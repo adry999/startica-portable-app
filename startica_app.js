@@ -90,6 +90,7 @@ $('reloadButton').onclick = async () => {
 };
 $('auditMore').onclick = () => void moreAudit().catch(e => message(e.message, true));
 $('printButton').onclick = () => window.print();
+$('printNotify').onclick = () => window.print();
 
 // ─── Starea formularelor ────────────────────────────────────────────────────
 

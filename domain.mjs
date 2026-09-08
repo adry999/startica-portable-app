@@ -225,6 +225,18 @@ export function allocations(p) {
 export function paymentTenders(p) {
   return p.tenders ?? [{ method: p.method || 'Cash', amount: p.amount || 0 }];
 }
+// Cu câte zile înainte de scadență apare copilul pe lista de notificat.
+export const NOTICE_DAYS = 3;
+// Ora fixă la prânz UTC: aritmetica pe zile nu este afectată de ora de vară.
+const shiftDays = (day, delta) =>
+  new Date(new Date(day + 'T12:00:00Z').getTime() + delta * 86400000).toISOString().slice(0, 10);
+const daysBetween = (from, to) => Math.round((new Date(to + 'T12:00:00Z') - new Date(from + 'T12:00:00Z')) / 86400000);
+// Scadența lunară este ziua din data contractului. dueDay rămâne ca rezervă
+// pentru fișele fără contract completat.
+export function dueDayFor(child) {
+  const fromContract = Number(child.contractDate?.slice(8, 10));
+  return fromContract >= 1 && fromContract <= 31 ? fromContract : child.dueDay || 10;
+}
 export function obligation(child, month, payments, asOf = today()) {
   const start = child.attendanceDate?.slice(0, 7),
     end = child.withdrawalDate?.slice(0, 7);
@@ -253,7 +265,12 @@ export function obligation(child, month, payments, asOf = today()) {
   const credit = expected === null ? null : Math.max(0, cents(paid) - cents(expected)) / 100;
   const [year, m] = month.split('-').map(Number);
   const lastDay = new Date(year, m, 0).getDate();
-  const due = `${month}-${String(Math.min(child.dueDay || 10, lastDay)).padStart(2, '0')}`;
+  const due = `${month}-${String(Math.min(dueDayFor(child), lastDay)).padStart(2, '0')}`;
+  const noticeFrom = shiftDays(due, -NOTICE_DAYS);
+  // Ce trebuie notificat: are de plată și fie a trecut scadența, fie intră în
+  // fereastra de avertizare. Ecranul „De notificat” filtrează exact pe asta.
+  const notify = !inactive && !unknown && rest > 0 && asOf >= noticeFrom;
+  const daysToDue = daysBetween(asOf, due);
   const label = inactive
     ? 'Fără obligație'
     : unknown
@@ -264,8 +281,10 @@ export function obligation(child, month, payments, asOf = today()) {
           ? 'Restanță'
           : paid > 0
             ? 'Plată parțială'
-            : 'Nescadent';
-  return { expected, paid, rest, credit, due, label };
+            : asOf >= noticeFrom
+              ? 'Scadent în curând'
+              : 'Nescadent';
+  return { expected, paid, rest, credit, due, label, notify, daysToDue };
 }
 export function cashSummary(s, month) {
   const payments = s.payments.filter(p => !p.archived && p.date.startsWith(month));

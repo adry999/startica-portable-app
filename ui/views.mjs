@@ -5,6 +5,8 @@ import { session, api, message, renderSaveStatus } from './session.mjs';
 import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel } from './parts.mjs';
 
 const selectedMonth = () => $('selectedMonth').value || today().slice(0, 7);
+// Numărul de contract este identificatorul folosit în discuția cu părintele.
+const contractOf = c => c.contractNumber || c.id;
 
 export function go(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
@@ -84,13 +86,14 @@ export function renderHealth() {
 // ─── Liste ──────────────────────────────────────────────────────────────────
 
 const HEADINGS = {
-  children: ['Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
+  children: ['Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
   payments: ['Data', 'Copil / sursă', 'Total', 'Luni acoperite', 'Cash / Card / Transfer', 'Acțiuni'],
   expenses: ['Data', 'Categorie', 'Descriere', 'Suma', 'Acțiuni'],
 };
 
 const CELLS = {
   children: r => [
+    esc(contractOf(r)),
     button('profile', 'children', r.id, r.name),
     parentContacts(r),
     esc(r.group || 'Lipsește'),
@@ -172,7 +175,11 @@ function renderDashboard(month, cash, review) {
       .reduce((sum, p) => sum + cents(p.amount) - allocations(p).reduce((n, a) => n + cents(a.amount), 0), 0) / 100,
   );
   $('reviewCount').textContent = review.items.length;
+  const toNotify = session.state.children.filter(
+    c => !c.archived && obligation(c, month, session.state.payments).notify,
+  ).length;
   $('alerts').innerHTML =
+    `<p><strong>${toNotify}</strong> copii de notificat pentru achitare.</p>` +
     `<p>${review.items.length} fișe sau achitări de verificat.</p>` +
     `<p>${session.state.payments.filter(p => !p.archived && !p.childId).length} plăți fără copil asociat.</p>`;
 
@@ -198,9 +205,65 @@ function renderStatus(month) {
     session.state.children
       .map(c => {
         const o = obligation(c, month, session.state.payments);
-        return `<tr><td>${esc(c.name)}${c.archived ? ' (arhivat)' : ''}</td><td>${money(o.expected)}</td><td>${money(o.paid)}</td><td>${money(o.rest)}</td><td>${money(o.credit)}</td><td>${date(o.due)}</td><td>${esc(o.label)}</td></tr>`;
+        return (
+          `<tr><td>${esc(contractOf(c))}</td><td>${esc(c.name)}${c.archived ? ' (arhivat)' : ''}</td>` +
+          `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td>${money(o.rest)}</td><td>${money(o.credit)}</td>` +
+          `<td>${date(o.due)}</td><td>${esc(o.label)}</td></tr>`
+        );
       })
-      .join('') || '<tr><td colspan="7">Nu sunt copii.</td></tr>';
+      .join('') || '<tr><td colspan="8">Nu sunt copii.</td></tr>';
+}
+
+// ─── De notificat ───────────────────────────────────────────────────────────
+
+// Textul din coloana „Termen”, formulat din perspectiva persoanei care sună.
+function termLabel(days) {
+  if (days < 0) return `întârziere ${-days} ${-days === 1 ? 'zi' : 'zile'}`;
+  if (days === 0) return 'scadent azi';
+  return `în ${days} ${days === 1 ? 'zi' : 'zile'}`;
+}
+
+function renderNotify(month) {
+  const rows = session.state.children
+    .filter(c => !c.archived)
+    .map(c => ({ child: c, o: obligation(c, month, session.state.payments) }))
+    .filter(r => r.o.notify)
+    // Cea mai veche întârziere prima: aia costă cel mai mult dacă mai așteaptă.
+    .sort((a, b) => a.o.daysToDue - b.o.daysToDue || a.child.name.localeCompare(b.child.name, 'ro'));
+
+  const late = rows.filter(r => r.o.daysToDue < 0);
+  const soon = rows.filter(r => r.o.daysToDue >= 0);
+  const owed = rows.reduce((sum, r) => sum + cents(r.o.rest), 0) / 100;
+  // Fișele fără taxă sau fără perioadă confirmată nu pot fi evaluate deloc;
+  // fără cifra asta, un „0 de notificat” ar părea liniștitor pe nedrept.
+  const unknown = session.state.children.filter(
+    c => !c.archived && obligation(c, month, session.state.payments).label === 'De verificat',
+  ).length;
+
+  $('notifyCount').textContent = rows.length;
+  $('notifyPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
+  $('notifyStats').innerHTML =
+    `<article class="card pink"><p>Cu întârziere</p><strong>${late.length}</strong><small>scadența a trecut</small></article>` +
+    `<article class="card yellow"><p>Scadente în curând</p><strong>${soon.length}</strong><small>în cel mult 3 zile</small></article>` +
+    `<article class="card orange"><p>Sumă de încasat</p><strong>${money(owed)}</strong><small>total pe lista de mai jos</small></article>` +
+    `<article class="card mint"><p>Nu pot fi evaluați</p><strong>${unknown}</strong><small>fără taxă sau perioadă confirmată</small></article>`;
+
+  $('notifyTable').innerHTML =
+    rows
+      .map(
+        ({ child: c, o }) =>
+          `<tr class="${o.daysToDue < 0 ? 'late-row' : ''}"><td>${esc(contractOf(c))}</td>` +
+          `<td>${button('profile', 'children', c.id, c.name)}</td><td>${parentContacts(c)}</td>` +
+          `<td>${esc(c.group || '—')}</td><td>${date(o.due)}</td><td>${esc(termLabel(o.daysToDue))}</td>` +
+          `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td><strong>${money(o.rest)}</strong></td>` +
+          `<td>${esc(o.label)}</td></tr>`,
+      )
+      .join('') ||
+    `<tr><td colspan="10" class="empty">${
+      unknown
+        ? 'Nimeni de notificat, dar ' + unknown + ' fișe nu pot fi evaluate. Completează taxa și perioada.'
+        : 'Nimeni de notificat pentru luna aceasta.'
+    }</td></tr>`;
 }
 
 function renderGroups() {
@@ -221,6 +284,7 @@ export function render() {
   renderDashboard(month, cash, review);
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
   renderStatus(month);
+  renderNotify(month);
   renderGroups();
   renderReview(review);
 }

@@ -41,7 +41,9 @@ test('Încasări după data reală, repartizări, avans, scadență și taxe ist
   assert.equal(cashSummary(s, '2026-10').income, 0);
   assert.equal(obligation(c, '2026-09', [p], '2026-09-08').paid, 2000);
   assert.equal(obligation(c, '2026-10', [p], '2026-09-08').paid, 500);
-  assert.equal(obligation(c, '2026-09', [], '2026-09-08').label, 'Nescadent');
+  // Scadența acestei fișe este ziua 10 (fără dată de contract, se ia dueDay).
+  assert.equal(obligation(c, '2026-09', [], '2026-09-06').label, 'Nescadent');
+  assert.equal(obligation(c, '2026-09', [], '2026-09-08').label, 'Scadent în curând');
   assert.equal(obligation(c, '2026-09', [], '2026-09-11').label, 'Restanță');
   c.feeHistory.push({ from: '2026-10', amount: 2500 });
   assert.equal(obligation(c, '2026-09', []).expected, 2000);
