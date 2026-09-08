@@ -16,6 +16,7 @@ export const STATIC_FILES = {
   '/startica_app.js': 'startica_app.js',
   '/domain.mjs': 'domain.mjs',
   '/review-center.mjs': 'review-center.mjs',
+  '/payment-matching.mjs': 'payment-matching.mjs',
   '/excel.mjs': 'excel.mjs',
   '/xlsx.full.min.js': 'xlsx.full.min.js',
   '/app.css': 'app.css',

@@ -6,6 +6,7 @@ import { go, render, renderList, renderHealth, profile, moreAudit } from './ui/v
 import { openEditor, bindEditorForm, archive, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
 import { bindFees } from './ui/fees.mjs';
+import { bindAssign } from './ui/assign.mjs';
 
 const HEALTH_POLL_MS = 30000;
 const LISTS = ['children', 'payments', 'expenses'];
@@ -14,6 +15,7 @@ setRenderers({ render, health: renderHealth });
 bindEditorForm();
 bindTransfers();
 bindFees();
+bindAssign();
 
 // Un singur ascultător pentru toate butoanele generate dinamic: rândurile din
 // tabele se redesenează des, iar ascultătorii individuali s-ar pierde.

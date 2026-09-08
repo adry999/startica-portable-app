@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../domain.mjs';
 import { childStatus } from '../excel.mjs';
+import { suggestChildren } from '../payment-matching.mjs';
 
 const temporary = prefix => {
   const dir = mkdtempSync(join(tmpdir(), prefix));
@@ -302,4 +303,117 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   const state = await app.get('/api/state');
   assert.equal(state.state.children[0].fee, 2000, 'Prima fișă nu a fost modificată.');
   assert.equal(state.revision, r.revision, 'Revizia nu s-a schimbat.');
+});
+
+test('Sugestiile de asociere separă potrivirea pe nume de simpla coincidență de sumă', () => {
+  const fee = [{ from: '2025-01', amount: 12000 }];
+  const children = [
+    { id: 'A', name: 'Florea Mark', feeHistory: fee },
+    { id: 'B', name: 'Taburceanu Stefan', feeHistory: fee },
+    { id: 'C', name: 'Gorea Elizaveta', feeHistory: fee },
+  ];
+  const empty = new Map();
+  const payment = (sourceName, amount = 12000) => ({
+    sourceName,
+    amount,
+    allocations: [{ month: '2025-09', amount }],
+  });
+
+  const named = suggestChildren(payment('Mark'), children, empty);
+  assert.equal(named[0].id, 'A', 'Numele din sursă decide primul candidat.');
+  assert.equal(named[0].nameMatch, true);
+  assert.equal(
+    named.filter(s => s.nameMatch).length,
+    1,
+    'Un singur copil are numele potrivit; ceilalți rămân simple coincidențe.',
+  );
+  assert.ok(
+    named.slice(1).every(s => s.nameMatch === false),
+    'Ceilalți candidați nu au potrivire de nume.',
+  );
+
+  // Diacriticele nu trebuie să împiedice potrivirea.
+  assert.equal(suggestChildren(payment('(Gorea Elizaveta)'), children, empty)[0].id, 'C');
+
+  // Text fără nume: pot exista candidați după sumă, dar niciunul nu se poate
+  // accepta în masă.
+  const noise = suggestChildren(payment('achitare gemeni 6 luni', 72000), children, empty);
+  assert.ok(
+    noise.every(s => s.nameMatch === false),
+    'Cuvintele-zgomot nu produc potriviri de nume.',
+  );
+
+  // O lună deja achitată scade scorul față de una neachitată.
+  const paidIndex = new Map([['A', new Map([['2025-09', 1200000]])]]);
+  const afterPaid = suggestChildren(payment('Mark'), children, paidIndex);
+  assert.equal(afterPaid[0].id, 'A', 'Numele rămâne decisiv.');
+  assert.ok(!afterPaid[0].reasons.some(r => r.includes('neachitată')));
+});
+
+test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuită', async t => {
+  const app = await startApplication(t, 'startica-asoc-', { autoBackupIntervalMs: 0 });
+  const child = normalizeRecord('children', {
+    id: 'CSV-1',
+    name: 'Florea Mark',
+    status: 'Activ',
+    contractDate: '2025-01-14',
+    attendanceDate: '2025-02-01',
+    feeHistory: [{ from: '2025-02', amount: 12000 }],
+    statusHistory: [{ from: '2025-02', status: 'Activ' }],
+  });
+  const payments = [
+    normalizeRecord('payments', {
+      id: 'PAY-1',
+      date: '2026-09-01',
+      amount: 12000,
+      sourceName: 'Mark',
+      allocations: [{ month: '2026-09', amount: 12000 }],
+    }),
+    normalizeRecord('payments', {
+      id: 'PAY-2',
+      childId: 'CSV-1',
+      date: '2026-08-01',
+      amount: 12000,
+      allocations: [{ month: '2026-08', amount: 12000 }],
+    }),
+  ];
+  let r = await app.post('/api/import', {
+    state: { children: [child], payments, expenses: [] },
+    confirm: 'IMPORT',
+    revision: 0,
+    requestId: randomUUID(),
+  });
+  assert.equal(r.ok, true, r.error);
+
+  // Neasociată => copilul apare ca restanțier deși banii au intrat.
+  assert.equal(obligation(r.state.children[0], '2026-09', r.state.payments, '2026-09-30').notify, true);
+
+  r = await app.post('/api/payments-assign', {
+    assignments: [{ id: 'PAY-1', childId: 'CSV-1' }],
+    revision: r.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(r.ok, true, r.error);
+  assert.equal(r.state.payments.find(p => p.id === 'PAY-1').childId, 'CSV-1');
+  assert.equal(
+    obligation(r.state.children[0], '2026-09', r.state.payments, '2026-09-30').notify,
+    false,
+    'După asociere, copilul nu mai este pe lista de notificat.',
+  );
+  assert.ok(readdirSync(app.backupDir).some(n => n.includes('inainte-asociere-achitari')));
+
+  // O achitare deja atribuită nu poate fi reasociată din greșeală de aici.
+  const refused = await app.post('/api/payments-assign', {
+    assignments: [{ id: 'PAY-2', childId: 'CSV-1' }],
+    revision: r.revision,
+    requestId: randomUUID(),
+  });
+  assert.match(refused.error, /are deja un copil asociat/);
+  // Un copil inexistent oprește tot.
+  const bad = await app.post('/api/payments-assign', {
+    assignments: [{ id: 'PAY-1', childId: 'LIPSA' }],
+    revision: r.revision,
+    requestId: randomUUID(),
+  });
+  assert.ok(bad.error, 'Asocierea către un copil inexistent este respinsă.');
 });

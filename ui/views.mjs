@@ -4,6 +4,7 @@ import { $, esc, money, date, time } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
 import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel } from './parts.mjs';
 import { renderFees } from './fees.mjs';
+import { renderAssign } from './assign.mjs';
 
 const selectedMonth = () => $('selectedMonth').value || today().slice(0, 7);
 // Numărul de contract este identificatorul folosit în discuția cu părintele.
@@ -12,6 +13,8 @@ const contractOf = c => c.contractNumber || c.id;
 export function go(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
   document.querySelectorAll('.nav').forEach(v => v.classList.toggle('active', v.dataset.view === id));
+  // Ecranul de asociere își construiește tabelul abia când devine vizibil.
+  if (id === 'assign') renderAssign(true);
   if (id === 'audit') {
     auditOffset = 0;
     void renderAudit().catch(e => message(e.message, true));
@@ -287,6 +290,7 @@ export function render() {
   renderStatus(month);
   renderNotify(month);
   renderFees();
+  renderAssign();
   renderGroups();
   renderReview(review);
 }

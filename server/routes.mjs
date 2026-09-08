@@ -88,6 +88,32 @@ export function createRouter(context) {
       );
     },
 
+    // Asocierea în masă a achitărilor rămase fără copil. Doar cele neasociate
+    // pot fi legate: o achitare deja atribuită nu se schimbă din greșeală aici.
+    '/api/payments-assign': b => {
+      if (!Array.isArray(b.assignments) || !b.assignments.length || b.assignments.length > 5000)
+        fail('Lista de asocieri este invalidă.');
+      return store.commit(
+        b,
+        'asociere-achitari',
+        () => {
+          const seen = new Set();
+          for (const { id, childId } of b.assignments) {
+            if (seen.has(id)) fail(`Achitarea ${id} apare de două ori.`);
+            seen.add(id);
+            const old = store.readRecord('payments', id);
+            if (!old) fail(`Achitarea ${id} nu mai există. Reîncarcă datele.`, 409);
+            if (old.childId) fail(`Achitarea ${id} are deja un copil asociat.`, 409);
+            if (!store.recordExists('children', childId)) fail(`Copilul ${childId} nu există.`);
+            const r = normalizeRecord('payments', { ...old, childId });
+            store.writeRecord('payments', r);
+            store.audit('asociere achitare', 'payments', r.id, old, r);
+          }
+        },
+        true,
+      );
+    },
+
     '/api/import-preview': b => importReport(b.state),
 
     '/api/financial-preview': b => {
