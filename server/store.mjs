@@ -93,8 +93,7 @@ export function createStore({ db, backups }) {
     }
   }
 
-  const auditPage = offset =>
-    db.prepare('SELECT * FROM audit_changes ORDER BY id DESC LIMIT 100 OFFSET ?').all(offset);
+  const auditPage = offset => db.prepare('SELECT * FROM audit_changes ORDER BY id DESC LIMIT 100 OFFSET ?').all(offset);
 
   return {
     readState,

@@ -12,8 +12,7 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
   CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,digest TEXT NOT NULL,revision INTEGER NOT NULL);
   CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);`;
 
-const hasTable = (db, name) =>
-  !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
+const hasTable = (db, name) => !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
 
 // Versiunea veche păstra toată evidența într-un singur JSON, în app_state.
 // Rândurile sunt mutate în records o singură dată, marcat prin settings.

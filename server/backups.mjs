@@ -212,8 +212,7 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
   // Numele vine de la client: trebuie să fie un nume simplu de fișier din
   // folderul de backup, niciodată o cale.
   function selectedBackup(name) {
-    if (typeof name !== 'string' || basename(name) !== name || !BACKUP_NAME.test(name))
-      fail('Nume de backup invalid.');
+    if (typeof name !== 'string' || basename(name) !== name || !BACKUP_NAME.test(name)) fail('Nume de backup invalid.');
     const file = join(backupDir, name);
     if (!existsSync(file)) fail('Backup inexistent.');
     return file;
