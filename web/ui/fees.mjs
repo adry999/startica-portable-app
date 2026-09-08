@@ -1,4 +1,4 @@
-import { today, monthOK, STATUS_HISTORY_VALUES } from '../domain.mjs';
+import { today, monthOK, STATUS_HISTORY_VALUES } from '../../shared/domain.mjs';
 import { $, esc, date } from './dom.mjs';
 import { session, message, mutate } from './session.mjs';
 

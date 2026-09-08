@@ -1,4 +1,4 @@
-import { normalizeRecord, dateOK } from './domain.mjs';
+import { normalizeRecord, dateOK } from '../shared/domain.mjs';
 
 const clean = value => String(value ?? '').trim();
 const key = value =>

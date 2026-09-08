@@ -16,7 +16,7 @@ export function childStatus(value) {
   const match = CHILD_STATUSES.find(s => s.toLocaleLowerCase('ro-RO') === raw.toLocaleLowerCase('ro-RO'));
   return match ? { status: match, note: '' } : { status: 'De verificat', note: `Statut din sursă: ${raw}` };
 }
-export function excelDate(value, XLSX) {
+function excelDate(value, XLSX) {
   if (value === null || value === undefined || value === '') return '';
   if (typeof value === 'number') {
     const d = XLSX.SSF.parse_date_code(value);

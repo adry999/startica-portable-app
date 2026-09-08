@@ -1,4 +1,4 @@
-import { emptyState } from '../domain.mjs';
+import { emptyState } from '../../shared/domain.mjs';
 import { $, time } from './dom.mjs';
 
 // Toată starea mutabilă a interfeței, într-un singur obiect. Modulele îl
@@ -33,7 +33,7 @@ export const session = {
 // Randările complete sunt declanșate din session (de exemplu după accept()),
 // dar sunt definite în views.mjs, care depinde de session. Punctul de intrare
 // le înregistrează aici, ca dependența să rămână într-o singură direcție.
-export const renderers = { render: () => {}, health: () => {} };
+const renderers = { render: () => {}, health: () => {} };
 export function setRenderers({ render, health }) {
   renderers.render = render;
   renderers.health = health;

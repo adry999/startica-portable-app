@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { TYPES } from '../domain.mjs';
+import { TYPES } from '../shared/domain.mjs';
 import { sqlString, stamp } from './util.mjs';
 
 const PRAGMAS = 'PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;';

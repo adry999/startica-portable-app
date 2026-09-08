@@ -1,4 +1,4 @@
-import { TYPES, emptyState } from '../domain.mjs';
+import { TYPES, emptyState } from '../shared/domain.mjs';
 import { fail, hash } from './util.mjs';
 
 const REQUEST_ID = /^[a-zA-Z0-9-]{10,100}$/;

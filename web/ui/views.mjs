@@ -1,5 +1,5 @@
-import { today, cents, obligation, paymentIndex, cashSummary, allocations } from '../domain.mjs';
-import { reviewCenter, filteredReviewItems } from '../review-center.mjs';
+import { today, cents, obligation, paymentIndex, cashSummary, allocations } from '../../shared/domain.mjs';
+import { reviewCenter, filteredReviewItems, reviewFilters } from '../../shared/review-center.mjs';
 import { $, esc, money, date, time } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
 import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel } from './parts.mjs';
@@ -43,7 +43,18 @@ function reviewRow(item, labels) {
   );
 }
 
+// Optiunile filtrului vin din aceeasi lista pe care o foloseste gruparea, ca
+// adaugarea unei categorii sa nu ceara si o editare in HTML.
+let filtersReady = false;
+function fillReviewFilter() {
+  if (filtersReady) return;
+  $('reviewFilter').innerHTML = reviewFilters
+    .map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`)
+    .join('');
+  filtersReady = true;
+}
 function renderReview(center) {
+  fillReviewFilter();
   const rows = filteredReviewItems(center, $('reviewFilter').value, $('reviewSearch').value),
     progress = center.progress;
   $('reviewProgress').innerHTML =

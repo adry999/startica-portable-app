@@ -5,9 +5,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
-import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../domain.mjs';
-import { childStatus } from '../excel.mjs';
-import { suggestChildren } from '../payment-matching.mjs';
+import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../shared/domain.mjs';
+import { childStatus } from '../shared/excel.mjs';
+import { suggestChildren } from '../shared/payment-matching.mjs';
 
 const temporary = prefix => {
   const dir = mkdtempSync(join(tmpdir(), prefix));

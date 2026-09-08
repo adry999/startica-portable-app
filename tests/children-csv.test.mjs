@@ -6,10 +6,10 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
-import { csvRows, previewChildrenCSV } from '../children-csv.mjs';
-import { normalizeRecord, cashSummary, obligation, emptyState, paymentTenders } from '../domain.mjs';
+import { csvRows, previewChildrenCSV } from '../server/children-csv.mjs';
+import { normalizeRecord, cashSummary, obligation, emptyState, paymentTenders } from '../shared/domain.mjs';
 import { createApplication } from '../startica_server.mjs';
-import { exportWorkbook, readWorkbook } from '../excel.mjs';
+import { exportWorkbook, readWorkbook } from '../shared/excel.mjs';
 const csv =
   'ID (Nr. contract),Nume copil,Parinte,Telefon,Data nasterii,Data frecventarii,Parinte 2,Telefon 2\n1,Copil test,Parinte unu,060123456,01.01.2022,01.09.2026,Parinte doi,+37360123457';
 const real = readFileSync(new URL('../../Fisiere_Excel/Lista_copiilor_inmatriculati.csv', import.meta.url), 'utf8');
@@ -99,7 +99,7 @@ test('Doi părinți opționali și achitare mixtă: total, repartizare, rapoarte
   assert.equal(normalizeRecord('payments', legacy).amount, 200);
   assert.equal(cashSummary({ ...s, payments: [{ ...p, archived: true }] }, '2026-09').income, 0);
   const require = createRequire(import.meta.url),
-    XLSX = require('../xlsx.full.min.js');
+    XLSX = require('../web/vendor/xlsx.full.min.js');
   const wb = XLSX.read(XLSX.write(exportWorkbook(s, XLSX), { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
     back = readWorkbook(wb, XLSX);
   assert.deepEqual(back.errors, []);

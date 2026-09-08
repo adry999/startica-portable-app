@@ -7,10 +7,10 @@ import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { readWorkbook } from '../excel.mjs';
-import { financialImportPlan } from '../financial-import.mjs';
+import { readWorkbook } from '../shared/excel.mjs';
+import { financialImportPlan } from '../server/financial-import.mjs';
 import { createApplication } from '../startica_server.mjs';
-import { emptyState, total } from '../domain.mjs';
+import { emptyState, total } from '../shared/domain.mjs';
 
 if (process.argv.slice(2).some(a => a !== '--apply'))
   throw Error('Folosește fără argumente pentru verificare sau --apply pentru import.');
@@ -19,7 +19,7 @@ const sourceFile = new URL('../../Fisiere_Excel/Evidenta_Achitari_corectata%20v5
 const bytes = readFileSync(sourceFile),
   sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const require = createRequire(import.meta.url),
-  XLSX = require('../xlsx.full.min.js');
+  XLSX = require('../web/vendor/xlsx.full.min.js');
 const report = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX);
 assert.deepEqual(report.errors, []);
 assert.deepEqual(

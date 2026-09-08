@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { validateState, normalizeRecord, total } from './domain.mjs';
+import { validateState, normalizeRecord, total } from '../shared/domain.mjs';
 
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nameKey = v =>

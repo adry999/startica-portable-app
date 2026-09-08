@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync
 import { join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { emptyState } from '../domain.mjs';
+import { emptyState } from '../shared/domain.mjs';
 import { fail, hash, sqlString, stamp, discard } from './util.mjs';
 
 const BACKUP_NAME = /^startica_[A-Za-z0-9_.-]+\.db$/;
@@ -51,7 +51,7 @@ export function snapshotState(file) {
   }
 }
 
-export function fileList(dir) {
+function fileList(dir) {
   return readdirSync(dir)
     .filter(n => BACKUP_NAME.test(n))
     .map(name => ({ name, modified: statSync(join(dir, name)).mtime.toISOString() }))

@@ -1,8 +1,8 @@
 import { existsSync, statSync } from 'node:fs';
 import { resolve, isAbsolute, relative } from 'node:path';
-import { validateState, normalizeRecord, applyChildSetup, summary, importReport } from '../domain.mjs';
-import { previewChildrenCSV } from '../children-csv.mjs';
-import { financialImportPlan } from '../financial-import.mjs';
+import { validateState, normalizeRecord, applyChildSetup, summary, importReport } from '../shared/domain.mjs';
+import { previewChildrenCSV } from './children-csv.mjs';
+import { financialImportPlan } from './financial-import.mjs';
 import { snapshotState } from './backups.mjs';
 import { fail } from './util.mjs';
 import { send, isStatic, sendStatic, isModule, sendModule, readJson, guardRequest, guardWrite } from './http.mjs';

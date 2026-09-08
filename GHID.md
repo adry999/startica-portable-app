@@ -12,6 +12,20 @@ Poți porni și din scurtătura `Startica.lnk`, cu pictograma oficială. O poți
 
 După această actualizare, închide ferestrele Startica vechi, rulează o singură dată `Opreste_Startica.vbs`, apoi pornește din nou. Oprirea automată urmărește numai ferestrele create cu noul lansator, nu taburile obișnuite sau ferestrele vechi.
 
+## Ce este unde
+
+    Porneste_Startica.vbs / .cmd   lansatoare
+    startica_desktop.ps1           lansatorul propriu-zis: pornește serverul și fereastra
+    startica_server.mjs            punctul de intrare al serverului
+    shared/                        reguli comune, aceleași în browser și pe server
+    server/                        bază de date, backup, rute, verificări
+    web/                           tot ce ajunge în browser: pagina, stilurile, ecranele
+    tests/  scripts/               teste și unelte de întreținere
+    Startica_Date/                 baza de evidență
+    Startica_Backup/  Jurnale/     copii de siguranță și jurnale de pornire
+
+Profilul de browser nu mai stă aici, ci în `%LOCALAPPDATA%Startica`.
+
 ## Cum pornește
 
 Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă. Fișierele `.cmd` fac același lucru, dar deschid scurt o fereastră de consolă; rămân ca variantă de rezervă și pentru diagnostic.

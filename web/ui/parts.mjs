@@ -1,8 +1,8 @@
-import { paymentTenders } from '../domain.mjs';
+import { paymentTenders } from '../../shared/domain.mjs';
 import { $, esc, money } from './dom.mjs';
 import { session } from './session.mjs';
 
-export const PAGE_SIZE = 100;
+const PAGE_SIZE = 100;
 // Pagina curentă a fiecărei liste. Resetată când se schimbă filtrele.
 export const pages = { children: 0, payments: 0, expenses: 0, review: 0, status: 0 };
 

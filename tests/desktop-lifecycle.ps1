@@ -25,7 +25,7 @@ try {
     foreach ($file in $files) { Copy-Item -LiteralPath $file.FullName -Destination $testDirectory }
     # Modulele serverului si ale interfetei stau in subdirectoare; fara ele
     # startica_server.mjs nu porneste.
-    foreach ($folder in @('assets','server','ui')) {
+    foreach ($folder in @('web','shared','server')) {
         Copy-Item -LiteralPath (Join-Path $source $folder) -Destination (Join-Path $testDirectory $folder) -Recurse
     }
     # Profilul se trece explicit: altfel testul ar scrie in profilul real din

@@ -10,18 +10,14 @@ const MAX_BODY_BYTES = 20000000;
 
 // Singurele fișiere pe care serverul le livrează. Lista explicită înlocuiește
 // orice rezolvare de cale, deci nu există traversare de directoare.
-export const STATIC_FILES = {
-  '/': 'Startica_aplicatie_simpla.html',
-  '/index.html': 'Startica_aplicatie_simpla.html',
-  '/startica_app.js': 'startica_app.js',
-  '/domain.mjs': 'domain.mjs',
-  '/review-center.mjs': 'review-center.mjs',
-  '/payment-matching.mjs': 'payment-matching.mjs',
-  '/excel.mjs': 'excel.mjs',
-  '/xlsx.full.min.js': 'xlsx.full.min.js',
-  '/app.css': 'app.css',
-  '/assets/startica-logo.svg': 'assets/startica-logo.svg',
-  '/assets/startica-icon.svg': 'assets/startica-icon.svg',
+const STATIC_FILES = {
+  '/': 'web/index.html',
+  '/index.html': 'web/index.html',
+  '/app.js': 'web/app.js',
+  '/app.css': 'web/app.css',
+  '/vendor/xlsx.full.min.js': 'web/vendor/xlsx.full.min.js',
+  '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',
+  '/assets/startica-icon.svg': 'web/assets/startica-icon.svg',
 };
 
 const mimeFor = path =>
@@ -49,12 +45,16 @@ export function send(res, value, status = 200, mime = 'application/json; charset
 
 export const isStatic = path => Object.hasOwn(STATIC_FILES, path);
 
-// Modulele interfeței, servite după nume, nu după cale: tiparul nu permite
-// punct sau bară, deci nu există traversare de directoare.
-const MODULE_PATH = /^\/ui\/[a-z0-9-]+\.mjs$/;
+// Modulele interfeței (web/ui) și regulile comune (shared), servite după nume,
+// nu după cale: tiparul nu permite punct sau bară, deci nu există traversare de
+// directoare. Regulile comune se servesc pentru că aceleași fișiere rulează și
+// în browser, și pe server — o singură sursă de adevăr pentru validări.
+const MODULE_PATH = /^\/(ui|shared)\/[a-z0-9-]+\.mjs$/;
 export const isModule = path => MODULE_PATH.test(path);
 export function sendModule(res, root, path) {
-  return send(res, readFileSync(join(root, path)), 200, 'text/javascript; charset=utf-8');
+  // /ui/... trăiește sub web/; /shared/... este la rădăcină.
+  const file = path.startsWith('/ui/') ? join(root, 'web', path) : join(root, path);
+  return send(res, readFileSync(file), 200, 'text/javascript; charset=utf-8');
 }
 
 export function sendStatic(res, root, path) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyState, normalizeRecord } from '../domain.mjs';
-import { filteredReviewItems, reviewCenter } from '../review-center.mjs';
+import { emptyState, normalizeRecord } from '../shared/domain.mjs';
+import { filteredReviewItems, reviewCenter } from '../shared/review-center.mjs';
 
 const child = (id, name = 'Copil Test') =>
   normalizeRecord('children', {

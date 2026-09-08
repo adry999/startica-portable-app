@@ -7,10 +7,17 @@ import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
 import { createApplication, retentionKeep } from '../startica_server.mjs';
-import { normalizeRecord, validateState, obligation, cashSummary, emptyState, importReport } from '../domain.mjs';
-import { exportWorkbook, readWorkbook } from '../excel.mjs';
+import {
+  normalizeRecord,
+  validateState,
+  obligation,
+  cashSummary,
+  emptyState,
+  importReport,
+} from '../shared/domain.mjs';
+import { exportWorkbook, readWorkbook } from '../shared/excel.mjs';
 const require = createRequire(import.meta.url),
-  XLSX = require('../xlsx.full.min.js');
+  XLSX = require('../web/vendor/xlsx.full.min.js');
 const child = () =>
   normalizeRecord('children', {
     id: 'ID-test',

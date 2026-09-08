@@ -4,8 +4,8 @@ import { mkdtempSync, rmSync, renameSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { normalizeRecord, emptyState } from '../domain.mjs';
-import { financialImportPlan } from '../financial-import.mjs';
+import { normalizeRecord, emptyState } from '../shared/domain.mjs';
+import { financialImportPlan } from '../server/financial-import.mjs';
 import { createApplication } from '../startica_server.mjs';
 const child = normalizeRecord('children', { id: 'ID-1', name: 'Copil Test', birthDate: '2022-01-01' });
 const currentChild = {

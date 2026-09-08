@@ -1,5 +1,5 @@
-import { today } from '../domain.mjs';
-import { unassignedPayments, assignmentRisk } from '../payment-matching.mjs';
+import { today } from '../../shared/domain.mjs';
+import { unassignedPayments, assignmentRisk } from '../../shared/payment-matching.mjs';
 import { $, esc, money, date } from './dom.mjs';
 import { session, message, mutate } from './session.mjs';
 

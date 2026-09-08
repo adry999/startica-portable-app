@@ -1,4 +1,4 @@
-import { today } from './domain.mjs';
+import { today } from '../shared/domain.mjs';
 import { $ } from './ui/dom.mjs';
 import { session, message, load, setRenderers, renderSaveStatus, checkConnection } from './ui/session.mjs';
 import { pages } from './ui/parts.mjs';

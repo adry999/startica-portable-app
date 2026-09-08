@@ -7,7 +7,7 @@ import {
   paymentTenders,
   CHILD_STATUSES,
   STATUS_HISTORY_VALUES,
-} from '../domain.mjs';
+} from '../../shared/domain.mjs';
 import { $, esc, money } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
 import { field, select, textarea } from './parts.mjs';
@@ -63,7 +63,7 @@ function allocationBalance() {
 
 // ─── Istoricul taxelor și al statutului ─────────────────────────────────────
 
-export function parseHistory(value, key) {
+function parseHistory(value, key) {
   return value
     .split('\n')
     .filter(s => s.trim())
