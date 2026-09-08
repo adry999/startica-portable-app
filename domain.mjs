@@ -155,6 +155,33 @@ export function normalizeRecord(type, input) {
   }
   return r;
 }
+// O intrare de istoric pe lună: rescrie luna dacă există deja.
+const upsertMonth = (rows, from, key, value) => [...(rows || []).filter(r => r.from !== from), { from, [key]: value }];
+
+// Completarea în masă a taxei, grupei și statutului. Fără taxă ȘI statut,
+// obligation() nu poate calcula nimic, deci ambele se scriu în istoric din
+// aceeași lună — de regulă luna începerii frecventării, ca și lunile trecute
+// să fie evaluate corect.
+export function applyChildSetup(child, setup) {
+  requireThat(setup && typeof setup === 'object', 'Completare invalidă.');
+  requireThat(monthOK(setup.from), `${child.id}: luna de aplicare este invalidă.`);
+  const r = structuredClone(child);
+  if (setup.group !== undefined) {
+    text(setup.group, 'Grupă');
+    r.group = setup.group.trim();
+  }
+  if (setup.fee !== undefined && setup.fee !== null) {
+    amount(setup.fee, `${child.name}: taxa`, true);
+    r.fee = setup.fee;
+    r.feeHistory = upsertMonth(r.feeHistory, setup.from, 'amount', setup.fee);
+  }
+  if (setup.status !== undefined && setup.status !== '') {
+    requireThat(STATUS_HISTORY_VALUES.includes(setup.status), `${child.name}: statut invalid.`);
+    r.status = setup.status;
+    r.statusHistory = upsertMonth(r.statusHistory, setup.from, 'status', setup.status);
+  }
+  return normalizeRecord('children', r);
+}
 export function validateState(input) {
   const s = emptyState();
   for (const type of TYPES) {

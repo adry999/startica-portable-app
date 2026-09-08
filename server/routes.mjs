@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import { resolve, isAbsolute, relative } from 'node:path';
-import { validateState, normalizeRecord, summary, importReport } from '../domain.mjs';
+import { validateState, normalizeRecord, applyChildSetup, summary, importReport } from '../domain.mjs';
 import { previewChildrenCSV } from '../children-csv.mjs';
 import { financialImportPlan } from '../financial-import.mjs';
 import { snapshotState } from './backups.mjs';
@@ -62,6 +62,31 @@ export function createRouter(context) {
         store.writeRecord(b.type, r);
         store.audit(old ? 'modificare' : 'adăugare', b.type, r.id, old, r);
       }),
+
+    // Completarea în masă a taxei, grupei și statutului. Fără ea, cei 105 copii
+    // importați din CSV nu pot fi evaluați deloc, iar lista de notificat rămâne
+    // goală fără ca nimic să fie greșit.
+    '/api/children-setup': b => {
+      if (!Array.isArray(b.updates) || !b.updates.length || b.updates.length > 5000)
+        fail('Lista de completări este invalidă.');
+      return store.commit(
+        b,
+        'completare-taxe',
+        () => {
+          const seen = new Set();
+          for (const update of b.updates) {
+            if (seen.has(update?.id)) fail(`Fișa ${update.id} apare de două ori.`);
+            seen.add(update?.id);
+            const old = store.readRecord('children', update?.id);
+            if (!old) fail(`Fișa ${update?.id} nu mai există. Reîncarcă datele.`, 409);
+            const r = applyChildSetup(old, update);
+            store.writeRecord('children', r);
+            store.audit('completare taxe și grupe', 'children', r.id, old, r);
+          }
+        },
+        true,
+      );
+    },
 
     '/api/import-preview': b => importReport(b.state),
 

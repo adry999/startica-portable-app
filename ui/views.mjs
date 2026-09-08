@@ -3,6 +3,7 @@ import { reviewCenter, filteredReviewItems } from '../review-center.mjs';
 import { $, esc, money, date, time } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
 import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel } from './parts.mjs';
+import { renderFees } from './fees.mjs';
 
 const selectedMonth = () => $('selectedMonth').value || today().slice(0, 7);
 // Numărul de contract este identificatorul folosit în discuția cu părintele.
@@ -285,6 +286,7 @@ export function render() {
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
   renderStatus(month);
   renderNotify(month);
+  renderFees();
   renderGroups();
   renderReview(review);
 }
