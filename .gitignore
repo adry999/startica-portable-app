@@ -1,0 +1,21 @@
+# ─── Date reale: nu intră NICIODATĂ în istoric ───────────────────────────────
+# Baza de evidență activă (date financiare).
+Startica_Date/
+# Copiile de siguranță locale (conțin aceleași date).
+Startica_Backup/
+# Jurnalele de pornire ale serverului.
+Jurnale/
+
+# ─── Profil de browser al ferestrei aplicației ──────────────────────────────
+# ~84 MB; conține Cookies, History, Login Data, TransportSecurity.
+# De mutat în %LOCALAPPDATA%\Startica\Interfata (vezi auditul).
+Interfata/
+
+# ─── Node ───────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+
+# ─── Diverse ────────────────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+*.tmp
