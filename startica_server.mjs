@@ -76,11 +76,6 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
     process.exitCode = 1;
   });
   app.server.listen(port, '127.0.0.1', () => {
-    try {
-      app.backup('pornire');
-    } catch (e) {
-      console.error('Backup la pornire: ' + e.message);
-    }
     console.log(`Startica: http://127.0.0.1:${port}`);
     if (process.env.STARTICA_NO_BROWSER !== '1')
       spawn('cmd.exe', ['/c', 'start', '', `http://127.0.0.1:${port}`], {
@@ -88,6 +83,17 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
         stdio: 'ignore',
         windowsHide: true,
       }).unref();
+    // Copia de pornire este sincronă și crește cu dimensiunea bazei. Pe calea
+    // de pornire, ea întârzia primul răspuns la /api/health, deci lansatorul
+    // aștepta degeaba înainte să deschidă fereastra. Amânată, serverul este
+    // gata imediat, iar copia se face cât se ridică browserul.
+    setTimeout(() => {
+      try {
+        app.backup('pornire');
+      } catch (e) {
+        console.error('Backup la pornire: ' + e.message);
+      }
+    }, 0);
   });
   let closing = false;
   const shutdown = async () => {

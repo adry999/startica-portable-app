@@ -1,8 +1,8 @@
 # Startica — utilizare locală
 
-Pornește `Porneste_Startica.cmd`: Startica se deschide într-o fereastră proprie Chrome/Edge, fără taburi și bară de adrese. Serverul local rulează ascuns în fundal. Este necesar Node.js cu suport `node:sqlite` (versiunea instalată pe acest calculator este compatibilă). Pornirile ulterioare folosesc serverul deja pornit pentru această copie a aplicației.
+Pornește din scurtătura **Startica** (sau `Porneste_Startica.vbs`): Startica se deschide într-o fereastră proprie Chrome/Edge, fără taburi și bară de adrese. Serverul local rulează ascuns în fundal. Este necesar Node.js cu suport `node:sqlite` (versiunea instalată pe acest calculator este compatibilă). Pornirile ulterioare folosesc serverul deja pornit pentru această copie a aplicației.
 
-La închiderea ultimei ferestre Startica pornite prin noul lansator, serverul se oprește automat și încearcă un backup final. `Opreste_Startica.cmd` rămâne o opțiune de rezervă dacă supravegherea ferestrei nu funcționează. Înainte să închizi, așteaptă confirmarea salvării. Formularele modificate și salvările neconfirmate declanșează avertizarea browserului la închidere.
+La închiderea ultimei ferestre Startica pornite prin noul lansator, serverul se oprește automat și încearcă un backup final. `Opreste_Startica.vbs` rămâne o opțiune de rezervă dacă supravegherea ferestrei nu funcționează. Înainte să închizi, așteaptă confirmarea salvării. Formularele modificate și salvările neconfirmate declanșează avertizarea browserului la închidere.
 
 Fereastra Startica folosește un profil de browser separat, fără acces la taburile și extensiile personale Chrome. Profilul se află în `%LOCALAPPDATA%Startica`, nu în folderul aplicației: conține cookies și date de autentificare, iar folderul aplicației este copiat și arhivat. Conține preferințe și cache pentru interfață, nu baza evidenței; poate fi șters oricând, se recreează la pornire. Vechiul folder `Interfata` din aplicație nu mai este folosit și poate fi șters. Dacă sunt deschise două ferestre Startica, serverul rămâne pornit până la închiderea ultimei. O oprire forțată a Windows poate împiedica backupul final; fiecare salvare confirmată este deja scrisă în SQLite. Erorile de pornire se găsesc în `Jurnale`.
 
@@ -10,7 +10,13 @@ Aceasta este interfața locală afișată în modul aplicație al Chrome/Edge, n
 
 Poți porni și din scurtătura `Startica.lnk`, cu pictograma oficială. O poți copia pe Desktop. Logo-ul și pictograma sunt în `assets`, preluate de pe startica.md. Culorile și fonturile existente corespund paletei site-ului.
 
-După această actualizare, închide ferestrele Startica vechi, rulează o singură dată `Opreste_Startica.cmd`, apoi pornește din nou. Oprirea automată urmărește numai ferestrele create cu noul lansator, nu taburile obișnuite sau ferestrele vechi.
+După această actualizare, închide ferestrele Startica vechi, rulează o singură dată `Opreste_Startica.vbs`, apoi pornește din nou. Oprirea automată urmărește numai ferestrele create cu noul lansator, nu taburile obișnuite sau ferestrele vechi.
+
+## Cum pornește
+
+Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă. Fișierele `.cmd` fac același lucru, dar deschid scurt o fereastră de consolă; rămân ca variantă de rezervă și pentru diagnostic.
+
+Dacă muți scurtătura pe Desktop, copiaz-o din nou după actualizări: ținta ei s-a schimbat.
 
 ## Date și copii
 

@@ -1,3 +1,6 @@
 @echo off
-start "" powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%~dp0startica_desktop.ps1" %*
+rem Varianta de rezerva si pentru diagnostic. Pentru pornirea obisnuita
+rem foloseste scurtatura Startica sau Porneste_Startica.vbs: acelea nu deschid
+rem nicio fereastra de consola, nici macar pentru o clipa.
+start "" wscript.exe "%~dp0Porneste_Startica.vbs" %*
 exit /b

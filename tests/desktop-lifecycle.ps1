@@ -21,7 +21,7 @@ function Wait-Condition([scriptblock]$Condition, [string]$Message) {
     throw $Message
 }
 try {
-    $files = Get-ChildItem -LiteralPath $source -File | Where-Object { $_.Extension -in @('.mjs','.js','.html','.css','.cmd') -or $_.Name -eq 'startica_desktop.ps1' }
+    $files = Get-ChildItem -LiteralPath $source -File | Where-Object { $_.Extension -in @('.mjs','.js','.html','.css','.cmd','.vbs') -or $_.Name -eq 'startica_desktop.ps1' }
     foreach ($file in $files) { Copy-Item -LiteralPath $file.FullName -Destination $testDirectory }
     # Modulele serverului si ale interfetei stau in subdirectoare; fara ele
     # startica_server.mjs nu porneste.

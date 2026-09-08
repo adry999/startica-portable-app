@@ -1,3 +1,4 @@
 @echo off
-start "" powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%~dp0startica_desktop.ps1" -Stop %*
+rem Varianta de rezerva. Fara fereastra de consola: Opreste_Startica.vbs.
+start "" wscript.exe "%~dp0Opreste_Startica.vbs" %*
 exit /b
