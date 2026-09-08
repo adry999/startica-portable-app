@@ -1,4 +1,21 @@
-import { emptyState, normalizeRecord, importReport, today, allocations, paymentTenders } from './domain.mjs';
+import {
+  emptyState,
+  normalizeRecord,
+  importReport,
+  today,
+  allocations,
+  paymentTenders,
+  CHILD_STATUSES,
+} from './domain.mjs';
+// Coloana de statut din V5 este text liber. Orice valoare pe care aplicația nu
+// o poate interpreta devine „De verificat”, cu textul original păstrat în
+// observații, ca importul să nu piardă rândul și nici informația din sursă.
+export function childStatus(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return { status: 'Activ', note: '' };
+  const match = CHILD_STATUSES.find(s => s.toLocaleLowerCase('ro-RO') === raw.toLocaleLowerCase('ro-RO'));
+  return match ? { status: match, note: '' } : { status: 'De verificat', note: `Statut din sursă: ${raw}` };
+}
 export function excelDate(value, XLSX) {
   if (value === null || value === undefined || value === '') return '';
   if (typeof value === 'number') {
@@ -80,24 +97,27 @@ export function readWorkbook(workbook, XLSX) {
     parse(
       'Copii',
       'children',
-      r => ({
-        id: t(r[0]),
-        name: t(r[1]),
-        parent: t(r[2]),
-        phone: t(r[3]),
-        birthDate: d(r[4]),
-        contractDate: d(r[5]),
-        attendanceDate: d(r[6]),
-        group: t(r[7]),
-        fee: Number(r[8]) > 0 ? Number(r[8]) : null,
-        dueDay: r[9] ? Number(r[9]) : 10,
-        status: t(r[10]) || 'Activ',
-        withdrawalDate: d(r[11]),
-        notes: t(r[12]),
-        verification: t(r[13]),
-        feeHistory: [],
-        statusHistory: [],
-      }),
+      r => {
+        const { status, note } = childStatus(r[10]);
+        return {
+          id: t(r[0]),
+          name: t(r[1]),
+          parent: t(r[2]),
+          phone: t(r[3]),
+          birthDate: d(r[4]),
+          contractDate: d(r[5]),
+          attendanceDate: d(r[6]),
+          group: t(r[7]),
+          fee: Number(r[8]) > 0 ? Number(r[8]) : null,
+          dueDay: r[9] ? Number(r[9]) : 10,
+          status,
+          withdrawalDate: d(r[11]),
+          notes: [t(r[12]), note].filter(Boolean).join('\n'),
+          verification: t(r[13]),
+          feeHistory: [],
+          statusHistory: [],
+        };
+      },
       r => !!r[0] && !String(r[0]).toUpperCase().includes('TOTAL'),
     );
     parse(

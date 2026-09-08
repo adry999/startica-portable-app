@@ -118,37 +118,64 @@ export function createApplication(options = {}) {
       source.close();
     }
   }
+  const discard = file => {
+    try {
+      if (existsSync(file)) unlinkSync(file);
+    } catch {}
+  };
+  // Un backup întrerupt (cădere de curent, disc plin) lasă în urmă un fișier
+  // .db.tmp de dimensiunea bazei. fileList() nu îl vede, deci retenția nu îl
+  // atinge niciodată. Vechimea minimă protejează un backup aflat în curs.
+  function pruneTemporary(dir) {
+    const cutoff = Date.now() - 3600000;
+    for (const name of readdirSync(dir)) {
+      if (!/^startica_[A-Za-z0-9_.-]+\.db\.tmp$/.test(name)) continue;
+      const file = join(dir, name);
+      try {
+        if (statSync(file).mtimeMs < cutoff) unlinkSync(file);
+      } catch {}
+    }
+  }
   function prune() {
     const files = fileList(backupDir),
       keep = retentionKeep(files);
     for (const f of files) if (!keep.has(f.name)) unlinkSync(join(backupDir, f.name));
+    pruneTemporary(backupDir);
   }
   function backup(reason = 'manual') {
     const name = `startica_${stamp()}_${reason}_${randomUUID().slice(0, 8)}.db`,
       file = join(backupDir, name),
       temp = file + '.tmp';
-    db.exec(`VACUUM INTO ${sqlString(temp)}`);
-    snapshotState(temp);
-    renameSync(temp, file);
+    try {
+      db.exec(`VACUUM INTO ${sqlString(temp)}`);
+      snapshotState(temp);
+      renameSync(temp, file);
+    } catch (e) {
+      discard(temp);
+      throw e;
+    }
     setSetting('lastLocal', new Date().toISOString());
     setSetting('localError', '');
     let warning = '';
     const external = setting('externalDir');
     if (external) {
+      const copy = join(external, name) + '.tmp';
       try {
         if (!existsSync(external) || !statSync(external).isDirectory()) fail('Folderul extern nu este disponibil.');
-        const dest = join(external, name),
-          copy = dest + '.tmp';
         copyFileSync(file, copy);
         if (hash(readFileSync(file)) !== hash(readFileSync(copy))) fail('Copia externă diferă de original.');
         snapshotState(copy);
-        renameSync(copy, dest);
+        renameSync(copy, join(external, name));
         setSetting('lastExternal', new Date().toISOString());
         setSetting('externalError', '');
       } catch (e) {
+        discard(copy);
         warning = 'Backup local creat; copia externă a eșuat: ' + e.message;
         setSetting('externalError', e.message);
       }
+      try {
+        pruneTemporary(external);
+      } catch {}
     }
     try {
       prune();

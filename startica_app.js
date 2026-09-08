@@ -8,6 +8,8 @@ import {
   cashSummary,
   allocations,
   paymentTenders,
+  CHILD_STATUSES,
+  STATUS_HISTORY_VALUES,
 } from './domain.mjs';
 import { readWorkbook, exportWorkbook } from './excel.mjs';
 import { reviewCenter, filteredReviewItems } from './review-center.mjs';
@@ -96,8 +98,17 @@ function message(text, error = false) {
   $('message').className = 'notice' + (error ? ' error' : '');
   $('message').textContent = text;
 }
+// Serverul poate: (a) să nu răspundă — operațiunea are stare necunoscută și
+// trebuie verificată; (b) să răspundă cu ceva ce nu e JSON — a fost contactat,
+// deci nu e o problemă de conexiune. Cele două cazuri cer acțiuni diferite din
+// partea utilizatorului, deci nu pot avea același mesaj.
+const networkFailure = () => {
+  connectionError = 'Apasă „Reîncarcă datele” pentru a verifica ultima operațiune.';
+  renderSaveStatus();
+  return Object.assign(Error('Conexiune întreruptă. ' + connectionError), { network: true });
+};
 async function api(path, body) {
-  let response, result;
+  let response;
   try {
     response = await fetch(path, {
       signal: AbortSignal.timeout(body === undefined ? 10000 : 60000),
@@ -109,11 +120,21 @@ async function api(path, body) {
             body: JSON.stringify(body),
           }),
     });
-    result = await response.json();
   } catch {
-    connectionError = 'Apasă „Reîncarcă datele” pentru a verifica ultima operațiune.';
+    throw networkFailure();
+  }
+  let result;
+  try {
+    result = await response.json();
+  } catch (e) {
+    // Corpul întrerupt sau expirat rămâne o cădere de conexiune.
+    if (e?.name === 'AbortError' || e?.name === 'TimeoutError') throw networkFailure();
+    connectionError = '';
     renderSaveStatus();
-    throw Object.assign(Error('Conexiune întreruptă. ' + connectionError), { network: true });
+    throw Object.assign(
+      Error(`Serverul a răspuns neașteptat (cod ${response.status}). Reîncarcă aplicația și verifică jurnalele.`),
+      { status: response.status },
+    );
   }
   connectionError = '';
   renderSaveStatus();
@@ -431,7 +452,7 @@ function openEditor(type, id) {
       field('contractDate', 'Data contractului', r.contractDate, 'date') +
       field('attendanceDate', 'Început frecventare', r.attendanceDate, 'date') +
       field('withdrawalDate', 'Retragere', r.withdrawalDate, 'date') +
-      select('status', 'Statut', r.status || 'Activ', ['Activ', 'Suspendat', 'Retras']) +
+      select('status', 'Statut', r.status || 'Activ', CHILD_STATUSES) +
       field('statusFrom', 'Statut aplicabil din luna', today().slice(0, 7), 'month', 'required') +
       field('fee', 'Taxa lunară (gol = necunoscută)', r.fee ?? '', 'number', 'min="0" step="0.01"') +
       field('feeFrom', 'Taxa aplicabilă din luna', today().slice(0, 7), 'month') +
@@ -558,7 +579,7 @@ $('editorForm').onsubmit = async event => {
       if (!r.statusHistory.length && (editor.record.status || r.status) === 'Activ' && r.attendanceDate)
         r.statusHistory = [{ from: r.attendanceDate.slice(0, 7), status: 'Activ' }];
       if (
-        ['Activ', 'Suspendat', 'Retras'].includes(r.status) &&
+        STATUS_HISTORY_VALUES.includes(r.status) &&
         (!r.statusHistory.length || r.status !== (editor.record.status || 'Activ'))
       )
         r.statusHistory = upsertHistory(r.statusHistory, v.statusFrom, 'status', r.status);

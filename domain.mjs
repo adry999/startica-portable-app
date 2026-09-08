@@ -1,4 +1,10 @@
 export const TYPES = ['children', 'payments', 'expenses'];
+// Stări reale, folosite de obligation() și acceptate în statusHistory.
+export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
+// Statutul unei fișe. „De verificat” marchează o fișă importată a cărei
+// situație nu este confirmată; nu este o stare din care se pot calcula
+// obligații, deci nu apare în statusHistory.
+export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
 export const emptyState = () => ({ children: [], payments: [], expenses: [] });
 export const today = () => {
   const d = new Date();
@@ -70,6 +76,7 @@ export function normalizeRecord(type, input) {
     r.name = r.name.trim();
     r.status ||= 'Activ';
     text(r.status, 'Statut', true);
+    requireThat(CHILD_STATUSES.includes(r.status), `Statut: folosește ${CHILD_STATUSES.join(', ')}.`);
     r.group ??= '';
     r.parent ??= '';
     r.phone ??= '';
@@ -95,7 +102,7 @@ export function normalizeRecord(type, input) {
         requireThat(item && monthOK(item.from) && !seen.has(item.from), `${field}: lună invalidă sau repetată.`);
         seen.add(item.from);
         if (valueKey === 'amount') amount(item.amount, 'Taxa istorică', true);
-        else requireThat(['Activ', 'Suspendat', 'Retras'].includes(item.status), 'Statut istoric invalid.');
+        else requireThat(STATUS_HISTORY_VALUES.includes(item.status), 'Statut istoric invalid.');
       }
       r[field].sort((a, b) => a.from.localeCompare(b.from));
     }
@@ -182,7 +189,7 @@ export function issues(s) {
     if (!c.feeHistory?.length) add('children', c, c.fee == null ? 'Taxă lipsă' : 'Taxă fără lună de aplicare');
     if (!c.group) add('children', c, 'Grupă lipsă');
     if (!c.attendanceDate) add('children', c, 'Data începerii frecventării lipsește');
-    if (!['Activ', 'Suspendat', 'Retras'].includes(c.status)) add('children', c, 'Statut de verificat');
+    if (!STATUS_HISTORY_VALUES.includes(c.status)) add('children', c, 'Statut de verificat');
     if (c.parent && c.name && c.parent.trim().toLocaleLowerCase('ro-RO') === c.name.trim().toLocaleLowerCase('ro-RO'))
       add('children', c, 'Părintele are același nume ca copilul; verifică sursa');
     if (
