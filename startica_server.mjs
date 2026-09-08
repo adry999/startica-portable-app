@@ -49,6 +49,13 @@ export function createApplication(options = {}) {
   const root = options.root || ROOT,
     dataDir = options.dataDir || join(root, 'Startica_Date');
   const backupDir = options.backupDir || join(root, 'Startica_Backup');
+  // Backupul automat de după fiecare salvare copia integral baza (VACUUM INTO
+  // + verificare + SHA256 pe ambele fișiere), deci latența unei singure
+  // modificări creștea cu dimensiunea evidenței. Datele sunt oricum durabile la
+  // COMMIT (synchronous=FULL); copia servește la recuperare, nu la salvare.
+  // Rărind-o, se pierde granularitatea copiilor, nu date confirmate.
+  // 0 = backup la fiecare scriere (folosit în teste).
+  const autoBackupIntervalMs = Number.isFinite(options.autoBackupIntervalMs) ? options.autoBackupIntervalMs : 300000;
   mkdirSync(dataDir, { recursive: true });
   mkdirSync(backupDir, { recursive: true });
   const dbFile = join(dataDir, 'startica.db'),
@@ -85,6 +92,7 @@ export function createApplication(options = {}) {
       }
     }
   }
+  let lastBackupAt = 0;
   const setting = k => db.prepare('SELECT value FROM settings WHERE key=?').get(k)?.value || '';
   const setSetting = (k, v) =>
     db.prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k, v);
@@ -98,6 +106,15 @@ export function createApplication(options = {}) {
     const m = db.prepare('SELECT * FROM meta WHERE id=1').get();
     return { state: readState(), revision: m.revision, updatedAt: m.updated_at };
   }
+  // Verificarea reviziei și căutarea unei singure înregistrări nu au nevoie de
+  // starea completă. readState() parsează JSON pentru fiecare rând din bază;
+  // folosit pentru a compara un întreg, costul crește cu toată evidența.
+  const currentRevision = () => db.prepare('SELECT revision FROM meta WHERE id=1').get().revision;
+  function readRecord(kind, id) {
+    const row = db.prepare('SELECT payload FROM records WHERE kind=? AND id=?').get(kind, id);
+    return row ? JSON.parse(row.payload) : undefined;
+  }
+  const recordExists = (kind, id) => !!db.prepare('SELECT 1 FROM records WHERE kind=? AND id=?').get(kind, id);
   function fileList(dir) {
     return readdirSync(dir)
       .filter(n => /^startica_[A-Za-z0-9_.-]+\.db$/.test(n))
@@ -156,6 +173,10 @@ export function createApplication(options = {}) {
     }
     setSetting('lastLocal', new Date().toISOString());
     setSetting('localError', '');
+    // Orice copie reușită repornește ceasul și anulează copia programată,
+    // indiferent de motiv: pornire, manual sau dinaintea unui import.
+    lastBackupAt = Date.now();
+    cancelScheduledBackup();
     let warning = '';
     const external = setting('externalDir');
     if (external) {
@@ -192,6 +213,51 @@ export function createApplication(options = {}) {
       return { warning: 'Datele sunt salvate, dar backupul local a eșuat: ' + e.message };
     }
   }
+  // Copia amânată. Fără ea, o singură modificare urmată de inactivitate nu ar
+  // produce nicio copie până la închiderea aplicației: rărirea ar deveni
+  // absență. Rulează în afara cererii HTTP, deci nu încetinește salvarea.
+  // unref(): un backup în așteptare nu ține procesul pornit.
+  let scheduled = null;
+  function cancelScheduledBackup() {
+    if (!scheduled) return;
+    clearTimeout(scheduled);
+    scheduled = null;
+  }
+  function scheduleBackup() {
+    if (scheduled || !autoBackupIntervalMs) return;
+    scheduled = setTimeout(() => {
+      scheduled = null;
+      safeBackup('automat');
+    }, autoBackupIntervalMs);
+    scheduled.unref?.();
+  }
+  // Backupul de după o salvare obișnuită. O eroare anterioară se reîncearcă
+  // imediat: altfel utilizatorul ar afla că backupul nu funcționează abia după
+  // expirarea intervalului.
+  function autoBackup() {
+    const retrying = !!(setting('localError') || setting('externalError'));
+    if (!retrying && Date.now() - lastBackupAt < autoBackupIntervalMs) {
+      scheduleBackup();
+      return { warning: '', skipped: true };
+    }
+    return safeBackup('automat');
+  }
+  // Eroarea externă memorată se actualizează doar când rulează un backup. Cu
+  // backupul automat rărit, dispariția folderului (stick scos, Drive
+  // deconectat) ar rămâne nesemnalată până la următoarea copie. Verificarea de
+  // mai jos costă un stat() și rulează la fiecare interogare de stare, adică
+  // din 30 în 30 de secunde din interfață.
+  function externalFailure() {
+    const stored = setting('externalError');
+    if (stored) return stored;
+    const dir = setting('externalDir');
+    if (!dir) return '';
+    try {
+      return existsSync(dir) && statSync(dir).isDirectory() ? '' : 'Folderul extern nu este disponibil.';
+    } catch (e) {
+      return e.message;
+    }
+  }
   function health() {
     return {
       ok: true,
@@ -201,7 +267,7 @@ export function createApplication(options = {}) {
       lastLocal: setting('lastLocal') || fileList(backupDir)[0]?.modified || '',
       lastExternal: setting('lastExternal'),
       localError: setting('localError'),
-      externalError: setting('externalError'),
+      externalError: externalFailure(),
       cloudVerified: false,
     };
   }
@@ -233,7 +299,7 @@ export function createApplication(options = {}) {
       if (prior.digest !== digest) fail('Operațiunea a fost deja folosită cu alte date.', 409);
       return { ok: true, replayed: true, ...envelope(), health: health() };
     }
-    if (body.revision !== envelope().revision)
+    if (body.revision !== currentRevision())
       fail(
         'Datele au fost schimbate în altă filă. Reîncarcă datele și verifică formularul înainte să salvezi din nou.',
         409,
@@ -251,7 +317,7 @@ export function createApplication(options = {}) {
       db.exec('ROLLBACK');
       throw e;
     }
-    const b = safeBackup('automat');
+    const b = autoBackup();
     return { ok: true, ...envelope(), warning: b.warning || '', health: health() };
   }
   function replace(s, action) {
@@ -340,6 +406,7 @@ export function createApplication(options = {}) {
         fail('Reîncarcă aplicația înainte de a salva.', 403);
       const b = await readJson(req);
       if (path === '/api/shutdown' && options.allowShutdown) {
+        cancelScheduledBackup();
         const result = safeBackup('inchidere');
         send(res, { ok: true, warning: result.warning || '' });
         server.close(() => db.close());
@@ -351,12 +418,11 @@ export function createApplication(options = {}) {
           res,
           commit(b, 'salvare', () => {
             const r = normalizeRecord(b.type, b.record),
-              s = readState(),
-              old = s[b.type].find(x => x.id === r.id);
+              old = readRecord(b.type, r.id);
             if (!['create', 'update'].includes(b.mode)) fail('Mod de salvare invalid.');
             if (b.mode === 'create' && old) fail('ID deja folosit.', 409);
             if (b.mode === 'update' && !old) fail('Înregistrarea nu mai există.', 409);
-            if (b.type === 'payments' && r.childId && !s.children.some(c => c.id === r.childId))
+            if (b.type === 'payments' && r.childId && !recordExists('children', r.childId))
               fail('Copilul asociat nu există.');
             db.prepare(
               'INSERT INTO records VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET payload=excluded.payload',
@@ -473,6 +539,7 @@ export function createApplication(options = {}) {
     envelope,
     close: () =>
       new Promise(resolveClose => {
+        cancelScheduledBackup();
         server.close(() => {
           db.close();
           resolveClose();

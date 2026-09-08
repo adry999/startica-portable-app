@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readdirSync, utimesSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readdirSync, utimesSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../domain.mjs';
 import { childStatus } from '../excel.mjs';
@@ -60,4 +61,131 @@ test('Importul V5 mapează un statut necunoscut, păstrând textul original', ()
   // Rândul trebuie să treacă validarea, nu să fie respins.
   const r = normalizeRecord('children', { id: 'ID-1', name: 'Copil', dueDay: 10, status: unknown.status });
   assert.equal(r.status, 'De verificat');
+});
+
+// Helper pentru testele care vorbesc cu serverul prin HTTP.
+async function startApplication(t, prefix, options = {}) {
+  const { dir, remove } = temporary(prefix);
+  const backupDir = join(dir, 'backups');
+  const app = createApplication({ dataDir: join(dir, 'data'), backupDir, ...options });
+  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
+  t.after(async () => {
+    await app.close();
+    remove();
+  });
+  const origin = `http://127.0.0.1:${app.server.address().port}`;
+  const token = (await (await fetch(origin + '/api/session')).json()).token;
+  return {
+    dir,
+    backupDir,
+    get: path => fetch(origin + path).then(r => r.json()),
+    post: (path, body) =>
+      fetch(origin + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
+        body: JSON.stringify(body),
+      }).then(r => r.json()),
+  };
+}
+const CHILD = { id: 'ID-1', name: 'Copil', dueDay: 10, status: 'Activ' };
+
+test('Backupul automat este rărit; cel dinaintea unui import rămâne obligatoriu', async t => {
+  const app = await startApplication(t, 'startica-debounce-', { autoBackupIntervalMs: 300000 });
+  const automatic = () => readdirSync(app.backupDir).filter(n => n.includes('_automat_')).length;
+
+  let revision = 0;
+  for (let n = 0; n < 5; n++) {
+    const result = await app.post('/api/record', {
+      type: 'children',
+      mode: n === 0 ? 'create' : 'update',
+      record: { ...CHILD, phone: String(n) },
+      revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(result.ok, true, result.error);
+    revision = result.revision;
+  }
+  assert.equal(revision, 5, 'Toate cele cinci salvări sunt confirmate.');
+  // Prima scriere copiază baza, fiindcă nu există încă nicio copie; următoarele
+  // patru intră în interval. Înainte de debounce erau cinci copii.
+  assert.equal(automatic(), 1, 'Numărul de backupuri automate nu crește cu numărul de salvări.');
+
+  const imported = await app.post('/api/import', {
+    state: { children: [CHILD], payments: [], expenses: [] },
+    confirm: 'IMPORT',
+    revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(imported.ok, true, imported.error);
+  assert.ok(
+    readdirSync(app.backupDir).some(n => n.includes('inainte-import')),
+    'Copia dinaintea importului nu depinde de interval.',
+  );
+});
+
+test('Dispariția folderului extern este raportată de starea aplicației, nu la următorul backup', async t => {
+  const app = await startApplication(t, 'startica-extern-', { autoBackupIntervalMs: 300000 });
+  const external = join(app.dir, 'extern');
+  mkdirSync(external);
+  const configured = await app.post('/api/settings', { externalDir: external });
+  assert.equal(configured.ok, true, configured.error);
+  assert.equal((await app.get('/api/health')).externalError, '', 'Cât timp folderul există, nu există eroare.');
+
+  rmSync(external, { recursive: true, force: true });
+  assert.match(
+    (await app.get('/api/health')).externalError,
+    /nu este disponibil/,
+    'Problema este vizibilă imediat, fără să aștepte un backup.',
+  );
+});
+
+test('Un backup eșuat se reîncearcă la următoarea salvare, fără să aștepte intervalul', async t => {
+  const app = await startApplication(t, 'startica-retry-', { autoBackupIntervalMs: 300000 });
+  const external = join(app.dir, 'extern');
+  mkdirSync(external);
+  assert.equal((await app.post('/api/settings', { externalDir: external })).ok, true);
+  rmSync(external, { recursive: true, force: true });
+
+  // Backupul manual nu este rărit: consemnează eroarea externă.
+  const manual = await app.post('/api/backup', {});
+  assert.match(manual.warning, /extern/);
+
+  // Salvarea următoare este în interval, dar eroarea cunoscută forțează o
+  // nouă încercare, ca utilizatorul să nu creadă că problema s-a rezolvat.
+  const saved = await app.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: CHILD,
+    revision: 0,
+    requestId: randomUUID(),
+  });
+  assert.equal(saved.ok, true, saved.error);
+  assert.match(saved.warning, /extern/, 'Eroarea persistă pe răspunsul salvării.');
+});
+
+test('O modificare urmată de inactivitate primește totuși o copie, în afara cererii', async t => {
+  const app = await startApplication(t, 'startica-amanat-', { autoBackupIntervalMs: 150 });
+  const automatic = () => readdirSync(app.backupDir).filter(n => n.includes('_automat_')).length;
+
+  const first = await app.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: CHILD,
+    revision: 0,
+    requestId: randomUUID(),
+  });
+  assert.equal(first.ok, true, first.error);
+  const second = await app.post('/api/record', {
+    type: 'children',
+    mode: 'update',
+    record: { ...CHILD, phone: '123' },
+    revision: first.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(second.ok, true, second.error);
+  const afterWrites = automatic();
+
+  // Fără alte cereri: copia amânată trebuie să apară singură.
+  await new Promise(r => setTimeout(r, 600));
+  assert.ok(automatic() > afterWrites, `Copia amânată nu a fost creată (înainte ${afterWrites}, după ${automatic()}).`);
 });

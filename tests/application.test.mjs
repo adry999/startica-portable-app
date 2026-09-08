@@ -128,7 +128,10 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   const dir = mkdtempSync(join(tmpdir(), 'startica-test-')),
     dataDir = join(dir, 'data'),
     backupDir = join(dir, 'backups');
-  const app = createApplication({ dataDir, backupDir });
+  // autoBackupIntervalMs: 0 => backup după fiecare scriere, ca înainte de
+  // introducerea debounce-ului. Testul verifică mai jos că eșecul copiei locale
+  // și al celei externe ajunge la utilizator ca avertizare pe răspunsul salvării.
+  const app = createApplication({ dataDir, backupDir, autoBackupIntervalMs: 0 });
   await new Promise(r => app.server.listen(0, '127.0.0.1', r));
   const origin = `http://127.0.0.1:${app.server.address().port}`;
   t.after(async () => {
