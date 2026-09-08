@@ -264,24 +264,40 @@ export function dueDayFor(child) {
   const fromContract = Number(child.contractDate?.slice(8, 10));
   return fromContract >= 1 && fromContract <= 31 ? fromContract : child.dueDay || 10;
 }
-export function obligation(child, month, payments, asOf = today()) {
+// Cât s-a încasat, pe copil și pe lună, calculat o singură dată. Fără index,
+// obligation() reciteşte toate plățile pentru fiecare copil, deci un tabel cu
+// N copii și M plăți costă N×M. asOf nedefinit înseamnă „fără limită de dată”.
+export function paymentIndex(payments, asOf) {
+  const index = new Map();
+  for (const p of payments) {
+    if (p.archived || !p.childId || (asOf && p.date > asOf)) continue;
+    let months = index.get(p.childId);
+    if (!months) index.set(p.childId, (months = new Map()));
+    for (const a of allocations(p)) months.set(a.month, (months.get(a.month) || 0) + cents(a.amount));
+  }
+  return index;
+}
+// `index` este opțional: dacă lipsește, se calculează pe loc, ca apelurile
+// izolate (un singur copil, o singură lună) să rămână simple.
+export function obligation(child, month, payments, asOf = today(), index = null) {
   const start = child.attendanceDate?.slice(0, 7),
     end = child.withdrawalDate?.slice(0, 7);
   const history = [...(child.statusHistory || [])]
     .sort((a, b) => a.from.localeCompare(b.from))
     .filter(r => r.from <= month);
   const status = history.at(-1)?.status || (!child.statusHistory?.length && child.status === 'Activ' ? 'Activ' : null);
-  const paid =
-    payments
-      .filter(p => !p.archived && p.childId === child.id && p.date <= asOf)
-      .reduce(
-        (sum, p) =>
-          sum +
-          allocations(p)
-            .filter(a => a.month === month)
-            .reduce((n, a) => n + cents(a.amount), 0),
-        0,
-      ) / 100;
+  const paid = index
+    ? (index.get(child.id)?.get(month) || 0) / 100
+    : payments
+        .filter(p => !p.archived && p.childId === child.id && p.date <= asOf)
+        .reduce(
+          (sum, p) =>
+            sum +
+            allocations(p)
+              .filter(a => a.month === month)
+              .reduce((n, a) => n + cents(a.amount), 0),
+          0,
+        ) / 100;
   const inactive = (start && month < start) || (end && month > end) || status === 'Suspendat' || status === 'Retras';
   const fees = [...(child.feeHistory || [])].sort((a, b) => a.from.localeCompare(b.from));
   // A current fee without an effective date must never be applied to past months.

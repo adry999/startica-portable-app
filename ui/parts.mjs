@@ -4,7 +4,7 @@ import { session } from './session.mjs';
 
 export const PAGE_SIZE = 100;
 // Pagina curentă a fiecărei liste. Resetată când se schimbă filtrele.
-export const pages = { children: 0, payments: 0, expenses: 0, review: 0 };
+export const pages = { children: 0, payments: 0, expenses: 0, review: 0, status: 0 };
 
 export function pageRows(type, rows) {
   const lastPage = Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1);

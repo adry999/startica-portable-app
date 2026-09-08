@@ -1,4 +1,4 @@
-import { cents, allocations, obligation } from './domain.mjs';
+import { cents, allocations, obligation, paymentIndex } from './domain.mjs';
 
 const strip = v =>
   String(v || '')
@@ -53,20 +53,6 @@ const nameTokens = value =>
   strip(value)
     .split(/[^a-z0-9]+/)
     .filter(t => t.length >= 3 && !NOISE.has(t) && !/^\d+$/.test(t));
-
-// Cât a încasat fiecare copil pe fiecare lună, calculat o singură dată.
-// Fără indexul ăsta, evaluarea a 578 de achitări față de 105 copii ar reciti
-// toate plățile de fiecare dată.
-function paidIndex(payments) {
-  const index = new Map();
-  for (const p of payments) {
-    if (p.archived || !p.childId) continue;
-    let months = index.get(p.childId);
-    if (!months) index.set(p.childId, (months = new Map()));
-    for (const a of allocations(p)) months.set(a.month, (months.get(a.month) || 0) + cents(a.amount));
-  }
-  return index;
-}
 
 const feeFor = (child, month) =>
   [...(child.feeHistory || [])]
@@ -141,7 +127,7 @@ export function unassignedPayments(state, limit = 200) {
     .filter(p => !p.archived && !p.childId)
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit);
-  const index = paidIndex(state.payments);
+  const index = paymentIndex(state.payments);
   return open.map(payment => ({ payment, suggestions: suggestChildren(payment, state.children, index) }));
 }
 

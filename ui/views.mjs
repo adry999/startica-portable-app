@@ -1,4 +1,4 @@
-import { today, cents, obligation, cashSummary, allocations } from '../domain.mjs';
+import { today, cents, obligation, paymentIndex, cashSummary, allocations } from '../domain.mjs';
 import { reviewCenter, filteredReviewItems } from '../review-center.mjs';
 import { $, esc, money, date, time } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
@@ -164,7 +164,7 @@ export function renderList(type) {
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────
 
-function renderDashboard(month, cash, review) {
+function renderDashboard(month, cash, review, index) {
   $('incomeStat').textContent = money(cash.income);
   $('expenseStat').textContent = money(cash.expense);
   $('netStat').textContent = money(cash.net);
@@ -180,7 +180,7 @@ function renderDashboard(month, cash, review) {
   );
   $('reviewCount').textContent = review.items.length;
   const toNotify = session.state.children.filter(
-    c => !c.archived && obligation(c, month, session.state.payments).notify,
+    c => !c.archived && obligation(c, month, session.state.payments, today(), index).notify,
   ).length;
   $('alerts').innerHTML =
     `<p><strong>${toNotify}</strong> copii de notificat pentru achitare.</p>` +
@@ -203,12 +203,12 @@ function renderDashboard(month, cash, review) {
     .join('');
 }
 
-function renderStatus(month) {
+function renderStatus(month, index) {
   $('statusPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
   $('statusTable').innerHTML =
-    session.state.children
+    pageRows('status', session.state.children)
       .map(c => {
-        const o = obligation(c, month, session.state.payments);
+        const o = obligation(c, month, session.state.payments, today(), index);
         return (
           `<tr><td>${esc(contractOf(c))}</td><td>${esc(c.name)}${c.archived ? ' (arhivat)' : ''}</td>` +
           `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td>${money(o.rest)}</td><td>${money(o.credit)}</td>` +
@@ -227,10 +227,11 @@ function termLabel(days) {
   return `în ${days} ${days === 1 ? 'zi' : 'zile'}`;
 }
 
-function renderNotify(month) {
+function renderNotify(month, index) {
+  const evaluate = c => obligation(c, month, session.state.payments, today(), index);
   const rows = session.state.children
     .filter(c => !c.archived)
-    .map(c => ({ child: c, o: obligation(c, month, session.state.payments) }))
+    .map(c => ({ child: c, o: evaluate(c) }))
     .filter(r => r.o.notify)
     // Cea mai veche întârziere prima: aia costă cel mai mult dacă mai așteaptă.
     .sort((a, b) => a.o.daysToDue - b.o.daysToDue || a.child.name.localeCompare(b.child.name, 'ro'));
@@ -240,9 +241,7 @@ function renderNotify(month) {
   const owed = rows.reduce((sum, r) => sum + cents(r.o.rest), 0) / 100;
   // Fișele fără taxă sau fără perioadă confirmată nu pot fi evaluate deloc;
   // fără cifra asta, un „0 de notificat” ar părea liniștitor pe nedrept.
-  const unknown = session.state.children.filter(
-    c => !c.archived && obligation(c, month, session.state.payments).label === 'De verificat',
-  ).length;
+  const unknown = session.state.children.filter(c => !c.archived && evaluate(c).label === 'De verificat').length;
 
   $('notifyCount').textContent = rows.length;
   $('notifyPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
@@ -285,10 +284,12 @@ export function render() {
   const month = selectedMonth(),
     cash = cashSummary(session.state, month),
     review = reviewCenter(session.state);
-  renderDashboard(month, cash, review);
+  // Un singur index de încasări pentru toate ecranele randării curente.
+  const index = paymentIndex(session.state.payments, today());
+  renderDashboard(month, cash, review, index);
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
-  renderStatus(month);
-  renderNotify(month);
+  renderStatus(month, index);
+  renderNotify(month, index);
   renderFees();
   renderAssign();
   renderGroups();
