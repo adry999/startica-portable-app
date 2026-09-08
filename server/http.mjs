@@ -48,6 +48,14 @@ export function send(res, value, status = 200, mime = 'application/json; charset
 
 export const isStatic = path => Object.hasOwn(STATIC_FILES, path);
 
+// Modulele interfeței, servite după nume, nu după cale: tiparul nu permite
+// punct sau bară, deci nu există traversare de directoare.
+const MODULE_PATH = /^\/ui\/[a-z0-9-]+\.mjs$/;
+export const isModule = path => MODULE_PATH.test(path);
+export function sendModule(res, root, path) {
+  return send(res, readFileSync(join(root, path)), 200, 'text/javascript; charset=utf-8');
+}
+
 export function sendStatic(res, root, path) {
   return send(res, readFileSync(join(root, STATIC_FILES[path])), 200, mimeFor(path));
 }

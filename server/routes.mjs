@@ -5,7 +5,7 @@ import { previewChildrenCSV } from '../children-csv.mjs';
 import { financialImportPlan } from '../financial-import.mjs';
 import { snapshotState } from './backups.mjs';
 import { fail } from './util.mjs';
-import { send, isStatic, sendStatic, readJson, guardRequest, guardWrite } from './http.mjs';
+import { send, isStatic, sendStatic, isModule, sendModule, readJson, guardRequest, guardWrite } from './http.mjs';
 
 // Handlerul a răspuns singur; nu se mai trimite nimic.
 const HANDLED = Symbol('handled');
@@ -154,6 +154,7 @@ export function createRouter(context) {
         path = url.pathname;
       if (req.method === 'GET') {
         if (isStatic(path)) return sendStatic(res, root, path);
+        if (isModule(path)) return sendModule(res, root, path);
         if (Object.hasOwn(read, path)) return send(res, read[path](url));
       }
       if (req.method !== 'POST') fail('Pagina nu există.', 404);
