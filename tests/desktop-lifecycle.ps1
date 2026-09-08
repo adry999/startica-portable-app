@@ -23,8 +23,15 @@ function Wait-Condition([scriptblock]$Condition, [string]$Message) {
 try {
     $files = Get-ChildItem -LiteralPath $source -File | Where-Object { $_.Extension -in @('.mjs','.js','.html','.css','.cmd') -or $_.Name -eq 'startica_desktop.ps1' }
     foreach ($file in $files) { Copy-Item -LiteralPath $file.FullName -Destination $testDirectory }
-    Copy-Item -LiteralPath (Join-Path $source 'assets') -Destination (Join-Path $testDirectory 'assets') -Recurse
-    $arguments = '/d /c ""' + (Join-Path $testDirectory 'Porneste_Startica.cmd') + '" -Port ' + $port + '"'
+    # Modulele serverului si ale interfetei stau in subdirectoare; fara ele
+    # startica_server.mjs nu porneste.
+    foreach ($folder in @('assets','server','ui')) {
+        Copy-Item -LiteralPath (Join-Path $source $folder) -Destination (Join-Path $testDirectory $folder) -Recurse
+    }
+    # Profilul se trece explicit: altfel testul ar scrie in profilul real din
+    # %LOCALAPPDATA% si ar inchide ferestrele Startica ale utilizatorului.
+    $arguments = '/d /c ""' + (Join-Path $testDirectory 'Porneste_Startica.cmd') + '" -Port ' + $port +
+        ' -ProfileDirectory "' + $profile + '""'
     $controllers += Start-Process -FilePath 'cmd.exe' -ArgumentList $arguments -WindowStyle Hidden -PassThru
     if (-not $controllers[-1].WaitForExit(5000)) { throw 'Terminalul lansatorului a ramas blocat.' }
     if ($controllers[-1].ExitCode -ne 0) { throw 'Lansatorul CMD a esuat.' }

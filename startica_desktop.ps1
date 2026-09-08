@@ -1,9 +1,22 @@
-param([switch]$Stop, [switch]$CheckOnly, [ValidateRange(1,65535)][int]$Port = 8765)
+param([switch]$Stop, [switch]$CheckOnly, [ValidateRange(1,65535)][int]$Port = 8765, [string]$ProfileDirectory)
 $ErrorActionPreference = 'Stop'
 $appDirectory = $PSScriptRoot
 $address = 'http://127.0.0.1:' + $Port
 $expectedDatabase = [IO.Path]::GetFullPath((Join-Path $appDirectory 'Startica_Date\startica.db'))
-$profileDirectory = Join-Path $appDirectory 'Interfata'
+# Profilul de browser al ferestrei aplicatiei contine cookies, istoric si date
+# de autentificare. Nu are ce cauta langa cod: folderul aplicatiei este copiat,
+# arhivat si trimis mai departe. Amprenta caii pastreaza copiile separate, ca
+# doua instalari sa nu foloseasca acelasi profil.
+# SHA256::HashData exista doar in .NET 5+; Porneste_Startica.cmd ruleaza
+# powershell.exe (5.1, .NET Framework), deci se foloseste instanta.
+$sha = [Security.Cryptography.SHA256]::Create()
+try {
+    $appIdentity = [BitConverter]::ToString(
+        $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($appDirectory.ToLowerInvariant()))
+    ).Replace('-','').Substring(0, 16)
+} finally { $sha.Dispose() }
+if ($ProfileDirectory) { $profileDirectory = $ProfileDirectory }
+else { $profileDirectory = Join-Path $env:LOCALAPPDATA ('Startica\Interfata_' + $appIdentity) }
 $ownsMutex = $false
 $mutex = $null
 function Get-StarticaHealth {
@@ -42,10 +55,7 @@ try {
         [pscustomobject]@{ Node = $nodePath; Browser = $browserPath; Application = $appDirectory; URL = $address; AutoStop = $true; InterfaceProfile = $profileDirectory } | ConvertTo-Json -Compress | Write-Output
         exit 0
     }
-    $sha = [Security.Cryptography.SHA256]::Create()
-    try { $identity = [BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($appDirectory.ToLowerInvariant()))).Replace('-','') }
-    finally { $sha.Dispose() }
-    $mutex = New-Object Threading.Mutex($false, ('Local\Startica_' + $identity))
+    $mutex = New-Object Threading.Mutex($false, ('Local\Startica_' + $appIdentity))
     try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $ownsMutex = $true }
     if (-not $ownsMutex) {
         $available = $false
@@ -71,7 +81,8 @@ try {
         }
         if (-not $available) { throw ('Pornirea dureaza prea mult. Verifica jurnalele din ' + $logDirectory) }
     }
-    # Dedicated interface profile; financial data stays in SQLite.
+    New-Item -ItemType Directory -Path $profileDirectory -Force | Out-Null
+    # Profil separat pentru fereastra aplicatiei; evidenta ramane in SQLite.
     $browserArguments = @(
         ('--app=' + $address), ('--user-data-dir="' + $profileDirectory + '"'),
         '--new-window', '--no-first-run', '--no-default-browser-check',
