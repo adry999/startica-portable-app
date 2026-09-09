@@ -1,10 +1,7 @@
 import { cents, allocations, obligation, paymentIndex } from './domain.mjs';
+import { stripDiacritics } from './text.mjs';
 
-const strip = v =>
-  String(v || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+const strip = v => stripDiacritics(v).toLowerCase();
 // Cuvinte care apar în textul sursei fără să fie nume: luni, metode, note.
 const NOISE = new Set([
   'ianuarie',
