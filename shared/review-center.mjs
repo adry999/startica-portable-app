@@ -18,7 +18,7 @@ function category(issue, record) {
   if (text.includes('posibil duplicat')) return 'duplicate';
   if (record?.importSource?.provisionalAmount || text.includes('provizori') || text.includes('metodă mixtă'))
     return 'provisional';
-  if (text.includes('potrivire automată')) return 'automatic';
+  if (record?.importSource?.autoMatched || text.includes('potrivire automată')) return 'automatic';
   if (text.includes('avans nerepartizat')) return 'advance';
   return 'all';
 }

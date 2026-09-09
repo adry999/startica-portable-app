@@ -417,3 +417,78 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
   });
   assert.ok(bad.error, 'Asocierea către un copil inexistent este respinsă.');
 });
+
+test('Normalizarea păstrează fiecare câmp real și elimină restul', () => {
+  // Lista provine din inventarul bazei reale: 105 fișe, 810 achitări, 1201
+  // cheltuieli. Dacă unul dintre câmpurile astea ar fi eliminat, restaurarea
+  // unui backup vechi ar pierde date în tăcere.
+  const real = {
+    children: {
+      id: 'CSV-1',
+      contractNumber: '1',
+      name: 'Copil',
+      parent: 'P1',
+      phone: '060',
+      parent2: 'P2',
+      phone2: '061',
+      birthDate: '2020-01-02',
+      contractDate: '2024-11-14',
+      attendanceDate: '2024-12-02',
+      withdrawalDate: '2026-01-05',
+      status: 'Activ',
+      group: 'Mica',
+      fee: 2000,
+      feeHistory: [{ from: '2024-12', amount: 2000 }],
+      statusHistory: [{ from: '2024-12', status: 'Activ' }],
+      dueDay: 14,
+      notes: 'observatii',
+      verification: 'OK',
+      archived: false,
+      archivedAt: '',
+    },
+    payments: {
+      id: 'PAY-1',
+      date: '2026-09-01',
+      childId: 'CSV-1',
+      childName: 'Copil',
+      sourceName: 'sursa',
+      sourceChildId: 'ID-9',
+      group: 'Mica',
+      method: 'Cash',
+      amount: 2000,
+      allocations: [{ month: '2026-09', amount: 2000 }],
+      month: '2026-09',
+      type: 'lunar',
+      notes: 'n',
+      verification: 'OK',
+      original: 'text sursa',
+      reviewed: true,
+      importSource: { kind: 'v5-financial', recordId: 'X' },
+      archived: false,
+      archivedAt: '',
+    },
+    expenses: {
+      id: 'EXP-1',
+      date: '2026-09-01',
+      category: 'Altele',
+      description: 'd',
+      amount: 10,
+      notes: 'n',
+      importSource: { kind: 'v5-financial', recordId: 'Y' },
+      archived: false,
+      archivedAt: '',
+    },
+  };
+  for (const [type, record] of Object.entries(real)) {
+    const clean = normalizeRecord(type, record);
+    for (const field of Object.keys(record))
+      assert.ok(field in clean, `${type}: câmpul ${field} a fost eliminat, deși există în datele reale`);
+  }
+
+  // Ce nu e în model nu mai ajunge în bază.
+  const withJunk = normalizeRecord('children', { ...real.children, campNecunoscut: { a: 1 }, altceva: 'x' });
+  assert.ok(!('campNecunoscut' in withJunk));
+  assert.ok(!('altceva' in withJunk));
+  // Un câmp al altui tip nu trece nici el.
+  assert.ok(!('tenders' in normalizeRecord('expenses', { ...real.expenses, tenders: [] })));
+});

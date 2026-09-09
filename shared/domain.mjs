@@ -47,12 +47,77 @@ function amount(v, field, zero = false) {
     `${field}: folosește o sumă validă, cu cel mult doi zecimali.`,
   );
 }
+// Câmpurile pe care le poate avea o înregistrare, per tip. Orice altceva se
+// elimină la normalizare: până acum, un câmp trimis o singură dată rămânea în
+// bază pentru totdeauna, intra în exportul Excel și apărea în jurnalul de
+// modificări, fără ca nimic să îl explice. Lista este și documentația modelului.
+const FIELDS = {
+  children: new Set([
+    'id',
+    'name',
+    'contractNumber',
+    'parent',
+    'phone',
+    'parent2',
+    'phone2',
+    'birthDate',
+    'contractDate',
+    'attendanceDate',
+    'withdrawalDate',
+    'group',
+    'status',
+    'statusHistory',
+    'fee',
+    'feeHistory',
+    'dueDay',
+    'notes',
+    'verification',
+    'archived',
+    'archivedAt',
+  ]),
+  payments: new Set([
+    'id',
+    'date',
+    'childId',
+    'childName',
+    'sourceName',
+    // Pus de importul V5 când plata trimite la un copil care nu există în
+    // fișier; păstrează proveniența pentru asocierea manuală de mai târziu.
+    'sourceChildId',
+    'group',
+    'month',
+    'method',
+    'tenders',
+    'amount',
+    'allocations',
+    'type',
+    'notes',
+    'verification',
+    'original',
+    'reviewed',
+    'importSource',
+    'archived',
+    'archivedAt',
+  ]),
+  expenses: new Set([
+    'id',
+    'date',
+    'category',
+    'description',
+    'amount',
+    'notes',
+    'importSource',
+    'archived',
+    'archivedAt',
+  ]),
+};
 export function normalizeRecord(type, input) {
   requireThat(
     TYPES.includes(type) && input && typeof input === 'object' && !Array.isArray(input),
     'Înregistrare invalidă.',
   );
   const r = structuredClone(input);
+  for (const key of Object.keys(r)) if (!FIELDS[type].has(key)) delete r[key];
   requireThat(typeof r.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(r.id), 'ID invalid.');
   if (r.archived !== undefined) requireThat(typeof r.archived === 'boolean', 'Arhivare invalidă.');
   for (const field of [
@@ -228,7 +293,7 @@ export function issues(s) {
   const fingerprints = new Map();
   for (const p of s.payments.filter(r => !r.archived)) {
     if (!p.childId) add('payments', p, 'Copil neasociat');
-    if ((p.allocations || []).reduce((n, a) => n + cents(a.amount), 0) < cents(p.amount))
+    if (allocations(p).reduce((n, a) => n + cents(a.amount), 0) < cents(p.amount))
       add('payments', p, 'Avans nerepartizat');
     if (p.verification && !/^OK$/i.test(p.verification.trim()) && !p.reviewed)
       add('payments', p, `Verificare import: ${p.verification}`);
@@ -253,7 +318,7 @@ export function paymentTenders(p) {
   return p.tenders ?? [{ method: p.method || 'Cash', amount: p.amount || 0 }];
 }
 // Cu câte zile înainte de scadență apare copilul pe lista de notificat.
-export const NOTICE_DAYS = 3;
+const NOTICE_DAYS = 3;
 // Ora fixă la prânz UTC: aritmetica pe zile nu este afectată de ora de vară.
 const shiftDays = (day, delta) =>
   new Date(new Date(day + 'T12:00:00Z').getTime() + delta * 86400000).toISOString().slice(0, 10);
@@ -300,7 +365,7 @@ export function obligation(child, month, payments, asOf = today(), index = null)
         ) / 100;
   const inactive = (start && month < start) || (end && month > end) || status === 'Suspendat' || status === 'Retras';
   const fees = [...(child.feeHistory || [])].sort((a, b) => a.from.localeCompare(b.from));
-  // A current fee without an effective date must never be applied to past months.
+  // O taxă curentă fără dată de aplicare nu se aplică niciodată lunilor trecute.
   const fee = fees.filter(f => f.from <= month).at(-1)?.amount ?? null;
   const unknown = !inactive && (!start || !status || fee === null);
   const expected = inactive ? 0 : unknown ? null : fee;

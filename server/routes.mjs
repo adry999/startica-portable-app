@@ -215,6 +215,11 @@ export function createRouter(context) {
       const result = write[path](body, url, res);
       if (result !== HANDLED) send(res, result);
     } catch (e) {
+      // A doua scriere ar arunca ERR_HTTP_HEADERS_SENT dacă antetele au plecat deja.
+      if (res.headersSent) {
+        console.error('Eroare după trimiterea răspunsului: ' + e.message);
+        return;
+      }
       send(res, { error: e.message }, e.status || 400);
     }
   };

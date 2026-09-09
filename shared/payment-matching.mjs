@@ -3,7 +3,7 @@ import { cents, allocations, obligation, paymentIndex } from './domain.mjs';
 const strip = v =>
   String(v || '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 // Cuvinte care apar în textul sursei fără să fie nume: luni, metode, note.
 const NOISE = new Set([
@@ -136,7 +136,11 @@ export function unassignedPayments(state, limit = 200) {
 export function assignmentRisk(state, month, asOf) {
   const unassigned = state.payments.filter(p => !p.archived && !p.childId);
   const covering = unassigned.filter(p => allocations(p).some(a => a.month === month));
-  const notified = state.children.filter(c => !c.archived && obligation(c, month, state.payments, asOf).notify).length;
+  // Rulează la fiecare randare a aplicației — indexul evită O(copii×plăți).
+  const index = paymentIndex(state.payments, asOf);
+  const notified = state.children.filter(
+    c => !c.archived && obligation(c, month, state.payments, asOf, index).notify,
+  ).length;
   return {
     unassigned: unassigned.length,
     coveringMonth: covering.length,

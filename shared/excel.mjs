@@ -6,6 +6,7 @@ import {
   allocations,
   paymentTenders,
   CHILD_STATUSES,
+  TYPES,
 } from './domain.mjs';
 // Coloana de statut din V5 este text liber. Orice valoare pe care aplicația nu
 // o poate interpreta devine „De verificat”, cu textul original păstrat în
@@ -68,7 +69,7 @@ export function readWorkbook(workbook, XLSX) {
     for (const name of ['Copii', 'Achitari', 'Cheltuieli'])
       if (!workbook.Sheets[name]) errors.push(`Lipsește fila ${name}.`);
     if (errors.length) return { errors, warnings };
-    // V5 starts data on row 5. A native/unknown export must never be interpreted as V5.
+    // V5 începe datele pe rândul 5. Un export nativ/necunoscut nu trebuie interpretat greșit ca V5.
     if (
       !String(rows('Copii')[3]?.[0] || '')
         .toLowerCase()
@@ -243,12 +244,11 @@ export function exportWorkbook(state, XLSX) {
     'Startica_Format',
   );
   const raw = [['Tip', 'ID', 'Fragment', 'Date complete']];
-  for (const type of Object.keys(state))
-    if (['children', 'payments', 'expenses'].includes(type))
-      for (const r of state[type]) {
-        const json = JSON.stringify(r);
-        for (let i = 0; i < json.length; i += 16000) raw.push([type, r.id, i / 16000, json.slice(i, i + 16000)]);
-      }
+  for (const type of TYPES)
+    for (const r of state[type]) {
+      const json = JSON.stringify(r);
+      for (let i = 0; i < json.length; i += 16000) raw.push([type, r.id, i / 16000, json.slice(i, i + 16000)]);
+    }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raw), 'Startica_Date');
   return wb;
 }

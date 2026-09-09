@@ -2,6 +2,9 @@ import { TYPES, emptyState } from '../shared/domain.mjs';
 import { fail, hash } from './util.mjs';
 
 const REQUEST_ID = /^[a-zA-Z0-9-]{10,100}$/;
+// requests ține idempotența pentru cazul unei reluări după o cădere de rețea:
+// nu are nevoie să crească la nesfârșit, deci se rărește la fiecare scriere.
+const REQUEST_RETENTION = 1000;
 
 export function createStore({ db, backups }) {
   function readState() {
@@ -69,6 +72,7 @@ export function createStore({ db, backups }) {
       fn();
       db.prepare('UPDATE meta SET revision=revision+1,updated_at=? WHERE id=1').run(new Date().toISOString());
       db.prepare('INSERT INTO requests VALUES(?,?,?)').run(body.requestId, digest, body.revision + 1);
+      db.prepare('DELETE FROM requests WHERE revision<?').run(body.revision + 1 - REQUEST_RETENTION);
       db.exec('COMMIT');
     } catch (e) {
       db.exec('ROLLBACK');

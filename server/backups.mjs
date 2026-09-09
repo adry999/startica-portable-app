@@ -58,6 +58,18 @@ function fileList(dir) {
     .sort((a, b) => b.modified.localeCompare(a.modified));
 }
 
+// Copiile dinaintea unei operațiuni ireversibile nu expiră niciodată (vezi
+// retentionKeep) — nimeni nu le șterge automat, deci utilizatorul trebuie să
+// poată vedea cât cresc, ca să decidă singur când face curățenie manuală.
+function permanentBackupsSummary(dir) {
+  try {
+    const files = readdirSync(dir).filter(n => BACKUP_NAME.test(n) && /inainte-|migrare/.test(n));
+    return { count: files.length, bytes: files.reduce((sum, n) => sum + statSync(join(dir, n)).size, 0) };
+  } catch {
+    return { count: 0, bytes: 0 };
+  }
+}
+
 // Un backup întrerupt (cădere de curent, disc plin) lasă în urmă un fișier
 // .db.tmp de dimensiunea bazei. fileList() nu îl vede, deci retenția nu îl
 // atinge niciodată.
@@ -206,6 +218,7 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
       localError: setting('localError'),
       externalError: externalFailure(),
       cloudVerified: false,
+      permanentBackups: permanentBackupsSummary(backupDir),
     };
   }
 

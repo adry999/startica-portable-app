@@ -67,6 +67,8 @@ export function createApplication(options = {}) {
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const port = Number(process.env.STARTICA_PORT || 8765);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Port Startica invalid.');
+  // Implicit ar opri tot procesul, pierzând fereastra fără explicație.
+  process.on('unhandledRejection', e => console.error('Respingere netratată: ' + (e?.stack || e)));
   const app = createApplication({ allowShutdown: true });
   app.server.on('error', e => {
     console.error(

@@ -27,8 +27,9 @@ const headers = {
   age: ['Varsta'],
 };
 
-// Strict CSV parsing for the application (not an Excel conversion). Keep phones
-// and contract numbers as text; support quoted delimiters/newlines and UTF-8 BOM.
+// Parsare CSV strictă pentru aplicație (nu o conversie Excel). Telefoanele și
+// numerele de contract rămân text; sunt suportate delimitatori/linii noi între
+// ghilimele și BOM UTF-8.
 export function csvRows(text) {
   if (typeof text !== 'string' || !text.trim()) throw Error('CSV gol.');
   if (text.length > 2000000) throw Error('CSV prea mare (maximum 2 MB).');

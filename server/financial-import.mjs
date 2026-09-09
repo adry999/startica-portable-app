@@ -15,7 +15,7 @@ const contractKey = v =>
     .replace(/^0+(?=\d)/, '')
     .toUpperCase();
 
-// Add-only V5 financial import. Children and existing operations are never edited.
+// Import financiar V5, doar adăugare. Copiii și operațiunile existente nu se modifică niciodată.
 export function financialImportPlan(input, current) {
   if (
     input?.format !== 'STARTICA_V5' ||
@@ -87,6 +87,7 @@ export function financialImportPlan(input, current) {
         recordDigest: sourceDigest,
         childId: original.childId || '',
         provisionalAmount: provisional,
+        autoMatched: type === 'payments' && /potrivire automat[ăa]/i.test(r.verification || ''),
       };
       additions[type].push(normalizeRecord(type, r));
     }

@@ -3,9 +3,8 @@ import { join } from 'node:path';
 import { fail } from './util.mjs';
 
 const CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-  "font-src 'self' https://fonts.gstatic.com; connect-src 'self'; object-src 'none'; base-uri 'none'; " +
-  "frame-ancestors 'none'";
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; " +
+  "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
 const MAX_BODY_BYTES = 20000000;
 
 // Singurele fișiere pe care serverul le livrează. Lista explicită înlocuiește
@@ -18,16 +17,22 @@ const STATIC_FILES = {
   '/vendor/xlsx.full.min.js': 'web/vendor/xlsx.full.min.js',
   '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',
   '/assets/startica-icon.svg': 'web/assets/startica-icon.svg',
+  '/assets/fonts/baloo2-latin.woff2': 'web/assets/fonts/baloo2-latin.woff2',
+  '/assets/fonts/baloo2-latin-ext.woff2': 'web/assets/fonts/baloo2-latin-ext.woff2',
+  '/assets/fonts/nunito-latin.woff2': 'web/assets/fonts/nunito-latin.woff2',
+  '/assets/fonts/nunito-latin-ext.woff2': 'web/assets/fonts/nunito-latin-ext.woff2',
 };
 
 const mimeFor = path =>
   path.endsWith('.svg')
     ? 'image/svg+xml'
-    : path.endsWith('.css')
-      ? 'text/css; charset=utf-8'
-      : path.endsWith('.js') || path.endsWith('.mjs')
-        ? 'text/javascript; charset=utf-8'
-        : 'text/html; charset=utf-8';
+    : path.endsWith('.woff2')
+      ? 'font/woff2'
+      : path.endsWith('.css')
+        ? 'text/css; charset=utf-8'
+        : path.endsWith('.js') || path.endsWith('.mjs')
+          ? 'text/javascript; charset=utf-8'
+          : 'text/html; charset=utf-8';
 
 export function send(res, value, status = 200, mime = 'application/json; charset=utf-8') {
   const content = Buffer.isBuffer(value)

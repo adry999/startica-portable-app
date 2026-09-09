@@ -4,7 +4,7 @@ Pornește din scurtătura **Startica** (sau `Porneste_Startica.vbs`): Startica s
 
 La închiderea ultimei ferestre Startica pornite prin noul lansator, serverul se oprește automat și încearcă un backup final. `Opreste_Startica.vbs` rămâne o opțiune de rezervă dacă supravegherea ferestrei nu funcționează. Înainte să închizi, așteaptă confirmarea salvării. Formularele modificate și salvările neconfirmate declanșează avertizarea browserului la închidere.
 
-Fereastra Startica folosește un profil de browser separat, fără acces la taburile și extensiile personale Chrome. Profilul se află în `%LOCALAPPDATA%Startica`, nu în folderul aplicației: conține cookies și date de autentificare, iar folderul aplicației este copiat și arhivat. Conține preferințe și cache pentru interfață, nu baza evidenței; poate fi șters oricând, se recreează la pornire. Vechiul folder `Interfata` din aplicație nu mai este folosit și poate fi șters. Dacă sunt deschise două ferestre Startica, serverul rămâne pornit până la închiderea ultimei. O oprire forțată a Windows poate împiedica backupul final; fiecare salvare confirmată este deja scrisă în SQLite. Erorile de pornire se găsesc în `Jurnale`.
+Fereastra Startica folosește un profil de browser separat, fără acces la taburile și extensiile personale Chrome. Profilul se află în `%LOCALAPPDATA%\Startica`, nu în folderul aplicației: conține cookies și date de autentificare, iar folderul aplicației este copiat și arhivat. Conține preferințe și cache pentru interfață, nu baza evidenței; poate fi șters oricând, se recreează la pornire. Vechiul folder `Interfata` din aplicație nu mai este folosit și poate fi șters. Dacă sunt deschise două ferestre Startica, serverul rămâne pornit până la închiderea ultimei. O oprire forțată a Windows poate împiedica backupul final; fiecare salvare confirmată este deja scrisă în SQLite. Erorile de pornire se găsesc în `Jurnale`.
 
 Aceasta este interfața locală afișată în modul aplicație al Chrome/Edge, nu un program Windows nativ instalat. Datele rămân în SQLite pe calculator. Pentru depanare, aceeași interfață poate fi accesată la http://127.0.0.1:8765.
 
@@ -24,7 +24,7 @@ După această actualizare, închide ferestrele Startica vechi, rulează o singu
     Startica_Date/                 baza de evidență
     Startica_Backup/  Jurnale/     copii de siguranță și jurnale de pornire
 
-Profilul de browser nu mai stă aici, ci în `%LOCALAPPDATA%Startica`.
+Profilul de browser nu mai stă aici, ci în `%LOCALAPPDATA%\Startica`.
 
 ## Cum pornește
 
@@ -100,8 +100,8 @@ Restaurarea prezintă numărul de înregistrări și totalurile. Scrie RESTAUREA
 
 ## Verificări pentru dezvoltare
 
-`node --test tests/application.test.mjs`
+`npm test` (= `node --test tests/*.test.mjs`) — rulează toate cele 5 fișiere de teste: `application`, `children-csv` (import CSV, dubluri, două contacte, achitări mixte, export/reimport, protecțiile bazei), `financial-import`, `fixes` și `review-center`.
 
-`node --test tests/application.test.mjs tests/children-csv.test.mjs` — include import CSV, dubluri, două contacte, achitări mixte, export/reimport și protecțiile bazei.
+`node tests/browser-smoke.mjs` (sau `npm run test:browser`) — Chrome headless, profil și bază temporare. Nu folosește profilul Chrome sau datele reale ale utilizatorului. Rulează separat de `npm test` pentru că are nevoie de Chrome instalat și durează mai mult.
 
-`node tests/browser-smoke.mjs` — Chrome headless, profil și bază temporare. Nu folosește profilul Chrome sau datele reale ale utilizatorului.
+`tests/desktop-lifecycle.ps1` — verifică lansatorul (`startica_desktop.ps1`): pornirea fără fereastră de consolă, oprirea la închiderea ferestrei, profil și bază temporare.

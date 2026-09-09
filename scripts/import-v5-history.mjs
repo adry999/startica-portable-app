@@ -1,32 +1,48 @@
-// Maintenance import for the supplied V5. Default is read-only preview.
-// --apply uses the application's authenticated API, revision check and backups.
+// Instrument de mentenanță pentru importul istoric V5, deja aplicat pe
+// 08.09.2026 (vezi GHID.md). Implicit face doar previzualizare; --apply
+// folosește API-ul autentificat al aplicației, verificarea de revizie și
+// backup-urile. Calea sursei poate fi dată explicit ca prim argument, pentru
+// un import similar cu alt fișier.
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { readWorkbook } from '../shared/excel.mjs';
 import { financialImportPlan } from '../server/financial-import.mjs';
 import { createApplication } from '../startica_server.mjs';
 import { emptyState, total } from '../shared/domain.mjs';
 
-if (process.argv.slice(2).some(a => a !== '--apply'))
-  throw Error('Folosește fără argumente pentru verificare sau --apply pentru import.');
-const sourceName = 'Evidenta_Achitari_corectata v5.xlsx';
-const sourceFile = new URL('../../Fisiere_Excel/Evidenta_Achitari_corectata%20v5.xlsx', import.meta.url);
+const args = process.argv.slice(2);
+const apply = args.includes('--apply');
+const extra = args.filter(a => a !== '--apply');
+if (extra.length > 1) throw Error('Folosește: node scripts/import-v5-history.mjs [cale-fișier-sursă] [--apply]');
+const sourceName = extra[0] ? extra[0].split(/[\\/]/).pop() : 'Evidenta_Achitari_corectata v5.xlsx';
+const sourceFile = extra[0]
+  ? resolve(process.cwd(), extra[0])
+  : fileURLToPath(new URL('../../Fisiere_Excel/Evidenta_Achitari_corectata%20v5.xlsx', import.meta.url));
+if (!existsSync(sourceFile))
+  throw Error(
+    `Fișierul sursă lipsește: ${sourceFile}\n` +
+      'Acest instrument a fost folosit pentru importul istoric V5, deja aplicat (vezi GHID.md). ' +
+      'Pentru un import similar cu alt fișier, dă calea completă ca prim argument.',
+  );
 const bytes = readFileSync(sourceFile),
   sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const require = createRequire(import.meta.url),
   XLSX = require('../web/vendor/xlsx.full.min.js');
 const report = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX);
 assert.deepEqual(report.errors, []);
-assert.deepEqual(
-  report.summary,
-  { children: 105, payments: 810, expenses: 1201, paymentTotal: 10105096, expenseTotal: 1564059 },
-  'V5 diferă de fișierul analizat; este necesară o nouă verificare.',
-);
+// Verificarea exactă a numerelor are sens doar pentru fișierul V5 original;
+// o cale dată explicit înseamnă un alt import, cu alte totaluri așteptate.
+if (!extra[0])
+  assert.deepEqual(
+    report.summary,
+    { children: 105, payments: 810, expenses: 1201, paymentTotal: 10105096, expenseTotal: 1564059 },
+    'V5 diferă de fișierul analizat; este necesară o nouă verificare.',
+  );
 const input = { format: 'STARTICA_V5', sourceName, sourceHash: sha(bytes), state: report.state };
 const db = new DatabaseSync(fileURLToPath(new URL('../Startica_Date/startica.db', import.meta.url)), {
   readOnly: true,
@@ -57,7 +73,7 @@ console.log(
     2,
   ),
 );
-if (process.argv.includes('--apply') && (plan.summary.payments || plan.summary.expenses)) {
+if (apply && (plan.summary.payments || plan.summary.expenses)) {
   const app = createApplication();
   await new Promise(r => app.server.listen(0, '127.0.0.1', r));
   try {
