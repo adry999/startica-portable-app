@@ -26,7 +26,8 @@ export function actions(type, r) {
   return (
     button('edit', type, r.id, 'Editează') +
     ' ' +
-    button('archive', type, r.id, r.archived ? 'Reactivează' : 'Arhivează')
+    button('archive', type, r.id, r.archived ? 'Reactivează' : 'Arhivează') +
+    (r.archived ? ' ' + button('delete', type, r.id, 'Șterge definitiv') : '')
   );
 }
 

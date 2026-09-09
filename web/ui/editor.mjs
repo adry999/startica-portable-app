@@ -211,11 +211,29 @@ function paymentFields(r) {
   );
 }
 
-const expenseFields = r =>
-  field('date', 'Data cheltuielii', r.date || today(), 'date', 'required') +
-  field('amount', 'Suma', r.amount ?? '', 'number', 'required min="0.01" step="0.01"') +
-  field('category', 'Categorie', r.category || 'Altele', 'text', 'required') +
-  field('description', 'Descriere', r.description);
+// Categorie = text liber cu sugestii, nu o listă închisă: clientul poate scrie
+// oricând una nouă, care apare apoi și ea ca sugestie la următoarea cheltuială.
+const DEFAULT_EXPENSE_CATEGORIES = [
+  'Chirie',
+  'Utilități',
+  'Salarii',
+  'Materiale educaționale',
+  'Alimente',
+  'Reparații și întreținere',
+  'Altele',
+];
+const expenseFields = r => {
+  const categories = [
+    ...new Set([...DEFAULT_EXPENSE_CATEGORIES, ...session.state.expenses.map(e => e.category).filter(Boolean)]),
+  ].sort((a, b) => a.localeCompare(b, 'ro'));
+  return (
+    field('date', 'Data cheltuielii', r.date || today(), 'date', 'required') +
+    field('amount', 'Suma', r.amount ?? '', 'number', 'required min="0.01" step="0.01"') +
+    field('category', 'Categorie', r.category || 'Altele', 'text', 'required list="expenseCategoryOptions"') +
+    `<datalist id="expenseCategoryOptions">${categories.map(c => `<option value="${esc(c)}"></option>`).join('')}</datalist>` +
+    field('description', 'Descriere', r.description)
+  );
+};
 
 const FIELDS = { children: childFields, payments: paymentFields, expenses: expenseFields };
 
@@ -363,6 +381,12 @@ export async function archive(type, id) {
     mode: 'update',
     record: { ...r, archived: !r.archived, archivedAt: r.archived ? '' : new Date().toISOString() },
   });
+}
+
+// Ireversibil, spre deosebire de archive() — doar pt. ce e deja arhivat.
+export async function deleteRecord(type, id) {
+  if (!confirm(`Ștergi definitiv înregistrarea ${id}? Nu poate fi anulată, spre deosebire de arhivare.`)) return;
+  await mutate('/api/record-delete', { type, id });
 }
 
 export async function confirmReview(id) {

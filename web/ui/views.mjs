@@ -353,10 +353,13 @@ function renderDashboard(month, cash, review, index) {
     history.push({ month: m, value: cashSummary(session.state, m).income });
   }
   const max = Math.max(1, ...history.map(r => r.value));
+  // Culoarea ține de luna calendaristică, nu de poziția din fereastra de 12
+  // luni — altfel aceeași lună schimba culoare la fiecare mutare a lunii selectate.
+  const BAR_COLORS = ['orange', 'yellow', 'mint'];
   $('bars').innerHTML = history
     .map(
       r =>
-        `<div class="bar" title="${r.month}: ${money(r.value)}"><i style="height:${(r.value / max) * 100}%"></i><small>${r.month.slice(5)}</small></div>`,
+        `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" title="${r.month}: ${money(r.value)}"><i style="height:${(r.value / max) * 100}%"></i><small>${r.month.slice(5)}</small></div>`,
     )
     .join('');
 }

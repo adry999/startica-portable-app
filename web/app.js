@@ -3,7 +3,7 @@ import { $ } from './ui/dom.mjs';
 import { session, message, load, setRenderers, renderSaveStatus, checkConnection } from './ui/session.mjs';
 import { pages } from './ui/parts.mjs';
 import { go, render, renderList, renderHealth, profile, moreAudit, bindGroups } from './ui/views.mjs';
-import { openEditor, bindEditorForm, archive, confirmReview } from './ui/editor.mjs';
+import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
 import { bindFees } from './ui/fees.mjs';
 import { bindAssign } from './ui/assign.mjs';
@@ -59,6 +59,7 @@ document.addEventListener('click', async event => {
     const { action, type, id } = b.dataset;
     if (action === 'edit') openEditor(type, id);
     if (action === 'archive') await archive(type, id);
+    if (action === 'delete') await deleteRecord(type, id);
     if (action === 'profile') profile(id);
     if (action === 'confirm-review') await confirmReview(id);
   } catch (e) {

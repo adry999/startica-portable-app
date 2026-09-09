@@ -569,10 +569,10 @@ h3 {
   border-radius: 99px 99px 7px 7px;
   background: var(--orange);
 }
-.bar:nth-child(3n + 2) i {
+.bar.yellow i {
   background: var(--yellow);
 }
-.bar:nth-child(3n) i {
+.bar.mint i {
   background: var(--mint);
 }
 .bar small {
