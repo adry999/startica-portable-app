@@ -325,7 +325,7 @@ h3 {
   align-items: end;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .view-head h2 {
   font-size: 31px;
@@ -383,11 +383,11 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin: 15px 0;
+  margin: 8px 0;
 }
 .children-summary article {
   min-width: 0;
-  padding: 16px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: 19px;
   background: #fff;
@@ -405,7 +405,7 @@ h3 {
   font-size: 12px;
 }
 .children-summary p {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   color: var(--slate);
   font-size: 14px;
   font-weight: 800;
@@ -425,7 +425,7 @@ h3 {
     sans-serif;
 }
 .children-summary-note {
-  margin: -3px 0 15px;
+  margin: -3px 0 8px;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
@@ -830,8 +830,8 @@ dialog::backdrop {
   align-items: end;
   flex-wrap: wrap;
   gap: 10px 12px;
-  margin: 15px 0;
-  padding: 13px;
+  margin: 8px 0;
+  padding: 10px 13px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: #fffdf9;
