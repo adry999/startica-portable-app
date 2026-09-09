@@ -82,6 +82,7 @@ test('Export/reimport complet prin fișier XLSX în memorie', () => {
     ],
     payments: [{ ...payment(), archived: true, original: 'sursă', notes: 'a'.repeat(35000) }],
     expenses: [normalizeRecord('expenses', { id: 'EXP-test', date: '2026-09-08', amount: 10.25, category: 'Test' })],
+    groups: [{ id: 'GRP-test', name: 'Grupa test', capacity: 10 }],
   };
   // Extra long field exercises chunking; validation normally caps text at 10k.
   s.payments[0].notes = 'text';
@@ -109,6 +110,7 @@ test('V5 original: numărul de înregistrări și totalurile rămân identice', 
     children: 105,
     payments: 810,
     expenses: 1201,
+    groups: 10,
     paymentTotal: 10105096,
     expenseTotal: 1564059,
   });
@@ -228,14 +230,14 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
     ).status,
     400,
   );
-  const invalid = { children: [child(), child()], payments: [], expenses: [] };
+  const invalid = { children: [child(), child()], payments: [], expenses: [], groups: [] };
   assert.equal(
     (await post('/api/import', { state: invalid, confirm: 'IMPORT', revision: 6, requestId: randomUUID() })).status,
     400,
   );
   assert.equal((await get('/api/state')).state.children[0].phone, '456');
   const importRequest = {
-    state: { children: [child()], payments: [payment()], expenses: [] },
+    state: { children: [child()], payments: [payment()], expenses: [], groups: [] },
     confirm: 'IMPORT',
     revision: 6,
     requestId: randomUUID(),
@@ -262,7 +264,7 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   mkdirSync(join(dir, 'data'));
   const old = new DatabaseSync(join(dir, 'data/startica.db'));
   old.exec('CREATE TABLE app_state(id INTEGER PRIMARY KEY,payload TEXT)');
-  const s = { children: [child()], payments: [payment()], expenses: [] };
+  const s = { children: [child()], payments: [payment()], expenses: [], groups: [] };
   old.prepare('INSERT INTO app_state VALUES(1,?)').run(JSON.stringify(s));
   old.close();
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups') });

@@ -112,7 +112,7 @@ test('Backupul automat este rărit; cel dinaintea unui import rămâne obligator
   assert.equal(automatic(), 1, 'Numărul de backupuri automate nu crește cu numărul de salvări.');
 
   const imported = await app.post('/api/import', {
-    state: { children: [CHILD], payments: [], expenses: [] },
+    state: { children: [CHILD], payments: [], expenses: [], groups: [] },
     confirm: 'IMPORT',
     revision,
     requestId: randomUUID(),
@@ -259,7 +259,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
     }),
   );
   let r = await app.post('/api/import', {
-    state: { children, payments: [], expenses: [] },
+    state: { children, payments: [], expenses: [], groups: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),
@@ -271,7 +271,16 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   assert.equal(before.label, 'De verificat');
   assert.equal(before.notify, false);
 
-  const updates = children.map(c => ({ id: c.id, fee: 2000, from: '2025-02', group: 'Grupa mică', status: 'Activ' }));
+  r = await app.post('/api/record', {
+    type: 'groups',
+    mode: 'create',
+    record: { id: 'GRP-mica', name: 'Grupa mică', capacity: null },
+    revision: r.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(r.ok, true, r.error);
+
+  const updates = children.map(c => ({ id: c.id, fee: 2000, from: '2025-02', groupId: 'GRP-mica', status: 'Activ' }));
   r = await app.post('/api/children-setup', { updates, revision: r.revision, requestId: randomUUID() });
   assert.equal(r.ok, true, r.error);
 
@@ -280,12 +289,12 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   assert.equal(after.notify, true);
   assert.equal(after.expected, 2000);
   assert.equal(after.due, '2026-09-14', 'Scadența vine tot din data contractului.');
-  assert.equal(r.state.children[0].group, 'Grupa mică');
+  assert.equal(r.state.children[0].groupId, 'GRP-mica');
   assert.deepEqual(r.state.children[0].feeHistory, [{ from: '2025-02', amount: 2000 }]);
   assert.deepEqual(r.state.children[0].statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 
   // O singură revizie pentru toate fișele, plus copia obligatorie și jurnalul.
-  assert.equal(r.revision, 2, 'Toate completările intră într-o singură operațiune.');
+  assert.equal(r.revision, 3, 'Toate completările intră într-o singură operațiune.');
   assert.ok(readdirSync(app.backupDir).some(n => n.includes('inainte-completare-taxe')));
   const audit = await app.get('/api/audit');
   assert.equal(audit.filter(a => a.action === 'completare taxe și grupe').length, 2);
@@ -378,7 +387,7 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
     }),
   ];
   let r = await app.post('/api/import', {
-    state: { children: [child], payments, expenses: [] },
+    state: { children: [child], payments, expenses: [], groups: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),
@@ -436,7 +445,7 @@ test('Normalizarea păstrează fiecare câmp real și elimină restul', () => {
       attendanceDate: '2024-12-02',
       withdrawalDate: '2026-01-05',
       status: 'Activ',
-      group: 'Mica',
+      groupId: 'GRP-mica',
       fee: 2000,
       feeHistory: [{ from: '2024-12', amount: 2000 }],
       statusHistory: [{ from: '2024-12', status: 'Activ' }],

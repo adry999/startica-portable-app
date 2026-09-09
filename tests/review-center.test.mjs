@@ -7,7 +7,6 @@ const child = (id, name = 'Copil Test') =>
   normalizeRecord('children', {
     id,
     name,
-    group: 'Grupa 1',
     status: 'Activ',
     attendanceDate: '2026-01-01',
     feeHistory: [{ from: '2026-01', amount: 500 }],

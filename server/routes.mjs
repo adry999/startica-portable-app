@@ -59,9 +59,48 @@ export function createRouter(context) {
         if (b.mode === 'update' && !old) fail('Înregistrarea nu mai există.', 409);
         if (b.type === 'payments' && r.childId && !store.recordExists('children', r.childId))
           fail('Copilul asociat nu există.');
+        if (b.type === 'children' && r.groupId && !store.recordExists('groups', r.groupId))
+          fail('Grupa asociată nu există.');
+        if (b.type === 'groups') {
+          const clash = store
+            .readState()
+            .groups.some(g => g.id !== r.id && g.name.toLocaleLowerCase('ro-RO') === r.name.toLocaleLowerCase('ro-RO'));
+          if (clash) fail('Există deja o grupă cu acest nume.');
+        }
         store.writeRecord(b.type, r);
         store.audit(old ? 'modificare' : 'adăugare', b.type, r.id, old, r);
       }),
+
+    // Grupele nu se arhivează, se șterg direct — dar numai când nimeni nu mai
+    // e atribuit ei, altfel copiii ar rămâne cu o referință către nimic.
+    '/api/group-delete': b =>
+      store.commit(b, 'ștergere grupă', () => {
+        const g = store.readRecord('groups', b.id);
+        if (!g) fail('Grupa nu mai există.', 409);
+        const occupied = store.readState().children.some(c => !c.archived && c.groupId === b.id);
+        if (occupied) fail('Mută mai întâi copiii din grupă.');
+        store.deleteRecord('groups', b.id);
+        store.audit('ștergere', 'groups', b.id, g, null);
+      }),
+
+    // Ștergere definitivă, doar pentru ce e deja arhivat — arhivarea rămâne
+    // singura cale reversibilă; asta e ireversibilă, de-aia backup înainte.
+    '/api/record-delete': b =>
+      store.commit(
+        b,
+        'ștergere definitivă',
+        () => {
+          if (!['children', 'payments', 'expenses'].includes(b.type)) fail('Tip invalid.');
+          const r = store.readRecord(b.type, b.id);
+          if (!r) fail('Înregistrarea nu mai există.', 409);
+          if (!r.archived) fail('Doar înregistrările arhivate pot fi șterse definitiv.');
+          if (b.type === 'children' && store.readState().payments.some(p => p.childId === b.id))
+            fail('Șterge mai întâi achitările copilului, altfel ar rămâne fără copil valid.');
+          store.deleteRecord(b.type, b.id);
+          store.audit('ștergere definitivă', b.type, b.id, r, null);
+        },
+        true,
+      ),
 
     // Completarea în masă a taxei, grupei și statutului. Fără ea, cei 105 copii
     // importați din CSV nu pot fi evaluați deloc, iar lista de notificat rămâne
@@ -79,6 +118,7 @@ export function createRouter(context) {
             seen.add(update?.id);
             const old = store.readRecord('children', update?.id);
             if (!old) fail(`Fișa ${update?.id} nu mai există. Reîncarcă datele.`, 409);
+            if (update.groupId && !store.recordExists('groups', update.groupId)) fail('Grupa asociată nu există.');
             const r = applyChildSetup(old, update);
             store.writeRecord('children', r);
             store.audit('completare taxe și grupe', 'children', r.id, old, r);

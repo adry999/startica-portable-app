@@ -17,6 +17,14 @@ export const money = v =>
 
 // Ora fixă evită schimbarea zilei la conversia de fus orar.
 export const date = v => (v ? new Date(v + 'T12:00:00').toLocaleDateString('ro-RO') : '—');
+
+const MONTHS_RO = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
+// Lună tip „2026-09” devine „2026 Sep”, mai lizibil în listele de repartizare.
+export const monthLabel = v => {
+  if (!v) return '—';
+  const [year, month] = v.split('-');
+  return `${year} ${MONTHS_RO[Number(month) - 1] || month}`;
+};
 export const time = v => (v ? new Date(v).toLocaleString('ro-RO') : 'niciodată');
 
 export const fileSize = bytes => (bytes >= 1e6 ? (bytes / 1e6).toFixed(1) + ' MB' : Math.round(bytes / 1e3) + ' KB');

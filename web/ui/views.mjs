@@ -1,14 +1,24 @@
 import { today, cents, obligation, paymentIndex, cashSummary, allocations, dueDayFor } from '../../shared/domain.mjs';
 import { reviewCenter, filteredReviewItems, reviewFilters } from '../../shared/review-center.mjs';
-import { $, esc, money, date, time, age, fileSize } from './dom.mjs';
-import { session, api, message, renderSaveStatus } from './session.mjs';
-import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel, statusBadgeClass } from './parts.mjs';
+import { $, esc, money, date, time, age, fileSize, monthLabel } from './dom.mjs';
+import { session, api, message, mutate, renderSaveStatus } from './session.mjs';
+import {
+  pages,
+  pageRows,
+  button,
+  actions,
+  childName,
+  parentContacts,
+  tenderLabel,
+  statusBadgeClass,
+} from './parts.mjs';
 import { renderFees } from './fees.mjs';
 import { renderAssign } from './assign.mjs';
 
 const selectedMonth = () => $('selectedMonth').value || today().slice(0, 7);
 // Numărul de contract este identificatorul folosit în discuția cu părintele.
 const contractOf = c => c.contractNumber || c.id;
+const groupName = id => session.state.groups.find(g => g.id === id)?.name || '';
 
 export function go(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
@@ -51,7 +61,7 @@ function reviewRow(item, labels) {
     r = item.record;
   const details = payment
     ? `${date(r.date)} · ${money(r.amount)}${r.sourceName ? ` · sursă: ${esc(r.sourceName)}` : ''}${r.childId ? ` · copil: ${esc(childName(r))}` : ''}`
-    : `Contract: ${esc(r.contractNumber || r.id)} · Grupă: ${esc(r.group || 'necompletată')}`;
+    : `Contract: ${esc(r.contractNumber || r.id)} · Grupă: ${esc(groupName(r.groupId) || 'necompletată')}`;
   const tags = item.categories.map(category => reviewTag(category, labels)).join('');
   const confirm = item.canConfirm ? button('confirm-review', 'payments', item.id, 'Confirmă asocierea') : '';
   return (
@@ -142,7 +152,7 @@ const CELLS = {
     esc(contractOf(r)),
     button('profile', 'children', r.id, r.name),
     parentContacts(r),
-    esc(r.group || 'Lipsește'),
+    esc(groupName(r.groupId) || 'Lipsește'),
     `<span class="badge ${statusBadgeClass(r.status)}">${esc(r.status)}${r.archived ? ' · Arhivat' : ''}</span>`,
     actions('children', r),
   ],
@@ -151,7 +161,7 @@ const CELLS = {
     esc(childName(r)) + (r.childId ? '' : '<br><small>Neasociată</small>'),
     money(r.amount),
     allocations(r)
-      .map(a => `${esc(a.month)}: ${money(a.amount)}`)
+      .map(a => `${esc(monthLabel(a.month))}: ${money(a.amount)}`)
       .join('<br>') || 'Avans nerepartizat',
     tenderLabel(r),
     actions('payments', r),
@@ -169,17 +179,17 @@ function matchesSearch(r, type, search) {
   if (!search) return true;
   return normalizeSearch(
     JSON.stringify([
-    r.name,
-    r.parent,
-    r.phone,
-    r.parent2,
-    r.phone2,
-    r.group,
-    r.id,
-    r.contractNumber,
-    r.notes,
-    r.description,
-    r.category,
+      r.name,
+      r.parent,
+      r.phone,
+      r.parent2,
+      r.phone2,
+      type === 'children' ? groupName(r.groupId) : r.group,
+      r.id,
+      r.contractNumber,
+      r.notes,
+      r.description,
+      r.category,
       type === 'payments' ? childName(r) : '',
     ]),
   ).includes(search);
@@ -190,6 +200,7 @@ const sortValue = (type, field, row) => {
   if (field === 'name') return row.name;
   if (field === 'child') return childName(row);
   if (field === 'amount') return Number(row.amount) || 0;
+  if (field === 'group') return groupName(row.groupId);
   return row[field] || '';
 };
 
@@ -403,7 +414,7 @@ function renderNotify(month, index) {
         ({ child: c, o }) =>
           `<tr class="${o.daysToDue < 0 ? 'late-row' : ''}"><td>${esc(contractOf(c))}</td>` +
           `<td>${button('profile', 'children', c.id, c.name)}</td><td>${parentContacts(c)}</td>` +
-          `<td>${esc(c.group || '—')}</td><td>${date(o.due)}</td><td>${esc(termLabel(o.daysToDue))}</td>` +
+          `<td>${esc(groupName(c.groupId) || '—')}</td><td>${date(o.due)}</td><td>${esc(termLabel(o.daysToDue))}</td>` +
           `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td><strong>${money(o.rest)}</strong></td>` +
           `<td>${esc(o.label)}</td></tr>`,
       )
@@ -415,24 +426,107 @@ function renderNotify(month, index) {
     }</td></tr>`;
 }
 
+function groupCard(g, children) {
+  const members = children.filter(c => c.groupId === g.id).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  const overCapacity = g.capacity && members.length > g.capacity;
+  const fill = g.capacity ? `${members.length}/${g.capacity} copii` : `${members.length} copii`;
+  const unassigned = children
+    .filter(c => !c.groupId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+    .map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
+    .join('');
+  return (
+    `<article class="card ${overCapacity ? 'pink' : 'mint'}" data-group="${esc(g.id)}">` +
+    `<div class="group-edit"><input data-name value="${esc(g.name)}" placeholder="nume grupă">` +
+    `<input data-capacity type="number" min="1" max="1000" value="${g.capacity ?? ''}" placeholder="capacitate">` +
+    `<button type="button" data-save>Salvează</button></div>` +
+    `<p class="group-fill">${fill}${overCapacity ? ' — peste capacitate' : ''}</p>` +
+    `<ul class="group-children">${
+      members
+        .map(
+          c =>
+            `<li>${esc(c.name)}<button type="button" data-remove="${esc(c.id)}" title="Scoate din grupă">×</button></li>`,
+        )
+        .join('') || '<li class="empty">Niciun copil atribuit.</li>'
+    }</ul>` +
+    `<div class="group-add"><select data-add>${unassigned ? `<option value="">Adaugă copil…</option>${unassigned}` : '<option value="">Toți copiii nearhivați sunt atribuiți</option>'}</select>` +
+    `<button type="button" data-add-btn ${unassigned ? '' : 'disabled'}>+ Adaugă</button></div>` +
+    `<button type="button" class="btn btn-ghost" data-delete>Șterge grupa</button>` +
+    `</article>`
+  );
+}
+
 function renderGroups() {
   const children = session.state.children.filter(c => !c.archived);
-  const groups = [...new Set(children.map(c => String(c.group || '').trim()).filter(Boolean))].sort((a, b) =>
-    a.localeCompare(b, 'ro'),
-  );
-  $('groupsGrid').innerHTML =
-    groups
-      .map(
-        g =>
-          `<article class="card mint"><h3>${esc(g)}</h3><p>${children.filter(c => String(c.group || '').trim() === g).length} copii nearhivați</p></article>`,
-      )
-      .join('') || '<p>Nu sunt grupe completate.</p>';
+  const groups = [...session.state.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  $('groupsGrid').innerHTML = groups.map(g => groupCard(g, children)).join('') || '<p>Nu există grupe create încă.</p>';
+}
+
+export function bindGroups() {
+  $('groupCreateForm').onsubmit = async event => {
+    event.preventDefault();
+    const name = $('groupNameInput').value.trim();
+    if (!name) {
+      message('Completează numele grupei.', true);
+      return;
+    }
+    const capacityRaw = $('groupCapacityInput').value.trim();
+    try {
+      await mutate('/api/record', {
+        type: 'groups',
+        mode: 'create',
+        record: { id: `GRP-${crypto.randomUUID()}`, name, capacity: capacityRaw ? Number(capacityRaw) : null },
+      });
+      $('groupCreateForm').reset();
+      message('Grupă creată.');
+    } catch (e) {
+      message(e.message, true);
+    }
+  };
+
+  $('groupsGrid').addEventListener('click', async event => {
+    const card = event.target.closest('[data-group]');
+    if (!card) return;
+    const id = card.dataset.group;
+    try {
+      if (event.target.dataset.save !== undefined) {
+        const name = card.querySelector('[data-name]').value.trim();
+        if (!name) {
+          message('Numele grupei nu poate fi gol.', true);
+          return;
+        }
+        const capacityRaw = card.querySelector('[data-capacity]').value.trim();
+        const g = session.state.groups.find(g => g.id === id);
+        await mutate('/api/record', {
+          type: 'groups',
+          mode: 'update',
+          record: { ...g, name, capacity: capacityRaw ? Number(capacityRaw) : null },
+        });
+        message('Grupă actualizată.');
+      } else if (event.target.dataset.delete !== undefined) {
+        await mutate('/api/group-delete', { id });
+        message('Grupă ștearsă.');
+      } else if (event.target.dataset.addBtn !== undefined) {
+        const childId = card.querySelector('[data-add]').value;
+        if (!childId) return;
+        const c = session.state.children.find(c => c.id === childId);
+        await mutate('/api/record', { type: 'children', mode: 'update', record: { ...c, groupId: id } });
+        message('Copil atribuit grupei.');
+      } else if (event.target.dataset.remove !== undefined) {
+        const c = session.state.children.find(c => c.id === event.target.dataset.remove);
+        await mutate('/api/record', { type: 'children', mode: 'update', record: { ...c, groupId: null } });
+        message('Copil scos din grupă.');
+      }
+    } catch (e) {
+      message(e.message, true);
+    }
+  });
 }
 
 function renderChildrenSummary(review) {
   const children = session.state.children.filter(c => !c.archived);
   const active = children.filter(c => c.status === 'Activ').length;
-  const occupiedGroups = new Set(children.map(c => String(c.group || '').trim()).filter(Boolean)).size;
+  const occupiedGroups = new Set(children.map(c => c.groupId).filter(Boolean)).size;
   // Centrul grupează deja observațiile după tip și ID; Set-ul păstrează
   // protecția explicită dacă regulile de verificare se extind ulterior.
   const incomplete = new Set(
@@ -485,7 +579,7 @@ export function profile(id) {
           `<tr class="${p.archived ? 'archived-row' : ''}"><td>${date(p.date)}</td><td>${money(p.amount)}</td>` +
           `<td>${tenderLabel(p)}</td><td>${
             allocations(p)
-              .map(a => `${esc(a.month)}: ${money(a.amount)}`)
+              .map(a => `${esc(monthLabel(a.month))}: ${money(a.amount)}`)
               .join('<br>') || 'Avans nerepartizat'
           }</td></tr>`,
       )
@@ -493,7 +587,7 @@ export function profile(id) {
   $('profileBody').innerHTML =
     `<div class="profile-head"><div><h3>${esc(c.name)}</h3>` +
     `<span class="badge ${statusBadgeClass(c.status)}">${esc(c.status)}${c.archived ? ' · Arhivat' : ''}</span></div>` +
-    `<p class="muted">Contract ${esc(contractOf(c))} · Grupa ${esc(c.group || 'nealocată')} · Vârstă ${age(c.birthDate)}</p></div>` +
+    `<p class="muted">Contract ${esc(contractOf(c))} · Grupa ${esc(session.state.groups.find(g => g.id === c.groupId)?.name || 'nealocată')} · Vârstă ${age(c.birthDate)}</p></div>` +
     `<div class="profile-grid">` +
     profileSection('Părinți', `<p>${parentContacts(c)}</p>`) +
     profileSection(

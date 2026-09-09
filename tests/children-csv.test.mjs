@@ -20,7 +20,7 @@ test('CSV: 105 copii, date sursă păstrate, avertizări și reimport fără dub
   assert.equal(p.additions.length, 105);
   assert.equal(p.additions.filter(c => !c.attendanceDate).length, 2);
   assert.equal(p.rows.filter(r => r.warnings.some(w => w.includes('Date neconcordante'))).length, 1);
-  assert.ok(p.additions.every(c => c.fee === null && c.group === '' && c.status === 'De verificat'));
+  assert.ok(p.additions.every(c => c.fee === null && c.groupId === null && c.status === 'De verificat'));
   assert.ok(p.rows.some(r => r.warnings.some(w => w.includes('Părinte coincide'))));
   const repeated = previewChildrenCSV(real, p.additions);
   assert.equal(repeated.additions.length, 0);
@@ -77,7 +77,7 @@ test('Doi părinți opționali și achitare mixtă: total, repartizare, rapoarte
   });
   assert.equal(p.amount, 1500.3);
   assert.equal(p.method, 'Cash + Card');
-  const s = { children: [c], payments: [p], expenses: [] },
+  const s = { children: [c], payments: [p], expenses: [], groups: [] },
     summary = cashSummary(s, '2026-09');
   assert.equal(summary.income, 1500.3);
   assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });

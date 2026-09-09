@@ -195,7 +195,6 @@ export function previewChildrenCSV(text, existing = []) {
         contractDate,
         attendanceDate,
         status: 'De verificat',
-        group: '',
         fee: null,
         feeHistory: [],
         statusHistory: [],

@@ -2,7 +2,7 @@ import { today } from '../shared/domain.mjs';
 import { $ } from './ui/dom.mjs';
 import { session, message, load, setRenderers, renderSaveStatus, checkConnection } from './ui/session.mjs';
 import { pages } from './ui/parts.mjs';
-import { go, render, renderList, renderHealth, profile, moreAudit } from './ui/views.mjs';
+import { go, render, renderList, renderHealth, profile, moreAudit, bindGroups } from './ui/views.mjs';
 import { openEditor, bindEditorForm, archive, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
 import { bindFees } from './ui/fees.mjs';
@@ -16,6 +16,7 @@ bindEditorForm();
 bindTransfers();
 bindFees();
 bindAssign();
+bindGroups();
 
 // Pe ecrane înguste navigația devine un panou explicit; pe desktop CSS o
 // afișează permanent, așa că nu folosim niciodată `hidden` pentru aceasta.

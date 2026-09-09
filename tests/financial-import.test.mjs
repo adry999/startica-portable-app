@@ -35,6 +35,7 @@ const source = {
       }),
     ],
     expenses: [normalizeRecord('expenses', { id: 'EXP-1', date: '2026-09-08', amount: 50 })],
+    groups: [],
   },
 };
 test('Istoric: mapare exactă, fără înlocuire, sume provizorii și reimport', () => {

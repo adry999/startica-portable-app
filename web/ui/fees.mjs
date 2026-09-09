@@ -14,6 +14,16 @@ const visibleChildren = () =>
     .filter(c => !c.archived && ($('feesFilter').value === 'all' || missingFee(c)))
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'));
 
+function groupOptions(selected) {
+  const groups = [...session.state.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  return (
+    `<option value="">Fără grupă</option>` +
+    groups
+      .map(g => `<option value="${esc(g.id)}" ${g.id === selected ? 'selected' : ''}>${esc(g.name)}</option>`)
+      .join('')
+  );
+}
+
 function row(c) {
   const currentStatus = c.status || 'Activ';
   const statusOptions = [...new Set([currentStatus, ...STATUS_HISTORY_VALUES])]
@@ -23,7 +33,7 @@ function row(c) {
   return (
     `<tr data-child="${esc(c.id)}"><td>${esc(c.contractNumber || c.id)}</td><td>${esc(c.name)}</td>` +
     `<td>${date(c.attendanceDate)}</td>` +
-    `<td><input data-group value="${esc(c.group || '')}" data-group-initial="${esc(c.group || '')}" placeholder="grupă"></td>` +
+    `<td><select data-group data-group-initial="${esc(c.groupId || '')}">${groupOptions(c.groupId || '')}</select></td>` +
     `<td><input data-fee type="number" min="0" step="0.01" value="${esc(currentFee)}" data-fee-initial="${esc(currentFee)}" placeholder="taxă"></td>` +
     `<td><input data-from type="month" value="${esc(defaultFrom(c))}"></td>` +
     `<td><select data-status data-status-initial="${esc(currentStatus)}">${statusOptions}</select></td></tr>`
@@ -40,6 +50,7 @@ export function renderFees() {
   $('feesTable').innerHTML =
     rows.map(row).join('') || '<tr><td colspan="7" class="empty">Nimic de completat pentru filtrul ales.</td></tr>';
   $('feesPending').textContent = `${rows.length} rânduri afișate`;
+  $('feesBulkGroup').innerHTML = groupOptions('');
 }
 
 // Se trimite un câmp doar dacă diferă de valoarea afișată inițial, ca un rând
@@ -52,7 +63,7 @@ function collect() {
       statusInput = tr.querySelector('[data-status]'),
       fromInput = tr.querySelector('[data-from]');
     const fee = feeInput.value.trim(),
-      group = groupInput.value.trim(),
+      group = groupInput.value,
       status = statusInput.value;
     const update = { id: tr.dataset.child, from: fromInput.value };
     let changed = false;
@@ -61,7 +72,7 @@ function collect() {
       changed = true;
     }
     if (group !== groupInput.dataset.groupInitial) {
-      update.group = group;
+      update.groupId = group || null;
       changed = true;
     }
     if (status !== statusInput.dataset.statusInitial) {
@@ -80,7 +91,7 @@ export function bindFees() {
 
   $('feesApplyAll').onclick = () => {
     const amount = $('feesBulkAmount').value.trim(),
-      group = $('feesBulkGroup').value.trim();
+      group = $('feesBulkGroup').value;
     if (!amount && !group) {
       message('Completează o taxă sau o grupă de aplicat.', true);
       return;

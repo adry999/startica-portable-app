@@ -95,6 +95,17 @@ export function readWorkbook(workbook, XLSX) {
         });
     const t = v => String(v ?? '').trim(),
       d = v => excelDate(v, XLSX);
+    // Coloana de grupă din V5 este text liber; devine o entitate proprie, ca la
+    // migrarea din baza existentă — un nume nou întâlnit primește o grupă nouă.
+    const groupNameToId = new Map();
+    for (const row of rows('Copii').slice(4)) {
+      const name = t(row?.[7]);
+      if (name && !groupNameToId.has(name)) {
+        const id = `GRP-${crypto.randomUUID()}`;
+        groupNameToId.set(name, id);
+        state.groups.push({ id, name, capacity: null });
+      }
+    }
     parse(
       'Copii',
       'children',
@@ -108,7 +119,7 @@ export function readWorkbook(workbook, XLSX) {
           birthDate: d(r[4]),
           contractDate: d(r[5]),
           attendanceDate: d(r[6]),
-          group: t(r[7]),
+          groupId: t(r[7]) ? groupNameToId.get(t(r[7])) : null,
           fee: Number(r[8]) > 0 ? Number(r[8]) : null,
           dueDay: r[9] ? Number(r[9]) : 10,
           status,
@@ -175,6 +186,7 @@ export function readWorkbook(workbook, XLSX) {
 export function exportWorkbook(state, XLSX) {
   const wb = XLSX.utils.book_new(),
     sheet = (name, data) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), name);
+  const groupName = id => state.groups.find(g => g.id === id)?.name || '';
   sheet(
     'Copii',
     state.children.map(r => ({
@@ -185,7 +197,7 @@ export function exportWorkbook(state, XLSX) {
       Parinte_2: r.parent2 || '',
       Telefon_2: r.phone2 || '',
       Nr_contract: r.contractNumber || '',
-      Grupa: r.group,
+      Grupa: groupName(r.groupId),
       Statut: r.status,
       Arhivat: !!r.archived,
       Taxa: r.fee,

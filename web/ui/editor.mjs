@@ -11,6 +11,9 @@ import {
 import { $, esc, money, age } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
 import { field, select, textarea } from './parts.mjs';
+import { stripDiacritics } from '../../shared/text.mjs';
+
+const normalizeSearch = value => stripDiacritics(value).toLocaleLowerCase('ro-RO');
 
 const ID_PREFIX = { children: 'ID', payments: 'PAY', expenses: 'EXP' };
 const TITLE = { children: 'copil', payments: 'achitare', expenses: 'cheltuială' };
@@ -52,6 +55,40 @@ function updatePaymentTotal() {
   allocationBalance();
 }
 
+// Dropdown copil: închis implicit, se deschide la focus/tastare, filtrează
+// fără diacritice; alegerea scrie id-ul în câmpul ascuns childId.
+function wireChildSearch() {
+  const search = $('childSearch'),
+    hidden = $('childId'),
+    list = $('childList');
+  if (!search || !hidden || !list) return;
+  const options = [
+    { id: '', label: 'Copil neasociat' },
+    ...session.state.children.map(c => ({ id: c.id, label: c.name + (c.archived ? ' (arhivat)' : '') })),
+  ];
+  const renderList = () => {
+    const q = normalizeSearch(search.value);
+    const matches = options.filter(o => !q || normalizeSearch(o.label).includes(q));
+    list.innerHTML =
+      matches.map(o => `<div class="combobox-option" data-id="${esc(o.id)}">${esc(o.label)}</div>`).join('') ||
+      '<div class="combobox-empty">Niciun rezultat</div>';
+    list.hidden = false;
+  };
+  search.onfocus = renderList;
+  search.oninput = renderList;
+  // mousedown, nu click: fuge înaintea blur-ului de pe search, ca alegerea să nu fie anulată.
+  list.onmousedown = e => {
+    const opt = e.target.closest('[data-id]');
+    if (!opt) return;
+    hidden.value = opt.dataset.id;
+    search.value = opt.textContent;
+    list.hidden = true;
+  };
+  search.onblur = () => {
+    setTimeout(() => (list.hidden = true), 150);
+  };
+}
+
 function allocationBalance() {
   if (!$('allocationRows')) return;
   const amount = Number($('editorForm').elements.amount.value),
@@ -82,15 +119,17 @@ const section = (title, html) =>
   `<fieldset class="form-section"><legend>${esc(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
 
 function childFields(r) {
-  const groups = [...new Set(session.state.children.map(c => c.group).filter(Boolean))];
+  const groupOptions = [...session.state.groups]
+    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+    .map(g => `<option value="${esc(g.id)}" ${g.id === r.groupId ? 'selected' : ''}>${esc(g.name)}</option>`)
+    .join('');
   return (
     section(
       'Date copil',
       field('name', 'Nume copil', r.name, 'text', 'required') +
         `<label class="field">Data nașterii<input name="birthDate" type="date" value="${esc(r.birthDate)}" id="childBirthDate"><small class="field-hint" id="childAgeHint">Vârstă: ${age(r.birthDate)}</small></label>` +
         select('status', 'Statut', r.status || 'Activ', CHILD_STATUSES) +
-        field('group', 'Grupă (nume sau număr)', r.group, 'text', 'list="groupOptions"') +
-        `<datalist id="groupOptions">${groups.map(g => `<option value="${esc(g)}"></option>`).join('')}</datalist>`,
+        `<label class="field">Grupă<select name="groupId"><option value="">Fără grupă</option>${groupOptions}</select></label>`,
     ) +
     section(
       'Părinți',
@@ -127,12 +166,8 @@ function childFields(r) {
 }
 
 function paymentFields(r) {
-  const children = session.state.children
-    .map(
-      c =>
-        `<option value="${esc(c.id)}" ${c.id === r.childId ? 'selected' : ''}>${esc(c.name)}${c.archived ? ' (arhivat)' : ''}</option>`,
-    )
-    .join('');
+  const selectedChild = session.state.children.find(c => c.id === r.childId);
+  const currentLabel = selectedChild ? selectedChild.name + (selectedChild.archived ? ' (arhivat)' : '') : '';
   const methods = [...new Set(['Cash', 'Card', 'Transfer', ...paymentTenders(r).map(p => p.method)])]
     .map(method =>
       field(
@@ -147,7 +182,13 @@ function paymentFields(r) {
   return (
     section(
       'Copil și dată',
-      `<label class="field full">Copil<select name="childId"><option value="">Copil neasociat</option>${children}</select></label>` +
+      `<label class="field full">Copil` +
+        `<div class="combobox">` +
+        `<input type="text" id="childSearch" value="${esc(currentLabel)}" placeholder="Caută copil după nume…" autocomplete="off">` +
+        `<input type="hidden" name="childId" id="childId" value="${esc(r.childId || '')}">` +
+        `<div class="combobox-list" id="childList" hidden></div>` +
+        `</div>` +
+        `</label>` +
         field('date', 'Data încasării', r.date || today(), 'date', 'required'),
     ) +
     section(
@@ -160,11 +201,13 @@ function paymentFields(r) {
       'Repartizare pe luni',
       `<div class="full"><p>Suma rămasă nerepartizată este evidențiată ca avans.</p><div id="allocationRows"></div><button type="button" class="action-btn" id="addAllocation">+ Lună</button><p id="allocationBalance"></p></div>`,
     ) +
-    section(
-      'Verificare import',
-      `<label class="field full checkbox-field"><input name="reviewed" type="checkbox" ${r.reviewed ? 'checked' : ''}><span>Am verificat observațiile importului</span></label>` +
-        `<p class="full field-hint">${esc(r.verification || 'Fără observații de import')}</p>`,
-    )
+    (r.verification
+      ? section(
+          'Verificare import',
+          `<label class="field full checkbox-field"><input name="reviewed" type="checkbox" ${r.reviewed ? 'checked' : ''}><span>Am verificat observațiile importului</span></label>` +
+            `<p class="full field-hint">${esc(r.verification)}</p>`,
+        )
+      : '')
   );
 }
 
@@ -195,6 +238,7 @@ export function openEditor(type, id) {
     $('addAllocation').onclick = () => addAllocation({ month: '', amount: '' });
     for (const input of document.querySelectorAll('[data-tender]')) input.oninput = updatePaymentTotal;
     updatePaymentTotal();
+    wireChildSearch();
   }
   if (type === 'children')
     $('childBirthDate').oninput = e => ($('childAgeHint').textContent = 'Vârstă: ' + age(e.target.value));
@@ -214,7 +258,7 @@ function childFromForm(r, v) {
     phone: v.phone.trim(),
     parent2: v.parent2.trim(),
     phone2: v.phone2.trim(),
-    group: v.group.trim(),
+    groupId: v.groupId || null,
     birthDate: v.birthDate,
     contractDate: v.contractDate,
     attendanceDate: v.attendanceDate,

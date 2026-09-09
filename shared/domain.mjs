@@ -1,11 +1,11 @@
-export const TYPES = ['children', 'payments', 'expenses'];
+export const TYPES = ['children', 'payments', 'expenses', 'groups'];
 // Stări reale, folosite de obligation() și acceptate în statusHistory.
 export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
 // Statutul unei fișe. „De verificat” marchează o fișă importată a cărei
 // situație nu este confirmată; nu este o stare din care se pot calcula
 // obligații, deci nu apare în statusHistory.
 export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
-export const emptyState = () => ({ children: [], payments: [], expenses: [] });
+export const emptyState = () => ({ children: [], payments: [], expenses: [], groups: [] });
 export const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -64,7 +64,7 @@ const FIELDS = {
     'contractDate',
     'attendanceDate',
     'withdrawalDate',
-    'group',
+    'groupId',
     'status',
     'statusHistory',
     'fee',
@@ -110,6 +110,7 @@ const FIELDS = {
     'archived',
     'archivedAt',
   ]),
+  groups: new Set(['id', 'name', 'capacity']),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -142,7 +143,9 @@ export function normalizeRecord(type, input) {
     r.status ||= 'Activ';
     text(r.status, 'Statut', true);
     requireThat(CHILD_STATUSES.includes(r.status), `Statut: folosește ${CHILD_STATUSES.join(', ')}.`);
-    r.group ??= '';
+    r.groupId ??= null;
+    if (r.groupId !== null)
+      requireThat(typeof r.groupId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(r.groupId), 'Grupă invalidă.');
     r.parent ??= '';
     r.phone ??= '';
     r.fee ??= null;
@@ -171,6 +174,15 @@ export function normalizeRecord(type, input) {
       }
       r[field].sort((a, b) => a.from.localeCompare(b.from));
     }
+  } else if (type === 'groups') {
+    text(r.name, 'Nume grupă', true);
+    r.name = r.name.trim();
+    if (r.capacity !== undefined && r.capacity !== null) {
+      requireThat(
+        Number.isInteger(r.capacity) && r.capacity >= 1 && r.capacity <= 1000,
+        'Capacitatea trebuie să fie un număr întreg între 1 și 1000.',
+      );
+    } else r.capacity = null;
   } else {
     requireThat(dateOK(r.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && r.tenders !== undefined) {
@@ -231,9 +243,10 @@ export function applyChildSetup(child, setup) {
   requireThat(setup && typeof setup === 'object', 'Completare invalidă.');
   requireThat(monthOK(setup.from), `${child.id}: luna de aplicare este invalidă.`);
   const r = structuredClone(child);
-  if (setup.group !== undefined) {
-    text(setup.group, 'Grupă');
-    r.group = setup.group.trim();
+  if (setup.groupId !== undefined) {
+    if (setup.groupId !== null)
+      requireThat(typeof setup.groupId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(setup.groupId), 'Grupă invalidă.');
+    r.groupId = setup.groupId;
   }
   if (setup.fee !== undefined && setup.fee !== null) {
     amount(setup.fee, `${child.name}: taxa`, true);
@@ -262,6 +275,9 @@ export function validateState(input) {
   const ids = new Set(s.children.map(r => r.id));
   for (const p of s.payments)
     requireThat(!p.childId || ids.has(p.childId), `Plata ${p.id}: copilul ${p.childId} nu există.`);
+  const groupIds = new Set(s.groups.map(g => g.id));
+  for (const c of s.children)
+    requireThat(!c.groupId || groupIds.has(c.groupId), `Copilul ${c.id}: grupa ${c.groupId} nu există.`);
   return s;
 }
 export function summary(s) {
@@ -269,6 +285,7 @@ export function summary(s) {
     children: s.children.length,
     payments: s.payments.length,
     expenses: s.expenses.length,
+    groups: s.groups.length,
     paymentTotal: total(s.payments),
     expenseTotal: total(s.expenses),
   };
@@ -279,7 +296,7 @@ export function issues(s) {
     result.push({ type, id: r.id, name: r.name || r.childName || r.sourceName || r.description || r.id, reason });
   for (const c of s.children.filter(r => !r.archived)) {
     if (!c.feeHistory?.length) add('children', c, c.fee == null ? 'Taxă lipsă' : 'Taxă fără lună de aplicare');
-    if (!c.group) add('children', c, 'Grupă lipsă');
+    if (!c.groupId) add('children', c, 'Grupă lipsă');
     if (!c.attendanceDate) add('children', c, 'Data începerii frecventării lipsește');
     if (!STATUS_HISTORY_VALUES.includes(c.status)) add('children', c, 'Statut de verificat');
     if (c.parent && c.name && c.parent.trim().toLocaleLowerCase('ro-RO') === c.name.trim().toLocaleLowerCase('ro-RO'))

@@ -32,6 +32,8 @@ export function createStore({ db, backups }) {
       .prepare('INSERT INTO records VALUES(?,?,?) ON CONFLICT(kind,id) DO UPDATE SET payload=excluded.payload')
       .run(kind, record.id, JSON.stringify(record));
 
+  const deleteRecord = (kind, id) => db.prepare('DELETE FROM records WHERE kind=? AND id=?').run(kind, id);
+
   function audit(action, type, id, before, after) {
     db.prepare(
       'INSERT INTO audit_changes(created_at,action,kind,record_id,before_json,after_json) VALUES(?,?,?,?,?,?)',
@@ -106,6 +108,7 @@ export function createStore({ db, backups }) {
     readRecord,
     recordExists,
     writeRecord,
+    deleteRecord,
     audit,
     auditPage,
     commit,
