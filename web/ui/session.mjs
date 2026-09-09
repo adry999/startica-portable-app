@@ -97,7 +97,7 @@ export function renderSaveStatus() {
 // deci nu e o problemă de conexiune. Cele două cazuri cer acțiuni diferite din
 // partea utilizatorului, deci nu pot avea același mesaj.
 const networkFailure = () => {
-  session.connectionError = 'Apasă „Reîncarcă datele” pentru a verifica ultima operațiune.';
+  session.connectionError = 'Apasă „Reîncarcă” pentru a verifica ultima operațiune.';
   renderSaveStatus();
   return Object.assign(Error('Conexiune întreruptă. ' + session.connectionError), { network: true });
 };
@@ -127,7 +127,7 @@ export async function api(path, body) {
     session.connectionError = '';
     renderSaveStatus();
     throw Object.assign(
-      Error(`Serverul a răspuns neașteptat (cod ${response.status}). Reîncarcă aplicația și verifică jurnalele.`),
+      Error(`Serverul a răspuns neașteptat (cod ${response.status}). Apasă „Reîncarcă” și verifică jurnalele.`),
       { status: response.status },
     );
   }
@@ -153,7 +153,7 @@ export function accept(result) {
   renderSaveStatus();
 }
 
-export async function executePending() {
+async function executePending() {
   if (session.busy) return;
   session.busy = true;
   session.saveError = '';
@@ -205,7 +205,7 @@ export async function load() {
 
 export async function mutate(path, body, base = session.revision) {
   if (!session.ready) throw Error('Așteaptă încărcarea datelor.');
-  if (session.pending || session.busy) throw Error('Verifică operațiunea anterioară cu „Reîncarcă datele”.');
+  if (session.pending || session.busy) throw Error('Verifică operațiunea anterioară cu „Reîncarcă”.');
   session.pending = { path, body: { ...body, revision: base, requestId: crypto.randomUUID() } };
   return executePending();
 }

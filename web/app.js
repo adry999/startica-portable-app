@@ -17,6 +17,25 @@ bindTransfers();
 bindFees();
 bindAssign();
 
+// Pe ecrane înguste navigația devine un panou explicit; pe desktop CSS o
+// afișează permanent, așa că nu folosim niciodată `hidden` pentru aceasta.
+const mobileNavQuery = window.matchMedia('(max-width: 720px)');
+function setMobileNav(open) {
+  const isOpen = mobileNavQuery.matches && open;
+  document.querySelector('.sidebar').classList.toggle('is-nav-open', isOpen);
+  $('navToggle').setAttribute('aria-expanded', String(isOpen));
+}
+function resetMobileNav() {
+  setMobileNav(false);
+}
+$('navToggle').onclick = () => {
+  const sidebar = document.querySelector('.sidebar');
+  setMobileNav(!sidebar.classList.contains('is-nav-open'));
+};
+if (mobileNavQuery.addEventListener) mobileNavQuery.addEventListener('change', resetMobileNav);
+else mobileNavQuery.addListener(resetMobileNav);
+resetMobileNav();
+
 // Un singur ascultător pentru toate butoanele generate dinamic: rândurile din
 // tabele se redesenează des, iar ascultătorii individuali s-ar pierde.
 document.addEventListener('click', async event => {
@@ -68,11 +87,85 @@ $('reviewReset').onclick = () => {
   refreshReview();
 };
 
+const MONTH_NAMES = [
+  'Ianuarie',
+  'Februarie',
+  'Martie',
+  'Aprilie',
+  'Mai',
+  'Iunie',
+  'Iulie',
+  'August',
+  'Septembrie',
+  'Octombrie',
+  'Noiembrie',
+  'Decembrie',
+];
+let monthPickerYear;
+
+function monthParts(value) {
+  const [year, month] = value.split('-').map(Number);
+  return { year, month };
+}
+
+function closeMonthPicker() {
+  $('monthMenu').hidden = true;
+  $('monthTrigger').setAttribute('aria-expanded', 'false');
+}
+
+function renderMonthPicker() {
+  const { year, month } = monthParts($('selectedMonth').value);
+  if (!monthPickerYear) monthPickerYear = year;
+  $('selectedMonthLabel').textContent = `${MONTH_NAMES[month - 1]} ${year}`;
+  $('monthYear').textContent = monthPickerYear;
+  $('monthOptions').innerHTML = MONTH_NAMES.map((name, index) => {
+    const value = `${monthPickerYear}-${String(index + 1).padStart(2, '0')}`;
+    return `<button class="month-option" type="button" role="option" data-month="${value}" aria-selected="${value === $('selectedMonth').value}">${name.slice(0, 3)}</button>`;
+  }).join('');
+}
+
 $('selectedMonth').value = today().slice(0, 7);
+monthPickerYear = monthParts($('selectedMonth').value).year;
+renderMonthPicker();
 $('selectedMonth').onchange = () => {
   if (!$('selectedMonth').value) $('selectedMonth').value = today().slice(0, 7);
+  monthPickerYear = monthParts($('selectedMonth').value).year;
+  renderMonthPicker();
   render();
 };
+$('monthTrigger').onclick = () => {
+  const opening = $('monthMenu').hidden;
+  $('monthMenu').hidden = !opening;
+  $('monthTrigger').setAttribute('aria-expanded', String(opening));
+  if (opening) renderMonthPicker();
+};
+$('monthPrevYear').onclick = () => {
+  monthPickerYear--;
+  renderMonthPicker();
+};
+$('monthNextYear').onclick = () => {
+  monthPickerYear++;
+  renderMonthPicker();
+};
+$('monthOptions').onclick = event => {
+  const option = event.target.closest('[data-month]');
+  if (!option) return;
+  $('selectedMonth').value = option.dataset.month;
+  $('selectedMonth').dispatchEvent(new Event('change'));
+  closeMonthPicker();
+};
+document.addEventListener('click', event => {
+  if (!$('monthControl').contains(event.target)) closeMonthPicker();
+});
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  closeMonthPicker();
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar.classList.contains('is-nav-open')) {
+    setMobileNav(false);
+    $('navToggle').focus();
+  }
+});
 
 // ─── Antet și istoric ───────────────────────────────────────────────────────
 
@@ -87,7 +180,11 @@ $('reloadButton').onclick = async () => {
       session.csvData = null;
       session.editor = null;
     }
-    message('Date reîncărcate. Pentru un formular în conflict, închide-l și redeschide înregistrarea.');
+    message(
+      recovering
+        ? 'Date reîncărcate. Formularul deschis a fost închis — redeschide înregistrarea dacă mai ai nevoie de ea.'
+        : 'Date reîncărcate.',
+    );
   } catch (e) {
     message(e.message, true);
   }

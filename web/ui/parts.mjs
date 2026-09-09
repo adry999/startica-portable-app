@@ -48,6 +48,10 @@ export function parentContacts(c) {
   );
 }
 
+// Reutilizează culorile deja definite pentru achitări (verde/galben/roz).
+const STATUS_BADGE_CLASS = { Activ: 'active', Suspendat: 'partial', Retras: 'late' };
+export const statusBadgeClass = status => STATUS_BADGE_CLASS[status] || 'partial';
+
 export function tenderLabel(p) {
   return paymentTenders(p)
     .map(part => `${esc(part.method)}: ${money(part.amount)}`)

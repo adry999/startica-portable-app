@@ -1,4 +1,4 @@
-import { today } from '../../shared/domain.mjs';
+import { today, allocations } from '../../shared/domain.mjs';
 import { unassignedPayments, assignmentRisk } from '../../shared/payment-matching.mjs';
 import { $, esc, money, date } from './dom.mjs';
 import { session, message, mutate } from './session.mjs';
@@ -35,7 +35,10 @@ function childOptions(suggestions) {
 }
 
 function row({ payment: p, suggestions }) {
-  const months = (p.allocations || []).map(a => `${esc(a.month)}: ${money(a.amount)}`).join('<br>') || '—';
+  const months =
+    allocations(p)
+      .map(a => `${esc(a.month)}: ${money(a.amount)}`)
+      .join('<br>') || '—';
   const source = p.sourceName || p.childName || '';
   return (
     `<tr data-payment="${esc(p.id)}"><td>${date(p.date)}</td><td><strong>${money(p.amount)}</strong></td>` +

@@ -1,8 +1,8 @@
-import { today, cents, obligation, paymentIndex, cashSummary, allocations } from '../../shared/domain.mjs';
+import { today, cents, obligation, paymentIndex, cashSummary, allocations, dueDayFor } from '../../shared/domain.mjs';
 import { reviewCenter, filteredReviewItems, reviewFilters } from '../../shared/review-center.mjs';
-import { $, esc, money, date, time } from './dom.mjs';
+import { $, esc, money, date, time, age, fileSize } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
-import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel } from './parts.mjs';
+import { pageRows, button, actions, childName, parentContacts, tenderLabel, statusBadgeClass } from './parts.mjs';
 import { renderFees } from './fees.mjs';
 import { renderAssign } from './assign.mjs';
 
@@ -12,7 +12,26 @@ const contractOf = c => c.contractNumber || c.id;
 
 export function go(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
-  document.querySelectorAll('.nav').forEach(v => v.classList.toggle('active', v.dataset.view === id));
+  let currentNav;
+  document.querySelectorAll('.nav').forEach(v => {
+    const current = v.dataset.view === id;
+    v.classList.toggle('active', current);
+    if (current) v.setAttribute('aria-current', 'page');
+    else v.removeAttribute('aria-current');
+    if (current) currentNav = v;
+  });
+  if (currentNav) {
+    const label = Array.from(currentNav.childNodes)
+      .filter(node => node.nodeType === 3)
+      .map(node => node.textContent.trim())
+      .filter(Boolean)
+      .join(' ');
+    $('currentViewLabel').textContent = label;
+  }
+  // În varianta compactă, alegerea unei secțiuni închide lista; pe desktop
+  // navigația rămâne afișată prin CSS, fără atributul hidden.
+  document.querySelector('.sidebar')?.classList.remove('is-nav-open');
+  $('navToggle').setAttribute('aria-expanded', 'false');
   // Ecranul de asociere își construiește tabelul abia când devine vizibil.
   if (id === 'assign') renderAssign(true);
   if (id === 'audit') {
@@ -43,8 +62,8 @@ function reviewRow(item, labels) {
   );
 }
 
-// Optiunile filtrului vin din aceeasi lista pe care o foloseste gruparea, ca
-// adaugarea unei categorii sa nu ceara si o editare in HTML.
+// Opțiunile filtrului vin din aceeași listă pe care o folosește gruparea, ca
+// adăugarea unei categorii să nu ceară și o editare în HTML.
 let filtersReady = false;
 function fillReviewFilter() {
   if (filtersReady) return;
@@ -74,6 +93,8 @@ export function renderHealth() {
   const { health } = session;
   const stale = !health.lastLocal || Date.now() - new Date(health.lastLocal).getTime() > 86400000,
     externalStale = !health.lastExternal || Date.now() - new Date(health.lastExternal).getTime() > 86400000;
+  const hasError = !!(health.localError || health.externalError);
+  const hasWarning = !hasError && (stale || !health.externalDir || externalStale);
   $('backupStatus').textContent = health.localError
     ? 'Backup local eșuat'
     : stale
@@ -83,16 +104,15 @@ export function renderHealth() {
         : health.externalError || externalStale
           ? 'Copia externă necesită atenție'
           : 'Backup local și copie externă verificate';
-  $('backupStatus').classList.toggle(
-    'danger',
-    !!(health.localError || stale || !health.externalDir || health.externalError || externalStale),
-  );
+  $('backupStatus').dataset.state = hasError ? 'error' : hasWarning ? 'warning' : 'ok';
+  $('backupStatus').classList.toggle('danger', hasError || hasWarning);
   $('healthDetails').innerHTML =
     `<p>Bază: ${esc(health.database)}</p><p>Backup local: ${esc(time(health.lastLocal))}</p>` +
     `<p>Copie externă: ${esc(time(health.lastExternal))}</p>` +
     `<p class="danger">${esc(health.localError || health.externalError || (!health.externalDir ? 'Copia externă nu este configurată.' : ''))}</p>` +
     `<p>Sincronizarea în cloud nu este confirmată de aplicație. Verifică starea din Google Drive.</p>` +
-    `<p>Păstrare locală: ultimele 20 de copii, câte una pentru ultimele 30 de zile cu backup și 12 luni cu backup. Copiile dinaintea importului, restaurării și migrării sunt păstrate separat.</p>`;
+    `<p>Păstrare locală: ultimele 20 de copii, câte una pentru ultimele 30 de zile cu backup și 12 luni cu backup. ` +
+    `Copiile dinaintea importului, restaurării și migrării nu expiră automat: ${health.permanentBackups.count} copii, ${fileSize(health.permanentBackups.bytes)}. Șterge-le manual din Startica_Backup dacă nu mai sunt necesare.</p>`;
   // Câmpul nu se suprascrie cât timp utilizatorul scrie în el.
   if (!session.settingsDirty && !session.settingsBusy) $('externalDir').value = health.externalDir || '';
   renderSaveStatus();
@@ -193,10 +213,56 @@ function renderDashboard(month, cash, review, index) {
   const toNotify = session.state.children.filter(
     c => !c.archived && obligation(c, month, session.state.payments, today(), index).notify,
   ).length;
-  $('alerts').innerHTML =
-    `<p><strong>${toNotify}</strong> copii de notificat pentru achitare.</p>` +
-    `<p>${review.items.length} fișe sau achitări de verificat.</p>` +
-    `<p>${session.state.payments.filter(p => !p.archived && !p.childId).length} plăți fără copil asociat.</p>`;
+  const unassigned = session.state.payments.filter(p => !p.archived && !p.childId).length;
+  const attentionItems = [
+    {
+      count: toNotify,
+      icon: '!',
+      title: 'Achitări de urmărit',
+      detail: toNotify === 1 ? '1 copil trebuie notificat.' : `${toNotify} copii trebuie notificați.`,
+      action: 'Vezi lista',
+      view: 'notify',
+      tone: 'urgent',
+    },
+    {
+      count: review.items.length,
+      icon: '✓',
+      title: 'Înregistrări de verificat',
+      detail:
+        review.items.length === 1
+          ? '1 fișă sau achitare necesită verificare.'
+          : `${review.items.length} fișe sau achitări necesită verificare.`,
+      action: 'Verifică',
+      view: 'review',
+      tone: 'review',
+    },
+    {
+      count: unassigned,
+      icon: '↗',
+      title: 'Achitări neasociate',
+      detail:
+        unassigned === 1
+          ? '1 achitare nu este legată de un copil.'
+          : `${unassigned} achitări nu sunt legate de un copil.`,
+      action: 'Asociază',
+      view: 'assign',
+      tone: 'assign',
+    },
+  ];
+  const allClear = attentionItems.every(item => item.count === 0);
+  $('alerts').innerHTML = allClear
+    ? '<div class="attention-empty"><strong>Nicio acțiune în listele urmărite.</strong>' +
+      (session.state.children.length || session.state.payments.length
+        ? 'Nu există notificări, înregistrări de verificat sau achitări neasociate.'
+        : 'Nu sunt copii sau achitări înregistrate încă.') +
+      '</div>'
+    : attentionItems
+        .map(item => {
+          const clear = item.count === 0;
+          const detail = clear ? 'Nicio acțiune necesară pe această listă.' : item.detail;
+          return `<article class="alert alert-${item.tone}${clear ? ' alert-clear' : ''}"><span class="alert-count">${item.count}</span><i aria-hidden="true">${item.icon}</i><div><strong>${item.title}</strong><small>${detail}</small></div><button class="alert-action" data-view="${item.view}">${clear ? 'Vezi lista' : item.action}<span aria-hidden="true">→</span></button></article>`;
+        })
+        .join('');
 
   const history = [];
   for (let i = 11; i >= 0; i--) {
@@ -240,9 +306,8 @@ function termLabel(days) {
 
 function renderNotify(month, index) {
   const evaluate = c => obligation(c, month, session.state.payments, today(), index);
-  const rows = session.state.children
-    .filter(c => !c.archived)
-    .map(c => ({ child: c, o: evaluate(c) }))
+  const all = session.state.children.filter(c => !c.archived).map(c => ({ child: c, o: evaluate(c) }));
+  const rows = all
     .filter(r => r.o.notify)
     // Cea mai veche întârziere prima: aia costă cel mai mult dacă mai așteaptă.
     .sort((a, b) => a.o.daysToDue - b.o.daysToDue || a.child.name.localeCompare(b.child.name, 'ro'));
@@ -252,7 +317,7 @@ function renderNotify(month, index) {
   const owed = rows.reduce((sum, r) => sum + cents(r.o.rest), 0) / 100;
   // Fișele fără taxă sau fără perioadă confirmată nu pot fi evaluate deloc;
   // fără cifra asta, un „0 de notificat” ar părea liniștitor pe nedrept.
-  const unknown = session.state.children.filter(c => !c.archived && evaluate(c).label === 'De verificat').length;
+  const unknown = all.filter(r => r.o.label === 'De verificat').length;
 
   $('notifyCount').textContent = rows.length;
   $('notifyPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
@@ -281,14 +346,31 @@ function renderNotify(month, index) {
 }
 
 function renderGroups() {
-  const groups = [...new Set(session.state.children.map(c => c.group).filter(Boolean))].sort();
+  const children = session.state.children.filter(c => !c.archived);
+  const groups = [...new Set(children.map(c => String(c.group || '').trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, 'ro'),
+  );
   $('groupsGrid').innerHTML =
     groups
       .map(
         g =>
-          `<article class="card mint"><h3>${esc(g)}</h3><p>${session.state.children.filter(c => c.group === g && !c.archived).length} copii nearhivați</p></article>`,
+          `<article class="card mint"><h3>${esc(g)}</h3><p>${children.filter(c => String(c.group || '').trim() === g).length} copii nearhivați</p></article>`,
       )
       .join('') || '<p>Nu sunt grupe completate.</p>';
+}
+
+function renderChildrenSummary(review) {
+  const children = session.state.children.filter(c => !c.archived);
+  const active = children.filter(c => c.status === 'Activ').length;
+  const occupiedGroups = new Set(children.map(c => String(c.group || '').trim()).filter(Boolean)).size;
+  // Centrul grupează deja observațiile după tip și ID; Set-ul păstrează
+  // protecția explicită dacă regulile de verificare se extind ulterior.
+  const incomplete = new Set(
+    review.items.filter(item => item.type === 'children' && !item.record.archived).map(item => item.id),
+  ).size;
+  $('activeChildrenStat').textContent = active;
+  $('occupiedGroupsStat').textContent = occupiedGroups;
+  $('incompleteChildrenStat').textContent = incomplete;
 }
 
 export function render() {
@@ -298,6 +380,7 @@ export function render() {
   // Un singur index de încasări pentru toate ecranele randării curente.
   const index = paymentIndex(session.state.payments, today());
   renderDashboard(month, cash, review, index);
+  renderChildrenSummary(review);
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
   renderStatus(month, index);
   renderNotify(month, index);
@@ -309,25 +392,68 @@ export function render() {
 
 // ─── Fișa copilului ─────────────────────────────────────────────────────────
 
+const profileSection = (title, html) => `<section class="profile-section"><h4>${esc(title)}</h4>${html}</section>`;
+
+function historyList(rows, render) {
+  return rows.length
+    ? `<ul class="history-list">${[...rows]
+        .sort((a, b) => a.from.localeCompare(b.from))
+        .map(r => `<li><strong>${esc(r.from)}</strong> ${render(r)}</li>`)
+        .join('')}</ul>`
+    : '<p class="muted">Fără istoric.</p>';
+}
+
 export function profile(id) {
   const c = session.state.children.find(r => r.id === id),
     payments = session.state.payments.filter(p => p.childId === id),
-    o = obligation(c, selectedMonth(), payments);
-  const history = JSON.stringify({ taxe: c.feeHistory || [], statute: c.statusHistory || [] }, null, 2);
-  const list =
+    month = selectedMonth(),
+    o = obligation(c, month, payments);
+  const paymentsRows =
     payments
       .map(
         p =>
-          `<p>${date(p.date)} · ${money(p.amount)} · ${tenderLabel(p)} · ${allocations(p)
-            .map(a => `${esc(a.month)}: ${money(a.amount)}`)
-            .join('; ')}${p.archived ? ' · Arhivată' : ''}</p>`,
+          `<tr class="${p.archived ? 'archived-row' : ''}"><td>${date(p.date)}</td><td>${money(p.amount)}</td>` +
+          `<td>${tenderLabel(p)}</td><td>${
+            allocations(p)
+              .map(a => `${esc(a.month)}: ${money(a.amount)}`)
+              .join('<br>') || 'Avans nerepartizat'
+          }</td></tr>`,
       )
-      .join('') || '<p>Fără achitări.</p>';
+      .join('') || `<tr><td colspan="4" class="empty">Fără achitări.</td></tr>`;
   $('profileBody').innerHTML =
-    `<h3>${esc(c.name)}</h3><p>${parentContacts(c)} · Grupa ${esc(c.group)}</p>` +
-    `<p>Contract: ${date(c.contractDate)} · Frecventare: ${date(c.attendanceDate)} · Retragere: ${date(c.withdrawalDate)}</p>` +
-    `<p>${esc(c.notes)}</p><p>Luna ${esc(selectedMonth())}: ${esc(o.label)} · Rest ${money(o.rest)} · Credit ${money(o.credit)}</p>` +
-    `<h3>Taxe și statute</h3><pre>${esc(history)}</pre><h3>Achitări</h3>${list}`;
+    `<div class="profile-head"><div><h3>${esc(c.name)}</h3>` +
+    `<span class="badge ${statusBadgeClass(c.status)}">${esc(c.status)}${c.archived ? ' · Arhivat' : ''}</span></div>` +
+    `<p class="muted">Contract ${esc(contractOf(c))} · Grupa ${esc(c.group || 'nealocată')} · Vârstă ${age(c.birthDate)}</p></div>` +
+    `<div class="profile-grid">` +
+    profileSection('Părinți', `<p>${parentContacts(c)}</p>`) +
+    profileSection(
+      'Contract',
+      `<p>Contract: ${date(c.contractDate)}<br>Frecventare: ${date(c.attendanceDate)}<br>Retragere: ${date(c.withdrawalDate)}</p>`,
+    ) +
+    profileSection(
+      'Taxă și scadență',
+      `<p>Taxă curentă: ${o.expected === null ? 'necunoscută' : money(o.expected)}<br>Ziua scadenței: ${dueDayFor(c)}<br>Scadență luna ${esc(month)}: ${date(o.due)}</p>`,
+    ) +
+    profileSection(
+      `Situație luna ${month}`,
+      `<p>${esc(o.label)}<br>Rest: ${money(o.rest)} · Credit: ${money(o.credit)}</p>`,
+    ) +
+    `</div>` +
+    profileSection(
+      'Istoric taxe și statut',
+      `<div class="profile-grid">` +
+        profileSection(
+          'Taxe',
+          historyList(c.feeHistory || [], f => `— ${money(f.amount)}`),
+        ) +
+        profileSection(
+          'Statut',
+          historyList(c.statusHistory || [], s => `— ${esc(s.status)}`),
+        ) +
+        `</div>`,
+    ) +
+    profileSection('Achitări', `<div class="table-wrap"><table><tbody>${paymentsRows}</tbody></table></div>`) +
+    (c.notes ? profileSection('Observații', `<p>${esc(c.notes)}</p>`) : '');
   $('profile').showModal();
 }
 
@@ -335,7 +461,7 @@ export function profile(id) {
 
 let auditOffset = 0;
 
-export async function renderAudit(append = false) {
+async function renderAudit(append = false) {
   const rows = await api(`/api/audit?offset=${auditOffset}`);
   const html =
     rows
@@ -359,5 +485,3 @@ export function moreAudit() {
   auditOffset += 100;
   return renderAudit(true);
 }
-
-export { pages };

@@ -2,11 +2,13 @@
 // Isolated headless Chrome test; never uses the user's Chrome profile or production DB.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createApplication } from '../startica_server.mjs';
 const dir = mkdtempSync(join(tmpdir(), 'startica-browser-'));
+const screenshotDir =
+  process.env.STARTICA_UI_SCREENSHOTS === '1' ? mkdtempSync(join(tmpdir(), 'startica-ui-shots-')) : null;
 // autoBackupIntervalMs: 0 => backup după fiecare scriere. Testul verifică
 // dialogul de restaurare, care previzualizează cel mai recent backup; politica
 // de rărire este acoperită separat, în tests/fixes.test.mjs.
@@ -97,6 +99,72 @@ try {
   );
   console.log('Application loaded');
   assert.equal(await evaluate("!!document.querySelector('.topbar #saveIndicator')"), true);
+  assert.equal(await evaluate("!!document.querySelector('.topbar #backupStatus')"), true);
+  assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 12);
+  assert.equal(
+    await evaluate("new Set([...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)).size"),
+    12,
+  );
+  assert.deepEqual(
+    await evaluate(
+      "['activeChildrenStat','occupiedGroupsStat','incompleteChildrenStat'].map(id=>document.getElementById(id).textContent)",
+    ),
+    ['0', '0', '0'],
+  );
+  assert.equal(await evaluate("!!document.querySelector('#alerts .attention-empty')"), true);
+  const viewport = async width => {
+    await command('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
+    await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  };
+  const noPageOverflow = async () =>
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true);
+  const screenshot = async name => {
+    if (!screenshotDir) return;
+    const { data } = await command('Page.captureScreenshot', { format: 'png' });
+    const path = join(screenshotDir, name + '.png');
+    writeFileSync(path, Buffer.from(data, 'base64'));
+    console.log('UI screenshot: ' + path);
+  };
+  for (const width of [1440, 1024, 390]) {
+    await viewport(width);
+    await noPageOverflow();
+    if (width === 390)
+      assert.equal(await evaluate("document.querySelector('.topbar').getBoundingClientRect().height < 360"), true);
+    await evaluate("document.getElementById('monthTrigger').click()");
+    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), false);
+    assert.equal(
+      await evaluate(
+        "(()=>{const r=document.getElementById('monthMenu').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;})()",
+      ),
+      true,
+    );
+    assert.equal(
+      await evaluate(
+        "(()=>{const menu=document.getElementById('monthMenu').getBoundingClientRect();const trigger=document.getElementById('monthTrigger').getBoundingClientRect();return menu.top-trigger.bottom>=0&&menu.top-trigger.bottom<=12;})()",
+      ),
+      true,
+    );
+    await screenshot('dashboard-' + width);
+    await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
+  }
+  assert.equal(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
+  await evaluate("document.getElementById('navToggle').click()");
+  assert.equal(await evaluate("document.getElementById('navToggle').getAttribute('aria-expanded')"), 'true');
+  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
+  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
+  assert.equal(await evaluate("document.querySelector('.view.active').id"), 'children');
+  assert.equal(await evaluate("document.getElementById('navToggle').getAttribute('aria-expanded')"), 'false');
+  assert.equal(await evaluate("document.querySelector('#primaryNav [aria-current=page]').dataset.view"), 'children');
+  await noPageOverflow();
+  await screenshot('children-mobile');
+  await evaluate(
+    "document.getElementById('navToggle').click();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))",
+  );
+  assert.equal(await evaluate('document.activeElement.id'), 'navToggle');
+  await viewport(1440);
+  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
+  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
   await until(() => evaluate("document.querySelector('.brand img')?.naturalWidth > 0"), 'Official logo failed to load');
   await evaluate(
     "document.querySelector('[data-create=children]').click();document.getElementById('editorForm').elements.name.dispatchEvent(new Event('input',{bubbles:true}))",
@@ -141,6 +209,16 @@ try {
   assert.equal((await (await fetch(url + '/api/state')).json()).state.children.length, 1);
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Copil <test>/);
   assert.equal(await evaluate("document.querySelector('test') !== null"), false);
+  assert.equal(await evaluate("document.getElementById('activeChildrenStat').textContent"), '1');
+  assert.equal(await evaluate("document.getElementById('occupiedGroupsStat').textContent"), '1');
+  await evaluate(
+    "document.getElementById('childrenSearch').value='Aucun rezultat';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
+  );
+  assert.equal(await evaluate("!!document.querySelector('#childrenTable .empty')"), true);
+  assert.equal(await evaluate("document.getElementById('activeChildrenStat').textContent"), '1');
+  await evaluate(
+    "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
+  );
   await evaluate("document.querySelector('[data-create=payments]').click()");
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Al doilea părinte/);
   await evaluate(
@@ -157,6 +235,18 @@ try {
   await evaluate("document.querySelector('[data-close=editor]').click()");
   assert.match(await evaluate("document.getElementById('incomeStat').textContent"), /3.?000/);
   assert.match(await evaluate("document.getElementById('advanceStat').textContent"), /500/);
+  const originalMonth = await evaluate("document.getElementById('selectedMonth').value");
+  const originalAdvance = await evaluate("document.getElementById('advanceStat').textContent");
+  await evaluate(
+    "document.getElementById('monthTrigger').click();document.getElementById('monthPrevYear').click();document.querySelector('#monthOptions button').click()",
+  );
+  assert.notEqual(await evaluate("document.getElementById('selectedMonth').value"), originalMonth);
+  assert.equal(await evaluate("document.getElementById('advanceStat').textContent"), originalAdvance);
+  assert.equal(await evaluate("!!document.querySelector('#alerts .attention-empty')"), false);
+  assert.equal(await evaluate("!!document.querySelector('#alerts .alert-clear')"), true);
+  await evaluate(
+    `document.getElementById('selectedMonth').value=${JSON.stringify(originalMonth)};document.getElementById('selectedMonth').dispatchEvent(new Event('change'))`,
+  );
   await evaluate("document.querySelector('[data-view=status]').click()");
   assert.match(await evaluate("document.getElementById('statusTable').textContent"), /Plătit/);
   await evaluate("document.querySelector('[data-action=edit][data-type=children]').click()");
@@ -172,6 +262,37 @@ try {
   await until(() => evaluate("!document.getElementById('editor').open"), 'Phone edit failed');
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Retras/);
   assert.match(await evaluate("document.getElementById('statusTable').textContent"), /Plătit/);
+  await evaluate("document.querySelector('[data-view=fees]').click()");
+  await evaluate(
+    "document.getElementById('feesFilter').value='all';document.getElementById('feesFilter').dispatchEvent(new Event('change',{bubbles:true}))",
+  );
+  assert.equal(
+    await evaluate("document.querySelector('#feesTable tr[data-child] select[data-status]').value"),
+    'Retras',
+  );
+  await evaluate("document.getElementById('feesSave').click()");
+  await until(
+    () => evaluate("document.getElementById('feesError').textContent!==''"),
+    'Untouched row should be rejected',
+  );
+  assert.match(await evaluate("document.getElementById('feesError').textContent"), /Nu ai completat nicio taxă/);
+  const beforeFeeOnlyEdit = (await (await fetch(url + '/api/state')).json()).state.children.find(
+    c => c.name === 'Copil <test>',
+  );
+  assert.equal(beforeFeeOnlyEdit.status, 'Retras');
+  await evaluate(
+    "(()=>{const input=document.querySelector('#feesTable tr[data-child] input[data-fee]');input.value='2500';input.dispatchEvent(new Event('input',{bubbles:true}));})()",
+  );
+  await evaluate("document.getElementById('feesSave').click()");
+  await until(async () => {
+    const child = (await (await fetch(url + '/api/state')).json()).state.children.find(c => c.name === 'Copil <test>');
+    return child?.feeHistory?.at(-1)?.amount === 2500;
+  }, 'Fee-only edit did not persist');
+  const afterFeeOnlyEdit = (await (await fetch(url + '/api/state')).json()).state.children.find(
+    c => c.name === 'Copil <test>',
+  );
+  assert.equal(afterFeeOnlyEdit.status, 'Retras');
+  assert.equal(afterFeeOnlyEdit.group, '1');
   await evaluate("document.querySelector('[data-action=profile]').click()");
   assert.match(await evaluate("document.getElementById('profileBody').textContent"), /3.?000/);
   await evaluate(
@@ -247,6 +368,43 @@ try {
   assert.match(await evaluate("document.getElementById('csvPreview').textContent"), /0 copii noi · 1 existenți/);
   assert.equal(await evaluate("document.querySelector('test') !== null"), false);
   await evaluate("document.querySelector('[data-close=csvDialog]').click()");
+  // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
+  const summaryFixture = await evaluate(`(async()=>{
+    const {session}=await import('/ui/session.mjs');
+    const {render}=await import('/ui/views.mjs');
+    const original=session.state;
+    try {
+      const sample=structuredClone(original.children[0]);
+      session.state={...original,payments:[],expenses:[],children:[
+        {...sample,id:'summary-active',archived:false,status:'Activ',feeHistory:[],group:'  Test  '},
+        {...sample,id:'summary-suspended',archived:false,status:'Suspendat',group:'Test'},
+        {...sample,id:'summary-archived',archived:true,status:'Activ',group:'Arhivă exclusiv'}
+      ]};
+      render();
+      return {
+        active:document.getElementById('activeChildrenStat').textContent,
+        groups:document.getElementById('occupiedGroupsStat').textContent,
+        review:Number(document.getElementById('incompleteChildrenStat').textContent),
+        groupText:document.getElementById('groupsGrid').textContent,
+        allClear:!!document.querySelector('#alerts .attention-empty')
+      };
+    } finally {session.state=original;render();}
+  })()`);
+  assert.equal(summaryFixture.active, '1');
+  assert.equal(summaryFixture.groups, '1');
+  assert.ok(summaryFixture.review > 0);
+  assert.doesNotMatch(summaryFixture.groupText, /Arhivă exclusiv/);
+  assert.equal(summaryFixture.allClear, false);
+  await viewport(390);
+  for (const view of ['children', 'payments', 'expenses', 'review']) {
+    await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
+    await noPageOverflow();
+  }
+  await viewport(1440);
+  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
+  await screenshot('children-desktop-populated');
+  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
+  await screenshot('dashboard-desktop-populated');
   assert.deepEqual(errors, []);
   console.log(
     'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, audit.',

@@ -7,6 +7,21 @@ import { parentContacts, summaryHTML } from './parts.mjs';
 const CSV_MAX_BYTES = 2000000;
 const EXCEL_MAX_BYTES = 20000000;
 
+// vendor/xlsx.full.min.js are ~950 KB; se încarcă abia la primul import/export
+// Excel, nu pe calea de pornire a aplicației.
+let xlsxLoading;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  xlsxLoading ??= new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = '/vendor/xlsx.full.min.js';
+    script.onload = () => resolve(window.XLSX);
+    script.onerror = () => reject(Error('Nu s-a putut încărca modulul Excel.'));
+    document.head.append(script);
+  });
+  return xlsxLoading;
+}
+
 // ─── Import copii din CSV ───────────────────────────────────────────────────
 
 function csvPreviewHTML(file, report) {
@@ -105,6 +120,7 @@ function bindExcel() {
     if (!file) return;
     try {
       if (file.size > EXCEL_MAX_BYTES) throw Error('Fișier prea mare (maximum 20 MB).');
+      const XLSX = await loadXLSX();
       const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
       const parsed = readWorkbook(workbook, XLSX);
       let report = parsed;
@@ -148,12 +164,17 @@ function bindExcel() {
     }
   };
 
-  $('exportButton').onclick = () => {
+  $('exportButton').onclick = async () => {
     if (!session.ready || session.pending) {
       message('Reîncarcă datele înainte de export.', true);
       return;
     }
-    XLSX.writeFile(exportWorkbook(session.state, XLSX), `Startica_complet_${today()}.xlsx`, { compression: true });
+    try {
+      const XLSX = await loadXLSX();
+      XLSX.writeFile(exportWorkbook(session.state, XLSX), `Startica_complet_${today()}.xlsx`, { compression: true });
+    } catch (e) {
+      message(e.message, true);
+    }
   };
 }
 

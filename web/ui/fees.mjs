@@ -15,16 +15,18 @@ const visibleChildren = () =>
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'));
 
 function row(c) {
-  const statusOptions = STATUS_HISTORY_VALUES.map(
-    s => `<option value="${esc(s)}" ${s === 'Activ' ? 'selected' : ''}>${esc(s)}</option>`,
-  ).join('');
+  const currentStatus = c.status || 'Activ';
+  const statusOptions = [...new Set([currentStatus, ...STATUS_HISTORY_VALUES])]
+    .map(s => `<option value="${esc(s)}" ${s === currentStatus ? 'selected' : ''}>${esc(s)}</option>`)
+    .join('');
+  const currentFee = c.feeHistory?.at(-1)?.amount ?? c.fee ?? '';
   return (
     `<tr data-child="${esc(c.id)}"><td>${esc(c.contractNumber || c.id)}</td><td>${esc(c.name)}</td>` +
     `<td>${date(c.attendanceDate)}</td>` +
-    `<td><input data-group value="${esc(c.group || '')}" placeholder="grupă"></td>` +
-    `<td><input data-fee type="number" min="0" step="0.01" value="${esc(c.feeHistory?.at(-1)?.amount ?? c.fee ?? '')}" placeholder="taxă"></td>` +
+    `<td><input data-group value="${esc(c.group || '')}" data-group-initial="${esc(c.group || '')}" placeholder="grupă"></td>` +
+    `<td><input data-fee type="number" min="0" step="0.01" value="${esc(currentFee)}" data-fee-initial="${esc(currentFee)}" placeholder="taxă"></td>` +
     `<td><input data-from type="month" value="${esc(defaultFrom(c))}"></td>` +
-    `<td><select data-status>${statusOptions}</select></td></tr>`
+    `<td><select data-status data-status-initial="${esc(currentStatus)}">${statusOptions}</select></td></tr>`
   );
 }
 
@@ -40,18 +42,35 @@ export function renderFees() {
   $('feesPending').textContent = `${rows.length} rânduri afișate`;
 }
 
-// Ce s-a completat efectiv: un rând fără taxă nu se trimite, ca să nu
-// suprascrie tăcut o fișă pe care utilizatorul nu a atins-o.
+// Se trimite un câmp doar dacă diferă de valoarea afișată inițial, ca un rând
+// neatins să nu suprascrie tăcut o fișă existentă.
 function collect() {
   const updates = [];
   for (const tr of $('feesTable').querySelectorAll('tr[data-child]')) {
-    const fee = tr.querySelector('[data-fee]').value.trim(),
-      from = tr.querySelector('[data-from]').value,
-      group = tr.querySelector('[data-group]').value.trim(),
-      status = tr.querySelector('[data-status]').value;
-    if (!fee) continue;
-    if (!monthOK(from)) throw Error(`Completează luna de aplicare pentru ${tr.cells[1].textContent}.`);
-    updates.push({ id: tr.dataset.child, fee: Number(fee), from, group, status });
+    const feeInput = tr.querySelector('[data-fee]'),
+      groupInput = tr.querySelector('[data-group]'),
+      statusInput = tr.querySelector('[data-status]'),
+      fromInput = tr.querySelector('[data-from]');
+    const fee = feeInput.value.trim(),
+      group = groupInput.value.trim(),
+      status = statusInput.value;
+    const update = { id: tr.dataset.child, from: fromInput.value };
+    let changed = false;
+    if (fee !== '' && fee !== feeInput.dataset.feeInitial) {
+      update.fee = Number(fee);
+      changed = true;
+    }
+    if (group !== groupInput.dataset.groupInitial) {
+      update.group = group;
+      changed = true;
+    }
+    if (status !== statusInput.dataset.statusInitial) {
+      update.status = status;
+      changed = true;
+    }
+    if (!changed) continue;
+    if (!monthOK(update.from)) throw Error(`Completează luna de aplicare pentru ${tr.cells[1].textContent}.`);
+    updates.push(update);
   }
   return updates;
 }

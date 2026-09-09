@@ -8,7 +8,7 @@ import {
   CHILD_STATUSES,
   STATUS_HISTORY_VALUES,
 } from '../../shared/domain.mjs';
-import { $, esc, money } from './dom.mjs';
+import { $, esc, money, age } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
 import { field, select, textarea } from './parts.mjs';
 
@@ -78,36 +78,51 @@ const upsertHistory = (rows, from, key, value) => [...rows.filter(r => r.from !=
 
 // ─── Formularele ────────────────────────────────────────────────────────────
 
+const section = (title, html) =>
+  `<fieldset class="form-section"><legend>${esc(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
+
 function childFields(r) {
   const groups = [...new Set(session.state.children.map(c => c.group).filter(Boolean))];
   return (
-    field('name', 'Nume copil', r.name, 'text', 'required') +
-    field('parent', 'Părinte 1 (opțional)', r.parent) +
-    field('phone', 'Telefon părinte 1 (opțional)', r.phone, 'tel') +
-    field('parent2', 'Părinte 2 (opțional)', r.parent2) +
-    field('phone2', 'Telefon părinte 2 (opțional)', r.phone2, 'tel') +
-    field('group', 'Grupă (nume sau număr)', r.group, 'text', 'list="groupOptions"') +
-    `<datalist id="groupOptions">${groups.map(g => `<option value="${esc(g)}"></option>`).join('')}</datalist>` +
-    field('birthDate', 'Data nașterii', r.birthDate, 'date') +
-    field('contractDate', 'Data contractului', r.contractDate, 'date') +
-    field('attendanceDate', 'Început frecventare', r.attendanceDate, 'date') +
-    field('withdrawalDate', 'Retragere', r.withdrawalDate, 'date') +
-    select('status', 'Statut', r.status || 'Activ', CHILD_STATUSES) +
-    field('statusFrom', 'Statut aplicabil din luna', today().slice(0, 7), 'month', 'required') +
-    field('fee', 'Taxa lunară (gol = necunoscută)', r.fee ?? '', 'number', 'min="0" step="0.01"') +
-    field('feeFrom', 'Taxa aplicabilă din luna', today().slice(0, 7), 'month') +
-    field('dueDay', 'Ziua scadenței', r.dueDay || 10, 'number', 'min="1" max="31" required') +
-    textarea(
-      'feeHistory',
-      'Istoric taxe — câte un rând: 2026-09 = 2000',
-      (r.feeHistory || []).map(f => `${f.from} = ${f.amount}`).join('\n'),
+    section(
+      'Date copil',
+      field('name', 'Nume copil', r.name, 'text', 'required') +
+        `<label class="field">Data nașterii<input name="birthDate" type="date" value="${esc(r.birthDate)}" id="childBirthDate"><small class="field-hint" id="childAgeHint">Vârstă: ${age(r.birthDate)}</small></label>` +
+        select('status', 'Statut', r.status || 'Activ', CHILD_STATUSES) +
+        field('group', 'Grupă (nume sau număr)', r.group, 'text', 'list="groupOptions"') +
+        `<datalist id="groupOptions">${groups.map(g => `<option value="${esc(g)}"></option>`).join('')}</datalist>`,
     ) +
-    textarea(
-      'statusHistory',
-      'Istoric statut — câte un rând: 2026-09 = Activ',
-      (r.statusHistory || []).map(f => `${f.from} = ${f.status}`).join('\n'),
+    section(
+      'Părinți',
+      field('parent', 'Părinte 1 (opțional)', r.parent) +
+        field('phone', 'Telefon părinte 1 (opțional)', r.phone, 'tel') +
+        field('parent2', 'Părinte 2 (opțional)', r.parent2) +
+        field('phone2', 'Telefon părinte 2 (opțional)', r.phone2, 'tel'),
     ) +
-    '<p class="notice full">Taxele se aplică integral lunii începute. O taxă sau un statut schimbat adaugă o intrare din luna aleasă. Poți corecta explicit rândurile din istoric. Completează data începerii pentru calculul obligațiilor.</p>'
+    section(
+      'Contract și taxe',
+      field('contractDate', 'Data contractului', r.contractDate, 'date') +
+        field('attendanceDate', 'Început frecventare', r.attendanceDate, 'date') +
+        field('withdrawalDate', 'Retragere', r.withdrawalDate, 'date') +
+        field('statusFrom', 'Statut aplicabil din luna', today().slice(0, 7), 'month', 'required') +
+        field('fee', 'Taxa lunară (gol = necunoscută)', r.fee ?? '', 'number', 'min="0" step="0.01"') +
+        field('feeFrom', 'Taxa aplicabilă din luna', today().slice(0, 7), 'month') +
+        field('dueDay', 'Ziua scadenței', r.dueDay || 10, 'number', 'min="1" max="31" required'),
+    ) +
+    section(
+      'Istoric (avansat)',
+      textarea(
+        'feeHistory',
+        'Istoric taxe — câte un rând: 2026-09 = 2000',
+        (r.feeHistory || []).map(f => `${f.from} = ${f.amount}`).join('\n'),
+      ) +
+        textarea(
+          'statusHistory',
+          'Istoric statut — câte un rând: 2026-09 = Activ',
+          (r.statusHistory || []).map(f => `${f.from} = ${f.status}`).join('\n'),
+        ) +
+        '<p class="notice full">Taxele se aplică integral lunii începute. O taxă sau un statut schimbat adaugă o intrare din luna aleasă. Poți corecta explicit rândurile din istoric. Completează data începerii pentru calculul obligațiilor.</p>',
+    )
   );
 }
 
@@ -168,6 +183,8 @@ export function openEditor(type, id) {
     for (const input of document.querySelectorAll('[data-tender]')) input.oninput = updatePaymentTotal;
     updatePaymentTotal();
   }
+  if (type === 'children')
+    $('childBirthDate').oninput = e => ($('childAgeHint').textContent = 'Vârstă: ' + age(e.target.value));
   // addAllocation a marcat formularul ca modificat; deschiderea nu este o modificare.
   session.editorDirty = false;
   $('editor').showModal();
@@ -259,7 +276,8 @@ export function bindEditorForm() {
     try {
       let r = FROM_FORM[type]({ ...session.editor.record, notes: v.notes }, v);
       if (r === null) return; // dublură neconfirmată
-      r = normalizeRecord(type, r);
+      // paymentFromForm normalizează deja intern, ca să poată verifica dubluri.
+      if (type !== 'payments') r = normalizeRecord(type, r);
       await mutate('/api/record', { type, record: r, mode }, revision);
       $('editor').close();
       session.editor = null;
