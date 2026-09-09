@@ -12,12 +12,17 @@ const EXCEL_MAX_BYTES = 20000000;
 let xlsxLoading;
 function loadXLSX() {
   if (window.XLSX) return Promise.resolve(window.XLSX);
+  // O eroare de rețea nu trebuie să rămână cache-uită: o cerere reluată
+  // trebuie să reîncerce, nu să eșueze mereu cu promisiunea veche.
   xlsxLoading ??= new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = '/vendor/xlsx.full.min.js';
     script.onload = () => resolve(window.XLSX);
     script.onerror = () => reject(Error('Nu s-a putut încărca modulul Excel.'));
     document.head.append(script);
+  }).catch(e => {
+    xlsxLoading = undefined;
+    throw e;
   });
   return xlsxLoading;
 }
