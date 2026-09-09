@@ -128,6 +128,23 @@ export function unassignedPayments(state, limit = 200) {
   return open.map(payment => ({ payment, suggestions: suggestChildren(payment, state.children, index) }));
 }
 
+// Harta copil → achitările neasociate care îl sugerează. Doar potrivirea de
+// nume leagă o plată de un anume copil (vezi suggestChildren), deci un
+// candidat fără nameMatch nu apare aici — ar da un fals sentiment de rezolvare.
+export function unassignedSuggestionsByChild(state) {
+  const index = paymentIndex(state.payments);
+  const byChild = new Map();
+  for (const payment of state.payments.filter(p => !p.archived && !p.childId)) {
+    for (const s of suggestChildren(payment, state.children, index)) {
+      if (!s.nameMatch) continue;
+      let list = byChild.get(s.id);
+      if (!list) byChild.set(s.id, (list = []));
+      list.push(payment);
+    }
+  }
+  return byChild;
+}
+
 // Câți copii ar putea fi raportați greșit ca restanțieri din cauza plăților
 // nelegate. Un „de notificat” nu poate fi crezut cât timp cifra asta e mare.
 export function assignmentRisk(state, month, asOf) {
