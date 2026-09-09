@@ -2,7 +2,7 @@ import { today, cents, obligation, paymentIndex, cashSummary, allocations, dueDa
 import { reviewCenter, filteredReviewItems, reviewFilters } from '../../shared/review-center.mjs';
 import { $, esc, money, date, time, age, fileSize } from './dom.mjs';
 import { session, api, message, renderSaveStatus } from './session.mjs';
-import { pageRows, button, actions, childName, parentContacts, tenderLabel, statusBadgeClass } from './parts.mjs';
+import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel, statusBadgeClass } from './parts.mjs';
 import { renderFees } from './fees.mjs';
 import { renderAssign } from './assign.mjs';
 
@@ -126,13 +126,24 @@ const HEADINGS = {
   expenses: ['Data', 'Categorie', 'Descriere', 'Suma', 'Acțiuni'],
 };
 
+const SORT_FIELDS = {
+  children: ['contract', 'name', null, 'group', 'status'],
+  payments: ['date', 'child', 'amount'],
+  expenses: ['date', 'category', 'description', 'amount'],
+};
+const listSort = {
+  children: { field: 'name', direction: 'asc', manual: false },
+  payments: { field: 'date', direction: 'desc', manual: false },
+  expenses: { field: 'date', direction: 'desc', manual: false },
+};
+
 const CELLS = {
   children: r => [
     esc(contractOf(r)),
     button('profile', 'children', r.id, r.name),
     parentContacts(r),
     esc(r.group || 'Lipsește'),
-    esc(r.status) + (r.archived ? ' · Arhivat' : ''),
+    `<span class="badge ${statusBadgeClass(r.status)}">${esc(r.status)}${r.archived ? ' · Arhivat' : ''}</span>`,
     actions('children', r),
   ],
   payments: r => [
@@ -148,9 +159,16 @@ const CELLS = {
   expenses: r => [date(r.date), esc(r.category), esc(r.description), money(r.amount), actions('expenses', r)],
 };
 
+const normalizeSearch = value =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('ro-RO');
+
 function matchesSearch(r, type, search) {
   if (!search) return true;
-  return JSON.stringify([
+  return normalizeSearch(
+    JSON.stringify([
     r.name,
     r.parent,
     r.phone,
@@ -162,14 +180,58 @@ function matchesSearch(r, type, search) {
     r.notes,
     r.description,
     r.category,
-    type === 'payments' ? childName(r) : '',
-  ])
-    .toLocaleLowerCase('ro-RO')
-    .includes(search);
+      type === 'payments' ? childName(r) : '',
+    ]),
+  ).includes(search);
+}
+
+const sortValue = (type, field, row) => {
+  if (field === 'contract') return contractOf(row);
+  if (field === 'name') return row.name;
+  if (field === 'child') return childName(row);
+  if (field === 'amount') return Number(row.amount) || 0;
+  return row[field] || '';
+};
+
+function sortRows(type, rows) {
+  const { field, direction } = listSort[type];
+  const factor = direction === 'asc' ? 1 : -1;
+  return rows.sort((a, b) => {
+    const av = sortValue(type, field, a),
+      bv = sortValue(type, field, b);
+    if (typeof av === 'number' || typeof bv === 'number') return factor * (Number(av) - Number(bv));
+    return factor * String(av).localeCompare(String(bv), 'ro', { numeric: true, sensitivity: 'base' });
+  });
+}
+
+function listHead(type) {
+  const { field: activeField, direction, manual } = listSort[type];
+  return (
+    '<tr>' +
+    HEADINGS[type]
+      .map((label, index) => {
+        const field = SORT_FIELDS[type][index];
+        if (!field) return `<th>${label}</th>`;
+        const active = field === activeField && manual;
+        return `<th aria-sort="${active ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}"><button type="button" class="table-sort" data-sort-type="${type}" data-sort="${field}">${label}<span aria-hidden="true">${active ? (direction === 'asc' ? '↑' : '↓') : '↕'}</span></button></th>`;
+      })
+      .join('') +
+    '</tr>'
+  );
+}
+
+export function setListSort(type, field, direction) {
+  const current = listSort[type];
+  if (!current || !SORT_FIELDS[type].includes(field)) return;
+  current.direction = direction;
+  current.field = field;
+  current.manual = true;
+  pages[type] = 0;
+  renderList(type);
 }
 
 export function renderList(type) {
-  const search = $(`${type}Search`).value.toLocaleLowerCase('ro-RO'),
+  const search = normalizeSearch($(`${type}Search`).value),
     archive = $(`${type}Archive`).value,
     month = $(`${type}Month`)?.value;
   const rows = session.state[type].filter(
@@ -178,9 +240,17 @@ export function renderList(type) {
       (!month || r.date.startsWith(month)) &&
       matchesSearch(r, type, search),
   );
-  if (type !== 'children') rows.sort((a, b) => b.date.localeCompare(a.date));
   const headings = HEADINGS[type];
-  $(`${type}Head`).innerHTML = '<tr>' + headings.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  sortRows(type, rows);
+  const head = $(`${type}Head`);
+  head.innerHTML = listHead(type);
+  for (const sortButton of head.querySelectorAll('[data-sort]'))
+    sortButton.onclick = () =>
+      setListSort(
+        sortButton.dataset.sortType,
+        sortButton.dataset.sort,
+        sortButton.parentElement.getAttribute('aria-sort') === 'ascending' ? 'desc' : 'asc',
+      );
   $(`${type}Table`).innerHTML =
     pageRows(type, rows)
       .map(

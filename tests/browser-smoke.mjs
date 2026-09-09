@@ -146,7 +146,13 @@ try {
     );
     await screenshot('dashboard-' + width);
     await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
+  assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
+  await evaluate("document.getElementById('monthTrigger').focus();document.getElementById('monthTrigger').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))");
+  assert.equal(await evaluate("document.activeElement.dataset.month === document.getElementById('selectedMonth').value"), true);
+  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))");
+  assert.equal(await evaluate("document.activeElement.dataset.month.endsWith('-10')"), true);
+  await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+  assert.equal(await evaluate("document.activeElement.id"), 'monthTrigger');
   }
   assert.equal(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
   await evaluate("document.getElementById('navToggle').click()");
@@ -219,6 +225,17 @@ try {
   await evaluate(
     "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
   );
+  await evaluate(
+    "document.getElementById('childrenSearch').value='parinte test';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
+  );
+  assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Copil <test>/);
+  assert.equal(await evaluate("typeof document.querySelector('#childrenHead [data-sort=name]').onclick"), 'function');
+  await evaluate(
+    "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'));document.querySelector('#childrenHead [data-sort=name]').click()",
+  );
+  assert.equal(await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"), 'ascending');
+  await evaluate("document.querySelector('#childrenHead [data-sort=name]').click()");
+  assert.equal(await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"), 'descending');
   await evaluate("document.querySelector('[data-create=payments]').click()");
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Al doilea părinte/);
   await evaluate(
@@ -401,6 +418,12 @@ try {
     await noPageOverflow();
   }
   await viewport(1440);
+  await evaluate(
+    "window.testPrint=[];window.print=()=>window.testPrint.push(document.body.dataset.printView);document.querySelector('#primaryNav [data-view=notify]').click();document.getElementById('printNotify').click();document.querySelector('#primaryNav [data-view=status]').click();document.getElementById('printButton').click()",
+  );
+  assert.deepEqual(await evaluate('window.testPrint'), ['notify', 'status']);
+  await evaluate("window.dispatchEvent(new Event('afterprint'))");
+  assert.equal(await evaluate("document.body.dataset.printView === undefined"), true);
   await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
   await screenshot('children-desktop-populated');
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");

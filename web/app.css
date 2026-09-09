@@ -603,6 +603,35 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+.table-wrap thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+}
+.table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+}
+.table-sort:hover,
+.table-sort:focus-visible {
+  color: var(--orange);
+}
+.table-sort span {
+  color: var(--orange);
+  font-size: 14px;
+  line-height: 1;
+}
 .badge {
   display: inline-flex;
   padding: 5px 10px;
@@ -1243,8 +1272,9 @@ summary {
   .safety,
   .footer-note,
   #message,
-  .view:not(#status),
-  #printButton {
+  .view,
+  #printButton,
+  #printNotify {
     display: none !important;
   }
   .app {
@@ -1254,7 +1284,8 @@ summary {
     padding: 0;
     max-width: none;
   }
-  .view#status {
+  body[data-print-view='status'] .view#status,
+  body[data-print-view='notify'] .view#notify {
     display: block !important;
   }
   .panel {

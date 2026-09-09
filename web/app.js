@@ -139,6 +139,16 @@ $('monthTrigger').onclick = () => {
   $('monthTrigger').setAttribute('aria-expanded', String(opening));
   if (opening) renderMonthPicker();
 };
+function focusSelectedMonth() {
+  const selected = $('monthOptions').querySelector('[aria-selected="true"]');
+  (selected || $('monthOptions').querySelector('[data-month]'))?.focus();
+}
+$('monthTrigger').onkeydown = event => {
+  if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+  event.preventDefault();
+  if ($('monthMenu').hidden) $('monthTrigger').click();
+  focusSelectedMonth();
+};
 $('monthPrevYear').onclick = () => {
   monthPickerYear--;
   renderMonthPicker();
@@ -154,12 +164,31 @@ $('monthOptions').onclick = event => {
   $('selectedMonth').dispatchEvent(new Event('change'));
   closeMonthPicker();
 };
+$('monthOptions').onkeydown = event => {
+  const option = event.target.closest('[data-month]');
+  if (!option) return;
+  const options = [...$('monthOptions').querySelectorAll('[data-month]')];
+  const index = options.indexOf(option);
+  const offsets = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 };
+  let next = null;
+  if (event.key in offsets) next = options[(index + offsets[event.key] + options.length) % options.length];
+  if (event.key === 'Home') next = options[0];
+  if (event.key === 'End') next = options.at(-1);
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
+};
 document.addEventListener('click', event => {
   if (!$('monthControl').contains(event.target)) closeMonthPicker();
 });
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
+  const pickerWasOpen = !$('monthMenu').hidden;
   closeMonthPicker();
+  if (pickerWasOpen) {
+    $('monthTrigger').focus();
+    return;
+  }
   const sidebar = document.querySelector('.sidebar');
   if (sidebar.classList.contains('is-nav-open')) {
     setMobileNav(false);
@@ -190,8 +219,13 @@ $('reloadButton').onclick = async () => {
   }
 };
 $('auditMore').onclick = () => void moreAudit().catch(e => message(e.message, true));
-$('printButton').onclick = () => window.print();
-$('printNotify').onclick = () => window.print();
+function printView(view) {
+  document.body.dataset.printView = view;
+  window.print();
+}
+window.addEventListener('afterprint', () => delete document.body.dataset.printView);
+$('printButton').onclick = () => printView('status');
+$('printNotify').onclick = () => printView('notify');
 
 // ─── Starea formularelor ────────────────────────────────────────────────────
 
