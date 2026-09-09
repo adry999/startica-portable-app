@@ -94,7 +94,7 @@ function childFields(r) {
     ) +
     section(
       'Părinți',
-      field('parent', 'Părinte 1 (opțional)', r.parent) +
+      field('parent', 'Părinte 1', r.parent, 'text', 'required') +
         field('phone', 'Telefon părinte 1 (opțional)', r.phone, 'tel') +
         field('parent2', 'Părinte 2 (opțional)', r.parent2) +
         field('phone2', 'Telefon părinte 2 (opțional)', r.phone2, 'tel'),
@@ -145,13 +145,26 @@ function paymentFields(r) {
     )
     .join('');
   return (
-    `<label class="field full">Copil<select name="childId"><option value="">Copil neasociat</option>${children}</select></label>` +
-    field('date', 'Data încasării', r.date || today(), 'date', 'required') +
-    field('amount', 'Total achitare (calculat automat)', r.amount ?? 0, 'number', 'readonly step="0.01"') +
-    `<div class="full tender-fields"><p>Completează una sau mai multe metode. Totalul se calculează automat; repartizarea pe luni folosește acest total o singură dată.</p>${methods}</div>` +
-    field('sourceName', 'Nume din sursă / plătitor', r.sourceName || r.childName || '') +
-    `<div class="full"><h3>Repartizare pe luni</h3><p>Suma rămasă nerepartizată este evidențiată ca avans.</p><div id="allocationRows"></div><button type="button" class="action-btn" id="addAllocation">+ Lună</button><p id="allocationBalance"></p></div>` +
-    `<label class="field full"><span><input name="reviewed" type="checkbox" ${r.reviewed ? 'checked' : ''}> Am verificat observațiile importului</span><small>${esc(r.verification || 'Fără observații de import')}</small></label>`
+    section(
+      'Copil și dată',
+      `<label class="field full">Copil<select name="childId"><option value="">Copil neasociat</option>${children}</select></label>` +
+        field('date', 'Data încasării', r.date || today(), 'date', 'required'),
+    ) +
+    section(
+      'Sumă și metodă',
+      field('amount', 'Total achitare (calculat automat)', r.amount ?? 0, 'number', 'readonly step="0.01"') +
+        `<div class="full tender-fields"><p>Completează una sau mai multe metode. Totalul se calculează automat; repartizarea pe luni folosește acest total o singură dată.</p>${methods}</div>` +
+        field('sourceName', 'Nume din sursă / plătitor', r.sourceName || r.childName || ''),
+    ) +
+    section(
+      'Repartizare pe luni',
+      `<div class="full"><p>Suma rămasă nerepartizată este evidențiată ca avans.</p><div id="allocationRows"></div><button type="button" class="action-btn" id="addAllocation">+ Lună</button><p id="allocationBalance"></p></div>`,
+    ) +
+    section(
+      'Verificare import',
+      `<label class="field full checkbox-field"><input name="reviewed" type="checkbox" ${r.reviewed ? 'checked' : ''}><span>Am verificat observațiile importului</span></label>` +
+        `<p class="full field-hint">${esc(r.verification || 'Fără observații de import')}</p>`,
+    )
   );
 }
 

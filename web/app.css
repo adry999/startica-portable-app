@@ -709,13 +709,24 @@ dialog::backdrop {
   font-size: 13px;
   font-weight: 800;
 }
-.field input,
+.field input:not([type='checkbox']),
 .field select {
   height: 44px;
   padding: 0 12px;
   border: 1px solid #ddd7cc;
   border-radius: 12px;
   background: #fff;
+}
+.checkbox-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.checkbox-field input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
 }
 .modal-actions {
   display: flex;
@@ -1051,7 +1062,7 @@ label {
   gap: 5px;
   font-size: 14px;
 }
-input,
+input:not([type='checkbox']):not([type='radio']),
 select,
 textarea {
   padding: 9px 12px;
