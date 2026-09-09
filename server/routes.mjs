@@ -67,6 +67,14 @@ export function createRouter(context) {
             .groups.some(g => g.id !== r.id && g.name.toLocaleLowerCase('ro-RO') === r.name.toLocaleLowerCase('ro-RO'));
           if (clash) fail('Există deja o grupă cu acest nume.');
         }
+        if (b.type === 'categories') {
+          const clash = store
+            .readState()
+            .categories.some(
+              g => g.id !== r.id && g.name.toLocaleLowerCase('ro-RO') === r.name.toLocaleLowerCase('ro-RO'),
+            );
+          if (clash) fail('Există deja o categorie cu acest nume.');
+        }
         store.writeRecord(b.type, r);
         store.audit(old ? 'modificare' : 'adăugare', b.type, r.id, old, r);
       }),
@@ -81,6 +89,16 @@ export function createRouter(context) {
         if (occupied) fail('Mută mai întâi copiii din grupă.');
         store.deleteRecord('groups', b.id);
         store.audit('ștergere', 'groups', b.id, g, null);
+      }),
+
+    // Categoria e doar o etichetă text pentru cheltuieli (fără FK), deci
+    // ștergerea nu are nevoie de verificare de ocupare, ca la grupe.
+    '/api/category-delete': b =>
+      store.commit(b, 'ștergere categorie', () => {
+        const c = store.readRecord('categories', b.id);
+        if (!c) fail('Categoria nu mai există.', 409);
+        store.deleteRecord('categories', b.id);
+        store.audit('ștergere', 'categories', b.id, c, null);
       }),
 
     // Ștergere definitivă, doar pentru ce e deja arhivat — arhivarea rămâne

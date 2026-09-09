@@ -5,15 +5,14 @@ import {
   normalizeRecord,
   allocations,
   paymentTenders,
+  firstUnpaidMonth,
   CHILD_STATUSES,
   STATUS_HISTORY_VALUES,
 } from '../../shared/domain.mjs';
 import { $, esc, money, age } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
-import { field, select, textarea } from './parts.mjs';
-import { stripDiacritics } from '../../shared/text.mjs';
-
-const normalizeSearch = value => stripDiacritics(value).toLocaleLowerCase('ro-RO');
+import { field, select, textarea, expenseCategories } from './parts.mjs';
+import { childPickerHTML, wireChildPicker } from './child-picker.mjs';
 
 const ID_PREFIX = { children: 'ID', payments: 'PAY', expenses: 'EXP' };
 const TITLE = { children: 'copil', payments: 'achitare', expenses: 'cheltuială' };
@@ -49,45 +48,6 @@ const readTenders = () =>
   [...document.querySelectorAll('[data-tender]')]
     .map(input => ({ method: input.dataset.tender, amount: Number(input.value) }))
     .filter(p => p.amount !== 0);
-
-function updatePaymentTotal() {
-  $('editorForm').elements.amount.value = (readTenders().reduce((sum, p) => sum + cents(p.amount), 0) / 100).toFixed(2);
-  allocationBalance();
-}
-
-// Dropdown copil: închis implicit, se deschide la focus/tastare, filtrează
-// fără diacritice; alegerea scrie id-ul în câmpul ascuns childId.
-function wireChildSearch() {
-  const search = $('childSearch'),
-    hidden = $('childId'),
-    list = $('childList');
-  if (!search || !hidden || !list) return;
-  const options = [
-    { id: '', label: 'Copil neasociat' },
-    ...session.state.children.map(c => ({ id: c.id, label: c.name + (c.archived ? ' (arhivat)' : '') })),
-  ];
-  const renderList = () => {
-    const q = normalizeSearch(search.value);
-    const matches = options.filter(o => !q || normalizeSearch(o.label).includes(q));
-    list.innerHTML =
-      matches.map(o => `<div class="combobox-option" data-id="${esc(o.id)}">${esc(o.label)}</div>`).join('') ||
-      '<div class="combobox-empty">Niciun rezultat</div>';
-    list.hidden = false;
-  };
-  search.onfocus = renderList;
-  search.oninput = renderList;
-  // mousedown, nu click: fuge înaintea blur-ului de pe search, ca alegerea să nu fie anulată.
-  list.onmousedown = e => {
-    const opt = e.target.closest('[data-id]');
-    if (!opt) return;
-    hidden.value = opt.dataset.id;
-    search.value = opt.textContent;
-    list.hidden = true;
-  };
-  search.onblur = () => {
-    setTimeout(() => (list.hidden = true), 150);
-  };
-}
 
 function allocationBalance() {
   if (!$('allocationRows')) return;
@@ -183,11 +143,7 @@ function paymentFields(r) {
     section(
       'Copil și dată',
       `<label class="field full">Copil` +
-        `<div class="combobox">` +
-        `<input type="text" id="childSearch" value="${esc(currentLabel)}" placeholder="Caută copil după nume…" autocomplete="off">` +
-        `<input type="hidden" name="childId" id="childId" value="${esc(r.childId || '')}">` +
-        `<div class="combobox-list" id="childList" hidden></div>` +
-        `</div>` +
+        childPickerHTML({ name: 'childId', selectedId: r.childId || '', selectedLabel: currentLabel }) +
         `</label>` +
         field('date', 'Data încasării', r.date || today(), 'date', 'required'),
     ) +
@@ -211,21 +167,8 @@ function paymentFields(r) {
   );
 }
 
-// Categorie = text liber cu sugestii, nu o listă închisă: clientul poate scrie
-// oricând una nouă, care apare apoi și ea ca sugestie la următoarea cheltuială.
-const DEFAULT_EXPENSE_CATEGORIES = [
-  'Chirie',
-  'Utilități',
-  'Salarii',
-  'Materiale educaționale',
-  'Alimente',
-  'Reparații și întreținere',
-  'Altele',
-];
 const expenseFields = r => {
-  const categories = [
-    ...new Set([...DEFAULT_EXPENSE_CATEGORIES, ...session.state.expenses.map(e => e.category).filter(Boolean)]),
-  ].sort((a, b) => a.localeCompare(b, 'ro'));
+  const categories = expenseCategories();
   return (
     field('date', 'Data cheltuielii', r.date || today(), 'date', 'required') +
     field('amount', 'Suma', r.amount ?? '', 'number', 'required min="0.01" step="0.01"') +
@@ -252,11 +195,58 @@ export function openEditor(type, id) {
   $('editorFields').innerHTML = FIELDS[type](r) + textarea('notes', 'Observații', r.notes);
   if (type === 'payments') {
     for (const a of allocations(r)) addAllocation(a);
-    if (!existing) addAllocation({ month: $('selectedMonth').value, amount: '' });
+    if (!existing) addAllocation({ month: (r.date || today()).slice(0, 7), amount: '' });
+    // Luna repartizării urmărește data încasării cât timp rândul unic de
+    // repartizare mai e încă egal cu ce am pornit — la prima editare manuală,
+    // sau dacă era deja diferit (plată pt. altă lună), sincronizarea nu pornește.
+    let syncedMonth = $('editorForm').elements.date.value.slice(0, 7);
+    $('editorForm').elements.date.oninput = e => {
+      const rows = $('allocationRows').children;
+      const monthInput = rows.length === 1 && rows[0].querySelector('[data-month]');
+      if (monthInput && monthInput.value === syncedMonth) {
+        syncedMonth = e.target.value.slice(0, 7);
+        monthInput.value = syncedMonth;
+        allocationBalance();
+      }
+    };
     $('addAllocation').onclick = () => addAllocation({ month: '', amount: '' });
+    // Suma repartizată urmărește totalul calculat din metode, cu aceeași
+    // protecție ca la lună: rămâne legată doar cât timp n-a fost atinsă manual.
+    const singleAmountInput = () => {
+      const rows = $('allocationRows').children;
+      return rows.length === 1 ? rows[0].querySelector('[data-amount]') : null;
+    };
+    let syncedAmount = singleAmountInput()?.value || '';
+    const updatePaymentTotal = () => {
+      const totalValue = readTenders().reduce((sum, p) => sum + cents(p.amount), 0) / 100;
+      $('editorForm').elements.amount.value = totalValue.toFixed(2);
+      const amountInput = singleAmountInput();
+      if (amountInput && (amountInput.value === syncedAmount || amountInput.value === '')) {
+        syncedAmount = totalValue ? totalValue.toFixed(2) : '';
+        amountInput.value = syncedAmount;
+      }
+      allocationBalance();
+    };
     for (const input of document.querySelectorAll('[data-tender]')) input.oninput = updatePaymentTotal;
     updatePaymentTotal();
-    wireChildSearch();
+    const options = [
+      { id: '', label: 'Copil neasociat' },
+      ...session.state.children.map(c => ({ id: c.id, label: c.name + (c.archived ? ' (arhivat)' : '') })),
+    ];
+    // Alegerea copilului propune luna cea mai veche neachitată a lui, nu luna
+    // încasării: încasarea vine des într-o lună pt. taxa lunii precedente.
+    wireChildPicker($('editorFields').querySelector('[data-child-picker]'), options, childId => {
+      const rows = $('allocationRows').children;
+      const monthInput = rows.length === 1 && rows[0].querySelector('[data-month]');
+      if (!monthInput || monthInput.value !== syncedMonth) return;
+      const child = session.state.children.find(c => c.id === childId);
+      const suggested = child && firstUnpaidMonth(child, session.state.payments);
+      if (suggested && suggested !== syncedMonth) {
+        syncedMonth = suggested;
+        monthInput.value = suggested;
+        allocationBalance();
+      }
+    });
   }
   if (type === 'children')
     $('childBirthDate').oninput = e => ($('childAgeHint').textContent = 'Vârstă: ' + age(e.target.value));
@@ -369,13 +359,10 @@ export function bindEditorForm() {
 
 // ─── Acțiuni pe rânduri ─────────────────────────────────────────────────────
 
+// Confirmarea e cerută de butonul însuși (al doilea click, vezi app.js),
+// nu printr-o fereastră modală — deci aici se arhivează direct.
 export async function archive(type, id) {
   const r = session.state[type].find(item => item.id === id);
-  const explanation =
-    type === 'children'
-      ? 'Arhivarea ascunde copilul din registrul curent; nu modifică obligațiile istorice.'
-      : 'Arhivarea exclude suma din rapoarte și este înregistrată în istoric.';
-  if (!confirm(`${r.archived ? 'Reactivezi' : 'Arhivezi'} înregistrarea ${id}? ${explanation}`)) return;
   await mutate('/api/record', {
     type,
     mode: 'update',

@@ -1,5 +1,5 @@
 // Instrument de mentenanță pentru importul istoric V5, deja aplicat pe
-// 08.09.2026 (vezi GHID.md). Implicit face doar previzualizare; --apply
+// 08.09.2026 (vezi docs/GHID.md). Implicit face doar previzualizare; --apply
 // folosește API-ul autentificat al aplicației, verificarea de revizie și
 // backup-urile. Calea sursei poate fi dată explicit ca prim argument, pentru
 // un import similar cu alt fișier.
@@ -26,7 +26,7 @@ const sourceFile = extra[0]
 if (!existsSync(sourceFile))
   throw Error(
     `Fișierul sursă lipsește: ${sourceFile}\n` +
-      'Acest instrument a fost folosit pentru importul istoric V5, deja aplicat (vezi GHID.md). ' +
+      'Acest instrument a fost folosit pentru importul istoric V5, deja aplicat (vezi docs/GHID.md). ' +
       'Pentru un import similar cu alt fișier, dă calea completă ca prim argument.',
   );
 const bytes = readFileSync(sourceFile),

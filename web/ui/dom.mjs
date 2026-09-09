@@ -1,5 +1,13 @@
 export const $ = id => document.getElementById(id);
 
+// Contorul unui buton din nav („De rezolvat”): la 0, butonul se estompează
+// (rămâne clicabil) — coada e goală, nu dezactivată.
+export const setNavCount = (id, count) => {
+  const badge = $(id);
+  badge.textContent = count;
+  badge.closest('.nav')?.classList.toggle('is-empty', count === 0);
+};
+
 // Tot HTML-ul din interfață este construit prin concatenare, deci orice valoare
 // care vine din date trebuie să treacă pe aici înainte de a ajunge în innerHTML.
 export const esc = v =>

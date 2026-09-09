@@ -7,7 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../shared/domain.mjs';
 import { childStatus } from '../shared/excel.mjs';
-import { suggestChildren } from '../shared/payment-matching.mjs';
+import { suggestChildren, unassignedSuggestionsByChild } from '../shared/payment-matching.mjs';
 
 const temporary = prefix => {
   const dir = mkdtempSync(join(tmpdir(), prefix));
@@ -112,7 +112,7 @@ test('Backupul automat este rărit; cel dinaintea unui import rămâne obligator
   assert.equal(automatic(), 1, 'Numărul de backupuri automate nu crește cu numărul de salvări.');
 
   const imported = await app.post('/api/import', {
-    state: { children: [CHILD], payments: [], expenses: [], groups: [] },
+    state: { children: [CHILD], payments: [], expenses: [], groups: [], categories: [] },
     confirm: 'IMPORT',
     revision,
     requestId: randomUUID(),
@@ -209,8 +209,11 @@ test('Scadența vine din data contractului, iar notificarea începe cu 3 zile î
 
   const at = day => obligation(c, '2026-09', [], day);
   assert.equal(at('2026-09-14').due, '2026-09-14');
+  // notify nu mai e condiționat de fereastra de 3 zile: orice rest neachitat
+  // apare pe listă din prima zi a lunii; doar eticheta arată apropierea de
+  // scadență, iar restanțele rămân evidențiate separat (label + late-row).
   for (const [day, label, notify] of [
-    ['2026-09-10', 'Nescadent', false],
+    ['2026-09-10', 'Nescadent', true],
     ['2026-09-11', 'Scadent în curând', true],
     ['2026-09-14', 'Scadent în curând', true],
     ['2026-09-15', 'Restanță', true],
@@ -259,7 +262,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
     }),
   );
   let r = await app.post('/api/import', {
-    state: { children, payments: [], expenses: [], groups: [] },
+    state: { children, payments: [], expenses: [], groups: [], categories: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),
@@ -359,6 +362,23 @@ test('Sugestiile de asociere separă potrivirea pe nume de simpla coincidență 
   assert.ok(!afterPaid[0].reasons.some(r => r.includes('neachitată')));
 });
 
+test('Harta copil → plăți neasociate include doar potrivirile de nume', () => {
+  const fee = [{ from: '2025-01', amount: 12000 }];
+  const children = [
+    { id: 'A', name: 'Florea Mark', feeHistory: fee },
+    { id: 'B', name: 'Taburceanu Stefan', feeHistory: fee },
+  ];
+  const payments = [
+    { id: 'P1', sourceName: 'Mark', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
+    { id: 'P2', sourceName: 'achitare gemeni', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
+    { id: 'P3', childId: 'B', sourceName: 'Stefan', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
+  ];
+  const byChild = unassignedSuggestionsByChild({ children, payments });
+  assert.deepEqual(byChild.get('A').map(p => p.id), ['P1'], 'Numele din sursă leagă plata P1 de copilul A.');
+  assert.equal(byChild.has('B'), false, 'Plata lui B e deja asociată (are childId), nu apare aici.');
+  assert.equal(byChild.size, 1, 'Plata fără potrivire de nume (P2) nu apare pentru nimeni.');
+});
+
 test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuită', async t => {
   const app = await startApplication(t, 'startica-asoc-', { autoBackupIntervalMs: 0 });
   const child = normalizeRecord('children', {
@@ -387,7 +407,7 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
     }),
   ];
   let r = await app.post('/api/import', {
-    state: { children: [child], payments, expenses: [], groups: [] },
+    state: { children: [child], payments, expenses: [], groups: [], categories: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),

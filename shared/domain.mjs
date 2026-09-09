@@ -1,17 +1,91 @@
-export const TYPES = ['children', 'payments', 'expenses', 'groups'];
+export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories'];
 // Stări reale, folosite de obligation() și acceptate în statusHistory.
 export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
 // Statutul unei fișe. „De verificat” marchează o fișă importată a cărei
 // situație nu este confirmată; nu este o stare din care se pot calcula
 // obligații, deci nu apare în statusHistory.
 export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
-export const emptyState = () => ({ children: [], payments: [], expenses: [], groups: [] });
+export const emptyState = () => ({ children: [], payments: [], expenses: [], groups: [], categories: [] });
 export const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 export const cents = value => Math.round(Number(value) * 100);
 export const total = rows => rows.reduce((s, r) => s + cents(r.amount), 0) / 100;
+// Grila unui calendar lunar real (săptămâni Luni–Duminică, cu zilele din
+// lunile vecine adăugate ca umplutură), cu zilele de naștere ale copiilor
+// nearhivați marcate pe fiecare celulă. Potrivirea e după lună+zi din
+// naștere, nu după an, ca ziua să apară în orice an calendaristic o arăți.
+export function monthCalendar(children, todayStr = today()) {
+  const t = new Date(todayStr + 'T12:00:00');
+  const year = t.getFullYear(),
+    month = t.getMonth();
+  const firstOfMonth = new Date(year, month, 1);
+  const leading = (firstOfMonth.getDay() + 6) % 7; // grila începe luni
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const totalCells = Math.ceil((leading + daysInMonth) / 7) * 7;
+  const gridStart = new Date(year, month, 1 - leading);
+
+  const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const dow = t.getDay();
+  const weekStart = new Date(t);
+  weekStart.setDate(t.getDate() + (dow === 0 ? -6 : 1 - dow));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  // Comparate ca text (YYYY-MM-DD), nu ca Date: gridStart e la miezul nopții,
+  // iar weekStart moștenea ora 12:00 de la `t` — comparația de Date excludea
+  // greșit prima zi a săptămânii.
+  const weekStartStr = isoDate(weekStart);
+  const weekEndStr = isoDate(weekEnd);
+
+  const monthDay = d => `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const byMonthDay = new Map();
+  for (const c of children) {
+    if (c.archived || !c.birthDate) continue;
+    const b = new Date(c.birthDate + 'T12:00:00');
+    const key = monthDay(b);
+    if (!byMonthDay.has(key)) byMonthDay.set(key, []);
+    byMonthDay.get(key).push({ name: c.name, birthYear: b.getFullYear() });
+  }
+
+  const days = Array.from({ length: totalCells }, (_, i) => {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    const matches = byMonthDay.get(monthDay(d)) || [];
+    const dateStr = isoDate(d);
+    return {
+      date: dateStr,
+      day: d.getDate(),
+      inMonth: d.getMonth() === month,
+      isToday: dateStr === todayStr,
+      isCurrentWeek: dateStr >= weekStartStr && dateStr <= weekEndStr,
+      names: matches.map(m => ({ name: m.name, turningAge: d.getFullYear() - m.birthYear })),
+    };
+  });
+
+  const weeks = [];
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  return weeks;
+}
+// Copiii cu ziua de naștere în următoarele `days` zile (0 = azi), ca de
+// pregătit ceva din timp — nu doar în ziua respectivă. Sortați crescător.
+export function upcomingBirthdays(children, days = 5, todayStr = today()) {
+  const t = new Date(todayStr + 'T12:00:00');
+  const range = Array.from({ length: days + 1 }, (_, i) => {
+    const d = new Date(t);
+    d.setDate(t.getDate() + i);
+    return d;
+  });
+  return children
+    .filter(c => !c.archived && c.birthDate)
+    .flatMap(c => {
+      const b = new Date(c.birthDate + 'T12:00:00');
+      const daysUntil = range.findIndex(d => d.getMonth() === b.getMonth() && d.getDate() === b.getDate());
+      if (daysUntil === -1) return [];
+      return [{ child: c, daysUntil, turningAge: range[daysUntil].getFullYear() - b.getFullYear() }];
+    })
+    .sort((a, b) => a.daysUntil - b.daysUntil || a.child.name.localeCompare(b.child.name, 'ro'));
+}
 export function monthOK(v) {
   return (
     typeof v === 'string' &&
@@ -110,7 +184,8 @@ const FIELDS = {
     'archived',
     'archivedAt',
   ]),
-  groups: new Set(['id', 'name', 'capacity']),
+  groups: new Set(['id', 'name', 'capacity', 'educator']),
+  categories: new Set(['id', 'name']),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -183,6 +258,9 @@ export function normalizeRecord(type, input) {
         'Capacitatea trebuie să fie un număr întreg între 1 și 1000.',
       );
     } else r.capacity = null;
+  } else if (type === 'categories') {
+    text(r.name, 'Nume categorie', true);
+    r.name = r.name.trim();
   } else {
     requireThat(dateOK(r.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && r.tenders !== undefined) {
@@ -286,6 +364,7 @@ export function summary(s) {
     payments: s.payments.length,
     expenses: s.expenses.length,
     groups: s.groups.length,
+    categories: s.categories.length,
     paymentTotal: total(s.payments),
     expenseTotal: total(s.expenses),
   };
@@ -334,7 +413,7 @@ export function allocations(p) {
 export function paymentTenders(p) {
   return p.tenders ?? [{ method: p.method || 'Cash', amount: p.amount || 0 }];
 }
-// Cu câte zile înainte de scadență apare copilul pe lista de notificat.
+// Cu câte zile înainte de scadență trece eticheta pe „Scadent în curând”.
 const NOTICE_DAYS = 3;
 // Ora fixă la prânz UTC: aritmetica pe zile nu este afectată de ora de vară.
 const shiftDays = (day, delta) =>
@@ -392,9 +471,10 @@ export function obligation(child, month, payments, asOf = today(), index = null)
   const lastDay = new Date(year, m, 0).getDate();
   const due = `${month}-${String(Math.min(dueDayFor(child), lastDay)).padStart(2, '0')}`;
   const noticeFrom = shiftDays(due, -NOTICE_DAYS);
-  // Ce trebuie notificat: are de plată și fie a trecut scadența, fie intră în
-  // fereastra de avertizare. Ecranul „De notificat” filtrează exact pe asta.
-  const notify = !inactive && !unknown && rest > 0 && asOf >= noticeFrom;
+  // Ce trebuie notificat: orice rest neachitat, indiferent cât de aproape e
+  // scadența — fereastra de 3 zile rămâne doar pt etichetă (label), ca restanțele
+  // reale să se distingă vizual de cele nescadente, fără să dispară din listă.
+  const notify = !inactive && !unknown && rest > 0;
   const daysToDue = daysBetween(asOf, due);
   const label = inactive
     ? 'Fără obligație'
@@ -410,6 +490,22 @@ export function obligation(child, month, payments, asOf = today(), index = null)
               ? 'Scadent în curând'
               : 'Nescadent';
   return { expected, paid, rest, credit, due, label, notify, daysToDue };
+}
+// Prima lună cu obligație reală neachitată (nu „De verificat” sau „Fără
+// obligație”) — încasarea sosește adesea într-o lună pt. taxa lunii
+// anterioare, deci implicit propunem luna care chiar mai trebuie plătită,
+// nu luna în care a intrat cash-ul.
+export function firstUnpaidMonth(child, payments, asOf = today()) {
+  const start = child.attendanceDate?.slice(0, 7);
+  if (!start) return null;
+  const limit = asOf.slice(0, 7);
+  let month = start;
+  for (let i = 0; i < 60 && month <= limit; i++) {
+    if (obligation(child, month, payments, asOf).rest > 0) return month;
+    const [y, m] = month.split('-').map(Number);
+    month = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+  }
+  return null;
 }
 export function cashSummary(s, month) {
   const payments = s.payments.filter(p => !p.archived && p.date.startsWith(month));

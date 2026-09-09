@@ -1,13 +1,18 @@
 import { today, allocations } from '../../shared/domain.mjs';
 import { unassignedPayments, assignmentRisk } from '../../shared/payment-matching.mjs';
-import { $, esc, money, date } from './dom.mjs';
+import { $, esc, money, date, setNavCount } from './dom.mjs';
 import { session, message, mutate } from './session.mjs';
+import { sortTable } from './parts.mjs';
+import { childPickerHTML, wireChildPicker } from './child-picker.mjs';
 
 const BATCH = 200;
+// Ultimul lot randat, ca fillSuggested/collect să știe sugestiile fiecărui
+// rând fără să le recalculeze sau să le citească înapoi din HTML.
+let lastItems = [];
 
 // Sugestiile ordonate, plus lista completă: potrivirea automată nu este de
 // încredere pe datele astea, deci alegerea rămâne întotdeauna a operatorului.
-const option = s => `<option value="${esc(s.id)}">${esc(s.name)} — ${esc(s.reasons.join('; '))}</option>`;
+const optionLabel = s => `${s.name} — ${s.reasons.join('; ')}`;
 
 // Două grupuri separate, pentru că indiciile nu sunt la fel de tari: numele din
 // sursă arată spre un copil anume, pe când o sumă sau o lună neachitată se
@@ -15,23 +20,15 @@ const option = s => `<option value="${esc(s.id)}">${esc(s.name)} — ${esc(s.rea
 function childOptions(suggestions) {
   const named = suggestions
     .filter(s => s.nameMatch)
-    .map(option)
-    .join('');
+    .map(s => ({ id: s.id, label: optionLabel(s), group: 'Nume potrivit în sursă' }));
   const weak = suggestions
     .filter(s => !s.nameMatch)
-    .map(option)
-    .join('');
+    .map(s => ({ id: s.id, label: optionLabel(s), group: 'Doar sumă sau lună — verifică' }));
   const rest = session.state.children
     .filter(c => !c.archived && !suggestions.some(s => s.id === c.id))
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
-    .join('');
-  return (
-    '<option value="">— alege copilul —</option>' +
-    (named ? `<optgroup label="Nume potrivit în sursă">${named}</optgroup>` : '') +
-    (weak ? `<optgroup label="Doar sumă sau lună — verifică">${weak}</optgroup>` : '') +
-    `<optgroup label="Toți copiii">${rest}</optgroup>`
-  );
+    .map(c => ({ id: c.id, label: c.name, group: 'Toți copiii' }));
+  return [...named, ...weak, ...rest];
 }
 
 function row({ payment: p, suggestions }) {
@@ -44,7 +41,7 @@ function row({ payment: p, suggestions }) {
     `<tr data-payment="${esc(p.id)}"><td>${date(p.date)}</td><td><strong>${money(p.amount)}</strong></td>` +
     `<td>${esc(p.method || '')}</td><td>${months}</td>` +
     `<td>${source ? esc(source) : '<small>fără text în sursă</small>'}</td>` +
-    `<td><select data-assign>${childOptions(suggestions)}</select></td></tr>`
+    `<td>${childPickerHTML({ placeholder: '— alege copilul —' })}</td></tr>`
   );
 }
 
@@ -54,31 +51,47 @@ function row({ payment: p, suggestions }) {
 export function renderAssign(force = false) {
   const month = $('selectedMonth').value || today().slice(0, 7);
   const risk = assignmentRisk(session.state, month, today());
-  $('assignCount').textContent = risk.unassigned;
+  setNavCount('assignCount', risk.unassigned);
   $('assignRisk').innerHTML =
     `<article class="card pink"><p>Achitări fără copil</p><strong>${risk.unassigned}</strong><small>nu se scad din datoria nimănui</small></article>` +
     `<article class="card yellow"><p>Din care pe luna ${esc(month)}</p><strong>${risk.coveringMonth}</strong><small>${money(risk.amountCoveringMonth)}</small></article>` +
     `<article class="card orange"><p>Copii pe lista de notificat</p><strong>${risk.notified}</strong><small>unii pot să fi achitat deja</small></article>`;
 
   if (!force && !$('assign').classList.contains('active')) return;
-  const items = unassignedPayments(session.state, BATCH);
+  const unsorted = unassignedPayments(session.state, BATCH);
   // Defalcarea se calculează pe lotul afișat, nu pe toate cele neasociate:
   // sugestiile pentru mii de achitări la fiecare randare ar încetini interfața.
-  const unique = items.filter(i => i.suggestions.filter(s => s.nameMatch).length === 1).length;
-  const ambiguous = items.filter(i => i.suggestions.filter(s => s.nameMatch).length > 1).length;
+  const unique = unsorted.filter(i => i.suggestions.filter(s => s.nameMatch).length === 1).length;
+  const ambiguous = unsorted.filter(i => i.suggestions.filter(s => s.nameMatch).length > 1).length;
   $('assignInfo').textContent = risk.unassigned
-    ? `Se afișează cele mai recente ${items.length} din ${risk.unassigned}. ` +
+    ? `Se afișează cele mai recente ${unsorted.length} din ${risk.unassigned}. ` +
       `Din ele: ${unique} cu un singur nume potrivit, ${ambiguous} cu mai mulți candidați, ` +
-      `${items.length - unique - ambiguous} fără niciun nume în sursă — acelea cer documentul original.`
+      `${unsorted.length - unique - ambiguous} fără niciun nume în sursă — acelea cer documentul original.`
     : 'Toate achitările au un copil asociat.';
+  const items = sortTable(
+    'assign',
+    unsorted,
+    {
+      date: r => r.payment.date,
+      amount: r => Number(r.payment.amount) || 0,
+      method: r => r.payment.method || '',
+      source: r => r.payment.sourceName || r.payment.childName || '',
+    },
+    () => renderAssign(true),
+  );
+  lastItems = items;
   $('assignTable').innerHTML =
     items.map(row).join('') || '<tr><td colspan="6" class="empty">Nu există achitări neasociate.</td></tr>';
+  for (const tr of $('assignTable').querySelectorAll('tr[data-payment]')) {
+    const item = items.find(i => i.payment.id === tr.dataset.payment);
+    wireChildPicker(tr.querySelector('[data-child-picker]'), childOptions(item.suggestions));
+  }
 }
 
 function collect() {
   const assignments = [];
   for (const tr of $('assignTable').querySelectorAll('tr[data-payment]')) {
-    const childId = tr.querySelector('[data-assign]').value;
+    const childId = tr.querySelector('.child-picker-value').value;
     if (childId) assignments.push({ id: tr.dataset.payment, childId });
   }
   return assignments;
@@ -93,12 +106,14 @@ export function bindAssign() {
   $('assignFillSuggested').onclick = () => {
     let filled = 0;
     for (const tr of $('assignTable').querySelectorAll('tr[data-payment]')) {
-      const select = tr.querySelector('[data-assign]');
-      const named = select.querySelectorAll('optgroup[label="Nume potrivit în sursă"] option');
+      const item = lastItems.find(i => i.payment.id === tr.dataset.payment);
+      const named = item.suggestions.filter(s => s.nameMatch);
+      const hidden = tr.querySelector('.child-picker-value');
       // Un singur candidat cu nume potrivit; două nume la fel de plauzibile
       // înseamnă că trebuie ales manual.
-      if (!select.value && named.length === 1) {
-        select.value = named[0].value;
+      if (!hidden.value && named.length === 1) {
+        hidden.value = named[0].id;
+        tr.querySelector('.child-picker-input').value = optionLabel(named[0]);
         filled++;
       }
     }
@@ -111,7 +126,10 @@ export function bindAssign() {
   };
 
   $('assignClear').onclick = () => {
-    for (const select of $('assignTable').querySelectorAll('[data-assign]')) select.value = '';
+    for (const tr of $('assignTable').querySelectorAll('tr[data-payment]')) {
+      tr.querySelector('.child-picker-value').value = '';
+      tr.querySelector('.child-picker-input').value = '';
+    }
     message('Selecțiile au fost golite.');
   };
 

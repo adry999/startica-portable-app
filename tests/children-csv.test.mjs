@@ -77,7 +77,7 @@ test('Doi părinți opționali și achitare mixtă: total, repartizare, rapoarte
   });
   assert.equal(p.amount, 1500.3);
   assert.equal(p.method, 'Cash + Card');
-  const s = { children: [c], payments: [p], expenses: [], groups: [] },
+  const s = { children: [c], payments: [p], expenses: [], groups: [], categories: [] },
     summary = cashSummary(s, '2026-09');
   assert.equal(summary.income, 1500.3);
   assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });

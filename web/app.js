@@ -2,7 +2,17 @@ import { today } from '../shared/domain.mjs';
 import { $ } from './ui/dom.mjs';
 import { session, message, load, setRenderers, renderSaveStatus, checkConnection } from './ui/session.mjs';
 import { pages } from './ui/parts.mjs';
-import { go, render, renderList, renderHealth, profile, moreAudit, bindGroups } from './ui/views.mjs';
+import {
+  go,
+  render,
+  renderList,
+  renderHealth,
+  profile,
+  moreAudit,
+  bindGroups,
+  bindCategories,
+  bindBulkArchive,
+} from './ui/views.mjs';
 import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
 import { bindFees } from './ui/fees.mjs';
@@ -17,6 +27,9 @@ bindTransfers();
 bindFees();
 bindAssign();
 bindGroups();
+bindCategories();
+bindBulkArchive('payments');
+bindBulkArchive('expenses');
 
 // Pe ecrane înguste navigația devine un panou explicit; pe desktop CSS o
 // afișează permanent, așa că nu folosim niciodată `hidden` pentru aceasta.
@@ -44,6 +57,7 @@ document.addEventListener('click', async event => {
   if (!b) return;
   try {
     if (b.dataset.view) go(b.dataset.view);
+    if (b.dataset.scroll) $(b.dataset.scroll).scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (b.dataset.create) openEditor(b.dataset.create);
     if (b.dataset.close) {
       if (session.busy) {
@@ -58,7 +72,22 @@ document.addEventListener('click', async event => {
     }
     const { action, type, id } = b.dataset;
     if (action === 'edit') openEditor(type, id);
-    if (action === 'archive') await archive(type, id);
+    if (action === 'archive') {
+      // Fără fereastră de confirmare: primul click doar cere confirmarea,
+      // rămâne fix pe rând; al doilea, în 4 secunde, chiar arhivează.
+      if (!b.classList.contains('confirm-pending')) {
+        b.classList.add('confirm-pending');
+        b.dataset.label = b.textContent;
+        b.textContent = 'Sigur?';
+        b._confirmTimer = setTimeout(() => {
+          b.classList.remove('confirm-pending');
+          b.textContent = b.dataset.label;
+        }, 4000);
+      } else {
+        clearTimeout(b._confirmTimer);
+        await archive(type, id);
+      }
+    }
     if (action === 'delete') await deleteRecord(type, id);
     if (action === 'profile') profile(id);
     if (action === 'confirm-review') await confirmReview(id);
@@ -70,7 +99,7 @@ document.addEventListener('click', async event => {
 // ─── Filtre ─────────────────────────────────────────────────────────────────
 
 for (const type of LISTS)
-  for (const suffix of ['Search', 'Archive', 'Month'])
+  for (const suffix of ['Search', 'Archive', 'MonthFrom', 'MonthTo', 'Category', 'Child', 'Method'])
     if ($(`${type}${suffix}`))
       $(`${type}${suffix}`).oninput = () => {
         pages[type] = 0;

@@ -1,5 +1,5 @@
 import { today, monthOK, STATUS_HISTORY_VALUES } from '../../shared/domain.mjs';
-import { $, esc, date } from './dom.mjs';
+import { $, esc, date, setNavCount } from './dom.mjs';
 import { session, message, mutate } from './session.mjs';
 
 // Luna din care se aplică taxa și statutul. Începerea frecventării este cea
@@ -42,7 +42,7 @@ function row(c) {
 
 export function renderFees() {
   const missing = session.state.children.filter(c => !c.archived && missingFee(c)).length;
-  $('feesCount').textContent = missing;
+  setNavCount('feesCount', missing);
   $('feesInfo').textContent = missing
     ? `${missing} copii fără taxă completată: nu pot fi evaluați și nu apar pe lista de notificat.`
     : 'Toți copiii nearhivați au taxa completată.';

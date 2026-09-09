@@ -1,19 +1,35 @@
-import { today, cents, obligation, paymentIndex, cashSummary, allocations, dueDayFor } from '../../shared/domain.mjs';
+import {
+  today,
+  cents,
+  total,
+  obligation,
+  paymentIndex,
+  cashSummary,
+  allocations,
+  paymentTenders,
+  dueDayFor,
+  monthCalendar,
+  upcomingBirthdays,
+} from '../../shared/domain.mjs';
 import { reviewCenter, filteredReviewItems, reviewFilters } from '../../shared/review-center.mjs';
-import { $, esc, money, date, time, age, fileSize, monthLabel } from './dom.mjs';
+import { $, esc, money, date, time, age, fileSize, monthLabel, setNavCount } from './dom.mjs';
 import { session, api, message, mutate, renderSaveStatus } from './session.mjs';
 import {
   pages,
   pageRows,
+  sortTable,
   button,
   actions,
   childName,
   parentContacts,
   tenderLabel,
   statusBadgeClass,
+  expenseCategories,
 } from './parts.mjs';
 import { renderFees } from './fees.mjs';
 import { renderAssign } from './assign.mjs';
+import { childPickerHTML, wireChildPicker } from './child-picker.mjs';
+import { unassignedSuggestionsByChild } from '../../shared/payment-matching.mjs';
 
 const selectedMonth = () => $('selectedMonth').value || today().slice(0, 7);
 // Numărul de contract este identificatorul folosit în discuția cu părintele.
@@ -130,22 +146,39 @@ export function renderHealth() {
 
 // ─── Liste ──────────────────────────────────────────────────────────────────
 
+// Selecția pt. arhivare în masă — la Achitări și Cheltuieli. Persistă între
+// randări (checkbox-urile revin bifate), se golește doar după o arhivare reușită.
+const bulkSelection = { payments: new Set(), expenses: new Set() };
+const selectAllHeader = type =>
+  `<input type="checkbox" id="${type}SelectAll" title="Selectează tot ce se vede">`;
+
 const HEADINGS = {
   children: ['Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
-  payments: ['Data', 'Copil / sursă', 'Total', 'Luni acoperite', 'Cash / Card / Transfer', 'Acțiuni'],
-  expenses: ['Data', 'Categorie', 'Descriere', 'Suma', 'Acțiuni'],
+  payments: [
+    selectAllHeader('payments'),
+    'Data',
+    'Copil / sursă',
+    'Total',
+    'Luni acoperite',
+    'Cash / Card / Transfer',
+    'Acțiuni',
+  ],
+  expenses: [selectAllHeader('expenses'), 'Data', 'Categorie', 'Descriere', 'Suma', 'Acțiuni'],
 };
 
 const SORT_FIELDS = {
   children: ['contract', 'name', null, 'group', 'status'],
-  payments: ['date', 'child', 'amount'],
-  expenses: ['date', 'category', 'description', 'amount'],
+  payments: [null, 'date', 'child', 'amount'],
+  expenses: [null, 'date', 'category', 'description', 'amount'],
 };
 const listSort = {
   children: { field: 'name', direction: 'asc', manual: false },
   payments: { field: 'date', direction: 'desc', manual: false },
   expenses: { field: 'date', direction: 'desc', manual: false },
 };
+
+const rowSelectCell = (type, r) =>
+  `<input type="checkbox" class="row-select" data-id="${esc(r.id)}" ${bulkSelection[type].has(r.id) ? 'checked' : ''} ${r.archived ? 'disabled' : ''}>`;
 
 const CELLS = {
   children: r => [
@@ -157,6 +190,7 @@ const CELLS = {
     actions('children', r),
   ],
   payments: r => [
+    rowSelectCell('payments', r),
     date(r.date),
     esc(childName(r)) + (r.childId ? '' : '<br><small>Neasociată</small>'),
     money(r.amount),
@@ -166,7 +200,14 @@ const CELLS = {
     tenderLabel(r),
     actions('payments', r),
   ],
-  expenses: r => [date(r.date), esc(r.category), esc(r.description), money(r.amount), actions('expenses', r)],
+  expenses: r => [
+    rowSelectCell('expenses', r),
+    date(r.date),
+    esc(r.category),
+    esc(r.description),
+    money(r.amount),
+    actions('expenses', r),
+  ],
 };
 
 const normalizeSearch = value =>
@@ -231,6 +272,123 @@ function listHead(type) {
   );
 }
 
+// Totalurile de sus reflectă filtrele active (arhivare, lună, categorie,
+// copil, metodă, căutare) — rows e deja filtrat, doar nepaginat.
+function renderListSummary(type, rows) {
+  const el = $(`${type}Summary`);
+  if (!el) return;
+  const sum = total(rows);
+  if (type === 'payments') {
+    const byMethod = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
+    for (const r of rows)
+      for (const t of paymentTenders(r)) {
+        const m = Object.hasOwn(byMethod, t.method) ? t.method : 'Altele';
+        byMethod[m] += cents(t.amount);
+      }
+    for (const m of Object.keys(byMethod)) byMethod[m] /= 100;
+    // Textul e într-un <span> separat de buton, ca randarea repetată a
+    // sumarului să nu șteargă butonul de arhivare în masă.
+    $('paymentsSummaryText').innerHTML =
+      `<strong>${rows.length}</strong> achitări · <strong>${money(sum)}</strong> total` +
+      ` · Cash: ${money(byMethod.Cash)} · Card: ${money(byMethod.Card)} · Transfer: ${money(byMethod.Transfer)}` +
+      (byMethod.Altele ? ` · Altele: ${money(byMethod.Altele)}` : '');
+  } else if (type === 'expenses') {
+    $('expensesSummaryText').innerHTML = `<strong>${rows.length}</strong> cheltuieli · <strong>${money(sum)}</strong> total`;
+  }
+}
+
+// Selecția curentă se păstrează la re-randare, ca la filtrul de categorii.
+function renderPaymentsChildFilter() {
+  const filter = $('paymentsChild');
+  if (!filter) return;
+  const current = filter.value;
+  const names = [...session.state.children].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  filter.innerHTML =
+    '<option value="">Toți</option>' + names.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  filter.value = current;
+}
+
+function updateBulkArchiveButton(type) {
+  const btn = $(`${type}BulkArchive`);
+  if (!btn) return;
+  clearTimeout(btn._confirmTimer);
+  btn.classList.remove('confirm-pending');
+  const n = bulkSelection[type].size;
+  btn.disabled = n === 0;
+  btn.textContent = n ? `Arhivează selectate (${n})` : 'Arhivează selectate';
+}
+
+// Casetele se reconstruiesc la fiecare randare a tabelului, deci legarea lor
+// se reface aici, nu o singură dată la pornire (spre deosebire de bulkBtn,
+// care e un element static din HTML, legat o singură dată în bindBulkArchive).
+function wireBulkSelection(type) {
+  const selected = bulkSelection[type];
+  const table = $(`${type}Table`),
+    selectAll = $(`${type}SelectAll`);
+  const boxes = [...table.querySelectorAll('.row-select')];
+  for (const cb of boxes)
+    cb.onchange = () => {
+      if (cb.checked) selected.add(cb.dataset.id);
+      else selected.delete(cb.dataset.id);
+      updateBulkArchiveButton(type);
+    };
+  if (selectAll) {
+    const selectable = boxes.filter(cb => !cb.disabled);
+    selectAll.checked = selectable.length > 0 && selectable.every(cb => cb.checked);
+    selectAll.onchange = () => {
+      for (const cb of selectable) {
+        cb.checked = selectAll.checked;
+        if (selectAll.checked) selected.add(cb.dataset.id);
+        else selected.delete(cb.dataset.id);
+      }
+      updateBulkArchiveButton(type);
+    };
+  }
+  updateBulkArchiveButton(type);
+}
+
+const TYPE_LABEL = { payments: 'achitări', expenses: 'cheltuieli' };
+
+// Butonul e static în HTML, deci legarea e o singură dată la pornire — spre
+// deosebire de casetele din tabel, reconstruite la fiecare randare.
+export function bindBulkArchive(type) {
+  const btn = $(`${type}BulkArchive`);
+  if (!btn) return;
+  btn.onclick = async () => {
+    if (!btn.classList.contains('confirm-pending')) {
+      btn.classList.add('confirm-pending');
+      btn.dataset.label = btn.textContent;
+      btn.textContent = `Sigur? Arhivează ${bulkSelection[type].size}`;
+      btn._confirmTimer = setTimeout(() => {
+        btn.classList.remove('confirm-pending');
+        btn.textContent = btn.dataset.label;
+      }, 4000);
+      return;
+    }
+    clearTimeout(btn._confirmTimer);
+    btn.classList.remove('confirm-pending');
+    btn.disabled = true;
+    const ids = [...bulkSelection[type]];
+    try {
+      for (const id of ids) {
+        const r = session.state[type].find(x => x.id === id);
+        if (!r || r.archived) continue;
+        await mutate('/api/record', {
+          type,
+          mode: 'update',
+          record: { ...r, archived: true, archivedAt: new Date().toISOString() },
+        });
+      }
+      bulkSelection[type].clear();
+      message(`${ids.length} ${TYPE_LABEL[type]} arhivate.`);
+    } catch (e) {
+      message(e.message, true);
+    } finally {
+      updateBulkArchiveButton(type);
+    }
+  };
+}
+
 export function setListSort(type, field, direction) {
   const current = listSort[type];
   if (!current || !SORT_FIELDS[type].includes(field)) return;
@@ -244,13 +402,22 @@ export function setListSort(type, field, direction) {
 export function renderList(type) {
   const search = normalizeSearch($(`${type}Search`).value),
     archive = $(`${type}Archive`).value,
-    month = $(`${type}Month`)?.value;
+    monthFrom = $(`${type}MonthFrom`)?.value,
+    monthTo = $(`${type}MonthTo`)?.value,
+    category = $(`${type}Category`)?.value,
+    childId = $(`${type}Child`)?.value,
+    method = $(`${type}Method`)?.value;
   const rows = session.state[type].filter(
     r =>
       (archive === 'all' || (archive === 'archived' ? r.archived : !r.archived)) &&
-      (!month || r.date.startsWith(month)) &&
+      (!monthFrom || r.date.slice(0, 7) >= monthFrom) &&
+      (!monthTo || r.date.slice(0, 7) <= monthTo) &&
+      (!category || r.category === category) &&
+      (!childId || r.childId === childId) &&
+      (!method || paymentTenders(r).some(t => t.method === method)) &&
       matchesSearch(r, type, search),
   );
+  renderListSummary(type, rows);
   const headings = HEADINGS[type];
   sortRows(type, rows);
   const head = $(`${type}Head`);
@@ -272,11 +439,12 @@ export function renderList(type) {
       )
       .join('') ||
     `<tr><td colspan="${headings.length}" class="empty">Nu există înregistrări pentru filtrele alese.</td></tr>`;
+  if (type === 'payments' || type === 'expenses') wireBulkSelection(type);
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────
 
-function renderDashboard(month, cash, review, index) {
+function renderDashboard(month, cash, review, all) {
   $('incomeStat').textContent = money(cash.income);
   $('expenseStat').textContent = money(cash.expense);
   $('netStat').textContent = money(cash.net);
@@ -290,10 +458,13 @@ function renderDashboard(month, cash, review, index) {
       .filter(p => !p.archived && p.date <= today())
       .reduce((sum, p) => sum + cents(p.amount) - allocations(p).reduce((n, a) => n + cents(a.amount), 0), 0) / 100,
   );
-  $('reviewCount').textContent = review.items.length;
-  const toNotify = session.state.children.filter(
-    c => !c.archived && obligation(c, month, session.state.payments, today(), index).notify,
-  ).length;
+  setNavCount('reviewCount', review.items.length);
+  const upcomingBirthdayCount = upcomingBirthdays(session.state.children, 5).length;
+  $('birthdaysHighlightCount').textContent = String(upcomingBirthdayCount);
+  $('birthdaysHighlightDetail').textContent = upcomingBirthdayCount
+    ? `${upcomingBirthdayCount} ${upcomingBirthdayCount === 1 ? 'copil' : 'copii'} în următoarele 5 zile`
+    : 'Niciuna în următoarele 5 zile';
+  const toNotify = all.filter(r => r.o.notify).length;
   const unassigned = session.state.payments.filter(p => !p.archived && !p.childId).length;
   const attentionItems = [
     {
@@ -362,14 +533,71 @@ function renderDashboard(month, cash, review, index) {
         `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" title="${r.month}: ${money(r.value)}"><i style="height:${(r.value / max) * 100}%"></i><small>${r.month.slice(5)}</small></div>`,
     )
     .join('');
+
+  renderBirthdays();
 }
 
-function renderStatus(month, index) {
+const CAL_WEEKDAYS = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
+
+function calendarCellHTML(cell) {
+  const chips = cell.names
+    .map(
+      n =>
+        `<span class="cal-chip" title="${esc(n.name)} · împlinește ${n.turningAge} ${n.turningAge === 1 ? 'an' : 'ani'}">${esc(n.name)}</span>`,
+    )
+    .join('');
+  const cls = [
+    'cal-cell',
+    cell.inMonth ? '' : 'cal-outside',
+    cell.isToday ? 'cal-today' : '',
+    cell.isCurrentWeek ? 'cal-current-week' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return `<div class="${cls}"><span class="cal-daynum">${cell.day}</span>${chips ? `<div class="cal-chips">${chips}</div>` : ''}</div>`;
+}
+
+// Calendar lunar cu adevărat, nu o listă: săptămâna curentă evidențiată prin
+// fundalul rândului, ziua de naștere afișată direct pe ziua ei.
+function birthdaysCalendarHTML(weeks) {
+  const header = CAL_WEEKDAYS.map(l => `<div class="cal-weekday">${l}</div>`).join('');
+  const cells = weeks.flat().map(calendarCellHTML).join('');
+  return header + cells;
+}
+
+function upcomingBirthdayPillHTML(r) {
+  const label = r.daysUntil === 0 ? 'azi' : r.daysUntil === 1 ? 'mâine' : `în ${r.daysUntil} zile`;
+  return (
+    `<span class="upcoming-pill${r.daysUntil === 0 ? ' is-today' : ''}">${esc(r.child.name)}` +
+    `<small>${label} · împlinește ${r.turningAge} ${r.turningAge === 1 ? 'an' : 'ani'}</small></span>`
+  );
+}
+
+function renderBirthdays() {
+  const upcoming = upcomingBirthdays(session.state.children, 5);
+  $('birthdaysUpcoming').innerHTML =
+    upcoming.map(upcomingBirthdayPillHTML).join('') ||
+    '<p class="upcoming-empty">Nicio zi de naștere în următoarele 5 zile.</p>';
+  $('birthdaysCalendar').innerHTML = birthdaysCalendarHTML(monthCalendar(session.state.children));
+}
+
+const STATUS_COLUMNS = {
+  contract: r => contractOf(r.child),
+  name: r => r.child.name,
+  expected: r => r.o.expected,
+  paid: r => r.o.paid,
+  rest: r => r.o.rest,
+  credit: r => r.o.credit,
+  due: r => r.o.due,
+  label: r => r.o.label,
+};
+
+function renderStatus(month, all) {
   $('statusPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
+  const sorted = sortTable('status', all, STATUS_COLUMNS, render);
   $('statusTable').innerHTML =
-    pageRows('status', session.state.children)
-      .map(c => {
-        const o = obligation(c, month, session.state.payments, today(), index);
+    pageRows('status', sorted)
+      .map(({ child: c, o }) => {
         return (
           `<tr><td>${esc(contractOf(c))}</td><td>${esc(c.name)}${c.archived ? ' (arhivat)' : ''}</td>` +
           `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td>${money(o.rest)}</td><td>${money(o.credit)}</td>` +
@@ -388,39 +616,60 @@ function termLabel(days) {
   return `în ${days} ${days === 1 ? 'zi' : 'zile'}`;
 }
 
-function renderNotify(month, index) {
-  const evaluate = c => obligation(c, month, session.state.payments, today(), index);
-  const all = session.state.children.filter(c => !c.archived).map(c => ({ child: c, o: evaluate(c) }));
-  const rows = all
-    .filter(r => r.o.notify)
-    // Cea mai veche întârziere prima: aia costă cel mai mult dacă mai așteaptă.
-    .sort((a, b) => a.o.daysToDue - b.o.daysToDue || a.child.name.localeCompare(b.child.name, 'ro'));
+const NOTIFY_COLUMNS = {
+  contract: r => contractOf(r.child),
+  name: r => r.child.name,
+  group: r => groupName(r.child.groupId),
+  due: r => r.o.due,
+  daysToDue: r => r.o.daysToDue,
+  expected: r => r.o.expected,
+  paid: r => r.o.paid,
+  rest: r => r.o.rest,
+  label: r => r.o.label,
+};
 
-  const late = rows.filter(r => r.o.daysToDue < 0);
-  const soon = rows.filter(r => r.o.daysToDue >= 0);
-  const owed = rows.reduce((sum, r) => sum + cents(r.o.rest), 0) / 100;
+function renderNotify(month, all, unassignedByChild) {
+  const notified = all.filter(r => r.o.notify);
+  // Implicit: întârzierea cea mai veche prima — costă cel mai mult dacă mai
+  // așteaptă. Un click pe un antet suprascrie asta cu sortarea manuală.
+  const rows = sortTable(
+    'notify',
+    [...notified].sort((a, b) => a.o.daysToDue - b.o.daysToDue || a.child.name.localeCompare(b.child.name, 'ro')),
+    NOTIFY_COLUMNS,
+    render,
+  );
+
+  const late = notified.filter(r => r.o.daysToDue < 0);
+  const soon = notified.filter(r => r.o.daysToDue >= 0);
+  const owed = notified.reduce((sum, r) => sum + cents(r.o.rest), 0) / 100;
   // Fișele fără taxă sau fără perioadă confirmată nu pot fi evaluate deloc;
   // fără cifra asta, un „0 de notificat” ar părea liniștitor pe nedrept.
   const unknown = all.filter(r => r.o.label === 'De verificat').length;
 
-  $('notifyCount').textContent = rows.length;
+  setNavCount('notifyCount', notified.length);
   $('notifyPeriod').textContent = `Luna ${month} · situație la ${date(today())}`;
   $('notifyStats').innerHTML =
     `<article class="card pink"><p>Cu întârziere</p><strong>${late.length}</strong><small>scadența a trecut</small></article>` +
-    `<article class="card yellow"><p>Scadente în curând</p><strong>${soon.length}</strong><small>în cel mult 3 zile</small></article>` +
+    `<article class="card yellow"><p>Nescadente încă</p><strong>${soon.length}</strong><small>de plată, dar scadența n-a trecut</small></article>` +
     `<article class="card orange"><p>Sumă de încasat</p><strong>${money(owed)}</strong><small>total pe lista de mai jos</small></article>` +
     `<article class="card mint"><p>Nu pot fi evaluați</p><strong>${unknown}</strong><small>fără taxă sau perioadă confirmată</small></article>`;
 
   $('notifyTable').innerHTML =
     rows
-      .map(
-        ({ child: c, o }) =>
+      .map(({ child: c, o }) => {
+        // Plata poate sta needentificată în Asociere achitări: fără semnalul
+        // ăsta, operatorul ar suna un părinte care de fapt a plătit deja.
+        const hint = unassignedByChild.has(c.id)
+          ? ` <button type="button" class="hint-link" data-view="assign">posibilă plată neasociată</button>`
+          : '';
+        return (
           `<tr class="${o.daysToDue < 0 ? 'late-row' : ''}"><td>${esc(contractOf(c))}</td>` +
           `<td>${button('profile', 'children', c.id, c.name)}</td><td>${parentContacts(c)}</td>` +
           `<td>${esc(groupName(c.groupId) || '—')}</td><td>${date(o.due)}</td><td>${esc(termLabel(o.daysToDue))}</td>` +
           `<td>${money(o.expected)}</td><td>${money(o.paid)}</td><td><strong>${money(o.rest)}</strong></td>` +
-          `<td>${esc(o.label)}</td></tr>`,
-      )
+          `<td>${esc(o.label)}${hint}</td></tr>`
+        );
+      })
       .join('') ||
     `<tr><td colspan="10" class="empty">${
       unknown
@@ -429,32 +678,55 @@ function renderNotify(month, index) {
     }</td></tr>`;
 }
 
-function groupCard(g, children) {
+// Deschis by default doar cardul pe care operatorul a apăsat „Detalii” —
+// lista de membri, educatorul etc. nu au ce căuta în privirea generală.
+const expandedGroups = new Set();
+// Aceleași culori ca la Dashboard, ca ecranul de Grupe să pară din aceeași
+// familie vizuală, nu un ecran de administrare separat.
+const GROUP_COLORS = ['orange', 'mint', 'yellow'];
+
+function groupCard(g, children, index) {
   const members = children.filter(c => c.groupId === g.id).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
   const overCapacity = g.capacity && members.length > g.capacity;
-  const fill = g.capacity ? `${members.length}/${g.capacity} copii` : `${members.length} copii`;
-  const unassigned = children
-    .filter(c => !c.groupId)
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`)
-    .join('');
+  const fillValue = g.capacity ? `${members.length}/${g.capacity}` : `${members.length}`;
+  const birthDates = members.map(c => c.birthDate).filter(Boolean).sort();
+  const ageRange = !birthDates.length
+    ? 'necunoscută'
+    : birthDates[0] === birthDates.at(-1)
+      ? age(birthDates[0])
+      : `${age(birthDates.at(-1))} – ${age(birthDates[0])}`;
+  const expanded = expandedGroups.has(g.id);
+  const unassigned = children.filter(c => !c.groupId);
+  const colorClass = overCapacity ? 'pink' : GROUP_COLORS[index % GROUP_COLORS.length];
   return (
-    `<article class="card ${overCapacity ? 'pink' : 'mint'}" data-group="${esc(g.id)}">` +
+    `<article class="group-card ${expanded ? 'expanded' : ''}" data-group="${esc(g.id)}">` +
+    `<button type="button" class="card ${colorClass} group-tile" data-toggle aria-expanded="${expanded}">` +
+    `<svg class="group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>` +
+    `<p>${esc(g.name)}</p>` +
+    `<strong>${fillValue}</strong>` +
+    `<small>${overCapacity ? 'copii — peste capacitate' : 'copii'}</small>` +
+    `</button>` +
+    `<div class="group-details" ${expanded ? '' : 'hidden'}>` +
     `<div class="group-edit"><input data-name value="${esc(g.name)}" placeholder="nume grupă">` +
     `<input data-capacity type="number" min="1" max="1000" value="${g.capacity ?? ''}" placeholder="capacitate">` +
-    `<button type="button" data-save>Salvează</button></div>` +
-    `<p class="group-fill">${fill}${overCapacity ? ' — peste capacitate' : ''}</p>` +
+    `<button type="button" class="action-btn" data-save>Salvează</button></div>` +
+    `<label class="field">Educator<input data-educator value="${esc(g.educator || '')}" placeholder="Nume educator"></label>` +
+    `<p class="group-fact">Vârste: <strong>${ageRange}</strong></p>` +
     `<ul class="group-children">${
       members
         .map(
           c =>
-            `<li>${esc(c.name)}<button type="button" data-remove="${esc(c.id)}" title="Scoate din grupă">×</button></li>`,
+            `<li><span>${esc(c.name)}</span><button type="button" data-remove="${esc(c.id)}" aria-label="Scoate din grupă" title="Scoate din grupă">×</button></li>`,
         )
         .join('') || '<li class="empty">Niciun copil atribuit.</li>'
     }</ul>` +
-    `<div class="group-add"><select data-add>${unassigned ? `<option value="">Adaugă copil…</option>${unassigned}` : '<option value="">Toți copiii nearhivați sunt atribuiți</option>'}</select>` +
-    `<button type="button" data-add-btn ${unassigned ? '' : 'disabled'}>+ Adaugă</button></div>` +
+    `<div class="group-add">` +
+    childPickerHTML({
+      placeholder: unassigned.length ? 'Caută copil…' : 'Toți copiii nearhivați sunt atribuiți',
+    }) +
+    `<button type="button" class="action-btn" data-add-btn ${unassigned.length ? '' : 'disabled'}>+ Adaugă</button></div>` +
     `<button type="button" class="btn btn-ghost" data-delete>Șterge grupa</button>` +
+    `</div>` +
     `</article>`
   );
 }
@@ -462,7 +734,14 @@ function groupCard(g, children) {
 function renderGroups() {
   const children = session.state.children.filter(c => !c.archived);
   const groups = [...session.state.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
-  $('groupsGrid').innerHTML = groups.map(g => groupCard(g, children)).join('') || '<p>Nu există grupe create încă.</p>';
+  $('groupsGrid').innerHTML =
+    groups.map((g, i) => groupCard(g, children, i)).join('') ||
+    '<p class="groups-empty">Nu există grupe create încă. Adaugă prima mai sus.</p>';
+  const unassigned = children
+    .filter(c => !c.groupId)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+    .map(c => ({ id: c.id, label: c.name }));
+  for (const picker of $('groupsGrid').querySelectorAll('[data-child-picker]')) wireChildPicker(picker, unassigned);
 }
 
 export function bindGroups() {
@@ -491,6 +770,12 @@ export function bindGroups() {
     const card = event.target.closest('[data-group]');
     if (!card) return;
     const id = card.dataset.group;
+    if (event.target.closest('[data-toggle]')) {
+      if (expandedGroups.has(id)) expandedGroups.delete(id);
+      else expandedGroups.add(id);
+      renderGroups();
+      return;
+    }
     try {
       if (event.target.dataset.save !== undefined) {
         const name = card.querySelector('[data-name]').value.trim();
@@ -499,18 +784,20 @@ export function bindGroups() {
           return;
         }
         const capacityRaw = card.querySelector('[data-capacity]').value.trim();
+        const educator = card.querySelector('[data-educator]').value.trim();
         const g = session.state.groups.find(g => g.id === id);
         await mutate('/api/record', {
           type: 'groups',
           mode: 'update',
-          record: { ...g, name, capacity: capacityRaw ? Number(capacityRaw) : null },
+          record: { ...g, name, capacity: capacityRaw ? Number(capacityRaw) : null, educator },
         });
         message('Grupă actualizată.');
       } else if (event.target.dataset.delete !== undefined) {
         await mutate('/api/group-delete', { id });
+        expandedGroups.delete(id);
         message('Grupă ștearsă.');
       } else if (event.target.dataset.addBtn !== undefined) {
-        const childId = card.querySelector('[data-add]').value;
+        const childId = card.querySelector('.child-picker-value').value;
         if (!childId) return;
         const c = session.state.children.find(c => c.id === childId);
         await mutate('/api/record', { type: 'children', mode: 'update', record: { ...c, groupId: id } });
@@ -520,6 +807,60 @@ export function bindGroups() {
         await mutate('/api/record', { type: 'children', mode: 'update', record: { ...c, groupId: null } });
         message('Copil scos din grupă.');
       }
+    } catch (e) {
+      message(e.message, true);
+    }
+  });
+}
+
+// ─── Categorii de cheltuieli ────────────────────────────────────────────────
+// Doar etichete text pentru sugestii (vezi editor.mjs); ștergerea unei
+// categorii nu schimbă cheltuielile care o folosesc deja.
+function renderCategories() {
+  const categories = [...session.state.categories].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  $('categoriesChips').innerHTML =
+    categories
+      .map(
+        c =>
+          `<span class="category-chip" data-category="${esc(c.id)}">${esc(c.name)}` +
+          `<button type="button" data-remove title="Șterge categoria">×</button></span>`,
+      )
+      .join('') || '<span class="muted">Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.</span>';
+  // Selecția curentă a filtrului se păstrează la re-randare, ca alegerea
+  // operatorului să nu sară înapoi pe „Toate” la fiecare mutație de stare.
+  const filter = $('expensesCategory');
+  const current = filter.value;
+  filter.innerHTML =
+    '<option value="">Toate</option>' + expenseCategories().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  filter.value = current;
+}
+
+export function bindCategories() {
+  $('categoryCreateForm').onsubmit = async event => {
+    event.preventDefault();
+    const name = $('categoryNameInput').value.trim();
+    if (!name) {
+      message('Completează numele categoriei.', true);
+      return;
+    }
+    try {
+      await mutate('/api/record', {
+        type: 'categories',
+        mode: 'create',
+        record: { id: `CAT-${crypto.randomUUID()}`, name },
+      });
+      $('categoryCreateForm').reset();
+      message('Categorie adăugată.');
+    } catch (e) {
+      message(e.message, true);
+    }
+  };
+  $('categoriesChips').addEventListener('click', async event => {
+    if (event.target.dataset.remove === undefined) return;
+    const id = event.target.closest('[data-category]').dataset.category;
+    try {
+      await mutate('/api/category-delete', { id });
+      message('Categorie ștearsă.');
     } catch (e) {
       message(e.message, true);
     }
@@ -544,16 +885,26 @@ export function render() {
   const month = selectedMonth(),
     cash = cashSummary(session.state, month),
     review = reviewCenter(session.state);
-  // Un singur index de încasări pentru toate ecranele randării curente.
-  const index = paymentIndex(session.state.payments, today());
-  renderDashboard(month, cash, review, index);
+  // Un singur index de încasări și o singură funcție de evaluare pentru toate
+  // ecranele randării curente (Dashboard, Situația plăților, De notificat).
+  const asOf = today();
+  const index = paymentIndex(session.state.payments, asOf);
+  const evaluate = c => obligation(c, month, session.state.payments, asOf, index);
+  // Dashboard, Status și Notify au nevoie de aceiași copii evaluați; calculat
+  // o singură dată, altfel obligation() rula de mai multe ori pe copil.
+  const allChildren = session.state.children.map(c => ({ child: c, o: evaluate(c) }));
+  const nonArchived = allChildren.filter(r => !r.child.archived);
+  const unassignedByChild = unassignedSuggestionsByChild(session.state);
+  renderDashboard(month, cash, review, nonArchived);
   renderChildrenSummary(review);
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
-  renderStatus(month, index);
-  renderNotify(month, index);
+  renderStatus(month, allChildren);
+  renderNotify(month, nonArchived, unassignedByChild);
   renderFees();
   renderAssign();
   renderGroups();
+  renderCategories();
+  renderPaymentsChildFilter();
   renderReview(review);
 }
 
