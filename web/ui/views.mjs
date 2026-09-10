@@ -459,8 +459,10 @@ function renderDashboard(month, cash, review, all) {
       .reduce((sum, p) => sum + cents(p.amount) - allocations(p).reduce((n, a) => n + cents(a.amount), 0), 0) / 100,
   );
   setNavCount('reviewCount', review.items.length);
-  const upcomingBirthdayCount = upcomingBirthdays(session.state.children, 5).length;
-  $('birthdaysHighlightCount').textContent = String(upcomingBirthdayCount);
+  const upcomingBirthdayRows = upcomingBirthdays(session.state.children, 5);
+  const upcomingBirthdayCount = upcomingBirthdayRows.length;
+  const hasBirthdayToday = upcomingBirthdayRows.some(r => r.daysUntil === 0);
+  $('birthdaysHighlightCount').textContent = (hasBirthdayToday ? '🎉 ' : '') + upcomingBirthdayCount;
   $('birthdaysHighlightDetail').textContent = upcomingBirthdayCount
     ? `${upcomingBirthdayCount} ${upcomingBirthdayCount === 1 ? 'copil' : 'copii'} în următoarele 5 zile`
     : 'Niciuna în următoarele 5 zile';
@@ -554,7 +556,8 @@ function calendarCellHTML(cell) {
   ]
     .filter(Boolean)
     .join(' ');
-  return `<div class="${cls}"><span class="cal-daynum">${cell.day}</span>${chips ? `<div class="cal-chips">${chips}</div>` : ''}</div>`;
+  const confetti = cell.isToday && cell.names.length ? '<span class="cal-confetti" aria-hidden="true">🎉</span>' : '';
+  return `<div class="${cls}">${confetti}<span class="cal-daynum">${cell.day}</span>${chips ? `<div class="cal-chips">${chips}</div>` : ''}</div>`;
 }
 
 // Calendar lunar cu adevărat, nu o listă: săptămâna curentă evidențiată prin
@@ -567,8 +570,9 @@ function birthdaysCalendarHTML(weeks) {
 
 function upcomingBirthdayPillHTML(r) {
   const label = r.daysUntil === 0 ? 'azi' : r.daysUntil === 1 ? 'mâine' : `în ${r.daysUntil} zile`;
+  const confetti = r.daysUntil === 0 ? '🎉 ' : '';
   return (
-    `<span class="upcoming-pill${r.daysUntil === 0 ? ' is-today' : ''}">${esc(r.child.name)}` +
+    `<span class="upcoming-pill${r.daysUntil === 0 ? ' is-today' : ''}">${confetti}${esc(r.child.name)}` +
     `<small>${label} · împlinește ${r.turningAge} ${r.turningAge === 1 ? 'an' : 'ani'}</small></span>`
   );
 }

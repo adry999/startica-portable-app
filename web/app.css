@@ -1859,6 +1859,7 @@ summary {
   text-align: center;
 }
 .cal-cell {
+  position: relative;
   min-height: 74px;
   padding: 6px 6px 8px;
   border-radius: 12px;
@@ -1866,6 +1867,13 @@ summary {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.cal-confetti {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  font-size: 15px;
+  line-height: 1;
 }
 .cal-daynum {
   font-size: 12px;
