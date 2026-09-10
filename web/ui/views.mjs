@@ -146,14 +146,14 @@ export function renderHealth() {
 
 // ─── Liste ──────────────────────────────────────────────────────────────────
 
-// Selecția pt. arhivare în masă — la Achitări și Cheltuieli. Persistă între
-// randări (checkbox-urile revin bifate), se golește doar după o arhivare reușită.
-const bulkSelection = { payments: new Set(), expenses: new Set() };
+// Selecția pt. arhivare/dezarhivare în masă — la Copii, Achitări și Cheltuieli.
+// Persistă între randări (checkbox-urile revin bifate), se golește după operație.
+const bulkSelection = { children: new Set(), payments: new Set(), expenses: new Set() };
 const selectAllHeader = type =>
   `<input type="checkbox" id="${type}SelectAll" title="Selectează tot ce se vede">`;
 
 const HEADINGS = {
-  children: ['Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
+  children: [selectAllHeader('children'), 'Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
   payments: [
     selectAllHeader('payments'),
     'Data',
@@ -167,7 +167,7 @@ const HEADINGS = {
 };
 
 const SORT_FIELDS = {
-  children: ['contract', 'name', null, 'group', 'status'],
+  children: [null, 'contract', 'name', null, 'group', 'status'],
   payments: [null, 'date', 'child', 'amount'],
   expenses: [null, 'date', 'category', 'description', 'amount'],
 };
@@ -178,10 +178,11 @@ const listSort = {
 };
 
 const rowSelectCell = (type, r) =>
-  `<input type="checkbox" class="row-select" data-id="${esc(r.id)}" ${bulkSelection[type].has(r.id) ? 'checked' : ''} ${r.archived ? 'disabled' : ''}>`;
+  `<input type="checkbox" class="row-select" data-id="${esc(r.id)}" ${bulkSelection[type].has(r.id) ? 'checked' : ''}>`;
 
 const CELLS = {
   children: r => [
+    rowSelectCell('children', r),
     esc(contractOf(r)),
     button('profile', 'children', r.id, r.name),
     parentContacts(r),
@@ -278,7 +279,9 @@ function renderListSummary(type, rows) {
   const el = $(`${type}Summary`);
   if (!el) return;
   const sum = total(rows);
-  if (type === 'payments') {
+  if (type === 'children') {
+    $('childrenSummaryText').innerHTML = `<strong>${rows.length}</strong> copii`;
+  } else if (type === 'payments') {
     const byMethod = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
     for (const r of rows)
       for (const t of paymentTenders(r)) {
@@ -287,7 +290,7 @@ function renderListSummary(type, rows) {
       }
     for (const m of Object.keys(byMethod)) byMethod[m] /= 100;
     // Textul e într-un <span> separat de buton, ca randarea repetată a
-    // sumarului să nu șteargă butonul de arhivare în masă.
+    // sumarului să nu șteargă butonul de arhivare/dezarhivare în masă.
     $('paymentsSummaryText').innerHTML =
       `<strong>${rows.length}</strong> achitări · <strong>${money(sum)}</strong> total` +
       ` · Cash: ${money(byMethod.Cash)} · Card: ${money(byMethod.Card)} · Transfer: ${money(byMethod.Transfer)}` +
@@ -308,19 +311,25 @@ function renderPaymentsChildFilter() {
   filter.value = current;
 }
 
-function updateBulkArchiveButton(type) {
-  const btn = $(`${type}BulkArchive`);
+function updateBulkActionButton(type) {
+  const btn = $(`${type}BulkAction`);
   if (!btn) return;
   clearTimeout(btn._confirmTimer);
   btn.classList.remove('confirm-pending');
   const n = bulkSelection[type].size;
   btn.disabled = n === 0;
-  btn.textContent = n ? `Arhivează selectate (${n})` : 'Arhivează selectate';
+  const archive = $(`${type}Archive`)?.value;
+  const isArchiveView = archive === 'archived';
+  if (isArchiveView) {
+    btn.textContent = n ? `Dezarhivează selectate (${n})` : 'Dezarhivează selectate';
+  } else {
+    btn.textContent = n ? `Arhivează selectate (${n})` : 'Arhivează selectate';
+  }
 }
 
 // Casetele se reconstruiesc la fiecare randare a tabelului, deci legarea lor
 // se reface aici, nu o singură dată la pornire (spre deosebire de bulkBtn,
-// care e un element static din HTML, legat o singură dată în bindBulkArchive).
+// care e un element static din HTML, legat o singură dată în bindBulkAction).
 function wireBulkSelection(type) {
   const selected = bulkSelection[type];
   const table = $(`${type}Table`),
@@ -330,35 +339,34 @@ function wireBulkSelection(type) {
     cb.onchange = () => {
       if (cb.checked) selected.add(cb.dataset.id);
       else selected.delete(cb.dataset.id);
-      updateBulkArchiveButton(type);
+      updateBulkActionButton(type);
     };
   if (selectAll) {
-    const selectable = boxes.filter(cb => !cb.disabled);
-    selectAll.checked = selectable.length > 0 && selectable.every(cb => cb.checked);
+    selectAll.checked = boxes.length > 0 && boxes.every(cb => cb.checked);
     selectAll.onchange = () => {
-      for (const cb of selectable) {
+      for (const cb of boxes) {
         cb.checked = selectAll.checked;
         if (selectAll.checked) selected.add(cb.dataset.id);
         else selected.delete(cb.dataset.id);
       }
-      updateBulkArchiveButton(type);
+      updateBulkActionButton(type);
     };
   }
-  updateBulkArchiveButton(type);
+  updateBulkActionButton(type);
 }
 
-const TYPE_LABEL = { payments: 'achitări', expenses: 'cheltuieli' };
+const TYPE_LABEL = { children: 'copii', payments: 'achitări', expenses: 'cheltuieli' };
 
 // Butonul e static în HTML, deci legarea e o singură dată la pornire — spre
 // deosebire de casetele din tabel, reconstruite la fiecare randare.
-export function bindBulkArchive(type) {
-  const btn = $(`${type}BulkArchive`);
+export function bindBulkAction(type) {
+  const btn = $(`${type}BulkAction`);
   if (!btn) return;
   btn.onclick = async () => {
     if (!btn.classList.contains('confirm-pending')) {
       btn.classList.add('confirm-pending');
       btn.dataset.label = btn.textContent;
-      btn.textContent = `Sigur? Arhivează ${bulkSelection[type].size}`;
+      btn.textContent = `Sigur? ${btn.textContent}`;
       btn._confirmTimer = setTimeout(() => {
         btn.classList.remove('confirm-pending');
         btn.textContent = btn.dataset.label;
@@ -369,22 +377,28 @@ export function bindBulkArchive(type) {
     btn.classList.remove('confirm-pending');
     btn.disabled = true;
     const ids = [...bulkSelection[type]];
+    const archive = $(`${type}Archive`)?.value;
+    const isArchiveView = archive === 'archived';
+    const targetState = !isArchiveView;
     try {
       for (const id of ids) {
         const r = session.state[type].find(x => x.id === id);
-        if (!r || r.archived) continue;
+        if (!r) continue;
+        if (targetState && r.archived) continue;
+        if (!targetState && !r.archived) continue;
         await mutate('/api/record', {
           type,
           mode: 'update',
-          record: { ...r, archived: true, archivedAt: new Date().toISOString() },
+          record: { ...r, archived: targetState, archivedAt: targetState ? new Date().toISOString() : null },
         });
       }
       bulkSelection[type].clear();
-      message(`${ids.length} ${TYPE_LABEL[type]} arhivate.`);
+      const action = isArchiveView ? 'dezarhivate' : 'arhivate';
+      message(`${ids.length} ${TYPE_LABEL[type]} ${action}.`);
     } catch (e) {
       message(e.message, true);
     } finally {
-      updateBulkArchiveButton(type);
+      updateBulkActionButton(type);
     }
   };
 }
@@ -439,7 +453,7 @@ export function renderList(type) {
       )
       .join('') ||
     `<tr><td colspan="${headings.length}" class="empty">Nu există înregistrări pentru filtrele alese.</td></tr>`;
-  if (type === 'payments' || type === 'expenses') wireBulkSelection(type);
+  if (type === 'children' || type === 'payments' || type === 'expenses') wireBulkSelection(type);
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────────────────

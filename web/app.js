@@ -11,7 +11,7 @@ import {
   moreAudit,
   bindGroups,
   bindCategories,
-  bindBulkArchive,
+  bindBulkAction,
 } from './ui/views.mjs';
 import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
@@ -28,8 +28,9 @@ bindFees();
 bindAssign();
 bindGroups();
 bindCategories();
-bindBulkArchive('payments');
-bindBulkArchive('expenses');
+bindBulkAction('children');
+bindBulkAction('payments');
+bindBulkAction('expenses');
 
 // Pe ecrane înguste navigația devine un panou explicit; pe desktop CSS o
 // afișează permanent, așa că nu folosim niciodată `hidden` pentru aceasta.
