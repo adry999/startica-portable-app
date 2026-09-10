@@ -474,21 +474,24 @@ export function obligation(child, month, payments, asOf = today(), index = null)
   // Ce trebuie notificat: orice rest neachitat, indiferent cât de aproape e
   // scadența — fereastra de 3 zile rămâne doar pt etichetă (label), ca restanțele
   // reale să se distingă vizual de cele nescadente, fără să dispară din listă.
-  const notify = !inactive && !unknown && rest > 0;
+  // Include și copii fără taxă setată (fee === null), dacă au dată de început și statut.
+  const notify = !inactive && start && status && (rest > 0 || fee === null);
   const daysToDue = daysBetween(asOf, due);
   const label = inactive
     ? 'Fără obligație'
-    : unknown
-      ? 'De verificat'
-      : rest === 0
-        ? 'Plătit'
-        : asOf > due
-          ? 'Restanță'
-          : paid > 0
-            ? 'Plată parțială'
-            : asOf >= noticeFrom
-              ? 'Scadent în curând'
-              : 'Nescadent';
+    : fee === null
+      ? 'Fără taxă'
+      : unknown
+        ? 'De verificat'
+        : rest === 0
+          ? 'Plătit'
+          : asOf > due
+            ? 'Restanță'
+            : paid > 0
+              ? 'Plată parțială'
+              : asOf >= noticeFrom
+                ? 'Scadent în curând'
+                : 'Nescadent';
   return { expected, paid, rest, credit, due, label, notify, daysToDue };
 }
 // Prima lună cu obligație reală neachitată (nu „De verificat” sau „Fără
