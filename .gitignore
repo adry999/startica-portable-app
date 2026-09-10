@@ -19,3 +19,6 @@ npm-debug.log*
 Thumbs.db
 desktop.ini
 *.tmp
+
+# Pachetul pentru client contine o copie a bazei reale si motorul inclus.
+Livrare/

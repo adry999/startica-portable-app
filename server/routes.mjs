@@ -85,8 +85,15 @@ export function createRouter(context) {
       store.commit(b, 'ștergere grupă', () => {
         const g = store.readRecord('groups', b.id);
         if (!g) fail('Grupa nu mai există.', 409);
-        const occupied = store.readState().children.some(c => !c.archived && c.groupId === b.id);
-        if (occupied) fail('Mută mai întâi copiii din grupă.');
+        const children = store.readState().children.filter(c => c.groupId === b.id);
+        if (children.length) {
+          const archived = children.filter(c => c.archived).length;
+          fail(
+            archived
+              ? 'Mută mai întâi copiii din grupă, inclusiv copiii arhivați. Ei păstrează grupa pentru restaurare.'
+              : 'Mută mai întâi copiii din grupă.',
+          );
+        }
         store.deleteRecord('groups', b.id);
         store.audit('ștergere', 'groups', b.id, g, null);
       }),

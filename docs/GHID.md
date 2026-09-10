@@ -26,6 +26,8 @@ După această actualizare, închide ferestrele Startica vechi, rulează o singu
 
 Profilul de browser nu mai stă aici, ci în `%LOCALAPPDATA%\Startica`.
 
+În `web/ui`, `views.mjs` coordonează randarea și registrele, iar ecranele sunt separate în `reports.mjs` (dashboard, calendar și situația plăților), `groups-categories.mjs`, `review.mjs` și `profile-audit.mjs`. Funcțiile comune acestor ecrane sunt în `view-helpers.mjs`.
+
 ## Cum pornește
 
 Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă. Fișierele `.cmd` fac același lucru, dar deschid scurt o fereastră de consolă; rămân ca variantă de rezervă și pentru diagnostic.
@@ -68,7 +70,9 @@ O achitare poate conține Cash, Card și Transfer simultan. Completează sumele 
 - Restanța apare după ziua scadentă. Pentru scadența 31 într-o lună mai scurtă, se folosește ultima zi a lunii.
 - Plățile datate după ziua curentă sunt excluse din soldul copilului la zi.
 - Informațiile insuficiente apar „De verificat”. Nu folosi aceste rânduri pentru solicitarea unei sume până la completare.
+- Lista „De notificat” include obligațiile cunoscute cu rest de plată pentru luna selectată, inclusiv înaintea scadenței. Fișele fără taxă aplicabilă, început de frecventare sau statut confirmat sunt excluse și contorizate separat ca neevaluabile. O taxă explicită de zero nu generează notificare.
 - Arhivarea copilului îl ascunde din registrul curent; păstrează obligațiile istorice. Arhivarea unei plăți/cheltuieli o exclude din rapoarte și este consemnată în istoric. În filtre poți afișa arhivatele și le poți reactiva.
+- O grupă poate fi ștearsă numai după mutarea sau eliminarea atribuirii tuturor copiilor ei, inclusiv celor arhivați. Pentru aceștia, afișează arhivatele în registrul Copii și modifică grupa din fișă; astfel, datele istorice și backupurile rămân valide pentru restaurare.
 
 ## Import și export
 
@@ -100,7 +104,7 @@ Restaurarea prezintă numărul de înregistrări și totalurile. Scrie RESTAUREA
 
 ## Verificări pentru dezvoltare
 
-`npm test` (= `node --test tests/*.test.mjs`) — rulează toate cele 5 fișiere de teste: `application`, `children-csv` (import CSV, dubluri, două contacte, achitări mixte, export/reimport, protecțiile bazei), `financial-import`, `fixes` și `review-center`.
+`npm test` (= `node --test tests/*.test.mjs`) — descoperă automat toate fișierele `*.test.mjs`: reguli financiare, import/export, backup/restaurare, protecțiile bazei, integritatea grupelor (inclusiv copii arhivați), calendarul aniversărilor și centrul de verificare. Testele API folosesc baze temporare.
 
 `node tests/browser-smoke.mjs` (sau `npm run test:browser`) — Chrome headless, profil și bază temporare. Nu folosește profilul Chrome sau datele reale ale utilizatorului. Rulează separat de `npm test` pentru că are nevoie de Chrome instalat și durează mai mult.
 

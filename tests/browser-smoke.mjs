@@ -97,9 +97,13 @@ try {
     () => evaluate("document.getElementById('saveIndicator')?.dataset.state==='saved'"),
     'Application failed to load',
   );
+  // Raportările și alocările rămân în aceeași lună, indiferent când rulează testul.
+  await evaluate(
+    "document.getElementById('selectedMonth').value='2026-09';document.getElementById('selectedMonth').dispatchEvent(new Event('change'))",
+  );
   console.log('Application loaded');
-  assert.equal(await evaluate("!!document.querySelector('.topbar #saveIndicator')"), true);
-  assert.equal(await evaluate("!!document.querySelector('.topbar #backupStatus')"), true);
+  assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
+  assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
   assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 12);
   assert.equal(
     await evaluate("new Set([...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)).size"),
@@ -173,6 +177,12 @@ try {
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
   await until(() => evaluate("document.querySelector('.brand img')?.naturalWidth > 0"), 'Official logo failed to load');
   await evaluate(
+    "document.querySelector('#primaryNav [data-view=groups]').click();document.getElementById('groupNameInput').value='Grupa test';document.getElementById('groupCapacityInput').value='12';document.getElementById('groupCreateForm').requestSubmit()",
+  );
+  await until(() => evaluate("document.querySelectorAll('#groupsGrid [data-group]').length===1"), 'Group creation failed');
+  const groupId = (await (await fetch(url + '/api/state')).json()).state.groups[0].id;
+  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
+  await evaluate(
     "document.querySelector('[data-create=children]').click();document.getElementById('editorForm').elements.name.dispatchEvent(new Event('input',{bubbles:true}))",
   );
   assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'pending');
@@ -194,7 +204,7 @@ try {
     "window.testFetch=window.fetch;window.fetch=async(...args)=>{if(args[0]==='/api/record'){const response=await window.testFetch(...args);return new Promise((resolve,reject)=>{window.failSave=()=>reject(new TypeError('Test lost response'));});}return window.testFetch(...args);}",
   );
   await evaluate(
-    "(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Copil <test>';f.elements.parent.value='Părinte test';f.elements.parent2.value='Al doilea părinte';f.elements.phone2.value='060123456';f.elements.group.value='1';f.elements.attendanceDate.value='2026-09-01';f.elements.fee.value='2000';f.elements.feeFrom.value='2026-09';f.elements.statusFrom.value='2026-09';f.requestSubmit();})()",
+    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Copil <test>';f.elements.parent.value='Părinte test';f.elements.parent2.value='Al doilea părinte';f.elements.phone2.value='060123456';f.elements.groupId.value=${JSON.stringify(groupId)};f.elements.attendanceDate.value='2026-09-01';f.elements.fee.value='2000';f.elements.feeFrom.value='2026-09';f.elements.statusFrom.value='2026-09';f.requestSubmit();})()`,
   );
   await until(() => evaluate("typeof window.failSave==='function'"), 'Save did not reach test server');
   assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'pending');
@@ -239,7 +249,7 @@ try {
   await evaluate("document.querySelector('[data-create=payments]').click()");
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Al doilea părinte/);
   await evaluate(
-    "(()=>{const f=document.getElementById('editorForm');f.elements.childId.selectedIndex=1;f.elements.date.value='2026-09-08';f.elements.tenderCash.value='1000';f.elements.tenderCard.value='2000';f.elements.tenderCard.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-month]').value='2026-09';document.querySelector('[data-amount]').value='2000';document.getElementById('addAllocation').click();const rows=document.querySelectorAll('.allocation');rows[1].querySelector('[data-month]').value='2026-10';rows[1].querySelector('[data-amount]').value='500';})()",
+    "(()=>{const f=document.getElementById('editorForm'),picker=f.querySelector('[data-child-picker]'),search=picker.querySelector('.child-picker-input');search.focus();picker.querySelector('.combobox-option[data-id]:not([data-id=\"\"])').dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));f.elements.date.value='2026-09-08';f.elements.tenderCash.value='1000';f.elements.tenderCard.value='2000';f.elements.tenderCard.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-month]').value='2026-09';document.querySelector('[data-amount]').value='2000';document.getElementById('addAllocation').click();const rows=document.querySelectorAll('.allocation');rows[1].querySelector('[data-month]').value='2026-10';rows[1].querySelector('[data-amount]').value='500';})()",
   );
   assert.equal(await evaluate("document.getElementById('editorForm').elements.amount.value"), '3000.00');
   await evaluate("document.getElementById('editorForm').requestSubmit()");
@@ -309,7 +319,7 @@ try {
     c => c.name === 'Copil <test>',
   );
   assert.equal(afterFeeOnlyEdit.status, 'Retras');
-  assert.equal(afterFeeOnlyEdit.group, '1');
+  assert.equal(afterFeeOnlyEdit.groupId, groupId);
   await evaluate("document.querySelector('[data-action=profile]').click()");
   assert.match(await evaluate("document.getElementById('profileBody').textContent"), /3.?000/);
   await evaluate(
@@ -393,9 +403,9 @@ try {
     try {
       const sample=structuredClone(original.children[0]);
       session.state={...original,payments:[],expenses:[],children:[
-        {...sample,id:'summary-active',archived:false,status:'Activ',feeHistory:[],group:'  Test  '},
-        {...sample,id:'summary-suspended',archived:false,status:'Suspendat',group:'Test'},
-        {...sample,id:'summary-archived',archived:true,status:'Activ',group:'Arhivă exclusiv'}
+        {...sample,id:'summary-active',name:'Copil neevaluabil',archived:false,status:'Activ',feeHistory:[],groupId:original.groups[0].id},
+        {...sample,id:'summary-suspended',archived:false,status:'Suspendat',groupId:original.groups[0].id},
+        {...sample,id:'summary-archived',name:'Copil arhivat exclusiv',archived:true,status:'Activ',groupId:original.groups[0].id}
       ]};
       render();
       return {
@@ -403,15 +413,19 @@ try {
         groups:document.getElementById('occupiedGroupsStat').textContent,
         review:Number(document.getElementById('incompleteChildrenStat').textContent),
         groupText:document.getElementById('groupsGrid').textContent,
-        allClear:!!document.querySelector('#alerts .attention-empty')
+        allClear:!!document.querySelector('#alerts .attention-empty'),
+        notifyText:document.getElementById('notifyTable').textContent,
+        notifyStats:document.getElementById('notifyStats').textContent
       };
     } finally {session.state=original;render();}
   })()`);
   assert.equal(summaryFixture.active, '1');
   assert.equal(summaryFixture.groups, '1');
   assert.ok(summaryFixture.review > 0);
-  assert.doesNotMatch(summaryFixture.groupText, /Arhivă exclusiv/);
+  assert.doesNotMatch(summaryFixture.groupText, /Copil arhivat exclusiv/);
   assert.equal(summaryFixture.allClear, false);
+  assert.doesNotMatch(summaryFixture.notifyText, /Copil neevaluabil/);
+  assert.match(summaryFixture.notifyStats, /Nu pot fi evaluați\s*1/);
   await viewport(390);
   for (const view of ['children', 'payments', 'expenses', 'review']) {
     await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);

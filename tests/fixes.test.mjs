@@ -191,7 +191,7 @@ test('O modificare urmată de inactivitate primește totuși o copie, în afara 
   assert.ok(automatic() > afterWrites, `Copia amânată nu a fost creată (înainte ${afterWrites}, după ${automatic()}).`);
 });
 
-test('Scadența vine din data contractului, iar notificarea începe cu 3 zile înainte', () => {
+test('Scadența vine din data contractului, iar orice obligație cunoscută neachitată se notifică', () => {
   // Contract pe 14 => scadent pe 14 în fiecare lună, notificare din 11.
   const c = normalizeRecord('children', {
     id: 'ID-1',
@@ -240,8 +240,22 @@ test('Scadența vine din data contractului, iar notificarea începe cu 3 zile î
   assert.equal(obligation(c, '2026-09', paid, '2026-09-30').notify, false);
   assert.equal(obligation(c, '2026-09', paid, '2026-09-30').label, 'Plătit');
 
-  // Fără taxă nu se poate evalua, deci nu se notifică pe baza unei presupuneri.
-  assert.equal(obligation({ ...c, feeHistory: [] }, '2026-09', [], '2026-09-30').notify, false);
+  // Fără elementele care definesc obligația, fișa se verifică manual și nu
+  // generează notificări bazate pe presupuneri.
+  for (const incomplete of [
+    { ...c, feeHistory: [] },
+    { ...c, attendanceDate: '' },
+    { ...c, status: 'De verificat', statusHistory: [] },
+  ]) {
+    const result = obligation(incomplete, '2026-09', [], '2026-09-30');
+    assert.equal(result.label, 'De verificat');
+    assert.equal(result.notify, false);
+  }
+
+  // Taxa zero este o obligație cunoscută, achitată integral prin definiție.
+  const zeroFee = obligation({ ...c, feeHistory: [{ from: '2024-12', amount: 0 }] }, '2026-09', [], '2026-09-30');
+  assert.equal(zeroFee.label, 'Plătit');
+  assert.equal(zeroFee.notify, false);
   // Retras => fără obligație.
   assert.equal(
     obligation({ ...c, statusHistory: [{ from: '2026-08', status: 'Retras' }] }, '2026-09', [], '2026-09-30').notify,
