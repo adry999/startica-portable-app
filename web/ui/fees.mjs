@@ -91,14 +91,16 @@ export function bindFees() {
 
   $('feesApplyAll').onclick = () => {
     const amount = $('feesBulkAmount').value.trim(),
-      group = $('feesBulkGroup').value;
-    if (!amount && !group) {
-      message('Completează o taxă sau o grupă de aplicat.', true);
+      group = $('feesBulkGroup').value,
+      status = $('feesBulkStatus').value;
+    if (!amount && !group && !status) {
+      message('Completează o taxă, o grupă sau un statut de aplicat.', true);
       return;
     }
     for (const tr of $('feesTable').querySelectorAll('tr[data-child]')) {
       if (amount) tr.querySelector('[data-fee]').value = amount;
       if (group) tr.querySelector('[data-group]').value = group;
+      if (status) tr.querySelector('[data-status]').value = status;
     }
     message(`Valorile au fost puse pe rândurile afișate. Verifică excepțiile, apoi salvează.`);
   };
