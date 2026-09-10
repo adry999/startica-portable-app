@@ -312,7 +312,7 @@ function renderPaymentsChildFilter() {
 }
 
 function updateBulkActionButton(type) {
-  const btn = $(`${type}BulkAction`);
+  const btn = $(`${type}BulkArchive`) || $(`${type}BulkAction`);
   if (!btn) return;
   clearTimeout(btn._confirmTimer);
   btn.classList.remove('confirm-pending');
@@ -360,7 +360,7 @@ const TYPE_LABEL = { children: 'copii', payments: 'achitări', expenses: 'cheltu
 // Butonul e static în HTML, deci legarea e o singură dată la pornire — spre
 // deosebire de casetele din tabel, reconstruite la fiecare randare.
 export function bindBulkAction(type) {
-  const btn = $(`${type}BulkAction`);
+  const btn = $(`${type}BulkArchive`) || $(`${type}BulkAction`);
   if (!btn) return;
   btn.onclick = async () => {
     if (!btn.classList.contains('confirm-pending')) {
