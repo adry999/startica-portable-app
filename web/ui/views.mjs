@@ -153,7 +153,7 @@ const selectAllHeader = type =>
   `<input type="checkbox" id="${type}SelectAll" title="Selectează tot ce se vede">`;
 
 const HEADINGS = {
-  children: [selectAllHeader('children'), 'Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Statut', 'Acțiuni'],
+  children: [selectAllHeader('children'), 'Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Scadență', 'Statut', 'Acțiuni'],
   payments: [
     selectAllHeader('payments'),
     'Data',
@@ -167,7 +167,7 @@ const HEADINGS = {
 };
 
 const SORT_FIELDS = {
-  children: [null, 'contract', 'name', null, 'group', 'status'],
+  children: [null, 'contract', 'name', null, 'group', 'dueDay', 'status'],
   payments: [null, 'date', 'child', 'amount'],
   expenses: [null, 'date', 'category', 'description', 'amount'],
 };
@@ -187,6 +187,7 @@ const CELLS = {
     button('profile', 'children', r.id, r.name),
     parentContacts(r),
     esc(groupName(r.groupId) || 'Lipsește'),
+    `ziua ${dueDayFor(r)}`,
     `<span class="badge ${statusBadgeClass(r.status)}">${esc(r.status)}${r.archived ? ' · Arhivat' : ''}</span>`,
     actions('children', r),
   ],
@@ -243,6 +244,7 @@ const sortValue = (type, field, row) => {
   if (field === 'child') return childName(row);
   if (field === 'amount') return Number(row.amount) || 0;
   if (field === 'group') return groupName(row.groupId);
+  if (field === 'dueDay') return dueDayFor(row);
   return row[field] || '';
 };
 
