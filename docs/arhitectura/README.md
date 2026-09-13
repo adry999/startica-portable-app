@@ -1,8 +1,15 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
-Stare, 13 septembrie 2026: **pașii 0, 1 și 2 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, vezi §6). Pașii 3–12 sunt propuși; modulele aplicației sunt încă în `server/`, `shared/` și `web/ui/`. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
+Stare, 13 septembrie 2026: **pașii 0–3 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, vezi §6). Pașii 4–12 sunt propuși; restul modulelor sunt încă în `server/`, `shared/` și `web/ui/`. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
 
-Pasul 2 a adăugat `src/config/environment.mjs`, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
+Pasul 3 a mutat în `src/shared/`:
+- `domain/`: `calendar-month`, `money`, `record-schema`, `records-report`, `payment-allocations`, `tuition-obligation`;
+- `format/`: escape HTML, bani, date, mărimi de fișier și căutarea fără diacritice, unificată din cele două `normalizeSearch` identice;
+- `ui/`: `element-lookup`, `nav-count-badge`, `child-picker`.
+
+Căile vechi (`shared/domain.mjs`, `shared/text.mjs`, `web/ui/dom.mjs`, `web/ui/child-picker.mjs`) sunt re-exporturi cu aceleași nume. `monthCalendar`, `upcomingBirthdays`, `applyChildSetup`, `issues`, `importReport` și `cashSummary` rămân în `shared/domain.mjs` până la pașii feature-urilor lor.
+
+, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
 
 **De la pasul 2, pachetul de livrare trebuie să conțină `package.json` și `src/`**, pentru că serverul importă `#config/environment.mjs`.
 

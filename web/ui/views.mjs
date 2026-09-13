@@ -10,6 +10,7 @@ import {
   dueDayFor,
 } from '../../shared/domain.mjs';
 import { reviewCenter } from '../../shared/review-center.mjs';
+import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { $, esc, money, date, time, fileSize, monthLabel } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
 import {
@@ -171,15 +172,9 @@ const CELLS = {
   ],
 };
 
-const normalizeSearch = value =>
-  String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('ro-RO');
-
 function matchesSearch(r, type, search) {
   if (!search) return true;
-  return normalizeSearch(
+  return normalizeSearchText(
     JSON.stringify([
       r.name,
       r.parent,
@@ -376,7 +371,7 @@ export function setListSort(type, field, direction) {
 }
 
 export function renderList(type) {
-  const search = normalizeSearch($(`${type}Search`).value),
+  const search = normalizeSearchText($(`${type}Search`).value),
     archive = $(`${type}Archive`).value,
     monthFrom = $(`${type}MonthFrom`)?.value,
     monthTo = $(`${type}MonthTo`)?.value,
