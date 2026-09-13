@@ -88,6 +88,7 @@ try {
         $logDirectory = Join-Path $appDirectory 'Jurnale'
         New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
         $logName = 'pornire_' + (Get-Date -Format 'yyyyMMdd_HHmmss_fff')
+        $env:STARTICA_PROFILE = 'production'
         $env:STARTICA_NO_BROWSER = '1'
         $env:STARTICA_PORT = [string]$Port
         $serverPath = Join-Path $appDirectory 'startica_server.mjs'

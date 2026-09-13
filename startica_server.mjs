@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, loadEnvironment } from '#config/environment.mjs';
 import { openDatabase, createSettings } from './server/database.mjs';
 import { createBackups } from './server/backups.mjs';
 import { createStore } from './server/store.mjs';
@@ -11,9 +12,6 @@ import { createRouter } from './server/routes.mjs';
 export { retentionKeep } from './server/backups.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
-// Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări. Vezi
-// server/backups.mjs. 0 = backup la fiecare scriere (folosit în teste).
-const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
 
 export function createApplication(options = {}) {
   const root = options.root || ROOT,
@@ -65,22 +63,22 @@ export function createApplication(options = {}) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
-  const port = Number(process.env.STARTICA_PORT || 8765);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('Port Startica invalid.');
+  const environment = loadEnvironment();
   // Implicit ar opri tot procesul, pierzând fereastra fără explicație.
   process.on('unhandledRejection', e => console.error('Respingere netratată: ' + (e?.stack || e)));
-  const app = createApplication({ allowShutdown: true });
+  const app = createApplication({ allowShutdown: true, autoBackupIntervalMs: environment.autoBackupIntervalMs });
   app.server.on('error', e => {
     console.error(
-      e.code === 'EADDRINUSE' ? `Startica este deja pornită. Deschide http://127.0.0.1:${port}` : e.message,
+      e.code === 'EADDRINUSE' ? `Startica este deja pornită. Deschide http://127.0.0.1:${environment.port}` : e.message,
     );
     app.db.close();
     process.exitCode = 1;
   });
-  app.server.listen(port, '127.0.0.1', () => {
-    console.log(`Startica: http://127.0.0.1:${port}`);
-    if (process.env.STARTICA_NO_BROWSER !== '1')
-      spawn('cmd.exe', ['/c', 'start', '', `http://127.0.0.1:${port}`], {
+  app.server.listen(environment.port, '127.0.0.1', () => {
+    const address = `http://127.0.0.1:${app.server.address().port}`;
+    console.log(`Startica: ${address}`);
+    if (environment.openBrowser)
+      spawn('cmd.exe', ['/c', 'start', '', address], {
         detached: true,
         stdio: 'ignore',
         windowsHide: true,

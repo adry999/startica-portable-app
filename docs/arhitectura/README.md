@@ -1,6 +1,10 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
-Stare, 13 septembrie 2026: **pașii 0 și 1 aplicați** (plasa de siguranță și aliasurile `#`, vezi §6). Pașii 2–12 sunt propuși, iar codul aplicației nu a fost încă mutat.
+Stare, 13 septembrie 2026: **pașii 0, 1 și 2 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, vezi §6). Pașii 3–12 sunt propuși.
+
+Pasul 2 a adăugat `src/config/environment.mjs`, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
+
+**De la pasul 2, pachetul de livrare trebuie să conțină `package.json` și `src/`**, pentru că serverul importă `#config/environment.mjs`.
 
 Pasul 1 a adăugat:
 - `package.json#imports`;
@@ -8,7 +12,7 @@ Pasul 1 a adăugat:
 - lista albă `/src/**` doar pentru codul de browser, în `server/http.mjs`, cu teste în `tests/http-modules.test.mjs`;
 - o probă de alias în browser smoke.
 
-Tot la pasul 1, `tests/desktop-lifecycle.ps1` pornește acum lansatorul VBS. Testul era stricat de la ștergerea lansatoarelor `.cmd`. **Pachetul de livrare trebuie să conțină de acum `package.json` și, după pasul 3, `src/`.** Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
+Tot la pasul 1, `tests/desktop-lifecycle.ps1` pornește acum lansatorul VBS. Testul era stricat de la ștergerea lansatoarelor `.cmd`. Pachetul de livrare trebuie să conțină de acum `package.json`. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
 
 Pasul 0 a adăugat:
 - `tsconfig.json` și scripturile `typecheck`, `check`, `test:e2e`;
