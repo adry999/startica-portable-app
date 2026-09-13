@@ -21,26 +21,28 @@ function Wait-Condition([scriptblock]$Condition, [string]$Message) {
     throw $Message
 }
 try {
-    $files = Get-ChildItem -LiteralPath $source -File | Where-Object { $_.Extension -in @('.mjs','.js','.html','.css','.cmd','.vbs') -or $_.Name -eq 'startica_desktop.ps1' }
+    # package.json contine aliasurile #; fara el Node nu rezolva importurile din src/.
+    $files = Get-ChildItem -LiteralPath $source -File | Where-Object { $_.Extension -in @('.mjs','.js','.html','.css','.vbs') -or $_.Name -in @('startica_desktop.ps1','package.json') }
     foreach ($file in $files) { Copy-Item -LiteralPath $file.FullName -Destination $testDirectory }
     # Modulele serverului si ale interfetei stau in subdirectoare; fara ele
     # startica_server.mjs nu porneste.
-    foreach ($folder in @('web','shared','server')) {
-        Copy-Item -LiteralPath (Join-Path $source $folder) -Destination (Join-Path $testDirectory $folder) -Recurse
+    foreach ($folder in @('web','shared','server','src')) {
+        if (Test-Path -LiteralPath (Join-Path $source $folder)) {
+            Copy-Item -LiteralPath (Join-Path $source $folder) -Destination (Join-Path $testDirectory $folder) -Recurse
+        }
     }
     # Profilul se trece explicit: altfel testul ar scrie in profilul real din
     # %LOCALAPPDATA% si ar inchide ferestrele Startica ale utilizatorului.
-    $arguments = '/d /c ""' + (Join-Path $testDirectory 'Porneste_Startica.cmd') + '" -Port ' + $port +
-        ' -ProfileDirectory "' + $profile + '""'
-    $controllers += Start-Process -FilePath 'cmd.exe' -ArgumentList $arguments -WindowStyle Hidden -PassThru
-    if (-not $controllers[-1].WaitForExit(5000)) { throw 'Terminalul lansatorului a ramas blocat.' }
-    if ($controllers[-1].ExitCode -ne 0) { throw 'Lansatorul CMD a esuat.' }
+    $launchArguments = @('//B', ('"' + (Join-Path $testDirectory 'Porneste_Startica.vbs') + '"'), '-Port', $port, '-ProfileDirectory', ('"' + $profile + '"'))
+    $controllers += Start-Process -FilePath 'wscript.exe' -ArgumentList $launchArguments -PassThru
+    if (-not $controllers[-1].WaitForExit(5000)) { throw 'Lansatorul a ramas blocat.' }
+    if ($controllers[-1].ExitCode -ne 0) { throw 'Lansatorul VBS a esuat.' }
     Wait-Condition { Test-Health } 'Serverul de test nu a pornit.'
     Wait-Condition { $b = Get-TestBrowser; $b -and (Get-Process -Id $b.ProcessId).MainWindowHandle -ne 0 } 'Prima fereastra nu a aparut.'
     Start-Sleep -Milliseconds 800
     $firstHandle = (Get-Process -Id (Get-TestBrowser).ProcessId).MainWindowHandle
-    $controllers += Start-Process -FilePath 'cmd.exe' -ArgumentList $arguments -WindowStyle Hidden -PassThru
-    if (-not $controllers[-1].WaitForExit(5000)) { throw 'Al doilea terminal a ramas blocat.' }
+    $controllers += Start-Process -FilePath 'wscript.exe' -ArgumentList $launchArguments -PassThru
+    if (-not $controllers[-1].WaitForExit(5000)) { throw 'Al doilea lansator a ramas blocat.' }
     Wait-Condition { (Get-Process -Id (Get-TestBrowser).ProcessId).MainWindowHandle -ne $firstHandle } 'A doua fereastra nu a aparut.'
     $process = Get-Process -Id (Get-TestBrowser).ProcessId
     if (-not $process.CloseMainWindow()) { throw 'Nu am putut inchide prima fereastra de test.' }
@@ -51,7 +53,7 @@ try {
     if (-not $process.CloseMainWindow()) { throw 'Nu am putut inchide ultima fereastra de test.' }
     Wait-Condition { -not (Test-Health) } 'Serverul nu s-a oprit dupa ultima fereastra.'
     if (-not (Get-ChildItem -LiteralPath (Join-Path $testDirectory 'Startica_Backup') -Filter '*inchidere*.db')) { throw 'Lipseste backupul final.' }
-    Write-Output 'PASS: lansatorul CMD se inchide imediat; doua ferestre, inchiderea primei pastreaza serverul, ultima il opreste si creeaza backup final.'
+    Write-Output 'PASS: lansatorul VBS se inchide imediat; doua ferestre, inchiderea primei pastreaza serverul, ultima il opreste si creeaza backup final.'
 } finally {
     if (Test-Health) {
         $session = Invoke-RestMethod ($url + '/api/session')
