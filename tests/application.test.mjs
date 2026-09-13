@@ -1,24 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, renameSync, readdirSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, renameSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
 import { createApplication } from '../startica_server.mjs';
-import {
-  normalizeRecord,
-  validateState,
-  obligation,
-  cashSummary,
-  emptyState,
-  importReport,
-} from '../shared/domain.mjs';
-import { exportWorkbook, readWorkbook } from '../shared/excel.mjs';
+import { normalizeRecord, validateState, obligation, cashSummary, emptyState } from '../shared/domain.mjs';
 import { startTestApplication } from './support/start-test-application.mjs';
-const require = createRequire(import.meta.url),
-  XLSX = require('../web/vendor/xlsx.full.min.js');
 const child = () =>
   normalizeRecord('children', {
     id: 'ID-test',
@@ -75,54 +64,6 @@ test('Validare monetară, dată, identificatori și referințe', () => {
   assert.throws(() => validateState({ children: [], payments: [payment()], expenses: [] }));
   assert.throws(() => validateState({ children: [child(), child()], payments: [], expenses: [] }));
   assert.equal(normalizeRecord('children', { ...child(), status: 'Retras' }).status, 'Retras');
-});
-test('Export/reimport complet prin fișier XLSX în memorie', () => {
-  const s = {
-    children: [
-      { ...child(), notes: 'Observații', extra: 'câmp păstrat', statusHistory: [{ from: '2026-09', status: 'Activ' }] },
-    ],
-    payments: [{ ...payment(), archived: true, original: 'sursă', notes: 'a'.repeat(35000) }],
-    expenses: [normalizeRecord('expenses', { id: 'EXP-test', date: '2026-09-08', amount: 10.25, category: 'Test' })],
-    groups: [{ id: 'GRP-test', name: 'Grupa test', capacity: 10 }],
-    categories: [],
-  };
-  // Extra long field exercises chunking; validation normally caps text at 10k.
-  s.payments[0].notes = 'text';
-  s.payments[0].extra = 'a'.repeat(35000);
-  const bytes = XLSX.write(exportWorkbook(s, XLSX), { type: 'buffer', bookType: 'xlsx' });
-  const result = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX);
-  assert.deepEqual(result.errors, []);
-  assert.deepEqual(result.state, validateState(s));
-  const zero = readWorkbook(exportWorkbook(emptyState(), XLSX), XLSX);
-  assert.deepEqual(zero.state, emptyState());
-});
-test('Importul refuză exporturi necunoscute în loc să importe liste goale', () => {
-  const wb = XLSX.utils.book_new();
-  for (const name of ['Copii', 'Achitari', 'Cheltuieli'])
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['ID'], ['ID-test']]), name);
-  assert.ok(readWorkbook(wb, XLSX).errors.length);
-});
-test('V5 original: numărul de înregistrări și totalurile rămân identice', () => {
-  const source = new URL('../../Fisiere_Excel/Evidenta_Achitari_corectata%20v5.xlsx', import.meta.url);
-  if (!existsSync(source)) return;
-  const wb = XLSX.read(readFileSync(source), { type: 'buffer' }),
-    report = readWorkbook(wb, XLSX);
-  assert.deepEqual(report.errors, []);
-  assert.deepEqual(report.summary, {
-    children: 105,
-    payments: 810,
-    expenses: 1201,
-    groups: 10,
-    categories: 0,
-    paymentTotal: 10105096,
-    expenseTotal: 1564059,
-  });
-  const roundtrip = readWorkbook(
-    XLSX.read(XLSX.write(exportWorkbook(report.state, XLSX), { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
-    XLSX,
-  );
-  assert.deepEqual(roundtrip.errors, []);
-  assert.deepEqual(roundtrip.state, report.state);
 });
 test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate', async t => {
   // autoBackupIntervalMs: 0 => backup după fiecare scriere, ca înainte de

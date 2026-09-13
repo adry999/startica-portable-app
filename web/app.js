@@ -18,9 +18,14 @@ import {
   createPaymentAssignmentController,
   createPaymentAssignmentView,
 } from '#features/payment-assignment/index.web.mjs';
-import { createReviewCenterView } from '#features/review-center/index.web.mjs';
+import { createReviewCenterView, findRecordIssues } from '#features/review-center/index.web.mjs';
 import { createGroupsController } from '#features/groups/index.web.mjs';
-import { createExpenseCategoriesController } from '#features/expenses/index.web.mjs';
+import {
+  createExpenseCategoriesController,
+  createExpensesListView,
+  expenseEditorFields,
+  listExpenseCategoryNames,
+} from '#features/expenses/index.web.mjs';
 import { DomainEvent } from '#shared/contracts/domain-events.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
@@ -29,13 +34,19 @@ import { bindMonthPicker } from '#app/web/month-picker.mjs';
 import { bindMobileNavigation } from '#app/web/mobile-navigation.mjs';
 import { bindUnsavedChangesGuard } from '#app/web/unsaved-changes-guard.mjs';
 import { pages } from './ui/parts.mjs';
-import { go, render, renderList, profile, registerScreen, onRender, bindBulkAction } from './ui/views.mjs';
-import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
-import { bindTransfers } from './ui/transfers.mjs';
+import { go, render, registerScreen, onRender } from './ui/views.mjs';
+import {
+  createChildProfileView,
+  createChildrenCsvDialog,
+  createChildrenListView,
+  childEditorFields,
+} from '#features/children/index.web.mjs';
+import { createPaymentsListView, paymentEditorFields } from '#features/payments/index.web.mjs';
+import { createRecordEditorDialog } from '#features/record-editing/index.web.mjs';
+import { createExcelTransferController, loadXLSX } from '#features/data-transfer/index.web.mjs';
 import { createFeeSetupController } from '#features/fee-setup/index.web.mjs';
 
 const HEALTH_POLL_MS = 30000;
-const LISTS = ['children', 'payments', 'expenses'];
 
 const renderBackupHealth = createBackupHealthView({
   elements: { status: $('backupStatus'), details: $('healthDetails'), externalDirInput: $('externalDir') },
@@ -67,8 +78,44 @@ createBackupController({
   showNotice: message,
   renderSaveStatus,
 });
-bindEditorForm();
-bindTransfers();
+createExcelTransferController({
+  elements: {
+    importButton: $('importButton'),
+    excelInput: $('excelInput'),
+    importPreview: $('importPreview'),
+    importDialog: $('importDialog'),
+    importConfirm: $('importConfirm'),
+    commitImport: $('commitImport'),
+    exportButton: $('exportButton'),
+  },
+  sessionState: session,
+  readRecords: () => session.state,
+  requestJson: api,
+  submitMutation: mutate,
+  showNotice: message,
+  loadXlsx: loadXLSX,
+  findRecordIssues,
+});
+createChildrenCsvDialog({
+  elements: {
+    importButton: $('importChildrenButton'),
+    fileInput: $('childrenCsvInput'),
+    dialog: $('csvDialog'),
+    preview: $('csvPreview'),
+    confirmInput: $('csvConfirm'),
+    commitButton: $('commitCsv'),
+    errorText: $('csvError'),
+  },
+  sessionState: session,
+  requestJson: api,
+  submitMutation: mutate,
+  showNotice: message,
+});
+const childProfile = createChildProfileView({
+  elements: { body: $('profileBody'), dialog: $('profile') },
+  readRecords: () => session.state,
+  readSelectedMonth: selectedMonth,
+});
 
 const auditLog = createAuditLogController({
   fetchAuditPage: createAuditLogApi({ requestJson: api }).fetchAuditPage,
@@ -172,15 +219,74 @@ const feeSetup = createFeeSetupController({
   showNotice: message,
   renderMissingFeeCount: count => setNavCount('feesCount', count),
 });
+const recordEditor = createRecordEditorDialog({
+  elements: {
+    editor: $('editor'),
+    editorForm: $('editorForm'),
+    editorTitle: $('editorTitle'),
+    editorFields: $('editorFields'),
+    editorError: $('editorError'),
+    editorSave: $('editorSave'),
+  },
+  fieldsByType: { children: childEditorFields, payments: paymentEditorFields, expenses: expenseEditorFields },
+  sessionState: session,
+  readRecords: () => session.state,
+  submitMutation: mutate,
+  showNotice: message,
+  renderSaveStatus,
+  readExpenseCategoryNames: () => listExpenseCategoryNames(session.state),
+});
+const listDependencies = { readRecords: () => session.state, submitMutation: mutate, showNotice: message };
+const childrenList = createChildrenListView({
+  elements: {
+    search: $('childrenSearch'),
+    archive: $('childrenArchive'),
+    head: $('childrenHead'),
+    table: $('childrenTable'),
+    summaryText: $('childrenSummaryText'),
+    bulkButton: $('childrenBulkAction'),
+  },
+  ...listDependencies,
+});
+const paymentsList = createPaymentsListView({
+  elements: {
+    search: $('paymentsSearch'),
+    child: $('paymentsChild'),
+    method: $('paymentsMethod'),
+    monthFrom: $('paymentsMonthFrom'),
+    monthTo: $('paymentsMonthTo'),
+    archive: $('paymentsArchive'),
+    head: $('paymentsHead'),
+    table: $('paymentsTable'),
+    summaryText: $('paymentsSummaryText'),
+    bulkButton: $('paymentsBulkArchive'),
+  },
+  ...listDependencies,
+});
+const expensesList = createExpensesListView({
+  elements: {
+    search: $('expensesSearch'),
+    monthFrom: $('expensesMonthFrom'),
+    monthTo: $('expensesMonthTo'),
+    category: $('expensesCategory'),
+    archive: $('expensesArchive'),
+    head: $('expensesHead'),
+    table: $('expensesTable'),
+    summaryText: $('expensesSummaryText'),
+    bulkButton: $('expensesBulkArchive'),
+  },
+  ...listDependencies,
+});
+// Listele citesc filtrul de categorie înainte ca lista de categorii să-i refacă opțiunile, ca înainte de migrare.
 onRender(({ review }) => {
+  childrenList.render();
+  paymentsList.render();
+  expensesList.render();
   feeSetup.render();
   groups.render();
   expenseCategories.render();
   renderReviewCenter(review);
 });
-bindBulkAction('children');
-bindBulkAction('payments');
-bindBulkAction('expenses');
 
 // Calendarul se leagă înaintea navigației mobile: ascultătorul lui de Escape
 // oprește propagarea când închide calendarul, ca cele două să nu reacționeze
@@ -202,7 +308,7 @@ document.addEventListener('click', async event => {
   try {
     if (b.dataset.view) go(b.dataset.view);
     if (b.dataset.scroll) $(b.dataset.scroll).scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (b.dataset.create) openEditor(b.dataset.create);
+    if (b.dataset.create) recordEditor.openEditor(b.dataset.create);
     if (b.dataset.close) {
       if (session.busy) {
         message('Așteaptă confirmarea salvării.', true);
@@ -215,7 +321,7 @@ document.addEventListener('click', async event => {
       render();
     }
     const { action, type, id } = b.dataset;
-    if (action === 'edit') openEditor(type, id);
+    if (action === 'edit') recordEditor.openEditor(type, id);
     if (action === 'archive') {
       // Fără fereastră de confirmare: primul click doar cere confirmarea,
       // rămâne fix pe rând; al doilea, în 4 secunde, chiar arhivează.
@@ -229,26 +335,18 @@ document.addEventListener('click', async event => {
         }, 4000);
       } else {
         clearTimeout(b._confirmTimer);
-        await archive(type, id);
+        await recordEditor.archiveRecord(type, id);
       }
     }
-    if (action === 'delete') await deleteRecord(type, id);
-    if (action === 'profile') profile(id);
-    if (action === 'confirm-review') await confirmReview(id);
+    if (action === 'delete') await recordEditor.deleteRecord(type, id);
+    if (action === 'profile') childProfile.openChildProfile(id);
+    if (action === 'confirm-review') await recordEditor.confirmReview(id);
   } catch (e) {
     message(e.message, true);
   }
 });
 
 // ─── Filtre ─────────────────────────────────────────────────────────────────
-
-for (const type of LISTS)
-  for (const suffix of ['Search', 'Archive', 'MonthFrom', 'MonthTo', 'Category', 'Child', 'Method'])
-    if ($(`${type}${suffix}`))
-      $(`${type}${suffix}`).oninput = () => {
-        pages[type] = 0;
-        renderList(type);
-      };
 
 const refreshReview = () => {
   pages.review = 0;

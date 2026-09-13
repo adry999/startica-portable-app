@@ -17,6 +17,10 @@ export function childNameOf(payment, children) {
   );
 }
 
+// Numărul de contract este identificatorul folosit în discuția cu părintele.
+/** @param {Pick<Child, 'id' | 'contractNumber'>} child */
+export const contractNumberOf = child => child.contractNumber || child.id;
+
 /**
  * @param {string | null} groupId
  * @param {Group[]} groups

@@ -1,35 +1,51 @@
-import {
-  emptyState,
-  normalizeRecord,
-  importReport,
-  today,
-  allocations,
-  paymentTenders,
-  CHILD_STATUSES,
-  TYPES,
-} from './domain.mjs';
+import { emptyState, normalizeRecord, CHILD_STATUSES, TYPES } from '#shared/domain/record-schema.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
+import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
+import { buildImportReport } from './import-report.mjs';
+
+/** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
+/** @typedef {import('./import-report.mjs').FindRecordIssues} FindRecordIssues */
+/** @typedef {import('../data-transfer.types.mjs').ImportReport} ImportReport */
+
 // Coloana de statut din V5 este text liber. Orice valoare pe care aplicația nu
 // o poate interpreta devine „De verificat”, cu textul original păstrat în
 // observații, ca importul să nu piardă rândul și nici informația din sursă.
-export function childStatus(value) {
+/** @param {unknown} value */
+export function mapV5ChildStatus(value) {
   const raw = String(value ?? '').trim();
   if (!raw) return { status: 'Activ', note: '' };
-  const match = CHILD_STATUSES.find(s => s.toLocaleLowerCase('ro-RO') === raw.toLocaleLowerCase('ro-RO'));
+  const match = CHILD_STATUSES.find(status => status.toLocaleLowerCase('ro-RO') === raw.toLocaleLowerCase('ro-RO'));
   return match ? { status: match, note: '' } : { status: 'De verificat', note: `Statut din sursă: ${raw}` };
 }
+
+/**
+ * @param {unknown} value
+ * @param {any} XLSX
+ */
 function excelDate(value, XLSX) {
   if (value === null || value === undefined || value === '') return '';
   if (typeof value === 'number') {
-    const d = XLSX.SSF.parse_date_code(value);
-    return d ? `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}` : '';
+    const parsed = XLSX.SSF.parse_date_code(value);
+    return parsed ? `${parsed.y}-${String(parsed.m).padStart(2, '0')}-${String(parsed.d).padStart(2, '0')}` : '';
   }
   if (value instanceof Date)
     return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
-  const s = String(value).trim(),
-    ro = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-  return ro ? `${ro[3]}-${ro[2].padStart(2, '0')}-${ro[1].padStart(2, '0')}` : /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
+  const text = String(value).trim();
+  const ro = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  return ro
+    ? `${ro[3]}-${ro[2].padStart(2, '0')}-${ro[1].padStart(2, '0')}`
+    : /^\d{4}-\d{2}-\d{2}$/.test(text)
+      ? text
+      : '';
 }
-export function readWorkbook(workbook, XLSX) {
+
+/**
+ * @param {any} workbook
+ * @param {any} XLSX
+ * @param {FindRecordIssues} findRecordIssues
+ * @returns {ImportReport}
+ */
+export function readWorkbook(workbook, XLSX, findRecordIssues) {
   const state = emptyState(),
     errors = [],
     warnings = [];
@@ -58,11 +74,11 @@ export function readWorkbook(workbook, XLSX) {
       const [type, id] = JSON.parse(key);
       try {
         for (let n = 0; n < parts.length; n++) if (typeof parts[n] !== 'string') throw Error('fragment lipsă');
-        const r = JSON.parse(parts.join(''));
-        if (r.id !== id) throw Error('ID diferit');
-        state[type].push(r);
+        const record = JSON.parse(parts.join(''));
+        if (record.id !== id) throw Error('ID diferit');
+        state[type].push(record);
       } catch (e) {
-        errors.push(`${id}: ${e.message}`);
+        errors.push(`${id}: ${/** @type {Error} */ (e).message}`);
       }
     }
   } else {
@@ -90,7 +106,7 @@ export function readWorkbook(workbook, XLSX) {
           try {
             state[type].push(normalizeRecord(type, fn(row, i)));
           } catch (e) {
-            errors.push(`${name}, rândul ${i + 5}: ${e.message}`);
+            errors.push(`${name}, rândul ${i + 5}: ${/** @type {Error} */ (e).message}`);
           }
         });
     const t = v => String(v ?? '').trim(),
@@ -110,7 +126,7 @@ export function readWorkbook(workbook, XLSX) {
       'Copii',
       'children',
       r => {
-        const { status, note } = childStatus(r[10]);
+        const { status, note } = mapV5ChildStatus(r[10]);
         return {
           id: t(r[0]),
           name: t(r[1]),
@@ -180,16 +196,21 @@ export function readWorkbook(workbook, XLSX) {
       }
     }
   }
-  const report = importReport(state);
+  const report = buildImportReport(state, findRecordIssues);
   return { ...report, errors: [...errors, ...report.errors], warnings: [...warnings, ...report.warnings] };
 }
-export function exportWorkbook(state, XLSX) {
+
+/**
+ * @param {RecordsSnapshot} records
+ * @param {any} XLSX
+ */
+export function exportWorkbook(records, XLSX) {
   const wb = XLSX.utils.book_new(),
     sheet = (name, data) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), name);
-  const groupName = id => state.groups.find(g => g.id === id)?.name || '';
+  const groupName = id => records.groups.find(g => g.id === id)?.name || '';
   sheet(
     'Copii',
-    state.children.map(r => ({
+    records.children.map(r => ({
       ID: r.id,
       Nume: r.name,
       Parinte: r.parent,
@@ -209,11 +230,11 @@ export function exportWorkbook(state, XLSX) {
   );
   sheet(
     'Achitari',
-    state.payments.map(r => ({
+    records.payments.map(r => ({
       ID: r.id,
       Data: r.date,
       ID_copil: r.childId,
-      Copil: state.children.find(c => c.id === r.childId)?.name || r.childName || r.sourceName || '',
+      Copil: records.children.find(c => c.id === r.childId)?.name || r.childName || r.sourceName || '',
       Metoda: r.method,
       Suma: r.amount,
       Cash: paymentTenders(r)
@@ -237,7 +258,7 @@ export function exportWorkbook(state, XLSX) {
   );
   sheet(
     'Cheltuieli',
-    state.expenses.map(r => ({
+    records.expenses.map(r => ({
       ID: r.id,
       Data: r.date,
       Categorie: r.category,
@@ -257,7 +278,7 @@ export function exportWorkbook(state, XLSX) {
   );
   const raw = [['Tip', 'ID', 'Fragment', 'Date complete']];
   for (const type of TYPES)
-    for (const r of state[type]) {
+    for (const r of records[type]) {
       const json = JSON.stringify(r);
       for (let i = 0; i < json.length; i += 16000) raw.push([type, r.id, i / 16000, json.slice(i, i + 16000)]);
     }

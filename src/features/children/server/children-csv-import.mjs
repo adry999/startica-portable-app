@@ -1,4 +1,18 @@
-import { normalizeRecord, dateOK } from '../shared/domain.mjs';
+import { dateOK } from '#shared/domain/calendar-month.mjs';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
+
+/** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
+/**
+ * @typedef {{
+ *   line: number, id: string, name: string, contractNumber: string, parent: string, phone: string,
+ *   parent2: string, phone2: string, birthDate: string, attendanceDate: string, action: string,
+ *   reason: string, warnings: string[],
+ * }} ChildrenCsvPreviewRow
+ * @typedef {{
+ *   total: number, additions: Child[], rows: ChildrenCsvPreviewRow[], errors: string[], warnings: string[],
+ *   skipped: number, conflicts: number,
+ * }} ChildrenCsvPreviewReport
+ */
 
 const clean = value => String(value ?? '').trim();
 const key = value =>
@@ -30,7 +44,8 @@ const headers = {
 // Parsare CSV strictă pentru aplicație (nu o conversie Excel). Telefoanele și
 // numerele de contract rămân text; sunt suportate delimitatori/linii noi între
 // ghilimele și BOM UTF-8.
-export function csvRows(text) {
+/** @param {string} text */
+export function parseCsvRows(text) {
   if (typeof text !== 'string' || !text.trim()) throw Error('CSV gol.');
   if (text.length > 2000000) throw Error('CSV prea mare (maximum 2 MB).');
   if (text.includes('\uFFFD') || text.includes('\0')) throw Error('Salvează fișierul ca CSV UTF-8.');
@@ -113,13 +128,19 @@ function csvDate(value, label, line) {
   return result;
 }
 
-export function previewChildrenCSV(text, existing = []) {
+/**
+ * @param {string} text
+ * @param {Child[]} existing
+ * @returns {ChildrenCsvPreviewReport}
+ */
+export function previewChildrenCsvImport(text, existing = []) {
+  /** @type {ChildrenCsvPreviewReport} */
   const result = { total: 0, additions: [], rows: [], errors: [], warnings: [], skipped: 0, conflicts: 0 };
   let source;
   try {
-    source = csvRows(text);
+    source = parseCsvRows(text);
   } catch (e) {
-    result.errors.push(e.message);
+    result.errors.push(/** @type {Error} */ (e).message);
     return result;
   }
   const header = source.shift()?.cells || [],
@@ -202,7 +223,7 @@ export function previewChildrenCSV(text, existing = []) {
       });
       candidates.push({ line, record, warnings });
     } catch (e) {
-      result.errors.push(e.message);
+      result.errors.push(/** @type {Error} */ (e).message);
     }
   }
   for (const item of candidates) {

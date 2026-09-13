@@ -1,11 +1,20 @@
 import { createHash } from 'node:crypto';
-import { validateState, normalizeRecord, total } from '../shared/domain.mjs';
+import { validateState, normalizeRecord } from '#shared/domain/record-schema.mjs';
+import { total } from '#shared/domain/money.mjs';
+
+/** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
+/** @typedef {import('#shared/contracts/record-types.mjs').Payment} Payment */
+/** @typedef {import('#shared/contracts/record-types.mjs').Expense} Expense */
+/** @typedef {import('../data-transfer.types.mjs').FinancialHistoryPlan} FinancialHistoryPlan */
+/** Doar câmpurile citite efectiv aici; fixture-urile de test nu trebuie să completeze grupe/categorii nefolosite. */
+/** @typedef {Pick<RecordsSnapshot, 'children' | 'payments' | 'expenses'>} FinancialImportTargetRecords */
+/** @typedef {('payments' | 'expenses')[]} FinancialRecordTypeList */
 
 const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const nameKey = v =>
   String(v || '')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
 const contractKey = v =>
@@ -15,8 +24,13 @@ const contractKey = v =>
     .replace(/^0+(?=\d)/, '')
     .toUpperCase();
 
-// Import financiar V5, doar adăugare. Copiii și operațiunile existente nu se modifică niciodată.
-export function financialImportPlan(input, current) {
+/**
+ * Import financiar V5, doar adăugare. Copiii și operațiunile existente nu se modifică niciodată.
+ * @param {any} input
+ * @param {FinancialImportTargetRecords} currentRecords
+ * @returns {FinancialHistoryPlan}
+ */
+export function planFinancialHistoryImport(input, currentRecords) {
   if (
     input?.format !== 'STARTICA_V5' ||
     typeof input.sourceName !== 'string' ||
@@ -25,11 +39,11 @@ export function financialImportPlan(input, current) {
     !/^[a-f0-9]{64}$/.test(input.sourceHash || '')
   )
     throw Error('Sursă V5 invalidă.');
-  const source = validateState(input.state),
+  const source = /** @type {RecordsSnapshot} */ (validateState(input.state)),
     mapping = new Map(),
     used = new Set();
   for (const child of source.children) {
-    const matches = current.children.filter(
+    const matches = currentRecords.children.filter(
       c =>
         nameKey(c.name) === nameKey(child.name) &&
         c.birthDate &&
@@ -43,10 +57,13 @@ export function financialImportPlan(input, current) {
     mapping.set(child.id, matches[0].id);
     used.add(matches[0].id);
   }
+  /** @type {{ payments: Payment[], expenses: Expense[] }} */
   const additions = { payments: [], expenses: [] },
     skipped = { payments: 0, expenses: 0 };
-  for (const type of ['payments', 'expenses']) {
-    const existing = new Map(current[type].map(r => [r.id, r]));
+  /** @type {FinancialRecordTypeList} */
+  const recordTypesToImport = ['payments', 'expenses'];
+  for (const type of recordTypesToImport) {
+    const existing = new Map(currentRecords[type].map(r => /** @type {[string, any]} */ ([r.id, r])));
     for (const original of source[type]) {
       const sourceDigest = digest(original),
         old = existing.get(original.id);
@@ -63,7 +80,9 @@ export function financialImportPlan(input, current) {
           `${original.id}: ID deja existent sau sursă modificată. Nu suprascriem operațiunea; verifică înainte de import.`,
         );
       }
-      const r = structuredClone(original);
+      // Payment | Expense nu se corelează pe ramuri de tip generic după `type`; structura reală e
+      // verificată de normalizeRecord() mai jos, la fel ca înainte de migrare.
+      const r = /** @type {any} */ (structuredClone(original));
       if (type === 'payments' && r.childId) {
         const target = mapping.get(r.childId);
         if (!target) throw Error(`${r.id}: copilul din sursă nu poate fi asociat.`);
@@ -85,7 +104,7 @@ export function financialImportPlan(input, current) {
         fileHash: input.sourceHash,
         recordId: original.id,
         recordDigest: sourceDigest,
-        childId: original.childId || '',
+        childId: /** @type {any} */ (original).childId || '',
         provisionalAmount: provisional,
         autoMatched: type === 'payments' && /potrivire automat[ăa]/i.test(r.verification || ''),
       };
@@ -102,7 +121,7 @@ export function financialImportPlan(input, current) {
       paymentTotal: total(additions.payments),
       expenseTotal: total(additions.expenses),
       unassigned: additions.payments.filter(p => !p.childId).length,
-      provisional: additions.payments.filter(p => p.importSource.provisionalAmount).length,
+      provisional: additions.payments.filter(p => p.importSource?.provisionalAmount).length,
     },
   };
 }

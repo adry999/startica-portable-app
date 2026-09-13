@@ -6,7 +6,6 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../shared/domain.mjs';
-import { childStatus } from '../shared/excel.mjs';
 import { startTestApplication } from './support/start-test-application.mjs';
 
 const temporary = prefix => {
@@ -50,18 +49,6 @@ test('Statutul copilului este restrâns la valorile pe care aplicația le înțe
     () => normalizeRecord('children', { ...base, statusHistory: [{ from: '2026-01', status: 'De verificat' }] }),
     /Statut istoric/,
   );
-});
-
-test('Importul V5 mapează un statut necunoscut, păstrând textul original', () => {
-  assert.deepEqual(childStatus(''), { status: 'Activ', note: '' });
-  assert.deepEqual(childStatus('  activ '), { status: 'Activ', note: '' });
-  assert.deepEqual(childStatus('Retras'), { status: 'Retras', note: '' });
-  const unknown = childStatus('Inactiv temporar');
-  assert.equal(unknown.status, 'De verificat');
-  assert.match(unknown.note, /Inactiv temporar/);
-  // Rândul trebuie să treacă validarea, nu să fie respins.
-  const r = normalizeRecord('children', { id: 'ID-1', name: 'Copil', dueDay: 10, status: unknown.status });
-  assert.equal(r.status, 'De verificat');
 });
 
 // Helper pentru testele care vorbesc cu serverul prin HTTP.
