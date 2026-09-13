@@ -150,13 +150,20 @@ try {
     );
     await screenshot('dashboard-' + width);
     await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
-  await evaluate("document.getElementById('monthTrigger').focus();document.getElementById('monthTrigger').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))");
-  assert.equal(await evaluate("document.activeElement.dataset.month === document.getElementById('selectedMonth').value"), true);
-  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))");
-  assert.equal(await evaluate("document.activeElement.dataset.month.endsWith('-10')"), true);
-  await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-  assert.equal(await evaluate("document.activeElement.id"), 'monthTrigger');
+    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
+    await evaluate(
+      "document.getElementById('monthTrigger').focus();document.getElementById('monthTrigger').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))",
+    );
+    assert.equal(
+      await evaluate("document.activeElement.dataset.month === document.getElementById('selectedMonth').value"),
+      true,
+    );
+    await evaluate(
+      "document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))",
+    );
+    assert.equal(await evaluate("document.activeElement.dataset.month.endsWith('-10')"), true);
+    await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
+    assert.equal(await evaluate('document.activeElement.id'), 'monthTrigger');
   }
   assert.equal(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
   await evaluate("document.getElementById('navToggle').click()");
@@ -179,7 +186,10 @@ try {
   await evaluate(
     "document.querySelector('#primaryNav [data-view=groups]').click();document.getElementById('groupNameInput').value='Grupa test';document.getElementById('groupCapacityInput').value='12';document.getElementById('groupCreateForm').requestSubmit()",
   );
-  await until(() => evaluate("document.querySelectorAll('#groupsGrid [data-group]').length===1"), 'Group creation failed');
+  await until(
+    () => evaluate("document.querySelectorAll('#groupsGrid [data-group]').length===1"),
+    'Group creation failed',
+  );
   const groupId = (await (await fetch(url + '/api/state')).json()).state.groups[0].id;
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
   await evaluate(
@@ -243,9 +253,15 @@ try {
   await evaluate(
     "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'));document.querySelector('#childrenHead [data-sort=name]').click()",
   );
-  assert.equal(await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"), 'ascending');
+  assert.equal(
+    await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"),
+    'ascending',
+  );
   await evaluate("document.querySelector('#childrenHead [data-sort=name]').click()");
-  assert.equal(await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"), 'descending');
+  assert.equal(
+    await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"),
+    'descending',
+  );
   await evaluate("document.querySelector('[data-create=payments]').click()");
   assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Al doilea părinte/);
   await evaluate(
@@ -437,7 +453,7 @@ try {
   );
   assert.deepEqual(await evaluate('window.testPrint'), ['notify', 'status']);
   await evaluate("window.dispatchEvent(new Event('afterprint'))");
-  assert.equal(await evaluate("document.body.dataset.printView === undefined"), true);
+  assert.equal(await evaluate('document.body.dataset.printView === undefined'), true);
   await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
   await screenshot('children-desktop-populated');
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");

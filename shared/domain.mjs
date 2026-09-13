@@ -26,7 +26,8 @@ export function monthCalendar(children, todayStr = today()) {
   const totalCells = Math.ceil((leading + daysInMonth) / 7) * 7;
   const gridStart = new Date(year, month, 1 - leading);
 
-  const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const isoDate = d =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const dow = t.getDay();
   const weekStart = new Date(t);
   weekStart.setDate(t.getDate() + (dow === 0 ? -6 : 1 - dow));

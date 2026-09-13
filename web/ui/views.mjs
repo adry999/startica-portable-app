@@ -12,7 +12,16 @@ import {
 import { reviewCenter } from '../../shared/review-center.mjs';
 import { $, esc, money, date, time, fileSize, monthLabel } from './dom.mjs';
 import { session, message, mutate, renderSaveStatus } from './session.mjs';
-import { pages, pageRows, button, actions, childName, parentContacts, tenderLabel, statusBadgeClass } from './parts.mjs';
+import {
+  pages,
+  pageRows,
+  button,
+  actions,
+  childName,
+  parentContacts,
+  tenderLabel,
+  statusBadgeClass,
+} from './parts.mjs';
 import { renderFees } from './fees.mjs';
 import { renderAssign } from './assign.mjs';
 import { unassignedSuggestionsByChild } from '../../shared/payment-matching.mjs';
@@ -91,11 +100,19 @@ export function renderHealth() {
 // Selecția pt. arhivare/dezarhivare în masă — la Copii, Achitări și Cheltuieli.
 // Persistă între randări (checkbox-urile revin bifate), se golește după operație.
 const bulkSelection = { children: new Set(), payments: new Set(), expenses: new Set() };
-const selectAllHeader = type =>
-  `<input type="checkbox" id="${type}SelectAll" title="Selectează tot ce se vede">`;
+const selectAllHeader = type => `<input type="checkbox" id="${type}SelectAll" title="Selectează tot ce se vede">`;
 
 const HEADINGS = {
-  children: [selectAllHeader('children'), 'Contract', 'Copil', 'Părinți / telefoane', 'Grupă', 'Scadență', 'Statut', 'Acțiuni'],
+  children: [
+    selectAllHeader('children'),
+    'Contract',
+    'Copil',
+    'Părinți / telefoane',
+    'Grupă',
+    'Scadență',
+    'Statut',
+    'Acțiuni',
+  ],
   payments: [
     selectAllHeader('payments'),
     'Data',
@@ -240,7 +257,8 @@ function renderListSummary(type, rows) {
       ` · Cash: ${money(byMethod.Cash)} · Card: ${money(byMethod.Card)} · Transfer: ${money(byMethod.Transfer)}` +
       (byMethod.Altele ? ` · Altele: ${money(byMethod.Altele)}` : '');
   } else if (type === 'expenses') {
-    $('expensesSummaryText').innerHTML = `<strong>${rows.length}</strong> cheltuieli · <strong>${money(sum)}</strong> total`;
+    $('expensesSummaryText').innerHTML =
+      `<strong>${rows.length}</strong> cheltuieli · <strong>${money(sum)}</strong> total`;
   }
 }
 

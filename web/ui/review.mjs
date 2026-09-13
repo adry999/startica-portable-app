@@ -48,4 +48,3 @@ export function renderReview(center) {
       .map(item => reviewRow(item, center.labels))
       .join('') || '<p class="empty">Nu există înregistrări pentru filtrul ales.</p>';
 }
-

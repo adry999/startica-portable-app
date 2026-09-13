@@ -14,7 +14,10 @@ function groupCard(g, children, index) {
   const members = children.filter(c => c.groupId === g.id).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
   const overCapacity = g.capacity && members.length > g.capacity;
   const fillValue = g.capacity ? `${members.length}/${g.capacity}` : `${members.length}`;
-  const birthDates = members.map(c => c.birthDate).filter(Boolean).sort();
+  const birthDates = members
+    .map(c => c.birthDate)
+    .filter(Boolean)
+    .sort();
   const ageRange = !birthDates.length
     ? 'necunoscută'
     : birthDates[0] === birthDates.at(-1)
@@ -156,7 +159,10 @@ export function renderCategories() {
   const filter = $('expensesCategory');
   const current = filter.value;
   filter.innerHTML =
-    '<option value="">Toate</option>' + expenseCategories().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    '<option value="">Toate</option>' +
+    expenseCategories()
+      .map(c => `<option value="${esc(c)}">${esc(c)}</option>`)
+      .join('');
   filter.value = current;
 }
 
@@ -191,4 +197,3 @@ export function bindCategories() {
     }
   });
 }
-
