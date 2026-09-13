@@ -8,6 +8,10 @@ import { fail } from './util.mjs';
 import { sendResponse } from '#core/server/http/json-response.mjs';
 import { RESPONSE_SENT, createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
+import {
+  createPaymentAssignmentRoutes,
+  createPaymentAssignmentService,
+} from '#features/payment-assignment/index.server.mjs';
 
 // Folderul extern nu are voie să fie baza activă sau folderul de backupuri:
 // altfel copiile s-ar suprascrie sau ar fi șterse de retenție.
@@ -151,32 +155,6 @@ export function createRouter(context) {
       );
     },
 
-    // Asocierea în masă a achitărilor rămase fără copil. Doar cele neasociate
-    // pot fi legate: o achitare deja atribuită nu se schimbă din greșeală aici.
-    '/api/payments-assign': b => {
-      if (!Array.isArray(b.assignments) || !b.assignments.length || b.assignments.length > 5000)
-        fail('Lista de asocieri este invalidă.');
-      return store.commit(
-        b,
-        'asociere-achitari',
-        () => {
-          const seen = new Set();
-          for (const { id, childId } of b.assignments) {
-            if (seen.has(id)) fail(`Achitarea ${id} apare de două ori.`);
-            seen.add(id);
-            const old = store.readRecord('payments', id);
-            if (!old) fail(`Achitarea ${id} nu mai există. Reîncarcă datele.`, 409);
-            if (old.childId) fail(`Achitarea ${id} are deja un copil asociat.`, 409);
-            if (!store.recordExists('children', childId)) fail(`Copilul ${childId} nu există.`);
-            const r = normalizeRecord('payments', { ...old, childId });
-            store.writeRecord('payments', r);
-            store.audit('asociere achitare', 'payments', r.id, old, r);
-          }
-        },
-        true,
-      );
-    },
-
     '/api/import-preview': b => importReport(b.state),
 
     '/api/financial-preview': b => {
@@ -262,9 +240,16 @@ export function createRouter(context) {
     '/api/state': () => fail('Această versiune este veche. Reîncarcă pagina.', 409),
   };
 
+  const paymentAssignmentService = createPaymentAssignmentService({
+    recordRepository: store.recordRepository,
+    auditTrail: store.auditLogRepository,
+    runRevisionTransaction: store.runRevisionTransaction,
+  });
+
   const routes = [
     ...Object.entries(read).map(([path, handler]) => ({ method: 'GET', path, handle: ({ url }) => handler(url) })),
     ...createAuditLogRoutes({ auditLogRepository: store.auditLogRepository }),
+    ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
     ...Object.entries(write).map(([path, handler]) => ({
       method: 'POST',
       path,

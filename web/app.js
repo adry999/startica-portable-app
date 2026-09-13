@@ -1,6 +1,25 @@
 import { $ } from './ui/dom.mjs';
-import { session, message, load, setRenderers, renderSaveStatus, checkConnection, api } from './ui/session.mjs';
+import {
+  session,
+  message,
+  load,
+  setRenderers,
+  renderSaveStatus,
+  checkConnection,
+  api,
+  mutate,
+  eventBus,
+} from './ui/session.mjs';
 import { createAuditLogApi, createAuditLogController, createAuditLogView } from '#features/audit-log/index.web.mjs';
+import {
+  createPaymentAssignmentApi,
+  createPaymentAssignmentController,
+  createPaymentAssignmentView,
+} from '#features/payment-assignment/index.web.mjs';
+import { DomainEvent } from '#shared/contracts/domain-events.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
+import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
+import { selectedMonth } from './ui/view-helpers.mjs';
 import { bindMonthPicker } from '#app/web/month-picker.mjs';
 import { bindMobileNavigation } from '#app/web/mobile-navigation.mjs';
 import { bindUnsavedChangesGuard } from '#app/web/unsaved-changes-guard.mjs';
@@ -11,7 +30,7 @@ import {
   renderList,
   renderHealth,
   profile,
-  onViewOpened,
+  registerScreen,
   bindGroups,
   bindCategories,
   bindBulkAction,
@@ -19,7 +38,6 @@ import {
 import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
 import { bindFees } from './ui/fees.mjs';
-import { bindAssign } from './ui/assign.mjs';
 
 const HEALTH_POLL_MS = 30000;
 const LISTS = ['children', 'payments', 'expenses'];
@@ -28,7 +46,6 @@ setRenderers({ render, health: renderHealth });
 bindEditorForm();
 bindTransfers();
 bindFees();
-bindAssign();
 
 const auditLog = createAuditLogController({
   fetchAuditPage: createAuditLogApi({ requestJson: api }).fetchAuditPage,
@@ -38,8 +55,49 @@ const auditLog = createAuditLogController({
     failureElement: $('auditFailure'),
   }),
 });
-onViewOpened('audit', auditLog.openFirstPage);
+registerScreen('audit', { activate: auditLog.openFirstPage });
 $('auditMore').onclick = () => void auditLog.loadNextPage();
+
+const paymentAssignmentApi = createPaymentAssignmentApi({ submitMutation: mutate });
+const paymentAssignment = createPaymentAssignmentController({
+  readRecords: () => session.state,
+  readSelectedMonth: selectedMonth,
+  readToday: today,
+  submitAssignments: async assignments => {
+    const result = await paymentAssignmentApi.submitAssignments(assignments);
+    if (!result.warning) message(`${assignments.length} achitări asociate.`);
+    return result;
+  },
+  eventBus,
+  renderAssignmentScreen: createPaymentAssignmentView({
+    elements: {
+      risk: $('assignRisk'),
+      summary: $('assignInfo'),
+      tableBody: $('assignTable'),
+      saveButton: $('assignSave'),
+      failure: $('assignError'),
+    },
+    readChildren: () => session.state.children,
+    readSelectedMonth: selectedMonth,
+    onSelectChild: (paymentId, childId) => paymentAssignment.selectChild(paymentId, childId),
+  }),
+  renderUnassignedCount: count => setNavCount('assignCount', count),
+});
+registerScreen('assign', paymentAssignment);
+$('assignFillSuggested').onclick = () => {
+  const filled = paymentAssignment.selectUnambiguousNameMatches();
+  message(
+    filled
+      ? `${filled} rânduri completate acolo unde numele din sursă indică un singur copil. Verifică-le înainte de a salva.`
+      : 'Niciun rând nu are un nume potrivit fără ambiguitate. Alege manual.',
+    !filled,
+  );
+};
+$('assignClear').onclick = () => {
+  paymentAssignment.clearSelections();
+  message('Selecțiile au fost golite.');
+};
+$('assignSave').onclick = () => void paymentAssignment.saveSelections();
 bindGroups();
 bindCategories();
 bindBulkAction('children');
@@ -49,7 +107,13 @@ bindBulkAction('expenses');
 // Calendarul se leagă înaintea navigației mobile: ascultătorul lui de Escape
 // oprește propagarea când închide calendarul, ca cele două să nu reacționeze
 // amândouă la aceeași apăsare (vezi month-picker.mjs).
-bindMonthPicker({ byId: $, onMonthChange: render });
+bindMonthPicker({
+  byId: $,
+  onMonthChange: () => {
+    render();
+    eventBus.publish(DomainEvent.SelectedMonthChanged, { month: selectedMonth() });
+  },
+});
 bindMobileNavigation({ byId: $ });
 
 // Un singur ascultător pentru toate butoanele generate dinamic: rândurile din

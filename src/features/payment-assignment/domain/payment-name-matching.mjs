@@ -1,5 +1,8 @@
-import { cents, allocations, obligation, paymentIndex } from './domain.mjs';
-import { stripDiacritics } from './text.mjs';
+import { cents } from '#shared/domain/money.mjs';
+import { allocations } from '#shared/domain/payment-allocations.mjs';
+import { stripDiacritics } from '#shared/format/text-search.mjs';
+
+/** @typedef {import('../payment-assignment.types.mjs').ChildSuggestion} ChildSuggestion */
 
 const strip = v => stripDiacritics(v).toLowerCase();
 // Cuvinte care apar în textul sursei fără să fie nume: luni, metode, note.
@@ -60,6 +63,7 @@ const feeFor = (child, month) =>
 // Un candidat primește puncte pentru fiecare indiciu independent care se
 // potrivește. Nimic nu se asociază automat: scorul doar ordonează sugestiile,
 // iar decizia rămâne a operatorului.
+/** @returns {ChildSuggestion[]} */
 export function suggestChildren(payment, children, index, limit = 5) {
   const sourceTokens = new Set([...nameTokens(payment.sourceName), ...nameTokens(payment.childName)]);
   const months = allocations(payment).map(a => a.month);
@@ -113,52 +117,8 @@ export function suggestChildren(payment, children, index, limit = 5) {
       });
   }
   return scored
-    .sort((a, b) => b.nameMatch - a.nameMatch || b.score - a.score || a.name.localeCompare(b.name, 'ro'))
+    .sort(
+      (a, b) => Number(b.nameMatch) - Number(a.nameMatch) || b.score - a.score || a.name.localeCompare(b.name, 'ro'),
+    )
     .slice(0, limit);
-}
-
-// Achitările fără copil, cu sugestiile lor. Cele mai recente primele: sunt cele
-// care afectează situația curentă.
-export function unassignedPayments(state, limit = 200) {
-  const open = state.payments
-    .filter(p => !p.archived && !p.childId)
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, limit);
-  const index = paymentIndex(state.payments);
-  return open.map(payment => ({ payment, suggestions: suggestChildren(payment, state.children, index) }));
-}
-
-// Harta copil → achitările neasociate care îl sugerează. Doar potrivirea de
-// nume leagă o plată de un anume copil (vezi suggestChildren), deci un
-// candidat fără nameMatch nu apare aici — ar da un fals sentiment de rezolvare.
-export function unassignedSuggestionsByChild(state) {
-  const index = paymentIndex(state.payments);
-  const byChild = new Map();
-  for (const payment of state.payments.filter(p => !p.archived && !p.childId)) {
-    for (const s of suggestChildren(payment, state.children, index)) {
-      if (!s.nameMatch) continue;
-      let list = byChild.get(s.id);
-      if (!list) byChild.set(s.id, (list = []));
-      list.push(payment);
-    }
-  }
-  return byChild;
-}
-
-// Câți copii ar putea fi raportați greșit ca restanțieri din cauza plăților
-// nelegate. Un „de notificat” nu poate fi crezut cât timp cifra asta e mare.
-export function assignmentRisk(state, month, asOf) {
-  const unassigned = state.payments.filter(p => !p.archived && !p.childId);
-  const covering = unassigned.filter(p => allocations(p).some(a => a.month === month));
-  // Rulează la fiecare randare a aplicației — indexul evită O(copii×plăți).
-  const index = paymentIndex(state.payments, asOf);
-  const notified = state.children.filter(
-    c => !c.archived && obligation(c, month, state.payments, asOf, index).notify,
-  ).length;
-  return {
-    unassigned: unassigned.length,
-    coveringMonth: covering.length,
-    amountCoveringMonth: covering.reduce((sum, p) => sum + cents(p.amount), 0) / 100,
-    notified,
-  };
 }

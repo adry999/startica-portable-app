@@ -1,7 +1,7 @@
 // Combobox reutilizabil pentru alegerea unui copil: input text căutabil (fără
 // diacritice) + listă flotantă, în loc de un <select> lung, greu de parcurs
 // manual când sunt mulți copii. Folosit la achitare (editor.mjs) și la
-// asocierea achitărilor (assign.mjs, un rând per achitare neasociată).
+// asocierea achitărilor (payment-assignment, un rând per achitare neasociată).
 import { escapeHtml as esc } from '#shared/format/html-escape.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 
@@ -19,8 +19,7 @@ export function childPickerHTML({ name, selectedId = '', selectedLabel = '', pla
 
 // O singură listă poate fi deschisă simultan, deci un singur ascultător de
 // scroll global e suficient — un tabel cu 200 de rânduri altfel ar acumula
-// 200 de ascultători permanenți la fiecare re-randare (assign.mjs randează
-// tabelul din nou la fiecare mutație de stare).
+// 200 de ascultători permanenți la fiecare reconstruire a tabelului.
 let openList = null;
 if (typeof window !== 'undefined')
   window.addEventListener(

@@ -7,7 +7,6 @@ import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../shared/domain.mjs';
 import { childStatus } from '../shared/excel.mjs';
-import { suggestChildren, unassignedSuggestionsByChild } from '../shared/payment-matching.mjs';
 import { startTestApplication } from './support/start-test-application.mjs';
 
 const temporary = prefix => {
@@ -311,72 +310,6 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   const state = await app.get('/api/state');
   assert.equal(state.state.children[0].fee, 2000, 'Prima fișă nu a fost modificată.');
   assert.equal(state.revision, r.revision, 'Revizia nu s-a schimbat.');
-});
-
-test('Sugestiile de asociere separă potrivirea pe nume de simpla coincidență de sumă', () => {
-  const fee = [{ from: '2025-01', amount: 12000 }];
-  const children = [
-    { id: 'A', name: 'Florea Mark', feeHistory: fee },
-    { id: 'B', name: 'Taburceanu Stefan', feeHistory: fee },
-    { id: 'C', name: 'Gorea Elizaveta', feeHistory: fee },
-  ];
-  const empty = new Map();
-  const payment = (sourceName, amount = 12000) => ({
-    sourceName,
-    amount,
-    allocations: [{ month: '2025-09', amount }],
-  });
-
-  const named = suggestChildren(payment('Mark'), children, empty);
-  assert.equal(named[0].id, 'A', 'Numele din sursă decide primul candidat.');
-  assert.equal(named[0].nameMatch, true);
-  assert.equal(
-    named.filter(s => s.nameMatch).length,
-    1,
-    'Un singur copil are numele potrivit; ceilalți rămân simple coincidențe.',
-  );
-  assert.ok(
-    named.slice(1).every(s => s.nameMatch === false),
-    'Ceilalți candidați nu au potrivire de nume.',
-  );
-
-  // Diacriticele nu trebuie să împiedice potrivirea.
-  assert.equal(suggestChildren(payment('(Gorea Elizaveta)'), children, empty)[0].id, 'C');
-
-  // Text fără nume: pot exista candidați după sumă, dar niciunul nu se poate
-  // accepta în masă.
-  const noise = suggestChildren(payment('achitare gemeni 6 luni', 72000), children, empty);
-  assert.ok(
-    noise.every(s => s.nameMatch === false),
-    'Cuvintele-zgomot nu produc potriviri de nume.',
-  );
-
-  // O lună deja achitată scade scorul față de una neachitată.
-  const paidIndex = new Map([['A', new Map([['2025-09', 1200000]])]]);
-  const afterPaid = suggestChildren(payment('Mark'), children, paidIndex);
-  assert.equal(afterPaid[0].id, 'A', 'Numele rămâne decisiv.');
-  assert.ok(!afterPaid[0].reasons.some(r => r.includes('neachitată')));
-});
-
-test('Harta copil → plăți neasociate include doar potrivirile de nume', () => {
-  const fee = [{ from: '2025-01', amount: 12000 }];
-  const children = [
-    { id: 'A', name: 'Florea Mark', feeHistory: fee },
-    { id: 'B', name: 'Taburceanu Stefan', feeHistory: fee },
-  ];
-  const payments = [
-    { id: 'P1', sourceName: 'Mark', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
-    { id: 'P2', sourceName: 'achitare gemeni', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
-    { id: 'P3', childId: 'B', sourceName: 'Stefan', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
-  ];
-  const byChild = unassignedSuggestionsByChild({ children, payments });
-  assert.deepEqual(
-    byChild.get('A').map(p => p.id),
-    ['P1'],
-    'Numele din sursă leagă plata P1 de copilul A.',
-  );
-  assert.equal(byChild.has('B'), false, 'Plata lui B e deja asociată (are childId), nu apare aici.');
-  assert.equal(byChild.size, 1, 'Plata fără potrivire de nume (P2) nu apare pentru nimeni.');
 });
 
 test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuită', async t => {

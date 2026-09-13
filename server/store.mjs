@@ -23,6 +23,8 @@ export function createStore({ db, backups }) {
     runRevisionTransaction(body, { action, backupBefore: preBackup }, fn);
 
   return {
+    recordRepository,
+    runRevisionTransaction,
     readState: recordRepository.readSnapshot,
     envelope: recordRepository.readEnvelope,
     currentRevision: recordRepository.currentRevision,

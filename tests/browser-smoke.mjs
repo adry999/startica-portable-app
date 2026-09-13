@@ -423,6 +423,31 @@ try {
   assert.match(await evaluate("document.getElementById('csvPreview').textContent"), /0 copii noi · 1 existenți/);
   assert.equal(await evaluate("document.querySelector('test') !== null"), false);
   await evaluate("document.querySelector('[data-close=csvDialog]').click()");
+  await evaluate(`(async()=>{
+    const {mutate}=await import('/ui/session.mjs');
+    await mutate('/api/record',{type:'payments',mode:'create',record:{id:'PAY-SMOKE-ASSIGN',date:'2026-09-02',amount:1234,sourceName:'CSV',allocations:[{month:'2026-09',amount:1234}]}});
+  })()`);
+  await until(() => evaluate("document.getElementById('assignCount').textContent==='1'"), 'Assign count badge failed');
+  await evaluate("document.querySelector('#primaryNav [data-view=assign]').click()");
+  await until(
+    () => evaluate("document.querySelectorAll('#assignTable tr[data-payment]').length===1"),
+    'Assign queue failed',
+  );
+  await evaluate("document.getElementById('assignFillSuggested').click()");
+  assert.match(await evaluate("document.querySelector('#assignTable .child-picker-input').value"), /^CSV <test>/);
+  await evaluate("document.getElementById('assignSave').click()");
+  await until(
+    async () =>
+      (await (await fetch(url + '/api/state')).json()).state.payments.find(p => p.id === 'PAY-SMOKE-ASSIGN')?.childId,
+    'Assign save failed',
+  );
+  await until(
+    () =>
+      evaluate(
+        "document.querySelector('#assignTable .empty')!==null && document.getElementById('assignCount').textContent==='0'",
+      ),
+    'Assign queue did not refresh',
+  );
   // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
   const summaryFixture = await evaluate(`(async()=>{
     const {session}=await import('/ui/session.mjs');

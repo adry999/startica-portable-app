@@ -24,8 +24,7 @@ import {
   statusBadgeClass,
 } from './parts.mjs';
 import { renderFees } from './fees.mjs';
-import { renderAssign } from './assign.mjs';
-import { unassignedSuggestionsByChild } from '../../shared/payment-matching.mjs';
+import { findUnassignedPaymentHintsByChild } from '#features/payment-assignment/index.web.mjs';
 import { selectedMonth, contractOf, groupName } from './view-helpers.mjs';
 import { renderReview } from './review.mjs';
 import { renderDashboard, renderStatus, renderNotify } from './reports.mjs';
@@ -34,10 +33,11 @@ import { profile } from './profile-audit.mjs';
 
 export { bindGroups, bindCategories, profile };
 
-const viewOpeners = new Map();
+/** @type {Map<string, { activate: () => void, deactivate?: () => void }>} */
+const screens = new Map();
 
-export function onViewOpened(viewId, openView) {
-  viewOpeners.set(viewId, openView);
+export function registerScreen(viewId, screen) {
+  screens.set(viewId, screen);
 }
 
 export function go(id) {
@@ -62,9 +62,9 @@ export function go(id) {
   // navigația rămâne afișată prin CSS, fără atributul hidden.
   document.querySelector('.sidebar')?.classList.remove('is-nav-open');
   $('navToggle').setAttribute('aria-expanded', 'false');
-  // Ecranul de asociere își construiește tabelul abia când devine vizibil.
-  if (id === 'assign') renderAssign(true);
-  viewOpeners.get(id)?.();
+  for (const [viewId, screen] of screens)
+    if (viewId === id) screen.activate();
+    else screen.deactivate?.();
   window.scrollTo(0, 0);
 }
 
@@ -443,14 +443,13 @@ export function render() {
   // o singură dată, altfel obligation() rula de mai multe ori pe copil.
   const allChildren = session.state.children.map(c => ({ child: c, o: evaluate(c) }));
   const nonArchived = allChildren.filter(r => !r.child.archived);
-  const unassignedByChild = unassignedSuggestionsByChild(session.state);
+  const unassignedByChild = findUnassignedPaymentHintsByChild(session.state);
   renderDashboard(month, cash, review, nonArchived);
   renderChildrenSummary(review);
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
   renderStatus(month, allChildren, render);
   renderNotify(month, nonArchived, unassignedByChild, render);
   renderFees();
-  renderAssign();
   renderGroups();
   renderCategories();
   renderPaymentsChildFilter();

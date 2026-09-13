@@ -26,37 +26,7 @@ const PAGE_SIZE = 100;
 // Pagina curentă a fiecărei liste. Resetată când se schimbă filtrele.
 export const pages = { children: 0, payments: 0, expenses: 0, review: 0, status: 0 };
 
-// Sortare pt. tabele cu antet static în HTML (Status, De notificat, Asociere
-// achitări) — spre deosebire de listHead() din views.mjs, antetul nu se
-// regenerează la fiecare randare, deci butoanele se leagă o singură dată aici;
-// randările următoare doar actualizează aria-sort și săgeata.
-const tableSort = {};
-
-export function sortTable(id, rows, columns, rerender) {
-  const head = $(`${id}Head`);
-  const s = tableSort[id];
-  if (head)
-    for (const button of head.querySelectorAll('[data-sort]')) {
-      const th = button.closest('th');
-      const active = s?.field === button.dataset.sort;
-      th.setAttribute('aria-sort', active ? (s.direction === 'asc' ? 'ascending' : 'descending') : 'none');
-      button.querySelector('span').textContent = active ? (s.direction === 'asc' ? '↑' : '↓') : '↕';
-      button.onclick = () => {
-        tableSort[id] = { field: button.dataset.sort, direction: active && s.direction === 'asc' ? 'desc' : 'asc' };
-        rerender();
-      };
-    }
-  if (!s) return rows;
-  const getValue = columns[s.field];
-  if (!getValue) return rows;
-  const factor = s.direction === 'asc' ? 1 : -1;
-  return [...rows].sort((a, b) => {
-    const av = getValue(a),
-      bv = getValue(b);
-    if (typeof av === 'number' || typeof bv === 'number') return factor * ((Number(av) || 0) - (Number(bv) || 0));
-    return factor * String(av).localeCompare(String(bv), 'ro', { numeric: true, sensitivity: 'base' });
-  });
-}
+export { sortTable } from '#shared/ui/table-sort.mjs';
 
 export function pageRows(type, rows) {
   const lastPage = Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1);
