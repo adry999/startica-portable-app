@@ -16,6 +16,7 @@ import {
   importReport,
 } from '../shared/domain.mjs';
 import { exportWorkbook, readWorkbook } from '../shared/excel.mjs';
+import { startTestApplication } from './support/start-test-application.mjs';
 const require = createRequire(import.meta.url),
   XLSX = require('../web/vendor/xlsx.full.min.js');
 const child = () =>
@@ -138,33 +139,11 @@ test('Retenția păstrează zile/luni și copii anterioare restaurării', () => 
   assert.ok(keep.size < files.length);
 });
 test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate', async t => {
-  const dir = mkdtempSync(join(tmpdir(), 'startica-test-')),
-    dataDir = join(dir, 'data'),
-    backupDir = join(dir, 'backups');
   // autoBackupIntervalMs: 0 => backup după fiecare scriere, ca înainte de
   // introducerea debounce-ului. Testul verifică mai jos că eșecul copiei locale
   // și al celei externe ajunge la utilizator ca avertizare pe răspunsul salvării.
-  const app = createApplication({ dataDir, backupDir, autoBackupIntervalMs: 0 });
-  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
-  const origin = `http://127.0.0.1:${app.server.address().port}`;
-  t.after(async () => {
-    await app.close();
-    if (
-      resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-test-') ||
-      resolve(dir).startsWith(resolve(tmpdir()) + '/startica-test-')
-    )
-      rmSync(dir, { recursive: true, force: true });
-  });
-  const token = (await (await fetch(origin + '/api/session')).json()).token;
-  const get = async p => (await fetch(origin + p)).json();
-  const post = async (p, b, extra = {}) => {
-    const response = await fetch(origin + p, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token, ...extra },
-      body: JSON.stringify(b),
-    });
-    return { status: response.status, body: await response.json() };
-  };
+  const { app, dir, origin, token, get, post } = await startTestApplication(t, { prefix: 'startica-test-' });
+  const backupDir = join(dir, 'backups');
   const request = (record, type, revision, mode = 'create') => ({
     record,
     type,
@@ -188,8 +167,18 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   assert.equal(r.status, 409);
   assert.equal((await get('/api/state')).state.payments.length, 1);
   assert.equal((await post('/api/record', request({}, 'children', 2))).status, 400);
-  assert.equal((await post('/api/backup', {}, { Origin: 'https://example.com' })).status, 403);
-  assert.equal((await post('/api/backup', {}, { 'X-Startica-Token': '' })).status, 403);
+  const withForeignOrigin = await fetch(origin + '/api/backup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token, Origin: 'https://example.com' },
+    body: '{}',
+  });
+  assert.equal(withForeignOrigin.status, 403);
+  const withoutToken = await fetch(origin + '/api/backup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Token': '' },
+    body: '{}',
+  });
+  assert.equal(withoutToken.status, 403);
   assert.equal((await post('/api/state', emptyState())).status, 409);
   const before = await post('/api/backup', {});
   assert.equal(before.status, 200);

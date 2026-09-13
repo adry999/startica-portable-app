@@ -8,12 +8,17 @@
   },
   "scripts": {
     "start": "node startica_server.mjs",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --test \"tests/*.test.mjs\" \"tests/architecture/*.test.mjs\" \"src/**/*.test.mjs\"",
     "test:browser": "node tests/browser-smoke.mjs",
+    "test:e2e": "node tests/browser-smoke.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File tests/desktop-lifecycle.ps1",
+    "typecheck": "tsc -p .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test"
   },
   "devDependencies": {
-    "prettier": "^3.9.6"
+    "@types/node": "^22.20.2",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,12 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, renameSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { renameSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { normalizeRecord, emptyState } from '../shared/domain.mjs';
 import { financialImportPlan } from '../server/financial-import.mjs';
-import { createApplication } from '../startica_server.mjs';
+import { startTestApplication } from './support/start-test-application.mjs';
 const child = normalizeRecord('children', { id: 'ID-1', name: 'Copil Test', birthDate: '2022-01-01' });
 const currentChild = {
   ...child,
@@ -78,60 +77,40 @@ test('Istoric: mapare exactă, fără înlocuire, sume provizorii și reimport',
   unassigned.state.payments[0].childId = '';
   assert.equal(financialImportPlan(unassigned, current).additions.payments[0].childId, '');
 });
-test('API istoric: atomic, backup obligatoriu, jurnal, idempotent și păstrarea fișelor', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'startica-financial-test-')),
-    backupDir = join(dir, 'backups'),
-    app = createApplication({ dataDir: join(dir, 'data'), backupDir });
-  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
-  const url = `http://127.0.0.1:${app.server.address().port}`;
-  try {
-    const token = (await (await fetch(url + '/api/session')).json()).token;
-    const post = async (path, b) => {
-      const r = await fetch(url + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
-        body: JSON.stringify(b),
-      });
-      return { status: r.status, body: await r.json() };
-    };
-    assert.equal(
-      (
-        await post('/api/record', {
-          record: currentChild,
-          type: 'children',
-          mode: 'create',
-          revision: 0,
-          requestId: randomUUID(),
-        })
-      ).status,
-      200,
-    );
-    const before = app.envelope().state.children;
-    const preview = await post('/api/financial-preview', source);
-    assert.equal(preview.body.summary.payments, 1);
-    assert.equal(preview.body.revision, 1);
-    assert.equal(app.envelope().state.payments.length, 0);
-    const b = { ...source, confirm: 'IMPORT ISTORIC', revision: 1, requestId: randomUUID() };
-    assert.equal((await post('/api/financial-import', { ...b, confirm: '' })).status, 400);
-    assert.equal((await post('/api/financial-import', { ...b, revision: 0 })).status, 409);
-    renameSync(backupDir, backupDir + '-offline');
-    assert.equal((await post('/api/financial-import', b)).status, 400);
-    assert.equal(app.envelope().state.payments.length, 0);
-    renameSync(backupDir + '-offline', backupDir);
-    const saved = await post('/api/financial-import', b);
-    assert.equal(saved.status, 200);
-    assert.deepEqual(saved.body.state.children, before);
-    assert.equal(saved.body.state.expenses.length, 1);
-    assert.equal((await post('/api/financial-import', b)).body.replayed, true);
-    assert.equal((await post('/api/financial-import', { ...b, revision: 2, requestId: randomUUID() })).status, 400);
-    assert.equal(app.envelope().revision, 2);
-    assert.equal(
-      app.db.prepare('SELECT count(*) AS n FROM audit_changes WHERE action=?').get('import istoric V5').n,
-      2,
-    );
-    assert.ok(readdirSync(backupDir).some(n => n.includes('inainte-import-istoric')));
-  } finally {
-    await app.close();
-    if (dir.startsWith(join(tmpdir(), 'startica-financial-test-'))) rmSync(dir, { recursive: true, force: true });
-  }
+test('API istoric: atomic, backup obligatoriu, jurnal, idempotent și păstrarea fișelor', async t => {
+  const { app, dir, post } = await startTestApplication(t, { prefix: 'startica-financial-test-' });
+  const backupDir = join(dir, 'backups');
+  assert.equal(
+    (
+      await post('/api/record', {
+        record: currentChild,
+        type: 'children',
+        mode: 'create',
+        revision: 0,
+        requestId: randomUUID(),
+      })
+    ).status,
+    200,
+  );
+  const before = app.envelope().state.children;
+  const preview = await post('/api/financial-preview', source);
+  assert.equal(preview.body.summary.payments, 1);
+  assert.equal(preview.body.revision, 1);
+  assert.equal(app.envelope().state.payments.length, 0);
+  const b = { ...source, confirm: 'IMPORT ISTORIC', revision: 1, requestId: randomUUID() };
+  assert.equal((await post('/api/financial-import', { ...b, confirm: '' })).status, 400);
+  assert.equal((await post('/api/financial-import', { ...b, revision: 0 })).status, 409);
+  renameSync(backupDir, backupDir + '-offline');
+  assert.equal((await post('/api/financial-import', b)).status, 400);
+  assert.equal(app.envelope().state.payments.length, 0);
+  renameSync(backupDir + '-offline', backupDir);
+  const saved = await post('/api/financial-import', b);
+  assert.equal(saved.status, 200);
+  assert.deepEqual(saved.body.state.children, before);
+  assert.equal(saved.body.state.expenses.length, 1);
+  assert.equal((await post('/api/financial-import', b)).body.replayed, true);
+  assert.equal((await post('/api/financial-import', { ...b, revision: 2, requestId: randomUUID() })).status, 400);
+  assert.equal(app.envelope().revision, 2);
+  assert.equal(app.db.prepare('SELECT count(*) AS n FROM audit_changes WHERE action=?').get('import istoric V5').n, 2);
+  assert.ok(readdirSync(backupDir).some(n => n.includes('inainte-import-istoric')));
 });

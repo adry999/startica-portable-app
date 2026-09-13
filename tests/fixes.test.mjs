@@ -8,6 +8,7 @@ import { createApplication } from '../startica_server.mjs';
 import { normalizeRecord, obligation, dueDayFor, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '../shared/domain.mjs';
 import { childStatus } from '../shared/excel.mjs';
 import { suggestChildren, unassignedSuggestionsByChild } from '../shared/payment-matching.mjs';
+import { startTestApplication } from './support/start-test-application.mjs';
 
 const temporary = prefix => {
   const dir = mkdtempSync(join(tmpdir(), prefix));
@@ -66,27 +67,8 @@ test('Importul V5 mapează un statut necunoscut, păstrând textul original', ()
 
 // Helper pentru testele care vorbesc cu serverul prin HTTP.
 async function startApplication(t, prefix, options = {}) {
-  const { dir, remove } = temporary(prefix);
-  const backupDir = join(dir, 'backups');
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir, ...options });
-  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
-  t.after(async () => {
-    await app.close();
-    remove();
-  });
-  const origin = `http://127.0.0.1:${app.server.address().port}`;
-  const token = (await (await fetch(origin + '/api/session')).json()).token;
-  return {
-    dir,
-    backupDir,
-    get: path => fetch(origin + path).then(r => r.json()),
-    post: (path, body) =>
-      fetch(origin + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
-        body: JSON.stringify(body),
-      }).then(r => r.json()),
-  };
+  const { dir, get, postJson } = await startTestApplication(t, { prefix, ...options });
+  return { dir, backupDir: join(dir, 'backups'), get, post: postJson };
 }
 const CHILD = { id: 'ID-1', name: 'Copil', dueDay: 10, status: 'Activ' };
 
@@ -388,7 +370,11 @@ test('Harta copil → plăți neasociate include doar potrivirile de nume', () =
     { id: 'P3', childId: 'B', sourceName: 'Stefan', amount: 12000, allocations: [{ month: '2025-09', amount: 12000 }] },
   ];
   const byChild = unassignedSuggestionsByChild({ children, payments });
-  assert.deepEqual(byChild.get('A').map(p => p.id), ['P1'], 'Numele din sursă leagă plata P1 de copilul A.');
+  assert.deepEqual(
+    byChild.get('A').map(p => p.id),
+    ['P1'],
+    'Numele din sursă leagă plata P1 de copilul A.',
+  );
   assert.equal(byChild.has('B'), false, 'Plata lui B e deja asociată (are childId), nu apare aici.');
   assert.equal(byChild.size, 1, 'Plata fără potrivire de nume (P2) nu apare pentru nimeni.');
 });

@@ -1,34 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve, dirname, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { createApplication } from '../startica_server.mjs';
 import { validateState } from '../shared/domain.mjs';
+import { startTestApplication } from './support/start-test-application.mjs';
 
 async function startApplication(t) {
-  const dir = mkdtempSync(join(tmpdir(), 'startica-groups-'));
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), autoBackupIntervalMs: 0 });
-  await new Promise(done => app.server.listen(0, '127.0.0.1', done));
-  t.after(async () => {
-    await app.close();
-    if (dirname(resolve(dir)) === resolve(tmpdir()) && basename(dir).startsWith('startica-groups-'))
-      rmSync(dir, { recursive: true, force: true });
-  });
-  const origin = `http://127.0.0.1:${app.server.address().port}`;
-  const token = (await (await fetch(origin + '/api/session')).json()).token;
-  return {
-    get: async path => (await fetch(origin + path)).json(),
-    post: async (path, body) => {
-      const response = await fetch(origin + path, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
-        body: JSON.stringify(body),
-      });
-      return { status: response.status, body: await response.json() };
-    },
-  };
+  return startTestApplication(t, { prefix: 'startica-groups-' });
 }
 
 const group = { id: 'GRP-1', name: 'Grupa curcubeu', capacity: 12 };
