@@ -1,4 +1,4 @@
-// Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări (vezi server/backups.mjs).
+// Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări (vezi features/backup/server/backup.service.mjs).
 export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
 
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */

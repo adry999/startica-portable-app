@@ -1,7 +1,7 @@
 import { today } from '../../shared/domain.mjs';
 import { readWorkbook, exportWorkbook } from '../../shared/excel.mjs';
-import { $, esc, date, time } from './dom.mjs';
-import { session, api, accept, message, mutate, renderSaveStatus } from './session.mjs';
+import { $, esc, date } from './dom.mjs';
+import { session, api, message, mutate } from './session.mjs';
 import { parentContacts, summaryHTML } from './parts.mjs';
 
 const CSV_MAX_BYTES = 2000000;
@@ -183,104 +183,7 @@ function bindExcel() {
   };
 }
 
-// ─── Backup, restaurare și setări ───────────────────────────────────────────
-
-async function previewRestore() {
-  session.restoreData = null;
-  $('commitRestore').disabled = true;
-  const name = $('backupSelect').value;
-  if (!name) return;
-  const s = await api('/api/backup-preview?name=' + encodeURIComponent(name));
-  // Selecția s-a schimbat cât timp răspunsul era pe drum.
-  if ($('backupSelect').value !== name) return;
-  session.restoreData = { name, revision: session.revision };
-  $('restorePreview').innerHTML = summaryHTML(s) + s.errors.map(e => `<p class="danger">${esc(e)}</p>`).join('');
-  $('commitRestore').disabled = !!s.errors.length;
-}
-
-function bindBackup() {
-  $('backupButton').onclick = async () => {
-    const b = $('backupButton');
-    b.disabled = true;
-    try {
-      const result = await api('/api/backup', {});
-      accept(result);
-      if (!result.warning) message('Backup local verificat creat.');
-    } catch (e) {
-      message(e.message, true);
-    } finally {
-      b.disabled = false;
-    }
-  };
-
-  $('restoreButton').onclick = async () => {
-    try {
-      const backups = await api('/api/backups');
-      if (!backups.length) throw Error('Nu există backupuri.');
-      $('backupSelect').innerHTML = backups
-        .map(b => `<option value="${esc(b.name)}">${esc(time(b.modified))} · ${esc(b.name)}</option>`)
-        .join('');
-      $('restoreConfirm').value = '';
-      $('restoreDialog').showModal();
-      await previewRestore();
-    } catch (e) {
-      message(e.message, true);
-    }
-  };
-
-  $('backupSelect').onchange = () => previewRestore().catch(e => message(e.message, true));
-
-  $('commitRestore').onclick = async () => {
-    if (!session.restoreData) return;
-    $('commitRestore').disabled = true;
-    try {
-      await mutate(
-        '/api/restore',
-        { name: session.restoreData.name, confirm: $('restoreConfirm').value },
-        session.restoreData.revision,
-      );
-      $('restoreDialog').close();
-    } catch (e) {
-      message(e.message, true);
-    } finally {
-      $('commitRestore').disabled = false;
-    }
-  };
-
-  $('settingsForm').onsubmit = async event => {
-    event.preventDefault();
-    if (session.settingsBusy || session.pending || session.busy) return;
-    const b = event.currentTarget.querySelector('button'),
-      folder = $('externalDir');
-    b.disabled = true;
-    folder.disabled = true;
-    session.settingsBusy = true;
-    session.settingsError = '';
-    renderSaveStatus();
-    try {
-      const result = await api('/api/settings', { externalDir: folder.value });
-      session.settingsDirty = false;
-      accept(result);
-      if (!result.warning)
-        message(
-          session.health.externalDir
-            ? 'Copia în folderul extern a fost verificată. Confirmă separat sincronizarea în Google Drive.'
-            : 'Backup local configurat.',
-        );
-    } catch (e) {
-      session.settingsError = e.message;
-      message(e.message, true);
-    } finally {
-      b.disabled = false;
-      folder.disabled = false;
-      session.settingsBusy = false;
-      renderSaveStatus();
-    }
-  };
-}
-
 export function bindTransfers() {
   bindChildrenCsv();
   bindExcel();
-  bindBackup();
 }

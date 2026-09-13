@@ -1,64 +1,17 @@
 import { paymentTenders } from '../../shared/domain.mjs';
-import { $, esc, money } from './dom.mjs';
+import { esc, money } from './dom.mjs';
 import { session } from './session.mjs';
+import { childNameOf } from '#shared/domain/record-labels.mjs';
+import { listExpenseCategoryNames } from '#features/expenses/index.web.mjs';
 
-// Sugestii de bază pt. categoria de cheltuieli — nu o listă închisă, clientul
-// poate scrie oricând una nouă (vezi editor.mjs).
-const DEFAULT_EXPENSE_CATEGORIES = [
-  'Chirie',
-  'Utilități',
-  'Salarii',
-  'Materiale educaționale',
-  'Alimente',
-  'Reparații și întreținere',
-  'Altele',
-];
-export const expenseCategories = () =>
-  [
-    ...new Set([
-      ...DEFAULT_EXPENSE_CATEGORIES,
-      ...session.state.categories.map(c => c.name),
-      ...session.state.expenses.map(e => e.category).filter(Boolean),
-    ]),
-  ].sort((a, b) => a.localeCompare(b, 'ro'));
+export const expenseCategories = () => listExpenseCategoryNames(session.state);
 
-const PAGE_SIZE = 100;
-// Pagina curentă a fiecărei liste. Resetată când se schimbă filtrele.
-export const pages = { children: 0, payments: 0, expenses: 0, review: 0, status: 0 };
+export { pageIndexByList as pages, paginateRows as pageRows } from '#shared/ui/pagination.mjs';
+export { recordActionButton as button, recordActions as actions } from '#shared/ui/record-actions.mjs';
 
 export { sortTable } from '#shared/ui/table-sort.mjs';
 
-export function pageRows(type, rows) {
-  const lastPage = Math.max(0, Math.ceil(rows.length / PAGE_SIZE) - 1);
-  const page = (pages[type] = Math.min(pages[type], lastPage));
-  const pager = $(`${type}Pager`);
-  if (pager)
-    pager.innerHTML =
-      `<span>${rows.length} înregistrări · pagina ${page + 1}/${lastPage + 1}</span>` +
-      `<button class="action-btn" data-page="${type}" data-delta="-1" ${page === 0 ? 'disabled' : ''}>Înapoi</button>` +
-      `<button class="action-btn" data-page="${type}" data-delta="1" ${(page + 1) * PAGE_SIZE >= rows.length ? 'disabled' : ''}>Înainte</button>`;
-  return rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-}
-
-export function button(action, type, id, label) {
-  return `<button type="button" class="action-btn" data-action="${action}" data-type="${type}" data-id="${esc(id)}">${esc(label)}</button>`;
-}
-
-export function actions(type, r) {
-  return (
-    `<span class="actions">` +
-    button('edit', type, r.id, 'Editează') +
-    button('archive', type, r.id, r.archived ? 'Reactivează' : 'Arhivează') +
-    (r.archived ? button('delete', type, r.id, 'Șterge definitiv') : '') +
-    `</span>`
-  );
-}
-
-// O achitare importată poate să nu aibă copil asociat; atunci se arată numele
-// din sursă, ca rândul să rămână identificabil.
-export function childName(p) {
-  return session.state.children.find(c => c.id === p.childId)?.name || p.childName || p.sourceName || 'Copil neasociat';
-}
+export const childName = payment => childNameOf(payment, session.state.children);
 
 export function parentContacts(c) {
   return (
@@ -82,9 +35,7 @@ export function tenderLabel(p) {
     .join('<br>');
 }
 
-export const summaryHTML = s =>
-  `<p>${s.children} copii · ${s.payments} achitări · ${s.expenses} cheltuieli</p>` +
-  `<p>Total achitări: ${money(s.paymentTotal)} · Total cheltuieli: ${money(s.expenseTotal)}</p>`;
+export { recordsSummaryMarkup as summaryHTML } from '#shared/ui/records-summary.mjs';
 
 export function field(name, label, value = '', type = 'text', extra = '') {
   return `<label class="field">${label}<input name="${name}" type="${type}" value="${esc(value)}" ${extra}></label>`;

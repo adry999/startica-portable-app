@@ -1,70 +1,40 @@
 import { existsSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, copyFileSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { DatabaseSync } from 'node:sqlite';
-import { emptyState } from '../shared/domain.mjs';
-import { fail, hash, sqlString, stamp, discard } from './util.mjs';
+import { fail } from '#core/server/errors/domain-error.mjs';
+import { sha256Hex } from '#core/server/persistence/content-digest.mjs';
+import { sqlStringLiteral } from '#core/server/database/sql-string-literal.mjs';
+import { fileTimestamp } from '#core/server/files/file-timestamp.mjs';
+import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
+import { selectBackupsToKeep } from '../domain/backup-retention.mjs';
+import { readBackupSnapshot } from './backup-snapshot.mjs';
+
+/** @typedef {import('../backup.types.mjs').BackupFileEntry} BackupFileEntry */
+/** @typedef {import('../backup.types.mjs').BackupHealth} BackupHealth */
+/** @typedef {import('../backup.types.mjs').BackupResult} BackupResult */
+/** @typedef {import('../backup.types.mjs').SafeBackupResult} SafeBackupResult */
+/** @typedef {import('../backup.types.mjs').BackupServiceDependencies} BackupServiceDependencies */
 
 const BACKUP_NAME = /^startica_[A-Za-z0-9_.-]+\.db$/;
 const TEMPORARY_NAME = /^startica_[A-Za-z0-9_.-]+\.db\.tmp$/;
 // Un .tmp mai nou decât atât poate aparține unui backup aflat în curs.
 const TEMPORARY_GRACE_MS = 3600000;
 
-// Ce se păstrează: ultimele 20 de copii, câte una pentru fiecare din ultimele
-// 30 de zile și 12 luni cu backup, plus copiile dinaintea unei operațiuni
-// ireversibile, care nu expiră.
-export function retentionKeep(files) {
-  const sorted = [...files].sort((a, b) => b.modified.localeCompare(a.modified));
-  const keep = new Set(sorted.slice(0, 20).map(f => f.name)),
-    days = new Set(),
-    months = new Set();
-  for (const f of sorted) {
-    const day = f.modified.slice(0, 10),
-      month = day.slice(0, 7);
-    if (!days.has(day) && days.size < 30) {
-      days.add(day);
-      keep.add(f.name);
-    }
-    if (!months.has(month) && months.size < 12) {
-      months.add(month);
-      keep.add(f.name);
-    }
-    if (/inainte-|migrare/.test(f.name)) keep.add(f.name);
-  }
-  return keep;
-}
-
-// Citește o copie și verifică integritatea ei. Folosit atât la previzualizarea
-// unei restaurări, cât și ca validare a fiecărui backup înainte de a fi acceptat.
-export function snapshotState(file) {
-  const source = new DatabaseSync(file, { readOnly: true });
-  try {
-    if (source.prepare('PRAGMA integrity_check').get().integrity_check !== 'ok') fail('Backup corupt.');
-    if (source.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='records'").get()) {
-      const s = emptyState();
-      for (const r of source.prepare('SELECT kind,payload FROM records').all()) s[r.kind].push(JSON.parse(r.payload));
-      return s;
-    }
-    return JSON.parse(source.prepare('SELECT payload FROM app_state WHERE id=1').get().payload);
-  } finally {
-    source.close();
-  }
-}
-
+/** @returns {BackupFileEntry[]} */
 function fileList(dir) {
   return readdirSync(dir)
-    .filter(n => BACKUP_NAME.test(n))
+    .filter(name => BACKUP_NAME.test(name))
     .map(name => ({ name, modified: statSync(join(dir, name)).mtime.toISOString() }))
     .sort((a, b) => b.modified.localeCompare(a.modified));
 }
 
 // Copiile dinaintea unei operațiuni ireversibile nu expiră niciodată (vezi
-// retentionKeep) — nimeni nu le șterge automat, deci utilizatorul trebuie să
-// poată vedea cât cresc, ca să decidă singur când face curățenie manuală.
+// selectBackupsToKeep) — nimeni nu le șterge automat, deci utilizatorul trebuie
+// să poată vedea cât cresc, ca să decidă singur când face curățenie manuală.
 function permanentBackupsSummary(dir) {
   try {
-    const files = readdirSync(dir).filter(n => BACKUP_NAME.test(n) && /inainte-|migrare/.test(n));
-    return { count: files.length, bytes: files.reduce((sum, n) => sum + statSync(join(dir, n)).size, 0) };
+    const files = readdirSync(dir).filter(name => BACKUP_NAME.test(name) && /inainte-|migrare/.test(name));
+    return { count: files.length, bytes: files.reduce((sum, name) => sum + statSync(join(dir, name)).size, 0) };
   } catch {
     return { count: 0, bytes: 0 };
   }
@@ -84,15 +54,23 @@ function pruneTemporary(dir) {
   }
 }
 
-export function createBackups({ db, dbFile, backupDir, setting, setSetting, autoBackupIntervalMs }) {
+/** @param {BackupServiceDependencies} dependencies */
+export function createBackupService({
+  database,
+  databaseFile,
+  backupDirectory,
+  readSetting,
+  writeSetting,
+  autoBackupIntervalMs,
+}) {
   let lastBackupAt = 0,
     scheduled = null;
 
   function prune() {
-    const files = fileList(backupDir),
-      keep = retentionKeep(files);
-    for (const f of files) if (!keep.has(f.name)) unlinkSync(join(backupDir, f.name));
-    pruneTemporary(backupDir);
+    const files = fileList(backupDirectory),
+      keep = selectBackupsToKeep(files);
+    for (const file of files) if (!keep.has(file.name)) unlinkSync(join(backupDirectory, file.name));
+    pruneTemporary(backupDirectory);
   }
 
   function cancelScheduledBackup() {
@@ -115,22 +93,25 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
   }
 
   function copyExternally(name, file) {
-    const external = setting('externalDir');
+    const external = readSetting('externalDir');
     if (!external) return '';
     const copy = join(external, name) + '.tmp';
     let warning = '';
     try {
       if (!existsSync(external) || !statSync(external).isDirectory()) fail('Folderul extern nu este disponibil.');
       copyFileSync(file, copy);
-      if (hash(readFileSync(file)) !== hash(readFileSync(copy))) fail('Copia externă diferă de original.');
-      snapshotState(copy);
+      // sha256Hex() e tipat pentru text; primește aici conținutul binar al bazei, la fel ca înainte de migrare.
+      if (sha256Hex(/** @type {any} */ (readFileSync(file))) !== sha256Hex(/** @type {any} */ (readFileSync(copy))))
+        fail('Copia externă diferă de original.');
+      readBackupSnapshot(copy);
       renameSync(copy, join(external, name));
-      setSetting('lastExternal', new Date().toISOString());
-      setSetting('externalError', '');
+      writeSetting('lastExternal', new Date().toISOString());
+      writeSetting('externalError', '');
     } catch (e) {
-      discard(copy);
-      warning = 'Backup local creat; copia externă a eșuat: ' + e.message;
-      setSetting('externalError', e.message);
+      const failure = /** @type {Error} */ (e);
+      removeFileIfPresent(copy);
+      warning = 'Backup local creat; copia externă a eșuat: ' + failure.message;
+      writeSetting('externalError', failure.message);
     }
     try {
       pruneTemporary(external);
@@ -141,20 +122,24 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
   // Copie verificată: VACUUM INTO într-un .tmp, deschidere și verificare a
   // integrității, abia apoi redenumire. Un fișier cu nume final este întotdeauna
   // o copie validă.
+  /**
+   * @param {string} [reason]
+   * @returns {BackupResult}
+   */
   function backup(reason = 'manual') {
-    const name = `startica_${stamp()}_${reason}_${randomUUID().slice(0, 8)}.db`,
-      file = join(backupDir, name),
+    const name = `startica_${fileTimestamp()}_${reason}_${randomUUID().slice(0, 8)}.db`,
+      file = join(backupDirectory, name),
       temp = file + '.tmp';
     try {
-      db.exec(`VACUUM INTO ${sqlString(temp)}`);
-      snapshotState(temp);
+      database.exec(`VACUUM INTO ${sqlStringLiteral(temp)}`);
+      readBackupSnapshot(temp);
       renameSync(temp, file);
     } catch (e) {
-      discard(temp);
+      removeFileIfPresent(temp);
       throw e;
     }
-    setSetting('lastLocal', new Date().toISOString());
-    setSetting('localError', '');
+    writeSetting('lastLocal', new Date().toISOString());
+    writeSetting('localError', '');
     // Orice copie reușită repornește ceasul și anulează copia programată,
     // indiferent de motiv: pornire, manual sau dinaintea unui import.
     lastBackupAt = Date.now();
@@ -163,17 +148,22 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
     try {
       prune();
     } catch (e) {
-      warning += ' Curățarea backupurilor vechi a eșuat: ' + e.message;
+      warning += ' Curățarea backupurilor vechi a eșuat: ' + /** @type {Error} */ (e).message;
     }
     return { file, name, warning };
   }
 
+  /**
+   * @param {string} [reason]
+   * @returns {SafeBackupResult}
+   */
   function safeBackup(reason) {
     try {
       return backup(reason);
     } catch (e) {
-      setSetting('localError', e.message);
-      return { warning: 'Datele sunt salvate, dar backupul local a eșuat: ' + e.message };
+      const failure = /** @type {Error} */ (e);
+      writeSetting('localError', failure.message);
+      return { warning: 'Datele sunt salvate, dar backupul local a eșuat: ' + failure.message };
     }
   }
 
@@ -182,8 +172,9 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
   // servește la recuperare. O eroare anterioară se reîncearcă imediat, altfel
   // utilizatorul ar afla că backupul nu funcționează abia după expirarea
   // intervalului.
+  /** @returns {SafeBackupResult} */
   function autoBackup() {
-    const retrying = !!(setting('localError') || setting('externalError'));
+    const retrying = !!(readSetting('localError') || readSetting('externalError'));
     if (!retrying && Date.now() - lastBackupAt < autoBackupIntervalMs) {
       scheduleBackup();
       return { warning: '', skipped: true };
@@ -196,37 +187,42 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
   // deconectat) ar rămâne nesemnalată până la următoarea copie. Verificarea de
   // mai jos costă un stat() și rulează la fiecare interogare de stare.
   function externalFailure() {
-    const stored = setting('externalError');
+    const stored = readSetting('externalError');
     if (stored) return stored;
-    const dir = setting('externalDir');
+    const dir = readSetting('externalDir');
     if (!dir) return '';
     try {
       return existsSync(dir) && statSync(dir).isDirectory() ? '' : 'Folderul extern nu este disponibil.';
     } catch (e) {
-      return e.message;
+      return /** @type {Error} */ (e).message;
     }
   }
 
+  /** @returns {BackupHealth} */
   function health() {
     return {
       ok: true,
-      database: dbFile,
-      backup: backupDir,
-      externalDir: setting('externalDir'),
-      lastLocal: setting('lastLocal') || fileList(backupDir)[0]?.modified || '',
-      lastExternal: setting('lastExternal'),
-      localError: setting('localError'),
+      database: databaseFile,
+      backup: backupDirectory,
+      externalDir: readSetting('externalDir'),
+      lastLocal: readSetting('lastLocal') || fileList(backupDirectory)[0]?.modified || '',
+      lastExternal: readSetting('lastExternal'),
+      localError: readSetting('localError'),
       externalError: externalFailure(),
       cloudVerified: false,
-      permanentBackups: permanentBackupsSummary(backupDir),
+      permanentBackups: permanentBackupsSummary(backupDirectory),
     };
   }
 
   // Numele vine de la client: trebuie să fie un nume simplu de fișier din
   // folderul de backup, niciodată o cale.
-  function selectedBackup(name) {
+  /**
+   * @param {unknown} name
+   * @returns {string}
+   */
+  function resolveBackupFile(name) {
     if (typeof name !== 'string' || basename(name) !== name || !BACKUP_NAME.test(name)) fail('Nume de backup invalid.');
-    const file = join(backupDir, name);
+    const file = join(backupDirectory, name);
     if (!existsSync(file)) fail('Backup inexistent.');
     return file;
   }
@@ -236,8 +232,8 @@ export function createBackups({ db, dbFile, backupDir, setting, setSetting, auto
     safeBackup,
     autoBackup,
     health,
-    selectedBackup,
+    listBackups: () => fileList(backupDirectory),
+    resolveBackupFile,
     cancelScheduledBackup,
-    list: () => fileList(backupDir),
   };
 }

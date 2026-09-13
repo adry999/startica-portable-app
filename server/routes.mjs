@@ -1,10 +1,7 @@
-import { existsSync, statSync } from 'node:fs';
-import { resolve, isAbsolute, relative } from 'node:path';
-import { validateState, normalizeRecord, applyChildSetup, summary, importReport } from '../shared/domain.mjs';
+import { validateState, normalizeRecord, importReport } from '../shared/domain.mjs';
 import { previewChildrenCSV } from './children-csv.mjs';
 import { financialImportPlan } from './financial-import.mjs';
-import { snapshotState } from './backups.mjs';
-import { fail } from './util.mjs';
+import { fail } from '#core/server/errors/domain-error.mjs';
 import { sendResponse } from '#core/server/http/json-response.mjs';
 import { RESPONSE_SENT, createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
@@ -12,20 +9,10 @@ import {
   createPaymentAssignmentRoutes,
   createPaymentAssignmentService,
 } from '#features/payment-assignment/index.server.mjs';
-
-// Folderul extern nu are voie să fie baza activă sau folderul de backupuri:
-// altfel copiile s-ar suprascrie sau ar fi șterse de retenție.
-function checkExternalDir(folder, reserved) {
-  if (!folder) return;
-  if (!isAbsolute(folder) || !existsSync(folder) || !statSync(folder).isDirectory())
-    fail('Alege un folder existent, folosind calea completă.');
-  const absolute = resolve(folder);
-  for (const dir of reserved) {
-    const inside = relative(resolve(dir), absolute);
-    if (absolute === resolve(dir) || (!inside.startsWith('..') && !isAbsolute(inside)))
-      fail('Alege un folder diferit de baza de date și backupurile locale.');
-  }
-}
+import { createGroupsRoutes } from '#features/groups/index.server.mjs';
+import { createExpenseCategoriesRoutes } from '#features/expenses/index.server.mjs';
+import { createFeeSetupRoutes } from '#features/fee-setup/index.server.mjs';
+import { createBackupRoutes } from '#features/backup/index.server.mjs';
 
 export function createRouter(context) {
   const { root, token, dataDir, backupDir, allowShutdown, settings, backups, store, shutdown } = context;
@@ -34,12 +21,6 @@ export function createRouter(context) {
   const read = {
     '/api/session': () => ({ token }),
     '/api/state': () => store.envelope(),
-    '/api/health': () => backups.health(),
-    '/api/backups': () => backups.list(),
-    '/api/backup-preview': url => {
-      const s = snapshotState(backups.selectedBackup(url.searchParams.get('name')));
-      return { ...summary(s), errors: importReport(s).errors };
-    },
   };
 
   const write = {
@@ -81,35 +62,6 @@ export function createRouter(context) {
         store.audit(old ? 'modificare' : 'adăugare', b.type, r.id, old, r);
       }),
 
-    // Grupele nu se arhivează, se șterg direct — dar numai când nimeni nu mai
-    // e atribuit ei, altfel copiii ar rămâne cu o referință către nimic.
-    '/api/group-delete': b =>
-      store.commit(b, 'ștergere grupă', () => {
-        const g = store.readRecord('groups', b.id);
-        if (!g) fail('Grupa nu mai există.', 409);
-        const children = store.readState().children.filter(c => c.groupId === b.id);
-        if (children.length) {
-          const archived = children.filter(c => c.archived).length;
-          fail(
-            archived
-              ? 'Mută mai întâi copiii din grupă, inclusiv copiii arhivați. Ei păstrează grupa pentru restaurare.'
-              : 'Mută mai întâi copiii din grupă.',
-          );
-        }
-        store.deleteRecord('groups', b.id);
-        store.audit('ștergere', 'groups', b.id, g, null);
-      }),
-
-    // Categoria e doar o etichetă text pentru cheltuieli (fără FK), deci
-    // ștergerea nu are nevoie de verificare de ocupare, ca la grupe.
-    '/api/category-delete': b =>
-      store.commit(b, 'ștergere categorie', () => {
-        const c = store.readRecord('categories', b.id);
-        if (!c) fail('Categoria nu mai există.', 409);
-        store.deleteRecord('categories', b.id);
-        store.audit('ștergere', 'categories', b.id, c, null);
-      }),
-
     // Ștergere definitivă, doar pentru ce e deja arhivat — arhivarea rămâne
     // singura cale reversibilă; asta e ireversibilă, de-aia backup înainte.
     '/api/record-delete': b =>
@@ -128,32 +80,6 @@ export function createRouter(context) {
         },
         true,
       ),
-
-    // Completarea în masă a taxei, grupei și statutului. Fără ea, cei 105 copii
-    // importați din CSV nu pot fi evaluați deloc, iar lista de notificat rămâne
-    // goală fără ca nimic să fie greșit.
-    '/api/children-setup': b => {
-      if (!Array.isArray(b.updates) || !b.updates.length || b.updates.length > 5000)
-        fail('Lista de completări este invalidă.');
-      return store.commit(
-        b,
-        'completare-taxe',
-        () => {
-          const seen = new Set();
-          for (const update of b.updates) {
-            if (seen.has(update?.id)) fail(`Fișa ${update.id} apare de două ori.`);
-            seen.add(update?.id);
-            const old = store.readRecord('children', update?.id);
-            if (!old) fail(`Fișa ${update?.id} nu mai există. Reîncarcă datele.`, 409);
-            if (update.groupId && !store.recordExists('groups', update.groupId)) fail('Grupa asociată nu există.');
-            const r = applyChildSetup(old, update);
-            store.writeRecord('children', r);
-            store.audit('completare taxe și grupe', 'children', r.id, old, r);
-          }
-        },
-        true,
-      );
-    },
 
     '/api/import-preview': b => importReport(b.state),
 
@@ -215,41 +141,34 @@ export function createRouter(context) {
       return store.commit(b, 'import', () => store.replace(s, 'import'), true);
     },
 
-    '/api/restore': b => {
-      if (b.confirm !== 'RESTAUREAZA') fail('Confirmă restaurarea.');
-      const s = validateState(snapshotState(backups.selectedBackup(b.name)));
-      return store.commit(b, 'restaurare', () => store.replace(s, 'restaurare'), true);
-    },
-
-    '/api/backup': () => ({ ok: true, ...backups.backup(), health: backups.health() }),
-
-    '/api/settings': b => {
-      const folder = String(b.externalDir || '').trim();
-      checkExternalDir(folder, [dataDir, backupDir]);
-      const before = setting('externalDir');
-      setSetting('externalDir', folder);
-      if (before !== folder) {
-        setSetting('lastExternal', '');
-        setSetting('externalError', '');
-      }
-      store.audit('configurare backup', null, null, { externalDir: before }, { externalDir: folder });
-      return { ok: true, ...backups.safeBackup('configurare'), health: backups.health() };
-    },
-
     // Ruta de scriere a versiunii vechi. Un mesaj explicit este mai util decât 404.
     '/api/state': () => fail('Această versiune este veche. Reîncarcă pagina.', 409),
   };
 
-  const paymentAssignmentService = createPaymentAssignmentService({
+  const recordWriteDependencies = {
     recordRepository: store.recordRepository,
     auditTrail: store.auditLogRepository,
     runRevisionTransaction: store.runRevisionTransaction,
-  });
+  };
+  const paymentAssignmentService = createPaymentAssignmentService(recordWriteDependencies);
 
   const routes = [
     ...Object.entries(read).map(([path, handler]) => ({ method: 'GET', path, handle: ({ url }) => handler(url) })),
     ...createAuditLogRoutes({ auditLogRepository: store.auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
+    ...createGroupsRoutes(recordWriteDependencies),
+    ...createExpenseCategoriesRoutes(recordWriteDependencies),
+    ...createFeeSetupRoutes(recordWriteDependencies),
+    ...createBackupRoutes({
+      backupService: backups,
+      readSetting: setting,
+      writeSetting: setSetting,
+      auditTrail: store.auditLogRepository,
+      runRevisionTransaction: store.runRevisionTransaction,
+      replaceAllRecords: store.replace,
+      dataDirectory: dataDir,
+      backupDirectory: backupDir,
+    }),
     ...Object.entries(write).map(([path, handler]) => ({
       method: 'POST',
       path,

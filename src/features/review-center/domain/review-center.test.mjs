@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { emptyState, normalizeRecord } from '../shared/domain.mjs';
-import { filteredReviewItems, reviewCenter } from '../shared/review-center.mjs';
+import { emptyState, normalizeRecord } from '#shared/domain/record-schema.mjs';
+import { buildReviewCenter, filterReviewItems } from './review-center.mjs';
 
 const child = (id, name = 'Copil Test') =>
   normalizeRecord('children', {
@@ -37,20 +37,21 @@ test('centrul de verificare grupează problemele pe înregistrare și oferă con
     payment('P-duplicat'),
     payment('P-duplicat-2'),
   ];
-  const center = reviewCenter(state);
+  const center = buildReviewCenter(state);
   assert.equal(center.progress.total, 3);
   assert.equal(center.items.filter(item => item.id === 'P-auto').length, 1);
-  assert.equal(center.items.find(item => item.id === 'P-auto').canConfirm, true);
-  assert.equal(center.items.find(item => item.id === 'P-nealocat').canConfirm, false);
-  assert.ok(center.items.find(item => item.id === 'P-provizoriu').categories.includes('provisional'));
-  assert.ok(center.items.find(item => item.id === 'P-avans').categories.includes('advance'));
-  assert.ok(center.items.find(item => item.id === 'P-duplicat-2').categories.includes('duplicate'));
+  const itemById = id => /** @type {any} */ (center.items.find(item => item.id === id));
+  assert.equal(itemById('P-auto').canConfirm, true);
+  assert.equal(itemById('P-nealocat').canConfirm, false);
+  assert.ok(itemById('P-provizoriu').categories.includes('provisional'));
+  assert.ok(itemById('P-avans').categories.includes('advance'));
+  assert.ok(itemById('P-duplicat-2').categories.includes('duplicate'));
   assert.deepEqual(
-    filteredReviewItems(center, 'unassigned').map(item => item.id),
+    filterReviewItems(center, 'unassigned').map(item => item.id),
     ['P-nealocat'],
   );
   assert.deepEqual(
-    filteredReviewItems(center, 'automatic').map(item => item.id),
+    filterReviewItems(center, 'automatic').map(item => item.id),
     ['P-auto'],
   );
 });
@@ -65,10 +66,10 @@ test('filtrarea caută după observația sursei și păstrează fișele cu date 
       importSource: { provisionalAmount: true },
     }),
   ];
-  const center = reviewCenter(state);
-  assert.equal(filteredReviewItems(center, 'children').length, 1);
+  const center = buildReviewCenter(state);
+  assert.equal(filterReviewItems(center, 'children').length, 1);
   assert.deepEqual(
-    filteredReviewItems(center, 'all', 'provizorie').map(item => item.id),
+    filterReviewItems(center, 'all', 'provizorie').map(item => item.id),
     ['P-provizoriu'],
   );
 });

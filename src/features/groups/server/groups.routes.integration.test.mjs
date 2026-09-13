@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { validateState } from '../shared/domain.mjs';
-import { startTestApplication } from './support/start-test-application.mjs';
+import { validateState } from '#shared/domain/record-schema.mjs';
+import { startTestApplication } from '#test-support/start-test-application.mjs';
 
 async function startApplication(t) {
   return startTestApplication(t, { prefix: 'startica-groups-' });

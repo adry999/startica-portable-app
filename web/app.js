@@ -7,15 +7,20 @@ import {
   renderSaveStatus,
   checkConnection,
   api,
+  accept,
   mutate,
   eventBus,
 } from './ui/session.mjs';
+import { createBackupController, createBackupHealthView } from '#features/backup/index.web.mjs';
 import { createAuditLogApi, createAuditLogController, createAuditLogView } from '#features/audit-log/index.web.mjs';
 import {
   createPaymentAssignmentApi,
   createPaymentAssignmentController,
   createPaymentAssignmentView,
 } from '#features/payment-assignment/index.web.mjs';
+import { createReviewCenterView } from '#features/review-center/index.web.mjs';
+import { createGroupsController } from '#features/groups/index.web.mjs';
+import { createExpenseCategoriesController } from '#features/expenses/index.web.mjs';
 import { DomainEvent } from '#shared/contracts/domain-events.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
@@ -24,28 +29,46 @@ import { bindMonthPicker } from '#app/web/month-picker.mjs';
 import { bindMobileNavigation } from '#app/web/mobile-navigation.mjs';
 import { bindUnsavedChangesGuard } from '#app/web/unsaved-changes-guard.mjs';
 import { pages } from './ui/parts.mjs';
-import {
-  go,
-  render,
-  renderList,
-  renderHealth,
-  profile,
-  registerScreen,
-  bindGroups,
-  bindCategories,
-  bindBulkAction,
-} from './ui/views.mjs';
+import { go, render, renderList, profile, registerScreen, onRender, bindBulkAction } from './ui/views.mjs';
 import { openEditor, bindEditorForm, archive, deleteRecord, confirmReview } from './ui/editor.mjs';
 import { bindTransfers } from './ui/transfers.mjs';
-import { bindFees } from './ui/fees.mjs';
+import { createFeeSetupController } from '#features/fee-setup/index.web.mjs';
 
 const HEALTH_POLL_MS = 30000;
 const LISTS = ['children', 'payments', 'expenses'];
 
-setRenderers({ render, health: renderHealth });
+const renderBackupHealth = createBackupHealthView({
+  elements: { status: $('backupStatus'), details: $('healthDetails'), externalDirInput: $('externalDir') },
+  isExternalDirLocked: () => session.settingsDirty || session.settingsBusy,
+});
+setRenderers({
+  render,
+  health: () => {
+    renderBackupHealth(session.health);
+    renderSaveStatus();
+  },
+});
+createBackupController({
+  elements: {
+    backupButton: $('backupButton'),
+    restoreButton: $('restoreButton'),
+    restoreDialog: $('restoreDialog'),
+    backupSelect: $('backupSelect'),
+    restoreConfirm: $('restoreConfirm'),
+    restorePreview: $('restorePreview'),
+    commitRestore: $('commitRestore'),
+    settingsForm: $('settingsForm'),
+    externalDirInput: $('externalDir'),
+  },
+  sessionState: session,
+  requestJson: api,
+  submitMutation: mutate,
+  acceptResult: accept,
+  showNotice: message,
+  renderSaveStatus,
+});
 bindEditorForm();
 bindTransfers();
-bindFees();
 
 const auditLog = createAuditLogController({
   fetchAuditPage: createAuditLogApi({ requestJson: api }).fetchAuditPage,
@@ -98,8 +121,63 @@ $('assignClear').onclick = () => {
   message('Selecțiile au fost golite.');
 };
 $('assignSave').onclick = () => void paymentAssignment.saveSelections();
-bindGroups();
-bindCategories();
+
+const renderReviewCenter = createReviewCenterView({
+  elements: {
+    progress: $('reviewProgress'),
+    list: $('reviewList'),
+    filter: $('reviewFilter'),
+    search: $('reviewSearch'),
+  },
+  readRecords: () => session.state,
+});
+const groups = createGroupsController({
+  elements: {
+    grid: $('groupsGrid'),
+    createForm: $('groupCreateForm'),
+    nameInput: $('groupNameInput'),
+    capacityInput: $('groupCapacityInput'),
+  },
+  readRecords: () => session.state,
+  submitMutation: mutate,
+  showNotice: message,
+});
+const expenseCategories = createExpenseCategoriesController({
+  elements: {
+    chips: $('categoriesChips'),
+    createForm: $('categoryCreateForm'),
+    nameInput: $('categoryNameInput'),
+    categoryFilter: $('expensesCategory'),
+  },
+  readRecords: () => session.state,
+  submitMutation: mutate,
+  showNotice: message,
+});
+const feeSetup = createFeeSetupController({
+  elements: {
+    info: $('feesInfo'),
+    table: $('feesTable'),
+    pending: $('feesPending'),
+    filter: $('feesFilter'),
+    bulkAmount: $('feesBulkAmount'),
+    bulkGroup: $('feesBulkGroup'),
+    bulkStatus: $('feesBulkStatus'),
+    applyAll: $('feesApplyAll'),
+    save: $('feesSave'),
+    failure: $('feesError'),
+  },
+  readRecords: () => session.state,
+  readToday: today,
+  submitMutation: mutate,
+  showNotice: message,
+  renderMissingFeeCount: count => setNavCount('feesCount', count),
+});
+onRender(({ review }) => {
+  feeSetup.render();
+  groups.render();
+  expenseCategories.render();
+  renderReviewCenter(review);
+});
 bindBulkAction('children');
 bindBulkAction('payments');
 bindBulkAction('expenses');

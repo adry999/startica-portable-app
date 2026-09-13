@@ -9,10 +9,10 @@ import {
   paymentTenders,
   dueDayFor,
 } from '../../shared/domain.mjs';
-import { reviewCenter } from '../../shared/review-center.mjs';
+import { buildReviewCenter } from '#features/review-center/index.web.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
-import { $, esc, money, date, time, fileSize, monthLabel } from './dom.mjs';
-import { session, message, mutate, renderSaveStatus } from './session.mjs';
+import { $, esc, money, date, monthLabel } from './dom.mjs';
+import { session, message, mutate } from './session.mjs';
 import {
   pages,
   pageRows,
@@ -23,15 +23,19 @@ import {
   tenderLabel,
   statusBadgeClass,
 } from './parts.mjs';
-import { renderFees } from './fees.mjs';
 import { findUnassignedPaymentHintsByChild } from '#features/payment-assignment/index.web.mjs';
 import { selectedMonth, contractOf, groupName } from './view-helpers.mjs';
-import { renderReview } from './review.mjs';
 import { renderDashboard, renderStatus, renderNotify } from './reports.mjs';
-import { renderGroups, bindGroups, renderCategories, bindCategories } from './groups-categories.mjs';
 import { profile } from './profile-audit.mjs';
 
-export { bindGroups, bindCategories, profile };
+export { profile };
+
+// Ecranele mutate în src/features se redesenează la fiecare render(), cu evaluările calculate o singură dată.
+const renderListeners = [];
+
+export function onRender(listener) {
+  renderListeners.push(listener);
+}
 
 /** @type {Map<string, { activate: () => void, deactivate?: () => void }>} */
 const screens = new Map();
@@ -66,37 +70,6 @@ export function go(id) {
     if (viewId === id) screen.activate();
     else screen.deactivate?.();
   window.scrollTo(0, 0);
-}
-
-// ─── Backup și stare ────────────────────────────────────────────────────────
-
-export function renderHealth() {
-  const { health } = session;
-  const stale = !health.lastLocal || Date.now() - new Date(health.lastLocal).getTime() > 86400000,
-    externalStale = !health.lastExternal || Date.now() - new Date(health.lastExternal).getTime() > 86400000;
-  const hasError = !!(health.localError || health.externalError);
-  const hasWarning = !hasError && (stale || !health.externalDir || externalStale);
-  $('backupStatus').textContent = health.localError
-    ? 'Backup local eșuat'
-    : stale
-      ? 'Backup local vechi/lipsă'
-      : !health.externalDir
-        ? 'Backup local OK · copie externă neconfigurată'
-        : health.externalError || externalStale
-          ? 'Copia externă necesită atenție'
-          : 'Backup local și copie externă verificate';
-  $('backupStatus').dataset.state = hasError ? 'error' : hasWarning ? 'warning' : 'ok';
-  $('backupStatus').classList.toggle('danger', hasError || hasWarning);
-  $('healthDetails').innerHTML =
-    `<p>Bază: ${esc(health.database)}</p><p>Backup local: ${esc(time(health.lastLocal))}</p>` +
-    `<p>Copie externă: ${esc(time(health.lastExternal))}</p>` +
-    `<p class="danger">${esc(health.localError || health.externalError || (!health.externalDir ? 'Copia externă nu este configurată.' : ''))}</p>` +
-    `<p>Sincronizarea în cloud nu este confirmată de aplicație. Verifică starea din Google Drive.</p>` +
-    `<p>Păstrare locală: ultimele 20 de copii, câte una pentru ultimele 30 de zile cu backup și 12 luni cu backup. ` +
-    `Copiile dinaintea importului, restaurării și migrării nu expiră automat: ${health.permanentBackups.count} copii, ${fileSize(health.permanentBackups.bytes)}. Șterge-le manual din Startica_Backup dacă nu mai sunt necesare.</p>`;
-  // Câmpul nu se suprascrie cât timp utilizatorul scrie în el.
-  if (!session.settingsDirty && !session.settingsBusy) $('externalDir').value = health.externalDir || '';
-  renderSaveStatus();
 }
 
 // ─── Liste ──────────────────────────────────────────────────────────────────
@@ -433,7 +406,7 @@ function renderChildrenSummary(review) {
 export function render() {
   const month = selectedMonth(),
     cash = cashSummary(session.state, month),
-    review = reviewCenter(session.state);
+    review = buildReviewCenter(session.state);
   // Un singur index de încasări și o singură funcție de evaluare pentru toate
   // ecranele randării curente (Dashboard, Situația plăților, De notificat).
   const asOf = today();
@@ -449,9 +422,6 @@ export function render() {
   for (const type of ['children', 'payments', 'expenses']) renderList(type);
   renderStatus(month, allChildren, render);
   renderNotify(month, nonArchived, unassignedByChild, render);
-  renderFees();
-  renderGroups();
-  renderCategories();
   renderPaymentsChildFilter();
-  renderReview(review);
+  for (const listener of renderListeners) listener({ month, review });
 }

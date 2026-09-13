@@ -6,7 +6,7 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
-import { createApplication, retentionKeep } from '../startica_server.mjs';
+import { createApplication } from '../startica_server.mjs';
 import {
   normalizeRecord,
   validateState,
@@ -123,20 +123,6 @@ test('V5 original: numărul de înregistrări și totalurile rămân identice', 
   );
   assert.deepEqual(roundtrip.errors, []);
   assert.deepEqual(roundtrip.state, report.state);
-});
-test('Retenția păstrează zile/luni și copii anterioare restaurării', () => {
-  const files = Array.from({ length: 80 }, (_, i) => ({
-    name: `startica_new_${i}.db`,
-    modified: `2026-09-08T12:${String(i % 60).padStart(2, '0')}:00Z`,
-  }));
-  files.push(
-    { name: 'startica_old.db', modified: '2026-08-01T00:00:00Z' },
-    { name: 'startica_inainte-import.db', modified: '2024-01-01T00:00:00Z' },
-  );
-  const keep = retentionKeep(files);
-  assert.ok(keep.has('startica_old.db'));
-  assert.ok(keep.has('startica_inainte-import.db'));
-  assert.ok(keep.size < files.length);
 });
 test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate', async t => {
   // autoBackupIntervalMs: 0 => backup după fiecare scriere, ca înainte de

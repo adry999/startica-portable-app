@@ -5,11 +5,9 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, loadEnvironment } from '#config/environment.mjs';
 import { openDatabase, createSettings } from './server/database.mjs';
-import { createBackups } from './server/backups.mjs';
+import { createBackupService } from '#features/backup/index.server.mjs';
 import { createStore } from './server/store.mjs';
 import { createRouter } from './server/routes.mjs';
-
-export { retentionKeep } from './server/backups.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 
@@ -23,7 +21,14 @@ export function createApplication(options = {}) {
 
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
   const settings = createSettings(db);
-  const backups = createBackups({ db, dbFile, backupDir, ...settings, autoBackupIntervalMs });
+  const backups = createBackupService({
+    database: db,
+    databaseFile: dbFile,
+    backupDirectory: backupDir,
+    readSetting: settings.setting,
+    writeSetting: settings.setSetting,
+    autoBackupIntervalMs,
+  });
   const store = createStore({ db, backups });
 
   // Tokenul de sesiune se schimbă la fiecare pornire: o filă rămasă deschisă
