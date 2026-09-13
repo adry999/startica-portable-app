@@ -1,19 +1,21 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
-Stare, 13 septembrie 2026: **pașii 0–5 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, infrastructura de server și de browser, vezi §6). Pașii 6–12 sunt propuși; restul modulelor sunt încă în `server/`, `shared/` și `web/ui/`. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
+Stare, 13 septembrie 2026: **pașii 0–6 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, infrastructura de server și de browser, feature-ul `audit-log`, vezi §6). Pașii 7–12 sunt propuși; restul modulelor sunt încă în `server/`, `shared/` și `web/ui/`. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7). `audit-log` a fost preluat de acolo fără modificări; codul viu este cel din `src/features/audit-log/`.
+
+Pasul 6 a adus `audit-log` în `src/features/audit-log/` și contractul `AuditTrail` în `src/shared/contracts/`. `/api/audit` primește `?beforeEntryId` și întoarce `{ entries, nextBeforeEntryId }`, cu intrările deja deserializate. `server/store.mjs` injectează repository-ul ca `auditTrail` în tranzacția cu revizie și păstrează `store.audit(...)` ca adaptor pentru rutele nemigrate. Istoricul a ieșit din `web/ui/profile-audit.mjs`, unde rămâne doar fișa copilului. `web/app.js` compune controller-ul și îl leagă de navigație prin `onViewOpened('audit', …)`. Eroarea de încărcare apare acum în ecran, nu în banner, iar „Mai multe” se ascunde când nu mai sunt pagini. Verificare: pe o copie a bazei reale, înainte și după, starea, reviziile, cererile salvate, rândurile de istoric (adăugare, modificare, ștergere) și backupurile sunt identice.
 
 Pasul 5 a mutat în `src/core/web/` clientul API (`ApiError`), store-ul sesiunii (publică `records.reloaded`), event bus-ul, starea ecranelor și bannerul de mesaje, cu teste colocate. În `src/app/web/` au ajuns indicatorul de salvare, selectorul de lună, navigația pe mobil și protecția la închidere cu modificări nesalvate. `web/ui/session.mjs` compune aceste module și exportă același obiect `session`. `web/app.js` rămâne punctul de intrare până la pasul 10, pentru că încă importă ecranele din `web/ui/`.
 
- erorile, HTTP-ul (gărzi, fișiere statice, dispatcher de rute), baza de date (conexiune, schemă, migrări), setările, repository-ul de înregistrări și tranzacția cu revizie, cu teste colocate. `server/util.mjs`, `http.mjs`, `database.mjs` și `migrations.mjs` sunt re-exporturi. `server/store.mjs` compune modulele din core și păstrează istoricul până la pasul 6. `server/routes.mjs` își păstrează regulile, dar folosește dispatcher-ul. `createApplication` rămâne în `startica_server.mjs` până la pasul 10. Verificare: aplicația pornită înainte și după pe copii ale bazei reale (105 copii, 811 achitări, 1201 cheltuieli) dă rezultate identice pentru stare, revizie, reluarea cererii, conflictele 409, digest-ul salvat, istoric și backupuri.
+Pasul 4 a mutat în `src/core/server/` erorile, HTTP-ul (gărzi, fișiere statice, dispatcher de rute), baza de date (conexiune, schemă, migrări), setările, repository-ul de înregistrări și tranzacția cu revizie, cu teste colocate. `server/util.mjs`, `http.mjs`, `database.mjs` și `migrations.mjs` sunt re-exporturi. `server/store.mjs` compune modulele din core și păstrează istoricul până la pasul 6. `server/routes.mjs` își păstrează regulile, dar folosește dispatcher-ul. `createApplication` rămâne în `startica_server.mjs` până la pasul 10. Verificare: aplicația pornită înainte și după pe copii ale bazei reale (105 copii, 811 achitări, 1201 cheltuieli) dă rezultate identice pentru stare, revizie, reluarea cererii, conflictele 409, digest-ul salvat, istoric și backupuri.
 
-:
+Pasul 3 a mutat în `src/shared/`:
 - `domain/`: `calendar-month`, `money`, `record-schema`, `records-report`, `payment-allocations`, `tuition-obligation`;
 - `format/`: escape HTML, bani, date, mărimi de fișier și căutarea fără diacritice, unificată din cele două `normalizeSearch` identice;
 - `ui/`: `element-lookup`, `nav-count-badge`, `child-picker`.
 
 Căile vechi (`shared/domain.mjs`, `shared/text.mjs`, `web/ui/dom.mjs`, `web/ui/child-picker.mjs`) sunt re-exporturi cu aceleași nume. `monthCalendar`, `upcomingBirthdays`, `applyChildSetup`, `issues`, `importReport` și `cashSummary` rămân în `shared/domain.mjs` până la pașii feature-urilor lor.
 
-, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
+Pasul 2 a adăugat `src/config/environment.mjs`, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
 
 **De la pasul 2, pachetul de livrare trebuie să conțină `package.json` și `src/`**, pentru că serverul importă `#config/environment.mjs`.
 

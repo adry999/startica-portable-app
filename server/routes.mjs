@@ -7,6 +7,7 @@ import { snapshotState } from './backups.mjs';
 import { fail } from './util.mjs';
 import { sendResponse } from '#core/server/http/json-response.mjs';
 import { RESPONSE_SENT, createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
+import { createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
 
 // Folderul extern nu are voie să fie baza activă sau folderul de backupuri:
 // altfel copiile s-ar suprascrie sau ar fi șterse de retenție.
@@ -35,7 +36,6 @@ export function createRouter(context) {
       const s = snapshotState(backups.selectedBackup(url.searchParams.get('name')));
       return { ...summary(s), errors: importReport(s).errors };
     },
-    '/api/audit': url => store.auditPage(Math.max(0, Number(url.searchParams.get('offset')) || 0)),
   };
 
   const write = {
@@ -264,6 +264,7 @@ export function createRouter(context) {
 
   const routes = [
     ...Object.entries(read).map(([path, handler]) => ({ method: 'GET', path, handle: ({ url }) => handler(url) })),
+    ...createAuditLogRoutes({ auditLogRepository: store.auditLogRepository }),
     ...Object.entries(write).map(([path, handler]) => ({
       method: 'POST',
       path,

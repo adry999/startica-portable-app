@@ -296,7 +296,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   assert.equal(r.revision, 3, 'Toate completările intră într-o singură operațiune.');
   assert.ok(readdirSync(app.backupDir).some(n => n.includes('inainte-completare-taxe')));
   const audit = await app.get('/api/audit');
-  assert.equal(audit.filter(a => a.action === 'completare taxe și grupe').length, 2);
+  assert.equal(audit.entries.filter(entry => entry.action === 'completare taxe și grupe').length, 2);
 
   // Un id inexistent oprește tot; nimic nu se scrie pe jumătate.
   const bad = await app.post('/api/children-setup', {

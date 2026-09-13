@@ -1,6 +1,6 @@
 import { obligation, allocations, dueDayFor } from '../../shared/domain.mjs';
-import { $, esc, money, date, time, age, monthLabel } from './dom.mjs';
-import { session, api } from './session.mjs';
+import { $, esc, money, date, age, monthLabel } from './dom.mjs';
+import { session } from './session.mjs';
 import { tenderLabel, parentContacts, statusBadgeClass } from './parts.mjs';
 import { selectedMonth, contractOf } from './view-helpers.mjs';
 
@@ -69,37 +69,4 @@ export function profile(id) {
     profileSection('Achitări', `<div class="table-wrap"><table><tbody>${paymentsRows}</tbody></table></div>`) +
     (c.notes ? profileSection('Observații', `<p>${esc(c.notes)}</p>`) : '');
   $('profile').showModal();
-}
-
-// ─── Istoric ────────────────────────────────────────────────────────────────
-
-let auditOffset = 0;
-
-export function resetAudit() {
-  auditOffset = 0;
-}
-
-export async function renderAudit(append = false) {
-  const rows = await api(`/api/audit?offset=${auditOffset}`);
-  const html =
-    rows
-      .map(r => {
-        const before = JSON.parse(r.before_json || 'null'),
-          after = JSON.parse(r.after_json || 'null');
-        const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
-        const diff = [...keys]
-          .filter(k => JSON.stringify(before?.[k]) !== JSON.stringify(after?.[k]))
-          .map(k => `${k}: ${JSON.stringify(before?.[k] ?? null)} → ${JSON.stringify(after?.[k] ?? null)}`)
-          .join('\n');
-        return `<details><summary>${esc(time(r.created_at))} · ${esc(r.action)} · ${esc(r.record_id || 'Setări')}</summary><pre>${esc(diff)}</pre></details>`;
-      })
-      .join('') || '<p>Nu mai sunt modificări.</p>';
-  if (append) $('auditList').insertAdjacentHTML('beforeend', html);
-  else $('auditList').innerHTML = html;
-  $('auditMore').disabled = rows.length < 100;
-}
-
-export function moreAudit() {
-  auditOffset += 100;
-  return renderAudit(true);
 }

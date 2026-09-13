@@ -365,6 +365,12 @@ try {
     () => evaluate("document.getElementById('auditList').textContent.includes('modificare')"),
     'Audit UI failed',
   );
+  assert(
+    await evaluate(
+      "document.querySelectorAll('#auditList details').length > 0 && document.getElementById('auditMore').hidden && document.getElementById('auditFailure').textContent === ''",
+    ),
+    'Audit page state failed',
+  );
   await evaluate(
     "document.querySelector('[data-view=settings]').click();const dir=document.getElementById('externalDir');dir.value='C:\\\\does-not-exist-startica-test';dir.dispatchEvent(new Event('input',{bubbles:true}));window.dispatchEvent(new Event('focus'))",
   );

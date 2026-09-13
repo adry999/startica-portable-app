@@ -30,9 +30,15 @@ import { selectedMonth, contractOf, groupName } from './view-helpers.mjs';
 import { renderReview } from './review.mjs';
 import { renderDashboard, renderStatus, renderNotify } from './reports.mjs';
 import { renderGroups, bindGroups, renderCategories, bindCategories } from './groups-categories.mjs';
-import { profile, renderAudit, resetAudit, moreAudit } from './profile-audit.mjs';
+import { profile } from './profile-audit.mjs';
 
-export { bindGroups, bindCategories, profile, moreAudit };
+export { bindGroups, bindCategories, profile };
+
+const viewOpeners = new Map();
+
+export function onViewOpened(viewId, openView) {
+  viewOpeners.set(viewId, openView);
+}
 
 export function go(id) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === id));
@@ -58,10 +64,7 @@ export function go(id) {
   $('navToggle').setAttribute('aria-expanded', 'false');
   // Ecranul de asociere își construiește tabelul abia când devine vizibil.
   if (id === 'assign') renderAssign(true);
-  if (id === 'audit') {
-    resetAudit();
-    void renderAudit().catch(e => message(e.message, true));
-  }
+  viewOpeners.get(id)?.();
   window.scrollTo(0, 0);
 }
 

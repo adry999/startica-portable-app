@@ -192,7 +192,9 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   assert.equal(restored.status, 200);
   assert.equal(restored.body.state.payments[0].archived, undefined);
   const audit = await get('/api/audit');
-  assert.ok(audit.some(r => r.action === 'restaurare' && r.before_json && r.after_json));
+  assert.ok(audit.entries.some(entry => entry.action === 'restaurare' && entry.before && entry.after));
+  assert.equal(audit.nextBeforeEntryId, null);
+  assert.equal((await fetch(origin + '/api/audit?beforeEntryId=0')).status, 400);
   const external = join(dir, 'external');
   mkdirSync(external);
   assert.equal((await post('/api/settings', { externalDir: external })).status, 200);

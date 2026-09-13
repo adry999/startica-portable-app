@@ -1,5 +1,6 @@
 import { $ } from './ui/dom.mjs';
-import { session, message, load, setRenderers, renderSaveStatus, checkConnection } from './ui/session.mjs';
+import { session, message, load, setRenderers, renderSaveStatus, checkConnection, api } from './ui/session.mjs';
+import { createAuditLogApi, createAuditLogController, createAuditLogView } from '#features/audit-log/index.web.mjs';
 import { bindMonthPicker } from '#app/web/month-picker.mjs';
 import { bindMobileNavigation } from '#app/web/mobile-navigation.mjs';
 import { bindUnsavedChangesGuard } from '#app/web/unsaved-changes-guard.mjs';
@@ -10,7 +11,7 @@ import {
   renderList,
   renderHealth,
   profile,
-  moreAudit,
+  onViewOpened,
   bindGroups,
   bindCategories,
   bindBulkAction,
@@ -28,6 +29,17 @@ bindEditorForm();
 bindTransfers();
 bindFees();
 bindAssign();
+
+const auditLog = createAuditLogController({
+  fetchAuditPage: createAuditLogApi({ requestJson: api }).fetchAuditPage,
+  renderAuditLog: createAuditLogView({
+    listElement: $('auditList'),
+    loadMoreButton: $('auditMore'),
+    failureElement: $('auditFailure'),
+  }),
+});
+onViewOpened('audit', auditLog.openFirstPage);
+$('auditMore').onclick = () => void auditLog.loadNextPage();
 bindGroups();
 bindCategories();
 bindBulkAction('children');
@@ -130,7 +142,6 @@ $('reloadButton').onclick = async () => {
     message(e.message, true);
   }
 };
-$('auditMore').onclick = () => void moreAudit().catch(e => message(e.message, true));
 function printView(view) {
   document.body.dataset.printView = view;
   window.print();
