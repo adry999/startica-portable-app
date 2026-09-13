@@ -5,40 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { isModule } from '../server/http.mjs';
 import { startTestApplication } from './support/start-test-application.mjs';
-
-const BROWSER_MODULES = [
-  '/ui/views.mjs',
-  '/shared/domain.mjs',
-  '/src/app/web/main.mjs',
-  '/src/core/web/api-client.mjs',
-  '/src/shared/format/money-format.mjs',
-  '/src/shared/ui/child-picker.mjs',
-  '/src/features/audit-log/index.web.mjs',
-  '/src/features/audit-log/web/audit-log.controller.mjs',
-  '/src/features/audit-log/domain/audit-change-diff.mjs',
-];
-
-const PRIVATE_PATHS = [
-  '/src/features/audit-log/index.server.mjs',
-  '/src/features/audit-log/server/audit-log.repository.mjs',
-  '/src/core/server/errors/domain-error.mjs',
-  '/src/app/server/main.mjs',
-  '/src/config/environment.mjs',
-  '/src/features/audit-log/web/audit-log.controller.test.mjs',
-  '/src/features/payment-assignment/test-support/assignment-fixtures.mjs',
-  '/src/features/audit-log/audit-log.types.d.mts',
-  '/src/features/index.web.mjs',
-  '/src/shared/../server/store.mjs',
-  '/src/shared/%2e%2e/server/store.mjs',
-  '/src/shared//money-format.mjs',
-  '/src/shared/Format/money-format.mjs',
-  '/src/shared/format/money-format.js',
-  '/src/shared/format/.mjs',
-  '/src/main.mjs',
-  '/server/store.mjs',
-];
 
 /** Cerere fără normalizarea căii pe care o face fetch(). */
 const rawGet = (origin, rawPath) =>
@@ -67,11 +34,6 @@ function createSourceRoot(t) {
   writeSource('src/features/audit-log/server/audit-log.repository.mjs', "export const serverOnly = 'secret';");
   return root;
 }
-
-test('lista albă acceptă doar modulele de browser', () => {
-  for (const path of BROWSER_MODULES) assert.equal(isModule(path), true, path);
-  for (const path of PRIVATE_PATHS) assert.equal(isModule(path), false, path);
-});
 
 test('serverul livrează modulele de browser din src/ și refuză codul de server, traversarea și fișierele lipsă', async t => {
   const root = createSourceRoot(t);

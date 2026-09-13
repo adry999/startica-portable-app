@@ -5,10 +5,8 @@ import { previewChildrenCSV } from './children-csv.mjs';
 import { financialImportPlan } from './financial-import.mjs';
 import { snapshotState } from './backups.mjs';
 import { fail } from './util.mjs';
-import { send, isStatic, sendStatic, isModule, sendModule, readJson, guardRequest, guardWrite } from './http.mjs';
-
-// Handlerul a răspuns singur; nu se mai trimite nimic.
-const HANDLED = Symbol('handled');
+import { sendResponse } from '#core/server/http/json-response.mjs';
+import { RESPONSE_SENT, createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 
 // Folderul extern nu are voie să fie baza activă sau folderul de backupuri:
 // altfel copiile s-ar suprascrie sau ar fi șterse de retenție.
@@ -45,9 +43,9 @@ export function createRouter(context) {
       if (!allowShutdown) fail('Operațiune inexistentă.', 404);
       backups.cancelScheduledBackup();
       const result = backups.safeBackup('inchidere');
-      send(res, { ok: true, warning: result.warning || '' });
+      sendResponse(res, { ok: true, warning: result.warning || '' });
       shutdown();
-      return HANDLED;
+      return RESPONSE_SENT;
     },
 
     '/api/record': b =>
@@ -264,28 +262,14 @@ export function createRouter(context) {
     '/api/state': () => fail('Această versiune este veche. Reîncarcă pagina.', 409),
   };
 
-  return async function handle(req, res, port) {
-    try {
-      const url = guardRequest(req, port),
-        path = url.pathname;
-      if (req.method === 'GET') {
-        if (isStatic(path)) return sendStatic(res, root, path);
-        if (isModule(path)) return sendModule(res, root, path);
-        if (Object.hasOwn(read, path)) return send(res, read[path](url));
-      }
-      if (req.method !== 'POST') fail('Pagina nu există.', 404);
-      guardWrite(req, token);
-      if (!Object.hasOwn(write, path)) fail('Operațiune inexistentă.', 404);
-      const body = await readJson(req);
-      const result = write[path](body, url, res);
-      if (result !== HANDLED) send(res, result);
-    } catch (e) {
-      // A doua scriere ar arunca ERR_HTTP_HEADERS_SENT dacă antetele au plecat deja.
-      if (res.headersSent) {
-        console.error('Eroare după trimiterea răspunsului: ' + e.message);
-        return;
-      }
-      send(res, { error: e.message }, e.status || 400);
-    }
-  };
+  const routes = [
+    ...Object.entries(read).map(([path, handler]) => ({ method: 'GET', path, handle: ({ url }) => handler(url) })),
+    ...Object.entries(write).map(([path, handler]) => ({
+      method: 'POST',
+      path,
+      handle: ({ body, url, response }) => handler(body, url, response),
+    })),
+  ];
+
+  return createRouteDispatcher({ root, sessionToken: token, routes }).dispatchRequest;
 }
