@@ -1,11 +1,15 @@
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fail } from './util.mjs';
 
-const CSP =
-  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; " +
-  "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'";
 const MAX_BODY_BYTES = 20000000;
+
+/** @param {string[]} scriptHashes */
+const contentSecurityPolicy = scriptHashes =>
+  `default-src 'self'; script-src ${["'self'", ...scriptHashes.map(hash => `'sha256-${hash}'`)].join(' ')}; ` +
+  "style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; " +
+  "frame-ancestors 'none'";
 
 // Singurele fișiere pe care serverul le livrează. Lista explicită înlocuiește
 // orice rezolvare de cale, deci nu există traversare de directoare.
@@ -34,36 +38,75 @@ const mimeFor = path =>
           ? 'text/javascript; charset=utf-8'
           : 'text/html; charset=utf-8';
 
-export function send(res, value, status = 200, mime = 'application/json; charset=utf-8') {
+/**
+ * @param {import('node:http').ServerResponse} res
+ * @param {unknown} value
+ * @param {number} [status]
+ * @param {string} [mime]
+ * @param {string[]} [scriptHashes] hash-urile scripturilor inline permise pe această pagină
+ */
+export function send(res, value, status = 200, mime = 'application/json; charset=utf-8', scriptHashes = []) {
   const content = Buffer.isBuffer(value)
     ? value
-    : Buffer.from(mime.startsWith('application/json') ? JSON.stringify(value) : value);
+    : Buffer.from(mime.startsWith('application/json') ? JSON.stringify(value) : String(value));
   res.writeHead(status, {
     'Content-Type': mime,
     'Content-Length': content.length,
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
-    'Content-Security-Policy': CSP,
+    'Content-Security-Policy': contentSecurityPolicy(scriptHashes),
   });
   res.end(content);
 }
 
+const INLINE_IMPORT_MAP = /<script type="importmap">([\s\S]*?)<\/script>/g;
+
+// Import map-ul e singurul script inline permis. Hash-ul se calculează din fișierul
+// servit, deci nu se poate desincroniza de conținutul lui.
+/** @param {string} html */
+export const importMapHashes = html =>
+  [...html.matchAll(INLINE_IMPORT_MAP)].map(match => createHash('sha256').update(match[1]).digest('base64'));
+
 export const isStatic = path => Object.hasOwn(STATIC_FILES, path);
 
-// Modulele interfeței (web/ui) și regulile comune (shared), servite după nume,
-// nu după cale: tiparul nu permite punct sau bară, deci nu există traversare de
-// directoare. Regulile comune se servesc pentru că aceleași fișiere rulează și
-// în browser, și pe server — o singură sursă de adevăr pentru validări.
-const MODULE_PATH = /^\/(ui|shared)\/[a-z0-9-]+\.mjs$/;
-export const isModule = path => MODULE_PATH.test(path);
+// Modulele interfeței (web/ui) și regulile comune (shared) încă nemutate în src/.
+// Tiparul nu permite punct sau bară în nume, deci nu există traversare.
+const LEGACY_MODULE_PATH = /^\/(ui|shared)\/[a-z0-9-]+\.mjs$/;
+const PATH_SEGMENT = /^[a-z0-9-]+$/;
+const MODULE_FILE_NAME = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.mjs$/;
+
+// Din src/ ajunge la client doar codul de browser. Segmentele fără punct exclud
+// traversarea; server/, config/, test-support/ și testele nu se servesc niciodată.
+/** @param {string} path */
+function isBrowserSourceModule(path) {
+  const [leading, sourceRoot, ...directories] = path.split('/');
+  const fileName = directories.pop();
+  if (leading !== '' || sourceRoot !== 'src' || !fileName) return false;
+  if (!MODULE_FILE_NAME.test(fileName) || fileName.endsWith('.test.mjs')) return false;
+  if (!directories.every(segment => PATH_SEGMENT.test(segment))) return false;
+  if (directories.includes('server') || directories.includes('test-support')) return false;
+  const [area, areaSection] = directories;
+  if (area === 'features')
+    return directories.length === 2 ? fileName === 'index.web.mjs' : ['domain', 'web'].includes(directories[2]);
+  if (area === 'app' || area === 'core') return areaSection === 'web';
+  return area === 'shared';
+}
+
+/** @param {string} path */
+export const isModule = path => LEGACY_MODULE_PATH.test(path) || isBrowserSourceModule(path);
+
 export function sendModule(res, root, path) {
-  // /ui/... trăiește sub web/; /shared/... este la rădăcină.
+  // /ui/... trăiește sub web/; /shared/... și /src/... sunt la rădăcină.
   const file = path.startsWith('/ui/') ? join(root, 'web', path) : join(root, path);
+  if (!existsSync(file)) fail('Pagina nu există.', 404);
   return send(res, readFileSync(file), 200, 'text/javascript; charset=utf-8');
 }
 
 export function sendStatic(res, root, path) {
-  return send(res, readFileSync(join(root, STATIC_FILES[path])), 200, mimeFor(path));
+  const content = readFileSync(join(root, STATIC_FILES[path]));
+  const mime = mimeFor(path);
+  const scriptHashes = mime.startsWith('text/html') ? importMapHashes(content.toString('utf8')) : [];
+  return send(res, content, 200, mime, scriptHashes);
 }
 
 export async function readJson(req) {

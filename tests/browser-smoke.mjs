@@ -102,6 +102,12 @@ try {
     "document.getElementById('selectedMonth').value='2026-09';document.getElementById('selectedMonth').dispatchEvent(new Event('change'))",
   );
   console.log('Application loaded');
+  // Un modul inexistent cerut la /src/... dovedește că import map-ul a trecut de CSP și a rezolvat aliasul.
+  const aliasResolution = await evaluate(
+    "import('#shared/alias-probe.mjs').then(() => 'loaded', error => String(error.message))",
+  );
+  assert.doesNotMatch(aliasResolution, /Failed to resolve module specifier/, aliasResolution);
+  assert.match(aliasResolution, /\/src\/shared\/alias-probe\.mjs/, aliasResolution);
   assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
   assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
   assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 12);

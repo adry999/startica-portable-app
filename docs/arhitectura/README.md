@@ -1,6 +1,14 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
-Stare, 13 septembrie 2026: **pasul 0 aplicat** (plasa de siguranță din §6). Pașii 1–12 sunt propuși, iar codul aplicației nu a fost încă mutat. Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
+Stare, 13 septembrie 2026: **pașii 0 și 1 aplicați** (plasa de siguranță și aliasurile `#`, vezi §6). Pașii 2–12 sunt propuși, iar codul aplicației nu a fost încă mutat.
+
+Pasul 1 a adăugat:
+- `package.json#imports`;
+- import map-ul din `web/index.html`, permis prin hash-ul CSP calculat la fiecare servire a paginii;
+- lista albă `/src/**` doar pentru codul de browser, în `server/http.mjs`, cu teste în `tests/http-modules.test.mjs`;
+- o probă de alias în browser smoke.
+
+Tot la pasul 1, `tests/desktop-lifecycle.ps1` pornește acum lansatorul VBS. Testul era stricat de la ștergerea lansatoarelor `.cmd`. **Pachetul de livrare trebuie să conțină de acum `package.json` și, după pasul 3, `src/`.** Folderul `referinta/` conține implementările de referință pentru două module, rulate și verificate într-un mediu izolat (vezi §7).
 
 Pasul 0 a adăugat:
 - `tsconfig.json` și scripturile `typecheck`, `check`, `test:e2e`;
