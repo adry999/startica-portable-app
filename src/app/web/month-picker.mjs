@@ -38,6 +38,11 @@ function requireElements() {
   return boundElements;
 }
 
+// Fără calendar legat sau cu câmpul gol, luna curentă: la fel ca înainte de mutarea în src/app.
+export function readSelectedMonth() {
+  return boundElements?.selectedMonth.value || today().slice(0, 7);
+}
+
 // Exportată separat: alte module (formularele care se deschid peste calendar) o pot închide.
 export function closeMonthPicker() {
   const elements = requireElements();

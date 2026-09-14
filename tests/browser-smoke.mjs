@@ -424,8 +424,8 @@ try {
   assert.equal(await evaluate("document.querySelector('test') !== null"), false);
   await evaluate("document.querySelector('[data-close=csvDialog]').click()");
   await evaluate(`(async()=>{
-    const {mutate}=await import('/ui/session.mjs');
-    await mutate('/api/record',{type:'payments',mode:'create',record:{id:'PAY-SMOKE-ASSIGN',date:'2026-09-02',amount:1234,sourceName:'CSV',allocations:[{month:'2026-09',amount:1234}]}});
+    const {submitMutation}=await import('/src/app/web/app-session.mjs');
+    await submitMutation('/api/record',{type:'payments',mode:'create',record:{id:'PAY-SMOKE-ASSIGN',date:'2026-09-02',amount:1234,sourceName:'CSV',allocations:[{month:'2026-09',amount:1234}]}});
   })()`);
   await until(() => evaluate("document.getElementById('assignCount').textContent==='1'"), 'Assign count badge failed');
   await evaluate("document.querySelector('#primaryNav [data-view=assign]').click()");
@@ -450,8 +450,8 @@ try {
   );
   // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
   const summaryFixture = await evaluate(`(async()=>{
-    const {session}=await import('/ui/session.mjs');
-    const {render}=await import('/ui/views.mjs');
+    const {sessionState:session,eventBus}=await import('/src/app/web/app-session.mjs');
+    const render=()=>eventBus.publish('records.reloaded',{revision:session.revision});
     const original=session.state;
     try {
       const sample=structuredClone(original.children[0]);

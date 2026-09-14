@@ -50,7 +50,7 @@ children/
     ├── children-list.view.mjs                    # ★ lista „Copii”
     ├── child-profile.view.mjs                    # ★ fișa copilului (dialog)
     ├── child-editor-fields.mjs                   # câmpurile copilului în editorul generic
-    ├── child-labels.mjs (+test)                  # formatParentContacts, statusBadgeClass
+    ├── child-labels.mjs (+test)                  # statusBadgeClass
     └── children-csv-dialog.mjs                   # ★ import CSV
 ```
 
@@ -70,5 +70,5 @@ node --test "src/features/children/**/*.test.mjs"
 ```
 
 - Domeniu: `buildBirthdayCalendar`, `listUpcomingBirthdays`.
-- Web: `child-labels.test.mjs` (contactele părinților, clasa badge-ului de statut).
+- Web: `child-labels.test.mjs` (clasa badge-ului de statut; contactele părinților au mutat în `#shared/format/parent-contacts-format.test.mjs`).
 - Server: parsarea și previzualizarea CSV (`children-csv-import.test.mjs`, inclusiv testul pe fișierul real, sărit dacă lipsește); integrare HTTP cu `startTestApplication` (`children.routes.integration.test.mjs`).

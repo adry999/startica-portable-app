@@ -13,7 +13,8 @@ import {
   readListSortValue,
 } from '#shared/ui/record-list-sort.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
-import { formatParentContacts, statusBadgeClass } from './child-labels.mjs';
+import { formatParentContacts } from '#shared/format/parent-contacts-format.mjs';
+import { statusBadgeClass } from './child-labels.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */

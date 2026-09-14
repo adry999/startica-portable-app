@@ -24,7 +24,7 @@ const REQUEST_RETENTION = 1000;
  *   database: import('node:sqlite').DatabaseSync,
  *   recordRepository: ReturnType<typeof import('./record-repository.mjs').createRecordRepository>,
  *   backups: { backup: (reason?: string) => unknown, autoBackup: () => { warning?: string }, health: () => unknown },
- *   auditTrail: { recordChange: (change: { action: string, recordType?: string | null, recordId?: string | null, before?: unknown, after?: unknown }) => void },
+ *   auditTrail: import('#shared/contracts/audit-trail.mjs').AuditTrail,
  * }} dependencies
  */
 export function createRevisionTransaction({ database, recordRepository, backups, auditTrail }) {
@@ -84,7 +84,7 @@ export function createRevisionTransaction({ database, recordRepository, backups,
         if (JSON.stringify(previousById.get(id)) !== JSON.stringify(nextById.get(id)))
           auditTrail.recordChange({
             action,
-            recordType: type,
+            recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType} */ (type),
             recordId: id,
             before: previousById.get(id),
             after: nextById.get(id),

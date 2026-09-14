@@ -4,7 +4,8 @@ import { formatDate, formatMonthLabel, formatAge } from '#shared/format/date-for
 import { formatPaymentTenders } from '#shared/format/payment-tenders-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { obligation, dueDayFor } from '#shared/domain/tuition-obligation.mjs';
-import { formatParentContacts, statusBadgeClass } from './child-labels.mjs';
+import { formatParentContacts } from '#shared/format/parent-contacts-format.mjs';
+import { statusBadgeClass } from './child-labels.mjs';
 import { contractNumberOf } from '#shared/domain/record-labels.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */

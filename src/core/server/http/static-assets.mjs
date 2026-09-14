@@ -9,7 +9,6 @@ import { sendResponse } from './json-response.mjs';
 const STATIC_FILES = {
   '/': 'web/index.html',
   '/index.html': 'web/index.html',
-  '/app.js': 'web/app.js',
   '/app.css': 'web/app.css',
   '/vendor/xlsx.full.min.js': 'web/vendor/xlsx.full.min.js',
   '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',

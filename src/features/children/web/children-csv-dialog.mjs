@@ -1,6 +1,6 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
-import { formatParentContacts } from './child-labels.mjs';
+import { formatParentContacts } from '#shared/format/parent-contacts-format.mjs';
 
 /**
  * @typedef {{
