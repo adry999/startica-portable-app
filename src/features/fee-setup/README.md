@@ -44,11 +44,9 @@ fee-setup/
 │   ├── fee-setup.routes.mjs                      # ★ validare și scriere în tranzacție
 │   └── fee-setup.routes.integration.test.mjs     # din tests/fixes.test.mjs
 └── web/
-    ├── fee-setup.view.mjs                        # portat din web/ui/fees.mjs (rânduri, opțiuni de grupă)
+    ├── fee-setup.view.mjs                        # ★ rânduri, opțiuni de grupă
     └── fee-setup.controller.mjs                  # ★ filtrare, completare în masă, salvare
 ```
-
-Până la rewire-ul din `web/app.js` și `server/routes.mjs`, ruta `/api/children-setup` rămâne servită de `server/routes.mjs`, care apelează încă `applyChildSetup` din `shared/domain.mjs`.
 
 ## Garanții
 

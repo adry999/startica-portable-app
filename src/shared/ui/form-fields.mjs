@@ -1,7 +1,6 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 
-// Port 1:1 al `field()`/`select()`/`textarea()` din web/ui/parts.mjs, folosit
-// de dialogul de editare generic și de câmpurile specifice fiecărui tip.
+// Markup comun pentru dialogul de editare generic și câmpurile fiecărui tip de înregistrare.
 
 export function textFieldMarkup(name, label, value = '', type = 'text', extra = '') {
   return `<label class="field">${label}<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${extra}></label>`;

@@ -29,7 +29,7 @@ function statusRowMarkup({ child, obligation }) {
 
 /**
  * Ecranul „Situația plăților”: obligația fiecărui copil pe luna selectată,
- * inclusiv arhivați. Înlocuiește `renderStatus` din `web/ui/reports.mjs`.
+ * inclusiv arhivați.
  * @param {{
  *   elements: { period: HTMLElement, table: HTMLTableSectionElement },
  *   readToday: () => string,

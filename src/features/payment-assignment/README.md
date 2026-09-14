@@ -51,12 +51,12 @@ payment-assignment/
 ├── payment-assignment.types.d.mts
 ├── index.server.mjs
 ├── index.web.mjs
-├── domain/                                  # mutat din shared/payment-matching.mjs, fără schimbări de logică
+├── domain/
 │   ├── payment-name-matching.mjs            # suggestChildren
-│   ├── unassigned-payment-queue.mjs         # listUnassignedPayments  (fost unassignedPayments)
-│   ├── unassigned-payment-risk.mjs          # measureAssignmentRisk   (fost assignmentRisk)
-│   ├── unassigned-payment-hints.mjs         # findUnassignedPaymentHintsByChild (fost unassignedSuggestionsByChild)
-│   └── *.test.mjs                           # din tests/fixes.test.mjs
+│   ├── unassigned-payment-queue.mjs         # listUnassignedPayments
+│   ├── unassigned-payment-risk.mjs          # measureAssignmentRisk
+│   ├── unassigned-payment-hints.mjs         # findUnassignedPaymentHintsByChild
+│   └── *.test.mjs
 ├── server/
 │   ├── payment-assignment.service.mjs       # ★ validare și scriere în tranzacție
 │   ├── payment-assignment.service.test.mjs
@@ -65,12 +65,12 @@ payment-assignment/
 │   ├── payment-assignment.api.mjs
 │   ├── payment-assignment.controller.mjs    # ★ coadă, selecții, salvare, evenimente
 │   ├── payment-assignment.controller.test.mjs
-│   └── payment-assignment.view.mjs          # portat din web/ui/assign.mjs (rânduri, child picker, carduri de risc)
+│   └── payment-assignment.view.mjs          # ★ rânduri, child picker, carduri de risc
 └── test-support/
     └── assignment-fixtures.mjs
 ```
 
-Până la pasul 10, `web/app.js` compune controller-ul și view-ul, iar `server/routes.mjs` creează service-ul din `store`. `web/ui/views.mjs` folosește `findUnassignedPaymentHintsByChild` pentru „De notificat” până se mută `billing`.
+`src/app/web/main.mjs` compune controller-ul și view-ul, iar `src/app/server/create-application.mjs` creează service-ul din `store`. `src/app/web/main.mjs` leagă `findUnassignedPaymentHintsByChild` pentru „De notificat” din `billing`.
 
 ## Garanții
 

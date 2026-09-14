@@ -5,9 +5,9 @@ import { textareaFieldMarkup } from '#shared/ui/form-fields.mjs';
 /** @typedef {import('../record-editing.types.mjs').RecordEditorContext} RecordEditorContext */
 /** @typedef {import('../record-editing.types.mjs').EditableRecordType} EditableRecordType */
 
-// Port 1:1 al fostului web/ui/editor.mjs: dialogul generic (deschidere,
-// salvare, arhivare, ștergere definitivă, confirmarea unei verificări),
-// cu câmpurile specifice fiecărui tip injectate prin `fieldsByType`.
+// Dialogul generic (deschidere, salvare, arhivare, ștergere definitivă,
+// confirmarea unei verificări), cu câmpurile specifice fiecărui tip
+// injectate prin `fieldsByType`.
 
 /** @param {RecordEditorDialogDependencies} dependencies */
 export function createRecordEditorDialog({

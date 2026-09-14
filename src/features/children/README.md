@@ -20,7 +20,7 @@ Modul **independent**: nu importă alt feature. Grupele și achitările vin din 
 | `createChildrenListView({ elements, readRecords, submitMutation, showNotice })` | lista „Copii”: căutare, arhivare, sortare, arhivare în masă; întoarce `{ render }` |
 | `createChildProfileView({ elements: { body, dialog }, readRecords, readSelectedMonth })` | întoarce `{ openChildProfile }` |
 | `createChildrenCsvDialog({ elements, sessionState, requestJson, submitMutation, showNotice })` | butonul de import, alegerea fișierului, previzualizarea și confirmarea |
-| `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `web/app.js`) |
+| `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `src/app/web/main.mjs`) |
 
 ## Cum rămâne decuplat
 
@@ -43,9 +43,9 @@ children/
 │   └── birthdays.test.mjs
 ├── server/
 │   ├── children-csv-import.mjs                   # parseCsvRows, previewChildrenCsvImport
-│   ├── children-csv-import.test.mjs              # parsare + previzualizare, din tests/children-csv.test.mjs
+│   ├── children-csv-import.test.mjs              # parsare + previzualizare
 │   ├── children.routes.mjs                       # ★ POST /api/children-csv-preview, /api/children-csv
-│   └── children.routes.integration.test.mjs      # din tests/children-csv.test.mjs
+│   └── children.routes.integration.test.mjs
 └── web/
     ├── children-list.view.mjs                    # ★ lista „Copii”
     ├── child-profile.view.mjs                    # ★ fișa copilului (dialog)

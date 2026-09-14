@@ -3,8 +3,7 @@
 
 /**
  * Statisticile de sub bara de titlu de pe ecranul „Copii” (copii activi,
- * grupe ocupate, fișe incomplete). Înlocuiește `renderChildrenSummary` din
- * `web/ui/views.mjs`.
+ * grupe ocupate, fișe incomplete).
  * @param {{
  *   elements: { activeChildren: HTMLElement, occupiedGroups: HTMLElement, incompleteChildren: HTMLElement },
  *   readRecords: () => RecordsSnapshot,

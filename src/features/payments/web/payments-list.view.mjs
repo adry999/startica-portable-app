@@ -37,10 +37,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
 
 /**
  * Ecranul „Achitări”: căutare, filtre (copil, metodă, interval de luni,
- * arhivare), sortare pe coloane și arhivare/dezarhivare în masă. Înlocuiește
- * `renderList('payments')`, `CELLS.payments`, `matchesSearch`/`sortValue`
- * pentru acest tip, `renderListSummary('payments', …)` și
- * `renderPaymentsChildFilter` din web/ui/views.mjs.
+ * arhivare), sortare pe coloane și arhivare/dezarhivare în masă.
  * @param {{
  *   elements: {
  *     search: HTMLInputElement,

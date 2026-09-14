@@ -80,8 +80,7 @@ data-transfer/
 - **Avertizările afișate după import Excel vin din previzualizarea locală, nu din cea de pe server.**
   Serverul revalidează starea primită (`state`), dar controller-ul păstrează `warnings` din
   `readWorkbook` (rulat în browser), pentru că acolo apar și avertizările specifice sursei
-  (ID de copil necunoscut, taxă fără dată de aplicare) — comportament neschimbat față de
-  `web/ui/transfers.mjs`.
+  (ID de copil necunoscut, taxă fără dată de aplicare).
 - **Importul istoricului financiar nu suprascrie niciodată o operațiune existentă.** O potrivire de
   ID cu digest identic e tratată ca reimport (omisă, idempotent); orice altă coincidență de ID
   oprește tot importul, ca să nu se piardă tăcut o corecție făcută manual.

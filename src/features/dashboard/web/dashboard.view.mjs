@@ -52,8 +52,7 @@ function upcomingBirthdayPillHTML(r) {
 
 /**
  * Ecranul „Dashboard”: cardurile de încasări, alertele de urmărit, istoricul
- * de venituri pe 12 luni și panoul zilelor de naștere. Înlocuiește
- * `renderDashboard`/`renderBirthdays` din `web/ui/reports.mjs`.
+ * de venituri pe 12 luni și panoul zilelor de naștere.
  * @param {{
  *   elements: {
  *     incomeStat: HTMLElement, expenseStat: HTMLElement, netStat: HTMLElement, incomeMethods: HTMLElement,

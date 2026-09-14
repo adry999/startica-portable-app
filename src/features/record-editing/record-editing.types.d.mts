@@ -47,8 +47,8 @@ export interface RecordEditorContext {
 /**
  * Interfața implementată structural de fiecare `*-editor-fields.mjs`
  * (children, payments, expenses). Field-urile NU importă `record-editing` —
- * dialogul le primește deja compuse din web/app.js, ca feature-urile să
- * rămână izolate unele de altele.
+ * dialogul le primește deja compuse din `src/app/web/main.mjs`, ca
+ * feature-urile să rămână izolate unele de altele.
  */
 export interface RecordEditorFields<TRecord = any> {
   /** Prefixul unui id nou la creare (ex. „ID”, „PAY”, „EXP”). */

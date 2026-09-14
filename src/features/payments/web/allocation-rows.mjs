@@ -2,9 +2,6 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { cents, total } from '#shared/domain/money.mjs';
 
-// Port 1:1 al repartizării pe luni din fostul web/ui/editor.mjs
-// (addAllocation, readAllocations, allocationBalance).
-
 /** @param {HTMLElement} rowsContainer */
 export function readAllocationRows(rowsContainer) {
   return Array.from(rowsContainer.children).map(row => ({

@@ -39,13 +39,13 @@ groups/
 │   └── groups.routes.mjs               # ★ ștergere cu verificarea copiilor atribuiți
 └── web/
     ├── groups.controller.mjs           # ★ stare (grupe extinse), formular, delegare de clic
-    └── groups.view.mjs                 # portat din web/ui/groups-categories.mjs (groupCard)
+    └── groups.view.mjs                 # ★ cardurile grupelor (groupCard)
 ```
 
 ## Decizii
 
-- **Fără dependință de `expenses`.** Categoriile de cheltuieli au fost portate separat, în feature-ul `expenses`, deși porneau din același fișier legacy (`web/ui/groups-categories.mjs`); nimic din domeniul lor nu se atinge de grupe.
-- **`expandedGroupIds` e stare de controller,** nu variabilă la nivel de modul ca în `web/ui/groups-categories.mjs` — mai multe instanțe ale ecranului nu și-ar mai împărți accidental starea de extindere.
+- **Fără dependință de `expenses`.** Categoriile de cheltuieli sunt un feature separat; nimic din domeniul lor nu se atinge de grupe.
+- **`expandedGroupIds` e stare de controller,** nu variabilă la nivel de modul — mai multe instanțe ale ecranului nu și-ar mai împărți accidental starea de extindere.
 - Contractul HTTP al `/api/group-delete` rămâne neschimbat la migrare.
 
 ## Teste
@@ -54,4 +54,4 @@ groups/
 node --test "src/features/groups/**/*.test.mjs"
 ```
 
-- Rută: `groups.routes.integration.test.mjs`, portat din `tests/groups.test.mjs`, pornește serverul real prin `#test-support/start-test-application.mjs`.
+- Rută: `groups.routes.integration.test.mjs`, pornește serverul real prin `#test-support/start-test-application.mjs`.

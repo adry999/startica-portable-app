@@ -29,7 +29,7 @@ export function createExcelTransferController({
       const XLSX = await loadXlsx();
       const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
       const parsed = readWorkbook(workbook, XLSX, findRecordIssues);
-      // Fuzionează previzualizarea locală cu cea revalidată de server — forme diferite după caz, ca la legacy.
+      // Previzualizarea locală și cea revalidată de server au forme diferite; se afișează ce a venit ultima.
       /** @type {any} */
       let report = parsed;
       // Serverul revalidează; avertizările locale despre sursă se păstrează.

@@ -3,7 +3,6 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup } from '#shared/ui/form-fields.mjs';
 
-// Port 1:1 al secțiunilor din fostul web/ui/editor.mjs (childFields, childFromForm).
 // Implementează structural RecordEditorFields din #features/record-editing —
 // fără să îl importe, ca feature-urile să rămână izolate unele de altele.
 

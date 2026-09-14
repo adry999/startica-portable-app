@@ -60,7 +60,7 @@ audit-log/
 ## Decizii
 
 - **Cursor după id, nu `OFFSET`.** O salvare făcută între două pagini nu deplasează rândurile deja afișate și nu produce dubluri. Un rând peste pagină arată dacă mai urmează ceva, fără `COUNT`.
-- **Schimbare de contract față de `web/ui/profile-audit.mjs`.** Contractul era `?offset` cu rânduri brute; devine `?beforeEntryId` cu `{ entries, nextBeforeEntryId }`, deja deserializate. Clientul și serverul se livrează în același pachet (pasul 6 din plan).
+- **Contractul e `?beforeEntryId` cu `{ entries, nextBeforeEntryId }`, deja deserializate** — nu `?offset` cu rânduri brute.
 - **View-ul adaugă doar intrările noi,** ca detaliile deja deschise să rămână deschise la „Mai multe”.
 - Tabelul `audit_changes` rămâne neschimbat, iar schema aparține lui `core`.
 

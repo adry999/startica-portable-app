@@ -9,7 +9,7 @@ import { assertUsableExternalFolder } from './external-backup-folder.mjs';
 const RESTORE_CONFIRMATION = 'RESTAUREAZA';
 const SETTINGS_AUDIT_ACTION = 'configurare backup';
 
-// [] dacă snapshot-ul e o stare validă, altfel primul mesaj de eroare — la fel ca importReport() legacy.
+// [] dacă snapshot-ul e o stare validă, altfel primul mesaj de eroare al validării.
 function previewErrors(snapshot) {
   try {
     validateState(snapshot);

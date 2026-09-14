@@ -25,9 +25,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
 
 /**
  * Ecranul „Cheltuieli”: căutare, filtre (interval de luni, categorie,
- * arhivare), sortare pe coloane și arhivare/dezarhivare în masă. Înlocuiește
- * `renderList('expenses')`, `CELLS.expenses`, `matchesSearch`/`sortValue`
- * pentru acest tip și `renderListSummary('expenses', …)` din web/ui/views.mjs.
+ * arhivare), sortare pe coloane și arhivare/dezarhivare în masă.
  * @param {{
  *   elements: {
  *     search: HTMLInputElement,

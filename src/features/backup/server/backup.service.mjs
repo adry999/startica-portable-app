@@ -100,7 +100,7 @@ export function createBackupService({
     try {
       if (!existsSync(external) || !statSync(external).isDirectory()) fail('Folderul extern nu este disponibil.');
       copyFileSync(file, copy);
-      // sha256Hex() e tipat pentru text; primește aici conținutul binar al bazei, la fel ca înainte de migrare.
+      // sha256Hex() e tipat pentru text, dar hash-uiește corect și conținutul binar al bazei.
       if (sha256Hex(/** @type {any} */ (readFileSync(file))) !== sha256Hex(/** @type {any} */ (readFileSync(copy))))
         fail('Copia externă diferă de original.');
       readBackupSnapshot(copy);

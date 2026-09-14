@@ -81,7 +81,7 @@ export function planFinancialHistoryImport(input, currentRecords) {
         );
       }
       // Payment | Expense nu se corelează pe ramuri de tip generic după `type`; structura reală e
-      // verificată de normalizeRecord() mai jos, la fel ca înainte de migrare.
+      // verificată de normalizeRecord() mai jos.
       const r = /** @type {any} */ (structuredClone(original));
       if (type === 'payments' && r.childId) {
         const target = mapping.get(r.childId);

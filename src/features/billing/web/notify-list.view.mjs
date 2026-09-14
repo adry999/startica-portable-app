@@ -35,7 +35,7 @@ function notifyColumns(groups) {
 
 /**
  * Ecranul „De notificat”: copiii cu rest de plată, sortați implicit după
- * întârzierea cea mai veche. Înlocuiește `renderNotify` din `web/ui/reports.mjs`.
+ * întârzierea cea mai veche.
  * @param {{
  *   elements: { period: HTMLElement, stats: HTMLElement, table: HTMLTableSectionElement },
  *   readRecords: () => RecordsSnapshot,

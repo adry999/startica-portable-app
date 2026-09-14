@@ -6,10 +6,7 @@ import { join } from 'node:path';
 import { validateState } from '#shared/domain/record-schema.mjs';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
 
-// /api/record și /api/record-delete rămân deocamdată implementate în
-// server/routes.mjs (portul spre createRecordEditingRoutes se face la
-// integrare); comportamentul verificat aici trebuie să rămână identic după
-// acea integrare, de-aia testele lovesc direct rutele HTTP, nu funcția.
+// Testele lovesc rutele HTTP, nu funcția: acoperă și înregistrarea lor în createApplication.
 
 async function startApplication(t) {
   return startTestApplication(t, { prefix: 'startica-record-editing-' });

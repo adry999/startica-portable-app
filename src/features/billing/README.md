@@ -35,15 +35,15 @@ billing/
 │   ├── month-evaluation.mjs        # evaluateChildrenForMonth
 │   └── month-evaluation.test.mjs
 └── web/
-    ├── payment-status.view.mjs     # ★ „Situația plăților”, portat din renderStatus (web/ui/reports.mjs)
-    └── notify-list.view.mjs        # ★ „De notificat”, portat din renderNotify (web/ui/reports.mjs)
+    ├── payment-status.view.mjs     # ★ „Situația plăților”
+    └── notify-list.view.mjs        # ★ „De notificat”
 ```
 
 ## Decizii
 
-- **Mutare fără schimbare de logică.** `evaluateChildrenForMonth` calculează exact ce calcula `render()` din `web/ui/views.mjs` pentru `allChildren` (un `paymentIndex` + `obligation()` per copil), doar cu câmpul `o` redenumit `obligation` pentru claritate.
-- **Randarea rămâne identică** cu `renderStatus`/`renderNotify` de dinainte, byte cu byte, inclusiv id-urile de tabel (`statusHead`/`statusPager`, `notifyHead`), pentru ca sortarea și paginarea existente să continue să funcționeze neschimbate.
-- Tabelul de notificat nu se paginează, la fel ca înainte — doar „Situația plăților” foloseşte `paginateRows`.
+- **`evaluateChildrenForMonth` calculează obligația fiecărui copil** din `allChildren` cu un `paymentIndex` + `obligation()` per copil.
+- **Randarea păstrează id-urile de tabel** (`statusHead`/`statusPager`, `notifyHead`), pentru ca sortarea și paginarea existente să continue să funcționeze neschimbate.
+- Tabelul de notificat nu se paginează — doar „Situația plăților” foloseşte `paginateRows`.
 
 ## Teste
 

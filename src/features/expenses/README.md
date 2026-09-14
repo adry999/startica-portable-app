@@ -4,22 +4,22 @@ Cheltuielile administrației: lista, editorul și categoriile folosite ca sugest
 
 Modul **independent**: nu depinde de alt feature, nu publică și nu consumă evenimente.
 
-> Migrare în doi pași: acest README acoperă doar partea de categorii, portată acum. Lista de cheltuieli și câmpurile din editor (`web/ui/expenses.mjs`, `web/ui/editor.mjs`) se mută la pasul următor din plan.
-
 ## Public API
 
 ### `index.server.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `createExpenseCategoriesRoutes({ recordRepository, auditTrail, runRevisionTransaction })` | `POST /api/category-delete`, cu corpul neschimbat: `{ id, revision, requestId }` |
+| `createExpenseCategoriesRoutes(dependencies)` | `POST /api/category-delete` |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `createExpenseCategoriesController({ elements, readRecords, submitMutation, showNotice })` | întoarce `{ render }`; randează chip-urile de categorii și opțiunile filtrului de cheltuieli |
-| `listExpenseCategoryNames(records)` | sugestii implicite + categorii proprii + nume folosite deja de cheltuieli, deduplicate și sortate `ro` |
+| `createExpenseCategoriesController(dependencies)` | chips-urile de categorii și filtrul de categorie; `{ render }` |
+| `createExpensesListView(dependencies)` | lista „Cheltuieli”; `{ render }` |
+| `expenseEditorFields` | câmpurile cheltuielii în dialogul generic |
+| `listExpenseCategoryNames(records)` | sugestiile de categorie (implicite, salvate, folosite) |
 
 ## Dependențe
 
@@ -38,17 +38,17 @@ expenses/
 ├── index.server.mjs
 ├── index.web.mjs
 ├── domain/
-│   ├── expense-category-names.mjs      # DEFAULT_EXPENSE_CATEGORIES, listExpenseCategoryNames (fost expenseCategories)
+│   ├── expense-category-names.mjs      # DEFAULT_EXPENSE_CATEGORIES, listExpenseCategoryNames
 │   └── expense-category-names.test.mjs
 ├── server/
 │   └── expense-categories.routes.mjs   # ★ ștergere, fără verificare de ocupare
 └── web/
-    └── expense-categories.controller.mjs   # ★ portat din renderCategories/bindCategories
+    └── expense-categories.controller.mjs   # ★ chips-urile de categorii, filtrul de categorie
 ```
 
 ## Decizii
 
-- **Fără dependință de `groups`.** Cele două ecrane porneau din același fișier legacy (`web/ui/groups-categories.mjs`), dar nu au nimic în comun în domeniu.
+- **Fără dependință de `groups`.** Cele două ecrane nu au nimic în comun în domeniu.
 - Contractul HTTP al `/api/category-delete` rămâne neschimbat la migrare.
 
 ## Teste

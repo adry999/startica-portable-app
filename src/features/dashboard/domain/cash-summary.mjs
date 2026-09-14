@@ -4,7 +4,6 @@ import { allocations, paymentTenders } from '#shared/domain/payment-allocations.
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Payment} Payment */
 
-// Fost `cashSummary` din `shared/domain.mjs`, neschimbat.
 /**
  * @param {RecordsSnapshot} records
  * @param {string} month

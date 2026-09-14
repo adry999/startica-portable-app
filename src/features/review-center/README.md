@@ -42,19 +42,18 @@ review-center/
 ├── index.server.mjs
 ├── index.web.mjs
 ├── domain/
-│   ├── record-issues.mjs           # findRecordIssues (fost issues(), din shared/domain.mjs)
+│   ├── record-issues.mjs           # findRecordIssues
 │   ├── record-issues.test.mjs
 │   ├── review-center.mjs           # buildReviewCenter, filterReviewItems, REVIEW_FILTERS
-│   └── review-center.test.mjs      # din tests/review-center.test.mjs
+│   └── review-center.test.mjs
 └── web/
-    └── review-center.view.mjs      # portat din web/ui/review.mjs
+    └── review-center.view.mjs      # ★ randarea centrului de verificare
 ```
 
 ## Decizii
 
-- **Mutare fără schimbare de logică.** `findRecordIssues` este exact `issues(s)` din `shared/domain.mjs`, iar `buildReviewCenter`/`filterReviewItems` sunt `reviewCenter`/`filteredReviewItems` din `shared/review-center.mjs`, doar redenumite și cu parametrul de stare primit explicit în loc de citit din `session`.
-- **Până la pasul 10**, `render()` din legacy calculează centrul o singură dată pe ciclu de randare și îl transmite atât view-ului de aici, cât și cardurilor din Dashboard, ca ambele să vadă aceleași date fără să recalculeze `buildReviewCenter`.
-- **Randarea rămâne identică** cu `renderReview`/`reviewRow` de dinainte, byte cu byte, inclusiv structura `<div id="reviewPager">...</div><div id="reviewRows">...</div>`, pentru ca CSS-ul și testul de fum din browser să nu observe migrarea.
+- **`buildReviewCenter` se calculează o singură dată pe ciclu de randare** și se transmite atât view-ului de aici, cât și cardurilor din Dashboard, ca ambele să vadă aceleași date fără să recalculeze.
+- **Randarea păstrează structura `<div id="reviewPager">...</div><div id="reviewRows">...</div>`**, ca CSS-ul și testul de fum din browser să rămână valabile.
 
 ## Teste
 

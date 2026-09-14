@@ -2,10 +2,9 @@ import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { textFieldMarkup } from '#shared/ui/form-fields.mjs';
 
-// Port 1:1 al fostului web/ui/editor.mjs (expenseFields, expenseFromForm).
 // Implementează structural RecordEditorFields (#features/record-editing/record-editing.types.mjs).
 // Sugestiile de categorie vin din context.readExpenseCategoryNames(), injectat
-// de compunerea din web/app.js — modulul nu importă alt feature.
+// de compunerea din src/app/web/main.mjs — modulul nu importă alt feature.
 
 /**
  * @param {any} record

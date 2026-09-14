@@ -36,9 +36,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
 
 /**
  * Ecranul „Copii”: căutare, filtru de arhivare, sortare pe coloane și
- * arhivare/dezarhivare în masă. Înlocuiește `renderList('children')`,
- * `CELLS.children`, `matchesSearch`/`sortValue` pentru acest tip și
- * `renderListSummary('children', …)` din web/ui/views.mjs.
+ * arhivare/dezarhivare în masă.
  * @param {{
  *   elements: {
  *     search: HTMLInputElement,

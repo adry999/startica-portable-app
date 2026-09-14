@@ -1,7 +1,4 @@
-// Combobox reutilizabil pentru alegerea unui copil: input text căutabil (fără
-// diacritice) + listă flotantă, în loc de un <select> lung, greu de parcurs
-// manual când sunt mulți copii. Folosit la achitare (editor.mjs) și la
-// asocierea achitărilor (payment-assignment, un rând per achitare neasociată).
+// Combobox căutabil (fără diacritice) pentru alegerea unui copil, în locul unui <select> lung.
 import { escapeHtml as esc } from '#shared/format/html-escape.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 

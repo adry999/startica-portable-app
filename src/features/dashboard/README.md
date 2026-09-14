@@ -35,14 +35,14 @@ dashboard/
 │   ├── cash-summary.mjs             # summarizeCashForMonth, sumUnallocatedAdvance
 │   └── cash-summary.test.mjs
 └── web/
-    ├── dashboard.view.mjs           # ★ „Dashboard”, portat din renderDashboard/renderBirthdays (web/ui/reports.mjs)
-    └── children-summary.view.mjs    # ★ statisticile de pe „Copii”, portat din renderChildrenSummary (web/ui/views.mjs)
+    ├── dashboard.view.mjs           # ★ „Dashboard”
+    └── children-summary.view.mjs    # ★ statisticile de pe „Copii”
 ```
 
 ## Decizii
 
-- **Mutare fără schimbare de logică.** `summarizeCashForMonth` este exact `cashSummary` din `shared/domain.mjs`; `sumUnallocatedAdvance` este calculul avansului făcut inline în `renderDashboard`, extras ca funcție pură. Randarea rămâne identică cu `renderDashboard`/`renderBirthdays`/`renderChildrenSummary` de dinainte, byte cu byte, inclusiv toate id-urile DOM.
-- **Istoricul de venituri pe 12 luni** reapelează `summarizeCashForMonth` pentru fiecare lună, ca înainte — nu ține un index separat, pentru că fereastra e mică (12 luni) și randarea e o dată pe ciclu.
+- **`sumUnallocatedAdvance`** e funcție pură, separată de `summarizeCashForMonth`.
+- **Istoricul de venituri pe 12 luni** reapelează `summarizeCashForMonth` pentru fiecare lună — nu ține un index separat, pentru că fereastra e mică (12 luni) și randarea e o dată pe ciclu.
 - **`evaluations`** primite de `renderDashboard`/`renderChildrenSummary` sunt cele nearhivate, calculate o singură dată de apelant (alături de `billing`) pentru toate ecranele randării curente.
 
 ## Teste

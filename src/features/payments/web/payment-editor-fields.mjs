@@ -7,9 +7,8 @@ import { textFieldMarkup } from '#shared/ui/form-fields.mjs';
 import { childPickerHTML, wireChildPicker } from '#shared/ui/child-picker.mjs';
 import { addAllocationRow, readAllocationRows, renderAllocationBalance } from './allocation-rows.mjs';
 
-// Port 1:1 al secțiunilor din fostul web/ui/editor.mjs (paymentFields, paymentFromForm)
-// și al legăturilor dinamice din openEditor() pt. type === 'payments'.
-// Implementează structural RecordEditorFields (#features/record-editing/record-editing.types.mjs).
+// Implementează structural RecordEditorFields, fără să importe record-editing,
+// ca feature-urile să rămână izolate.
 
 // Fieldset-ul e identic la copil și la achitare, dar field-urile nu pot
 // împărți cod între feature-uri — de-aia mica duplicare cu child-editor-fields.mjs.

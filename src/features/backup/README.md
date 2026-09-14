@@ -71,7 +71,7 @@ backup/
 - **Numele backupului validat ca nume de fișier, nu ca cale.** `resolveBackupFile` refuză orice ar putea ieși din folderul de backup (`../`, cale absolută).
 - **Copia externă se verifică prin hash**, nu doar prin dimensiune: `sha256Hex` pe fișierul local și pe copie trebuie să coincidă înainte de redenumire.
 - **Backupul automat rărit, dar cu reîncercare imediată** dacă ultima copie (locală sau externă) a eșuat — altfel utilizatorul ar afla abia după expirarea intervalului.
-- **`/api/backup-preview` reconstruiește raportul de import** (`summary` + `errors`) direct din regulile de validare, fără să depindă de fostul `importReport` din `shared/domain.mjs`.
+- **`/api/backup-preview` reconstruiește raportul de import** (`summary` + `errors`) direct din regulile de validare.
 
 ## Teste
 
