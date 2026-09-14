@@ -46,7 +46,16 @@ test('GET /api/diagnostic citește ultimele 200 de linii din jurnal și ultimele
 });
 
 test('raportul de diagnostic nu conține date personale', async t => {
-  const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true });
+  const home = mkdtempSync(join(tmpdir(), 'startica-diagnostic-home-'));
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  mkdirSync(join(home, 'Jurnale'), { recursive: true });
+  const logFile = join(home, 'Jurnale', 'startica.log');
+  writeFileSync(
+    logFile,
+    '2026-09-15T08:00:00.000Z ERROR Eroare după trimiterea răspunsului: Copilul asociat nu există.\n' +
+      '    at Object.handle (C:\\Users\\PCC\\Aplicatie_Startica\\src\\features\\children\\server\\children.routes.mjs:42:11)\n',
+  );
+  const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true, home, logFile });
   const childName = 'Zorro Testescu';
   const parentName = 'Ramona Testescu';
   const phone = '+37369999123';
@@ -87,7 +96,9 @@ test('raportul de diagnostic nu conține date personale', async t => {
     requestId: randomUUID(),
   });
   assert.equal(response.status, 200);
-  const serialized = JSON.stringify(await bundle.get('/api/diagnostic'));
+  const diagnostic = await bundle.get('/api/diagnostic');
+  assert.ok(diagnostic.log.length >= 2);
+  const serialized = JSON.stringify(diagnostic);
   for (const secret of [childName, parentName, phone, paymentNote])
     assert.ok(!serialized.includes(secret), `diagnosticul conține „${secret}”`);
 });
