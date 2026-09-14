@@ -7,7 +7,7 @@ description: Convențiile Startica pentru arhitectură, importuri, erori, testar
 
 ## Scop
 
-Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/README.md` fără să strice livrarea. Livrarea înseamnă o aplicație locală, offline, pornită dintr-un folder copiat la client, fără pas de build.
+Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/README.md` fără să strice livrarea. Livrarea înseamnă o aplicație locală, offline, instalată cu `Startica_Setup_<v>.exe` (Inno Setup, per utilizator), fără pas de build; datele în `%LOCALAPPDATA%\Startica`.
 
 ## Triggers
 
@@ -19,7 +19,7 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 
 ### Stack (se schimbă doar prin decizie explicită)
 
-- JavaScript ESM `.mjs`, cu Node 22.17 inclus în pachet (`Aplicatie/runtime/node.exe`), `node:sqlite` și UI vanilla în fereastră Chrome/Edge.
+- JavaScript ESM `.mjs`, cu Node 22.17 inclus în pachet (`runtime\node.exe` lângă `Startica.exe`, în `%LOCALAPPDATA%\Programs\Startica`), `node:sqlite` și UI vanilla în fereastră Chrome/Edge.
 - Zero dependențe runtime. SheetJS rămâne vendorizat. Ca devDependencies sunt permise doar `prettier` și `typescript` (numai pentru `tsc --noEmit`).
 - Fără framework, bundler sau transpilare: ce e în repo rulează exact așa la client.
 
@@ -77,13 +77,13 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 - Nu se face mock de module: dependențele vin prin parametri. Pentru cereri controlate în timp se folosește `Promise.withResolvers()`.
 - Numele testului descrie comportamentul, în română. Fără comentarii de narațiune în teste.
 - Fiecare garanție se testează în stratul ei: tranzacția și idempotența în `core`, regulile în `domain`, orchestrarea în controller.
-- Înainte de commit: `npm run check` (format, `tsc`, teste) și, pentru UI sau lansator, `npm run test:e2e`. Până la pasul 0 se folosesc `npm test` și `npm run test:browser`. Dacă se schimbă ceva la livrare, pachetul se pornește și dintr-o altă cale.
+- Înainte de commit: `npm run check` (format, `tsc`, teste) și, pentru UI sau lansator, `npm run test:e2e`. Până la pasul 0 se folosesc `npm test` și `npm run test:browser`. Dacă se schimbă ceva la livrare, se face o instalare de probă cu instalerul (actualizare și dezinstalare cu Startica pornită, vezi `scripts/pachet-client/GHID-LIVRARE.md`).
 
 ### Configurare
 
-- Doar `#config/environment.mjs` citește `process.env` (`STARTICA_PROFILE`, `STARTICA_PORT`, `STARTICA_NO_BROWSER`).
-- Profilurile sunt `development`, `test` și `production`. Nu există staging: verificarea de dinainte de livrare este pachetul pornit din altă cale.
-- `Startica_Date`, `Startica_Backup` și `Jurnale` sunt relative la folderul aplicației. Testele le primesc prin opțiuni, în directoare temporare.
+- Doar `#config/environment.mjs` citește `process.env` (`STARTICA_PROFILE`, `STARTICA_PORT`, `STARTICA_NO_BROWSER`, `STARTICA_HOME`).
+- Profilurile sunt `development`, `test` și `production`. Nu există staging: verificarea de dinainte de livrare este instalarea de probă cu instalerul.
+- `Startica_Date`, `Startica_Backup` și `Jurnale` sunt relative la `STARTICA_HOME` când e setat (lansatorul), altfel la folderul aplicației (dezvoltare). Testele le primesc prin opțiuni, în directoare temporare.
 
 ### Nume și comentarii
 

@@ -1,6 +1,6 @@
 # Startica ca aplicație desktop: instalare, lansator, date în profilul utilizatorului
 
-Stare la scriere: `master` @ `7b86a41` (v1.2.1), migrarea arhitecturală încheiată (pașii 0–12), `npm test` = 226 de teste (225 trec, 1 sărit). Auditul din 15 septembrie 2026 (produs + tehnic + „dublu click și gata”) a fost aprobat integral de utilizator. Acest spec ia deciziile; planul de implementare este `docs/superpowers/plans/2026-09-15-desktop-app.md`.
+Stare la scriere: `master` @ `7b86a41` (v1.2.1), migrarea arhitecturală încheiată (pașii 0–12), `npm test` = 226 de teste (225 trec, 1 sărit). Auditul din 15 septembrie 2026 (produs + tehnic + „dublu click și gata”) a fost aprobat integral de utilizator. Acest spec ia deciziile; implementarea s-a făcut direct din el, pe puncte de control A–D.
 
 ## 1. Problema
 
