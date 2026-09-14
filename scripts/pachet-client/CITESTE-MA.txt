@@ -18,6 +18,9 @@ ACTUALIZARE (ai deja Startica instalată)
 3. Evidența (fișe, achitări, cheltuieli) nu este atinsă: rămâne acolo
    unde a fost, în afara folderului programului.
 
+Înainte de actualizare, salvează ce lucrezi și închide Startica. Instalerul
+închide aplicația dacă e deschisă, iar o modificare nesalvată se pierde.
+
 UNDE SUNT DATELE
 Evidența este în %LOCALAPPDATA%\Startica, separat de programul instalat.
 Dezinstalarea Startica din Panoul de control șterge doar programul;
@@ -27,6 +30,37 @@ Dacă până acum ai folosit Startica din arhiva ZIP veche, la prima
 pornire după instalare aplicația găsește automat evidența veche și
 întreabă dacă o preia. Folderul vechi nu este atins și poate fi
 păstrat sau șters ulterior, după verificare.
+
+COPIA ÎN AFARA CALCULATORULUI (GOOGLE DRIVE)
+1. Instalează Google Drive for desktop și autentifică-te cu contul
+   grădiniței.
+2. Creează în Drive un folder separat, de exemplu „Startica-backup".
+3. În Google Drive for desktop setează folderul „Disponibil offline".
+4. În Startica: Backup și setări → folder extern → alege acel folder
+   (de exemplu G:\My Drive\Startica-backup).
+5. Verifică pe ecran data ultimei copii externe.
+
+Reguli de siguranță (copiile nu sunt criptate):
+- Verificare în doi pași activată pe contul Google și parolă folosită
+  doar acolo.
+- Folderul nu se partajează cu nimeni și nu stă într-un Drive partajat.
+- Drive for desktop pornește cu Windows și rămâne autentificat.
+- Contul Windows are parolă și blocare automată a ecranului.
+- Lunar, pe drive.google.com, ultimul fișier startica_*.db are data de
+  azi.
+
+DACĂ SE STRICĂ SAU SE PIERDE CALCULATORUL
+1. Pe calculatorul nou instalează Startica (Startica_Setup_x.y.z.exe)
+   și Google Drive for desktop cu contul grădiniței.
+2. Așteaptă sincronizarea folderului Startica-backup.
+3. La prima pornire a Startica alege „evidență goală".
+4. Copiază cel mai nou fișier startica_….db din folderul Drive în
+   %LOCALAPPDATA%\Startica\Startica_Backup.
+5. În Startica: Backup și setări → Restaurare → alege fișierul →
+   verifică previzualizarea (număr de copii, plăți, cheltuieli) →
+   confirmă.
+6. Apoi setează din nou folderul extern (restaurarea nu aduce setările
+   și nici istoricul modificărilor).
 
 DACĂ NU PORNEȘTE
 1. Verifică existența Google Chrome sau Microsoft Edge pe calculator.
