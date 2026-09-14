@@ -3,8 +3,6 @@ import assert from 'node:assert/strict';
 import { isBrowserModule } from './static-assets.mjs';
 
 const BROWSER_MODULES = [
-  '/ui/views.mjs',
-  '/shared/domain.mjs',
   '/src/app/web/main.mjs',
   '/src/core/web/api-client.mjs',
   '/src/shared/format/money-format.mjs',
@@ -15,6 +13,8 @@ const BROWSER_MODULES = [
 ];
 
 const PRIVATE_PATHS = [
+  '/ui/views.mjs',
+  '/shared/domain.mjs',
   '/src/features/audit-log/index.server.mjs',
   '/src/features/audit-log/server/audit-log.repository.mjs',
   '/src/core/server/errors/domain-error.mjs',

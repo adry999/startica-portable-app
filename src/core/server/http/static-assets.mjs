@@ -40,9 +40,6 @@ const importMapHashes = html =>
 
 export const isStaticAsset = path => Object.hasOwn(STATIC_FILES, path);
 
-// Modulele interfeței (web/ui) și regulile comune (shared) încă nemutate în src/.
-// Tiparul nu permite punct sau bară în nume, deci nu există traversare.
-const LEGACY_MODULE_PATH = /^\/(ui|shared)\/[a-z0-9-]+\.mjs$/;
 const PATH_SEGMENT = /^[a-z0-9-]+$/;
 const MODULE_FILE_NAME = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.mjs$/;
 
@@ -63,12 +60,10 @@ function isBrowserSourceModule(path) {
   return area === 'shared';
 }
 
-/** @param {string} path */
-export const isBrowserModule = path => LEGACY_MODULE_PATH.test(path) || isBrowserSourceModule(path);
+export const isBrowserModule = isBrowserSourceModule;
 
 export function sendBrowserModule(response, root, path) {
-  // /ui/... trăiește sub web/; /shared/... și /src/... sunt la rădăcină.
-  const file = path.startsWith('/ui/') ? join(root, 'web', path) : join(root, path);
+  const file = join(root, path);
   if (!existsSync(file)) fail('Pagina nu există.', 404);
   return sendResponse(response, readFileSync(file), 200, 'text/javascript; charset=utf-8');
 }
