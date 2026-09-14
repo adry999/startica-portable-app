@@ -15,7 +15,11 @@ const ALLOWED_TARGET_AREAS = {
   core: ['core', 'shared', 'config'],
   shared: ['shared'],
   features: ['features', 'core', 'shared'],
+  entry: ['app', 'config', 'core', 'shared', 'features'],
+  tests: ['app', 'config', 'core', 'shared', 'features'],
 };
+
+const SRC_AREAS = ['app', 'config', 'core', 'shared', 'features'];
 
 const PUBLIC_FEATURE_ENTRIES = new Set(['index.server.mjs', 'index.web.mjs']);
 
@@ -33,7 +37,10 @@ export function readImportSpecifiers(sourceText) {
 /** @param {string} path cale posix, relativă la rădăcina repo-ului */
 function locate(path) {
   const segments = path.split('/');
-  if (segments[0] !== 'src') return { area: 'outside', feature: null, runtime: 'any' };
+  if (segments[0] !== 'src') {
+    const isEntry = segments[0] === 'scripts' || segments.length === 1;
+    return { area: isEntry ? 'entry' : segments[0] === 'tests' ? 'tests' : 'outside', feature: null, runtime: 'any' };
+  }
   const area = segments[1];
   const fileName = segments.at(-1);
   const isServer = segments.includes('server') || fileName === 'index.server.mjs';
@@ -53,6 +60,8 @@ function locate(path) {
 function resolveTarget(fromPath, specifier) {
   if (specifier.startsWith('./') || specifier.startsWith('../'))
     return posix.normalize(posix.join(posix.dirname(fromPath), specifier));
+  // URL de browser evaluat de tests/browser-smoke.mjs în Chrome, nu un pachet extern.
+  if (specifier.startsWith('/src/')) return specifier.slice(1);
   const alias = Object.keys(ALIAS_TARGETS).find(prefix => specifier.startsWith(prefix));
   return alias ? ALIAS_TARGETS[alias] + specifier.slice(alias.length) : null;
 }
@@ -70,6 +79,7 @@ export function findImportViolations(sourceFiles) {
   const violations = [];
   for (const { path, specifiers } of sourceFiles) {
     const source = locate(path);
+    const sourceInSrc = SRC_AREAS.includes(source.area);
     for (const specifier of specifiers) {
       const report = rule => violations.push({ path, specifier, rule });
 
@@ -86,21 +96,22 @@ export function findImportViolations(sourceFiles) {
       }
 
       const isRelative = !specifier.startsWith('#');
-      if (isRelative && (specifier.match(/\.\.\//g)?.length ?? 0) > 1) report('deep-relative-import');
+      if (sourceInSrc && isRelative && (specifier.match(/\.\.\//g)?.length ?? 0) > 1) report('deep-relative-import');
 
       const destination = locate(target);
-      if (destination.area === 'outside') {
-        if (!(isTestFile(path) && target.startsWith('tests/support/'))) report('import-outside-src');
+      if (!SRC_AREAS.includes(destination.area)) {
+        // scripts/, tests/ și rădăcina pot importa liber în afara src/ (ex. startica_server.mjs, fixture-uri).
+        if (sourceInSrc && !(isTestFile(path) && target.startsWith('tests/support/'))) report('import-outside-src');
         continue;
       }
-      if (isRelative && !sameModule(source, destination)) report('relative-import-across-boundary');
+      if (sourceInSrc && isRelative && !sameModule(source, destination)) report('relative-import-across-boundary');
       if (!ALLOWED_TARGET_AREAS[source.area]?.includes(destination.area)) report('forbidden-layer-dependency');
       if (source.area === 'features' && destination.area === 'features' && source.feature !== destination.feature)
         report('feature-imports-feature');
 
       const targetSegments = target.split('/');
       if (
-        source.area === 'app' &&
+        ['app', 'entry', 'tests'].includes(source.area) &&
         destination.area === 'features' &&
         (targetSegments.length !== 4 || !PUBLIC_FEATURE_ENTRIES.has(targetSegments[3]))
       )

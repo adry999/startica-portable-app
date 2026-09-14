@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findImportViolations, readImportSpecifiers } from './import-boundary-rules.mjs';
@@ -21,6 +21,31 @@ function collectSourceFiles(projectRoot) {
         specifiers: readImportSpecifiers(readFileSync(absolutePath, 'utf8')),
       };
     });
+}
+
+/** @param {string} dir cale relativă la REPO_ROOT @param {RegExp} pattern @param {string} [excludePrefix] */
+function collectRepoFiles(dir, pattern, excludePrefix) {
+  return readdirSync(join(REPO_ROOT, dir), { withFileTypes: true, recursive: true })
+    .filter(entry => entry.isFile() && pattern.test(entry.name))
+    .map(entry => relative(REPO_ROOT, join(entry.parentPath, entry.name)).split(sep).join('/'))
+    .filter(path => !excludePrefix || !path.startsWith(excludePrefix))
+    .map(path => ({ path, specifiers: readImportSpecifiers(readFileSync(join(REPO_ROOT, path), 'utf8')) }));
+}
+
+/** Tot codul livrat: src/, scripts/, tests/ (fără fixture-urile din tests/architecture/) și rădăcina. */
+function collectApplicationFiles() {
+  const rootFiles = readdirSync(REPO_ROOT, { withFileTypes: true })
+    .filter(entry => entry.isFile() && entry.name.endsWith('.mjs'))
+    .map(entry => ({
+      path: entry.name,
+      specifiers: readImportSpecifiers(readFileSync(join(REPO_ROOT, entry.name), 'utf8')),
+    }));
+  return [
+    ...collectRepoFiles('src', /\.(mjs|d\.mts)$/),
+    ...collectRepoFiles('scripts', /\.mjs$/),
+    ...collectRepoFiles('tests', /\.mjs$/, 'tests/architecture/'),
+    ...rootFiles,
+  ];
 }
 
 test('citește specificatorii din import, export, import dinamic și tipuri JSDoc', () => {
@@ -65,6 +90,13 @@ test('permite dependențele din arhitectura țintă', () => {
         'node:path',
       ),
       sourceFile('src/core/web/view-state.mjs', './api-error.mjs', '#shared/contracts/domain-events.mjs'),
+      sourceFile(
+        'scripts/import-v5-history.mjs',
+        '#features/data-transfer/index.server.mjs',
+        '#app/server/create-application.mjs',
+      ),
+      sourceFile('tests/browser-smoke.mjs', '../startica_server.mjs', '/src/app/web/app-session.mjs'),
+      sourceFile('tests/support/start-test-application.mjs', '#app/server/create-application.mjs'),
     ]),
     [],
   );
@@ -104,6 +136,11 @@ test('semnalează fiecare tip de încălcare a granițelor', () => {
       sourceFile('src/features/children/domain/birthdays.mjs', '#test-support/in-memory-record-repository.mjs'),
       'import-outside-src',
     ],
+    [
+      sourceFile('scripts/import-v5-history.mjs', '#features/data-transfer/domain/excel-workbook.mjs'),
+      'feature-private-import',
+    ],
+    [sourceFile('tests/http-modules.test.mjs', '#features/backup/server/backup.service.mjs'), 'feature-private-import'],
   ];
 
   for (const [file, expectedRule] of cases)
@@ -119,8 +156,6 @@ test('codul de referință din docs/arhitectura respectă granițele', () => {
   assert.deepEqual(findImportViolations(collectSourceFiles(referenceRoot)), []);
 });
 
-test('codul din src/ respectă granițele', t => {
-  if (!existsSync(join(REPO_ROOT, 'src'))) return t.skip('src/ apare la pasul 1 din docs/arhitectura/README.md');
-
-  assert.deepEqual(findImportViolations(collectSourceFiles(REPO_ROOT)), []);
+test('codul aplicației, scripturile și testele respectă granițele', () => {
+  assert.deepEqual(findImportViolations(collectApplicationFiles()), []);
 });

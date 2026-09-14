@@ -27,7 +27,7 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 
 - Planul are pașii 0–12 (`docs/arhitectura/README.md`, §6). Pasul curent se află cu `git log --oneline -- src/ tests/architecture/`.
 - **Înainte de pasul 1**, codul nou rămâne în structura veche. Respectă totuși deja numele, straturile și regula că ecranele nu se importă între ele.
-- **După pasul 1**, tot codul nou intră în `src/`. Căile vechi rămân doar ca fațade `export … from` până la pasul 12.
+- **După pasul 1**, tot codul nou intră în `src/`. Tot codul aplicației e în `src/`: scripturile și testele importă feature-urile doar prin `index.server.mjs`/`index.web.mjs`, niciodată prin căile lor interne.
 - `docs/arhitectura/referinta/` e cod verificat, care se copiază 1:1 la pașii 5–7. Nu se modifică separat de plan.
 
 ### Structură și granițe

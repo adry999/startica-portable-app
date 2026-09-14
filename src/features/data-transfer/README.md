@@ -17,8 +17,10 @@ rutele/controller-ul de mai jos — composition root-ul îl leagă de `#features
 | Export | Rol |
 | --- | --- |
 | `createDataTransferRoutes({ recordRepository, auditTrail, runRevisionTransaction, replaceAllRecords, readEnvelope, findRecordIssues })` | `POST /api/import-preview`, `POST /api/financial-preview`, `POST /api/financial-import`, `POST /api/import` |
+| `readWorkbook(workbook, XLSX, findRecordIssues)` | citește un `.xlsx` (export propriu sau V5), folosit de `scripts/import-v5-history.mjs` |
+| `planFinancialHistoryImport(input, currentRecords)` | planul pur de import istoric V5, folosit de `scripts/import-v5-history.mjs` |
 
-Interne, fără export public: `buildImportReport(input, findRecordIssues)` (raportul de previzualizare) și `planFinancialHistoryImport(input, currentRecords)` (planul pur de import istoric V5).
+Intern, fără export public: `buildImportReport(input, findRecordIssues)` (raportul de previzualizare).
 
 ### `index.web.mjs`
 
