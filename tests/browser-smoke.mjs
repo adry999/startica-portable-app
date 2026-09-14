@@ -35,7 +35,8 @@ const chrome = spawn(
 let ws,
   seq = 0;
 const pending = new Map(),
-  errors = [];
+  errors = [],
+  consoleErrors = [];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function until(fn, message) {
   for (let n = 0; n < 100; n++) {
@@ -67,6 +68,9 @@ try {
     const m = JSON.parse(e.data);
     if (m.method === 'Runtime.exceptionThrown')
       errors.push(m.params.exceptionDetails.text + ' ' + JSON.stringify(m.params.exceptionDetails.exception));
+    // Verificat separat de excepții: un console.error nu oprește execuția, dar tot semnalează un bug.
+    if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error')
+      consoleErrors.push(m.params.args.map(a => a.value ?? a.description ?? '').join(' '));
     if (m.id) {
       const p = pending.get(m.id);
       pending.delete(m.id);
@@ -491,13 +495,78 @@ try {
   assert.deepEqual(await evaluate('window.testPrint'), ['notify', 'status']);
   await evaluate("window.dispatchEvent(new Event('afterprint'))");
   assert.equal(await evaluate('document.body.dataset.printView === undefined'), true);
+
+  // Versiunea afișată în bara laterală trebuie să vină din package.json, nu dintr-o valoare fixă în cod.
+  const packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+  await until(() => evaluate("document.getElementById('appVersion').textContent !== ''"), 'App version failed to load');
+  assert.equal(await evaluate("document.getElementById('appVersion').textContent"), `Startica v${packageVersion}`);
+
+  // Fișă cu taxă neachitată dinainte de luna selectată, ca „De notificat” să aibă garantat un rând.
+  await evaluate("document.querySelector('[data-create=children]').click()");
+  await evaluate(
+    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Notificat <test>';f.elements.parent.value='Părinte notificat';f.elements.groupId.value=${JSON.stringify(groupId)};f.elements.attendanceDate.value='2026-01-01';f.elements.fee.value='1500';f.elements.feeFrom.value='2026-01';f.elements.statusFrom.value='2026-01';f.requestSubmit();})()`,
+  );
+  await until(() => evaluate("!document.getElementById('editor').open"), 'Notify fixture save failed');
+  await evaluate("document.querySelector('#primaryNav [data-view=notify]').click()");
+  await until(
+    () => evaluate("document.getElementById('notifyTable').textContent.includes('Notificat <test>')"),
+    'Fișa neachitată nu a apărut pe De notificat',
+  );
+  assert.equal(await evaluate("!!document.querySelector('#notifyTable [data-action=copy-message]')"), true);
+
+  // §4.7/M5: emulare reală a media print (nu simularea window.print de mai sus), verificând print.css.
+  await command('Emulation.setEmulatedMedia', { media: 'print' });
+  await evaluate("document.body.dataset.printView='notify'");
+  assert.equal(await evaluate("getComputedStyle(document.getElementById('copyAllMessages')).display"), 'none');
+  assert.equal(await evaluate("getComputedStyle(document.getElementById('printNotify')).display"), 'none');
+  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('notify')).display"), 'none');
+  assert.match(await evaluate("document.getElementById('notifyTable').textContent"), /Notificat <test>/);
+  assert.equal(
+    await evaluate("getComputedStyle(document.querySelector('#notifyHead th:last-child')).display"),
+    'none',
+  );
+  await evaluate("delete document.body.dataset.printView");
+
+  await evaluate(
+    "[...document.querySelectorAll('#notifyTable tr')].find(tr=>tr.textContent.includes('Notificat <test>')).querySelector('[data-action=profile]').click()",
+  );
+  await evaluate("document.body.dataset.printView='profile'");
+  assert.equal(
+    await evaluate("[...document.querySelectorAll('#profile .modal-head button')].every(b=>getComputedStyle(b).display==='none')"),
+    true,
+  );
+  assert.equal(await evaluate("document.getElementById('profileBody').textContent.length > 0"), true);
+  await evaluate("delete document.body.dataset.printView;document.querySelector('[data-close=profile]').click()");
+  await command('Emulation.setEmulatedMedia', { media: 'screen' });
+
+  // §4.7: fiecare ecran din navigare trebuie să devină activ, fără excepții/erori de consolă noi și fără scroll orizontal.
+  const screenViews = await evaluate("[...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)");
+  assert.equal(screenViews.length, 12);
+  for (const view of screenViews) {
+    const exceptionsBefore = errors.length;
+    const consoleErrorsBefore = consoleErrors.length;
+    await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
+    assert.equal(await evaluate("document.querySelector('.view.active').id"), view, 'Ecran inactiv: ' + view);
+    assert.equal(
+      errors.length,
+      exceptionsBefore,
+      'Excepție la navigarea către ' + view + ': ' + JSON.stringify(errors.slice(exceptionsBefore)),
+    );
+    assert.equal(
+      consoleErrors.length,
+      consoleErrorsBefore,
+      'Eroare în consolă la navigarea către ' + view + ': ' + JSON.stringify(consoleErrors.slice(consoleErrorsBefore)),
+    );
+    await noPageOverflow();
+  }
+
   await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
   await screenshot('children-desktop-populated');
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
   await screenshot('dashboard-desktop-populated');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, audit.',
+    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, audit; all 12 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
   );
 } catch (error) {
   console.error(error);
