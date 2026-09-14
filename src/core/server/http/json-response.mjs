@@ -1,7 +1,7 @@
 /** @param {string[]} scriptHashes */
 const contentSecurityPolicy = scriptHashes =>
   `default-src 'self'; script-src ${["'self'", ...scriptHashes.map(hash => `'sha256-${hash}'`)].join(' ')}; ` +
-  "style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; " +
+  "style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; " +
   "frame-ancestors 'none'";
 
 /**

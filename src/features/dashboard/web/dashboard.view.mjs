@@ -182,9 +182,14 @@ export function createDashboardView({
     bars.innerHTML = history
       .map(
         r =>
-          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" title="${r.month}: ${formatMoney(r.value)}"><i style="height:${(r.value / max) * 100}%"></i><small>${r.month.slice(5)}</small></div>`,
+          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" title="${r.month}: ${formatMoney(r.value)}"><i data-height="${(r.value / max) * 100}"></i><small>${r.month.slice(5)}</small></div>`,
       )
       .join('');
+    // CSP nu are 'unsafe-inline' pe style-src; înălțimea vine din date, deci
+    // se scrie pe CSSOM (permis), nu prin atributul style din markup.
+    bars.querySelectorAll('[data-height]').forEach(bar => {
+      /** @type {HTMLElement} */ (bar).style.height = `${bar.getAttribute('data-height')}%`;
+    });
 
     renderBirthdays(records.children, upcomingBirthdayRows);
   };
