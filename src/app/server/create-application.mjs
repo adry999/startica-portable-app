@@ -49,6 +49,13 @@ export function createApplication(options = {}) {
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
 
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
+  // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers) ar arunca la o bază deja închisă.
+  let databaseClosed = false;
+  function closeDatabase() {
+    if (databaseClosed) return;
+    databaseClosed = true;
+    db.close();
+  }
   const settings = createSettingsRepository(db);
   // settings.setting citește o coloană SQLite (tip generic în node:sqlite); valorile scrise
   // sunt mereu string (vezi settings-repository.mjs), deci tipul e sigur aici.
@@ -91,7 +98,7 @@ export function createApplication(options = {}) {
       backupService: backups,
       allowShutdown: !!options.allowShutdown,
       shutdown: () => {
-        server.close(() => db.close());
+        server.close(() => closeDatabase());
         server.closeIdleConnections();
       },
     }),
@@ -154,7 +161,7 @@ export function createApplication(options = {}) {
         new Promise(resolveClose => {
           backups.cancelScheduledBackup();
           server.close(() => {
-            db.close();
+            closeDatabase();
             resolveClose();
           });
         })
