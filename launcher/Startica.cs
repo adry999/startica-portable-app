@@ -232,8 +232,7 @@ namespace Startica
 
             HealthInfo health = FindExistingServer();
 
-            string identity = ComputeHomeIdentity(_options.Home);
-            Mutex mutex = new Mutex(false, "Local\\Startica_" + identity);
+            Mutex mutex = new Mutex(false, OwnerMutexName(_options.Home));
             bool ownsMutex = false;
             try
             {
@@ -306,7 +305,7 @@ namespace Startica
 
             // Un singur proces oprește serverul: proprietarul, când i s-a închis fereastra, sau --stop după ce proprietarul a ieșit.
             // Mutex reentrant pe același fir: dacă Stop() rulează chiar din proprietar (Supervise), WaitOne reușește imediat.
-            Mutex ownerMutex = new Mutex(false, "Local\\Startica_" + ComputeHomeIdentity(_options.Home));
+            Mutex ownerMutex = new Mutex(false, OwnerMutexName(_options.Home));
             bool acquired = false;
             try
             {
@@ -834,6 +833,12 @@ namespace Startica
             }
         }
 
+        // Global, nu Local: acoperă și sesiuni multiple ale aceluiași utilizator (RDP + consolă).
+        private static string OwnerMutexName(string home)
+        {
+            return "Global\\Startica_" + ComputeHomeIdentity(home);
+        }
+
         // === Migrarea de la instalarea veche (ZIP), secțiunea 2.5 din spec ===
 
         private bool RunMigration()
@@ -1023,7 +1028,7 @@ namespace Startica
             try
             {
                 File.WriteAllText(Path.Combine(oldFolder, "EVIDENTA MUTATA - citeste.txt"),
-                    "Evidența a fost preluată în %LOCALAPPDATA%\\Startica la " +
+                    "Evidența a fost preluată în " + _options.Home + " la " +
                     DateTime.Now.ToString("dd.MM.yyyy HH:mm") + ". Acest folder poate fi șters după verificare.",
                     Encoding.UTF8);
             }
