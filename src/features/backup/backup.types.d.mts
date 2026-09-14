@@ -8,7 +8,7 @@ export interface BackupFileEntry {
   modified: string;
 }
 
-export interface BackupPermanentSummary {
+export interface BackupFolderSummary {
   count: number;
   bytes: number;
 }
@@ -24,7 +24,8 @@ export interface BackupHealth {
   localError: string;
   externalError: string;
   cloudVerified: false;
-  permanentBackups: BackupPermanentSummary;
+  permanentBackups: BackupFolderSummary;
+  externalBackups: BackupFolderSummary;
 }
 
 export interface BackupResult {

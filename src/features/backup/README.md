@@ -66,6 +66,7 @@ backup/
 
 - **Copie verificată înainte de redenumire.** `VACUUM INTO` scrie într-un `.tmp`; abia după `readBackupSnapshot` (integritate + parsare) fișierul e redenumit la numele final. Un fișier cu numele final e întotdeauna o copie validă.
 - **Copiile dinaintea unei operațiuni ireversibile nu expiră.** `selectBackupsToKeep` le păstrează pe cele cu `inainte-` sau `migrare` în nume, indiferent de vechime; restul retenției e ultimele 20 de copii, câte una pentru fiecare din ultimele 30 de zile și 12 luni cu backup.
+- **Folderul extern urmează aceeași retenție ca cel local.** Fără ea, fiecare copie automată rămânea în Drive pentru totdeauna; o curățare externă eșuată devine un avertisment pe `warning`, nu un backup ratat.
 - **Numele backupului validat ca nume de fișier, nu ca cale.** `resolveBackupFile` refuză orice ar putea ieși din folderul de backup (`../`, cale absolută).
 - **Copia externă se verifică prin hash**, nu doar prin dimensiune: `sha256Hex` pe fișierul local și pe copie trebuie să coincidă înainte de redenumire.
 - **Backupul automat rărit, dar cu reîncercare imediată** dacă ultima copie (locală sau externă) a eșuat — altfel utilizatorul ar afla abia după expirarea intervalului.

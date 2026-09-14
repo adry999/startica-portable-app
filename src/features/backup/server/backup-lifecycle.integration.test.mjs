@@ -108,6 +108,19 @@ test('Backupul dinaintea ștergerii definitive apare în /api/backups, în perma
   assert.deepEqual(preview.errors, []);
 });
 
+test('/api/health include externalBackups pentru folderul extern configurat', async t => {
+  const app = await startApplication(t, 'startica-external-summary-');
+  const external = join(app.dir, 'extern');
+  mkdirSync(external);
+  // /api/settings declanșează o copie ('configurare'), care e prima și singura din extern.
+  assert.equal((await app.post('/api/settings', { externalDir: external })).ok, true);
+
+  const health = await app.get('/api/health');
+
+  assert.equal(health.externalBackups.count, 1);
+  assert.ok(health.externalBackups.bytes > 0);
+});
+
 test('Dispariția folderului extern este raportată de starea aplicației, nu la următorul backup', async t => {
   const app = await startApplication(t, 'startica-extern-', { autoBackupIntervalMs: 300000 });
   const external = join(app.dir, 'extern');

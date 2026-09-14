@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, existsSync, readdirSync, copyFileSync, rmSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  existsSync,
+  readdirSync,
+  copyFileSync,
+  writeFileSync,
+  utimesSync,
+  openSync,
+  closeSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -87,6 +98,92 @@ test('resolveBackupFile respinge un nume cu separator de cale', t => {
 
   assert.throws(() => service.resolveBackupFile('../startica_x.db'));
   assert.throws(() => service.resolveBackupFile('sub/startica_x.db'));
+});
+
+// Fișiere fictive .db (fără schema reală) doar pentru fileList()/selectBackupsToKeep(),
+// care lucrează pe nume și mtime, nu pe conținut.
+function writeFakeBackup(dir, mtimeMs, index, content = 'continut fictiv') {
+  const name = `startica_${new Date(mtimeMs).toISOString().replace(/[:.]/g, '-')}_automat_${index.toString(16).padStart(8, '0')}.db`;
+  const file = join(dir, name);
+  writeFileSync(file, content);
+  utimesSync(file, new Date(mtimeMs), new Date(mtimeMs));
+  return { file, name };
+}
+
+test('copia externă urmează aceeași retenție ca cea locală', t => {
+  const { service, dir, writeSetting } = createHarness(t);
+  const external = join(dir, 'extern');
+  mkdirSync(external);
+  writeSetting('externalDir', external);
+
+  const now = Date.now();
+  const oldNames = [];
+  for (let i = 0; i < 25; i++) {
+    // i=0 cel mai vechi, i=24 cel mai nou dintre cele 25 fictive.
+    oldNames.push(writeFakeBackup(external, now - (25 - i) * 1000, i).name);
+  }
+
+  const result = service.backup('manual');
+
+  assert.equal(result.warning, '', result.warning);
+  const remaining = readdirSync(external).filter(name => name.endsWith('.db'));
+  assert.equal(remaining.length, 20, 'Retenția externă păstrează tot 20 de copii, ca cea locală.');
+  assert.ok(remaining.includes(result.name), 'Copia nouă e mereu păstrată.');
+  assert.ok(!remaining.includes(oldNames[0]), 'Cea mai veche copie fictivă a fost ștearsă.');
+  assert.ok(remaining.includes(oldNames[24]), 'Cea mai recentă dintre cele vechi a fost păstrată.');
+});
+
+test('o curățare externă eșuată nu anulează copia reușită', t => {
+  const { service, dir, writeSetting } = createHarness(t);
+  const external = join(dir, 'extern');
+  mkdirSync(external);
+  writeSetting('externalDir', external);
+
+  const now = Date.now();
+  // 21 de copii fictive, mai vechi decât cea nouă: retenția (top 20) trebuie
+  // să elimine exact cele mai vechi două, dintre care una rămâne blocată.
+  const { file: locked } = writeFakeBackup(external, now - 21000, 0);
+  for (let i = 1; i <= 20; i++) writeFakeBackup(external, now - (21 - i) * 1000, i);
+
+  // Un handle deschis blochează unlinkSync pe Windows, deci fișierul cel mai
+  // vechi (candidat sigur la ștergere) nu poate fi eliminat de pruneExternal.
+  const handle = openSync(locked, 'r');
+  t.after(() => {
+    try {
+      closeSync(handle);
+    } catch {
+      // deja închis
+    }
+  });
+
+  const result = service.backup('manual');
+
+  if (!existsSync(locked)) {
+    t.skip('Pe acest sistem de fișiere, ștergerea unui fișier deschis a reușit.');
+    return;
+  }
+  assert.match(result.warning, /Curățarea copiilor externe/);
+  assert.ok(existsSync(join(external, result.name)), 'Copia nouă există, deși retenția externă a eșuat parțial.');
+});
+
+test('health().externalBackups numără copiile din folderul extern configurat', t => {
+  const { service, dir, writeSetting } = createHarness(t);
+  const external = join(dir, 'extern');
+  mkdirSync(external);
+  writeSetting('externalDir', external);
+
+  let bytes = 0;
+  const now = Date.now();
+  for (let i = 0; i < 3; i++) {
+    const size = (i + 1) * 10;
+    writeFakeBackup(external, now - i * 1000, i, 'x'.repeat(size));
+    bytes += size;
+  }
+
+  assert.deepEqual(service.health().externalBackups, { count: 3, bytes });
+
+  writeSetting('externalDir', '');
+  assert.deepEqual(service.health().externalBackups, { count: 0, bytes: 0 });
 });
 
 test('autoBackup() sare peste copie în interval și reîncearcă imediat după o eroare locală', t => {

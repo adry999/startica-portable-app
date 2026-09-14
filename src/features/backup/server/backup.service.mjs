@@ -43,6 +43,25 @@ function permanentBackupsSummary(dir) {
   }
 }
 
+// Folderul extern urmează aceeași retenție ca cel local (vezi pruneExternal),
+// deci suma tuturor copiilor arată exact cât se păstrează acolo, nu doar ultima.
+function externalBackupsSummary(dir) {
+  if (!dir) return { count: 0, bytes: 0 };
+  try {
+    const files = readdirSync(dir).filter(name => BACKUP_NAME.test(name));
+    return { count: files.length, bytes: files.reduce((sum, name) => sum + statSync(join(dir, name)).size, 0) };
+  } catch {
+    return { count: 0, bytes: 0 };
+  }
+}
+
+// Aceeași retenție ca local: fără ea, fiecare backup automat rămânea în Drive pentru totdeauna.
+function pruneExternal(external) {
+  const files = fileList(external),
+    keep = selectBackupsToKeep(files);
+  for (const file of files) if (!keep.has(file.name)) unlinkSync(join(external, file.name));
+}
+
 // Un backup întrerupt (cădere de curent, disc plin) lasă în urmă un fișier
 // .db.tmp de dimensiunea bazei. fileList() nu îl vede, deci retenția nu îl
 // atinge niciodată.
@@ -127,6 +146,11 @@ export function createBackupService({
       renameSync(copy, join(external, name));
       writeSetting('lastExternal', new Date().toISOString());
       writeSetting('externalError', '');
+      try {
+        pruneExternal(external);
+      } catch (e) {
+        warning += ' Curățarea copiilor externe a eșuat: ' + /** @type {Error} */ (e).message;
+      }
     } catch (e) {
       const failure = /** @type {Error} */ (e);
       removeFileIfPresent(copy);
@@ -222,17 +246,19 @@ export function createBackupService({
 
   /** @returns {BackupHealth} */
   function health() {
+    const external = readSetting('externalDir');
     return {
       ok: true,
       database: databaseFile,
       backup: backupDirectory,
-      externalDir: readSetting('externalDir'),
+      externalDir: external,
       lastLocal: readSetting('lastLocal') || fileList(backupDirectory)[0]?.modified || '',
       lastExternal: readSetting('lastExternal'),
       localError: readSetting('localError'),
       externalError: externalFailure(),
       cloudVerified: false,
       permanentBackups: permanentBackupsSummary(backupDirectory),
+      externalBackups: externalBackupsSummary(external),
     };
   }
 
