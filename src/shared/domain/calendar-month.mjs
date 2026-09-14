@@ -11,12 +11,9 @@ export function monthOK(v) {
   );
 }
 export function dateOK(v) {
-  return (
-    typeof v === 'string' &&
-    /^\d{4}-\d{2}-\d{2}$/.test(v) &&
-    monthOK(v.slice(0, 7)) &&
-    new Date(v + 'T12:00:00Z').toISOString().slice(0, 10) === v
-  );
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v) || !monthOK(v.slice(0, 7))) return false;
+  const date = new Date(v + 'T12:00:00Z');
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === v;
 }
 // Ora fixă la prânz UTC: aritmetica pe zile nu este afectată de ora de vară.
 export const shiftDays = (day, delta) =>

@@ -54,3 +54,10 @@ test('CSV: ghilimele, delimitatori, UTF-8 și validare strictă', () => {
   ])
     assert.ok(previewChildrenCsvImport(invalid).errors.length);
 });
+
+test('CSV: data nașterii cu zi 0 produce eroare cu mesajul românesc', () => {
+  const invalid = csv.replace('01.01.2022', '0.5.2024');
+  const result = previewChildrenCsvImport(invalid);
+  assert.ok(result.errors.length > 0);
+  assert.ok(result.errors.some(e => /data nașterii invalidă \(0\.5\.2024\)/.test(e)));
+});
