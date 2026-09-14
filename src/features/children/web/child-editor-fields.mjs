@@ -1,15 +1,10 @@
 import { normalizeRecord, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
-import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup } from '#shared/ui/form-fields.mjs';
+import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
 
 // Implementează structural RecordEditorFields din #features/record-editing —
 // fără să îl importe, ca feature-urile să rămână izolate unele de altele.
-
-// Fieldset-ul e identic la copil și la achitare, dar field-urile nu pot
-// împărți cod între feature-uri — de-aia mica duplicare cu payment-editor-fields.mjs.
-const section = (title, html) =>
-  `<fieldset class="form-section"><legend>${escapeHtml(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
 
 function parseHistory(value, key) {
   return value
@@ -38,21 +33,21 @@ function markup(record, context) {
     .join('');
   const currentMonth = context.today().slice(0, 7);
   return (
-    section(
+    formSectionMarkup(
       'Date copil',
       textFieldMarkup('name', 'Nume copil', record.name, 'text', 'required') +
         `<label class="field">Data nașterii<input name="birthDate" type="date" value="${escapeHtml(record.birthDate)}" id="childBirthDate"><small class="field-hint" id="childAgeHint">Vârstă: ${formatAge(record.birthDate)}</small></label>` +
         selectFieldMarkup('status', 'Statut', record.status || 'Activ', CHILD_STATUSES) +
         `<label class="field">Grupă<select name="groupId"><option value="">Fără grupă</option>${groupOptions}</select></label>`,
     ) +
-    section(
+    formSectionMarkup(
       'Părinți',
       textFieldMarkup('parent', 'Părinte 1', record.parent, 'text', 'required') +
         textFieldMarkup('phone', 'Telefon părinte 1 (opțional)', record.phone, 'tel') +
         textFieldMarkup('parent2', 'Părinte 2 (opțional)', record.parent2) +
         textFieldMarkup('phone2', 'Telefon părinte 2 (opțional)', record.phone2, 'tel'),
     ) +
-    section(
+    formSectionMarkup(
       'Contract și taxe',
       textFieldMarkup('contractDate', 'Data contractului', record.contractDate, 'date') +
         textFieldMarkup('attendanceDate', 'Început frecventare', record.attendanceDate, 'date') +
@@ -62,7 +57,7 @@ function markup(record, context) {
         textFieldMarkup('feeFrom', 'Taxa aplicabilă din luna', currentMonth, 'month') +
         textFieldMarkup('dueDay', 'Ziua scadenței', record.dueDay || 10, 'number', 'min="1" max="31" required'),
     ) +
-    section(
+    formSectionMarkup(
       'Istoric (avansat)',
       textareaFieldMarkup(
         'feeHistory',

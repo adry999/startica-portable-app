@@ -3,17 +3,12 @@ import { cents } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { firstUnpaidMonth } from '#shared/domain/tuition-obligation.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
-import { textFieldMarkup } from '#shared/ui/form-fields.mjs';
+import { textFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
 import { childPickerHTML, wireChildPicker } from '#shared/ui/child-picker.mjs';
 import { addAllocationRow, readAllocationRows, renderAllocationBalance } from './allocation-rows.mjs';
 
 // Implementează structural RecordEditorFields, fără să importe record-editing,
 // ca feature-urile să rămână izolate.
-
-// Fieldset-ul e identic la copil și la achitare, dar field-urile nu pot
-// împărți cod între feature-uri — de-aia mica duplicare cu child-editor-fields.mjs.
-const section = (title, html) =>
-  `<fieldset class="form-section"><legend>${escapeHtml(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
 
 /** @param {HTMLFormElement} formElement */
 function readTenders(formElement) {
@@ -44,14 +39,14 @@ function markup(record, context) {
     )
     .join('');
   return (
-    section(
+    formSectionMarkup(
       'Copil și dată',
       `<label class="field full">Copil` +
         childPickerHTML({ name: 'childId', selectedId: record.childId || '', selectedLabel: currentLabel }) +
         `</label>` +
         textFieldMarkup('date', 'Data încasării', record.date || context.today(), 'date', 'required'),
     ) +
-    section(
+    formSectionMarkup(
       'Sumă și metodă',
       textFieldMarkup(
         'amount',
@@ -63,12 +58,12 @@ function markup(record, context) {
         `<div class="full tender-fields"><p>Completează una sau mai multe metode. Totalul se calculează automat; repartizarea pe luni folosește acest total o singură dată.</p>${methods}</div>` +
         textFieldMarkup('sourceName', 'Nume din sursă / plătitor', record.sourceName || record.childName || ''),
     ) +
-    section(
+    formSectionMarkup(
       'Repartizare pe luni',
       `<div class="full"><p>Suma rămasă nerepartizată este evidențiată ca avans.</p><div id="allocationRows"></div><button type="button" class="action-btn" id="addAllocation">+ Lună</button><p id="allocationBalance"></p></div>`,
     ) +
     (record.verification
-      ? section(
+      ? formSectionMarkup(
           'Verificare import',
           `<label class="field full checkbox-field"><input name="reviewed" type="checkbox" ${record.reviewed ? 'checked' : ''}><span>Am verificat observațiile importului</span></label>` +
             `<p class="full field-hint">${escapeHtml(record.verification)}</p>`,
