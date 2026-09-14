@@ -82,10 +82,34 @@ test('o eroare SQLite ajunge ca 500 cu mesaj românesc și se scrie în jurnal',
   const response = await postJson(origin, '/api/sistem');
   assert.equal(response.status, 500);
   assert.deepEqual(await response.json(), {
-    error: 'Eroare de sistem la salvare (disc, fișiere). Detalii în jurnal.',
+    error: 'Eroare de sistem (disc, fișiere sau internă). Detalii în jurnal.',
   });
   assert.equal(logged.length, 1);
   assert.match(String(logged[0]), /database or disk is full/);
+});
+
+test('o eroare de programare (TypeError) ajunge ca 500 cu mesaj românesc și se scrie în jurnal', async t => {
+  const logged = [];
+  const { origin } = await startDispatcherServer(
+    t,
+    [
+      {
+        method: 'POST',
+        path: '/api/programare',
+        handle: () => {
+          throw new TypeError('Cannot read properties of undefined');
+        },
+      },
+    ],
+    { log: message => logged.push(message) },
+  );
+  const response = await postJson(origin, '/api/programare');
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), {
+    error: 'Eroare de sistem (disc, fișiere sau internă). Detalii în jurnal.',
+  });
+  assert.equal(logged.length, 1);
+  assert.match(String(logged[0]), /Cannot read properties of undefined/);
 });
 
 test('un fail() de domeniu își păstrează mesajul și statusul, fără să scrie în jurnal', async t => {

@@ -43,10 +43,16 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
         log('Eroare după trimiterea răspunsului: ' + failure.message);
         return;
       }
-      // Erorile Node/SQLite (cod, nu fail() de domeniu) nu au mesaj pentru utilizator; doar în jurnal.
-      if (failure.code || failure.errcode) {
+      // Erorile Node/SQLite și cele de programare (nu fail() de domeniu) nu au mesaj pentru utilizator; doar în jurnal.
+      if (
+        failure.code ||
+        failure.errcode ||
+        failure instanceof TypeError ||
+        failure instanceof RangeError ||
+        failure instanceof ReferenceError
+      ) {
         log(failure.stack || failure);
-        sendResponse(response, { error: 'Eroare de sistem la salvare (disc, fișiere). Detalii în jurnal.' }, 500);
+        sendResponse(response, { error: 'Eroare de sistem (disc, fișiere sau internă). Detalii în jurnal.' }, 500);
         return;
       }
       sendResponse(response, { error: failure.message }, failure.status || 400);
