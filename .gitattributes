@@ -1,6 +1,7 @@
 * text=auto eol=lf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+scripts/pachet-client/CITESTE-MA.txt text eol=crlf
 *.ico binary
 *.lnk binary
 *.db binary

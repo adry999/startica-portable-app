@@ -1,0 +1,109 @@
+STARTICA 1.2.0 — ACTUALIZARE PENTRU CLIENT
+Pregătită la 14 septembrie 2026
+
+ACTUALIZARE (ai deja Startica pe acest calculator)
+1. În aplicația veche, deschisă, folosește Backup acum din Backup și
+   setări și așteaptă confirmarea.
+2. Închide fereastra Startica și așteaptă câteva secunde, cât aplicația
+   se oprește și face copia de siguranță. Dacă rămâne pornită în fundal,
+   folosește Opreste_Startica.vbs din folderul vechi.
+3. Redenumește folderul vechi Startica în Startica_vechi (clic dreapta,
+   Redenumire).
+4. Extrage arhiva nouă în același loc, ca să apară un folder nou
+   Startica, lângă Startica_vechi.
+5. Mută folderele Startica_Date și Startica_Backup din
+   Startica_vechi\Aplicatie în Startica\Aplicatie.
+6. Pornește noul Startica din scurtătura de pe Desktop; calea rămâne
+   aceeași, iar scurtătura funcționează în continuare. Dacă ai mutat
+   folderul în alt loc, rulează din nou Creeaza_Scurtatura.vbs din
+   noul folder.
+7. Verifică în aplicație că fișele copiilor, achitările și cheltuielile
+   sunt cele cunoscute, iar Backup și setări arată același folder
+   extern ca înainte.
+8. Păstrează Startica_vechi câteva zile, cât verifici totul, apoi îl
+   poți șterge.
+
+Nu porni noul Startica înainte să muți Startica_Date și Startica_Backup
+din Startica_vechi. Dacă l-ai pornit din greșeală, închide-l și
+înlocuiește folderul Startica_Date din noul Aplicatie cu cel din
+Startica_vechi.
+
+INSTALARE NOUĂ (nu ai folosit Startica până acum)
+1. Extrage întregul folder Startica din arhivă într-un loc permanent,
+   de exemplu Documente. Nu porni aplicația direct din arhiva ZIP.
+2. Deschide Creeaza_Scurtatura.vbs prin dublu clic. Pe Desktop apare
+   scurtătura Startica, cu pictograma aplicației.
+3. Pornește aplicația din scurtătura Startica de pe Desktop sau cu
+   dublu clic pe Porneste_Startica.vbs. La prima pornire, aplicația
+   creează automat o bază de date goală; nu este nevoie de nicio
+   configurare suplimentară pentru pornire.
+
+Dacă Windows afișează un avertisment de securitate la deschiderea
+fișierelor .vbs, alege Executare. Poți evita avertismentul dacă, înainte de
+extragere, deschizi Proprietăți pe arhiva ZIP și bifezi Deblocare.
+
+Aplicația este pentru Windows pe 64 de biți și folosește Chrome sau Edge,
+instalat pe calculator. Motorul Node.js este inclus; nu trebuie instalat
+separat și nu trebuie rulat npm install. Aplicația funcționează local,
+inclusiv fără internet. Sincronizarea unei copii în cloud necesită internet.
+
+DATE ȘI SALVARE
+Acest pachet NU conține date (fișe, achitări, cheltuieli). La
+actualizare, datele vin din folderul vechi, mutate la pasul 5 de mai
+sus. La instalare nouă, baza pornește goală și se completează pe
+măsură ce lucrezi. Datele de lucru sunt în
+Aplicatie\Startica_Date\startica.db.
+
+Formularele se salvează prin butonul Salvează. Așteaptă confirmarea salvării
+înainte de închidere. La închiderea ultimei ferestre, serverul se oprește și
+creează o copie de siguranță. Opreste_Startica.vbs este opțiunea de rezervă
+dacă aplicația rămâne pornită în fundal.
+
+Nu muta, nu șterge și nu înlocui fișierele bazei cât aplicația este deschisă.
+Nu lucra alternativ în două copii ale folderului: datele lor sunt separate.
+Păstrează folderul de lucru pe discul local, în afara unui folder sincronizat.
+
+BACKUP
+Copiile locale sunt în Aplicatie\Startica_Backup. La actualizare,
+folderul vine din Startica_vechi, cu backupurile de până acum;
+backupurile ulterioare se creează automat.
+
+Deschide Backup și setări și confirmă (sau, la instalare nouă,
+configurează) un folder existent pe o destinație externă sau în Google
+Drive. Folosește Salvează și testează copia, apoi verifică separat
+sincronizarea în Google Drive. Confirmarea copiei locale nu confirmă
+încărcarea în cloud.
+
+Pentru o copie înainte de o operațiune importantă, folosește Backup acum.
+Restaurarea înlocuiește datele curente și cere confirmare. Exportul Excel
+nu înlocuiește backupul bazei.
+
+VERIFICAREA EVIDENȚEI
+În Centrul de verificare sunt afișate fișele incomplete, achitările neasociate
+și alte neclarități. Verifică documentele înainte de asocierea unei plăți sau
+solicitarea unei restanțe. Pachetul nu corectează automat aceste date.
+
+O achitare poate include Cash, Card și Transfer și poate fi repartizată pe
+mai multe luni. Diferența nerepartizată este avans; nu scade automat o datorie.
+Taxele și statutele se aplică din luna indicată. O fișă fără date suficiente
+rămâne De verificat și nu generează notificare de plată.
+
+FIȘIERE
+Creeaza_Scurtatura.vbs — pune scurtătura Startica pe Desktop
+Porneste_Startica.vbs  — deschide aplicația
+Opreste_Startica.vbs   — oprire de rezervă
+CITESTE-MA.txt         — aceste instrucțiuni
+Aplicatie              — programul și motorul; datele apar după prima
+                          pornire sau după mutarea celor vechi, la
+                          actualizare
+
+Păstrează întregul subfolder Aplicatie. Subfolderele src, web și runtime
+sunt necesare funcționării; nu sunt fișiere temporare.
+Licențele componentelor incluse se află în Aplicatie\Licente.
+Folderul Aplicatie\Jurnale apare automat la pornire și ajută la depanare.
+
+DACĂ NU PORNEȘTE
+Extrage toate fișierele din nou, verifică existența Chrome/Edge și închide
+celelalte copii Startica. Dacă există politici Windows care blochează
+fișierele VBS sau PowerShell, cere ajutorul persoanei care administrează
+calculatorul. Mesajul de eroare și fișierele din Jurnale ajută la diagnostic.
