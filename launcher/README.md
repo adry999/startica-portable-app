@@ -25,7 +25,7 @@ Toate sunt opționale.
 | `--app-dir <dir>` | folderul `Startica.exe` | unde sunt `startica_server.mjs` și `runtime\node.exe` (în dezvoltare: rădăcina repo-ului) |
 | `--port <n>` | `8765` | portul preferat; dacă e ocupat, sistemul alege altul |
 | `--profile-dir <dir>` | `<home>\Interfata` | profilul de browser al ferestrei aplicației |
-| `--stop` | — | oprește serverul acestei rădăcini de date și iese |
+| `--stop` | — | închide Startica pentru acest home: ferestrele profilului, apoi așteaptă proprietarul (mutex, max 15 s), apoi serverul |
 | `--no-migrate` | — | sare peste detectarea instalării vechi (teste) |
 | `--quiet` | — | fără ferestre de dialog; erorile doar în jurnal, cod de ieșire 1 (teste, instaler) |
 
