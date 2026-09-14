@@ -31,12 +31,17 @@ WizardStyle=modern
 Compression=lzma2/max
 SolidCompression=yes
 
-; Inno 6.7.3 instalat aici nu are Romanian.isl in Languages\.
+; Traducere neoficiala vendorizata (Inno 6.7.3 instalat aici nu are Romanian.isl in Languages\).
 [Languages]
-Name: "default"; MessagesFile: "compiler:Default.isl"
+Name: "romanian"; MessagesFile: "{#SourcePath}Romanian.isl"
 
 [Files]
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+
+; La actualizare, module vechi din src/web care nu mai exista in noua versiune nu trebuie sa ramana amestecate (datele nu sunt in {app}).
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\src"
+Type: filesandordirs; Name: "{app}\web"
 
 [Tasks]
 Name: "desktopicon"; Description: "Creează o scurtătură pe &desktop"; GroupDescription: "Scurtături suplimentare:"

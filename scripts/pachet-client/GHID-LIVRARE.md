@@ -11,6 +11,7 @@ Pentru cine pregătește și instalează pachetul la client, nu pentru client
 - [ ] Test de ciclu de viață: a doua pornire deschide a doua fereastră; închiderea ultimei ferestre oprește serverul și scrie un backup `*_inchidere_*`.
 - [ ] `scripts\pachet-client\build-client-package.ps1` rulează fără erori și produce `Livrare\Startica_Setup_<versiune>.exe`.
 - [ ] Instalerul instalat de probă pe acest calculator (sau într-o mașină virtuală / Windows Sandbox): pornește, deschide fereastra, scurtăturile apar, dezinstalarea lasă evidența pe loc.
+- [ ] Actualizare de probă cu Startica pornită (fereastră deschisă): instalerul o închide, nu cere repornire, evidența rămâne; apoi dezinstalare cu Startica pornită: `{app}` dispare, `%LOCALAPPDATA%\Startica` rămâne.
 - [ ] SHA-256 al instalerului calculat și notat (`Get-FileHash Livrare\Startica_Setup_<versiune>.exe -Algorithm SHA256`).
 
 ## La client

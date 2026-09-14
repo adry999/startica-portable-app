@@ -90,14 +90,14 @@ csc.exe /nologo /target:winexe /platform:anycpu /optimize+ /langversion:5
 | `--app-dir <dir>` | folderul exe-ului | unde sunt `startica_server.mjs` și `runtime\node.exe` (în dezvoltare: rădăcina repo-ului) |
 | `--port <n>` | 8765 | portul preferat |
 | `--profile-dir <dir>` | `<home>\Interfata` | profilul browserului |
-| `--stop` | — | oprește serverul acestei rădăcini și iese |
+| `--stop` | — | închide Startica pentru acest home: ferestrele profilului (`CloseMainWindow`, apoi `Kill` după 5 s), serverul, apoi așteaptă ieșirea procesului proprietar (mutex, max 15 s) |
 | `--no-migrate` | — | sare peste detectarea instalării vechi (teste) |
 | `--quiet` | — | fără ferestre de dialog; erorile doar în jurnal și cod de ieșire 1 (teste, instaler) |
 
 **Fluxul de pornire:**
 
 1. Creează `<home>`, `Jurnale`, deschide `lansator.log`.
-2. `--stop`: găsește serverul (pasul 6), `POST /api/shutdown` cu tokenul din `/api/session`, așteaptă până la 60 s închiderea procesului, iese.
+2. `--stop`: închide Startica pentru acest home: ferestrele profilului (`CloseMainWindow`, apoi `Kill` după 5 s), serverul, apoi așteaptă ieșirea procesului proprietar (mutex, max 15 s), iese.
 3. Migrare (§2.5), doar dacă `<home>\Startica_Date\startica.db` lipsește și nu s-a dat `--no-migrate`/`--quiet`.
 4. Motorul: `<app-dir>\runtime\node.exe`; dacă lipsește, `node` din PATH (dezvoltare); altfel eroare „Lipsește motorul aplicației. Reinstalează Startica.”
 5. Browserul, în ordine: Edge (`%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe`, `%ProgramFiles%\Microsoft\Edge\Application\msedge.exe`, App Paths din registru), apoi Chrome (`%ProgramFiles%\Google\Chrome\Application\chrome.exe`, `%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe`, App Paths). Niciunul: „Startica are nevoie de Microsoft Edge sau Google Chrome. Instalează unul dintre ele și pornește din nou.”
@@ -138,11 +138,12 @@ Dialog: „Am găsit evidența Startica în: `<cale>` (modificată la `<data>`).
 | `OutputBaseFilename` | `Startica_Setup_{#AppVersion}` |
 | `WizardStyle` | `modern`; `DisableProgramGroupPage=yes`; `DisableDirPage=auto`; `UsePreviousAppDir=yes` |
 | `Compression` | `lzma2/max`, `SolidCompression=yes` |
-| `[Languages]` | `Romanian.isl` din Inno dacă există, altfel `Default.isl` (**neverificat** dacă 6.x include româna) |
+| `[Languages]` | `Romanian.isl` vendorizat în `scripts/pachet-client/` (traducere neoficială, Inno 6.1.0+); instalarea locală de Inno 6.7.3 nu are `Romanian.isl` în `Languages\` |
 | `[Files]` | conținutul stagiului `{app}`: `Startica.exe`, `runtime\node.exe`, `startica_server.mjs`, `package.json`, `src\**` fără teste, `web\**`, `Licente\**`, `CITESTE-MA.txt` |
+| `[InstallDelete]` | `{app}\src`, `{app}\web` (recursiv), înainte de copiere: module vechi rămase la actualizare nu trebuie amestecate cu cele noi (datele nu sunt în `{app}`) |
 | `[Icons]` | `{autoprograms}\Startica`, `{autodesktop}\Startica` (task bifat implicit); scurtătura de pe Desktop poartă același nume ca cea veche, deci o înlocuiește |
 | `[Run]` | `{app}\Startica.exe`, `postinstall nowait`, „Pornește Startica” |
-| `[Code]` `PrepareToInstall` | dacă există `{app}\Startica.exe`, rulează `--stop --quiet` și așteaptă terminarea (max 60 s), ca `node.exe` să nu fie în uz |
+| `[Code]` `PrepareToInstall` | dacă există `{app}\Startica.exe`, rulează `--stop --quiet` și așteaptă terminarea (max 60 s), ca `Startica.exe` și `node.exe` să nu fie în uz |
 | `[UninstallRun]` | `{app}\Startica.exe --stop --quiet`, `RunOnceId: StopStartica` |
 | Dezinstalare | șterge doar `{app}`; mesaj final: „Evidența rămâne în %LOCALAPPDATA%\Startica.” |
 
