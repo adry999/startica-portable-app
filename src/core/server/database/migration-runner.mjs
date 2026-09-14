@@ -9,7 +9,7 @@ import { migration as groupsEntity } from './migrations/002-groups-entity.mjs';
 // backup automat înainte și într-o tranzacție proprie. Adaugă una nouă la
 // finalul listei, cu numărul următor — nu modifica niciodată una deja lansată,
 // altfel o bază reală care a trecut deja prin ea ar rula-o din nou greșit.
-export const MIGRATIONS = [appStateToRecords, groupsEntity];
+const MIGRATIONS = [appStateToRecords, groupsEntity];
 
 const hasTable = (database, name) =>
   !!database.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
@@ -17,7 +17,7 @@ const hasTable = (database, name) =>
 // O bază fără schemaVersion memorată e fie nouă, fie a trecut deja prin
 // migrarea veche (marcată prin legacyMigrated, dinainte să existe lista de
 // mai jos) — în ambele cazuri migrarea #1 nu mai trebuie rulată.
-export function schemaVersion(database) {
+function schemaVersion(database) {
   const stored = readSettingValue(database, 'schemaVersion');
   if (stored !== undefined) return Number(stored);
   return !hasTable(database, 'app_state') || readSettingValue(database, 'legacyMigrated') ? 1 : 0;

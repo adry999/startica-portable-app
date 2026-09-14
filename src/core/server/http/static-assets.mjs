@@ -19,7 +19,7 @@ const STATIC_FILES = {
   '/assets/fonts/nunito-latin-ext.woff2': 'web/assets/fonts/nunito-latin-ext.woff2',
 };
 
-export const mimeFor = path =>
+const mimeFor = path =>
   path.endsWith('.svg')
     ? 'image/svg+xml'
     : path.endsWith('.woff2')
@@ -35,7 +35,7 @@ const INLINE_IMPORT_MAP = /<script type="importmap">([\s\S]*?)<\/script>/g;
 // Import map-ul e singurul script inline permis. Hash-ul se calculează din fișierul
 // servit, deci nu se poate desincroniza de conținutul lui.
 /** @param {string} html */
-export const importMapHashes = html =>
+const importMapHashes = html =>
   [...html.matchAll(INLINE_IMPORT_MAP)].map(match => createHash('sha256').update(match[1]).digest('base64'));
 
 export const isStaticAsset = path => Object.hasOwn(STATIC_FILES, path);

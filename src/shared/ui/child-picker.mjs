@@ -2,8 +2,6 @@
 import { escapeHtml as esc } from '#shared/format/html-escape.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 
-export const normalizeSearch = normalizeSearchText;
-
 export function childPickerHTML({ name, selectedId = '', selectedLabel = '', placeholder = 'Caută copil după nume…' }) {
   return (
     `<div class="combobox" data-child-picker>` +
@@ -50,8 +48,8 @@ export function wireChildPicker(picker, options, onChange) {
     if (openList === list) openList = null;
   };
   const renderList = () => {
-    const q = normalizeSearch(search.value);
-    const matches = options.filter(o => !q || normalizeSearch(o.label).includes(q));
+    const q = normalizeSearchText(search.value);
+    const matches = options.filter(o => !q || normalizeSearchText(o.label).includes(q));
     let lastGroup;
     list.innerHTML =
       matches

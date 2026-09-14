@@ -12,8 +12,6 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | --- | --- |
 | `createBackupService({ database, databaseFile, backupDirectory, readSetting, writeSetting, autoBackupIntervalMs })` | `backup`, `safeBackup`, `autoBackup`, `health`, `listBackups`, `resolveBackupFile`, `cancelScheduledBackup` |
 | `createBackupRoutes({ backupService, readSetting, writeSetting, auditTrail, runRevisionTransaction, replaceAllRecords, dataDirectory, backupDirectory })` | `GET /api/health`, `GET /api/backups`, `GET /api/backup-preview`, `POST /api/backup`, `POST /api/restore`, `POST /api/settings` |
-| `readBackupSnapshot(file)` | citește un fișier `.db` și verifică integritatea lui înainte de a-l accepta ca stare |
-| `selectBackupsToKeep(files)` | regula de retenție, pură |
 
 ### `index.web.mjs`
 

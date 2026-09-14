@@ -1,4 +1,4 @@
-import type { RecordsSnapshot, RecordType, RecordByType } from '#shared/contracts/record-types.mjs';
+import type { RecordsSnapshot, RecordByType } from '#shared/contracts/record-types.mjs';
 import type { RecordRepository, RevisionEnvelope, RunRevisionTransaction } from '#shared/contracts/persistence.mjs';
 import type { AuditTrail } from '#shared/contracts/audit-trail.mjs';
 

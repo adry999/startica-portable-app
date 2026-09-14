@@ -43,8 +43,7 @@ export function readSelectedMonth() {
   return boundElements?.selectedMonth.value || today().slice(0, 7);
 }
 
-// Exportată separat: alte module (formularele care se deschid peste calendar) o pot închide.
-export function closeMonthPicker() {
+function closeMonthPicker() {
   const elements = requireElements();
   elements.monthMenu.hidden = true;
   elements.monthTrigger.setAttribute('aria-expanded', 'false');

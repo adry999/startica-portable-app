@@ -11,15 +11,12 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | Export | Rol |
 | --- | --- |
 | `findRecordIssues(records)` | regulile de verificare, pe fișă și pe achitare (pur) |
-| `buildReviewCenter(records)` | grupează problemele pe înregistrare, cu progresul verificărilor de import |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `REVIEW_FILTERS` | lista `[valoare, etichetă]` pentru selectul de filtru |
-| `buildReviewCenter(records)` | ca mai sus |
-| `filterReviewItems(center, filter, search)` | filtrează itemii centrului după categorie și text |
+| `buildReviewCenter(records)` | grupează problemele pe înregistrare, cu progresul verificărilor de import |
 | `findRecordIssues(records)` | ca mai sus |
 | `createReviewCenterView({ elements, readRecords })` | întoarce `renderReviewCenter(center)` |
 

@@ -34,10 +34,6 @@ export {
   firstUnpaidMonth,
 };
 
-export {
-  buildBirthdayCalendar as monthCalendar,
-  listUpcomingBirthdays as upcomingBirthdays,
-} from '#features/children/domain/birthdays.mjs';
 export function cashSummary(s, month) {
   const payments = s.payments.filter(p => !p.archived && p.date.startsWith(month));
   const income = total(payments),

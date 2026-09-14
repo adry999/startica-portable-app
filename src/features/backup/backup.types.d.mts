@@ -70,17 +70,6 @@ export interface BackupRoutesDependencies {
   backupDirectory: string;
 }
 
-export interface BackupPreview {
-  children: number;
-  payments: number;
-  expenses: number;
-  groups: number;
-  categories: number;
-  paymentTotal: number;
-  expenseTotal: number;
-  errors: string[];
-}
-
 export interface BackupControllerDependencies {
   elements: {
     backupButton: HTMLButtonElement;

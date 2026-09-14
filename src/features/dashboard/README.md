@@ -10,7 +10,6 @@ Modul **independent**: nu importă alt feature. Copiii, plățile și grupele vi
 
 | Export | Rol |
 | --- | --- |
-| `summarizeCashForMonth(records, month)` | încasările/cheltuielile/soldul unei luni, pe metodă de plată |
 | `createDashboardView({ elements, readRecords, readToday, listUpcomingBirthdays, buildBirthdayCalendar, renderReviewCount })` | întoarce `renderDashboard({ month, review, evaluations })` |
 | `createChildrenSummaryView({ elements, readRecords })` | întoarce `renderChildrenSummary({ review })` |
 

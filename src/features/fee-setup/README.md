@@ -10,14 +10,12 @@ Modul **independent**: nu importă alt feature. Depinde de `groups` doar prin da
 
 | Export | Rol |
 | --- | --- |
-| `applyChildFeeSetup(child, setup)` | regula pură: scrie taxa/grupa/statutul în istoric pe luna dată |
 | `createFeeSetupRoutes({ recordRepository, auditTrail, runRevisionTransaction })` | `POST /api/children-setup`, cu corpul neschimbat: `{ updates: [{ id, from, fee?, groupId?, status? }], revision, requestId }` |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `hasMissingFee(child)` | copilul nu are niciun istoric de taxă |
 | `createFeeSetupController({ elements, readRecords, readToday, submitMutation, showNotice, renderMissingFeeCount })` | întoarce `{ render }`; leagă filtrul, completarea în masă și salvarea la crearea sa |
 
 ## Cum rămâne decuplat

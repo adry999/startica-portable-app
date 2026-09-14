@@ -4,7 +4,7 @@ import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 /** @typedef {import('../data-transfer.types.mjs').FinancialHistorySource} FinancialHistorySource */
 
 /** @returns {Child} copilul așa cum apare în exportul V5 sursă */
-export function v5SourceChild() {
+function v5SourceChild() {
   return normalizeRecord('children', { id: 'ID-1', name: 'Copil Test', birthDate: '2022-01-01' });
 }
 

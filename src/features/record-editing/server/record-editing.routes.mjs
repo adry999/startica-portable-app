@@ -8,8 +8,8 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 
 const SAVE_ACTION = 'salvare';
 const DELETE_ACTION = 'ștergere definitivă';
-// Grupele și categoriile au propriile rute de ștergere (groups/expenses);
-// aici doar tipurile cu arhivare, deci și cu „ștergere definitivă” a arhivei.
+// Grupele și categoriile au rute proprii de ștergere; aici doar tipurile cu arhivare.
+/** @type {import('../record-editing.types.mjs').EditableRecordType[]} */
 const DELETABLE_TYPES = ['children', 'payments', 'expenses'];
 
 /** @param {RecordEditingRoutesDependencies} dependencies */

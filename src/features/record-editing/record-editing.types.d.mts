@@ -15,7 +15,7 @@ export interface RecordSaveRequest extends RevisionRequest {
 /** Contractul HTTP existent al /api/record-delete; se păstrează neschimbat la migrare.
  *  Doar tipurile cu arhivare pot fi șterse definitiv (grupele/categoriile au rutele lor). */
 export interface RecordDeleteRequest extends RevisionRequest {
-  type: 'children' | 'payments' | 'expenses';
+  type: EditableRecordType;
   id: string;
 }
 

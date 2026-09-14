@@ -20,7 +20,6 @@ Modul **dependent**: are nevoie de istoric, de regula obligației lunare, de tra
 | `createPaymentAssignmentApi({ submitMutation })` | `submitAssignments(assignments)` |
 | `createPaymentAssignmentController(dependencies)` | `activate`, `deactivate`, `refresh`, `selectChild`, `selectUnambiguousNameMatches`, `clearSelections`, `saveSelections`, `dispose` |
 | `createPaymentAssignmentView({ elements, readChildren, readSelectedMonth, onSelectChild })` | întoarce `renderAssignmentScreen(state)`; reconstruiește tabelul doar când se schimbă coada |
-| `ASSIGNMENT_QUEUE_LIMIT` | 200 de achitări pe lot |
 | `findUnassignedPaymentHintsByChild(records)` | pentru portul din `billing` („posibilă plată neasociată”); îl leagă `app/` |
 
 ## Cum rămâne decuplat
