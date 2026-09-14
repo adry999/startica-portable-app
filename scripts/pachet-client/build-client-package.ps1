@@ -51,6 +51,7 @@ if ($BaseZip) {
 if (-not (Test-Path -LiteralPath $resolvedBaseZip -PathType Leaf)) {
     throw ('Arhiva de baza nu a fost gasita: ' + $resolvedBaseZip)
 }
+Write-Output ('Arhiva de baza: ' + $resolvedBaseZip)
 
 $packageJson = Get-Content -Raw -LiteralPath (Join-Path $repo 'package.json') | ConvertFrom-Json
 $version = $packageJson.version
@@ -150,6 +151,7 @@ try {
     $nodeVersionOutput = & $nodeExePath '--version'
     if ($LASTEXITCODE -ne 0) { throw 'Motorul Node din pachet nu a putut fi rulat.' }
     $actualNodeVersion = [version]($nodeVersionOutput.Trim().TrimStart('v'))
+    Write-Output ('Node din arhiva de baza: ' + $actualNodeVersion + ' (necesar ' + $enginesNode + ')')
     if ($actualNodeVersion -lt $requiredNodeVersion) {
         throw ('Motorul Node din arhiva de baza (' + $actualNodeVersion + ') este mai vechi decat cerinta din package.json (' + $enginesNode + ').')
     }
