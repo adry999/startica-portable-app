@@ -7,11 +7,12 @@ import { RESPONSE_SENT, createRouteDispatcher } from './route-dispatcher.mjs';
 /** @returns {import('node:net').AddressInfo} */
 const listeningAddress = server => /** @type {import('node:net').AddressInfo} */ (server.address());
 
-function startDispatcherServer(t, routes) {
+function startDispatcherServer(t, routes, options = {}) {
   const dispatchRequest = createRouteDispatcher({
     root: process.cwd(),
     sessionToken: 'test-token',
     routes,
+    ...options,
   }).dispatchRequest;
   const server = createServer((request, response) => dispatchRequest(request, response, listeningAddress(server).port));
   t.after(() => new Promise(done => server.close(done)));
@@ -61,6 +62,43 @@ test('un handler care apelează fail(..., 409) întoarce statusul și mesajul di
   const response = await postJson(origin, '/api/conflict');
   assert.equal(response.status, 409);
   assert.deepEqual(await response.json(), { error: 'Conflict de revizie.' });
+});
+
+test('o eroare SQLite ajunge ca 500 cu mesaj românesc și se scrie în jurnal', async t => {
+  const logged = [];
+  const { origin } = await startDispatcherServer(
+    t,
+    [
+      {
+        method: 'POST',
+        path: '/api/sistem',
+        handle: () => {
+          throw Object.assign(new Error('database or disk is full'), { code: 'ERR_SQLITE_ERROR', errcode: 13 });
+        },
+      },
+    ],
+    { log: message => logged.push(message) },
+  );
+  const response = await postJson(origin, '/api/sistem');
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), {
+    error: 'Eroare de sistem la salvare (disc, fișiere). Detalii în jurnal.',
+  });
+  assert.equal(logged.length, 1);
+  assert.match(String(logged[0]), /database or disk is full/);
+});
+
+test('un fail() de domeniu își păstrează mesajul și statusul, fără să scrie în jurnal', async t => {
+  const logged = [];
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'POST', path: '/api/conflict-domeniu', handle: () => fail('Conflict de revizie.', 409) }],
+    { log: message => logged.push(message) },
+  );
+  const response = await postJson(origin, '/api/conflict-domeniu');
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'Conflict de revizie.' });
+  assert.equal(logged.length, 0);
 });
 
 test('un handler care întoarce RESPONSE_SENT nu mai primește un al doilea răspuns', async t => {
