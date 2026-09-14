@@ -1,3 +1,5 @@
+import { isAbsolute } from 'node:path';
+
 // Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări (vezi features/backup/server/backup.service.mjs).
 export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
 
@@ -9,6 +11,7 @@ export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
  * @property {number} port 0 = port liber ales de sistem
  * @property {boolean} openBrowser
  * @property {number} autoBackupIntervalMs 0 = backup la fiecare scriere
+ * @property {string | undefined} home rădăcina de date a lansatorului desktop; absentă = folderul aplicației
  */
 
 const PROFILE_DEFAULTS = {
@@ -30,6 +33,16 @@ function parsePort(rawPort, defaultPort) {
 }
 
 /**
+ * @param {string | undefined} rawHome
+ */
+function parseHome(rawHome) {
+  if (rawHome === undefined) return undefined;
+  if (!rawHome || !isAbsolute(rawHome))
+    throw new Error(`STARTICA_HOME invalid: „${rawHome}”. Folosește o cale absolută.`);
+  return rawHome;
+}
+
+/**
  * Singurul loc care citește variabilele de mediu ale aplicației; valorile greșite opresc pornirea.
  * @param {Record<string, string | undefined>} [variables]
  * @returns {Readonly<StarticaEnvironment>}
@@ -46,5 +59,6 @@ export function loadEnvironment(variables = process.env) {
     port: parsePort(variables.STARTICA_PORT, defaults.port),
     openBrowser: variables.STARTICA_NO_BROWSER === '1' ? false : defaults.openBrowser,
     autoBackupIntervalMs: defaults.autoBackupIntervalMs,
+    home: parseHome(variables.STARTICA_HOME),
   });
 }

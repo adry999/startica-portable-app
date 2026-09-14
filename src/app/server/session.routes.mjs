@@ -5,15 +5,16 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
 /**
  * @param {{
  *   sessionToken: string,
+ *   version: string,
  *   readEnvelope: () => unknown,
  *   backupService: { cancelScheduledBackup: () => void, safeBackup: (reason: string) => { warning?: string } },
  *   allowShutdown: boolean,
  *   shutdown: () => void,
  * }} dependencies
  */
-export function createSessionRoutes({ sessionToken, readEnvelope, backupService, allowShutdown, shutdown }) {
+export function createSessionRoutes({ sessionToken, version, readEnvelope, backupService, allowShutdown, shutdown }) {
   return [
-    { method: 'GET', path: '/api/session', handle: () => ({ token: sessionToken }) },
+    { method: 'GET', path: '/api/session', handle: () => ({ token: sessionToken, version }) },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },
     {
       method: 'POST',

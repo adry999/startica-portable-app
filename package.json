@@ -15,14 +15,15 @@
     "#test-support/*": "./tests/support/*"
   },
   "scripts": {
-    "start": "node startica_server.mjs",
+    "start": "node --disable-warning=ExperimentalWarning startica_server.mjs",
     "test": "node --test \"tests/*.test.mjs\" \"tests/architecture/*.test.mjs\" \"src/**/*.test.mjs\"",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:e2e": "node tests/browser-smoke.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File tests/desktop-lifecycle.ps1",
     "typecheck": "tsc -p .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run typecheck && npm test"
+    "check": "npm run format:check && npm run typecheck && npm test",
+    "check:full": "npm run check && npm run test:e2e"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",

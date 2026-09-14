@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -22,10 +23,22 @@ import { createChildrenRoutes } from '#features/children/index.server.mjs';
 import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
+import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+// Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
+const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
-/** @param {{ root?: string, dataDir?: string, backupDir?: string, autoBackupIntervalMs?: number, allowShutdown?: boolean }} [options] */
+/**
+ * @param {{
+ *   root?: string,
+ *   dataDir?: string,
+ *   backupDir?: string,
+ *   home?: string,
+ *   autoBackupIntervalMs?: number,
+ *   allowShutdown?: boolean,
+ * }} [options]
+ */
 export function createApplication(options = {}) {
   const root = options.root || ROOT,
     dataDir = options.dataDir || join(root, 'Startica_Date'),
@@ -72,6 +85,7 @@ export function createApplication(options = {}) {
   const routes = [
     ...createSessionRoutes({
       sessionToken: token,
+      version,
       readEnvelope: recordRepository.readEnvelope,
       backupService: backups,
       allowShutdown: !!options.allowShutdown,
@@ -79,6 +93,15 @@ export function createApplication(options = {}) {
         server.close(() => db.close());
         server.closeIdleConnections();
       },
+    }),
+    ...createDiagnosticRoutes({
+      version,
+      home: options.home,
+      database: dbFile,
+      backupDirectory: backupDir,
+      readSetting,
+      backupService: backups,
+      allowShutdown: !!options.allowShutdown,
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
@@ -119,7 +142,9 @@ export function createApplication(options = {}) {
   return {
     server,
     db,
+    database: dbFile,
     backup: backups.backup,
+    safeBackup: backups.safeBackup,
     health: backups.health,
     envelope: recordRepository.readEnvelope,
     close: () =>

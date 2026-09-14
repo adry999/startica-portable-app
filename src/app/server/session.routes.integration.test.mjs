@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -9,6 +9,12 @@ import { createApplication, startTestApplication } from '#test-support/start-tes
 test('/api/session întoarce un token de sesiune', async t => {
   const app = await startTestApplication(t, { prefix: 'startica-session-' });
   assert.ok(app.token && app.token.length > 0);
+});
+
+test('/api/session întoarce versiunea din package.json', async t => {
+  const app = await startTestApplication(t, { prefix: 'startica-session-' });
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+  assert.equal((await app.get('/api/session')).version, version);
 });
 
 test('POST /api/state refuză scrierea cu 409 și un mesaj explicit', async t => {
