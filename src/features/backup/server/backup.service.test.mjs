@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, existsSync, readdirSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -61,6 +61,32 @@ test('safeBackup() raportează o avertizare, nu aruncă, când folderul de backu
     readSetting('localError'),
     result.warning.replace('Datele sunt salvate, dar backupul local a eșuat: ', ''),
   );
+});
+
+test('backup() normalizează un motiv cu diacritice și spații la un nume ASCII', t => {
+  const { service } = createHarness(t);
+
+  const result = service.backup('inainte-ștergere definitivă');
+
+  assert.match(result.name, /_inainte-stergere-definitiva_[0-9a-f]{8}\.db$/);
+});
+
+test('un backup existent cu diacritice și spații în nume este listat, contorizat ca permanent și rezolvabil', t => {
+  const { service, backupDirectory } = createHarness(t);
+  const created = service.backup('manual');
+  const legacyName = 'startica_2026-09-09T19-35-04-365Z_inainte-ștergere definitivă_73c52b1f.db';
+  copyFileSync(created.file, join(backupDirectory, legacyName));
+
+  assert.ok(service.listBackups().some(entry => entry.name === legacyName));
+  assert.equal(service.health().permanentBackups.count, 1);
+  assert.equal(service.resolveBackupFile(legacyName), join(backupDirectory, legacyName));
+});
+
+test('resolveBackupFile respinge un nume cu separator de cale', t => {
+  const { service } = createHarness(t);
+
+  assert.throws(() => service.resolveBackupFile('../startica_x.db'));
+  assert.throws(() => service.resolveBackupFile('sub/startica_x.db'));
 });
 
 test('autoBackup() sare peste copie în interval și reîncearcă imediat după o eroare locală', t => {

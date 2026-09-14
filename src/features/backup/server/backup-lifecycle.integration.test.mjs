@@ -77,6 +77,37 @@ test('Backupul automat este rărit; cel dinaintea unui import rămâne obligator
   );
 });
 
+test('Backupul dinaintea ștergerii definitive apare în /api/backups, în permanentBackups și se poate previzualiza', async t => {
+  const { post, get } = await startApplication(t, 'startica-stergere-');
+
+  const created = await post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: { ...CHILD, archived: true },
+    revision: 0,
+    requestId: randomUUID(),
+  });
+  assert.equal(created.ok, true, created.error);
+
+  const deleted = await post('/api/record-delete', {
+    type: 'children',
+    id: CHILD.id,
+    revision: created.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(deleted.ok, true, deleted.error);
+
+  const backups = await get('/api/backups');
+  const beforeDelete = backups.find(entry => entry.name.includes('inainte-stergere-definitiva'));
+  assert.ok(beforeDelete, 'Backupul dinaintea ștergerii nu apare în listă.');
+
+  const health = await get('/api/health');
+  assert.equal(health.permanentBackups.count, 1);
+
+  const preview = await get('/api/backup-preview?name=' + encodeURIComponent(beforeDelete.name));
+  assert.deepEqual(preview.errors, []);
+});
+
 test('Dispariția folderului extern este raportată de starea aplicației, nu la următorul backup', async t => {
   const app = await startApplication(t, 'startica-extern-', { autoBackupIntervalMs: 300000 });
   const external = join(app.dir, 'extern');
