@@ -1,5 +1,5 @@
-STARTICA 1.2.0 — ACTUALIZARE PENTRU CLIENT
-Pregătită la 14 septembrie 2026
+STARTICA 1.2.1 — ACTUALIZARE PENTRU CLIENT
+Pregătită la 15 septembrie 2026
 
 ACTUALIZARE (ai deja Startica pe acest calculator)
 1. În aplicația veche, deschisă, folosește Backup acum din Backup și
