@@ -111,10 +111,7 @@ function csvDate(value, label, line) {
   if (!value || value === '.') return '';
   const m = /^(\d{1,2})[./](\d{1,2})[./](\d{4})$/.exec(value);
   const result = m ? `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}` : value;
-  let valid = false;
-  try {
-    valid = dateOK(result);
-  } catch {}
+  const valid = dateOK(result);
   if (!valid) throw Error(`Rând ${line}: ${label} invalidă (${value}). Folosește ZZ.LL.AAAA.`);
   return result;
 }

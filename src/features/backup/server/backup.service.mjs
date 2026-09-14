@@ -50,7 +50,9 @@ function pruneTemporary(dir) {
     const file = join(dir, name);
     try {
       if (statSync(file).mtimeMs < cutoff) unlinkSync(file);
-    } catch {}
+    } catch (error) {
+      console.warn(`Backupul temporar ${file} nu a putut fi curățat: ${/** @type {Error} */ (error).message}`);
+    }
   }
 }
 
@@ -115,7 +117,9 @@ export function createBackupService({
     }
     try {
       pruneTemporary(external);
-    } catch {}
+    } catch (error) {
+      console.warn(`Curățarea folderului extern ${external} a eșuat: ${/** @type {Error} */ (error).message}`);
+    }
     return warning;
   }
 

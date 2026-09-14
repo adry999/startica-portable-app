@@ -5,5 +5,7 @@ import { existsSync, unlinkSync } from 'node:fs';
 export const removeFileIfPresent = file => {
   try {
     if (existsSync(file)) unlinkSync(file);
-  } catch {}
+  } catch (error) {
+    console.warn(`Fișierul temporar ${file} nu a putut fi șters: ${/** @type {Error} */ (error).message}`);
+  }
 };
