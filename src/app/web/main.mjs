@@ -1,3 +1,4 @@
+import { confirmOnSecondClick } from '#shared/ui/confirm-twice-button.mjs';
 import { byId } from '#shared/ui/element-lookup.mjs';
 import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
 import { pageIndexByList } from '#shared/ui/pagination.mjs';
@@ -386,9 +387,7 @@ bindMobileNavigation({ byId: element });
 
 // Un singur ascultător pentru toate butoanele generate dinamic: rândurile din tabele se redesenează des.
 document.addEventListener('click', async event => {
-  const button = /** @type {(HTMLButtonElement & { _confirmTimer?: ReturnType<typeof setTimeout> }) | null} */ (
-    /** @type {HTMLElement} */ (event.target).closest('button')
-  );
+  const button = /** @type {HTMLButtonElement | null} */ (/** @type {HTMLElement} */ (event.target).closest('button'));
   if (!button) return;
   try {
     if (button.dataset.view) navigation.go(button.dataset.view);
@@ -411,21 +410,7 @@ document.addEventListener('click', async event => {
     const type = /** @type {any} */ (button.dataset.type);
     const id = /** @type {string} */ (button.dataset.id);
     if (action === 'edit') recordEditor.openEditor(type, id);
-    if (action === 'archive') {
-      // Fără fereastră de confirmare: primul click cere confirmarea pe rând; al doilea, în 4 secunde, arhivează.
-      if (!button.classList.contains('confirm-pending')) {
-        button.classList.add('confirm-pending');
-        button.dataset.label = button.textContent ?? '';
-        button.textContent = 'Sigur?';
-        button._confirmTimer = setTimeout(() => {
-          button.classList.remove('confirm-pending');
-          button.textContent = button.dataset.label ?? '';
-        }, 4000);
-      } else {
-        clearTimeout(button._confirmTimer);
-        await recordEditor.archiveRecord(type, id);
-      }
-    }
+    if (action === 'archive' && confirmOnSecondClick(button, 'Sigur?')) await recordEditor.archiveRecord(type, id);
     if (action === 'delete') await recordEditor.deleteRecord(type, id);
     if (action === 'profile') childProfile.openChildProfile(id);
     if (action === 'confirm-review') await recordEditor.confirmReview(id);

@@ -1,4 +1,5 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
+import { cancelPendingConfirmation, confirmOnSecondClick } from './confirm-twice-button.mjs';
 import { byId } from './element-lookup.mjs';
 
 /** @typedef {{ id: string, archived?: boolean }} SelectableRecord */
@@ -72,18 +73,13 @@ export function buildArchiveMutationBody(recordType, record, targetArchived, arc
 export function createBulkSelectionController({
   recordType,
   typeLabel,
-  elements: { table, selectAllId, bulkButton: bulkButtonElement, archiveFilter },
+  elements: { table, selectAllId, bulkButton, archiveFilter },
   readRecords,
   submitMutation,
   showNotice,
 }) {
   /** @type {Set<string>} */
   const selectedIds = new Set();
-  // Timer-ul de confirmare ("Sigur?") e ținut direct pe element, ca la butonul
-  // static de arhivare din HTML — nu face parte din tipul standard al butonului.
-  const bulkButton = /** @type {HTMLButtonElement & { _confirmTimer?: ReturnType<typeof setTimeout> }} */ (
-    bulkButtonElement
-  );
 
   const isArchivedView = () => archiveFilter?.value === 'archived';
   const isSelected = id => selectedIds.has(id);
@@ -91,8 +87,7 @@ export function createBulkSelectionController({
 
   function updateBulkActionButton() {
     if (!bulkButton) return;
-    clearTimeout(bulkButton._confirmTimer);
-    bulkButton.classList.remove('confirm-pending');
+    cancelPendingConfirmation(bulkButton);
     bulkButton.disabled = selectedIds.size === 0;
     bulkButton.textContent = bulkActionButtonLabel({
       selectedCount: selectedIds.size,
@@ -128,23 +123,10 @@ export function createBulkSelectionController({
 
   // Butonul e static în HTML: legarea e o singură dată, la construirea listei —
   // spre deosebire de casetele din tabel, reconstruite la fiecare randare.
-  // Fără fereastră de confirmare: primul click doar cere confirmarea, rămâne
-  // fix pe buton; al doilea, în 4 secunde, chiar declanșează mutația.
   function bindBulkActionButton() {
     if (!bulkButton) return;
     bulkButton.onclick = async () => {
-      if (!bulkButton.classList.contains('confirm-pending')) {
-        bulkButton.classList.add('confirm-pending');
-        bulkButton.dataset.label = bulkButton.textContent ?? '';
-        bulkButton.textContent = `Sigur? ${bulkButton.textContent}`;
-        bulkButton._confirmTimer = setTimeout(() => {
-          bulkButton.classList.remove('confirm-pending');
-          bulkButton.textContent = bulkButton.dataset.label ?? '';
-        }, 4000);
-        return;
-      }
-      clearTimeout(bulkButton._confirmTimer);
-      bulkButton.classList.remove('confirm-pending');
+      if (!confirmOnSecondClick(bulkButton, `Sigur? ${bulkButton.textContent}`)) return;
       bulkButton.disabled = true;
       const ids = [...selectedIds];
       // Filtrul se citește o singură dată: mesajul descrie acțiunea făcută, chiar dacă filtrul se schimbă între timp.
