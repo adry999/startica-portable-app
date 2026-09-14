@@ -6,11 +6,6 @@ Startica_Backup/
 # Jurnalele de pornire ale serverului.
 Jurnale/
 
-# ─── Profil de browser al ferestrei aplicației ──────────────────────────────
-# ~84 MB; conține Cookies, History, Login Data, TransportSecurity.
-# De mutat în %LOCALAPPDATA%\Startica\Interfata (vezi auditul).
-Interfata/
-
 # ─── Node ───────────────────────────────────────────────────────────────────
 node_modules/
 npm-debug.log*
@@ -22,3 +17,8 @@ desktop.ini
 
 # Pachetul pentru client contine o copie a bazei reale si motorul inclus.
 Livrare/
+
+# ─── Lansatorul nativ ────────────────────────────────────────────────────────
+# Compilate cu launcher/build-launcher.ps1, nu se urmaresc in git.
+launcher/bin/
+launcher/obj/
