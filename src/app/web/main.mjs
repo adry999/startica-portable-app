@@ -94,5 +94,5 @@ bindUnsavedChangesGuard({ readState: () => sessionState, isEditorOpen: () => ele
 setInterval(checkConnection, HEALTH_POLL_MS);
 window.addEventListener('focus', checkConnection);
 loadSession().catch(error =>
-  showNotice('Pornește aplicația din Porneste_Startica.cmd. ' + /** @type {Error} */ (error).message, true),
+  showNotice('Pornește aplicația din Porneste_Startica.vbs. ' + /** @type {Error} */ (error).message, true),
 );

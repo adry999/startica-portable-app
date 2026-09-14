@@ -7,7 +7,7 @@ $expectedDatabase = [IO.Path]::GetFullPath((Join-Path $appDirectory 'Startica_Da
 # de autentificare. Nu are ce cauta langa cod: folderul aplicatiei este copiat,
 # arhivat si trimis mai departe. Amprenta caii pastreaza copiile separate, ca
 # doua instalari sa nu foloseasca acelasi profil.
-# SHA256::HashData exista doar in .NET 5+; Porneste_Startica.cmd ruleaza
+# SHA256::HashData exista doar in .NET 5+; Porneste_Startica.vbs ruleaza
 # powershell.exe (5.1, .NET Framework), deci se foloseste instanta.
 $sha = [Security.Cryptography.SHA256]::Create()
 try {
@@ -65,7 +65,13 @@ function Find-StarticaWindowProcess {
 }
 try {
     if ($Stop) { Stop-StarticaServer; exit 0 }
-    $nodePath = (Get-Command node -ErrorAction Stop).Source
+    # Pachetul pentru client aduce motorul in runtime\; in dezvoltare se foloseste Node instalat.
+    $nodePath = Join-Path $appDirectory 'runtime\node.exe'
+    if (-not (Test-Path -LiteralPath $nodePath -PathType Leaf)) {
+        $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
+        if (-not $nodeCommand) { throw 'Lipseste motorul aplicatiei. Extrage din nou intregul folder Startica din arhiva primita.' }
+        $nodePath = $nodeCommand.Source
+    }
     $browserCandidates = @(
         (Join-Path $env:ProgramFiles 'Google\Chrome\Application\chrome.exe'),
         (Join-Path ([Environment]::GetEnvironmentVariable('ProgramFiles(x86)')) 'Microsoft\Edge\Application\msedge.exe'),

@@ -6,13 +6,18 @@
 ' procesul ascuns din prima, fara nimic vizibil.
 Option Explicit
 
-Dim shell, fso, folder, command, argument, index
+Dim shell, fso, folder, script, command, argument, index
 Set shell = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 folder = fso.GetParentFolderName(WScript.ScriptFullName)
 
-command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File """ & _
-    folder & "\startica_desktop.ps1"""
+' In pachetul pentru client lansatorii stau langa folderul Aplicatie.
+script = folder & "\startica_desktop.ps1"
+If fso.FileExists(folder & "\Aplicatie\startica_desktop.ps1") Then
+    script = folder & "\Aplicatie\startica_desktop.ps1"
+End If
+
+command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File """ & script & """"
 
 ' Argumentele primite (-Stop, -Port 8765) se trimit mai departe. Cele care
 ' contin spatii se citeaza, ca o cale sa nu fie rupta in doua.
