@@ -10,10 +10,12 @@ import { createRequire } from 'node:module';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
-import { readWorkbook } from '../shared/excel.mjs';
-import { financialImportPlan } from '../server/financial-import.mjs';
-import { createApplication } from '../startica_server.mjs';
-import { emptyState, total } from '../shared/domain.mjs';
+import { readWorkbook } from '#features/data-transfer/domain/excel-workbook.mjs';
+import { planFinancialHistoryImport } from '#features/data-transfer/server/financial-history-import.mjs';
+import { findRecordIssues } from '#features/review-center/index.server.mjs';
+import { createApplication } from '#app/server/create-application.mjs';
+import { emptyState } from '#shared/domain/record-schema.mjs';
+import { total } from '#shared/domain/money.mjs';
 
 const args = process.argv.slice(2);
 const apply = args.includes('--apply');
@@ -33,14 +35,22 @@ const bytes = readFileSync(sourceFile),
   sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const require = createRequire(import.meta.url),
   XLSX = require('../web/vendor/xlsx.full.min.js');
-const report = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX);
+const report = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX, findRecordIssues);
 assert.deepEqual(report.errors, []);
 // Verificarea exactă a numerelor are sens doar pentru fișierul V5 original;
 // o cale dată explicit înseamnă un alt import, cu alte totaluri așteptate.
 if (!extra[0])
   assert.deepEqual(
     report.summary,
-    { children: 105, payments: 810, expenses: 1201, paymentTotal: 10105096, expenseTotal: 1564059 },
+    {
+      children: 105,
+      payments: 810,
+      expenses: 1201,
+      groups: 10,
+      categories: 0,
+      paymentTotal: 10105096,
+      expenseTotal: 1564059,
+    },
     'V5 diferă de fișierul analizat; este necesară o nouă verificare.',
   );
 const input = { format: 'STARTICA_V5', sourceName, sourceHash: sha(bytes), state: report.state };
@@ -57,7 +67,7 @@ try {
 } finally {
   db.close();
 }
-const plan = financialImportPlan(input, before.state);
+const plan = planFinancialHistoryImport(input, before.state);
 console.log(
   JSON.stringify(
     {
@@ -100,7 +110,7 @@ if (apply && (plan.summary.payments || plan.summary.expenses)) {
       );
     }
     assert.equal(app.db.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
-    const replay = financialImportPlan(input, result.state);
+    const replay = planFinancialHistoryImport(input, result.state);
     assert.equal(replay.summary.payments, 0);
     assert.equal(replay.summary.expenses, 0);
     const h = app.health(),
