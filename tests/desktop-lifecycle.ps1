@@ -1,5 +1,5 @@
 # Testeaza lansatorul nativ Startica.exe (vezi docs/superpowers/specs/2026-09-15-desktop-app-design.md).
-# Ruleaza doua scenarii izolate, fiecare cu propriul %TEMP% ca --home, ca sa nu atinga
+# Ruleaza trei scenarii izolate, fiecare cu propriul %TEMP% ca --home, ca sa nu atinga
 # instalarea reala a utilizatorului.
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -37,7 +37,9 @@ function Test-Health([string]$BaseUrl, [string]$ExpectedDatabase) {
 function Get-PortInfo([string]$HomeDir) {
     $path = Join-Path $HomeDir 'startica.port'
     if (-not (Test-Path -LiteralPath $path)) { return $null }
-    try { return Get-Content -LiteralPath $path -Raw | ConvertFrom-Json } catch { return $null }
+    # -Encoding UTF8 explicit: fara el, Get-Content foloseste codepage-ul implicit cand
+    # fisierul (scris de Node, fara BOM) are diacritice in calea bazei (Scenariul 3).
+    try { return Get-Content -LiteralPath $path -Raw -Encoding UTF8 | ConvertFrom-Json } catch { return $null }
 }
 
 # CommandLine contine profilul: distinge ferestrele de test de restul ferestrelor
@@ -58,6 +60,15 @@ function Stop-TestBrowsers([string]$ProfileDir) {
 
 function New-TestHome {
     $homeDir = Join-Path $env:TEMP ('startica-desktop-test-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $homeDir | Out-Null
+    return $homeDir
+}
+
+function New-DiacriticsTestHome {
+    # Coduri de caracter, nu literal in fisier: ramane corect indiferent de codepage-ul
+    # cu care Windows PowerShell 5.1 citeste acest .ps1 (fara BOM, cf. .gitattributes).
+    $diacriticsName = [string][char]0x0218 + 'erban ' + [string][char]0x00CE + 'onu' + [string][char]0x021B
+    $homeDir = Join-Path $env:TEMP ('startica-desktop-test-' + $diacriticsName + '-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $homeDir | Out-Null
     return $homeDir
 }
@@ -172,6 +183,41 @@ try {
     Assert (Wait-Condition { -not (Get-OldestBrowserWindow $profile2) } 10) 'Fereastra Scenariului 2 a disparut dupa --stop'
     Assert ($owner2.WaitForExit(20000)) 'Procesul proprietar (Scenariul 2) a iesit in cel mult 20s dupa --stop'
     Assert ($owner2.ExitCode -eq 0) 'Procesul proprietar (Scenariul 2) a iesit cu codul 0'
+
+    # --- Scenariul 3: home cu diacritice si spatii in cale (M7d) ---
+    Write-Output '--- Scenariul 3: home cu diacritice si spatii in cale ---'
+    $home3 = New-DiacriticsTestHome
+    $testHomes += $home3
+    $profile3 = Join-Path $home3 'Interfata'
+    $testProfiles += $profile3
+    $port3 = Get-FreePort
+    $url3 = 'http://127.0.0.1:' + $port3
+    $db3 = Join-Path $home3 'Startica_Date\startica.db'
+    # Sir unic pre-citat, nu array de argumente: caile cu spatii trebuie sa ramana un
+    # singur token dupa fiecare "--flag" in linia de comanda trimisa lui Start-Process.
+    $args3 = '--home "' + $home3 + '" --app-dir "' + $repoRoot + '" --port ' + $port3 + ' --profile-dir "' + $profile3 + '" --no-migrate --quiet'
+
+    $owner3 = Start-Process -FilePath $launcherExe -ArgumentList $args3 -PassThru
+    $launcherProcesses += $owner3
+
+    Assert (Wait-Condition { Test-Health $url3 $db3 } 20) 'Serverul porneste cu home cu diacritice si spatii in cale'
+    Assert (Test-Path -LiteralPath (Join-Path $home3 'startica.port')) 'startica.port a fost creat (home cu diacritice)'
+    $portInfo3 = Get-PortInfo $home3
+    Assert ($portInfo3 -and ($portInfo3.database -ieq $db3)) 'startica.port contine calea bazei cu diacritice, corect codificata'
+    Assert (Test-Path -LiteralPath (Join-Path $home3 'Jurnale\startica.log')) 'Jurnale\startica.log exista (home cu diacritice)'
+    $starticaLogText = Get-Content -LiteralPath (Join-Path $home3 'Jurnale\startica.log') -Raw -Encoding UTF8
+    Assert (-not $starticaLogText.Contains([char]0xFFFD)) 'startica.log nu are caractere de inlocuire (UTF-8 corect)'
+    Assert (Test-Path -LiteralPath (Join-Path $home3 'Jurnale\lansator.log')) 'Jurnale\lansator.log exista (home cu diacritice)'
+    $lansatorLogText = Get-Content -LiteralPath (Join-Path $home3 'Jurnale\lansator.log') -Raw -Encoding UTF8
+    Assert ($lansatorLogText.Contains($home3)) 'lansator.log contine calea home cu diacritice, corect codificata UTF-8'
+
+    Assert (Wait-Condition { $b = Get-OldestBrowserWindow $profile3; $b -and (Get-Process -Id $b.ProcessId).MainWindowHandle -ne 0 } 25) 'Fereastra Scenariului 3 a aparut'
+
+    $lastWindow3 = Get-Process -Id (Get-OldestBrowserWindow $profile3).ProcessId
+    Assert $lastWindow3.CloseMainWindow() 'Fereastra Scenariului 3 a primit comanda de inchidere'
+    Assert (Wait-Condition { -not (Test-Health $url3 $db3) } 20) 'Serverul se opreste dupa inchiderea ferestrei (home cu diacritice)'
+    Assert ($owner3.WaitForExit(65000)) 'Procesul proprietar (Scenariul 3) iese dupa oprirea serverului'
+    Assert ($owner3.ExitCode -eq 0) 'Procesul proprietar (Scenariul 3) iese cu codul 0'
 
     Write-Output 'PASS: toate scenariile de ciclu de viata au trecut.'
 } catch {
