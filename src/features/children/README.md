@@ -38,6 +38,7 @@ Modul **independent**: nu importă alt feature. Grupele și achitările vin din 
 ```
 children/
 ├── README.md
+├── children.types.d.mts                        # tipurile pentru previzualizarea importului CSV
 ├── domain/
 │   ├── birthdays.mjs                             # buildBirthdayCalendar, listUpcomingBirthdays
 │   └── birthdays.test.mjs

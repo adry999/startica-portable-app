@@ -2,17 +2,8 @@ import { dateOK } from '#shared/domain/calendar-month.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
-/**
- * @typedef {{
- *   line: number, id: string, name: string, contractNumber: string, parent: string, phone: string,
- *   parent2: string, phone2: string, birthDate: string, attendanceDate: string, action: string,
- *   reason: string, warnings: string[],
- * }} ChildrenCsvPreviewRow
- * @typedef {{
- *   total: number, additions: Child[], rows: ChildrenCsvPreviewRow[], errors: string[], warnings: string[],
- *   skipped: number, conflicts: number,
- * }} ChildrenCsvPreviewReport
- */
+/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewRow} ChildrenCsvPreviewRow */
+/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewReport} ChildrenCsvPreviewReport */
 
 const clean = value => String(value ?? '').trim();
 const key = value =>

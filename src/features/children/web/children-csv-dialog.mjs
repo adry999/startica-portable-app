@@ -2,31 +2,8 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatParentContacts } from '#shared/format/parent-contacts-format.mjs';
 
-/**
- * @typedef {{
- *   line: number,
- *   contractNumber: string,
- *   name: string,
- *   parent: string,
- *   phone: string,
- *   parent2: string,
- *   phone2: string,
- *   birthDate: string,
- *   attendanceDate: string,
- *   reason: string,
- *   warnings: string[],
- * }} ChildrenCsvPreviewRow
- * @typedef {{
- *   total: number,
- *   additions: unknown[],
- *   rows: ChildrenCsvPreviewRow[],
- *   errors: string[],
- *   warnings: string[],
- *   skipped: number,
- *   conflicts: number,
- *   revision?: number,
- * }} ChildrenCsvPreviewReport
- */
+/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewRow} ChildrenCsvPreviewRow */
+/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewReport} ChildrenCsvPreviewReport */
 
 const CSV_MAX_BYTES = 2000000;
 const CSV_CONFIRMATION_PHRASE = 'IMPORT COPII';
