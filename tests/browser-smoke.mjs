@@ -521,18 +521,17 @@ try {
   assert.equal(await evaluate("getComputedStyle(document.getElementById('printNotify')).display"), 'none');
   assert.notEqual(await evaluate("getComputedStyle(document.getElementById('notify')).display"), 'none');
   assert.match(await evaluate("document.getElementById('notifyTable').textContent"), /Notificat <test>/);
-  assert.equal(
-    await evaluate("getComputedStyle(document.querySelector('#notifyHead th:last-child')).display"),
-    'none',
-  );
-  await evaluate("delete document.body.dataset.printView");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#notifyHead th:last-child')).display"), 'none');
+  await evaluate('delete document.body.dataset.printView');
 
   await evaluate(
     "[...document.querySelectorAll('#notifyTable tr')].find(tr=>tr.textContent.includes('Notificat <test>')).querySelector('[data-action=profile]').click()",
   );
   await evaluate("document.body.dataset.printView='profile'");
   assert.equal(
-    await evaluate("[...document.querySelectorAll('#profile .modal-head button')].every(b=>getComputedStyle(b).display==='none')"),
+    await evaluate(
+      "[...document.querySelectorAll('#profile .modal-head button')].every(b=>getComputedStyle(b).display==='none')",
+    ),
     true,
   );
   assert.equal(await evaluate("document.getElementById('profileBody').textContent.length > 0"), true);
