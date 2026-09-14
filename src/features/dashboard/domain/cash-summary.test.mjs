@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { obligation } from '#shared/domain/tuition-obligation.mjs';
 import { summarizeCashForMonth, sumUnallocatedAdvance } from './cash-summary.mjs';
 
 /** @param {any} value */
@@ -72,4 +73,48 @@ test('sumUnallocatedAdvance ignoră plățile arhivate sau ulterioare lui asOf',
     { id: 'P2', date: '2026-09-09', amount: 500, allocations: [] },
   ]);
   assert.equal(sumUnallocatedAdvance(payments, '2026-09-08'), 0);
+});
+
+test('Încasările lunii după data reală a plății', () => {
+  const p = asAny({
+    id: 'PAY-test',
+    childId: 'ID-test',
+    date: '2026-09-08',
+    amount: 3000,
+    method: 'Cash',
+    allocations: [
+      { month: '2026-09', amount: 2000 },
+      { month: '2026-10', amount: 500 },
+    ],
+  });
+  const s = asAny({ children: [], payments: [p], expenses: [], groups: [], categories: [] });
+  assert.equal(summarizeCashForMonth(s, '2026-09').income, 3000);
+  assert.equal(summarizeCashForMonth(s, '2026-10').income, 0);
+});
+
+test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () => {
+  const c = asAny({
+    id: 'C1',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 1500 }],
+    dueDay: 10,
+  });
+  const p = asAny({
+    id: 'P1',
+    childId: 'C1',
+    date: '2026-09-08',
+    tenders: [
+      { method: 'Cash', amount: 1000.1 },
+      { method: 'Card', amount: 500.2 },
+    ],
+    amount: 1500.3,
+    allocations: [{ month: '2026-09', amount: 1500 }],
+  });
+  const s = asAny({ children: [c], payments: [p], expenses: [], groups: [], categories: [] });
+  const summary = summarizeCashForMonth(s, '2026-09');
+  assert.equal(summary.income, 1500.3);
+  assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });
+  assert.equal(obligation(c, '2026-09', [p], '2026-09-08').paid, 1500);
+  assert.equal(summarizeCashForMonth(asAny({ ...s, payments: [{ ...p, archived: true }] }), '2026-09').income, 0);
 });

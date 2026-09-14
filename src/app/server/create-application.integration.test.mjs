@@ -5,9 +5,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
-import { createApplication } from '../startica_server.mjs';
-import { normalizeRecord, validateState, obligation, cashSummary, emptyState } from '../shared/domain.mjs';
-import { startTestApplication } from './support/start-test-application.mjs';
+import { normalizeRecord, emptyState } from '#shared/domain/record-schema.mjs';
+import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
+
 const child = () =>
   normalizeRecord('children', {
     id: 'ID-test',
@@ -30,41 +30,7 @@ const payment = () =>
       { month: '2026-10', amount: 500 },
     ],
   });
-test('Încasări după data reală, repartizări, avans, scadență și taxe istorice', () => {
-  const c = child(),
-    p = payment(),
-    s = { children: [c], payments: [p], expenses: [] };
-  assert.equal(cashSummary(s, '2026-09').income, 3000);
-  assert.equal(cashSummary(s, '2026-10').income, 0);
-  assert.equal(obligation(c, '2026-09', [p], '2026-09-08').paid, 2000);
-  assert.equal(obligation(c, '2026-10', [p], '2026-09-08').paid, 500);
-  // Scadența acestei fișe este ziua 10 (fără dată de contract, se ia dueDay).
-  assert.equal(obligation(c, '2026-09', [], '2026-09-06').label, 'Nescadent');
-  assert.equal(obligation(c, '2026-09', [], '2026-09-08').label, 'Scadent în curând');
-  assert.equal(obligation(c, '2026-09', [], '2026-09-11').label, 'Restanță');
-  c.feeHistory.push({ from: '2026-10', amount: 2500 });
-  assert.equal(obligation(c, '2026-09', []).expected, 2000);
-  assert.equal(obligation(c, '2026-10', []).expected, 2500);
-  assert.equal(obligation({ ...c, feeHistory: [] }, '2026-09', []).expected, null);
-  assert.equal(obligation({ ...c, attendanceDate: '' }, '2026-09', []).label, 'De verificat');
-  assert.equal(
-    obligation({ ...c, statusHistory: [{ from: '2026-09', status: 'Suspendat' }] }, '2026-09', []).expected,
-    0,
-  );
-  assert.equal(obligation({ ...c, withdrawalDate: '2026-09-20' }, '2026-10', []).expected, 0);
-  assert.equal(obligation({ ...c, dueDay: 31 }, '2027-02', []).due, '2027-02-28');
-  assert.equal(obligation(c, '2026-09', [{ ...p, date: '2026-10-01' }], '2026-09-08').paid, 0);
-});
-test('Validare monetară, dată, identificatori și referințe', () => {
-  assert.throws(() => normalizeRecord('children', {}));
-  assert.throws(() => normalizeRecord('payments', { ...payment(), amount: -1 }));
-  assert.throws(() => normalizeRecord('payments', { ...payment(), date: '2026-02-30' }));
-  assert.throws(() => normalizeRecord('payments', { ...payment(), amount: 1.001 }));
-  assert.throws(() => normalizeRecord('payments', { ...payment(), amount: 100 }));
-  assert.throws(() => validateState({ children: [], payments: [payment()], expenses: [] }));
-  assert.throws(() => validateState({ children: [child(), child()], payments: [], expenses: [] }));
-  assert.equal(normalizeRecord('children', { ...child(), status: 'Retras' }).status, 'Retras');
-});
+
 test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate', async t => {
   // autoBackupIntervalMs: 0 => backup după fiecare scriere, ca înainte de
   // introducerea debounce-ului. Testul verifică mai jos că eșecul copiei locale
@@ -196,40 +162,4 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
     resolve(dir).startsWith(resolve(tmpdir()) + '/startica-migration-')
   )
     rmSync(dir, { recursive: true, force: true });
-});
-test('Oprire desktop autentificată, cu backup final și închiderea bazei', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'startica-shutdown-'));
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), allowShutdown: true });
-  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
-  const url = `http://127.0.0.1:${app.server.address().port}`;
-  try {
-    const denied = await fetch(url + '/api/shutdown', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: '{}',
-    });
-    assert.equal(denied.status, 403);
-    await denied.json();
-    const { token } = await (await fetch(url + '/api/session')).json();
-    const closed = new Promise(r => app.server.once('close', r));
-    const response = await fetch(url + '/api/shutdown', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
-      body: '{}',
-    });
-    assert.equal(response.status, 200);
-    assert.equal((await response.json()).ok, true);
-    await closed;
-    assert.ok(readdirSync(join(dir, 'backups')).some(name => name.includes('inchidere')));
-    const check = new DatabaseSync(join(dir, 'data/startica.db'), { readOnly: true });
-    assert.equal(check.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
-    check.close();
-  } finally {
-    if (app.server.listening) await app.close();
-    if (
-      resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-shutdown-') ||
-      resolve(dir).startsWith(resolve(tmpdir()) + '/startica-shutdown-')
-    )
-      rmSync(dir, { recursive: true, force: true });
-  }
 });

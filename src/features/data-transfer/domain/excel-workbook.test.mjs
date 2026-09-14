@@ -107,3 +107,33 @@ test('Importul V5 mapează un statut necunoscut, păstrând textul original', ()
   const r = normalizeRecord('children', { id: 'ID-1', name: 'Copil', dueDay: 10, status: unknown.status });
   assert.equal(r.status, 'De verificat');
 });
+
+test('Doi părinți și achitarea mixtă trec prin export și import', () => {
+  const c = normalizeRecord('children', {
+    id: 'C1',
+    name: 'Copil',
+    parent: 'P1',
+    phone: '00123',
+    parent2: 'P2',
+    phone2: '+373456',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 1500 }],
+  });
+  const p = normalizeRecord('payments', {
+    id: 'P1',
+    childId: c.id,
+    date: '2026-09-08',
+    tenders: [
+      { method: 'Cash', amount: 1000.1 },
+      { method: 'Card', amount: 500.2 },
+    ],
+    allocations: [{ month: '2026-09', amount: 1500 }],
+  });
+  const s = { children: [c], payments: [p], expenses: [], groups: [], categories: [] };
+  const wb = XLSX.read(XLSX.write(exportWorkbook(s, XLSX), { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
+    back = readWorkbook(wb, XLSX, findRecordIssues);
+  assert.deepEqual(back.errors, []);
+  assert.deepEqual(back.state, s);
+  assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Copii)[0].Telefon_2, '+373456');
+  assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Achitari)[0].Card, 500.2);
+});

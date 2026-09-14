@@ -1,7 +1,9 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
-import { createApplication } from '../../startica_server.mjs';
+import { createApplication } from '#app/server/create-application.mjs';
+
+export { createApplication };
 
 export async function startTestApplication(t, options = {}) {
   const { prefix = 'startica-test-', ...applicationOptions } = options;
