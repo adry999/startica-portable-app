@@ -84,6 +84,8 @@ try {
     # Testele nu au ce cauta in pachetul livrat clientului.
     Get-ChildItem -LiteralPath (Join-Path $appStage 'src') -Recurse -Filter '*.test.mjs' -File |
         Remove-Item -Force
+    Get-ChildItem -LiteralPath (Join-Path $appStage 'src') -Recurse -Directory -Filter 'test-support' |
+        Remove-Item -Recurse -Force
 
     # Motorul Node si licentele nu sunt urmarite in git; vin din arhiva anterioara.
     $baseArchive = [System.IO.Compression.ZipFile]::OpenRead($resolvedBaseZip)
@@ -129,11 +131,21 @@ try {
         throw 'Lipseste Aplicatie\web\index.html din pachetul construit.'
     }
 
-    # includeBaseDirectory=$false: intrarile devin relative la $stageRoot,
-    # deci poarta deja prefixul Startica/ fara sa dubleze numele folderului temporar.
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($stageRoot, $zipPath, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+    # ZipFile.CreateFromDirectory din .NET Framework scrie caile cu "\", pe care
+    # unele programe de dezarhivare nu le recunosc ca foldere; intrarile se scriu una cate una, cu "/".
+    $stageFiles = Get-ChildItem -LiteralPath $stageRoot -Recurse -File
+    $zipStream = [System.IO.File]::Open($zipPath, [System.IO.FileMode]::CreateNew)
+    try {
+        $zipArchive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+        try {
+            foreach ($file in $stageFiles) {
+                $entryName = $file.FullName.Substring($stageRoot.Length + 1).Replace('\', '/')
+                [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zipArchive, $file.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+            }
+        } finally { $zipArchive.Dispose() }
+    } finally { $zipStream.Dispose() }
 
-    $entryCount = (Get-ChildItem -LiteralPath $stageRoot -Recurse -File).Count
+    $entryCount = $stageFiles.Count
     $sizeMB = (Get-Item -LiteralPath $zipPath).Length / 1MB
     $hash = Get-FileHash -LiteralPath $zipPath -Algorithm SHA256
 
