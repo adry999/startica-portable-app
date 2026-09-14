@@ -73,7 +73,8 @@ export function firstUnpaidMonth(child, payments, asOf = today()) {
   if (!start) return null;
   const limit = asOf.slice(0, 7);
   let month = start;
-  for (let i = 0; i < 60 && month <= limit; i++) {
+  // 120 de luni (10 ani): peste durata obișnuită de frecventare a unei grădinițe.
+  for (let i = 0; i < 120 && month <= limit; i++) {
     if ((obligation(child, month, payments, asOf).rest ?? 0) > 0) return month;
     const [y, m] = month.split('-').map(Number);
     month = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;

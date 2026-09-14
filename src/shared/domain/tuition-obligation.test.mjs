@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeRecord } from './record-schema.mjs';
-import { obligation, dueDayFor } from './tuition-obligation.mjs';
+import { obligation, dueDayFor, firstUnpaidMonth } from './tuition-obligation.mjs';
 
 const child = () =>
   normalizeRecord('children', {
@@ -120,4 +120,21 @@ test('Încasări după data reală, repartizări, avans, scadență și taxe ist
   assert.equal(obligation({ ...childRecord, withdrawalDate: '2026-09-20' }, '2026-10', []).expected, 0);
   assert.equal(obligation({ ...childRecord, dueDay: 31 }, '2027-02', []).due, '2027-02-28');
   assert.equal(obligation(childRecord, '2026-09', [{ ...paymentRecord, date: '2026-10-01' }], '2026-09-08').paid, 0);
+});
+
+test('firstUnpaidMonth caută până la 120 de luni, pentru o frecventare de peste 5 ani', () => {
+  // Frecventare din 2020; taxa e 0 până în 2025-06 (luna 66, dincolo de vechea limită de 60), apoi devine reală.
+  const unpaidFrom = '2025-06';
+  const longChild = normalizeRecord('children', {
+    id: 'ID-vechi',
+    name: 'Copil vechi',
+    status: 'Activ',
+    attendanceDate: '2020-01-15',
+    dueDay: 10,
+    feeHistory: [
+      { from: '2020-01', amount: 0 },
+      { from: unpaidFrom, amount: 2000 },
+    ],
+  });
+  assert.equal(firstUnpaidMonth(longChild, [], '2025-06-20'), unpaidFrom);
 });
