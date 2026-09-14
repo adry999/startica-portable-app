@@ -11,7 +11,7 @@ const screenshotDir =
   process.env.STARTICA_UI_SCREENSHOTS === '1' ? mkdtempSync(join(tmpdir(), 'startica-ui-shots-')) : null;
 // autoBackupIntervalMs: 0 => backup după fiecare scriere. Testul verifică
 // dialogul de restaurare, care previzualizează cel mai recent backup; politica
-// de rărire este acoperită separat, în tests/fixes.test.mjs.
+// de rărire este acoperită separat, în src/features/backup/domain/backup-retention.test.mjs.
 const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), autoBackupIntervalMs: 0 });
 await new Promise(r => app.server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${app.server.address().port}`;

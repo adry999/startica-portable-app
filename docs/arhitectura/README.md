@@ -42,7 +42,7 @@ Pasul 3 a mutat în `src/shared/`:
 - `format/`: escape HTML, bani, date, mărimi de fișier și căutarea fără diacritice, unificată din cele două `normalizeSearch` identice;
 - `ui/`: `element-lookup`, `nav-count-badge`, `child-picker`.
 
-Căile vechi (`shared/domain.mjs`, `shared/text.mjs`, `web/ui/dom.mjs`, `web/ui/child-picker.mjs`) sunt re-exporturi cu aceleași nume. `monthCalendar`, `upcomingBirthdays`, `applyChildSetup`, `issues`, `importReport` și `cashSummary` rămân în `shared/domain.mjs` până la pașii feature-urilor lor.
+Căile vechi (`shared/domain.mjs`, `shared/text.mjs`, `web/ui/dom.mjs`, `web/ui/child-picker.mjs`) au rămas re-exporturi cu aceleași nume până la mutarea tuturor consumatorilor; au fost șterse la remedierea auditului.
 
 Pasul 2 a adăugat `src/config/environment.mjs`, singurul cititor al variabilelor `STARTICA_PROFILE`, `STARTICA_PORT` și `STARTICA_NO_BROWSER`, cu validare la pornire. `startica_server.mjs` îl folosește, iar `startica_desktop.ps1` setează `STARTICA_PROFILE=production`.
 

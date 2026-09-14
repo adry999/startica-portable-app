@@ -14,23 +14,23 @@ După această actualizare, închide ferestrele Startica vechi, rulează o singu
 
 ## Ce este unde
 
-    Porneste_Startica.vbs / .cmd   lansatoare
+    Porneste_Startica.vbs          lansator (Opreste_Startica.vbs: oprire de rezervă)
     startica_desktop.ps1           lansatorul propriu-zis: pornește serverul și fereastra
     startica_server.mjs            punctul de intrare al serverului
-    shared/                        reguli comune, aceleași în browser și pe server
-    server/                        bază de date, backup, rute, verificări
-    web/                           tot ce ajunge în browser: pagina, stilurile, ecranele
+    src/app/                       composition root: leagă feature-urile, pe server și în browser
+    src/features/                  câte un folder pe capabilitate (copii, achitări, backup, ...)
+    src/shared/  src/core/         reguli comune și infrastructură (HTTP, SQLite, evenimente)
+    src/config/                    variabilele de mediu
+    web/                           pagina, stilurile, pictogramele și SheetJS
     tests/  scripts/               teste și unelte de întreținere
     Startica_Date/                 baza de evidență
     Startica_Backup/  Jurnale/     copii de siguranță și jurnale de pornire
 
-Profilul de browser nu mai stă aici, ci în `%LOCALAPPDATA%\Startica`.
-
-În `web/ui`, `views.mjs` coordonează randarea și registrele, iar ecranele sunt separate în `reports.mjs` (dashboard, calendar și situația plăților), `groups-categories.mjs`, `review.mjs` și `profile-audit.mjs`. Funcțiile comune acestor ecrane sunt în `view-helpers.mjs`.
+Profilul de browser stă în `%LOCALAPPDATA%\Startica`. Structura codului și regulile dintre module sunt în `docs/arhitectura/README.md`.
 
 ## Cum pornește
 
-Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă. Fișierele `.cmd` fac același lucru, dar deschid scurt o fereastră de consolă; rămân ca variantă de rezervă și pentru diagnostic.
+Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă.
 
 Dacă muți scurtătura pe Desktop, copiaz-o din nou după actualizări: ținta ei s-a schimbat.
 
