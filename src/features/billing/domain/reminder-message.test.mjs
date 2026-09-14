@@ -10,7 +10,7 @@ test('include numele părintelui cu virgulă când e prezent', () => {
   const message = reminderMessage({ child: child(), obligation, month: '2026-09' });
   assert.equal(
     message,
-    'Bună ziua, Maria! Vă reamintim că taxa pentru 2026 Sep pentru Ion este de 500,00 lei, cu scadența la ' +
+    'Bună ziua, Maria! Vă reamintim că taxa pentru septembrie 2026 pentru Ion este de 500,00 lei, cu scadența la ' +
       '10.09.2026. Rest de plată: 200,00 lei. Vă mulțumim! Startica',
   );
 });

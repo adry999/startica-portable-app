@@ -36,6 +36,7 @@ export function createAppSessionStore({
     state: emptyState(),
     revision: 0,
     token: '',
+    version: '',
     health: {},
     ready: false,
     // Operațiunea trimisă, dar neconfirmată. Rămâne setată după o cădere de
@@ -117,7 +118,9 @@ export function createAppSessionStore({
     state.loading = true;
     renderSaveStatus();
     try {
-      state.token = (await requestJson('/api/session')).token;
+      const session = await requestJson('/api/session');
+      state.token = session.token;
+      state.version = session.version || '';
       accept(await requestJson('/api/state'));
       state.health = await requestJson('/api/health');
       state.saveError = '';

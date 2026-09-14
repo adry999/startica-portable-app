@@ -6,6 +6,7 @@ import { cents } from '#shared/domain/money.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { recordActionButton } from '#shared/ui/record-actions.mjs';
 import { sortTable } from '#shared/ui/table-sort.mjs';
+import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { reminderMessage } from '../domain/reminder-message.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -32,22 +33,6 @@ function notifyColumns(groups) {
     rest: r => r.obligation.rest,
     label: r => r.obligation.label,
   };
-}
-
-/**
- * Copiază un text în clipboard și dă un semnal scurt prin `showNotice`;
- * eșecul (permisiune refuzată) e afișat ca eroare, nu aruncat mai departe.
- * @param {string} text
- * @param {string} successMessage
- * @param {(text: string, isError?: boolean) => void} showNotice
- */
-async function copyToClipboard(text, successMessage, showNotice) {
-  try {
-    await navigator.clipboard.writeText(text);
-    showNotice(successMessage);
-  } catch {
-    showNotice('Copierea în clipboard a eșuat. Selectează și copiază manual.', true);
-  }
 }
 
 /**

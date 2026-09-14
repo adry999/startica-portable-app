@@ -1,5 +1,6 @@
 import { pageIndexByList } from '#shared/ui/pagination.mjs';
 import { confirmOnSecondClick } from '#shared/ui/confirm-twice-button.mjs';
+import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 
 /**
  * @param {{
@@ -56,10 +57,8 @@ export function bindGlobalActions({
       if (action === 'delete') await recordEditor.deleteRecord(type, id);
       if (action === 'profile') childProfile.openChildProfile(id);
       if (action === 'confirm-review') await recordEditor.confirmReview(id);
-      if (action === 'copy-message') {
-        await navigator.clipboard.writeText(/** @type {string} */ (button.dataset.message));
-        showNotice('Mesaj copiat.');
-      }
+      if (action === 'copy-message')
+        await copyToClipboard(/** @type {string} */ (button.dataset.message), 'Mesaj copiat.', showNotice);
     } catch (error) {
       showNotice(/** @type {Error} */ (error).message, true);
     }
