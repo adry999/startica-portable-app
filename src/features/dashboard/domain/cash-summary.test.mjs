@@ -61,16 +61,24 @@ test('summarizeCashForMonth pune metodele necunoscute la Altele', () => {
 
 test('sumUnallocatedAdvance ia partea nerepartizată dintr-o plată încasată la sau înainte de asOf', () => {
   const payments = asAny([
-    { id: 'P1', date: '2026-09-05', amount: 500, allocations: [{ month: '2026-09', amount: 300 }] },
-    { id: 'P2', date: '2026-09-05', amount: 200, allocations: [] },
+    { id: 'P1', childId: 'C1', date: '2026-09-05', amount: 500, allocations: [{ month: '2026-09', amount: 300 }] },
+    { id: 'P2', childId: 'C2', date: '2026-09-05', amount: 200, allocations: [] },
   ]);
   assert.equal(sumUnallocatedAdvance(payments, '2026-09-08'), 400);
 });
 
 test('sumUnallocatedAdvance ignoră plățile arhivate sau ulterioare lui asOf', () => {
   const payments = asAny([
-    { id: 'P1', date: '2026-09-05', amount: 500, allocations: [], archived: true },
-    { id: 'P2', date: '2026-09-09', amount: 500, allocations: [] },
+    { id: 'P1', childId: 'C1', date: '2026-09-05', amount: 500, allocations: [], archived: true },
+    { id: 'P2', childId: 'C1', date: '2026-09-09', amount: 500, allocations: [] },
+  ]);
+  assert.equal(sumUnallocatedAdvance(payments, '2026-09-08'), 0);
+});
+
+test('plățile neasociate nu intră în avansuri', () => {
+  const payments = asAny([
+    { id: 'P1', childId: '', date: '2026-09-05', amount: 500, allocations: [] },
+    { id: 'P2', date: '2026-09-05', amount: 300, allocations: [] },
   ]);
   assert.equal(sumUnallocatedAdvance(payments, '2026-09-08'), 0);
 });

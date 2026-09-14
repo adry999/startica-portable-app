@@ -30,7 +30,8 @@ export function summarizeCashForMonth(records, month) {
 export function sumUnallocatedAdvance(payments, asOf) {
   return (
     payments
-      .filter(p => !p.archived && p.date <= asOf)
+      // Fără copil asociat, plata nu e a nimănui — nu e un avans de scăzut din obligația cuiva.
+      .filter(p => !p.archived && p.childId && p.date <= asOf)
       .reduce((sum, p) => sum + cents(p.amount) - allocations(p).reduce((n, a) => n + cents(a.amount), 0), 0) / 100
   );
 }
