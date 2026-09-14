@@ -1,5 +1,6 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatDateTime } from '#shared/format/date-format.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
 import { recordsSummaryMarkup } from '#shared/ui/records-summary.mjs';
 
 /** @typedef {import('../backup.types.mjs').BackupControllerDependencies} BackupControllerDependencies */
@@ -16,6 +17,7 @@ export function createBackupController({
     commitRestore,
     settingsForm,
     externalDirInput,
+    diagnosticButton,
   },
   sessionState,
   requestJson,
@@ -91,6 +93,25 @@ export function createBackupController({
       showNotice(/** @type {Error} */ (error).message, true);
     } finally {
       commitRestore.disabled = false;
+    }
+  };
+
+  diagnosticButton.onclick = async () => {
+    diagnosticButton.disabled = true;
+    try {
+      const diagnostic = await requestJson('/api/diagnostic');
+      const url = URL.createObjectURL(new Blob([JSON.stringify(diagnostic, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `startica-diagnostic-${today()}.json`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      showNotice(/** @type {Error} */ (error).message, true);
+    } finally {
+      diagnosticButton.disabled = false;
     }
   };
 

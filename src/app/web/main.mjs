@@ -8,6 +8,7 @@ import {
   acceptResult,
   checkConnection,
   eventBus,
+  loadAppVersion,
   loadSession,
   renderSaveStatus,
   requestJson,
@@ -94,5 +95,8 @@ bindUnsavedChangesGuard({ readState: () => sessionState, isEditorOpen: () => ele
 setInterval(checkConnection, HEALTH_POLL_MS);
 window.addEventListener('focus', checkConnection);
 loadSession().catch(error =>
-  showNotice('Pornește aplicația din Porneste_Startica.vbs. ' + /** @type {Error} */ (error).message, true),
+  showNotice('Pornește aplicația din scurtătura Startica. ' + /** @type {Error} */ (error).message, true),
 );
+loadAppVersion().then(version => {
+  if (version) element('appVersion').textContent = `Startica v${version}`;
+});

@@ -33,6 +33,17 @@ const apiClient = createApiClient({
 });
 export const requestJson = apiClient.requestJson;
 
+// Separată de load(): versiunea se afișează o singură dată în bara laterală,
+// nu face parte din starea de date care se reîncarcă la fiecare operațiune.
+/** @returns {Promise<string>} */
+export async function loadAppVersion() {
+  try {
+    return (await requestJson('/api/session')).version || '';
+  } catch {
+    return '';
+  }
+}
+
 /** @type {ReturnType<typeof createSaveIndicator> | undefined} */
 let saveIndicator;
 export function renderSaveStatus() {

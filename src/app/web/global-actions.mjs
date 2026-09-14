@@ -56,6 +56,10 @@ export function bindGlobalActions({
       if (action === 'delete') await recordEditor.deleteRecord(type, id);
       if (action === 'profile') childProfile.openChildProfile(id);
       if (action === 'confirm-review') await recordEditor.confirmReview(id);
+      if (action === 'copy-message') {
+        await navigator.clipboard.writeText(/** @type {string} */ (button.dataset.message));
+        showNotice('Mesaj copiat.');
+      }
     } catch (error) {
       showNotice(/** @type {Error} */ (error).message, true);
     }
@@ -104,6 +108,7 @@ export function bindGlobalActions({
   window.addEventListener('afterprint', () => delete document.body.dataset.printView);
   element('printButton').onclick = () => printView('status');
   element('printNotify').onclick = () => printView('notify');
+  element('printProfile').onclick = () => printView('profile');
 
   // ─── Starea formularelor ────────────────────────────────────────────────────
 

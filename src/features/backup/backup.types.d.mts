@@ -81,6 +81,7 @@ export interface BackupControllerDependencies {
     commitRestore: HTMLButtonElement;
     settingsForm: HTMLFormElement;
     externalDirInput: HTMLInputElement;
+    diagnosticButton: HTMLButtonElement;
   };
   /** Obiectul de sesiune, mutabil și comun întregii interfețe; controller-ul îl citește și scrie prin referință. */
   sessionState: {

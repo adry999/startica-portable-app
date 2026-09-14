@@ -6,6 +6,7 @@ import { cents } from '#shared/domain/money.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { recordActionButton } from '#shared/ui/record-actions.mjs';
 import { sortTable } from '#shared/ui/table-sort.mjs';
+import { reminderMessage } from '../domain/reminder-message.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Group} Group */
@@ -34,23 +35,41 @@ function notifyColumns(groups) {
 }
 
 /**
+ * Copiază un text în clipboard și dă un semnal scurt prin `showNotice`;
+ * eșecul (permisiune refuzată) e afișat ca eroare, nu aruncat mai departe.
+ * @param {string} text
+ * @param {string} successMessage
+ * @param {(text: string, isError?: boolean) => void} showNotice
+ */
+async function copyToClipboard(text, successMessage, showNotice) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showNotice(successMessage);
+  } catch {
+    showNotice('Copierea în clipboard a eșuat. Selectează și copiază manual.', true);
+  }
+}
+
+/**
  * Ecranul „De notificat”: copiii cu rest de plată, sortați implicit după
  * întârzierea cea mai veche.
  * @param {{
- *   elements: { period: HTMLElement, stats: HTMLElement, table: HTMLTableSectionElement },
+ *   elements: { period: HTMLElement, stats: HTMLElement, table: HTMLTableSectionElement, copyAllButton: HTMLButtonElement },
  *   readRecords: () => RecordsSnapshot,
  *   readToday: () => string,
  *   requestRender: () => void,
  *   renderNotifyCount: (count: number) => void,
+ *   showNotice: (text: string, isError?: boolean) => void,
  * }} dependencies
  * @returns {(context: { month: string, evaluations: ChildMonthEvaluation[], unassignedPaymentHintsByChild: Map<string, unknown> }) => void}
  */
 export function createNotifyListView({
-  elements: { period, stats, table },
+  elements: { period, stats, table, copyAllButton },
   readRecords,
   readToday,
   requestRender,
   renderNotifyCount,
+  showNotice,
 }) {
   return function renderNotifyList({ month, evaluations, unassignedPaymentHintsByChild }) {
     const { groups } = readRecords();
@@ -81,9 +100,11 @@ export function createNotifyListView({
       `<article class="card orange"><p>Sumă de încasat</p><strong>${formatMoney(owed)}</strong><small>total pe lista de mai jos</small></article>` +
       `<article class="card mint"><p>Nu pot fi evaluați</p><strong>${unknown}</strong><small>fără taxă sau perioadă confirmată</small></article>`;
 
+    const messages = rows.map(({ child, obligation }) => reminderMessage({ child, obligation, month }));
+
     table.innerHTML =
       rows
-        .map(({ child, obligation }) => {
+        .map(({ child, obligation }, index) => {
           // Plata poate sta needentificată în Asociere achitări: fără semnalul
           // ăsta, operatorul ar suna un părinte care de fapt a plătit deja.
           const hint = unassignedPaymentHintsByChild.has(child.id)
@@ -94,14 +115,22 @@ export function createNotifyListView({
             `<td>${recordActionButton('profile', 'children', child.id, child.name)}</td><td>${formatParentContacts(child)}</td>` +
             `<td>${escapeHtml(groupNameOf(child.groupId, groups) || '—')}</td><td>${formatDate(obligation.due)}</td><td>${escapeHtml(termLabel(obligation.daysToDue))}</td>` +
             `<td>${formatMoney(obligation.expected)}</td><td>${formatMoney(obligation.paid)}</td><td><strong>${formatMoney(obligation.rest)}</strong></td>` +
-            `<td>${escapeHtml(obligation.label)}${hint}</td></tr>`
+            `<td>${escapeHtml(obligation.label)}${hint}</td>` +
+            `<td><button type="button" class="action-btn" data-action="copy-message" data-message="${escapeHtml(messages[index])}">Copiază</button></td></tr>`
           );
         })
         .join('') ||
-      `<tr><td colspan="10" class="empty">${
+      `<tr><td colspan="11" class="empty">${
         unknown
           ? 'Nimeni de notificat, dar ' + unknown + ' fișe nu pot fi evaluate. Completează taxa și perioada.'
           : 'Nimeni de notificat pentru luna aceasta.'
       }</td></tr>`;
+
+    copyAllButton.onclick = () =>
+      copyToClipboard(
+        messages.join('\n\n'),
+        messages.length ? `${messages.length} mesaje copiate.` : 'Nimic de copiat.',
+        showNotice,
+      );
   };
 }
