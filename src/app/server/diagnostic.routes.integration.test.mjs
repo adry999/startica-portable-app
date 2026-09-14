@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
 
 test('GET /api/diagnostic răspunde 404 fără allowShutdown', async t => {
@@ -41,4 +43,51 @@ test('GET /api/diagnostic citește ultimele 200 de linii din jurnal și ultimele
   assert.equal(response.log.at(-1), 'linia 204');
   assert.ok(response.backups.length >= 1 && response.backups.length <= 10);
   assert.ok(response.backups.every(name => typeof name === 'string'));
+});
+
+test('raportul de diagnostic nu conține date personale', async t => {
+  const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true });
+  const childName = 'Zorro Testescu';
+  const parentName = 'Ramona Testescu';
+  const phone = '+37369999123';
+  const paymentNote = 'Nota-unica-plata-9f3c1a';
+  const child = normalizeRecord('children', {
+    id: 'ID-diagnostic-test',
+    name: childName,
+    parent: parentName,
+    phone,
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    fee: 2000,
+    dueDay: 10,
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  let response = await bundle.post('/api/record', {
+    record: child,
+    type: 'children',
+    revision: 0,
+    mode: 'create',
+    requestId: randomUUID(),
+  });
+  assert.equal(response.status, 200);
+  const payment = normalizeRecord('payments', {
+    id: 'PAY-diagnostic-test',
+    childId: child.id,
+    date: '2026-09-08',
+    amount: 2000,
+    method: 'Cash',
+    notes: paymentNote,
+    allocations: [{ month: '2026-09', amount: 2000 }],
+  });
+  response = await bundle.post('/api/record', {
+    record: payment,
+    type: 'payments',
+    revision: 1,
+    mode: 'create',
+    requestId: randomUUID(),
+  });
+  assert.equal(response.status, 200);
+  const serialized = JSON.stringify(await bundle.get('/api/diagnostic'));
+  for (const secret of [childName, parentName, phone, paymentNote])
+    assert.ok(!serialized.includes(secret), `diagnosticul conține „${secret}”`);
 });
