@@ -2,7 +2,7 @@
 
 Achitările copiilor: lista „Achitări” (filtre, totaluri pe metode, arhivare în masă), câmpurile achitării în editorul generic din `record-editing` și repartizarea pe luni.
 
-Modul **independent**: nu importă alt feature. Copiii vin din `RecordsSnapshot`; câmpurile din editor implementează structural interfața `RecordEditorFields` și sunt injectate de `src/app/web/main.mjs`.
+Modul **independent**: nu importă alt feature. Copiii vin din `RecordsSnapshot`; câmpurile din editor implementează structural interfața `RecordEditorFields` și sunt injectate de `src/app/web/compose-screens.mjs`.
 
 ## Public API
 

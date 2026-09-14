@@ -20,7 +20,7 @@ Modul **independent**: nu importă alt feature. Grupele și achitările vin din 
 | `createChildrenListView({ elements, readRecords, submitMutation, showNotice })` | lista „Copii”: căutare, arhivare, sortare, arhivare în masă; întoarce `{ render }` |
 | `createChildProfileView({ elements: { body, dialog }, readRecords, readSelectedMonth })` | întoarce `{ openChildProfile }` |
 | `createChildrenCsvDialog({ elements, sessionState, requestJson, submitMutation, showNotice })` | butonul de import, alegerea fișierului, previzualizarea și confirmarea |
-| `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `src/app/web/main.mjs`) |
+| `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `src/app/web/compose-screens.mjs`) |
 
 ## Cum rămâne decuplat
 

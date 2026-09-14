@@ -69,7 +69,7 @@ payment-assignment/
     └── assignment-fixtures.mjs
 ```
 
-`src/app/web/main.mjs` compune controller-ul și view-ul, iar `src/app/server/create-application.mjs` creează service-ul din `store`. `src/app/web/main.mjs` leagă `findUnassignedPaymentHintsByChild` pentru „De notificat” din `billing`.
+`src/app/web/compose-screens.mjs` compune controller-ul și view-ul, iar `src/app/server/create-application.mjs` creează service-ul cu `recordRepository`, `auditTrail` (din `audit-log`) și `runRevisionTransaction`. `src/app/web/main.mjs` leagă `findUnassignedPaymentHintsByChild` pentru „De notificat” din `billing`.
 
 ## Garanții
 

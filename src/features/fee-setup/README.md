@@ -60,4 +60,4 @@ node --test "src/features/fee-setup/**/*.test.mjs"
 ```
 
 - Domeniu: reguli pure pentru `applyChildFeeSetup`, `hasMissingFee`, `defaultSetupMonth`.
-- Integrare: `startTestApplication`, server real, aceleași asigurări ca înainte de mutare.
+- Integrare: `startTestApplication`, server real; verifică `/api/children-setup` cap-coadă (validare, tranzacție, backup, audit).
