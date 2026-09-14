@@ -1,5 +1,5 @@
-// Lansatorul nativ Startica: porneste serverul Node si fereastra browserului,
-// fara VBScript/PowerShell. Inlocuieste startica_desktop.ps1 + Porneste_/Opreste_Startica.vbs.
+﻿// Lansatorul nativ Startica: pornește serverul Node și fereastra browserului,
+// fără VBScript/PowerShell. Înlocuiește startica_desktop.ps1 + Porneste_/Opreste_Startica.vbs.
 // C# 5 / .NET Framework 4.x (compilat cu csc.exe din Windows, vezi build-launcher.ps1).
 using System;
 using System.Collections.Generic;
@@ -117,9 +117,9 @@ namespace Startica
             return args[index];
         }
 
-        // Path.GetFullPath nu scoate separatorul final ("C:\Home\" ramane cu \), ceea ce
-        // ar rupe compararea hash-ului de mutex si a caii bazei intre doua porniri cu/fara
-        // separator final in --home. Radacina de disc ("C:\") ramane neschimbata.
+        // Path.GetFullPath nu scoate separatorul final ("C:\Home\" rămâne cu \), ceea ce
+        // ar rupe compararea hash-ului de mutex și a căii bazei între două porniri cu/fără
+        // separator final în --home. Rădăcina de disc ("C:\") rămâne neschimbată.
         private static string NormalizeDirectory(string path)
         {
             string full = Path.GetFullPath(path);
@@ -129,7 +129,7 @@ namespace Startica
         }
     }
 
-    /// <summary>Jurnal cu timestamp ISO, rotit la 1 MB intr-o singura generatie (lansator.1.log).</summary>
+    /// <summary>Jurnal cu timestamp ISO, rotit la 1 MB într-o singură generație (lansator.1.log).</summary>
     internal sealed class Logger
     {
         private const long MaxBytes = 1024 * 1024;
@@ -139,7 +139,8 @@ namespace Startica
         public Logger(string path) { _path = path; }
 
         public void Info(string message) { Write("INFO", message); }
-        public void Error(string message) { Write("EROARE", message); }
+        public void Warn(string message) { Write("WARN", message); }
+        public void Error(string message) { Write("ERROR", message); }
 
         private void Write(string level, string message)
         {
@@ -163,7 +164,7 @@ namespace Startica
             }
             catch (IOException)
             {
-                // scrierea urmatoare continua peste fisierul curent; rotatia nu e critica
+                // scrierea următoare continuă peste fișierul curent; rotația nu e critică
             }
         }
     }
@@ -241,10 +242,12 @@ namespace Startica
 
                 if (!ownsMutex)
                 {
-                    // Nu suntem proprietarul acestui home: alta instanta porneste/tine serverul.
+                    // Nu suntem proprietarul acestui home: altă instanță pornește/ține serverul.
                     if (health == null) health = WaitForHealth(10000);
-                    int port = health != null ? health.Port : _options.Port;
-                    OpenWindow(browserPath, "http://127.0.0.1:" + port, _options.ProfileDir);
+                    if (health == null)
+                        throw new StarticaException(
+                            "Startica pornește deja, dar serverul nu răspunde încă. Închide fereastra Startica existentă și încearcă din nou.");
+                    OpenWindow(browserPath, "http://127.0.0.1:" + health.Port, _options.ProfileDir);
                     _logger.Info("Fereastră deschisă (instanță neproprietară).");
                     return;
                 }
@@ -289,14 +292,37 @@ namespace Startica
                 }
                 catch (Exception ex)
                 {
-                    _logger.Info("Nu am putut șterge " + directory + ": " + ex.Message);
+                    _logger.Warn("Nu am putut șterge " + directory + ": " + ex.Message);
                 }
             }
         }
 
-        // === Oprire (--stop si finalul supravegherii) ===
+        // === Oprire (--stop și finalul supravegherii) ===
 
+        // --stop = închide totul pentru acest home: fereastră, server, proces proprietar.
         private void Stop()
+        {
+            CloseWindows();
+
+            // Un singur proces oprește serverul: proprietarul, când i s-a închis fereastra, sau --stop după ce proprietarul a ieșit.
+            // Mutex reentrant pe același fir: dacă Stop() rulează chiar din proprietar (Supervise), WaitOne reușește imediat.
+            Mutex ownerMutex = new Mutex(false, "Local\\Startica_" + ComputeHomeIdentity(_options.Home));
+            bool acquired = false;
+            try
+            {
+                try { acquired = ownerMutex.WaitOne(15000); }
+                catch (AbandonedMutexException) { acquired = true; }
+                if (!acquired) _logger.Warn("Procesul proprietar nu a ieșit în 15 s; opresc serverul direct.");
+                StopServerProcess();
+            }
+            finally
+            {
+                if (acquired) { try { ownerMutex.ReleaseMutex(); } catch (Exception) { } }
+                ownerMutex.Close();
+            }
+        }
+
+        private void StopServerProcess()
         {
             PortFileInfo portInfo = ReadPortFileWithRetry(3, 100);
             if (portInfo == null)
@@ -306,7 +332,7 @@ namespace Startica
             }
             if (!IsPortListening(portInfo.Port))
             {
-                // scurta reincercare: fisierul poate fi scris chiar inainte ca serverul sa asculte
+                // Snapshot-ul GetActiveTcpListeners poate fi cu o clipă în urmă.
                 Thread.Sleep(150);
                 if (!IsPortListening(portInfo.Port))
                 {
@@ -319,13 +345,31 @@ namespace Startica
             HealthInfo health = TryGetHealth(portInfo.Port);
             if (health == null)
             {
+                // portul ascultă, dar nu răspunde ca server Startica al nostru: fișierul e desincronizat
+                DeletePortFile();
                 _logger.Info("Niciun server Startica activ pentru acest home.");
                 return;
             }
 
-            string token = GetSessionToken(health.Port);
-            string warning = PostShutdown(health.Port, token);
-            if (!string.IsNullOrEmpty(warning)) _logger.Info("Avertisment la oprire: " + warning);
+            string warning;
+            try
+            {
+                string token = GetSessionToken(health.Port);
+                warning = PostShutdown(health.Port, token);
+            }
+            catch (WebException)
+            {
+                // Cursa cu un alt proces care oprea deja acest server (mutexul reduce fereastra, nu o elimina).
+                if (!IsPortListening(health.Port))
+                {
+                    _logger.Info("Serverul se oprea deja printr-un alt proces.");
+                    WaitForProcessExit(portInfo.Pid, 60000);
+                    _logger.Info("Server oprit.");
+                    return;
+                }
+                throw;
+            }
+            if (!string.IsNullOrEmpty(warning)) _logger.Warn("Avertisment la oprire: " + warning);
             WaitForProcessExit(portInfo.Pid, 60000);
             _logger.Info("Server oprit.");
         }
@@ -338,7 +382,7 @@ namespace Startica
             if (portInfo == null) return null;
             if (!IsPortListening(portInfo.Port))
             {
-                // scurta reincercare: fisierul poate fi scris chiar inainte ca serverul sa asculte
+                // Snapshot-ul GetActiveTcpListeners poate fi cu o clipă în urmă.
                 Thread.Sleep(150);
                 if (!IsPortListening(portInfo.Port))
                 {
@@ -346,7 +390,15 @@ namespace Startica
                     return null;
                 }
             }
-            return TryGetHealth(portInfo.Port);
+            HealthInfo health = TryGetHealth(portInfo.Port);
+            if (health == null)
+            {
+                // portul e ascultat de altcineva sau nu răspunde ca server Startica al nostru:
+                // fișierul .port e desincronizat și nu are voie să blocheze pornirea (pasul 8 alege alt port).
+                DeletePortFile();
+                return null;
+            }
+            return health;
         }
 
         private HealthInfo WaitForHealth(int timeoutMs)
@@ -369,6 +421,16 @@ namespace Startica
             int delay = 25;
             while (timer.ElapsedMilliseconds < timeoutMs)
             {
+                // Fișierul e al serverului pornit de noi: o bază diferită e eroare reală; ștergerea l-ar lăsa orfan.
+                PortFileInfo ownPortInfo = ReadPortFile();
+                if (ownPortInfo != null && ownPortInfo.Pid == serverProcess.Id)
+                {
+                    string reportedDatabase = TryGetRunningDatabase(ownPortInfo.Port);
+                    if (reportedDatabase != null && !string.Equals(reportedDatabase, _expectedDatabase, StringComparison.OrdinalIgnoreCase))
+                        throw new StarticaException("Serverul a pornit, dar răspunde cu altă bază: " + reportedDatabase +
+                            ". Detalii în " + Path.Combine(_options.Home, @"Jurnale\lansator.log"));
+                }
+
                 HealthInfo health = FindExistingServer();
                 if (health != null) return health;
                 if (serverProcess.HasExited)
@@ -398,7 +460,7 @@ namespace Startica
             info.EnvironmentVariables["STARTICA_NO_BROWSER"] = "1";
             info.EnvironmentVariables["STARTICA_PORT"] = port.ToString();
             info.EnvironmentVariables["STARTICA_HOME"] = _options.Home;
-            // Comanda si mediul complet, ca o pornire esuata fara startica.log sa fie diagnosticabila din lansator.log.
+            // Comanda și mediul complet, ca o pornire eșuată fără startica.log să fie diagnosticabilă din lansator.log.
             _logger.Info("Pornesc serverul: \"" + nodePath + "\" " + info.Arguments +
                 " | WorkingDirectory=" + _options.AppDir +
                 " | STARTICA_HOME=" + _options.Home +
@@ -407,7 +469,7 @@ namespace Startica
             return Process.Start(info);
         }
 
-        // === Fereastra (functie separata, ca sa poata fi inlocuita cu WebView2 mai tarziu) ===
+        // === Fereastra (funcție separată, ca să poată fi înlocuită cu WebView2 mai târziu) ===
 
         private static void OpenWindow(string browserPath, string address, string profileDir)
         {
@@ -429,7 +491,7 @@ namespace Startica
             ManagementObject windowProcess = FindWindowProcessWithRetry(exeName, 15000);
             if (windowProcess == null)
                 throw new StarticaException(
-                    "Nu am putut urmări fereastra Startica. Serverul rămâne pornit; închide-l din \"Backup și setări\" sau pornește din nou Startica.");
+                    "Nu am putut urmări fereastra Startica. Serverul rămâne pornit și va fi refolosit la următoarea pornire.");
 
             while (windowProcess != null)
             {
@@ -441,7 +503,7 @@ namespace Startica
                 }
                 catch (ArgumentException)
                 {
-                    // procesul s-a inchis deja intre interogare si asteptare
+                    // procesul s-a închis deja între interogare și așteptare
                 }
                 windowProcess = FindWindowProcess(exeName);
             }
@@ -463,6 +525,22 @@ namespace Startica
 
         private ManagementObject FindWindowProcess(string exeName)
         {
+            List<ManagementObject> matches = FindAllWindowProcessesForExe(exeName);
+            return matches.Count > 0 ? matches[0] : null;
+        }
+
+        // Indiferent de browser (Edge sau Chrome) - --stop nu știe cu care a pornit fereastra dacă a pornit alt lansator.
+        private List<ManagementObject> FindAllWindowProcesses()
+        {
+            List<ManagementObject> matches = new List<ManagementObject>();
+            matches.AddRange(FindAllWindowProcessesForExe("msedge.exe"));
+            matches.AddRange(FindAllWindowProcessesForExe("chrome.exe"));
+            return matches;
+        }
+
+        private List<ManagementObject> FindAllWindowProcessesForExe(string exeName)
+        {
+            List<ManagementObject> matches = new List<ManagementObject>();
             string query = "SELECT ProcessId, CommandLine FROM Win32_Process WHERE Name = '" +
                 exeName.Replace("'", "''") + "'";
             using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
@@ -475,13 +553,58 @@ namespace Startica
                     if (commandLine.IndexOf(_options.ProfileDir, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     if (commandLine.IndexOf("--user-data-dir", StringComparison.OrdinalIgnoreCase) < 0) continue;
                     if (commandLine.IndexOf("--type=", StringComparison.OrdinalIgnoreCase) >= 0) continue;
-                    return candidate;
+                    matches.Add(candidate);
                 }
             }
-            return null;
+            return matches;
         }
 
-        // === Motorul si browserul ===
+        // Garda de modificări nesalvate din UI poate ține CloseMainWindow la infinit, de-aia urmează un Kill() după 5 s.
+        private void CloseWindows()
+        {
+            List<ManagementObject> windows = FindAllWindowProcesses();
+            if (windows.Count == 0) return;
+
+            List<int> processIds = new List<int>();
+            foreach (ManagementObject window in windows)
+            {
+                int processId = (int)(uint)window["ProcessId"];
+                processIds.Add(processId);
+                try { Process.GetProcessById(processId).CloseMainWindow(); }
+                catch (ArgumentException) { /* s-a închis deja */ }
+            }
+
+            Stopwatch timer = Stopwatch.StartNew();
+            while (timer.ElapsedMilliseconds < 5000 && AnyStillRunning(processIds))
+                Thread.Sleep(200);
+
+            foreach (int processId in processIds)
+            {
+                try
+                {
+                    Process process = Process.GetProcessById(processId);
+                    if (!process.HasExited)
+                    {
+                        process.Kill();
+                        _logger.Warn("Fereastra Startica (PID " + processId + ") nu s-a închis singură; a fost închisă forțat.");
+                    }
+                }
+                catch (ArgumentException) { /* s-a închis deja */ }
+                catch (InvalidOperationException) { /* s-a închis deja */ }
+            }
+        }
+
+        private static bool AnyStillRunning(List<int> processIds)
+        {
+            foreach (int processId in processIds)
+            {
+                try { if (!Process.GetProcessById(processId).HasExited) return true; }
+                catch (ArgumentException) { /* s-a închis deja */ }
+            }
+            return false;
+        }
+
+        // === Motorul și browserul ===
 
         private string FindNode()
         {
@@ -552,16 +675,16 @@ namespace Startica
             }
         }
 
-        // === Fisierul .port si /api/health, /api/session, /api/shutdown ===
+        // === Fișierul .port și /api/health, /api/session, /api/shutdown ===
 
         private string PortFilePath()
         {
             return Path.Combine(_options.Home, "startica.port");
         }
 
-        // Serverul scrie startica.port atomic (.tmp + rename), dar o citire chiar in jurul
-        // rename-ului poate gasi fisierul lipsa/gol/JSON partial. Cateva reincercari scurte
-        // evita sa tratam gresit un server care tocmai porneste ca "niciun server".
+        // Serverul scrie startica.port atomic (.tmp + rename), dar o citire chiar în jurul
+        // rename-ului poate găsi fișierul lipsă/gol/JSON parțial. Câteva reîncercări scurte
+        // evită să tratăm greșit un server care tocmai pornește ca "niciun server".
         private PortFileInfo ReadPortFileWithRetry(int attempts, int delayMs)
         {
             for (int attempt = 0; attempt < attempts; attempt++)
@@ -611,8 +734,9 @@ namespace Startica
             return false;
         }
 
-        // Raspunde daca e a noastra (database == baza asteptata); null daca nu raspunde
-        // nimeni; arunca daca raspunde altcineva (port folosit de alta aplicatie/copie).
+        // Răspunde dacă e a noastră (database == baza așteptată); null în orice alt caz
+        // (nimeni nu răspunde, sau răspunde altcineva pe acel port). Un .port vechi al cărui
+        // port a fost preluat de altă aplicație nu are voie să blocheze pornirea.
         private HealthInfo TryGetHealth(int port)
         {
             string body;
@@ -629,11 +753,17 @@ namespace Startica
             bool ok = okValue is bool && (bool)okValue;
             string database = databaseValue as string;
             if (!ok || string.IsNullOrEmpty(database))
-                throw new StarticaException("Portul " + port + " este folosit de altă aplicație sau de altă copie Startica.");
+            {
+                _logger.Warn("Portul " + port + " este folosit de altă aplicație sau de altă copie Startica (răspuns neașteptat la /api/health).");
+                return null;
+            }
 
             string normalized = Path.GetFullPath(database);
             if (!string.Equals(normalized, _expectedDatabase, StringComparison.OrdinalIgnoreCase))
-                throw new StarticaException("Portul " + port + " este folosit de altă aplicație sau de altă copie Startica.");
+            {
+                _logger.Warn("Portul " + port + " este folosit de altă aplicație sau de altă copie Startica (bază diferită: " + normalized + ").");
+                return null;
+            }
 
             return new HealthInfo(port, normalized);
         }
@@ -657,6 +787,10 @@ namespace Startica
             request.ContentType = "application/json";
             request.Headers["X-Startica-Token"] = token;
             request.Timeout = 60000;
+            // Fără proxy/Expect: 100-continue, ca WPAD sau un round-trip suplimentar să nu
+            // consume din cele 60 s de așteptare a închiderii.
+            request.Proxy = null;
+            request.ServicePoint.Expect100Continue = false;
             request.ContentLength = payload.Length;
             using (Stream stream = request.GetRequestStream()) stream.Write(payload, 0, payload.Length);
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
@@ -675,6 +809,8 @@ namespace Startica
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.Method = "GET";
             request.Timeout = timeoutMs;
+            // WPAD poate consuma secunde bune din fereastra de 15 s de așteptare a serverului.
+            request.Proxy = null;
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             using (StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
                 return reader.ReadToEnd();
@@ -683,7 +819,7 @@ namespace Startica
         private static void WaitForProcessExit(int pid, int timeoutMs)
         {
             try { Process.GetProcessById(pid).WaitForExit(timeoutMs); }
-            catch (ArgumentException) { /* procesul nu mai exista - deja oprit */ }
+            catch (ArgumentException) { /* procesul nu mai există - deja oprit */ }
         }
 
         private static string ComputeHomeIdentity(string home)
@@ -698,7 +834,7 @@ namespace Startica
             }
         }
 
-        // === Migrarea de la instalarea veche (ZIP), sectiunea 2.5 din spec ===
+        // === Migrarea de la instalarea veche (ZIP), secțiunea 2.5 din spec ===
 
         private bool RunMigration()
         {
@@ -707,7 +843,7 @@ namespace Startica
             if (candidate == null)
             {
                 DialogResult browse = MessageBox.Show(
-                    "Nu am găsit nicio evidență Startica veche. Aleți folderul manual?",
+                    "Nu am găsit nicio evidență Startica veche. Alegi folderul manual?",
                     "Startica", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (browse == DialogResult.Yes)
                 {
@@ -716,11 +852,25 @@ namespace Startica
                         dialog.Description = "Alege folderul instalației Startica vechi (conține Startica_Date).";
                         if (dialog.ShowDialog() == DialogResult.OK)
                         {
-                            if (File.Exists(Path.Combine(dialog.SelectedPath, DatabaseRelativePath)))
-                                candidate = dialog.SelectedPath;
+                            string selected = dialog.SelectedPath;
+                            string nested = Path.Combine(selected, "Aplicatie");
+                            if (File.Exists(Path.Combine(selected, DatabaseRelativePath)))
+                                candidate = selected;
+                            else if (File.Exists(Path.Combine(nested, DatabaseRelativePath)))
+                                candidate = nested;
                             else
-                                MessageBox.Show("Nu am găsit nicio evidență acolo. Pornesc cu o evidență goală.",
-                                    "Startica", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            {
+                                DialogResult emptyChoice = MessageBox.Show(
+                                    "Nu am găsit nicio evidență în folderul ales. Pornesc cu o evidență goală?",
+                                    "Startica", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                                if (emptyChoice != DialogResult.Yes)
+                                {
+                                    _logger.Info("Pornire anulată de utilizator la migrare.");
+                                    return false;
+                                }
+                                _logger.Info("Pornire cu evidență goală (folder ales fără evidență).");
+                                return true;
+                            }
                         }
                     }
                 }
@@ -731,7 +881,7 @@ namespace Startica
                 }
             }
 
-            DateTime modified = File.GetLastWriteTime(Path.Combine(candidate, DatabaseRelativePath));
+            DateTime modified = LastWriteOfDatabase(candidate);
             DialogResult confirm = MessageBox.Show(
                 "Am găsit evidența Startica în: " + candidate + " (modificată la " +
                 modified.ToString("dd.MM.yyyy HH:mm") + "). O preiau în noua instalare? Folderul vechi rămâne neatins.",
@@ -751,6 +901,21 @@ namespace Startica
 
             CopyOldInstallation(candidate);
             return true;
+        }
+
+        // WAL-ul necheckpointat poate fi mai nou decât fișierul principal .db; data arătată
+        // utilizatorului trebuie să reflecte cea mai recentă scriere reală.
+        private static DateTime LastWriteOfDatabase(string candidate)
+        {
+            string databasePath = Path.Combine(candidate, DatabaseRelativePath);
+            DateTime modified = File.GetLastWriteTime(databasePath);
+            string walPath = databasePath + "-wal";
+            if (File.Exists(walPath))
+            {
+                DateTime walModified = File.GetLastWriteTime(walPath);
+                if (walModified > modified) modified = walModified;
+            }
+            return modified;
         }
 
         private string FindOldInstallationCandidate()
@@ -799,8 +964,8 @@ namespace Startica
             return null;
         }
 
-        // Foloseste WScript.Shell prin COM tarziu-legat (Microsoft.CSharp e deja referentiat
-        // pentru `dynamic`), ca sa nu fie nevoie de un assembly de interop dedicat.
+        // Folosește WScript.Shell prin COM târziu-legat (Microsoft.CSharp e deja referențiat
+        // pentru `dynamic`), ca să nu fie nevoie de un assembly de interop dedicat.
         private static ShortcutInfo TryReadShortcut(string lnkPath)
         {
             if (!File.Exists(lnkPath)) return null;

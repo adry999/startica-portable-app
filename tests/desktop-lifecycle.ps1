@@ -160,14 +160,18 @@ try {
     Assert ($portInfo2 -and $portInfo2.port -ne $occupiedPort) 'Serverul a pornit pe alt port decat cel ocupat de test'
     $url2 = 'http://127.0.0.1:' + $portInfo2.port
     Assert (Wait-Condition { Test-Health $url2 $db2 } 15) 'Serverul raspunde pe portul alternativ cu baza asteptata'
+    Assert (Wait-Condition { $b = Get-OldestBrowserWindow $profile2; $b -and (Get-Process -Id $b.ProcessId).MainWindowHandle -ne 0 } 25) 'Fereastra Scenariului 2 a aparut'
 
-    # --stop opreste serverul acestei radacini fara sa astepte inchiderea ferestrei.
+    # --stop trebuie sa inchida totul pentru acest home: fereastra, serverul si procesul proprietar.
     $stopArgs2 = '--stop --quiet --home "' + $home2 + '"'
     $stop2 = Start-Process -FilePath $launcherExe -ArgumentList $stopArgs2 -Wait -PassThru
     $launcherProcesses += $stop2
     Assert ($stop2.ExitCode -eq 0) '--stop iese cu codul 0'
     Assert (Wait-Condition { -not (Test-Health $url2 $db2) } 20) 'Serverul s-a oprit dupa --stop'
     Assert (-not (Test-Path -LiteralPath (Join-Path $home2 'startica.port'))) 'startica.port a fost sters dupa --stop'
+    Assert (Wait-Condition { -not (Get-OldestBrowserWindow $profile2) } 10) 'Fereastra Scenariului 2 a disparut dupa --stop'
+    Assert ($owner2.WaitForExit(20000)) 'Procesul proprietar (Scenariul 2) a iesit in cel mult 20s dupa --stop'
+    Assert ($owner2.ExitCode -eq 0) 'Procesul proprietar (Scenariul 2) a iesit cu codul 0'
 
     Write-Output 'PASS: toate scenariile de ciclu de viata au trecut.'
 } catch {
