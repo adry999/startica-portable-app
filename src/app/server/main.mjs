@@ -1,50 +1,58 @@
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { format } from 'node:util';
 import { loadEnvironment } from '#config/environment.mjs';
 import { createRotatingLogFile } from '#core/server/files/rotating-log-file.mjs';
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 import { createApplication } from './create-application.mjs';
 
 // Lansatorul desktop nu are altă fereastră pentru mesajele serverului, deci consola merge în jurnal.
-/** @param {string} home */
-function redirectConsoleToLogFile(home) {
-  const logsDir = join(home, 'Jurnale');
-  mkdirSync(logsDir, { recursive: true });
-  const logFile = createRotatingLogFile({ file: join(logsDir, 'startica.log') });
-  console.log = (...args) => logFile.write('INFO', args.join(' '));
-  console.warn = (...args) => logFile.write('WARN', args.join(' '));
-  console.error = (...args) => logFile.write('ERROR', args.join(' '));
+/** @param {string} logFile */
+function redirectConsoleToLogFile(logFile) {
+  mkdirSync(dirname(logFile), { recursive: true });
+  const log = createRotatingLogFile({ file: logFile });
+  console.log = (...args) => log.write('INFO', format(...args));
+  console.warn = (...args) => log.write('WARN', format(...args));
+  console.error = (...args) => log.write('ERROR', format(...args));
 }
 
 export function startServer() {
   const environment = loadEnvironment();
-  if (environment.home) redirectConsoleToLogFile(environment.home);
+  const logFile = environment.home ? join(environment.home, 'Jurnale', 'startica.log') : undefined;
+  if (logFile) redirectConsoleToLogFile(logFile);
   const portFile = environment.home ? join(environment.home, 'startica.port') : null;
   // Implicit ar opri tot procesul, pierzând fereastra fără explicație.
   process.on('unhandledRejection', e => {
     const failure = /** @type {Error} */ (e);
     console.error('Respingere netratată: ' + (failure?.stack || failure));
   });
-  const app = createApplication({
+  /** @type {ReturnType<typeof createApplication>} */
+  let app;
+  // Înregistrat înaintea createApplication: și o bază coruptă la deschidere trebuie să ajungă în jurnal.
+  process.on('uncaughtException', e => {
+    const failure = /** @type {Error} */ (e);
+    try {
+      console.error('Excepție netratată: ' + (failure?.stack || failure));
+      const result = app?.safeBackup('eroare');
+      if (result?.warning) console.error(result.warning);
+      app?.db.close();
+      if (portFile) removeFileIfPresent(portFile);
+    } finally {
+      process.exit(1);
+    }
+  });
+  app = createApplication({
     ...(environment.home
       ? {
           dataDir: join(environment.home, 'Startica_Date'),
           backupDir: join(environment.home, 'Startica_Backup'),
           home: environment.home,
+          logFile,
         }
       : {}),
     allowShutdown: true,
     autoBackupIntervalMs: environment.autoBackupIntervalMs,
-  });
-  // Fără această captură, o eroare neprevăzută ar închide procesul brusc, fără jurnal și fără backup.
-  process.on('uncaughtException', e => {
-    const failure = /** @type {Error} */ (e);
-    console.error('Excepție netratată: ' + (failure?.stack || failure));
-    const result = app.safeBackup('eroare');
-    if (result.warning) console.error(result.warning);
-    app.db.close();
-    process.exit(1);
   });
   app.server.on('error', e => {
     const failure = /** @type {NodeJS.ErrnoException} */ (e);
@@ -60,7 +68,11 @@ export function startServer() {
     const port = /** @type {import('node:net').AddressInfo} */ (app.server.address()).port;
     const address = `http://127.0.0.1:${port}`;
     console.log(`Startica: ${address}`);
-    if (portFile) writeFileSync(portFile, JSON.stringify({ port, pid: process.pid, database: app.database }));
+    if (portFile) {
+      // Lansatorul citește fișierul de îndată ce apare; nu are voie să-l vadă gol.
+      writeFileSync(portFile + '.tmp', JSON.stringify({ port, pid: process.pid, database: app.database }));
+      renameSync(portFile + '.tmp', portFile);
+    }
     if (environment.openBrowser)
       spawn('cmd.exe', ['/c', 'start', '', address], {
         detached: true,

@@ -29,9 +29,10 @@ test('GET /api/diagnostic citește ultimele 200 de linii din jurnal și ultimele
   const home = mkdtempSync(join(tmpdir(), 'startica-diagnostic-home-'));
   t.after(() => rmSync(home, { recursive: true, force: true }));
   mkdirSync(join(home, 'Jurnale'), { recursive: true });
+  const logFile = join(home, 'Jurnale', 'startica.log');
   const lines = Array.from({ length: 205 }, (_, i) => `linia ${i}`);
-  writeFileSync(join(home, 'Jurnale', 'startica.log'), lines.join('\n') + '\n');
-  const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true, home });
+  writeFileSync(logFile, lines.join('\n') + '\n');
+  const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true, home, logFile });
   await bundle.post('/api/backup', {});
   const response = await bundle.get('/api/diagnostic');
   assert.equal(response.home, home);

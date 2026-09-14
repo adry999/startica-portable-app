@@ -35,6 +35,7 @@ const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
  *   dataDir?: string,
  *   backupDir?: string,
  *   home?: string,
+ *   logFile?: string,
  *   autoBackupIntervalMs?: number,
  *   allowShutdown?: boolean,
  * }} [options]
@@ -97,6 +98,7 @@ export function createApplication(options = {}) {
     ...createDiagnosticRoutes({
       version,
       home: options.home,
+      logFile: options.logFile,
       database: dbFile,
       backupDirectory: backupDir,
       readSetting,

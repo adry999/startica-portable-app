@@ -18,8 +18,11 @@ export function createRotatingLogFile({ file, maxBytes = DEFAULT_MAX_BYTES }) {
    * @param {string} message
    */
   function write(level, message) {
-    rotateIfNeeded();
-    appendFileSync(file, `${new Date().toISOString()} ${level} ${message}\n`);
+    // Jurnalul nu doboară serverul: disc plin sau fișier rotit ținut deschis de altcineva.
+    try {
+      rotateIfNeeded();
+      appendFileSync(file, `${new Date().toISOString()} ${level} ${message}\n`);
+    } catch {}
   }
 
   return { write };
