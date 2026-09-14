@@ -40,7 +40,7 @@ const payment = () =>
   });
 
 test('Export/reimport complet prin fișier XLSX în memorie', () => {
-  const s = {
+  const state = {
     children: [
       { ...child(), notes: 'Observații', extra: 'câmp păstrat', statusHistory: [{ from: '2026-09', status: 'Activ' }] },
     ],
@@ -50,13 +50,13 @@ test('Export/reimport complet prin fișier XLSX în memorie', () => {
     categories: [],
   };
   // Extra long field exercises chunking; validation normally caps text at 10k.
-  s.payments[0].notes = 'text';
-  s.payments[0].extra = 'a'.repeat(35000);
-  const bytes = XLSX.write(exportWorkbook(s, XLSX), { type: 'buffer', bookType: 'xlsx' });
+  state.payments[0].notes = 'text';
+  state.payments[0].extra = 'a'.repeat(35000);
+  const bytes = XLSX.write(exportWorkbook(state, XLSX), { type: 'buffer', bookType: 'xlsx' });
   const result = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX, findRecordIssues);
   assert.deepEqual(result.errors, []);
   assert.ok(result.state);
-  assert.deepEqual(result.state, validateState(s));
+  assert.deepEqual(result.state, validateState(state));
   const zero = readWorkbook(exportWorkbook(emptyState(), XLSX), XLSX, findRecordIssues);
   assert.ok(zero.state);
   assert.deepEqual(zero.state, emptyState());
@@ -104,12 +104,12 @@ test('Importul V5 mapează un statut necunoscut, păstrând textul original', ()
   assert.equal(unknown.status, 'De verificat');
   assert.match(unknown.note, /Inactiv temporar/);
   // Rândul trebuie să treacă validarea, nu să fie respins.
-  const r = normalizeRecord('children', { id: 'ID-1', name: 'Copil', dueDay: 10, status: unknown.status });
-  assert.equal(r.status, 'De verificat');
+  const normalized = normalizeRecord('children', { id: 'ID-1', name: 'Copil', dueDay: 10, status: unknown.status });
+  assert.equal(normalized.status, 'De verificat');
 });
 
 test('Doi părinți și achitarea mixtă trec prin export și import', () => {
-  const c = normalizeRecord('children', {
+  const child = normalizeRecord('children', {
     id: 'C1',
     name: 'Copil',
     parent: 'P1',
@@ -119,9 +119,9 @@ test('Doi părinți și achitarea mixtă trec prin export și import', () => {
     attendanceDate: '2026-09-01',
     feeHistory: [{ from: '2026-09', amount: 1500 }],
   });
-  const p = normalizeRecord('payments', {
+  const payment = normalizeRecord('payments', {
     id: 'P1',
-    childId: c.id,
+    childId: child.id,
     date: '2026-09-08',
     tenders: [
       { method: 'Cash', amount: 1000.1 },
@@ -129,11 +129,13 @@ test('Doi părinți și achitarea mixtă trec prin export și import', () => {
     ],
     allocations: [{ month: '2026-09', amount: 1500 }],
   });
-  const s = { children: [c], payments: [p], expenses: [], groups: [], categories: [] };
-  const wb = XLSX.read(XLSX.write(exportWorkbook(s, XLSX), { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
+  const state = { children: [child], payments: [payment], expenses: [], groups: [], categories: [] };
+  const wb = XLSX.read(XLSX.write(exportWorkbook(state, XLSX), { type: 'buffer', bookType: 'xlsx' }), {
+      type: 'buffer',
+    }),
     back = readWorkbook(wb, XLSX, findRecordIssues);
   assert.deepEqual(back.errors, []);
-  assert.deepEqual(back.state, s);
+  assert.deepEqual(back.state, state);
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Copii)[0].Telefon_2, '+373456');
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Achitari)[0].Card, 500.2);
 });

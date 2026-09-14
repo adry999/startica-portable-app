@@ -50,7 +50,7 @@ test('Validare monetară, dată, identificatori și referințe', () => {
 });
 
 test('Doi părinți opționali și achitare mixtă se normalizează', () => {
-  const c = normalizeRecord('children', {
+  const childRecord = normalizeRecord('children', {
     id: 'C1',
     name: 'Copil',
     parent: 'P1',
@@ -61,10 +61,10 @@ test('Doi părinți opționali și achitare mixtă se normalizează', () => {
     feeHistory: [{ from: '2026-09', amount: 1500 }],
   });
   assert.doesNotThrow(() => normalizeRecord('children', { id: 'C0', name: 'Fără contacte' }));
-  assert.throws(() => normalizeRecord('children', { ...c, phone2: 123 }));
-  const p = normalizeRecord('payments', {
+  assert.throws(() => normalizeRecord('children', { ...childRecord, phone2: 123 }));
+  const mixedPayment = normalizeRecord('payments', {
     id: 'P1',
-    childId: c.id,
+    childId: childRecord.id,
     date: '2026-09-08',
     tenders: [
       { method: 'Cash', amount: 1000.1 },
@@ -72,8 +72,8 @@ test('Doi părinți opționali și achitare mixtă se normalizează', () => {
     ],
     allocations: [{ month: '2026-09', amount: 1500 }],
   });
-  assert.equal(p.amount, 1500.3);
-  assert.equal(p.method, 'Cash + Card');
+  assert.equal(mixedPayment.amount, 1500.3);
+  assert.equal(mixedPayment.method, 'Cash + Card');
   for (const tenders of [
     [],
     [{ method: 'Cash', amount: -1 }],
@@ -83,9 +83,11 @@ test('Doi părinți opționali și achitare mixtă se normalizează', () => {
       { method: 'card', amount: 2 },
     ],
   ])
-    assert.throws(() => normalizeRecord('payments', { ...p, tenders }));
-  assert.throws(() => normalizeRecord('payments', { ...p, amount: 999 }));
-  assert.throws(() => normalizeRecord('payments', { ...p, allocations: [{ month: '2026-09', amount: 1600 }] }));
+    assert.throws(() => normalizeRecord('payments', { ...mixedPayment, tenders }));
+  assert.throws(() => normalizeRecord('payments', { ...mixedPayment, amount: 999 }));
+  assert.throws(() =>
+    normalizeRecord('payments', { ...mixedPayment, allocations: [{ month: '2026-09', amount: 1600 }] }),
+  );
   const legacy = { id: 'P2', date: '2026-09-08', amount: 200, method: 'Transfer' };
   assert.equal(normalizeRecord('payments', legacy).amount, 200);
 });

@@ -7,7 +7,7 @@ import { summarizeCashForMonth, sumUnallocatedAdvance } from './cash-summary.mjs
 const asAny = value => /** @type {any} */ (value);
 
 test('summarizeCashForMonth totalizează încasările lunii pe metodă și scade cheltuielile', () => {
-  const p = {
+  const payment = {
     id: 'P1',
     date: '2026-09-08',
     childId: 'C1',
@@ -20,7 +20,7 @@ test('summarizeCashForMonth totalizează încasările lunii pe metodă și scade
   };
   const records = asAny({
     children: [],
-    payments: [p],
+    payments: [payment],
     expenses: [{ id: 'E1', date: '2026-09-05', amount: 200, category: 'Altele', description: '' }],
     groups: [],
     categories: [],
@@ -76,7 +76,7 @@ test('sumUnallocatedAdvance ignoră plățile arhivate sau ulterioare lui asOf',
 });
 
 test('Încasările lunii după data reală a plății', () => {
-  const p = asAny({
+  const payment = asAny({
     id: 'PAY-test',
     childId: 'ID-test',
     date: '2026-09-08',
@@ -87,20 +87,20 @@ test('Încasările lunii după data reală a plății', () => {
       { month: '2026-10', amount: 500 },
     ],
   });
-  const s = asAny({ children: [], payments: [p], expenses: [], groups: [], categories: [] });
-  assert.equal(summarizeCashForMonth(s, '2026-09').income, 3000);
-  assert.equal(summarizeCashForMonth(s, '2026-10').income, 0);
+  const records = asAny({ children: [], payments: [payment], expenses: [], groups: [], categories: [] });
+  assert.equal(summarizeCashForMonth(records, '2026-09').income, 3000);
+  assert.equal(summarizeCashForMonth(records, '2026-10').income, 0);
 });
 
 test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () => {
-  const c = asAny({
+  const child = asAny({
     id: 'C1',
     status: 'Activ',
     attendanceDate: '2026-09-01',
     feeHistory: [{ from: '2026-09', amount: 1500 }],
     dueDay: 10,
   });
-  const p = asAny({
+  const payment = asAny({
     id: 'P1',
     childId: 'C1',
     date: '2026-09-08',
@@ -111,10 +111,13 @@ test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () =>
     amount: 1500.3,
     allocations: [{ month: '2026-09', amount: 1500 }],
   });
-  const s = asAny({ children: [c], payments: [p], expenses: [], groups: [], categories: [] });
-  const summary = summarizeCashForMonth(s, '2026-09');
+  const records = asAny({ children: [child], payments: [payment], expenses: [], groups: [], categories: [] });
+  const summary = summarizeCashForMonth(records, '2026-09');
   assert.equal(summary.income, 1500.3);
   assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });
-  assert.equal(obligation(c, '2026-09', [p], '2026-09-08').paid, 1500);
-  assert.equal(summarizeCashForMonth(asAny({ ...s, payments: [{ ...p, archived: true }] }), '2026-09').income, 0);
+  assert.equal(obligation(child, '2026-09', [payment], '2026-09-08').paid, 1500);
+  assert.equal(
+    summarizeCashForMonth(asAny({ ...records, payments: [{ ...payment, archived: true }] }), '2026-09').income,
+    0,
+  );
 });

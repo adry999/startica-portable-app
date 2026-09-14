@@ -44,20 +44,20 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
     mode,
     requestId: randomUUID(),
   });
-  let r = await post('/api/record', request(child(), 'children', 0));
-  assert.equal(r.status, 200);
-  assert.equal(r.body.revision, 1);
+  let response = await post('/api/record', request(child(), 'children', 0));
+  assert.equal(response.status, 200);
+  assert.equal(response.body.revision, 1);
   const pay = request(payment(), 'payments', 1);
-  r = await post('/api/record', pay);
-  assert.equal(r.status, 200);
-  r = await post('/api/record', pay);
-  assert.equal(r.body.replayed, true);
-  assert.equal(r.body.state.payments.length, 1);
-  r = await post(
+  response = await post('/api/record', pay);
+  assert.equal(response.status, 200);
+  response = await post('/api/record', pay);
+  assert.equal(response.body.replayed, true);
+  assert.equal(response.body.state.payments.length, 1);
+  response = await post(
     '/api/record',
     request(normalizeRecord('expenses', { id: 'EXP-test', date: '2026-09-08', amount: 100 }), 'expenses', 1),
   );
-  assert.equal(r.status, 409);
+  assert.equal(response.status, 409);
   assert.equal((await get('/api/state')).state.payments.length, 1);
   assert.equal((await post('/api/record', request({}, 'children', 2))).status, 400);
   const withForeignOrigin = await fetch(origin + '/api/backup', {
@@ -96,14 +96,14 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   assert.deepEqual(readFileSync(join(external, copied)), readFileSync(join(backupDir, copied)));
   assert.equal((await get('/api/health')).cloudVerified, false);
   renameSync(external, external + '-offline');
-  r = await post('/api/record', request({ ...child(), phone: '123' }, 'children', 4, 'update'));
-  assert.equal(r.status, 200);
-  assert.match(r.body.warning, /extern/);
+  response = await post('/api/record', request({ ...child(), phone: '123' }, 'children', 4, 'update'));
+  assert.equal(response.status, 200);
+  assert.match(response.body.warning, /extern/);
   renameSync(backupDir, backupDir + '-offline');
-  r = await post('/api/record', request({ ...child(), phone: '456' }, 'children', 5, 'update'));
-  assert.equal(r.status, 200);
-  assert.match(r.body.warning, /backupul local/);
-  assert.equal(r.body.state.children[0].phone, '456');
+  response = await post('/api/record', request({ ...child(), phone: '456' }, 'children', 5, 'update'));
+  assert.equal(response.status, 200);
+  assert.match(response.body.warning, /backupul local/);
+  assert.equal(response.body.state.children[0].phone, '456');
   renameSync(backupDir + '-offline', backupDir);
   assert.equal(
     (
@@ -128,12 +128,12 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
     revision: 6,
     requestId: randomUUID(),
   };
-  r = await post('/api/import', importRequest);
-  assert.equal(r.status, 200);
-  assert.equal(r.body.revision, 7);
-  r = await post('/api/import', importRequest);
-  assert.equal(r.body.replayed, true);
-  assert.equal(r.body.state.payments.length, 1);
+  response = await post('/api/import', importRequest);
+  assert.equal(response.status, 200);
+  assert.equal(response.body.revision, 7);
+  response = await post('/api/import', importRequest);
+  assert.equal(response.body.replayed, true);
+  assert.equal(response.body.state.payments.length, 1);
   assert.ok(readdirSync(backupDir).some(name => name.includes('inainte-import')));
   assert.equal(
     (await post('/api/record', request({ ...payment(), archived: true }, 'payments', 7, 'update'))).status,
@@ -150,11 +150,11 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   mkdirSync(join(dir, 'data'));
   const old = new DatabaseSync(join(dir, 'data/startica.db'));
   old.exec('CREATE TABLE app_state(id INTEGER PRIMARY KEY,payload TEXT)');
-  const s = { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [] };
-  old.prepare('INSERT INTO app_state VALUES(1,?)').run(JSON.stringify(s));
+  const state = { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [] };
+  old.prepare('INSERT INTO app_state VALUES(1,?)').run(JSON.stringify(state));
   old.close();
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups') });
-  assert.deepEqual(app.envelope().state, s);
+  assert.deepEqual(app.envelope().state, state);
   assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
   app.db.close();
   if (

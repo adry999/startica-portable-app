@@ -21,5 +21,6 @@ export function textareaFieldMarkup(name, label, value) {
   return `<label class="field full">${label}<textarea name="${name}">${escapeHtml(value || '')}</textarea></label>`;
 }
 
-export const formSectionMarkup = (title, html) =>
-  `<fieldset class="form-section"><legend>${escapeHtml(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
+export function formSectionMarkup(title, html) {
+  return `<fieldset class="form-section"><legend>${escapeHtml(title)}</legend><div class="form-section-grid">${html}</div></fieldset>`;
+}
