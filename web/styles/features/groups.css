@@ -125,3 +125,10 @@
   flex: 1;
   min-width: 0;
 }
+
+@media (max-width: 720px) {
+  /* Pe ecran îngust dala ia înălțimea cardurilor, ca pe celelalte ecrane. */
+  .group-tile {
+    min-height: 135px;
+  }
+}

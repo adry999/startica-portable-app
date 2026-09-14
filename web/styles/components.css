@@ -401,7 +401,6 @@ dialog::backdrop {
   flex: 1 1 245px;
 }
 .filter-search input[type='search'] {
-  border-radius: 99px;
   background: #fff;
 }
 .toolbar input {
