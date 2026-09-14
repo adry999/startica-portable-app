@@ -1,0 +1,13 @@
+/* Lista „De notificat”: întârzierile trebuie să sară în ochi la o privire. */
+.late-row {
+  background: var(--pink-soft);
+}
+.late-row td:nth-child(6),
+.late-row td:nth-child(9) {
+  color: var(--raspberry);
+  font-weight: 700;
+}
+#notifyCount {
+  background: var(--raspberry);
+  color: var(--white);
+}

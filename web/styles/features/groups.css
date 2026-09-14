@@ -1,0 +1,127 @@
+.group-create {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fffdf9;
+}
+.groups-empty {
+  padding: 42px;
+  color: var(--muted);
+  text-align: center;
+}
+.groups-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.group-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.group-card.expanded {
+  grid-column: 1 / -1;
+}
+.group-card.expanded .group-tile {
+  max-width: 340px;
+}
+.group-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 0;
+  text-align: left;
+}
+.group-chevron {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 18px;
+  height: 18px;
+  color: rgba(58, 71, 80, 0.4);
+  transition: transform 160ms ease;
+}
+.group-tile[aria-expanded='true'] .group-chevron {
+  transform: rotate(180deg);
+}
+.group-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.group-details[hidden] {
+  display: none;
+}
+.group-fact {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.group-fact strong {
+  color: var(--slate);
+}
+.group-edit {
+  display: flex;
+  gap: 8px;
+}
+.group-edit input[data-name] {
+  flex: 1;
+  min-width: 0;
+}
+.group-edit input[data-capacity] {
+  width: 84px;
+}
+.group-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.group-children li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px 6px 10px;
+  border-radius: 10px;
+  background: #faf8f4;
+  font-size: 13px;
+}
+.group-children li.empty {
+  justify-content: center;
+  color: var(--muted);
+  background: transparent;
+}
+.group-children li button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+}
+.group-children li button:hover {
+  background: var(--pink-soft);
+  color: #b83d63;
+}
+.group-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.group-add .combobox {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isBrowserModule } from './static-assets.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { isBrowserModule, isStaticAsset, STATIC_FILES } from './static-assets.mjs';
+
+const ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 
 const BROWSER_MODULES = [
   '/src/app/web/main.mjs',
@@ -37,4 +42,17 @@ const PRIVATE_PATHS = [
 test('lista albă acceptă doar modulele de browser', () => {
   for (const path of BROWSER_MODULES) assert.equal(isBrowserModule(path), true, path);
   for (const path of PRIVATE_PATHS) assert.equal(isBrowserModule(path), false, path);
+});
+
+test('fiecare foaie de stil din index.html e în lista albă și fișierul mapat există', () => {
+  const html = readFileSync(join(ROOT, 'web/index.html'), 'utf8');
+  const stylesheetHrefs = [...html.matchAll(/<link\s+[^>]*>/g)]
+    .map(match => match[0])
+    .filter(tag => /rel="stylesheet"/.test(tag))
+    .map(tag => /href="([^"]+)"/.exec(tag)?.[1]);
+  assert.ok(stylesheetHrefs.length > 0);
+  for (const href of stylesheetHrefs) {
+    assert.equal(isStaticAsset(href), true, href);
+    assert.equal(existsSync(join(ROOT, STATIC_FILES[href])), true, href);
+  }
 });

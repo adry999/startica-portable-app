@@ -1,0 +1,6 @@
+#importDialog {
+  width: min(1000px, calc(100% - 30px));
+}
+#importPreview {
+  margin: 15px 0;
+}

@@ -6,10 +6,23 @@ import { sendResponse } from './json-response.mjs';
 
 // Singurele fișiere pe care serverul le livrează. Lista explicită înlocuiește
 // orice rezolvare de cale, deci nu există traversare de directoare.
-const STATIC_FILES = {
+export const STATIC_FILES = {
   '/': 'web/index.html',
   '/index.html': 'web/index.html',
-  '/app.css': 'web/app.css',
+  '/styles/base.css': 'web/styles/base.css',
+  '/styles/layout.css': 'web/styles/layout.css',
+  '/styles/components.css': 'web/styles/components.css',
+  '/styles/features/backup.css': 'web/styles/features/backup.css',
+  '/styles/features/billing.css': 'web/styles/features/billing.css',
+  '/styles/features/children.css': 'web/styles/features/children.css',
+  '/styles/features/dashboard.css': 'web/styles/features/dashboard.css',
+  '/styles/features/data-transfer.css': 'web/styles/features/data-transfer.css',
+  '/styles/features/expenses.css': 'web/styles/features/expenses.css',
+  '/styles/features/groups.css': 'web/styles/features/groups.css',
+  '/styles/features/payments.css': 'web/styles/features/payments.css',
+  '/styles/features/record-editing.css': 'web/styles/features/record-editing.css',
+  '/styles/features/review-center.css': 'web/styles/features/review-center.css',
+  '/styles/print.css': 'web/styles/print.css',
   '/vendor/xlsx.full.min.js': 'web/vendor/xlsx.full.min.js',
   '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',
   '/assets/startica-icon.svg': 'web/assets/startica-icon.svg',

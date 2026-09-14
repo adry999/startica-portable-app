@@ -1,0 +1,6 @@
+#editorError {
+  color: #9d2046;
+}
+#editorError:empty {
+  display: none;
+}

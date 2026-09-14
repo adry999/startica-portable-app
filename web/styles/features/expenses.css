@@ -1,0 +1,49 @@
+.categories-bar {
+  flex-wrap: wrap;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fffdf9;
+}
+.categories-label {
+  font-weight: 800;
+  font-size: 13px;
+}
+#categoriesChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 auto;
+}
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: 99px;
+  background: var(--mint-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+.category-chip button {
+  border: 0;
+  background: transparent;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+}
+.category-chip button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+#categoryCreateForm {
+  display: flex;
+  gap: 8px;
+}
+#categoryNameInput {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  background: #fff;
+}

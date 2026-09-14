@@ -1,0 +1,34 @@
+@media print {
+  .sidebar,
+  .topbar,
+  .safety,
+  .footer-note,
+  #message,
+  .view,
+  #printButton,
+  #printNotify {
+    display: none !important;
+  }
+  .app {
+    display: block;
+  }
+  .content {
+    padding: 0;
+    max-width: none;
+  }
+  body[data-print-view='status'] .view#status,
+  body[data-print-view='notify'] .view#notify {
+    display: block !important;
+  }
+  .panel {
+    box-shadow: none;
+    padding: 0;
+    border: 0;
+  }
+  .table-wrap {
+    overflow: visible;
+  }
+  tr {
+    break-inside: avoid;
+  }
+}
