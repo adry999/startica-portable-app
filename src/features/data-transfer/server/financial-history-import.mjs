@@ -82,23 +82,24 @@ export function planFinancialHistoryImport(input, currentRecords) {
       }
       // Payment | Expense nu se corelează pe ramuri de tip generic după `type`; structura reală e
       // verificată de normalizeRecord() mai jos.
-      const r = /** @type {any} */ (structuredClone(original));
-      if (type === 'payments' && r.childId) {
-        const target = mapping.get(r.childId);
-        if (!target) throw Error(`${r.id}: copilul din sursă nu poate fi asociat.`);
-        r.childId = target;
+      const addition = /** @type {any} */ (structuredClone(original));
+      if (type === 'payments' && addition.childId) {
+        const target = mapping.get(addition.childId);
+        if (!target) throw Error(`${addition.id}: copilul din sursă nu poate fi asociat.`);
+        addition.childId = target;
       }
-      const provisional = type === 'payments' && (/provizori/i.test(r.notes || '') || /mixt/i.test(r.method));
+      const provisional =
+        type === 'payments' && (/provizori/i.test(addition.notes || '') || /mixt/i.test(addition.method));
       if (provisional) {
-        r.verification = [
-          r.verification,
+        addition.verification = [
+          addition.verification,
           'SUMĂ PROVIZORIE — verifică totalul și împărțirea Cash/Card în textul original',
         ]
           .filter(Boolean)
           .join('; ');
-        r.reviewed = false;
+        addition.reviewed = false;
       }
-      r.importSource = {
+      addition.importSource = {
         kind: 'v5-financial',
         file: input.sourceName,
         fileHash: input.sourceHash,
@@ -106,9 +107,9 @@ export function planFinancialHistoryImport(input, currentRecords) {
         recordDigest: sourceDigest,
         childId: /** @type {any} */ (original).childId || '',
         provisionalAmount: provisional,
-        autoMatched: type === 'payments' && /potrivire automat[ăa]/i.test(r.verification || ''),
+        autoMatched: type === 'payments' && /potrivire automat[ăa]/i.test(addition.verification || ''),
       };
-      additions[type].push(normalizeRecord(type, r));
+      additions[type].push(normalizeRecord(type, addition));
     }
   }
   return {

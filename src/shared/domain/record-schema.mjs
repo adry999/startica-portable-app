@@ -100,10 +100,10 @@ export function normalizeRecord(type, input) {
     TYPES.includes(type) && input && typeof input === 'object' && !Array.isArray(input),
     'Înregistrare invalidă.',
   );
-  const r = structuredClone(input);
-  for (const key of Object.keys(r)) if (!FIELDS[type].has(key)) delete r[key];
-  requireThat(typeof r.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(r.id), 'ID invalid.');
-  if (r.archived !== undefined) requireThat(typeof r.archived === 'boolean', 'Arhivare invalidă.');
+  const record = structuredClone(input);
+  for (const key of Object.keys(record)) if (!FIELDS[type].has(key)) delete record[key];
+  requireThat(typeof record.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(record.id), 'ID invalid.');
+  if (record.archived !== undefined) requireThat(typeof record.archived === 'boolean', 'Arhivare invalidă.');
   for (const field of [
     'notes',
     'verification',
@@ -119,66 +119,75 @@ export function normalizeRecord(type, input) {
     'category',
     'method',
   ])
-    if (r[field] !== undefined) text(r[field], field);
+    if (record[field] !== undefined) text(record[field], field);
   if (type === 'children') {
-    text(r.name, 'Nume copil', true);
-    r.name = r.name.trim();
-    r.status ||= 'Activ';
-    text(r.status, 'Statut', true);
-    requireThat(CHILD_STATUSES.includes(r.status), `Statut: folosește ${CHILD_STATUSES.join(', ')}.`);
-    r.groupId ??= null;
-    if (r.groupId !== null)
-      requireThat(typeof r.groupId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(r.groupId), 'Grupă invalidă.');
-    r.parent ??= '';
-    r.phone ??= '';
-    r.fee ??= null;
-    if (r.fee !== null) requireAmount(r.fee, 'Taxa', true);
-    r.dueDay ??= 10;
+    text(record.name, 'Nume copil', true);
+    record.name = record.name.trim();
+    record.status ||= 'Activ';
+    text(record.status, 'Statut', true);
+    requireThat(CHILD_STATUSES.includes(record.status), `Statut: folosește ${CHILD_STATUSES.join(', ')}.`);
+    record.groupId ??= null;
+    if (record.groupId !== null)
+      requireThat(
+        typeof record.groupId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(record.groupId),
+        'Grupă invalidă.',
+      );
+    record.parent ??= '';
+    record.phone ??= '';
+    record.fee ??= null;
+    if (record.fee !== null) requireAmount(record.fee, 'Taxa', true);
+    record.dueDay ??= 10;
     requireThat(
-      Number.isInteger(r.dueDay) && r.dueDay >= 1 && r.dueDay <= 31,
+      Number.isInteger(record.dueDay) && record.dueDay >= 1 && record.dueDay <= 31,
       'Scadența trebuie să fie între 1 și 31.',
     );
     for (const field of ['birthDate', 'contractDate', 'attendanceDate', 'withdrawalDate'])
-      if (r[field]) requireThat(dateOK(r[field]), `${field}: dată invalidă.`);
-    if (r.attendanceDate && r.withdrawalDate)
-      requireThat(r.withdrawalDate >= r.attendanceDate, 'Retragerea nu poate preceda începerea frecventării.');
+      if (record[field]) requireThat(dateOK(record[field]), `${field}: dată invalidă.`);
+    if (record.attendanceDate && record.withdrawalDate)
+      requireThat(
+        record.withdrawalDate >= record.attendanceDate,
+        'Retragerea nu poate preceda începerea frecventării.',
+      );
     for (const [field, valueKey] of [
       ['feeHistory', 'amount'],
       ['statusHistory', 'status'],
     ]) {
-      r[field] ??= [];
-      requireThat(Array.isArray(r[field]) && r[field].length <= 1000, `${field}: istoric invalid.`);
+      record[field] ??= [];
+      requireThat(Array.isArray(record[field]) && record[field].length <= 1000, `${field}: istoric invalid.`);
       const seen = new Set();
-      for (const item of r[field]) {
-        requireThat(item && monthOK(item.from) && !seen.has(item.from), `${field}: lună invalidă sau repetată.`);
-        seen.add(item.from);
-        if (valueKey === 'amount') requireAmount(item.amount, 'Taxa istorică', true);
-        else requireThat(STATUS_HISTORY_VALUES.includes(item.status), 'Statut istoric invalid.');
+      for (const historyEntry of record[field]) {
+        requireThat(
+          historyEntry && monthOK(historyEntry.from) && !seen.has(historyEntry.from),
+          `${field}: lună invalidă sau repetată.`,
+        );
+        seen.add(historyEntry.from);
+        if (valueKey === 'amount') requireAmount(historyEntry.amount, 'Taxa istorică', true);
+        else requireThat(STATUS_HISTORY_VALUES.includes(historyEntry.status), 'Statut istoric invalid.');
       }
-      r[field].sort((a, b) => a.from.localeCompare(b.from));
+      record[field].sort((a, b) => a.from.localeCompare(b.from));
     }
   } else if (type === 'groups') {
-    text(r.name, 'Nume grupă', true);
-    r.name = r.name.trim();
-    if (r.capacity !== undefined && r.capacity !== null) {
+    text(record.name, 'Nume grupă', true);
+    record.name = record.name.trim();
+    if (record.capacity !== undefined && record.capacity !== null) {
       requireThat(
-        Number.isInteger(r.capacity) && r.capacity >= 1 && r.capacity <= 1000,
+        Number.isInteger(record.capacity) && record.capacity >= 1 && record.capacity <= 1000,
         'Capacitatea trebuie să fie un număr întreg între 1 și 1000.',
       );
-    } else r.capacity = null;
+    } else record.capacity = null;
   } else if (type === 'categories') {
-    text(r.name, 'Nume categorie', true);
-    r.name = r.name.trim();
+    text(record.name, 'Nume categorie', true);
+    record.name = record.name.trim();
   } else {
-    requireThat(dateOK(r.date), 'Data operațiunii este invalidă.');
-    if (type === 'payments' && r.tenders !== undefined) {
+    requireThat(dateOK(record.date), 'Data operațiunii este invalidă.');
+    if (type === 'payments' && record.tenders !== undefined) {
       requireThat(
-        Array.isArray(r.tenders) && r.tenders.length > 0 && r.tenders.length <= 10,
+        Array.isArray(record.tenders) && record.tenders.length > 0 && record.tenders.length <= 10,
         'Completează cel puțin o sumă Cash, Card sau Transfer.',
       );
       const methods = new Set();
       let sum = 0;
-      for (const part of r.tenders) {
+      for (const part of record.tenders) {
         requireThat(part && typeof part === 'object', 'Componentă de achitare invalidă.');
         text(part.method, 'Metoda de achitare', true);
         part.method = part.method.trim();
@@ -187,54 +196,63 @@ export function normalizeRecord(type, input) {
         requireAmount(part.amount, 'Suma ' + part.method);
         sum += cents(part.amount);
       }
-      if (r.amount !== undefined) {
-        requireAmount(r.amount, 'Suma');
-        requireThat(cents(r.amount) === sum, 'Totalul trebuie să fie egal cu suma Cash + Card + Transfer.');
+      if (record.amount !== undefined) {
+        requireAmount(record.amount, 'Suma');
+        requireThat(cents(record.amount) === sum, 'Totalul trebuie să fie egal cu suma Cash + Card + Transfer.');
       }
-      r.amount = sum / 100;
-      r.method = r.tenders.map(p => p.method).join(' + ');
+      record.amount = sum / 100;
+      record.method = record.tenders.map(tender => tender.method).join(' + ');
     }
-    requireAmount(r.amount, 'Suma');
+    requireAmount(record.amount, 'Suma');
     if (type === 'payments') {
-      r.childId ??= '';
-      text(r.childId, 'ID copil');
-      r.method ||= 'Cash';
-      r.allocations ??= r.month ? [{ month: r.month, amount: r.amount }] : [];
-      requireThat(Array.isArray(r.allocations) && r.allocations.length <= 120, 'Repartizare invalidă.');
+      record.childId ??= '';
+      text(record.childId, 'ID copil');
+      record.method ||= 'Cash';
+      record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
+      requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');
       const seen = new Set();
       let allocated = 0;
-      for (const a of r.allocations) {
-        requireThat(a && monthOK(a.month) && !seen.has(a.month), 'Lună de repartizare invalidă sau repetată.');
-        seen.add(a.month);
-        requireAmount(a.amount, 'Suma repartizată');
-        allocated += cents(a.amount);
+      for (const allocation of record.allocations) {
+        requireThat(
+          allocation && monthOK(allocation.month) && !seen.has(allocation.month),
+          'Lună de repartizare invalidă sau repetată.',
+        );
+        seen.add(allocation.month);
+        requireAmount(allocation.amount, 'Suma repartizată');
+        allocated += cents(allocation.amount);
       }
-      requireThat(allocated <= cents(r.amount), 'Repartizările depășesc suma plății.');
-      r.month = r.allocations.length === 1 ? r.allocations[0].month : '';
+      requireThat(allocated <= cents(record.amount), 'Repartizările depășesc suma plății.');
+      record.month = record.allocations.length === 1 ? record.allocations[0].month : '';
     } else {
-      r.category ||= 'Altele';
-      r.description ??= '';
+      record.category ||= 'Altele';
+      record.description ??= '';
     }
   }
-  return r;
+  return record;
 }
 export function validateState(input) {
-  const s = emptyState();
+  const state = emptyState();
   for (const type of TYPES) {
     requireThat(Array.isArray(input?.[type]) && input[type].length <= 100000, `Lista ${type} este invalidă.`);
     const seen = new Set();
-    s[type] = input[type].map(r => {
-      const clean = normalizeRecord(type, r);
-      requireThat(!seen.has(clean.id), `ID repetat: ${clean.id}`);
-      seen.add(clean.id);
-      return clean;
+    state[type] = input[type].map(rawRecord => {
+      const normalized = normalizeRecord(type, rawRecord);
+      requireThat(!seen.has(normalized.id), `ID repetat: ${normalized.id}`);
+      seen.add(normalized.id);
+      return normalized;
     });
   }
-  const ids = new Set(s.children.map(r => r.id));
-  for (const p of s.payments)
-    requireThat(!p.childId || ids.has(p.childId), `Plata ${p.id}: copilul ${p.childId} nu există.`);
-  const groupIds = new Set(s.groups.map(g => g.id));
-  for (const c of s.children)
-    requireThat(!c.groupId || groupIds.has(c.groupId), `Copilul ${c.id}: grupa ${c.groupId} nu există.`);
-  return s;
+  const ids = new Set(state.children.map(child => child.id));
+  for (const payment of state.payments)
+    requireThat(
+      !payment.childId || ids.has(payment.childId),
+      `Plata ${payment.id}: copilul ${payment.childId} nu există.`,
+    );
+  const groupIds = new Set(state.groups.map(group => group.id));
+  for (const child of state.children)
+    requireThat(
+      !child.groupId || groupIds.has(child.groupId),
+      `Copilul ${child.id}: grupa ${child.groupId} nu există.`,
+    );
+  return state;
 }

@@ -24,43 +24,43 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
       attendanceDate: '2025-02-03',
     }),
   );
-  let r = await app.post('/api/import', {
+  let response = await app.post('/api/import', {
     state: { children, payments: [], expenses: [], groups: [], categories: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),
   });
-  assert.equal(r.ok, true, r.error);
+  assert.equal(response.ok, true, response.error);
 
   // Înainte: fără taxă și fără statut, nimic nu se poate calcula.
-  const before = obligation(r.state.children[0], '2026-09', [], '2026-09-30');
+  const before = obligation(response.state.children[0], '2026-09', [], '2026-09-30');
   assert.equal(before.label, 'De verificat');
   assert.equal(before.notify, false);
 
-  r = await app.post('/api/record', {
+  response = await app.post('/api/record', {
     type: 'groups',
     mode: 'create',
     record: { id: 'GRP-mica', name: 'Grupa mică', capacity: null },
-    revision: r.revision,
+    revision: response.revision,
     requestId: randomUUID(),
   });
-  assert.equal(r.ok, true, r.error);
+  assert.equal(response.ok, true, response.error);
 
   const updates = children.map(c => ({ id: c.id, fee: 2000, from: '2025-02', groupId: 'GRP-mica', status: 'Activ' }));
-  r = await app.post('/api/children-setup', { updates, revision: r.revision, requestId: randomUUID() });
-  assert.equal(r.ok, true, r.error);
+  response = await app.post('/api/children-setup', { updates, revision: response.revision, requestId: randomUUID() });
+  assert.equal(response.ok, true, response.error);
 
-  const after = obligation(r.state.children[0], '2026-09', [], '2026-09-30');
+  const after = obligation(response.state.children[0], '2026-09', [], '2026-09-30');
   assert.equal(after.label, 'Restanță');
   assert.equal(after.notify, true);
   assert.equal(after.expected, 2000);
   assert.equal(after.due, '2026-09-14', 'Scadența vine tot din data contractului.');
-  assert.equal(r.state.children[0].groupId, 'GRP-mica');
-  assert.deepEqual(r.state.children[0].feeHistory, [{ from: '2025-02', amount: 2000 }]);
-  assert.deepEqual(r.state.children[0].statusHistory, [{ from: '2025-02', status: 'Activ' }]);
+  assert.equal(response.state.children[0].groupId, 'GRP-mica');
+  assert.deepEqual(response.state.children[0].feeHistory, [{ from: '2025-02', amount: 2000 }]);
+  assert.deepEqual(response.state.children[0].statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 
   // O singură revizie pentru toate fișele, plus copia obligatorie și jurnalul.
-  assert.equal(r.revision, 3, 'Toate completările intră într-o singură operațiune.');
+  assert.equal(response.revision, 3, 'Toate completările intră într-o singură operațiune.');
   assert.ok(readdirSync(app.backupDir).some(n => n.includes('inainte-completare-taxe')));
   const audit = await app.get('/api/audit');
   assert.equal(audit.entries.filter(entry => entry.action === 'completare taxe și grupe').length, 2);
@@ -71,11 +71,11 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
       { id: 'CSV-1', fee: 3000, from: '2025-02' },
       { id: 'LIPSA', fee: 1, from: '2025-02' },
     ],
-    revision: r.revision,
+    revision: response.revision,
     requestId: randomUUID(),
   });
   assert.match(bad.error, /nu mai există/);
   const state = await app.get('/api/state');
   assert.equal(state.state.children[0].fee, 2000, 'Prima fișă nu a fost modificată.');
-  assert.equal(state.revision, r.revision, 'Revizia nu s-a schimbat.');
+  assert.equal(state.revision, response.revision, 'Revizia nu s-a schimbat.');
 });

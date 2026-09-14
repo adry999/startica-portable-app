@@ -9,15 +9,15 @@ import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMar
 function parseHistory(value, key) {
   return value
     .split('\n')
-    .filter(s => s.trim())
-    .map(s => {
-      const parts = s.split('=');
-      if (parts.length !== 2) throw Error('Istoric invalid. Folosește formatul lună = valoare.');
-      return { from: parts[0].trim(), [key]: key === 'amount' ? Number(parts[1].trim()) : parts[1].trim() };
+    .filter(line => line.trim())
+    .map(line => {
+      const segments = line.split('=');
+      if (segments.length !== 2) throw Error('Istoric invalid. Folosește formatul lună = valoare.');
+      return { from: segments[0].trim(), [key]: key === 'amount' ? Number(segments[1].trim()) : segments[1].trim() };
     });
 }
 
-const upsertHistory = (rows, from, key, value) => [...rows.filter(r => r.from !== from), { from, [key]: value }];
+const upsertHistory = (rows, from, key, value) => [...rows.filter(row => row.from !== from), { from, [key]: value }];
 
 /**
  * @param {any} record

@@ -214,47 +214,49 @@ export function previewChildrenCsvImport(text, existing = []) {
       result.errors.push(/** @type {Error} */ (e).message);
     }
   }
-  for (const item of candidates) {
-    const r = item.record;
+  for (const candidate of candidates) {
+    const record = candidate.record;
     const matches = existing.filter(
-      c => contractKey(c.contractNumber || c.id) === contractKey(r.contractNumber) || key(c.name) === key(r.name),
+      c =>
+        contractKey(c.contractNumber || c.id) === contractKey(record.contractNumber) ||
+        key(c.name) === key(record.name),
     );
     let action = 'add',
       reason = 'Copil nou';
     if (matches.length) {
       const exact =
         matches.length === 1 &&
-        key(matches[0].name) === key(r.name) &&
-        (!matches[0].birthDate || !r.birthDate || matches[0].birthDate === r.birthDate);
+        key(matches[0].name) === key(record.name) &&
+        (!matches[0].birthDate || !record.birthDate || matches[0].birthDate === record.birthDate);
       action = exact ? 'skip' : 'conflict';
       reason = exact
         ? 'Există deja; datele existente rămân neschimbate.'
         : 'Posibil duplicat / contract în conflict; nu se importă automat.';
       if (exact) result.skipped++;
       else result.conflicts++;
-      item.warnings.push('Înregistrări existente: ' + matches.map(c => c.id).join(', '));
+      candidate.warnings.push('Înregistrări existente: ' + matches.map(c => c.id).join(', '));
       if (
         exact &&
         ['parent', 'phone', 'parent2', 'phone2', 'birthDate', 'contractDate', 'attendanceDate'].some(
-          f => clean(matches[0][f]) !== clean(r[f]),
+          f => clean(matches[0][f]) !== clean(record[f]),
         )
       )
-        item.warnings.push('CSV-ul are câmpuri diferite; verifică manual fișa existentă.');
-    } else result.additions.push(r);
+        candidate.warnings.push('CSV-ul are câmpuri diferite; verifică manual fișa existentă.');
+    } else result.additions.push(record);
     result.rows.push({
-      line: item.line,
-      id: r.id,
-      name: r.name,
-      contractNumber: r.contractNumber,
-      parent: r.parent,
-      phone: r.phone,
-      parent2: r.parent2,
-      phone2: r.phone2,
-      birthDate: r.birthDate,
-      attendanceDate: r.attendanceDate,
+      line: candidate.line,
+      id: record.id,
+      name: record.name,
+      contractNumber: record.contractNumber,
+      parent: record.parent,
+      phone: record.phone,
+      parent2: record.parent2,
+      phone2: record.phone2,
+      birthDate: record.birthDate,
+      attendanceDate: record.attendanceDate,
       action,
       reason,
-      warnings: item.warnings,
+      warnings: candidate.warnings,
     });
   }
   return result;

@@ -210,61 +210,62 @@ export function exportWorkbook(records, XLSX) {
   const groupName = id => records.groups.find(g => g.id === id)?.name || '';
   sheet(
     'Copii',
-    records.children.map(r => ({
-      ID: r.id,
-      Nume: r.name,
-      Parinte: r.parent,
-      Telefon: r.phone,
-      Parinte_2: r.parent2 || '',
-      Telefon_2: r.phone2 || '',
-      Nr_contract: r.contractNumber || '',
-      Grupa: groupName(r.groupId),
-      Statut: r.status,
-      Arhivat: !!r.archived,
-      Taxa: r.fee,
-      Scadenta: r.dueDay,
-      Inceput: r.attendanceDate,
-      Retragere: r.withdrawalDate,
-      Observatii: r.notes,
+    records.children.map(child => ({
+      ID: child.id,
+      Nume: child.name,
+      Parinte: child.parent,
+      Telefon: child.phone,
+      Parinte_2: child.parent2 || '',
+      Telefon_2: child.phone2 || '',
+      Nr_contract: child.contractNumber || '',
+      Grupa: groupName(child.groupId),
+      Statut: child.status,
+      Arhivat: !!child.archived,
+      Taxa: child.fee,
+      Scadenta: child.dueDay,
+      Inceput: child.attendanceDate,
+      Retragere: child.withdrawalDate,
+      Observatii: child.notes,
     })),
   );
   sheet(
     'Achitari',
-    records.payments.map(r => ({
-      ID: r.id,
-      Data: r.date,
-      ID_copil: r.childId,
-      Copil: records.children.find(c => c.id === r.childId)?.name || r.childName || r.sourceName || '',
-      Metoda: r.method,
-      Suma: r.amount,
-      Cash: paymentTenders(r)
+    records.payments.map(payment => ({
+      ID: payment.id,
+      Data: payment.date,
+      ID_copil: payment.childId,
+      Copil:
+        records.children.find(c => c.id === payment.childId)?.name || payment.childName || payment.sourceName || '',
+      Metoda: payment.method,
+      Suma: payment.amount,
+      Cash: paymentTenders(payment)
         .filter(p => p.method === 'Cash')
         .reduce((n, p) => n + p.amount, 0),
-      Card: paymentTenders(r)
+      Card: paymentTenders(payment)
         .filter(p => p.method === 'Card')
         .reduce((n, p) => n + p.amount, 0),
-      Transfer: paymentTenders(r)
+      Transfer: paymentTenders(payment)
         .filter(p => p.method === 'Transfer')
         .reduce((n, p) => n + p.amount, 0),
-      Detalii_metode: paymentTenders(r)
+      Detalii_metode: paymentTenders(payment)
         .map(p => `${p.method}: ${p.amount}`)
         .join('; '),
-      Repartizari: allocations(r)
+      Repartizari: allocations(payment)
         .map(a => `${a.month}: ${a.amount}`)
         .join('; '),
-      Arhivat: !!r.archived,
-      Observatii: r.notes,
+      Arhivat: !!payment.archived,
+      Observatii: payment.notes,
     })),
   );
   sheet(
     'Cheltuieli',
-    records.expenses.map(r => ({
-      ID: r.id,
-      Data: r.date,
-      Categorie: r.category,
-      Descriere: r.description,
-      Suma: r.amount,
-      Arhivat: !!r.archived,
+    records.expenses.map(expense => ({
+      ID: expense.id,
+      Data: expense.date,
+      Categorie: expense.category,
+      Descriere: expense.description,
+      Suma: expense.amount,
+      Arhivat: !!expense.archived,
     })),
   );
   XLSX.utils.book_append_sheet(
