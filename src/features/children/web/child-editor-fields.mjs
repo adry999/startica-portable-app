@@ -1,4 +1,5 @@
 import { normalizeRecord, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
+import { defaultSetupMonth } from '#shared/domain/child-setup-month.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
@@ -31,7 +32,12 @@ function markup(record, context) {
         `<option value="${escapeHtml(g.id)}" ${g.id === record.groupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`,
     )
     .join('');
-  const currentMonth = context.today().slice(0, 7);
+  // Fără istoric (adăugare), luna implicită e cea din care se calculează
+  // corect lunile trecute; cu istoric deja existent, luna curentă rămâne implicită.
+  const defaultMonth =
+    record.feeHistory?.length || record.statusHistory?.length
+      ? context.today().slice(0, 7)
+      : defaultSetupMonth(record, context.today());
   return (
     formSectionMarkup(
       'Date copil',
@@ -52,9 +58,9 @@ function markup(record, context) {
       textFieldMarkup('contractDate', 'Data contractului', record.contractDate, 'date') +
         textFieldMarkup('attendanceDate', 'Început frecventare', record.attendanceDate, 'date') +
         textFieldMarkup('withdrawalDate', 'Retragere', record.withdrawalDate, 'date') +
-        textFieldMarkup('statusFrom', 'Statut aplicabil din luna', currentMonth, 'month', 'required') +
+        textFieldMarkup('statusFrom', 'Statut aplicabil din luna', defaultMonth, 'month', 'required') +
         textFieldMarkup('fee', 'Taxa lunară (gol = necunoscută)', record.fee ?? '', 'number', 'min="0" step="0.01"') +
-        textFieldMarkup('feeFrom', 'Taxa aplicabilă din luna', currentMonth, 'month') +
+        textFieldMarkup('feeFrom', 'Taxa aplicabilă din luna', defaultMonth, 'month') +
         textFieldMarkup('dueDay', 'Ziua scadenței', record.dueDay || 10, 'number', 'min="1" max="31" required'),
     ) +
     formSectionMarkup(
