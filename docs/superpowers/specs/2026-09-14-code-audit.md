@@ -94,3 +94,7 @@ Fără cod comentat, fără dependențe nefolosite în `package.json`.
 | E2 | minor | `src/features/dashboard/web/dashboard.view.mjs:94,114` | `listUpcomingBirthdays` de două ori pe randare | O singură calculare | auto |
 | E3 | minor | `src/features/children/web/children-list.view.mjs:76,90` | `readRecords()` pe fiecare rând | Transmite `records` | auto |
 | E4 | minor | `src/features/backup/server/backup.service.mjs:34-41,69-74,201-215` | `health()` citește folderul de două ori | Nu se schimbă: sondaj la 30 s, câteva zeci de fișiere | — |
+
+## Stare
+
+Remediat conform `docs/superpowers/plans/2026-09-14-audit-remediation.md`. Nerezolvate intenționat: O1, U5, E4.

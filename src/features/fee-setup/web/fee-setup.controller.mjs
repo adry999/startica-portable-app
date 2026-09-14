@@ -42,6 +42,7 @@ export function createFeeSetupController({
 
   function render() {
     const records = readRecords();
+    const groupsSortedByName = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
     const missing = records.children.filter(child => !child.archived && hasMissingFee(child)).length;
     renderMissingFeeCount(missing);
     info.textContent = missing
@@ -50,10 +51,10 @@ export function createFeeSetupController({
     const today = readToday();
     const rows = visibleChildren(records);
     table.innerHTML =
-      rows.map(child => feeSetupRowMarkup(child, records.groups, today)).join('') ||
+      rows.map(child => feeSetupRowMarkup(child, groupsSortedByName, today)).join('') ||
       '<tr><td colspan="7" class="empty">Nimic de completat pentru filtrul ales.</td></tr>';
     pending.textContent = `${rows.length} rânduri afișate`;
-    bulkGroup.innerHTML = groupOptionsMarkup(records.groups, '');
+    bulkGroup.innerHTML = groupOptionsMarkup(groupsSortedByName, '');
   }
 
   // Se trimite un câmp doar dacă diferă de valoarea afișată inițial, ca un rând

@@ -1,6 +1,6 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
-Stare, 14 septembrie 2026: **pașii 0–10 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, infrastructura de server și de browser, toate feature-urile, inclusiv `billing` și `dashboard`, și composition root-ul în `src/app`, vezi §6). Pașii 11–12 sunt propuși; restul modulelor sunt încă în `server/`, `shared/` și `web/ui/`. Folderul `referinta/` conține implementările de referință pentru cele două module, rulate și verificate într-un mediu izolat (vezi §7). Ambele au fost preluate de acolo; codul viu este cel din `src/features/`.
+Stare, 14 septembrie 2026: **pașii 0–10 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, infrastructura de server și de browser, toate feature-urile, inclusiv `billing` și `dashboard`, și composition root-ul în `src/app`, vezi §6). Pașii 11–12 sunt propuși; tot codul aplicației este în `src/`. Folderul `referinta/` conține implementările de referință pentru cele două module, rulate și verificate într-un mediu izolat (vezi §7). Ambele au fost preluate de acolo; codul viu este cel din `src/features/`.
 
 Pasul 10 a mutat ultimele ecrane și composition root-ul:
 - `billing`: evaluarea lunii (`evaluateChildrenForMonth`), „Situația plăților” și „De notificat”;
@@ -8,7 +8,9 @@ Pasul 10 a mutat ultimele ecrane și composition root-ul:
 - server: `src/app/server/{create-application,session.routes,main}.mjs` compun direct core-ul și rutele feature-urilor; `startica_server.mjs` a rămas punctul de intrare (reexportă `createApplication`, pornește serverul doar când e rulat direct); `server/{routes,store,database,http,migrations}.mjs` au fost șterse;
 - browser: `src/app/web/main.mjs` înlocuiește `web/app.js`, `app-session.mjs` înlocuiește `web/ui/session.mjs`, `navigation.mjs` preia `go`, iar `render-cycle.mjs` calculează o singură dată pe randare luna, evaluările, centrul de verificare și indiciile, apoi randează fiecare ecran prin `renderGuarded`, ascultând `records.reloaded` și `selected-month.changed`; `web/ui/` a fost șters, `index.html` încarcă `/src/app/web/main.mjs`.
 
-Verificare: pe o copie a bazei reale, cele 30 de operații de la pasul 9 dau aceleași rezultate pe noul composition root; code-review independent a confirmat echivalența ecranelor mutate și ordinea randărilor. Auditul de după pas (14 septembrie) a găsit resturi de migrare de curățat (README-uri și comentarii cu istoric, exporturi fără consumatori, `scripts/import-v5-history.mjs` rupt de la pasul 9); se remediază după planul de remediere, înaintea pasului 11.
+Verificare: pe o copie a bazei reale, cele 30 de operații de la pasul 9 dau aceleași rezultate pe noul composition root; code-review independent a confirmat echivalența ecranelor mutate și ordinea randărilor.
+
+Auditul din 14 septembrie a fost remediat după `docs/superpowers/plans/2026-09-14-audit-remediation.md`: scriptul V5 repară, documentația și comentariile fără istorie, confirmarea în doi pași, fieldset-ul și tipurile CSV unificate, exporturi și fațade moarte șterse, testele de la rădăcină mutate lângă module, `src/app/web/main.mjs` împărțit. Pașii 11–12 pornesc de aici.
 
 Pasul 9 a mutat feature-urile centrale:
 - `record-editing`: `/api/record` și `/api/record-delete`, dialogul generic de editare, arhivarea, ștergerea definitivă și confirmarea din „De verificat”; integritatea referințelor și unicitatea numelor au intrat în `#shared/domain/record-integrity.mjs`. Câmpurile din editor sunt în feature-ul fiecărui tip (`children`, `payments` cu rândurile de repartizare, `expenses`) și sunt injectate în dialog de `web/app.js`, ca `record-editing` să nu importe alte feature-uri;

@@ -7,14 +7,13 @@ import { defaultSetupMonth } from '../domain/child-fee-setup.mjs';
 /** @typedef {import('#shared/contracts/record-types.mjs').Group} Group */
 
 /**
- * @param {Group[]} groups
+ * @param {Group[]} groupsSortedByName
  * @param {string} selectedGroupId
  */
-export function groupOptionsMarkup(groups, selectedGroupId) {
-  const sorted = [...groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+export function groupOptionsMarkup(groupsSortedByName, selectedGroupId) {
   return (
     `<option value="">Fără grupă</option>` +
-    sorted
+    groupsSortedByName
       .map(
         group =>
           `<option value="${escapeHtml(group.id)}" ${group.id === selectedGroupId ? 'selected' : ''}>${escapeHtml(group.name)}</option>`,
@@ -25,10 +24,10 @@ export function groupOptionsMarkup(groups, selectedGroupId) {
 
 /**
  * @param {Child} child
- * @param {Group[]} groups
+ * @param {Group[]} groupsSortedByName
  * @param {string} today
  */
-export function feeSetupRowMarkup(child, groups, today) {
+export function feeSetupRowMarkup(child, groupsSortedByName, today) {
   const currentStatus = child.status || 'Activ';
   const statusOptions = [...new Set([currentStatus, ...STATUS_HISTORY_VALUES])]
     .map(
@@ -40,7 +39,7 @@ export function feeSetupRowMarkup(child, groups, today) {
   return (
     `<tr data-child="${escapeHtml(child.id)}"><td>${escapeHtml(child.contractNumber || child.id)}</td><td>${escapeHtml(child.name)}</td>` +
     `<td>${formatDate(child.attendanceDate)}</td>` +
-    `<td><select data-group data-group-initial="${escapeHtml(child.groupId || '')}">${groupOptionsMarkup(groups, child.groupId || '')}</select></td>` +
+    `<td><select data-group data-group-initial="${escapeHtml(child.groupId || '')}">${groupOptionsMarkup(groupsSortedByName, child.groupId || '')}</select></td>` +
     `<td><input data-fee type="number" min="0" step="0.01" value="${escapeHtml(currentFee)}" data-fee-initial="${escapeHtml(currentFee)}" placeholder="taxă"></td>` +
     `<td><input data-from type="month" value="${escapeHtml(defaultSetupMonth(child, today))}"></td>` +
     `<td><select data-status data-status-initial="${escapeHtml(currentStatus)}">${statusOptions}</select></td></tr>`

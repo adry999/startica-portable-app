@@ -69,9 +69,11 @@ export function createChildrenListView({
     showNotice,
   });
 
-  /** @param {Child} child */
-  function rowCellsFor(child) {
-    const records = readRecords();
+  /**
+   * @param {Child} child
+   * @param {RecordsSnapshot} records
+   */
+  function rowCellsFor(child, records) {
     return [
       bulkSelection.rowCheckboxMarkupFor(child.id),
       escapeHtml(contractNumberOf(child)),
@@ -105,7 +107,7 @@ export function createChildrenListView({
       /** @type {Child[]} */ (paginateRows(LIST_ID, rows))
         .map(
           child =>
-            `<tr class="${child.archived ? 'archived-row' : ''}">${rowCellsFor(child)
+            `<tr class="${child.archived ? 'archived-row' : ''}">${rowCellsFor(child, records)
               .map(cell => `<td>${cell}</td>`)
               .join('')}</tr>`,
         )

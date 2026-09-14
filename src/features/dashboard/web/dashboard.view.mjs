@@ -88,11 +88,13 @@ export function createDashboardView({
   buildBirthdayCalendar,
   renderReviewCount,
 }) {
-  /** @param {Child[]} children */
-  function renderBirthdays(children) {
-    const upcoming = listUpcomingBirthdays(children, 5);
+  /**
+   * @param {Child[]} children
+   * @param {UpcomingBirthday[]} upcomingBirthdayRows
+   */
+  function renderBirthdays(children, upcomingBirthdayRows) {
     birthdaysUpcoming.innerHTML =
-      upcoming.map(upcomingBirthdayPillHTML).join('') ||
+      upcomingBirthdayRows.map(upcomingBirthdayPillHTML).join('') ||
       '<p class="upcoming-empty">Nicio zi de naștere în următoarele 5 zile.</p>';
     birthdaysCalendar.innerHTML = birthdaysCalendarHTML(buildBirthdayCalendar(children));
   }
@@ -184,6 +186,6 @@ export function createDashboardView({
       )
       .join('');
 
-    renderBirthdays(records.children);
+    renderBirthdays(records.children, upcomingBirthdayRows);
   };
 }
