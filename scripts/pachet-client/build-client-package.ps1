@@ -1,7 +1,7 @@
-# Construieste arhiva de livrare pentru client din HEAD (nu din copia de
-# lucru), ca zip-ul sa corespunda exact unui commit verificabil.
+# Construieste instalerul de livrare pentru client din HEAD (nu din copia de
+# lucru), ca instalerul sa corespunda exact unui commit verificabil.
 param(
-    [string]$BaseZip = 'Livrare\Startica_v1.1.1.zip',
+    [string]$BaseZip,
     [string]$OutputDirectory = 'Livrare'
 )
 $ErrorActionPreference = 'Stop'
@@ -13,18 +13,45 @@ function Resolve-RepoPath([string]$path) {
     return Join-Path $repo $path
 }
 
-$resolvedBaseZip = Resolve-RepoPath $BaseZip
+function Find-Iscc {
+    $fromPath = Get-Command 'ISCC.exe' -ErrorAction SilentlyContinue
+    if ($fromPath) { return $fromPath.Source }
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe'),
+        (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe')
+    )
+    foreach ($candidate in $candidates) {
+        if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf)) { return $candidate }
+    }
+    return $null
+}
+
 $resolvedOutputDirectory = Resolve-RepoPath $OutputDirectory
 
-# Arhiva trebuie sa corespunda exact unui commit; o copie de lucru modificata
-# ar livra fisiere care nu sunt in istoric.
+# Instalerul trebuie sa corespunda exact unui commit; o copie de lucru
+# modificata ar livra fisiere care nu sunt in istoric.
 $statusOutput = & git -C $repo status --porcelain --untracked-files=no
 if ($LASTEXITCODE -ne 0) { throw 'git status a esuat.' }
 if ($statusOutput) { throw 'Exista fisiere urmarite modificate fata de HEAD. Fa commit sau stash inainte de a construi pachetul.' }
 
+$isccPath = Find-Iscc
+if (-not $isccPath) {
+    throw 'ISCC.exe (Inno Setup 6) nu a fost gasit in PATH, %LOCALAPPDATA%\Programs\Inno Setup 6 sau %ProgramFiles(x86)%\Inno Setup 6. Instaleaza-l cu: winget install --id JRSoftware.InnoSetup -e --scope user'
+}
+
+if ($BaseZip) {
+    $resolvedBaseZip = Resolve-RepoPath $BaseZip
+} else {
+    # runtime\node.exe si Licente\ nu sunt urmarite in git; vin dintr-un pachet anterior.
+    $candidateZips = Get-ChildItem -LiteralPath (Resolve-RepoPath 'Livrare') -Filter 'Startica_v*.zip' -File -ErrorAction SilentlyContinue |
+        Sort-Object { [version]($_.BaseName -replace '^Startica_v', '') } -Descending
+    if (-not $candidateZips) { throw 'Nicio arhiva Startica_v*.zip gasita in Livrare pentru -BaseZip (sursa runtime\node.exe si Licente\).' }
+    $resolvedBaseZip = $candidateZips[0].FullName
+}
 if (-not (Test-Path -LiteralPath $resolvedBaseZip -PathType Leaf)) {
     throw ('Arhiva de baza nu a fost gasita: ' + $resolvedBaseZip)
 }
+Write-Output ('Arhiva de baza: ' + $resolvedBaseZip)
 
 $packageJson = Get-Content -Raw -LiteralPath (Join-Path $repo 'package.json') | ConvertFrom-Json
 $version = $packageJson.version
@@ -35,9 +62,9 @@ if ($enginesNode -notmatch '^>=\s*(\d+\.\d+\.\d+)\s*$') {
 $requiredNodeVersion = [version]$Matches[1]
 
 New-Item -ItemType Directory -Path $resolvedOutputDirectory -Force | Out-Null
-$zipPath = Join-Path $resolvedOutputDirectory ('Startica_v' + $version + '.zip')
-if (Test-Path -LiteralPath $zipPath) {
-    throw ('Arhiva exista deja: ' + $zipPath + '. Sterge-o sau alege alt -OutputDirectory.')
+$setupExePath = Join-Path $resolvedOutputDirectory ('Startica_Setup_' + $version + '.exe')
+if (Test-Path -LiteralPath $setupExePath) {
+    throw ('Instalerul exista deja: ' + $setupExePath + '. Sterge-l sau alege alt -OutputDirectory.')
 }
 
 Add-Type -AssemblyName System.IO.Compression
@@ -46,11 +73,10 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 # Cale scurta sub TEMP: caile din src\app\... ale proiectului sunt deja
 # adanci, iar MAX_PATH loveste usor daca radacina de stagiu e lunga.
 $guid = [guid]::NewGuid().ToString('N').Substring(0, 8)
-$stageRoot = Join-Path $env:TEMP ('startica-package-' + $guid)
-$starticaStage = Join-Path $stageRoot 'Startica'
-$appStage = Join-Path $starticaStage 'Aplicatie'
-# Extragerea intermediara a git archive sta in afara $stageRoot: $stageRoot
-# devine radacina zip-ului, iar orice ramane acolo la final ajunge in arhiva.
+# $appStage este continutul {app}: Startica.exe, runtime\node.exe, src\, web\ etc, direct la radacina.
+$appStage = Join-Path $env:TEMP ('startica-package-' + $guid)
+# Extragerea intermediara a git archive sta separat: fisierele nefolosite din
+# arhiva git (ex. scripts\pachet-client\) nu trebuie sa ajunga in {app}.
 $workRoot = Join-Path $env:TEMP ('startica-work-' + $guid)
 $extractRoot = Join-Path $workRoot 'extract'
 $archivePath = Join-Path $workRoot 'head.tar'
@@ -59,12 +85,8 @@ try {
     New-Item -ItemType Directory -Path $appStage -Force | Out-Null
     New-Item -ItemType Directory -Path $extractRoot -Force | Out-Null
 
-    # Un singur archive+tar pentru tot ce vine din HEAD: programul si
-    # lansatorii impreuna, apoi mutati fiecare in locul lui in stagiu.
     $headPaths = @(
-        'src', 'web', 'package.json', 'startica_server.mjs', 'startica_desktop.ps1',
-        'Porneste_Startica.vbs', 'Opreste_Startica.vbs',
-        'scripts/pachet-client/Creeaza_Scurtatura.vbs', 'scripts/pachet-client/CITESTE-MA.txt'
+        'src', 'web', 'package.json', 'startica_server.mjs', 'scripts/pachet-client/CITESTE-MA.txt'
     )
     & git -C $repo archive --format=tar --output $archivePath HEAD -- $headPaths
     if ($LASTEXITCODE -ne 0) { throw 'git archive de la HEAD a esuat (lipseste un fisier necesar in commit?).' }
@@ -75,17 +97,26 @@ try {
     Move-Item -LiteralPath (Join-Path $extractRoot 'web') -Destination (Join-Path $appStage 'web')
     Move-Item -LiteralPath (Join-Path $extractRoot 'package.json') -Destination (Join-Path $appStage 'package.json')
     Move-Item -LiteralPath (Join-Path $extractRoot 'startica_server.mjs') -Destination (Join-Path $appStage 'startica_server.mjs')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'startica_desktop.ps1') -Destination (Join-Path $appStage 'startica_desktop.ps1')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'Porneste_Startica.vbs') -Destination (Join-Path $starticaStage 'Porneste_Startica.vbs')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'Opreste_Startica.vbs') -Destination (Join-Path $starticaStage 'Opreste_Startica.vbs')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'scripts\pachet-client\Creeaza_Scurtatura.vbs') -Destination (Join-Path $starticaStage 'Creeaza_Scurtatura.vbs')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'scripts\pachet-client\CITESTE-MA.txt') -Destination (Join-Path $starticaStage 'CITESTE-MA.txt')
+    Move-Item -LiteralPath (Join-Path $extractRoot 'scripts\pachet-client\CITESTE-MA.txt') -Destination (Join-Path $appStage 'CITESTE-MA.txt')
 
     # Testele nu au ce cauta in pachetul livrat clientului.
     Get-ChildItem -LiteralPath (Join-Path $appStage 'src') -Recurse -Filter '*.test.mjs' -File |
         Remove-Item -Force
     Get-ChildItem -LiteralPath (Join-Path $appStage 'src') -Recurse -Directory -Filter 'test-support' |
         Remove-Item -Recurse -Force
+
+    # Lansatorul nu e urmarit in git; se construieste acum, din arborele de lucru curat.
+    $buildLauncherScript = Join-Path $repo 'launcher\build-launcher.ps1'
+    if (-not (Test-Path -LiteralPath $buildLauncherScript -PathType Leaf)) {
+        throw ('Lipseste scriptul lansatorului: ' + $buildLauncherScript)
+    }
+    & $buildLauncherScript
+    if ($LASTEXITCODE -ne 0) { throw 'Construirea lansatorului (Startica.exe) a esuat.' }
+    $launcherExePath = Join-Path $repo 'launcher\bin\Startica.exe'
+    if (-not (Test-Path -LiteralPath $launcherExePath -PathType Leaf)) {
+        throw ('Lansatorul nu a fost construit: ' + $launcherExePath)
+    }
+    Copy-Item -LiteralPath $launcherExePath -Destination (Join-Path $appStage 'Startica.exe')
 
     # Motorul Node si licentele nu sunt urmarite in git; vin din arhiva anterioara.
     $baseArchive = [System.IO.Compression.ZipFile]::OpenRead($resolvedBaseZip)
@@ -120,40 +151,32 @@ try {
     $nodeVersionOutput = & $nodeExePath '--version'
     if ($LASTEXITCODE -ne 0) { throw 'Motorul Node din pachet nu a putut fi rulat.' }
     $actualNodeVersion = [version]($nodeVersionOutput.Trim().TrimStart('v'))
+    Write-Output ('Node din arhiva de baza: ' + $actualNodeVersion + ' (necesar ' + $enginesNode + ')')
     if ($actualNodeVersion -lt $requiredNodeVersion) {
         throw ('Motorul Node din arhiva de baza (' + $actualNodeVersion + ') este mai vechi decat cerinta din package.json (' + $enginesNode + ').')
     }
 
     if (-not (Test-Path -LiteralPath (Join-Path $appStage 'src\app\server\create-application.mjs') -PathType Leaf)) {
-        throw 'Lipseste Aplicatie\src\app\server\create-application.mjs din pachetul construit.'
+        throw 'Lipseste src\app\server\create-application.mjs din pachetul construit.'
     }
     if (-not (Test-Path -LiteralPath (Join-Path $appStage 'web\index.html') -PathType Leaf)) {
-        throw 'Lipseste Aplicatie\web\index.html din pachetul construit.'
+        throw 'Lipseste web\index.html din pachetul construit.'
     }
 
-    # ZipFile.CreateFromDirectory din .NET Framework scrie caile cu "\", pe care
-    # unele programe de dezarhivare nu le recunosc ca foldere; intrarile se scriu una cate una, cu "/".
-    $stageFiles = Get-ChildItem -LiteralPath $stageRoot -Recurse -File
-    $zipStream = [System.IO.File]::Open($zipPath, [System.IO.FileMode]::CreateNew)
-    try {
-        $zipArchive = New-Object System.IO.Compression.ZipArchive($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
-        try {
-            foreach ($file in $stageFiles) {
-                $entryName = $file.FullName.Substring($stageRoot.Length + 1).Replace('\', '/')
-                [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zipArchive, $file.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
-            }
-        } finally { $zipArchive.Dispose() }
-    } finally { $zipStream.Dispose() }
+    $issPath = Join-Path $repo 'scripts\pachet-client\Startica.iss'
+    & $isccPath ('/DAppVersion=' + $version) ('/DStageDir=' + $appStage) ('/DOutputDir=' + $resolvedOutputDirectory) $issPath
+    if ($LASTEXITCODE -ne 0) { throw 'ISCC (Inno Setup) a esuat la compilare.' }
+    if (-not (Test-Path -LiteralPath $setupExePath -PathType Leaf)) {
+        throw ('ISCC a raportat succes, dar instalerul asteptat lipseste: ' + $setupExePath)
+    }
 
-    $entryCount = $stageFiles.Count
-    $sizeMB = (Get-Item -LiteralPath $zipPath).Length / 1MB
-    $hash = Get-FileHash -LiteralPath $zipPath -Algorithm SHA256
+    $sizeMB = (Get-Item -LiteralPath $setupExePath).Length / 1MB
+    $hash = Get-FileHash -LiteralPath $setupExePath -Algorithm SHA256
 
-    Write-Output ('Arhiva: ' + $zipPath)
-    Write-Output ('Fisiere: ' + $entryCount)
+    Write-Output ('Instaler: ' + $setupExePath)
     Write-Output ('Dimensiune: ' + $sizeMB.ToString('0.00') + ' MB')
     Write-Output ('SHA-256: ' + $hash.Hash)
 } finally {
-    if (Test-Path -LiteralPath $stageRoot) { Remove-Item -LiteralPath $stageRoot -Recurse -Force -ErrorAction SilentlyContinue }
+    if (Test-Path -LiteralPath $appStage) { Remove-Item -LiteralPath $appStage -Recurse -Force -ErrorAction SilentlyContinue }
     if (Test-Path -LiteralPath $workRoot) { Remove-Item -LiteralPath $workRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }

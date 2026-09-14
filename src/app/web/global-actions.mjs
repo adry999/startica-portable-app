@@ -1,5 +1,6 @@
 import { pageIndexByList } from '#shared/ui/pagination.mjs';
 import { confirmOnSecondClick } from '#shared/ui/confirm-twice-button.mjs';
+import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 
 /**
  * @param {{
@@ -56,6 +57,8 @@ export function bindGlobalActions({
       if (action === 'delete') await recordEditor.deleteRecord(type, id);
       if (action === 'profile') childProfile.openChildProfile(id);
       if (action === 'confirm-review') await recordEditor.confirmReview(id);
+      if (action === 'copy-message')
+        await copyToClipboard(/** @type {string} */ (button.dataset.message), 'Mesaj copiat.', showNotice);
     } catch (error) {
       showNotice(/** @type {Error} */ (error).message, true);
     }
@@ -104,6 +107,7 @@ export function bindGlobalActions({
   window.addEventListener('afterprint', () => delete document.body.dataset.printView);
   element('printButton').onclick = () => printView('status');
   element('printNotify').onclick = () => printView('notify');
+  element('printProfile').onclick = () => printView('profile');
 
   // ─── Starea formularelor ────────────────────────────────────────────────────
 

@@ -1,21 +1,20 @@
 # Startica — utilizare locală
 
-Pornește din scurtătura **Startica** (sau `Porneste_Startica.vbs`): Startica se deschide într-o fereastră proprie Chrome/Edge, fără taburi și bară de adrese. Serverul local rulează ascuns în fundal. Este necesar Node.js cu suport `node:sqlite` (versiunea instalată pe acest calculator este compatibilă). Pornirile ulterioare folosesc serverul deja pornit pentru această copie a aplicației.
+Pornește din scurtătura **Startica**, creată de instalare (în dezvoltare: `npm start`). Startica se deschide într-o fereastră proprie Chrome/Edge, fără taburi și bară de adrese. Serverul local rulează ascuns în fundal, cu motorul Node.js inclus în pachet. Pornirile ulterioare folosesc serverul deja pornit pentru această copie a aplicației.
 
-La închiderea ultimei ferestre Startica pornite prin noul lansator, serverul se oprește automat și încearcă un backup final. `Opreste_Startica.vbs` rămâne o opțiune de rezervă dacă supravegherea ferestrei nu funcționează. Înainte să închizi, așteaptă confirmarea salvării. Formularele modificate și salvările neconfirmate declanșează avertizarea browserului la închidere.
+La închiderea ultimei ferestre Startica, serverul se oprește automat și încearcă un backup final. Înainte să închizi, așteaptă confirmarea salvării. Formularele modificate și salvările neconfirmate declanșează avertizarea browserului la închidere.
 
 Fereastra Startica folosește un profil de browser separat, fără acces la taburile și extensiile personale Chrome. Profilul se află în `%LOCALAPPDATA%\Startica`, nu în folderul aplicației: conține cookies și date de autentificare, iar folderul aplicației este copiat și arhivat. Conține preferințe și cache pentru interfață, nu baza evidenței; poate fi șters oricând, se recreează la pornire. Vechiul folder `Interfata` din aplicație nu mai este folosit și poate fi șters. Dacă sunt deschise două ferestre Startica, serverul rămâne pornit până la închiderea ultimei. O oprire forțată a Windows poate împiedica backupul final; fiecare salvare confirmată este deja scrisă în SQLite. Erorile de pornire se găsesc în `Jurnale`.
 
 Aceasta este interfața locală afișată în modul aplicație al Chrome/Edge, nu un program Windows nativ instalat. Datele rămân în SQLite pe calculator. Pentru depanare, aceeași interfață poate fi accesată la http://127.0.0.1:8765.
 
-Poți porni și din scurtătura `Startica.lnk`, cu pictograma oficială. O poți copia pe Desktop. Logo-ul și pictograma sunt în `assets`, preluate de pe startica.md. Culorile și fonturile existente corespund paletei site-ului.
+Scurtătura Startica, cu pictograma oficială, este creată automat de instalare pe Desktop și în meniul Start. Logo-ul și pictograma sunt în `assets`, preluate de pe startica.md. Culorile și fonturile existente corespund paletei site-ului.
 
-După această actualizare, închide ferestrele Startica vechi, rulează o singură dată `Opreste_Startica.vbs`, apoi pornește din nou. Oprirea automată urmărește numai ferestrele create cu noul lansator, nu taburile obișnuite sau ferestrele vechi.
+Actualizările se instalează rulând din nou `Startica_Setup_<versiune>.exe`: instalarea oprește automat Startica dacă rulează, înlocuiește programul și îl pornește din nou. Evidența din `%LOCALAPPDATA%\Startica` nu este atinsă.
 
 ## Ce este unde
 
-    Porneste_Startica.vbs          lansator (Opreste_Startica.vbs: oprire de rezervă)
-    startica_desktop.ps1           lansatorul propriu-zis: pornește serverul și fereastra
+    launcher/                      sursa lansatorului nativ (Startica.exe, compilat cu build-launcher.ps1)
     startica_server.mjs            punctul de intrare al serverului
     src/app/                       composition root: leagă feature-urile, pe server și în browser
     src/features/                  câte un folder pe capabilitate (copii, achitări, backup, ...)
@@ -30,9 +29,7 @@ Profilul de browser stă în `%LOCALAPPDATA%\Startica`. Structura codului și re
 
 ## Cum pornește
 
-Scurtătura pornește prin `wscript.exe`, care nu are consolă: nu apare nicio fereastră neagră, nici măcar pentru o clipă.
-
-Dacă muți scurtătura pe Desktop, copiaz-o din nou după actualizări: ținta ei s-a schimbat.
+Scurtătura pornește `Startica.exe`, lansatorul nativ, fără fereastră de consolă. Lansatorul pornește serverul dacă nu rulează deja și deschide fereastra; la o a doua pornire, doar deschide o fereastră nouă către serverul existent. Poți opri serverul manual cu `Startica.exe --stop`.
 
 ## Date și copii
 
@@ -50,7 +47,7 @@ Indicatorul din dreapta sus apare pe toate paginile: verde = date confirmate pe 
 
 Formularele se salvează prin butonul Salvează, nu automat la tastare. Închiderea unui formular fără salvare abandonează modificările lui. După o eroare de conexiune, indicatorul rămâne roșu până la verificare/reîncercare. Setările nesalvate sunt păstrate în formular la verificările conexiunii.
 
-Lansatoarele CMD pornesc acum controlerul ascuns și se termină imediat. La dublu clic, terminalul lansatorului dispare; într-un PowerShell deja deschis revine promptul, fără a închide terminalul tău. Scurtătura Startica.lnk pornește direct aplicația fără terminal. Închiderea ultimei ferestre păstrează mecanismul de oprire automată cu backup final.
+Scurtătura Startica pornește aplicația direct, fără fereastră de terminal. Închiderea ultimei ferestre păstrează mecanismul de oprire automată cu backup final.
 
 Datele devin curente în pagină după confirmarea serverului. Reîncercarea aceleiași operațiuni nu adaugă o plată nouă. După întreruperea conexiunii, „Reîncarcă datele” verifică/reia aceeași operațiune; celelalte salvări rămân blocate până la clarificare.
 
@@ -108,4 +105,4 @@ Restaurarea prezintă numărul de înregistrări și totalurile. Scrie RESTAUREA
 
 `node tests/browser-smoke.mjs` (sau `npm run test:browser`) — Chrome headless, profil și bază temporare. Nu folosește profilul Chrome sau datele reale ale utilizatorului. Rulează separat de `npm test` pentru că are nevoie de Chrome instalat și durează mai mult.
 
-`tests/desktop-lifecycle.ps1` — verifică lansatorul (`startica_desktop.ps1`): pornirea fără fereastră de consolă, oprirea la închiderea ferestrei, profil și bază temporare.
+`tests/desktop-lifecycle.ps1` — verifică lansatorul (`Startica.exe`): pornirea fără fereastră de consolă, oprirea la închiderea ferestrei, profil și bază temporare.

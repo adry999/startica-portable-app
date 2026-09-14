@@ -6,7 +6,8 @@
   #message,
   .view,
   #printButton,
-  #printNotify {
+  #printNotify,
+  #copyAllMessages {
     display: none !important;
   }
   .app {
@@ -30,5 +31,30 @@
   }
   tr {
     break-inside: avoid;
+  }
+  /* Coloana cu butonul „Copiază” nu are sens pe hârtie. */
+  body[data-print-view='notify'] #notifyHead th:last-child,
+  body[data-print-view='notify'] #notifyTable td:last-child {
+    display: none;
+  }
+  /* Fișa copilului se tipărește direct din <dialog>, care rămâne pe stratul de sus. */
+  body[data-print-view='profile'] dialog#profile {
+    position: static;
+    width: auto;
+    max-height: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+  body[data-print-view='profile'] dialog#profile::backdrop {
+    display: none;
+  }
+  body[data-print-view='profile'] #profile .close,
+  body[data-print-view='profile'] #profile .modal-head button {
+    display: none !important;
+  }
+  body[data-print-view='profile'] #profile .modal,
+  body[data-print-view='profile'] #profileBody {
+    max-height: none;
+    overflow: visible;
   }
 }

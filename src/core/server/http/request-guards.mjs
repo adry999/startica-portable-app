@@ -38,5 +38,9 @@ export async function readJsonBody(request) {
     if (size > MAX_BODY_BYTES) fail('Fișierul este prea mare.', 413);
     chunks.push(chunk);
   }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
+  } catch {
+    fail('Cererea nu este JSON valid.', 400);
+  }
 }

@@ -78,6 +78,7 @@ export function composeScreens(dependencies) {
       commitRestore: element('commitRestore'),
       settingsForm: element('settingsForm'),
       externalDirInput: element('externalDir'),
+      diagnosticButton: element('diagnosticButton'),
     },
     sessionState: /** @type {any} */ (sessionState),
     requestJson,
@@ -231,11 +232,17 @@ export function composeScreens(dependencies) {
     requestRender: () => renderCycle.render(),
   });
   const renderNotifyList = createNotifyListView({
-    elements: { period: element('notifyPeriod'), stats: element('notifyStats'), table: element('notifyTable') },
+    elements: {
+      period: element('notifyPeriod'),
+      stats: element('notifyStats'),
+      table: element('notifyTable'),
+      copyAllButton: element('copyAllMessages'),
+    },
     readRecords,
     readToday: today,
     requestRender: () => renderCycle.render(),
     renderNotifyCount: count => setNavCount('notifyCount', count),
+    showNotice,
   });
   const listDependencies = { readRecords, submitMutation, showNotice };
   const childrenList = createChildrenListView({

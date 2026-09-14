@@ -5,7 +5,6 @@ web/vendor/xlsx.full.min.js
 Startica_Date/
 Startica_Backup/
 Jurnale/
-Interfata/
 
 # HTML: formatarea automată poate introduce noduri de spațiu între elemente
 # inline. De făcut separat, verificat cu `npm run test:browser`.

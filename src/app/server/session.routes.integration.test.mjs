@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -9,6 +9,12 @@ import { createApplication, startTestApplication } from '#test-support/start-tes
 test('/api/session întoarce un token de sesiune', async t => {
   const app = await startTestApplication(t, { prefix: 'startica-session-' });
   assert.ok(app.token && app.token.length > 0);
+});
+
+test('/api/session întoarce versiunea din package.json', async t => {
+  const app = await startTestApplication(t, { prefix: 'startica-session-' });
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+  assert.equal((await app.get('/api/session')).version, version);
 });
 
 test('POST /api/state refuză scrierea cu 409 și un mesaj explicit', async t => {
@@ -28,7 +34,7 @@ test('POST /api/shutdown răspunde 404 când nu este permisă oprirea', async t 
 test('Oprire desktop autentificată, cu backup final și închiderea bazei', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'startica-shutdown-'));
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), allowShutdown: true });
-  await new Promise(r => app.server.listen(0, '127.0.0.1', r));
+  await new Promise(done => app.server.listen(0, '127.0.0.1', done));
   const url = `http://127.0.0.1:${app.server.address().port}`;
   try {
     const denied = await fetch(url + '/api/shutdown', {
@@ -39,7 +45,7 @@ test('Oprire desktop autentificată, cu backup final și închiderea bazei', asy
     assert.equal(denied.status, 403);
     await denied.json();
     const { token } = await (await fetch(url + '/api/session')).json();
-    const closed = new Promise(r => app.server.once('close', r));
+    const closed = new Promise(done => app.server.once('close', done));
     const response = await fetch(url + '/api/shutdown', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
@@ -52,6 +58,42 @@ test('Oprire desktop autentificată, cu backup final și închiderea bazei', asy
     const check = new DatabaseSync(join(dir, 'data/startica.db'), { readOnly: true });
     assert.equal(check.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
     check.close();
+  } finally {
+    if (app.server.listening) await app.close();
+    if (
+      resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-shutdown-') ||
+      resolve(dir).startsWith(resolve(tmpdir()) + '/startica-shutdown-')
+    )
+      rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('al doilea POST /api/shutdown nu face un al doilea backup', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-shutdown-'));
+  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), allowShutdown: true });
+  await new Promise(done => app.server.listen(0, '127.0.0.1', done));
+  const url = `http://127.0.0.1:${app.server.address().port}`;
+  try {
+    const { token } = await (await fetch(url + '/api/session')).json();
+    const closed = new Promise(done => app.server.once('close', done));
+    const request = () =>
+      fetch(url + '/api/shutdown', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
+        body: '{}',
+      });
+    const first = await request();
+    assert.equal(first.status, 200);
+    assert.equal((await first.json()).ok, true);
+    // Al doilea apel poate ajunge la server (ok: true) sau găsi conexiunea deja închisă; ambele sunt bune.
+    const second = await request().catch(() => null);
+    if (second) {
+      assert.equal(second.status, 200);
+      assert.equal((await second.json()).ok, true);
+    }
+    await closed;
+    assert.equal(readdirSync(join(dir, 'backups')).filter(name => name.includes('inchidere')).length, 1);
+    await assert.doesNotReject(() => app.close());
   } finally {
     if (app.server.listening) await app.close();
     if (

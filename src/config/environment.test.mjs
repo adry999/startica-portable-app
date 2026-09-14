@@ -8,6 +8,7 @@ test('fără variabile, profilul este development și deschide browserul', () =>
     port: 8765,
     openBrowser: true,
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+    home: undefined,
   });
 });
 
@@ -23,6 +24,7 @@ test('lansatorul desktop primește production, portul ales și fără browser se
     port: 8791,
     openBrowser: false,
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+    home: undefined,
   });
   assert.equal(Object.isFrozen(environment), true);
 });
@@ -33,7 +35,26 @@ test('profilul test alege un port liber și face backup la fiecare scriere', () 
     port: 0,
     openBrowser: false,
     autoBackupIntervalMs: 0,
+    home: undefined,
   });
+});
+
+test('STARTICA_PORT=0 lasă sistemul să aleagă portul', () => {
+  assert.equal(loadEnvironment({ STARTICA_PORT: '0' }).port, 0);
+});
+
+test('STARTICA_HOME absent păstrează comportamentul de azi, cu datele în folderul aplicației', () => {
+  assert.equal(loadEnvironment({}).home, undefined);
+});
+
+test('STARTICA_HOME cu o cale absolută este acceptată', () => {
+  const home = process.platform === 'win32' ? 'C:\\Users\\test\\AppData\\Local\\Startica' : '/home/test/.startica';
+  assert.equal(loadEnvironment({ STARTICA_HOME: home }).home, home);
+});
+
+test('STARTICA_HOME relativ sau gol oprește pornirea', () => {
+  for (const home of ['', 'Startica', '.\\Startica', '../Startica'])
+    assert.throws(() => loadEnvironment({ STARTICA_HOME: home }), /STARTICA_HOME invalid/, home);
 });
 
 test('STARTICA_NO_BROWSER oprește browserul doar cu valoarea 1', () => {

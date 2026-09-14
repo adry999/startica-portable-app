@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -22,10 +23,23 @@ import { createChildrenRoutes } from '#features/children/index.server.mjs';
 import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
+import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+// Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
+const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
-/** @param {{ root?: string, dataDir?: string, backupDir?: string, autoBackupIntervalMs?: number, allowShutdown?: boolean }} [options] */
+/**
+ * @param {{
+ *   root?: string,
+ *   dataDir?: string,
+ *   backupDir?: string,
+ *   home?: string,
+ *   logFile?: string,
+ *   autoBackupIntervalMs?: number,
+ *   allowShutdown?: boolean,
+ * }} [options]
+ */
 export function createApplication(options = {}) {
   const root = options.root || ROOT,
     dataDir = options.dataDir || join(root, 'Startica_Date'),
@@ -35,6 +49,13 @@ export function createApplication(options = {}) {
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
 
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
+  // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers) ar arunca la o bază deja închisă.
+  let databaseClosed = false;
+  function closeDatabase() {
+    if (databaseClosed) return;
+    databaseClosed = true;
+    db.close();
+  }
   const settings = createSettingsRepository(db);
   // settings.setting citește o coloană SQLite (tip generic în node:sqlite); valorile scrise
   // sunt mereu string (vezi settings-repository.mjs), deci tipul e sigur aici.
@@ -72,13 +93,24 @@ export function createApplication(options = {}) {
   const routes = [
     ...createSessionRoutes({
       sessionToken: token,
+      version,
       readEnvelope: recordRepository.readEnvelope,
       backupService: backups,
       allowShutdown: !!options.allowShutdown,
       shutdown: () => {
-        server.close(() => db.close());
+        server.close(() => closeDatabase());
         server.closeIdleConnections();
       },
+    }),
+    ...createDiagnosticRoutes({
+      version,
+      home: options.home,
+      logFile: options.logFile,
+      database: dbFile,
+      backupDirectory: backupDir,
+      readSetting,
+      backupService: backups,
+      allowShutdown: !!options.allowShutdown,
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
@@ -119,7 +151,9 @@ export function createApplication(options = {}) {
   return {
     server,
     db,
+    database: dbFile,
     backup: backups.backup,
+    safeBackup: backups.safeBackup,
     health: backups.health,
     envelope: recordRepository.readEnvelope,
     close: () =>
@@ -127,7 +161,7 @@ export function createApplication(options = {}) {
         new Promise(resolveClose => {
           backups.cancelScheduledBackup();
           server.close(() => {
-            db.close();
+            closeDatabase();
             resolveClose();
           });
         })
