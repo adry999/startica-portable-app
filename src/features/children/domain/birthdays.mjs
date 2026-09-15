@@ -1,5 +1,20 @@
 import { today } from '#shared/domain/calendar-month.mjs';
 
+const isLeapYear = year => new Date(year, 1, 29).getDate() === 29;
+
+// Născuții pe 29 februarie își serbează ziua pe 28 în anii nebisecți, altfel n-ar apărea deloc.
+/**
+ * @param {Date} birthDate
+ * @param {Date} date
+ */
+function isBirthdayOn(birthDate, date) {
+  if (date.getMonth() !== birthDate.getMonth()) return false;
+  if (date.getDate() === birthDate.getDate()) return true;
+  return (
+    birthDate.getMonth() === 1 && birthDate.getDate() === 29 && date.getDate() === 28 && !isLeapYear(date.getFullYear())
+  );
+}
+
 /**
  * @typedef {{
  *   date: string,
@@ -55,7 +70,9 @@ export function buildBirthdayCalendar(children, todayStr = today()) {
   const days = Array.from({ length: totalCells }, (_, i) => {
     const d = new Date(gridStart);
     d.setDate(gridStart.getDate() + i);
-    const matches = byMonthDay.get(monthDay(d)) || [];
+    const key = monthDay(d);
+    const leapDayBirthdays = key === '02-28' && !isLeapYear(d.getFullYear()) ? byMonthDay.get('02-29') || [] : [];
+    const matches = [...(byMonthDay.get(key) || []), ...leapDayBirthdays];
     const dateStr = isoDate(d);
     return {
       date: dateStr,
@@ -89,9 +106,7 @@ export function listUpcomingBirthdays(children, days = 5, todayStr = today()) {
     .filter(child => !child.archived && child.birthDate)
     .flatMap(child => {
       const birthDate = new Date(child.birthDate + 'T12:00:00');
-      const daysUntil = range.findIndex(
-        d => d.getMonth() === birthDate.getMonth() && d.getDate() === birthDate.getDate(),
-      );
+      const daysUntil = range.findIndex(date => isBirthdayOn(birthDate, date));
       if (daysUntil === -1) return [];
       return [{ child, daysUntil, turningAge: range[daysUntil].getFullYear() - birthDate.getFullYear() }];
     })

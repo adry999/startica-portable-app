@@ -83,3 +83,22 @@ test('listUpcomingBirthdays traversează corect granița de lună/an', () => {
   assert.equal(rows[0].daysUntil, 3);
   assert.equal(rows[0].turningAge, 2026 - 2015);
 });
+
+test('buildBirthdayCalendar arată copilul născut pe 02-29 pe 02-28 în ani non-bisecți', () => {
+  const children = [child('febborn', '2020-02-29')];
+  const weeks = buildBirthdayCalendar(children, '2025-02-28');
+  assert.deepEqual(cellFor(weeks, '2025-02-28').names, [{ name: 'febborn', turningAge: 2025 - 2020 }]);
+
+  const weeksLeap = buildBirthdayCalendar(children, '2024-02-29');
+  assert.deepEqual(cellFor(weeksLeap, '2024-02-28').names, []);
+  assert.deepEqual(cellFor(weeksLeap, '2024-02-29').names, [{ name: 'febborn', turningAge: 2024 - 2020 }]);
+});
+
+test('listUpcomingBirthdays arată copilul născut pe 02-29 pe 02-28 în ani non-bisecți', () => {
+  const children = [child('febborn', '2020-02-29')];
+  const rows = listUpcomingBirthdays(children, 5, '2025-02-25');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].child.id, 'febborn');
+  assert.equal(rows[0].daysUntil, 3);
+  assert.equal(listUpcomingBirthdays(children, 5, '2024-02-25')[0].daysUntil, 4);
+});
