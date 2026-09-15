@@ -3,7 +3,7 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 import { validateState } from '#shared/domain/record-schema.mjs';
 import { summary } from '#shared/domain/records-report.mjs';
 import { readBackupSnapshotDetails } from './backup-snapshot.mjs';
-import { assertUsableExternalFolder } from './external-backup-folder.mjs';
+import { assertUsableExternalFolder, normalizeExternalFolder } from './external-backup-folder.mjs';
 
 /** @typedef {import('../backup.types.mjs').BackupRoutesDependencies} BackupRoutesDependencies */
 
@@ -55,7 +55,7 @@ export function createBackupRoutes({
   function configureExternalDir(folder) {
     const before = readSetting('externalDir');
     writeSetting('externalDir', folder);
-    if (before !== folder) {
+    if (normalizeExternalFolder(before) !== folder) {
       writeSetting('lastExternal', '');
       writeSetting('externalError', '');
     }
@@ -110,7 +110,7 @@ export function createBackupRoutes({
       /** @param {{ body: any }} request */
       handle: ({ body }) => {
         if (body.confirm !== RESTORE_CONFIRMATION) fail('Confirmă restaurarea.');
-        const dir = typeof body.dir === 'string' ? body.dir.trim() : '';
+        const dir = normalizeExternalFolder(body.dir);
         const { name } = body;
         const file = resolveRestoreFile({ name, dir });
         const { snapshot } = readRestoreSnapshot(file, !!dir);
@@ -140,7 +140,7 @@ export function createBackupRoutes({
             restoreWarning + (configureResult.warning ? (restoreWarning ? ' ' : '') + configureResult.warning : '');
           return { ...result, warning, health: backupService.health() };
         }
-        if (configured !== folder)
+        if (normalizeExternalFolder(configured) !== folder)
           return {
             ...result,
             warning:
@@ -158,7 +158,7 @@ export function createBackupRoutes({
       path: '/api/settings',
       /** @param {{ body: any }} request */
       handle: ({ body }) => {
-        const folder = String(body.externalDir || '').trim();
+        const folder = normalizeExternalFolder(body.externalDir);
         assertUsableExternalFolder(folder, [dataDirectory, backupDirectory]);
         configureExternalDir(folder);
         return { ok: true, ...backupService.safeBackup('configurare'), health: backupService.health() };

@@ -2,6 +2,15 @@ import { existsSync, statSync } from 'node:fs';
 import { resolve, isAbsolute, relative } from 'node:path';
 import { fail } from '#core/server/errors/domain-error.mjs';
 
+/**
+ * @param {unknown} folder
+ * @returns {string}
+ */
+export function normalizeExternalFolder(folder) {
+  const trimmed = String(folder || '').trim();
+  return isAbsolute(trimmed) ? resolve(trimmed) : trimmed;
+}
+
 // Folderul extern nu are voie să fie baza activă sau folderul de backupuri:
 // altfel copiile s-ar suprascrie sau ar fi șterse de retenție.
 /**

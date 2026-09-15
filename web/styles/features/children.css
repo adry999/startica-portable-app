@@ -65,3 +65,14 @@
     grid-template-columns: 1fr;
   }
 }
+/* A 3-a coloană e „Copil" (HEADINGS din children-list.view.mjs); rămâne vizibilă la derularea orizontală. */
+#children .table-wrap th:nth-child(3),
+#children .table-wrap td:nth-child(3) {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+}
+#children .table-wrap th:nth-child(3) {
+  background: #fff;
+}

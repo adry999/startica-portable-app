@@ -622,6 +622,18 @@ try {
     editButton.right <= editButton.innerWidth,
     `Copii @ 1280px: butonul de editare iese din ecran ${JSON.stringify(editButton)}`,
   );
+  // Items 1+2: coloana sticky rămâne vizibilă (nu derulează sub marginea din stânga) când tabelul Copii se derulează orizontal.
+  await viewport(800);
+  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
+  await evaluate("document.querySelector('#children .table-wrap').scrollLeft = 200");
+  assert.equal(
+    await evaluate(
+      "document.querySelector('#childrenTable td:nth-child(3)').getBoundingClientRect().left >= document.querySelector('#children .table-wrap').getBoundingClientRect().left",
+    ),
+    true,
+    'Coloana sticky din Copii a derulat sub marginea din stânga a tabelului',
+  );
+  await viewport(1280);
   await viewport(1440);
 
   // A2/§6: restaurare din folderul extern — copiază cel mai recent backup local, ca o descărcare Drive deja terminată.
@@ -640,12 +652,21 @@ try {
     "document.querySelector('[data-view=settings]').click();document.getElementById('restoreButton').click()",
   );
   await until(() => evaluate("document.getElementById('restoreDialog').open"), 'Restore dialog did not open');
-  await evaluate("document.querySelector('#restoreSource input[value=extern]').click()");
+  // Item 3: sursa comută pe „extern” cu un folder gol precompletat, ceea ce pornește automat o căutare;
+  // click pe „Caută copii” cât timp acel request e în zbor nu trebuie ignorat (butonul nu se mai dezactivează).
+  // Ambele acțiuni rulează sincron, într-un singur Runtime.evaluate, ca niciunul dintre cele două fetch-uri
+  // să nu apuce să se rezolve între ele — reproduce exact cursa descrisă în regulă, nu doar contractul final.
+  const emptyExternalDir = join(dir, 'goale');
+  mkdirSync(emptyExternalDir, { recursive: true });
+  await evaluate(`
+    document.getElementById('restoreFolder').value=${JSON.stringify(emptyExternalDir)};
+    document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}));
+    document.querySelector('#restoreSource input[value=extern]').click();
+    document.getElementById('restoreFolder').value=${JSON.stringify(externalDir)};
+    document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}));
+    document.getElementById('restoreFolderLoad').click();
+  `);
   assert.equal(await evaluate("document.getElementById('restoreExternal').hidden"), false);
-  await evaluate(
-    `document.getElementById('restoreFolder').value=${JSON.stringify(externalDir)};document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}))`,
-  );
-  await evaluate("document.getElementById('restoreFolderLoad').click()");
   await until(
     () => evaluate("document.getElementById('backupSelect').options.length>0"),
     'External backup list did not load',
