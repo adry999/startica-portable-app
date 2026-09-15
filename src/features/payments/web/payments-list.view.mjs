@@ -97,7 +97,9 @@ export function createPaymentsListView({
       {
         cell:
           allocations(payment)
-            .map(a => `${escapeHtml(formatMonthLabel(a.month))}: ${formatMoney(a.amount)}`)
+            .map(
+              a => `<span class="money-line">${escapeHtml(formatMonthLabel(a.month))}: ${formatMoney(a.amount)}</span>`,
+            )
             .join('<br>') || 'Avans nerepartizat',
       },
       { cell: formatPaymentTenders(payment) },
