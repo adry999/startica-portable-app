@@ -29,12 +29,12 @@ function createRecordingAuditTrail() {
   return { changes, recordChange: change => changes.push(change) };
 }
 
-function createHarness(t) {
+function createHarness(t, overrides = {}) {
   const database = new DatabaseSync(':memory:');
   applySchema(database);
   t.after(() => database.close());
   const recordRepository = createRecordRepository(database);
-  const backups = createRecordingBackups();
+  const backups = overrides.backups || createRecordingBackups();
   const auditTrail = createRecordingAuditTrail();
   const transaction = createRevisionTransaction({ database, recordRepository, backups, auditTrail });
   return { database, recordRepository, backups, auditTrail, ...transaction };
@@ -120,6 +120,33 @@ test('backupBefore cheamă backup cu numele acțiunii, înainte de applyChanges'
   );
 
   assert.deepEqual(backupCallsBeforeApply, [{ fn: 'backup', reason: 'inainte-ștergere definitivă' }]);
+});
+
+test('backupBefore eșuat oprește operațiunea cu 500 și mesaj specific, fără nicio scriere', t => {
+  const backups = {
+    backup: () => {
+      throw new Error('unable to open database file');
+    },
+    autoBackup: () => ({ warning: '' }),
+    health: () => ({ ok: true }),
+  };
+  const { runRevisionTransaction, recordRepository, database } = createHarness(t, { backups });
+
+  assert.throws(
+    () =>
+      runRevisionTransaction(
+        { revision: 0, requestId: 'req-salvare-08' },
+        { action: 'ștergere definitivă', backupBefore: true },
+        () => recordRepository.save('children', { id: 'CHILD-1', name: 'Ana' }),
+      ),
+    /** @param {Error & { status?: number }} error */
+    error =>
+      error.status === 500 && /Backupul de siguranță dinaintea operației nu a putut fi creat/.test(error.message),
+  );
+
+  assert.equal(recordRepository.currentRevision(), 0);
+  assert.equal(recordRepository.find('children', 'CHILD-1'), undefined);
+  assert.equal(database.prepare('SELECT * FROM requests WHERE id=?').get('req-salvare-08'), undefined);
 });
 
 test('o excepție în applyChanges anulează tranzacția: fără înregistrare, fără schimbare de revizie, fără cerere memorată', t => {

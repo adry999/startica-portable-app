@@ -32,7 +32,9 @@ test('API istoric: atomic, backup obligatoriu, jurnal, idempotent și păstrarea
   assert.equal((await post('/api/financial-import', { ...b, confirm: '' })).status, 400);
   assert.equal((await post('/api/financial-import', { ...b, revision: 0 })).status, 409);
   renameSync(backupDir, backupDir + '-offline');
-  assert.equal((await post('/api/financial-import', b)).status, 400);
+  const backupFailure = await post('/api/financial-import', b);
+  assert.equal(backupFailure.status, 500);
+  assert.match(backupFailure.body.error, /Backupul de siguranță dinaintea operației nu a putut fi creat/);
   assert.equal(app.envelope().state.payments.length, 0);
   renameSync(backupDir + '-offline', backupDir);
   const saved = await post('/api/financial-import', b);

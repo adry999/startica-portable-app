@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, renameSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { applySchema } from '#core/server/database/schema.mjs';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
@@ -34,6 +34,16 @@ test('backup manual: creează o copie listată și actualizează health.lastLoca
 
   assert.ok((await get('/api/backups')).some(entry => entry.name === created.body.name));
   assert.ok((await get('/api/health')).lastLocal);
+});
+
+test('backup manual eșuat întoarce mesaj specific, nu eroare generică', async t => {
+  const { post, dir } = await startTestApplication(t, { prefix: 'startica-backup-routes-' });
+  renameSync(join(dir, 'backups'), join(dir, 'backups-offline'));
+
+  const result = await post('/api/backup', {});
+
+  assert.equal(result.status, 500);
+  assert.match(result.body.error, /Backupul nu a putut fi creat/);
 });
 
 test('previzualizarea unui backup refuză un nume cu cale', async t => {

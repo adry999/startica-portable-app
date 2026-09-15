@@ -47,7 +47,15 @@ export function createBackupRoutes({
     {
       method: 'POST',
       path: '/api/backup',
-      handle: () => ({ ok: true, ...backupService.backup(), health: backupService.health() }),
+      handle: () => {
+        try {
+          return { ok: true, ...backupService.backup(), health: backupService.health() };
+        } catch (e) {
+          // Cerută explicit de utilizator: mesaj specific, nu generic, ca la backupul obligatoriu.
+          console.error(/** @type {Error} */ (e).stack || e);
+          return fail('Backupul nu a putut fi creat. Verifică folderul de backup și spațiul pe disc.', 500);
+        }
+      },
     },
     {
       method: 'POST',
