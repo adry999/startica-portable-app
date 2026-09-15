@@ -96,6 +96,8 @@ test('o modificare cu date medicale pe o vizită e păstrată redactată în ist
 
   const [entry] = repository.readPage({ beforeEntryId: null }).entries;
 
+  assert.ok(entry.before);
+  assert.ok(entry.after);
   assert.equal(entry.before.healthNotes, '[date medicale]');
   assert.equal(entry.after.healthNotes, '');
   assert.equal(entry.before.name, 'Ana');
@@ -113,6 +115,8 @@ test('o modificare cu date medicale pe un copil e păstrată redactată în isto
 
   const [entry] = repository.readPage({ beforeEntryId: null }).entries;
 
+  assert.ok(entry.before);
+  assert.ok(entry.after);
   assert.equal(entry.before.healthNotes, '[date medicale]');
   assert.equal(entry.after.healthNotes, '[date medicale]');
 });

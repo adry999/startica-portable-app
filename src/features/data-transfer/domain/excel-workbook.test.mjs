@@ -225,6 +225,7 @@ test('Datele medicale nu ajung în fila Startica_Date, iar reimportul le lasă g
     findRecordIssues,
   );
   assert.deepEqual(back.errors, []);
+  assert.ok(back.state);
   assert.equal(back.state.visits[0].healthNotes, '');
   assert.equal(back.state.children[0].healthNotes, undefined);
 });
