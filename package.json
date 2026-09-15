@@ -1,6 +1,6 @@
 {
   "name": "startica",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Evidență locală Startica: server Node cu SQLite și interfață în fereastră Chrome/Edge.",
   "engines": {

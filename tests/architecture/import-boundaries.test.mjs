@@ -97,6 +97,13 @@ test('permite dependențele din arhitectura țintă', () => {
       ),
       sourceFile('tests/browser-smoke.mjs', '../startica_server.mjs', '/src/app/web/app-session.mjs'),
       sourceFile('tests/support/start-test-application.mjs', '#app/server/create-application.mjs'),
+      sourceFile(
+        'src/app/server/telegram-digest.mjs',
+        '#features/children/index.server.mjs',
+        '#features/visits/index.server.mjs',
+        '#features/billing/index.server.mjs',
+        '#features/telegram-notify/index.server.mjs',
+      ),
     ]),
     [],
   );
@@ -141,6 +148,13 @@ test('semnalează fiecare tip de încălcare a granițelor', () => {
       'feature-private-import',
     ],
     [sourceFile('tests/http-modules.test.mjs', '#features/backup/server/backup.service.mjs'), 'feature-private-import'],
+    [
+      sourceFile(
+        'src/features/telegram-notify/server/telegram-digest-helper.mjs',
+        '#features/children/index.server.mjs',
+      ),
+      'feature-imports-feature',
+    ],
   ];
 
   for (const [file, expectedRule] of cases)

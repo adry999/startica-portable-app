@@ -13,6 +13,15 @@ export const formatMonthName = v =>
   v ? new Date(v + '-01T12:00:00').toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }) : '—';
 export const formatDateTime = v => (v ? new Date(v).toLocaleString('ro-RO') : 'niciodată');
 
+// Titlul rezumatului zilnic Telegram, cu ziua săptămânii scrisă complet.
+export const formatLongDate = v =>
+  new Date(v + 'T12:00:00').toLocaleDateString('ro-RO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
 // Sub 2 ani se arată în luni, ca diferența dintre copiii mici să rămână vizibilă.
 export const formatAge = v => {
   if (!v) return 'necunoscută';

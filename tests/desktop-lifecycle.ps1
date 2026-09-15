@@ -81,12 +81,24 @@ function Stop-ViaLauncher([string]$LauncherExe, [string]$HomeDir) {
     } catch {}
 }
 
+# Acelasi calcul ca ComputeHomeIdentity din Startica.cs: SHA-256 pe calea normalizata
+# (lowercase), primii 8 octeti in hex - folosit ca sa gasim numele sarcinii din Scenariul 4
+# fara sa parsam jurnalul lansatorului.
+function Get-HomeIdentityHash8([string]$HomeDir) {
+    $normalized = [IO.Path]::GetFullPath($HomeDir).ToLowerInvariant()
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $hash = $sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($normalized)) }
+    finally { $sha.Dispose() }
+    return (($hash[0..7] | ForEach-Object { $_.ToString('x2') }) -join '').Substring(0, 8)
+}
+
 # --- Resurse urmarite pentru curatenie (populate pe masura ce testul avanseaza) ---
 $launcherExe = $null
 $testHomes = @()
 $testProfiles = @()
 $launcherProcesses = @()
 $occupyingListener = $null
+$telegramTaskPaths = @()
 
 try {
     Write-Output '--- Se construieste lansatorul ---'
@@ -219,12 +231,99 @@ try {
     Assert ($owner3.WaitForExit(65000)) 'Procesul proprietar (Scenariul 3) iese dupa oprirea serverului'
     Assert ($owner3.ExitCode -eq 0) 'Procesul proprietar (Scenariul 3) iese cu codul 0'
 
+    # --- Scenariul 4: sarcina programata Telegram (T5) - trebuie sa coexiste cu Startica pornit ---
+    Write-Output '--- Scenariul 4: sarcina programata Telegram ---'
+    $home4 = New-TestHome
+    $testHomes += $home4
+    $profile4 = Join-Path $home4 'Interfata'
+    $testProfiles += $profile4
+    $port4 = Get-FreePort
+    $url4 = 'http://127.0.0.1:' + $port4
+    $db4 = Join-Path $home4 'Startica_Date\startica.db'
+    $args4 = '--home "' + $home4 + '" --app-dir "' + $repoRoot + '" --port ' + $port4 + ' --profile-dir "' + $profile4 + '" --no-migrate --quiet'
+
+    # Startica ramane pornit din acelasi home cat ruleaza tot scenariul: dovada ca
+    # --register-task/--telegram/--unregister-task nu intra in conflict cu mutexul proprietarului.
+    $owner4 = Start-Process -FilePath $launcherExe -ArgumentList $args4 -PassThru
+    $launcherProcesses += $owner4
+    Assert (Wait-Condition { Test-Health $url4 $db4 } 20) 'Scenariul 4: Startica porneste normal in home-ul comun'
+    Assert (Wait-Condition { $b = Get-OldestBrowserWindow $profile4; $b -and (Get-Process -Id $b.ProcessId).MainWindowHandle -ne 0 } 25) 'Scenariul 4: fereastra a aparut'
+
+    $hash4 = Get-HomeIdentityHash8 $home4
+    $taskName4 = 'Rezumat Telegram ' + $hash4
+    $taskPath4 = 'Startica\' + $taskName4
+    $telegramTaskPaths += $taskPath4
+
+    $register4 = Start-Process -FilePath $launcherExe -ArgumentList ('--register-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
+    $launcherProcesses += $register4
+    Assert ($register4.ExitCode -eq 0) 'Scenariul 4: --register-task iese cu codul 0'
+
+    # Fara "2>" pe schtasks: sub $ErrorActionPreference = 'Stop', o linie pe stderr redirectata
+    # (asteptata la interogarea de mai jos, dupa stergere) devine exceptie terminanta chiar
+    # daca e trimisa spre $null - stderr nu se redirecteaza deloc, doar se citeste $LASTEXITCODE.
+    & schtasks.exe /Query /TN $taskPath4 /XML | Set-Variable -Name queryXml4Lines
+    Assert ($LASTEXITCODE -eq 0) 'Scenariul 4: schtasks /Query gaseste sarcina inregistrata'
+    $queryXml4 = ($queryXml4Lines -join "`n")
+    Assert ($queryXml4 -match '--telegram') 'Scenariul 4: actiunea din XML contine --telegram'
+
+    $telegramArgs4 = '--telegram --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"'
+
+    # startica_telegram.mjs e proprietatea T2/T3 (nu inca in acest worktree la data scrierii):
+    # fara el, node.exe iese cu "module not found" si codul lansatorului nu mai e 0 - asteptat,
+    # nu o eroare a lansatorului. Ramificatia de mai jos verifica doar ce nu depinde de T2/T3.
+    $telegramEntryPoint = Join-Path $repoRoot 'startica_telegram.mjs'
+    if (Test-Path -LiteralPath $telegramEntryPoint) {
+        $telegramRun4 = Start-Process -FilePath $launcherExe -ArgumentList $telegramArgs4 -Wait -PassThru
+        $launcherProcesses += $telegramRun4
+        Assert ($telegramRun4.ExitCode -eq 0) 'Scenariul 4: --telegram iese cu codul 0 fara telegram.json'
+
+        $telegramLogPath4 = Join-Path $home4 'Jurnale\telegram.log'
+        Assert (Wait-Condition { Test-Path -LiteralPath $telegramLogPath4 } 5) 'Scenariul 4: telegram.log a fost creat'
+        $telegramLogText4 = Get-Content -LiteralPath $telegramLogPath4 -Raw -Encoding UTF8
+        Assert ($telegramLogText4 -match 'Neconfigurat') 'Scenariul 4: telegram.log arata "Neconfigurat" fara telegram.json'
+
+        # Token de forma valida (regex-ul din §4.2), cheie inexistenta la Telegram: 401, clasificat
+        # ca eroare permanenta => cod de iesire 0, fara apel real necesar pentru ca testul sa treaca.
+        $telegramDataDir4 = Join-Path $home4 'Startica_Date'
+        New-Item -ItemType Directory -Path $telegramDataDir4 -Force | Out-Null
+        $fakeToken = '123456789:AAAA' + ('A' * 22)
+        $fakeConfig = @{ token = $fakeToken; chatId = '987654321'; chatName = 'Test'; botUsername = 'test_bot' } | ConvertTo-Json
+        Set-Content -LiteralPath (Join-Path $telegramDataDir4 'telegram.json') -Value $fakeConfig -Encoding UTF8
+
+        $telegramRun4b = Start-Process -FilePath $launcherExe -ArgumentList $telegramArgs4 -Wait -PassThru
+        $launcherProcesses += $telegramRun4b
+        Assert ($telegramRun4b.ExitCode -eq 0) 'Scenariul 4: --telegram iese cu codul 0 cu token fals (eroare Telegram clasificata, fara reluare)'
+    } else {
+        Write-Output 'ASTEPTARE (T2/T3 neterminate): startica_telegram.mjs lipseste; pasii --telegram/telegram.log/telegram.json raman neverificati end-to-end.'
+    }
+
+    $unregister4 = Start-Process -FilePath $launcherExe -ArgumentList ('--unregister-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
+    $launcherProcesses += $unregister4
+    Assert ($unregister4.ExitCode -eq 0) 'Scenariul 4: --unregister-task iese cu codul 0'
+
+    & schtasks.exe /Query /TN $taskPath4 | Out-Null
+    Assert ($LASTEXITCODE -ne 0) 'Scenariul 4: sarcina a disparut dupa --unregister-task'
+    $telegramTaskPaths = $telegramTaskPaths | Where-Object { $_ -ne $taskPath4 }
+
+    Assert (Test-Health $url4 $db4) 'Scenariul 4: Startica a ramas sanatos tot acest timp (fara conflict de mutex/lock cu sarcina)'
+
+    $lastWindow4 = Get-Process -Id (Get-OldestBrowserWindow $profile4).ProcessId
+    Assert $lastWindow4.CloseMainWindow() 'Scenariul 4: fereastra primeste comanda de inchidere'
+    Assert (Wait-Condition { -not (Test-Health $url4 $db4) } 20) 'Scenariul 4: serverul se opreste dupa inchiderea ferestrei'
+    Assert ($owner4.WaitForExit(65000)) 'Scenariul 4: procesul proprietar iese dupa oprirea serverului'
+    Assert ($owner4.ExitCode -eq 0) 'Scenariul 4: procesul proprietar iese cu codul 0'
+
     Write-Output 'PASS: toate scenariile de ciclu de viata au trecut.'
 } catch {
     Write-Output ('EROARE: ' + $_.Exception.Message)
     $exitCode = 1
 } finally {
     Write-Output '--- Curatenie ---'
+    # Doar daca Scenariul 4 a esuat inainte de --unregister-task: sarcina de test nu are voie
+    # sa ramana in Task Scheduler-ul real dupa o rulare picata.
+    foreach ($taskPath in $telegramTaskPaths) {
+        try { & schtasks.exe /Delete /TN $taskPath /F 2>$null | Out-Null } catch {}
+    }
     foreach ($homeDir in $testHomes) {
         try { Stop-ViaLauncher $launcherExe $homeDir } catch {}
     }

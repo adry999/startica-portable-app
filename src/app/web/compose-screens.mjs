@@ -29,6 +29,7 @@ import {
 import { createPaymentsListView, paymentEditorFields } from '#features/payments/index.web.mjs';
 import { createRecordEditorDialog } from '#features/record-editing/index.web.mjs';
 import { createReviewCenterView, findRecordIssues } from '#features/review-center/index.web.mjs';
+import { createTelegramSettingsController } from '#features/telegram-notify/index.web.mjs';
 import {
   countVisitsForDays,
   createVisitRemindersController,
@@ -98,6 +99,18 @@ export function composeScreens(dependencies) {
     showNotice,
     renderSaveStatus,
   });
+  const telegramSettings = createTelegramSettingsController({
+    elements: {
+      status: element('telegramStatus'),
+      form: element('telegramForm'),
+      tokenInput: element('telegramToken'),
+      testButton: element('telegramTest'),
+      disconnectButton: element('telegramDisconnect'),
+    },
+    requestJson,
+    showNotice,
+  });
+  navigation.registerScreen('settings', { activate: telegramSettings.activate });
   createExcelTransferController({
     elements: {
       importButton: element('importButton'),

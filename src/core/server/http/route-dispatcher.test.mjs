@@ -141,3 +141,51 @@ test('un handler care întoarce RESPONSE_SENT nu mai primește un al doilea răs
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { trimisManual: true });
 });
+
+test('un handler POST asincron este așteptat înainte de a trimite răspunsul', async t => {
+  const { origin } = await startDispatcherServer(t, [
+    {
+      method: 'POST',
+      path: '/api/asincron',
+      handle: async () => {
+        await new Promise(done => setTimeout(done, 5));
+        return { gata: true };
+      },
+    },
+  ]);
+  const response = await postJson(origin, '/api/asincron');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { gata: true });
+});
+
+test('un fail() de domeniu aruncat dintr-un handler asincron își păstrează statusul', async t => {
+  const { origin } = await startDispatcherServer(t, [
+    {
+      method: 'POST',
+      path: '/api/asincron-eroare',
+      handle: async () => {
+        await new Promise(done => setTimeout(done, 5));
+        fail('Refuzat asincron.', 409);
+      },
+    },
+  ]);
+  const response = await postJson(origin, '/api/asincron-eroare');
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'Refuzat asincron.' });
+});
+
+test('un handler GET asincron este așteptat înainte de a trimite răspunsul', async t => {
+  const { origin } = await startDispatcherServer(t, [
+    {
+      method: 'GET',
+      path: '/api/asincron-citire',
+      handle: async () => {
+        await new Promise(done => setTimeout(done, 5));
+        return { citit: true };
+      },
+    },
+  ]);
+  const response = await fetch(origin + '/api/asincron-citire');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { citit: true });
+});

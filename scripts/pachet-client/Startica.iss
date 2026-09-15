@@ -51,9 +51,12 @@ Name: "{autoprograms}\Startica"; Filename: "{app}\Startica.exe"; IconFilename: "
 Name: "{autodesktop}\Startica"; Filename: "{app}\Startica.exe"; IconFilename: "{app}\Startica.exe"; Tasks: desktopicon
 
 [Run]
+; Inregistreaza sarcina programata Telegram inaintea pasului postinstall - actualizarea o reinregistreaza oricum.
+Filename: "{app}\Startica.exe"; Parameters: "--register-task --quiet"; Flags: runhidden waituntilterminated
 Filename: "{app}\Startica.exe"; Description: "Pornește Startica"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
+Filename: "{app}\Startica.exe"; Parameters: "--unregister-task --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "UnregisterTelegramTask"; Check: StarticaExeExists
 Filename: "{app}\Startica.exe"; Parameters: "--stop --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "StopStartica"; Check: StarticaExeExists
 
 [Code]

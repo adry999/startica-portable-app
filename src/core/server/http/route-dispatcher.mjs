@@ -27,14 +27,16 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
         if (isStaticAsset(path)) return sendStaticAsset(response, root, path);
         if (isBrowserModule(path)) return sendBrowserModule(response, root, path);
         const getHandler = getRoutes.get(path);
-        if (getHandler) return sendResponse(response, getHandler({ url, response }));
+        // await pe o valoare simplă e un no-op: rutele existente rămân sincrone,
+        // Telegram (§4) e prima care așteaptă un apel de rețea înainte de răspuns.
+        if (getHandler) return sendResponse(response, await getHandler({ url, response }));
       }
       if (request.method !== 'POST') fail('Pagina nu există.', 404);
       assertAuthorizedWrite(request, sessionToken);
       const postHandler = postRoutes.get(path);
       if (!postHandler) fail('Operațiune inexistentă.', 404);
       const body = await readJsonBody(request);
-      const result = postHandler({ body, url, response });
+      const result = await postHandler({ body, url, response });
       if (result !== RESPONSE_SENT) sendResponse(response, result);
     } catch (error) {
       const failure = /** @type {Error & { status?: number, code?: string, errcode?: number }} */ (error);
