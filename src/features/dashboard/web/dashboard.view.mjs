@@ -55,6 +55,7 @@ function upcomingBirthdayPillHTML(r) {
  *   listUpcomingBirthdays: (children: Child[], days?: number, todayStr?: string) => UpcomingBirthday[],
  *   buildBirthdayCalendar: (children: Child[], todayStr?: string) => unknown[][],
  *   renderReviewCount: (count: number) => void,
+ *   summarizeUpcomingVisits: () => { today: number, tomorrow: number, items: unknown[] },
  * }} dependencies
  * @returns {(context: { month: string, review: ReviewCenterLike, evaluations: ChildMonthEvaluationLike[], missingFeeCount: number }) => void}
  */
@@ -77,6 +78,7 @@ export function createDashboardView({
   listUpcomingBirthdays,
   buildBirthdayCalendar,
   renderReviewCount,
+  summarizeUpcomingVisits,
 }) {
   /**
    * @param {Child[]} children
@@ -111,6 +113,7 @@ export function createDashboardView({
       : 'Niciuna în următoarele 5 zile';
     const toNotify = evaluations.filter(r => r.obligation.notify).length;
     const unassigned = records.payments.filter(p => !p.archived && !p.childId).length;
+    const visitsSummary = summarizeUpcomingVisits();
     const attentionItems = [
       // Numărul rămâne toNotify chiar cu copii fără taxă, ca „0 de notificat” să confirme
       // că sunt la zi în loc să dispară sub un card fals „nicio acțiune”.
@@ -159,6 +162,19 @@ export function createDashboardView({
         action: 'Asociază',
         view: 'assign',
         tone: 'assign',
+        forceShow: false,
+      },
+      {
+        count: visitsSummary.today + visitsSummary.tomorrow,
+        icon: '◷',
+        title: 'Vizite programate',
+        detail:
+          visitsSummary.today > 0 || visitsSummary.tomorrow > 0
+            ? `${visitsSummary.today} azi · ${visitsSummary.tomorrow} mâine`
+            : 'Nicio vizită azi sau mâine.',
+        action: 'Vezi calendarul',
+        view: 'visits',
+        tone: 'visits',
         forceShow: false,
       },
     ];
