@@ -1,4 +1,5 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
+import { confirmOnSecondClick } from '#shared/ui/confirm-twice-button.mjs';
 import { listExpenseCategoryNames } from '../domain/expense-category-names.mjs';
 
 /** @typedef {import('../expenses.types.mjs').ExpenseCategoriesControllerDependencies} ExpenseCategoriesControllerDependencies */
@@ -12,6 +13,7 @@ export function createExpenseCategoriesController({
   submitMutation,
   showNotice,
 }) {
+  nameInput.setAttribute('aria-label', 'Categoria nouă');
   function render() {
     const records = readRecords();
     const categories = [...records.categories].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
@@ -20,7 +22,7 @@ export function createExpenseCategoriesController({
         .map(
           category =>
             `<span class="category-chip" data-category="${escapeHtml(category.id)}">${escapeHtml(category.name)}` +
-            `<button type="button" data-remove title="Șterge categoria">×</button></span>`,
+            `<button type="button" data-remove title="Șterge categoria" aria-label="Șterge ${escapeHtml(category.name)}">×</button></span>`,
         )
         .join('') ||
       '<span class="muted">Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.</span>';
@@ -60,6 +62,8 @@ export function createExpenseCategoriesController({
     if (target.dataset.remove === undefined) return;
     const categoryElement = /** @type {HTMLElement | null} */ (target.closest('[data-category]'));
     const id = categoryElement?.dataset.category ?? '';
+    const categoryName = readRecords().categories.find(category => category.id === id)?.name ?? 'categoria';
+    if (!confirmOnSecondClick(target, `Sigur? Șterge ${categoryName}`)) return;
     try {
       await submitMutation('/api/category-delete', { id });
       showNotice('Categorie ștearsă.');
