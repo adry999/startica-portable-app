@@ -6,11 +6,14 @@ import { byId } from './element-lookup.mjs';
 
 // Casetă „selectează tot ce se vede”, generată în antetul listei (Copii, Achitări, Cheltuieli).
 export const selectAllCheckboxMarkup = listId =>
-  `<input type="checkbox" id="${listId}SelectAll" title="Selectează tot ce se vede">`;
+  `<input type="checkbox" id="${listId}SelectAll" aria-label="Selectează tot ce se vede" title="Selectează tot ce se vede">`;
 
 // Caseta unui rând, cu starea bifată păstrată din selecția curentă.
-export const rowCheckboxMarkup = (id, isSelected) =>
-  `<input type="checkbox" class="row-select" data-id="${escapeHtml(id)}" ${isSelected ? 'checked' : ''}>`;
+export const rowCheckboxMarkup = (id, isSelected, label) => {
+  const labelAttr = label ? ` aria-label="${escapeHtml(label)}"` : '';
+  const checkedAttr = isSelected ? ' checked' : '';
+  return `<input type="checkbox" class="row-select" data-id="${escapeHtml(id)}"${labelAttr}${checkedAttr}>`;
+};
 
 /** @param {{ selectedCount: number, isArchivedView: boolean }} args */
 export function bulkActionButtonLabel({ selectedCount, isArchivedView }) {
@@ -68,6 +71,7 @@ export function buildArchiveMutationBody(recordType, record, targetArchived, arc
  *   readRecords: () => SelectableRecord[],
  *   submitMutation: (path: string, body: unknown) => Promise<{ warning?: string }>,
  *   showNotice: (message: string, isError?: boolean) => void,
+ *   recordLabelFor?: (id: string) => string,
  * }} dependencies
  */
 export function createBulkSelectionController({
@@ -77,13 +81,14 @@ export function createBulkSelectionController({
   readRecords,
   submitMutation,
   showNotice,
+  recordLabelFor,
 }) {
   /** @type {Set<string>} */
   const selectedIds = new Set();
 
   const isArchivedView = () => archiveFilter?.value === 'archived';
   const isSelected = id => selectedIds.has(id);
-  const rowCheckboxMarkupFor = id => rowCheckboxMarkup(id, isSelected(id));
+  const rowCheckboxMarkupFor = id => rowCheckboxMarkup(id, isSelected(id), recordLabelFor?.(id));
 
   function updateBulkActionButton() {
     if (!bulkButton) return;
