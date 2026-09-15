@@ -6,12 +6,15 @@ import { createApplication } from '#app/server/create-application.mjs';
 export { createApplication };
 
 export async function startTestApplication(t, options = {}) {
-  const { prefix = 'startica-test-', ...applicationOptions } = options;
+  // fetch explicit, cu implicit globalThis.fetch: testele Telegram (§4) dau un
+  // fetch fals aici; create-application.mjs îl leagă la createTelegramService.
+  const { prefix = 'startica-test-', fetch: fetchOverride = globalThis.fetch, ...applicationOptions } = options;
   const dir = mkdtempSync(join(tmpdir(), prefix));
   const app = createApplication({
     dataDir: join(dir, 'data'),
     backupDir: join(dir, 'backups'),
     autoBackupIntervalMs: 0,
+    fetch: fetchOverride,
     ...applicationOptions,
   });
   await new Promise(done => app.server.listen(0, '127.0.0.1', done));
