@@ -32,7 +32,7 @@ function findChrome() {
 function rasterize(chromePath, svgMarkup, size, workDir) {
   const htmlPath = join(workDir, `frame-${size}.html`);
   const pngPath = join(workDir, `frame-${size}.png`);
-  // width/height 100% pe html/body/svg: SVG-ul umple exact fereastră headless, un singur pas de scalare.
+  // width/height 100% pe html/body/svg: SVG-ul umple exact fereastra headless, un singur pas de scalare.
   const html =
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     'html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}' +
