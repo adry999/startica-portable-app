@@ -51,7 +51,7 @@ export function createBackupRoutes({
         try {
           return { ok: true, ...backupService.backup(), health: backupService.health() };
         } catch (e) {
-          // Cerută explicit de utilizator: mesaj specific, nu generic, ca la backupul obligatoriu.
+          // Backupul manual e acțiunea operatorului: eroarea generică nu i-ar spune ce să facă.
           console.error(/** @type {Error} */ (e).stack || e);
           return fail('Backupul nu a putut fi creat. Verifică folderul de backup și spațiul pe disc.', 500);
         }
