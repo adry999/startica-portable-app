@@ -30,6 +30,19 @@ Pentru cine pregătește și instalează pachetul la client, nu pentru client
 - [ ] Închiderea ferestrei oprește aplicația (apare un backup nou în `%LOCALAPPDATA%\Startica\Startica_Backup`).
 - [ ] Dacă a fost o actualizare de pe ZIP: folderul vechi rămâne pe loc; se poate șterge după câteva zile de verificare, la decizia clientului.
 
+## Notificări Telegram
+
+- [ ] Botul Telegram creat din @BotFather: trimite `/newbot`, completează numele și username-ul, primește token-ul.
+- [ ] În Startica: Backup și setări → Notificări Telegram → token-ul din bot e copiat în câmpul „Token-ul botului" și apasă „Conectează".
+- [ ] În Telegram: se deschide botul creat, apasă Start, apoi în Startica se apasă din nou „Conectează" și mesajul de probă ajunge în Telegram.
+- [ ] Rezumatul zilnic conține: zile de naștere din următoarele 3 zile, vizitele astazi și mâine cu oră, nume și telefon, copii din „De notificat" pe luna curentă. Niciodată nu conține date medicale.
+- [ ] Rezumatul sosește la 08:00 în fiecare zi, dar numai dacă utilizatorul Windows e autentificat (ecran blocat e în regulă). Calculator adormit la 08:00 → rezumatul vine la trezire; calculator oprit toată ziua → niciun rezumat pentru ziua aceea.
+- [ ] Token-ul e stocat în `%LOCALAPPDATA%\Startica\Startica_Date\telegram.json` și **nu e inclus în backupuri**. După restaurare pe un calculator nou, token-ul se lipește din nou (procedura de 2 minute ca mai sus).
+- [ ] Token-ul nu se dă nimănui: cine îl are poate posta mesaje ca botul. Dacă e compromis, se revocă din @BotFather și se reconectează.
+- [ ] Butonul „Deconectează" șterge fișierul local; botul rămâne pe Telegram.
+- [ ] Jurnalul `%LOCALAPPDATA%\Startica\Jurnale\telegram.log` conține erorile procesului: token invalid, Telegram indisponibil, bază nemigrată etc.
+- [ ] Dezinstalarea Startica șterge sarcina programată Windows „Rezumat Telegram" automat.
+
 ## Restaurare pe un PC nou
 
 Dacă calculatorul clientului se strică sau se pierde, procedura de restaurare este:
