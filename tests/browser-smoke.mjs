@@ -734,6 +734,45 @@ try {
   assert.equal(await evaluate("document.querySelector('.view.active').id"), 'visits');
   await evaluate("document.querySelector('[data-create=visits]').click()");
   await until(() => evaluate("document.getElementById('editorForm')?.elements.name"), 'Visits editor did not open');
+  // Lipește din clipboard: butonul apare doar la creare. Acces real la clipboard nu e testabil
+  // aici — conexiunea CDP a acestui test e la nivel de pagină, nu de browser, deci nu poate
+  // acorda permisiunea prin Browser.grantPermissions; fără ea, navigator.clipboard.readText()
+  // eșuează sigur în Chrome headless. Testăm în schimb calea de eroare reală (fără permisiune)
+  // și, separat, funcția pură de completare a câmpurilor, apelată direct cu date construite.
+  assert.equal(await evaluate("!!document.getElementById('vizPasteTemplate')"), true);
+  assert.match(await evaluate("document.getElementById('editorFields').textContent"), /AAAA-LL-ZZ/);
+  await evaluate("document.getElementById('vizPasteTemplate').click()");
+  await until(
+    () => evaluate("document.getElementById('vizPasteError').hidden === false"),
+    'Clipboard denial did not show the inline error',
+  );
+  assert.match(
+    await evaluate("document.getElementById('vizPasteError').textContent"),
+    /Nu am putut citi din clipboard/,
+  );
+  const ageHintBeforePaste = await evaluate("document.getElementById('vizAgeHint').textContent");
+  const pasteFillResult = await evaluate(`(async()=>{
+    const {applyParsedVisitFields}=await import('/src/features/visits/index.web.mjs');
+    const f=document.getElementById('editorForm');
+    applyParsedVisitFields(f,{name:'Copil lipit',parent:'Părinte lipit',phone:'0711222333',date:'2026-09-21',birthDate:'2022-05-04'});
+    return {
+      name:f.elements.name.value,
+      parent:f.elements.parent.value,
+      phone:f.elements.phone.value,
+      date:f.elements.date.value,
+      birthDate:f.elements.birthDate.value,
+      ageHint:document.getElementById('vizAgeHint').textContent,
+    };
+  })()`);
+  assert.equal(pasteFillResult.name, 'Copil lipit');
+  assert.equal(pasteFillResult.parent, 'Părinte lipit');
+  assert.equal(pasteFillResult.phone, '0711222333');
+  assert.equal(pasteFillResult.date, '2026-09-21');
+  assert.equal(pasteFillResult.birthDate, '2022-05-04');
+  // Dovedește că applyParsedVisitFields a declanșat input real pe birthDate (nu doar a scris .value),
+  // altfel oninput-ul deja legat n-ar recalcula vârsta.
+  assert.notEqual(pasteFillResult.ageHint, ageHintBeforePaste);
+  assert.match(pasteFillResult.ageHint, /^Vârstă: /);
   await evaluate(
     `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='2026-09-15';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
   );

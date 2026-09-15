@@ -21,6 +21,7 @@ Modul **dependent** de `children` (la înrolare, copilul creat se salvează), de
 | `createVisitsListView({ elements: { head, table } })` | randare listă (antet sortabil, rânduri, acțiuni) |
 | `createVisitsCalendarView({ elements: { calendar } })` | randare calendar (cip-uri pe statut, selecție de zi) |
 | `visitEditorFields` | secțiuni editor: copil, părinți, vizita, dorințe, date medicale, post-vizită |
+| `applyParsedVisitFields(formElement, parsed)` | scrie în formular câmpurile deja parsate din șablonul lipit din clipboard |
 | `createVisitsApi({ submitMutation })` | `enrolChild(visitId, child)` → `POST /api/visits-enrol` |
 | `buildChildPrefill(visit)` | precompletarea fișei copilului la „Înscrie copilul” (pur, din `domain/`) |
 
@@ -36,6 +37,8 @@ Modul **dependent** de `children` (la înrolare, copilul creat se salvează), de
 | `domain/visit-status.mjs` (pur) | `allowedNextStatuses`, `applyVisitStatus`, `rescheduleVisit` |
 | `domain/visit-statistics.mjs` (pur) | `summarizeVisitFunnel`, `countVisitsForDays` |
 | `domain/visit-child-prefill.mjs` (pur) | `buildChildPrefill` |
+| `domain/visit-paste-template.mjs` (pur) | `parseVisitPasteTemplate` — șablonul lipit din clipboard la creare |
+| `#shared/format/text-search.mjs` | `normalizeSearchText` — potrivire etichete/grupă fără diacritice |
 | `#shared/domain/month-grid.mjs` (pur, S0) | `buildMonthGrid` |
 | `#shared/ui/month-calendar.mjs` (UI, S0) | `monthCalendarMarkup` |
 | `#shared/ui/record-list-sort.mjs`, `#shared/ui/record-list-search.mjs`, `#shared/ui/record-actions.mjs` | listă: antet, sortare, căutare, acțiuni |
@@ -63,7 +66,9 @@ visits/
 │   ├── visit-health-notes.mjs       # ★ expirarea datelor medicale la 12 luni
 │   ├── visit-health-notes.test.mjs
 │   ├── visit-child-prefill.mjs      # ★ precompletarea fișei copilului la înscriere
-│   └── visit-child-prefill.test.mjs
+│   ├── visit-child-prefill.test.mjs
+│   ├── visit-paste-template.mjs     # ★ parsarea șablonului lipit din clipboard (creare vizită)
+│   └── visit-paste-template.test.mjs
 ├── server/                          # task S3
 └── web/
     ├── visits.api.mjs               # `enrolChild`
