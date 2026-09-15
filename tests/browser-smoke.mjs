@@ -461,6 +461,19 @@ try {
       ),
     'Assign queue did not refresh',
   );
+  // La 6 coloane, tabelul gol nu depășește 1024 px de la sine; se forțează lățimea ca regresia (celula centrată iese din tabelul derulat) să fie verificabilă.
+  await viewport(1024);
+  assert.equal(
+    await evaluate(
+      "(()=>{const table=document.querySelector('#assignTable').parentElement;const prev=table.style.minWidth;table.style.minWidth='2000px';const cell=document.querySelector('#assignTable .empty');const range=document.createRange();range.selectNodeContents(cell);const ok=[...range.getClientRects()].every(r=>r.left>=0&&r.right<=innerWidth);table.style.minWidth=prev;return ok;})()",
+    ),
+    true,
+  );
+  assert.equal(
+    await evaluate("getComputedStyle(document.querySelector('#statusHead th.amount')).textAlign"),
+    'right',
+  );
+  await viewport(1440);
   // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
   const summaryFixture = await evaluate(`(async()=>{
     const {sessionState:session,eventBus}=await import('/src/app/web/app-session.mjs');

@@ -32,3 +32,7 @@
     grid-template-columns: 1fr;
   }
 }
+/* Antetul Achitări e generat de listHeadMarkup fără clasă pe coloană; Total e a 4-a. */
+#payments table th:nth-child(4) {
+  text-align: right;
+}
