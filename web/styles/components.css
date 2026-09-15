@@ -79,6 +79,15 @@
 }
 .table-wrap {
   overflow: auto;
+  container-type: inline-size;
+}
+/* Celula cu colspan e lată cât tabelul derulat; fixată la lățimea vizibilă ca textul centrat să rămână pe ecran. */
+.table-wrap td.empty {
+  display: block;
+  position: sticky;
+  left: 0;
+  width: 100cqw;
+  box-sizing: border-box;
 }
 .table-wrap thead {
   position: sticky;
@@ -452,6 +461,9 @@ dialog::backdrop {
 }
 td.amount {
   white-space: nowrap;
+  text-align: right;
+}
+th.amount {
   text-align: right;
 }
 /* O sumă cu eticheta ei („Cash: 1.000,00 lei”) rămâne pe un rând; celula poate avea mai multe astfel de rânduri. */
