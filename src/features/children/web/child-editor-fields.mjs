@@ -54,6 +54,11 @@ function markup(record, context) {
         textFieldMarkup('phone2', 'Telefon părinte 2 (opțional)', record.phone2, 'tel'),
     ) +
     formSectionMarkup(
+      'Date medicale',
+      textareaFieldMarkup('healthNotes', 'Date medicale', record.healthNotes) +
+        '<p class="notice full">Date sensibile: nu apar în export și în istoric.</p>',
+    ) +
+    formSectionMarkup(
       'Contract și taxe',
       textFieldMarkup('contractDate', 'Data contractului', record.contractDate, 'date') +
         textFieldMarkup('attendanceDate', 'Început frecventare', record.attendanceDate, 'date') +
@@ -107,6 +112,7 @@ function read(formData, formElement, context) {
     phone: String(formData.phone).trim(),
     parent2: String(formData.parent2).trim(),
     phone2: String(formData.phone2).trim(),
+    healthNotes: formData.healthNotes,
     groupId: formData.groupId || null,
     birthDate: formData.birthDate,
     contractDate: formData.contractDate,

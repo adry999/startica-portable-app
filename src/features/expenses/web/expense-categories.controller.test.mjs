@@ -12,7 +12,7 @@ function createHarness({ categories = [] } = {}) {
   const notices = [];
   const submitted = [];
   /** @type {RecordsSnapshot} */
-  const records = { categories, expenses: [], children: [], payments: [], groups: [] };
+  const records = { categories, expenses: [], children: [], payments: [], groups: [], visits: [] };
   const createForm = asAny({ reset: () => {} });
   const nameInput = asAny({ value: '', setAttribute: () => {} });
   createExpenseCategoriesController({

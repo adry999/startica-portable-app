@@ -35,6 +35,34 @@ test('assertRecordReferencesExist: nu verifică nimic pt. alte tipuri', () => {
   );
 });
 
+test('assertRecordReferencesExist: refuză o vizită cu copil inexistent', () => {
+  assert.throws(
+    () => assertRecordReferencesExist('visits', { childId: 'ID-1' }, () => false),
+    /Copilul asociat nu există\./,
+  );
+});
+
+test('assertRecordReferencesExist: acceptă o vizită neasociată (childId gol)', () => {
+  assert.doesNotThrow(() => assertRecordReferencesExist('visits', { childId: '' }, () => false));
+});
+
+test('assertRecordReferencesExist: refuză o vizită cu grupa dorită inexistentă', () => {
+  assert.throws(
+    () => assertRecordReferencesExist('visits', { desiredGroupId: 'GRP-1' }, () => false),
+    /Grupa dorită nu există\./,
+  );
+});
+
+test('assertRecordReferencesExist: acceptă o vizită fără grupa dorită', () => {
+  assert.doesNotThrow(() => assertRecordReferencesExist('visits', { desiredGroupId: null }, () => false));
+});
+
+test('assertRecordReferencesExist: acceptă o vizită cu copil și grupă existente', () => {
+  assert.doesNotThrow(() =>
+    assertRecordReferencesExist('visits', { childId: 'ID-1', desiredGroupId: 'GRP-1' }, () => true),
+  );
+});
+
 test('assertUniqueName: refuză o grupă cu nume duplicat, indiferent de literă mare/mică', () => {
   const records = { ...emptyState(), groups: [{ id: 'GRP-1', name: 'Grupa Mare', capacity: null }] };
   assert.throws(

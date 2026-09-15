@@ -29,6 +29,13 @@ import {
 import { createPaymentsListView, paymentEditorFields } from '#features/payments/index.web.mjs';
 import { createRecordEditorDialog } from '#features/record-editing/index.web.mjs';
 import { createReviewCenterView, findRecordIssues } from '#features/review-center/index.web.mjs';
+import {
+  countVisitsForDays,
+  createVisitRemindersController,
+  createVisitsApi,
+  createVisitsController,
+  visitEditorFields,
+} from '#features/visits/index.web.mjs';
 
 /**
  * Leagă id-urile din index.html de ecranele fiecărui feature și le înregistrează în ciclul de randare.
@@ -191,13 +198,89 @@ export function composeScreens(dependencies) {
       editorError: element('editorError'),
       editorSave: element('editorSave'),
     },
-    fieldsByType: { children: childEditorFields, payments: paymentEditorFields, expenses: expenseEditorFields },
+    fieldsByType: {
+      children: childEditorFields,
+      payments: paymentEditorFields,
+      expenses: expenseEditorFields,
+      visits: visitEditorFields,
+    },
     sessionState,
     readRecords,
     submitMutation,
     showNotice,
     renderSaveStatus,
     readExpenseCategoryNames: () => listExpenseCategoryNames(readRecords()),
+  });
+
+  const visitsApi = createVisitsApi({ submitMutation });
+  const visits = createVisitsController({
+    elements: {
+      funnel: element('visitsFunnel'),
+      calendar: element('visitsCalendar'),
+      prevMonthButton: element('visitsPrevMonth'),
+      nextMonthButton: element('visitsNextMonth'),
+      monthLabel: element('visitsMonthLabel'),
+      todayButton: element('visitsToday'),
+      search: element('visitsSearch'),
+      statusFilter: element('visitsStatus'),
+      allMonthsCheckbox: element('visitsAllMonths'),
+      archiveCheckbox: element('visitsArchive'),
+      head: element('visitsHead'),
+      table: element('visitsTable'),
+      summaryText: element('visitsSummaryText'),
+    },
+    readRecords,
+    readNow: () => new Date(),
+    submitMutation,
+    showNotice,
+    openEditor: recordEditor.openEditor,
+    enrolChild: visitsApi.enrolChild,
+    openProfile: childProfile.openChildProfile,
+    renderVisitsCount: count => setNavCount('visitsCount', count),
+  });
+
+  // Fereastra Notification poate lipsi (headless, browsere vechi) sau localStorage poate
+  // arunca într-un profil de navigare privată blocat; portul rămâne tăcut, nu aplicația.
+  const notifications = {
+    permission: () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission),
+    request: () =>
+      typeof Notification === 'undefined' ? Promise.resolve('unsupported') : Notification.requestPermission(),
+    show: (title, body, key, onClick) => {
+      if (typeof Notification === 'undefined') return;
+      const notification = new Notification(title, { body, tag: key });
+      notification.onclick = () => {
+        window.focus();
+        onClick?.();
+      };
+    },
+  };
+  const REMINDER_KEYS_STORAGE_KEY = 'startica.visitReminders';
+  const rememberedKeys = {
+    read: () => {
+      try {
+        const raw = localStorage.getItem(REMINDER_KEYS_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    },
+    write: keys => {
+      try {
+        localStorage.setItem(REMINDER_KEYS_STORAGE_KEY, JSON.stringify(keys));
+      } catch {
+        // Profil de navigare privată sau stocare blocată: memento-urile nu persistă, dar aplicația continuă.
+      }
+    },
+  };
+  createVisitRemindersController({
+    readRecords,
+    readNow: () => new Date(),
+    notifications,
+    rememberedKeys,
+    eventBus,
+    elements: { button: element('visitsNotifyButton'), hint: element('visitsNotifyHint') },
+    goToVisits: () => navigation.go('visits'),
   });
 
   // ─── Ecranele randate la fiecare reîncărcare a datelor ──────────────────────
@@ -221,6 +304,7 @@ export function composeScreens(dependencies) {
     listUpcomingBirthdays,
     buildBirthdayCalendar,
     renderReviewCount: count => setNavCount('reviewCount', count),
+    summarizeUpcomingVisits: () => countVisitsForDays(readRecords().visits, today()),
   });
   const renderChildrenSummary = createChildrenSummaryView({
     elements: {
@@ -362,6 +446,7 @@ export function composeScreens(dependencies) {
   renderCycle.addScreen('groups', () => groups.render());
   renderCycle.addScreen('expense-categories', () => expenseCategories.render());
   renderCycle.addScreen('review-center', ({ review }) => renderReviewCenter(review));
+  renderCycle.addScreen('visits', () => visits.render());
 
   return { recordEditor, childProfile };
 }

@@ -41,7 +41,7 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
     }),
   ];
   let r = await app.post('/api/import', {
-    state: { children: [child], payments, expenses: [], groups: [], categories: [] },
+    state: { children: [child], payments, expenses: [], groups: [], categories: [], visits: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),

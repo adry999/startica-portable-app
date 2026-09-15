@@ -1,15 +1,45 @@
 import { monthOK, dateOK } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 
-export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories'];
+export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits'];
 // Stări reale, folosite de obligation() și acceptate în statusHistory.
 export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
 // Statutul unei fișe. „De verificat” marchează o fișă importată a cărei
 // situație nu este confirmată; nu este o stare din care se pot calcula
 // obligații, deci nu apare în statusHistory.
 export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
-/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[] }} */
-export const emptyState = () => ({ children: [], payments: [], expenses: [], groups: [], categories: [] });
+// Drumul unei vizite: „reprogramată” e un eveniment în history, nu un statut propriu.
+export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'];
+const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
+/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[] }} */
+export const emptyState = () => ({
+  children: [],
+  payments: [],
+  expenses: [],
+  groups: [],
+  categories: [],
+  visits: [],
+});
+// Câmpurile per tip care duc date medicale în clar: excluse din export
+// (stripSensitiveFields) și redactate în istoric (redactSensitiveFields). O
+// intrare nouă în TYPES cu un câmp sensibil trebuie adăugată aici.
+export const SENSITIVE_FIELDS = { visits: ['healthNotes'], children: ['healthNotes'] };
+/** Copie a înregistrării fără câmpurile sensibile — folosită la export. */
+export function stripSensitiveFields(type, record) {
+  const fields = SENSITIVE_FIELDS[type];
+  if (!record || !fields?.length) return record;
+  const copy = { ...record };
+  for (const field of fields) delete copy[field];
+  return copy;
+}
+/** Copie a înregistrării cu valorile sensibile ne-goale înlocuite — folosită în istoric. */
+export function redactSensitiveFields(type, record) {
+  const fields = SENSITIVE_FIELDS[type];
+  if (!record || !fields?.length) return record;
+  const copy = { ...record };
+  for (const field of fields) if (copy[field]) copy[field] = '[date medicale]';
+  return copy;
+}
 export function requireThat(ok, message) {
   if (!ok) throw new Error(message);
 }
@@ -42,6 +72,7 @@ const FIELDS = {
     'phone',
     'parent2',
     'phone2',
+    'healthNotes',
     'birthDate',
     'contractDate',
     'attendanceDate',
@@ -94,6 +125,29 @@ const FIELDS = {
   ]),
   groups: new Set(['id', 'name', 'capacity', 'educator']),
   categories: new Set(['id', 'name']),
+  visits: new Set([
+    'id',
+    'name',
+    'birthDate',
+    'parent',
+    'phone',
+    'parent2',
+    'phone2',
+    'date',
+    'time',
+    'status',
+    'statusChangedAt',
+    'history',
+    'desiredStartDate',
+    'desiredGroupId',
+    'source',
+    'healthNotes',
+    'postVisitNotes',
+    'notes',
+    'childId',
+    'archived',
+    'archivedAt',
+  ]),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -118,6 +172,9 @@ export function normalizeRecord(type, input) {
     'group',
     'category',
     'method',
+    'source',
+    'healthNotes',
+    'postVisitNotes',
   ])
     if (record[field] !== undefined) text(record[field], field);
   if (type === 'children') {
@@ -178,6 +235,56 @@ export function normalizeRecord(type, input) {
   } else if (type === 'categories') {
     text(record.name, 'Nume categorie', true);
     record.name = record.name.trim();
+  } else if (type === 'visits') {
+    text(record.name, 'Nume copil', true);
+    record.name = record.name.trim();
+    if (record.birthDate) requireThat(dateOK(record.birthDate), 'Data nașterii este invalidă.');
+    text(record.parent, 'Părinte', true);
+    record.parent = record.parent.trim();
+    record.phone ??= '';
+    record.parent2 ??= '';
+    record.phone2 ??= '';
+    requireThat(dateOK(record.date), 'Data vizitei este invalidă.');
+    requireThat(typeof record.time === 'string' && TIME_OK.test(record.time), 'Ora vizitei este invalidă.');
+    record.status ||= 'Programată';
+    text(record.status, 'Statut', true);
+    requireThat(VISIT_STATUSES.includes(record.status), `Statut: folosește ${VISIT_STATUSES.join(', ')}.`);
+    requireThat(
+      typeof record.statusChangedAt === 'string' && !Number.isNaN(Date.parse(record.statusChangedAt)),
+      'Data schimbării de statut este invalidă.',
+    );
+    record.history ??= [];
+    requireThat(Array.isArray(record.history) && record.history.length <= 1000, 'history: istoric invalid.');
+    let previousAt = -Infinity;
+    for (const entry of record.history) {
+      requireThat(
+        entry &&
+          typeof entry.at === 'string' &&
+          !Number.isNaN(Date.parse(entry.at)) &&
+          VISIT_STATUSES.includes(entry.status) &&
+          dateOK(entry.date) &&
+          typeof entry.time === 'string' &&
+          TIME_OK.test(entry.time),
+        'history: intrare invalidă.',
+      );
+      const at = Date.parse(entry.at);
+      requireThat(at >= previousAt, 'history: intrările trebuie să fie ordonate cronologic.');
+      previousAt = at;
+    }
+    if (record.desiredStartDate) requireThat(dateOK(record.desiredStartDate), 'Data dorită de start este invalidă.');
+    record.desiredGroupId ??= null;
+    if (record.desiredGroupId !== null)
+      requireThat(
+        typeof record.desiredGroupId === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(record.desiredGroupId),
+        'Grupa dorită este invalidă.',
+      );
+    record.source ??= '';
+    record.healthNotes ??= '';
+    record.postVisitNotes ??= '';
+    record.childId ??= '';
+    text(record.childId, 'ID copil');
+    if (record.status === 'Înscris') requireThat(!!record.childId, 'Vizita înscrisă trebuie să aibă un copil asociat.');
+    else requireThat(!record.childId, 'Doar o vizită înscrisă poate avea un copil asociat.');
   } else {
     requireThat(dateOK(record.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && record.tenders !== undefined) {
@@ -253,6 +360,13 @@ export function validateState(input) {
     requireThat(
       !child.groupId || groupIds.has(child.groupId),
       `Copilul ${child.id}: grupa ${child.groupId} nu există.`,
+    );
+  for (const visit of state.visits)
+    requireThat(!visit.childId || ids.has(visit.childId), `Vizita ${visit.id}: copilul ${visit.childId} nu există.`);
+  for (const visit of state.visits)
+    requireThat(
+      !visit.desiredGroupId || groupIds.has(visit.desiredGroupId),
+      `Vizita ${visit.id}: grupa ${visit.desiredGroupId} nu există.`,
     );
   return state;
 }

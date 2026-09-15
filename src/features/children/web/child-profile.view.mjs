@@ -87,7 +87,8 @@ export function createChildProfileView({ elements: { body, dialog }, readRecords
           `</div>`,
       ) +
       profileSection('Achitări', `<div class="table-wrap"><table><tbody>${paymentsRows}</tbody></table></div>`) +
-      (child.notes ? profileSection('Observații', `<p>${escapeHtml(child.notes)}</p>`) : '');
+      (child.notes ? profileSection('Observații', `<p>${escapeHtml(child.notes)}</p>`) : '') +
+      (child.healthNotes ? profileSection('Date medicale', `<p>${escapeHtml(child.healthNotes)}</p>`) : '');
     dialog.showModal();
   }
 

@@ -116,14 +116,14 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
     ).status,
     400,
   );
-  const invalid = { children: [child(), child()], payments: [], expenses: [], groups: [] };
+  const invalid = { children: [child(), child()], payments: [], expenses: [], groups: [], categories: [], visits: [] };
   assert.equal(
     (await post('/api/import', { state: invalid, confirm: 'IMPORT', revision: 6, requestId: randomUUID() })).status,
     400,
   );
   assert.equal((await get('/api/state')).state.children[0].phone, '456');
   const importRequest = {
-    state: { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [] },
+    state: { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [], visits: [] },
     confirm: 'IMPORT',
     revision: 6,
     requestId: randomUUID(),
@@ -154,7 +154,7 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   old.prepare('INSERT INTO app_state VALUES(1,?)').run(JSON.stringify(state));
   old.close();
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups') });
-  assert.deepEqual(app.envelope().state, state);
+  assert.deepEqual(app.envelope().state, { ...state, visits: [] });
   assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
   app.db.close();
   if (

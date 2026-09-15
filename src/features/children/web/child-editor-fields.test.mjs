@@ -21,6 +21,41 @@ test('la adăugare fără istoric și fără nicio dată, luna implicită e ziua
   assert.equal(valueOf(html, 'feeFrom'), '2026-09');
 });
 
+test('secțiunea „Date medicale” apare după „Părinți”, cu notița despre datele sensibile', () => {
+  const html = childEditorFields.markup({ id: 'ID-1', healthNotes: 'Alergie la polen' }, context);
+  const parentsIndex = html.indexOf('Părinți');
+  const healthIndex = html.indexOf('Date medicale');
+  assert.ok(parentsIndex >= 0 && healthIndex > parentsIndex);
+  assert.match(html, /Alergie la polen/);
+  assert.match(html, /Date sensibile: nu apar în export și în istoric\./);
+});
+
+test('citirea formularului păstrează valoarea introdusă la „Date medicale”', () => {
+  const formData = /** @type {any} */ ({
+    notes: '',
+    name: 'Ana',
+    parent: 'Maria',
+    phone: '',
+    parent2: '',
+    phone2: '',
+    healthNotes: 'Alergie la nuci',
+    groupId: '',
+    birthDate: '2022-01-01',
+    contractDate: '',
+    attendanceDate: '',
+    withdrawalDate: '',
+    status: 'Activ',
+    statusFrom: '2026-09',
+    fee: '',
+    feeFrom: '',
+    dueDay: '10',
+    feeHistory: '',
+    statusHistory: '',
+  });
+  const record = childEditorFields.read(formData, /** @type {any} */ ({}), { previousRecord: { id: 'ID-1' } });
+  assert.equal(record.healthNotes, 'Alergie la nuci');
+});
+
 test('cu istoric deja existent, luna implicită rămâne luna curentă', () => {
   const html = childEditorFields.markup(
     {

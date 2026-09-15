@@ -43,6 +43,7 @@ export function v5FinancialSource() {
       expenses: [normalizeRecord('expenses', { id: 'EXP-1', date: '2026-09-08', amount: 50 })],
       groups: [],
       categories: [],
+      visits: [],
     },
   };
 }

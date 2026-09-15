@@ -22,6 +22,7 @@ export const STATIC_FILES = {
   '/styles/features/payments.css': 'web/styles/features/payments.css',
   '/styles/features/record-editing.css': 'web/styles/features/record-editing.css',
   '/styles/features/review-center.css': 'web/styles/features/review-center.css',
+  '/styles/features/visits.css': 'web/styles/features/visits.css',
   '/styles/print.css': 'web/styles/print.css',
   '/vendor/xlsx.full.min.js': 'web/vendor/xlsx.full.min.js',
   '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',

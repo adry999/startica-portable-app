@@ -15,7 +15,7 @@ test('Se poate șterge o categorie existentă; revizia crește și rămâne în 
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [], payments: [], expenses: [], groups: [], categories: [category] }, 0),
+    request({ children: [], payments: [], expenses: [], groups: [], categories: [category], visits: [] }, 0),
   );
   assert.equal(imported.status, 200, imported.body.error);
 
@@ -39,7 +39,7 @@ test('Ștergerea unei categorii inexistente este refuzată cu 409', async t => {
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [], payments: [], expenses: [], groups: [], categories: [] }, 0),
+    request({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
   );
   assert.equal(imported.status, 200, imported.body.error);
 
