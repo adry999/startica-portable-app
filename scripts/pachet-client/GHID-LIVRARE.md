@@ -30,6 +30,21 @@ Pentru cine pregătește și instalează pachetul la client, nu pentru client
 - [ ] Închiderea ferestrei oprește aplicația (apare un backup nou în `%LOCALAPPDATA%\Startica\Startica_Backup`).
 - [ ] Dacă a fost o actualizare de pe ZIP: folderul vechi rămâne pe loc; se poate șterge după câteva zile de verificare, la decizia clientului.
 
+## Restaurare pe un PC nou
+
+Dacă calculatorul clientului se strică sau se pierde, procedura de restaurare este:
+
+- [ ] **Înainte de orice**: dacă calculatorul vechi încă funcționează, închide sau dezinstalează Startica pe el. Două calculatoare care scriu în același folder Drive și-ar șterge reciproc copiile.
+- [ ] Pe calculatorul nou: instalează Startica și Google Drive for desktop cu contul grădiniței.
+- [ ] La prima pornire a Startica: refuzi dialogul de preluare a înregistrărilor vechi (nu sunt niciunde pe un PC nou).
+- [ ] Deschide Backup și setări → Restaurare → Din folderul extern.
+- [ ] Lipește calea completă a folderului de backup din Google Drive (de exemplu: G:\My Drive\Startica-backup).
+- [ ] Apasă Caută copii.
+- [ ] Selectează copia marcată cu cea mai recentă.
+- [ ] Verifică previzualizarea (numerele de copii și plăți).
+- [ ] Scrie RESTAUREAZA în câmpul de confirmare și apasă Restaurează.
+- [ ] Folderul extern se setează automat; verifică în Backup și setări că apare configurarea nouă.
+
 ## Întreținere
 
 - Lunar: pe drive.google.com ultimul `startica_*.db` are data de azi.
