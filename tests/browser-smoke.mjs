@@ -479,10 +479,7 @@ try {
     ),
     true,
   );
-  assert.equal(
-    await evaluate("getComputedStyle(document.querySelector('#statusHead th.amount')).textAlign"),
-    'right',
-  );
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#statusHead th.amount')).textAlign"), 'right');
   await viewport(1440);
   // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
   const summaryFixture = await evaluate(`(async()=>{
