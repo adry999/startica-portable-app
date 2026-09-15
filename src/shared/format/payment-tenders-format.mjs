@@ -7,6 +7,6 @@ import { paymentTenders } from '#shared/domain/payment-allocations.mjs';
 /** @param {Payment} payment */
 export function formatPaymentTenders(payment) {
   return paymentTenders(payment)
-    .map(part => `${escapeHtml(part.method)}: ${formatMoney(part.amount)}`)
+    .map(part => `<span class="money-line">${escapeHtml(part.method)}: ${formatMoney(part.amount)}</span>`)
     .join('<br>');
 }

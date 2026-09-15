@@ -454,6 +454,10 @@ td.amount {
   white-space: nowrap;
   text-align: right;
 }
+/* O sumă cu eticheta ei („Cash: 1.000,00 lei”) rămâne pe un rând; celula poate avea mai multe astfel de rânduri. */
+.money-line {
+  white-space: nowrap;
+}
 
 @media (max-width: 1050px) {
   .stats {

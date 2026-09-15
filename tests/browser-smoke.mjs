@@ -551,6 +551,7 @@ try {
   await evaluate(`(async()=>{
     const {submitMutation}=await import('/src/app/web/app-session.mjs');
     await submitMutation('/api/record',{type:'expenses',mode:'create',record:{id:'EXP-SMOKE-LAYOUT',date:'2026-09-03',amount:123456.78,category:'Bucătărie',description:''}});
+    await submitMutation('/api/record',{type:'categories',mode:'create',record:{id:'CAT-SMOKE-LAYOUT',name:'Bucătărie'}});
   })()`);
   const wrappedMoney = selector =>
     evaluate(`(()=>{
@@ -561,7 +562,7 @@ try {
   const moneySelectorByView = {
     dashboard: '#dashboard .card strong',
     expenses: '#expensesTable td:nth-child(5)',
-    payments: '#paymentsTable td.amount',
+    payments: '#paymentsTable td.amount, #paymentsTable .money-line',
     status: '#statusTable td.amount',
     notify: '#notifyTable td.amount',
   };
@@ -576,6 +577,22 @@ try {
     }
   }
   await viewport(1280);
+  await evaluate("document.querySelector('#primaryNav [data-view=expenses]').click()");
+  const categoryConfirm = await evaluate(`(()=>{
+    const button=document.querySelector('#categoriesChips [data-remove]');
+    if(!button) return null;
+    button.click();
+    const range=document.createRange();range.selectNodeContents(button);const rects=[...range.getClientRects()];
+    return {text:button.textContent,wrapped:rects.some(rect=>rect.top>=rects[0].bottom-1),width:button.getBoundingClientRect().width};
+  })()`);
+  assert.ok(categoryConfirm, 'Cheltuieli: nicio categorie de verificat');
+  assert.match(categoryConfirm.text, /^Sigur\? Șterge Bucătărie$/);
+  assert.equal(
+    categoryConfirm.wrapped,
+    false,
+    `Confirmarea ștergerii categoriei se rupe: ${JSON.stringify(categoryConfirm)}`,
+  );
+  assert.ok(categoryConfirm.width > 20, `Butonul de confirmare nu s-a lățit: ${JSON.stringify(categoryConfirm)}`);
   await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
   const editButton = await evaluate(
     "(()=>{const button=document.querySelector('#childrenTable [data-action=edit]');return button&&{right:button.getBoundingClientRect().right,innerWidth};})()",

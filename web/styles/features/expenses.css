@@ -36,6 +36,16 @@
 .category-chip button:hover {
   background: rgba(0, 0, 0, 0.08);
 }
+/* Butonul × primește textul de confirmare: se lățește ca pastilă, altfel textul se înghesuie în 20 px. */
+.category-chip button.confirm-pending,
+.category-chip button.confirm-pending:hover {
+  width: auto;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: #b83d63;
+  color: #fff;
+  white-space: nowrap;
+}
 #categoryCreateForm {
   display: flex;
   gap: 8px;
