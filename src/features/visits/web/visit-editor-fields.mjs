@@ -3,6 +3,7 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
 import { allowedNextStatuses, applyVisitStatus, rescheduleVisit } from '../domain/visit-status.mjs';
+import { parseVisitPasteTemplate } from '../domain/visit-paste-template.mjs';
 
 // Implementează structural RecordEditorFields din #features/record-editing —
 // fără să îl importe, ca feature-urile să rămână izolate unele de altele.
@@ -23,7 +24,14 @@ function markup(record, context) {
         `<option value="${escapeHtml(g.id)}" ${g.id === record.desiredGroupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`,
     )
     .join('');
+  // Doar la creare: operatorul completează un șablon fix pe hârtie/telefon în timpul apelului,
+  // apoi îl lipește aici în loc să retasteze fiecare câmp.
+  const pasteTemplateSection =
+    context.mode === 'create'
+      ? `<div class="full paste-template"><button type="button" class="action-btn" id="vizPasteTemplate">Lipește din clipboard</button> <small class="field-hint">Datele trebuie scrise ca AAAA-LL-ZZ</small><p class="field-hint" id="vizPasteError" hidden></p></div>`
+      : '';
   return (
+    pasteTemplateSection +
     formSectionMarkup(
       'Copil',
       textFieldMarkup('name', 'Nume copil', record.name, 'text', 'required') +
@@ -61,15 +69,52 @@ function markup(record, context) {
   );
 }
 
+// Scrie în formular câmpurile deja parsate din șablonul lipit. Separată de
+// bind(), ca să poată fi testată direct, fără acces real la clipboard.
 /**
  * @param {HTMLFormElement} formElement
+ * @param {Record<string, string>} parsed
  */
-function bind(formElement) {
+export function applyParsedVisitFields(formElement, parsed) {
+  for (const [field, value] of Object.entries(parsed)) {
+    const control = /** @type {HTMLInputElement | HTMLSelectElement | null} */ (formElement.elements.namedItem(field));
+    if (control) control.value = value;
+  }
+  if ('birthDate' in parsed) {
+    const birthDateInput = /** @type {HTMLInputElement | null} */ (formElement.elements.namedItem('birthDate'));
+    birthDateInput?.dispatchEvent(new Event('input'));
+  }
+}
+
+/**
+ * @param {HTMLFormElement} formElement
+ * @param {any} context RecordEditorContext (din #features/record-editing, neimportat aici)
+ */
+function bind(formElement, context) {
   const birthDateInput = /** @type {HTMLInputElement} */ (formElement.elements.namedItem('birthDate'));
   const ageHint = formElement.querySelector('#vizAgeHint');
   if (birthDateInput && ageHint)
     birthDateInput.oninput = event =>
       (ageHint.textContent = 'Vârstă: ' + formatAge(/** @type {HTMLInputElement} */ (event.target).value));
+
+  const pasteButton = /** @type {HTMLButtonElement | null} */ (formElement.querySelector('#vizPasteTemplate'));
+  const pasteError = /** @type {HTMLElement | null} */ (formElement.querySelector('#vizPasteError'));
+  if (pasteButton)
+    pasteButton.onclick = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        applyParsedVisitFields(formElement, parseVisitPasteTemplate(text, { groups: context.records.groups }));
+        if (pasteError) {
+          pasteError.hidden = true;
+          pasteError.textContent = '';
+        }
+      } catch {
+        if (pasteError) {
+          pasteError.hidden = false;
+          pasteError.textContent = 'Nu am putut citi din clipboard. Completează câmpurile manual.';
+        }
+      }
+    };
 }
 
 /**
