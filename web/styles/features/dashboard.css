@@ -283,6 +283,10 @@
   background: #eef8f1;
   border-color: #cae6d2;
 }
+.alert-visits {
+  background: #eef3fc;
+  border-color: #c9d9f2;
+}
 .alert-action {
   align-self: center;
   padding: 5px 6px;
