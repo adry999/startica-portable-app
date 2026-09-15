@@ -66,7 +66,7 @@ function upcomingBirthdayPillHTML(r) {
  *   buildBirthdayCalendar: (children: Child[], todayStr?: string) => unknown[][],
  *   renderReviewCount: (count: number) => void,
  * }} dependencies
- * @returns {(context: { month: string, review: ReviewCenterLike, evaluations: ChildMonthEvaluationLike[] }) => void}
+ * @returns {(context: { month: string, review: ReviewCenterLike, evaluations: ChildMonthEvaluationLike[], missingFeeCount: number }) => void}
  */
 export function createDashboardView({
   elements: {
@@ -99,7 +99,7 @@ export function createDashboardView({
     birthdaysCalendar.innerHTML = birthdaysCalendarHTML(buildBirthdayCalendar(children));
   }
 
-  return function renderDashboard({ month, review, evaluations }) {
+  return function renderDashboard({ month, review, evaluations, missingFeeCount }) {
     const records = readRecords();
     const cash = summarizeCashForMonth(records, month);
     incomeStat.textContent = formatMoney(cash.income);
@@ -122,15 +122,26 @@ export function createDashboardView({
     const toNotify = evaluations.filter(r => r.obligation.notify).length;
     const unassigned = records.payments.filter(p => !p.archived && !p.childId).length;
     const attentionItems = [
-      {
-        count: toNotify,
-        icon: '!',
-        title: 'Achitări de urmărit',
-        detail: toNotify === 1 ? '1 copil trebuie notificat.' : `${toNotify} copii trebuie notificați.`,
-        action: 'Vezi lista',
-        view: 'notify',
-        tone: 'urgent',
-      },
+      // Fără taxă, „0 de notificat” ar ascunde copiii necalculați în loc să confirme că sunt la zi.
+      missingFeeCount > 0
+        ? {
+            count: missingFeeCount,
+            icon: '!',
+            title: 'Achitări de urmărit',
+            detail: `Nu se pot calcula: ${missingFeeCount} ${missingFeeCount === 1 ? 'copil' : 'copii'} fără taxă. Completează în Taxe și grupe →`,
+            action: 'Completează',
+            view: 'fees',
+            tone: 'urgent',
+          }
+        : {
+            count: toNotify,
+            icon: '!',
+            title: 'Achitări de urmărit',
+            detail: toNotify === 1 ? '1 copil trebuie notificat.' : `${toNotify} copii trebuie notificați.`,
+            action: 'Vezi lista',
+            view: 'notify',
+            tone: 'urgent',
+          },
       {
         count: review.items.length,
         icon: '✓',

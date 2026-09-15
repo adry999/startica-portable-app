@@ -87,15 +87,21 @@ export function createPaymentsListView({
   /** @param {Payment} payment @param {RecordsSnapshot} records */
   function rowCellsFor(payment, records) {
     return [
-      bulkSelection.rowCheckboxMarkupFor(payment.id),
-      formatDate(payment.date),
-      escapeHtml(childNameOf(payment, records.children)) + (payment.childId ? '' : '<br><small>Neasociată</small>'),
-      formatMoney(payment.amount),
-      allocations(payment)
-        .map(a => `${escapeHtml(formatMonthLabel(a.month))}: ${formatMoney(a.amount)}`)
-        .join('<br>') || 'Avans nerepartizat',
-      formatPaymentTenders(payment),
-      recordActions('payments', payment),
+      { cell: bulkSelection.rowCheckboxMarkupFor(payment.id) },
+      { cell: formatDate(payment.date) },
+      {
+        cell:
+          escapeHtml(childNameOf(payment, records.children)) + (payment.childId ? '' : '<br><small>Neasociată</small>'),
+      },
+      { cell: formatMoney(payment.amount), class: 'amount' },
+      {
+        cell:
+          allocations(payment)
+            .map(a => `${escapeHtml(formatMonthLabel(a.month))}: ${formatMoney(a.amount)}`)
+            .join('<br>') || 'Avans nerepartizat',
+      },
+      { cell: formatPaymentTenders(payment) },
+      { cell: recordActions('payments', payment) },
     ];
   }
 
@@ -132,12 +138,12 @@ export function createPaymentsListView({
     });
     table.innerHTML =
       /** @type {Payment[]} */ (paginateRows(LIST_ID, rows))
-        .map(
-          payment =>
-            `<tr class="${payment.archived ? 'archived-row' : ''}">${rowCellsFor(payment, records)
-              .map(cell => `<td>${cell}</td>`)
-              .join('')}</tr>`,
-        )
+        .map(payment => {
+          const cells = rowCellsFor(payment, records);
+          return `<tr class="${payment.archived ? 'archived-row' : ''}">${cells
+            .map(({ cell, class: cls }) => `<td${cls ? ` class="${cls}"` : ''}>${cell}</td>`)
+            .join('')}</tr>`;
+        })
         .join('') ||
       `<tr><td colspan="${HEADINGS.length}" class="empty">Nu există înregistrări pentru filtrele alese.</td></tr>`;
     bulkSelection.wireRowCheckboxes();

@@ -112,14 +112,14 @@ try {
   );
   assert.doesNotMatch(aliasResolution, /Failed to resolve module specifier/, aliasResolution);
   assert.match(aliasResolution, /\/src\/shared\/alias-probe\.mjs/, aliasResolution);
-  // Pictogramă netă în bara de activități Windows: ICO multi-dimensiune (16/32/48/256), nu SVG rasterizat de Chrome.
+  // Pictogramă netă în bara de activități Windows: ICO multi-dimensiune (16–256), nu SVG rasterizat de Chrome.
   const icoResponse = await fetch(url + '/assets/startica.ico');
   assert.equal(icoResponse.status, 200);
   assert.equal(icoResponse.headers.get('content-type'), 'image/x-icon');
   assert.equal(await evaluate("document.querySelectorAll('link[rel~=icon]').length"), 2);
   assert.equal(
     await evaluate('document.querySelector(\'link[href="/assets/startica.ico"]\')?.sizes.value'),
-    '16x16 32x32 48x48 256x256',
+    '16x16 20x20 24x24 32x32 40x40 48x48 256x256',
   );
   assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
   assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
@@ -546,6 +546,46 @@ try {
   assert.equal(await evaluate("document.getElementById('profileBody').textContent.length > 0"), true);
   await evaluate("delete document.body.dataset.printView;document.querySelector('[data-close=profile]').click()");
   await command('Emulation.setEmulatedMedia', { media: 'screen' });
+
+  // Sumele se verifică abia aici, cu toate tabelele populate: pe tabele goale verificarea ar trece orbește.
+  await evaluate(`(async()=>{
+    const {submitMutation}=await import('/src/app/web/app-session.mjs');
+    await submitMutation('/api/record',{type:'expenses',mode:'create',record:{id:'EXP-SMOKE-LAYOUT',date:'2026-09-03',amount:123456.78,category:'Bucătărie',description:''}});
+  })()`);
+  const wrappedMoney = selector =>
+    evaluate(`(()=>{
+      const cells=[...document.querySelectorAll(${JSON.stringify(selector)})].filter(cell=>cell.offsetParent!==null&&cell.textContent.trim());
+      const wrapped=cells.filter(cell=>{const range=document.createRange();range.selectNodeContents(cell);const rects=[...range.getClientRects()];return rects.some(rect=>rect.top>=rects[0].bottom-1);});
+      return {checked:cells.length,wrapped:wrapped.map(cell=>cell.textContent.trim())};
+    })()`);
+  const moneySelectorByView = {
+    dashboard: '#dashboard .card strong',
+    expenses: '#expensesTable td:nth-child(5)',
+    payments: '#paymentsTable td.amount',
+    status: '#statusTable td.amount',
+    notify: '#notifyTable td.amount',
+  };
+  for (const width of [800, 1024, 1280]) {
+    await viewport(width);
+    for (const [view, selector] of Object.entries(moneySelectorByView)) {
+      await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
+      await noPageOverflow();
+      const { checked, wrapped } = await wrappedMoney(selector);
+      assert.ok(checked > 0, `${view} @ ${width}px: nicio sumă de verificat în ${selector}`);
+      assert.deepEqual(wrapped, [], `${view} @ ${width}px: sume rupte pe două rânduri`);
+    }
+  }
+  await viewport(1280);
+  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
+  const editButton = await evaluate(
+    "(()=>{const button=document.querySelector('#childrenTable [data-action=edit]');return button&&{right:button.getBoundingClientRect().right,innerWidth};})()",
+  );
+  assert.ok(editButton, 'Copii: niciun buton de editare de verificat');
+  assert.ok(
+    editButton.right <= editButton.innerWidth,
+    `Copii @ 1280px: butonul de editare iese din ecran ${JSON.stringify(editButton)}`,
+  );
+  await viewport(1440);
 
   // §4.7: fiecare ecran din navigare trebuie să devină activ, fără excepții/erori de consolă noi și fără scroll orizontal.
   const screenViews = await evaluate("[...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)");

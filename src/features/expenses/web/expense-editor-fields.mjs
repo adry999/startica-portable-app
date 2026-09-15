@@ -1,6 +1,7 @@
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { textFieldMarkup } from '#shared/ui/form-fields.mjs';
+import { canonicalCategoryName } from '../domain/canonical-category-name.mjs';
 
 // Implementează structural RecordEditorFields (#features/record-editing/record-editing.types.mjs).
 // Sugestiile de categorie vin din context.readExpenseCategoryNames(), injectat
@@ -33,12 +34,13 @@ function markup(record, context) {
  * @param {any} context RecordEditorContext (din #features/record-editing, neimportat aici)
  */
 function read(formData, formElement, context) {
+  const category = canonicalCategoryName(String(formData.category), context.records);
   return normalizeRecord('expenses', {
     ...context.previousRecord,
     notes: formData.notes,
     date: formData.date,
     amount: Number(formData.amount),
-    category: String(formData.category).trim(),
+    category,
     description: String(formData.description).trim(),
   });
 }

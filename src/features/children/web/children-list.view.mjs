@@ -67,6 +67,10 @@ export function createChildrenListView({
     readRecords: () => readRecords().children,
     submitMutation,
     showNotice,
+    recordLabelFor: id => {
+      const child = readRecords().children.find(c => c.id === id);
+      return child ? `Selectează ${child.name}` : '';
+    },
   });
 
   /**
@@ -79,7 +83,7 @@ export function createChildrenListView({
       escapeHtml(contractNumberOf(child)),
       recordActionButton('profile', 'children', child.id, child.name),
       formatParentContacts(child),
-      escapeHtml(groupNameOf(child.groupId, records.groups) || 'Lipsește'),
+      escapeHtml(groupNameOf(child.groupId, records.groups) || '—'),
       `ziua ${dueDayFor(child)}`,
       `<span class="badge ${statusBadgeClass(child.status)}">${escapeHtml(child.status)}${child.archived ? ' · Arhivat' : ''}</span>`,
       recordActions('children', child),

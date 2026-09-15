@@ -21,7 +21,7 @@
   gap: 15px;
 }
 .stats.monthly-stats {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 .card {
   border: 1px solid var(--border);
@@ -64,7 +64,10 @@
 }
 .card strong {
   display: block;
-  font: 800 30px 'Baloo 2';
+  font-size: clamp(22px, 2.4vw + 8px, 30px);
+  font-weight: 800;
+  font-family: 'Baloo 2';
+  overflow-wrap: anywhere;
 }
 .card small {
   display: block;
@@ -446,6 +449,10 @@ dialog::backdrop {
   font-weight: 900;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+}
+td.amount {
+  white-space: nowrap;
+  text-align: right;
 }
 
 @media (max-width: 1050px) {

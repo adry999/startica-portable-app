@@ -12,13 +12,21 @@ import {
 test('selectAllCheckboxMarkup include id-ul specific listei', () => {
   assert.equal(
     selectAllCheckboxMarkup('children'),
-    '<input type="checkbox" id="childrenSelectAll" title="Selectează tot ce se vede">',
+    '<input type="checkbox" id="childrenSelectAll" aria-label="Selectează tot ce se vede" title="Selectează tot ce se vede">',
   );
 });
 
 test('rowCheckboxMarkup marchează checked doar când rândul e selectat', () => {
-  assert.equal(rowCheckboxMarkup('c1', false), '<input type="checkbox" class="row-select" data-id="c1" >');
+  assert.equal(rowCheckboxMarkup('c1', false), '<input type="checkbox" class="row-select" data-id="c1">');
   assert.equal(rowCheckboxMarkup('c1', true), '<input type="checkbox" class="row-select" data-id="c1" checked>');
+});
+
+test('rowCheckboxMarkup pune eticheta accesibilă doar când e dată și o escapează', () => {
+  assert.equal(
+    rowCheckboxMarkup('c1', false, 'Selectează "Ana"'),
+    '<input type="checkbox" class="row-select" data-id="c1" aria-label="Selectează &quot;Ana&quot;">',
+  );
+  assert.equal(rowCheckboxMarkup('c1', true, ''), '<input type="checkbox" class="row-select" data-id="c1" checked>');
 });
 
 test('bulkActionButtonLabel arată verbul potrivit vizualizării și numărul selectat', () => {

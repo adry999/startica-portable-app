@@ -41,8 +41,8 @@ export function groupCardMarkup(group, children, index, isExpanded) {
     `<small>${overCapacity ? 'copii — peste capacitate' : 'copii'}</small>` +
     `</button>` +
     `<div class="group-details" ${isExpanded ? '' : 'hidden'}>` +
-    `<div class="group-edit"><input data-name value="${escapeHtml(group.name)}" placeholder="nume grupă">` +
-    `<input data-capacity type="number" min="1" max="1000" value="${group.capacity ?? ''}" placeholder="capacitate">` +
+    `<div class="group-edit"><input data-name value="${escapeHtml(group.name)}" placeholder="nume grupă" aria-label="Nume grupă">` +
+    `<input data-capacity type="number" min="1" max="1000" value="${group.capacity ?? ''}" placeholder="capacitate" aria-label="Capacitate">` +
     `<button type="button" class="action-btn" data-save>Salvează</button></div>` +
     `<label class="field">Educator<input data-educator value="${escapeHtml(group.educator || '')}" placeholder="Nume educator"></label>` +
     `<p class="group-fact">Vârste: <strong>${ageRange}</strong></p>` +
