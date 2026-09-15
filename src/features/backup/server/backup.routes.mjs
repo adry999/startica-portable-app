@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { validateState } from '#shared/domain/record-schema.mjs';
 import { summary } from '#shared/domain/records-report.mjs';
@@ -8,6 +9,9 @@ import { assertUsableExternalFolder } from './external-backup-folder.mjs';
 
 const RESTORE_CONFIRMATION = 'RESTAUREAZA';
 const SETTINGS_AUDIT_ACTION = 'configurare backup';
+const RESTORE_AUDIT_ACTION = 'restaurare';
+const EXTERNAL_READ_FAILURE =
+  'Copia nu a putut fi citită. Dacă e în Google Drive, așteaptă să fie descărcată (bifa verde) și încearcă din nou.';
 
 // [] dacă snapshot-ul e o stare validă, altfel primul mesaj de eroare al validării.
 function previewErrors(snapshot) {
@@ -30,17 +34,60 @@ export function createBackupRoutes({
   dataDirectory,
   backupDirectory,
 }) {
+  // dir gol sau absent înseamnă lista locală.
+  function resolveRestoreFile({ name, dir }) {
+    return dir ? backupService.resolveExternalBackupFile(dir, name) : backupService.resolveBackupFile(name);
+  }
+
+  // Un fișier „online-only” din Drive se descarcă sincron la deschidere; eroarea
+  // de sistem care rezultă offline nu e interpretabilă de operator.
+  function readRestoreSnapshot(file, isExternal) {
+    try {
+      return readBackupSnapshotDetails(file);
+    } catch (error) {
+      const failure = /** @type {Error & { status?: number }} */ (error);
+      if (!isExternal || typeof failure.status === 'number') throw failure;
+      console.error(failure.stack || failure);
+      return fail(EXTERNAL_READ_FAILURE);
+    }
+  }
+
+  function configureExternalDir(folder) {
+    const before = readSetting('externalDir');
+    writeSetting('externalDir', folder);
+    if (before !== folder) {
+      writeSetting('lastExternal', '');
+      writeSetting('externalError', '');
+    }
+    auditTrail.recordChange({
+      action: SETTINGS_AUDIT_ACTION,
+      recordType: null,
+      recordId: null,
+      before: { externalDir: before },
+      after: { externalDir: folder },
+    });
+  }
+
   return [
     { method: 'GET', path: '/api/health', handle: () => backupService.health() },
     { method: 'GET', path: '/api/backups', handle: () => backupService.listBackups() },
     {
       method: 'GET',
+      path: '/api/external-backups',
+      /** @param {{ url: URL }} request */
+      handle: ({ url }) => {
+        const dir = (url.searchParams.get('dir') || '').trim();
+        return { folder: resolve(dir), backups: backupService.listExternalBackups(dir) };
+      },
+    },
+    {
+      method: 'GET',
       path: '/api/backup-preview',
       /** @param {{ url: URL }} request */
       handle: ({ url }) => {
-        const { snapshot, notes } = readBackupSnapshotDetails(
-          backupService.resolveBackupFile(url.searchParams.get('name')),
-        );
+        const dir = (url.searchParams.get('dir') || '').trim();
+        const file = resolveRestoreFile({ name: url.searchParams.get('name'), dir });
+        const { snapshot, notes } = readRestoreSnapshot(file, !!dir);
         return { ...summary(snapshot), errors: previewErrors(snapshot), notes };
       },
     },
@@ -63,11 +110,47 @@ export function createBackupRoutes({
       /** @param {{ body: any }} request */
       handle: ({ body }) => {
         if (body.confirm !== RESTORE_CONFIRMATION) fail('Confirmă restaurarea.');
-        const { snapshot } = readBackupSnapshotDetails(backupService.resolveBackupFile(body.name));
+        const dir = typeof body.dir === 'string' ? body.dir.trim() : '';
+        const { name } = body;
+        const file = resolveRestoreFile({ name, dir });
+        const { snapshot } = readRestoreSnapshot(file, !!dir);
         const state = validateState(snapshot);
-        return runRevisionTransaction(body, { action: 'restaurare', backupBefore: true }, () =>
-          replaceAllRecords(state, 'restaurare'),
-        );
+        const folder = dir || backupDirectory;
+
+        const result = runRevisionTransaction(body, { action: RESTORE_AUDIT_ACTION, backupBefore: true }, () => {
+          auditTrail.recordChange({
+            action: RESTORE_AUDIT_ACTION,
+            recordType: null,
+            recordId: null,
+            before: null,
+            after: { sursa: dir ? 'extern' : 'local', folder, name },
+          });
+          replaceAllRecords(state, RESTORE_AUDIT_ACTION);
+        });
+
+        if (!dir) return result;
+
+        const restoreWarning = /** @type {{ warning?: string }} */ (result).warning || '';
+        const configured = readSetting('externalDir');
+        if (!configured) {
+          // Setarea se face DUPĂ tranzacție: înainte, ar trimite în Drive copia goală dinaintea restaurării.
+          configureExternalDir(folder);
+          const configureResult = backupService.safeBackup('configurare');
+          const warning =
+            restoreWarning + (configureResult.warning ? (restoreWarning ? ' ' : '') + configureResult.warning : '');
+          return { ...result, warning, health: backupService.health() };
+        }
+        if (configured !== folder)
+          return {
+            ...result,
+            warning:
+              restoreWarning +
+              (restoreWarning ? ' ' : '') +
+              'Folderul extern configurat rămâne ' +
+              configured +
+              '; schimbă-l în Setări dacă vrei copiile în folderul folosit la restaurare.',
+          };
+        return result;
       },
     },
     {
@@ -77,19 +160,7 @@ export function createBackupRoutes({
       handle: ({ body }) => {
         const folder = String(body.externalDir || '').trim();
         assertUsableExternalFolder(folder, [dataDirectory, backupDirectory]);
-        const before = readSetting('externalDir');
-        writeSetting('externalDir', folder);
-        if (before !== folder) {
-          writeSetting('lastExternal', '');
-          writeSetting('externalError', '');
-        }
-        auditTrail.recordChange({
-          action: SETTINGS_AUDIT_ACTION,
-          recordType: null,
-          recordId: null,
-          before: { externalDir: before },
-          after: { externalDir: folder },
-        });
+        configureExternalDir(folder);
         return { ok: true, ...backupService.safeBackup('configurare'), health: backupService.health() };
       },
     },

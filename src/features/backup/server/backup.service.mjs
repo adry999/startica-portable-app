@@ -8,6 +8,7 @@ import { fileTimestamp } from '#core/server/files/file-timestamp.mjs';
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 import { selectBackupsToKeep } from '../domain/backup-retention.mjs';
 import { readBackupSnapshot } from './backup-snapshot.mjs';
+import { assertUsableExternalFolder } from './external-backup-folder.mjs';
 
 /** @typedef {import('../backup.types.mjs').BackupFileEntry} BackupFileEntry */
 /** @typedef {import('../backup.types.mjs').BackupHealth} BackupHealth */
@@ -23,12 +24,27 @@ const TEMPORARY_NAME = /^startica_[\p{L}\p{N}_. -]+\.db\.tmp$/u;
 // Un .tmp mai nou decât atât poate aparține unui backup aflat în curs.
 const TEMPORARY_GRACE_MS = 3600000;
 
-/** @returns {BackupFileEntry[]} */
+/**
+ * @param {string} dir
+ * @returns {BackupFileEntry[]}
+ */
 function fileList(dir) {
   return readdirSync(dir)
     .filter(name => BACKUP_NAME.test(name))
-    .map(name => ({ name, modified: statSync(join(dir, name)).mtime.toISOString() }))
+    .map(name => {
+      const stats = statSync(join(dir, name));
+      return { name, modified: stats.mtime.toISOString(), bytes: stats.size };
+    })
     .sort((a, b) => b.modified.localeCompare(a.modified));
+}
+
+// Numele vine de la client: trebuie să fie un nume simplu de fișier, niciodată o cale.
+/**
+ * @param {unknown} name
+ * @returns {asserts name is string}
+ */
+function assertBackupName(name) {
+  if (typeof name !== 'string' || basename(name) !== name || !BACKUP_NAME.test(name)) fail('Nume de backup invalid.');
 }
 
 // Copiile dinaintea unei operațiuni ireversibile nu expiră niciodată (vezi
@@ -98,6 +114,7 @@ export function createBackupService({
   database,
   databaseFile,
   backupDirectory,
+  dataDirectory,
   readSetting,
   writeSetting,
   autoBackupIntervalMs,
@@ -262,15 +279,40 @@ export function createBackupService({
     };
   }
 
-  // Numele vine de la client: trebuie să fie un nume simplu de fișier din
-  // folderul de backup, niciodată o cale.
   /**
    * @param {unknown} name
    * @returns {string}
    */
   function resolveBackupFile(name) {
-    if (typeof name !== 'string' || basename(name) !== name || !BACKUP_NAME.test(name)) fail('Nume de backup invalid.');
+    assertBackupName(name);
     const file = join(backupDirectory, name);
+    if (!existsSync(file)) fail('Backup inexistent.');
+    return file;
+  }
+
+  /**
+   * @param {string} dir
+   * @returns {BackupFileEntry[]}
+   */
+  function listExternalBackups(dir) {
+    assertUsableExternalFolder(dir, [dataDirectory, backupDirectory]);
+    try {
+      return fileList(dir);
+    } catch {
+      // EPERM, cale UNC indisponibilă etc.: mesaj interpretabil de operator, nu eroarea brută de sistem.
+      return fail('Folderul nu poate fi citit.');
+    }
+  }
+
+  /**
+   * @param {string} dir
+   * @param {unknown} name
+   * @returns {string}
+   */
+  function resolveExternalBackupFile(dir, name) {
+    assertUsableExternalFolder(dir, [dataDirectory, backupDirectory]);
+    assertBackupName(name);
+    const file = join(dir, name);
     if (!existsSync(file)) fail('Backup inexistent.');
     return file;
   }
@@ -282,6 +324,8 @@ export function createBackupService({
     health,
     listBackups: () => fileList(backupDirectory),
     resolveBackupFile,
+    listExternalBackups,
+    resolveExternalBackupFile,
     cancelScheduledBackup,
   };
 }
