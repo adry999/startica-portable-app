@@ -34,15 +34,25 @@ function renderAlerts({ missingFeeCount, evaluations = [], reviewItems = [] }) {
   return alerts.innerHTML;
 }
 
-test('cardul „Achitări de urmărit” semnalează copiii fără taxă completată, nu îi ascunde sub „nicio acțiune”', () => {
+test('cardul „Achitări de urmărit” arată numărul real de notificat și copiii fără taxă, chiar dacă nimeni nu trebuie notificat acum', () => {
   const html = renderAlerts({ missingFeeCount: 2 });
   const card = html.match(/<article class="alert alert-urgent">.*?<\/article>/s)?.[0] ?? '';
 
-  assert.match(card, /Nu se pot calcula/);
-  assert.match(card, /2 copii fără taxă/);
+  assert.match(card, /0 de notificat · 2 fără taxă \(nu se pot calcula\)/);
+  assert.match(card, />Completează</);
   assert.match(card, /data-view="fees"/);
   assert.doesNotMatch(card, /necesară/);
   assert.doesNotMatch(html, /Nicio acțiune în listele urmărite/);
+});
+
+test('cardul „Achitări de urmărit” arată numărul real de notificat și copiii fără taxă, când există și notificări de trimis', () => {
+  const evaluations = [asAny({ child: { id: 'C1' }, obligation: { notify: true } })];
+  const html = renderAlerts({ missingFeeCount: 2, evaluations });
+  const card = html.match(/<article class="alert alert-urgent">.*?<\/article>/s)?.[0] ?? '';
+
+  assert.match(card, /1 de notificat · 2 fără taxă \(nu se pot calcula\)/);
+  assert.match(card, />Vezi lista</);
+  assert.match(card, /data-view="notify"/);
 });
 
 test('cardul „Achitări de urmărit” se comportă ca azi când toți copiii nearhivați au taxa completată', () => {
