@@ -59,6 +59,16 @@ Dacă calculatorul clientului se strică sau se pierde, procedura de restaurare 
 - [ ] Scrie RESTAUREAZA în câmpul de confirmare și apasă Restaurează.
 - [ ] Folderul extern se setează automat; verifică că apare configurarea nouă. Restaurarea aduce fișele, achitările și cheltuielile; istoricul modificărilor nu se restaurează.
 
+## Vizite (calendar, statut, înscriere, notificări)
+
+- [ ] Ecranul Vizite apare în meniu, cu calendarul lunar, contoarele (Programate, Efectuate, Înscriși, Renunțat din ultimele 12 luni) și lista filtrabilă.
+- [ ] Adăugare vizită: „Adaugă vizită" deschide editorul; copilul și părintele se completează, data și ora sunt obligatorii, statutul inițial e „Programată".
+- [ ] Schimbare de statut: butoane rapide din listă: „Efectuată", „Neprezentată", „Renunțat" (doar cele permise). După ce vizita e „Efectuată", butonul „Înscrie copilul" precompleează editorul copilului cu datele vizitei.
+- [ ] Reprogramare: modificarea datei/orei pe o vizită existentă rescheduleaz-o — statutul revine la „Programată", se adaugă o intrare în istoric, nu se creează o vizită nouă.
+- [ ] Înscriere: din „Înscrie copilul" pe o vizită „Efectuată" → editorul copilului precompletat cu datele din vizită → salvare: copilul apare în lista Copii, vizita devine „Înscris".
+- [ ] Date medicale: câmp text în secțiunea „Date medicale" din editor. Nu apar în exportul Excel și nici în „Istoric" (modificări). Se golesc automat la 12 luni de la ultima schimbare de statut a vizitei (sau de la arhivarea copilului, pentru notele medicale ale copiilor). **Totuși, datele rămân în clar în baza locală și în copiile din folderul extern** — se spune explicit în CITESTE-MA.
+- [ ] Notificări: butonul „Activează notificările" din ecranul Vizite apare doar dacă permisiunile browser sunt în stare implicită; la clic, cere permisiune. Cardul „Vizite azi/mâine" apare în Panou; notificările Windows apar doar cât fereastra e deschisă.
+
 ## Întreținere
 
 - Lunar: pe drive.google.com ultimul `startica_*.db` are data de azi.

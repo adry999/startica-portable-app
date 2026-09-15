@@ -43,8 +43,9 @@ export function createRecordEditorDialog({
   /**
    * @param {EditableRecordType} type
    * @param {string} [id]
+   * @param {import('../record-editing.types.mjs').OpenEditorOptions} [options]
    */
-  function openEditor(type, id) {
+  function openEditor(type, id, options = {}) {
     if (!sessionState.ready || sessionState.pending) {
       showNotice('Reîncarcă datele înainte de a deschide un formular.', true);
       return;
@@ -52,13 +53,20 @@ export function createRecordEditorDialog({
     const fields = fieldsByType[type];
     const records = readRecords();
     const existing = /** @type {any[]} */ (records[type]).find(r => r.id === id);
-    const record = structuredClone(existing || { id: `${fields.idPrefix}-${crypto.randomUUID()}` });
+    // Fără `id`, o precompletare (înscrierea unui copil dintr-o vizită) pornește
+    // fișa nouă de la câmpurile deja cunoscute, ca operatorul să nu le retasteze.
+    const record = structuredClone(
+      existing || {
+        id: `${fields.idPrefix}-${crypto.randomUUID()}`,
+        ...(id === undefined ? options.prefill : undefined),
+      },
+    );
     const mode = existing ? 'update' : 'create';
     // Revizia este reținută la deschidere: salvarea se compară cu datele pe care
     // utilizatorul chiar le-a văzut, nu cu cele sosite între timp.
-    sessionState.editor = { type, record, mode, revision: sessionState.revision };
+    sessionState.editor = { type, record, mode, revision: sessionState.revision, submit: options.submit };
     const context = buildContext(mode, record);
-    editorTitle.textContent = fields.title(record, mode);
+    editorTitle.textContent = options.title ?? fields.title(record, mode);
     editorError.textContent = '';
     editorFields.innerHTML = fields.markup(record, context) + textareaFieldMarkup('notes', 'Observații', record.notes);
     fields.bind?.(editorForm, context);
@@ -78,13 +86,16 @@ export function createRecordEditorDialog({
       ),
     );
     const entry = /** @type {any} */ (sessionState.editor);
-    const { type, mode, revision, record: previousRecord } = entry;
+    const { type, mode, revision, record: previousRecord, submit } = entry;
     editorSave.disabled = true;
     try {
       const context = buildContext(mode, previousRecord);
       const record = fieldsByType[type].read(formData, editorForm, context);
       if (record === null) return; // dublură neconfirmată
-      await submitMutation('/api/record', { type, record, mode }, revision);
+      // `submit` (din openEditor(..., { submit })) înlocuiește POST-ul implicit,
+      // ex. înscrierea unui copil, care trece prin /api/visits-enrol.
+      if (submit) await submit(record);
+      else await submitMutation('/api/record', { type, record, mode }, revision);
       editor.close();
       sessionState.editor = null;
     } catch (e) {

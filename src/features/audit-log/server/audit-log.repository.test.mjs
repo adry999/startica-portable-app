@@ -83,3 +83,56 @@ test('refuză un cursor sau o acțiune invalidă', t => {
     assert.throws(() => repository.readPage({ beforeEntryId }), { status: 400 });
   assert.throws(() => repository.recordChange({ action: ' ' }), { status: 400 });
 });
+
+test('o modificare cu date medicale pe o vizită e păstrată redactată în istoric', t => {
+  const repository = createRepository(t);
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'visits',
+    recordId: 'VIZ-1',
+    before: { healthNotes: 'Alergie la nuci', name: 'Ana' },
+    after: { healthNotes: '', name: 'Ana' },
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
+  assert.ok(entry.before);
+  assert.ok(entry.after);
+  assert.equal(entry.before.healthNotes, '[date medicale]');
+  assert.equal(entry.after.healthNotes, '');
+  assert.equal(entry.before.name, 'Ana');
+});
+
+test('o modificare cu date medicale pe un copil e păstrată redactată în istoric', t => {
+  const repository = createRepository(t);
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: { healthNotes: 'Astm' },
+    after: { healthNotes: 'Astm ușor' },
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
+  assert.ok(entry.before);
+  assert.ok(entry.after);
+  assert.equal(entry.before.healthNotes, '[date medicale]');
+  assert.equal(entry.after.healthNotes, '[date medicale]');
+});
+
+test('redactarea nu atinge alte câmpuri sau alte tipuri de înregistrare', t => {
+  const repository = createRepository(t);
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'payments',
+    recordId: 'PAY-1',
+    before: { amount: 100 },
+    after: { amount: 200 },
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
+  assert.deepEqual(entry.before, { amount: 100 });
+  assert.deepEqual(entry.after, { amount: 200 });
+});

@@ -1,4 +1,4 @@
-export type RecordType = 'children' | 'payments' | 'expenses' | 'groups' | 'categories';
+export type RecordType = 'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits';
 
 /** YYYY-MM */
 export type MonthKey = string;
@@ -16,6 +16,8 @@ export interface Child {
   phone: string;
   parent2?: string;
   phone2?: string;
+  /** Sensibil (SENSITIVE_FIELDS): exclus din export, redactat în istoric, golit la 12 luni de la archivedAt. */
+  healthNotes?: string;
   birthDate?: DateKey;
   contractDate?: DateKey;
   attendanceDate?: DateKey;
@@ -90,12 +92,52 @@ export interface ExpenseCategory {
   name: string;
 }
 
+export type VisitStatus = 'Programată' | 'Efectuată' | 'Neprezentată' | 'Înscris' | 'Renunțat';
+
+export interface VisitHistoryEntry {
+  /** ISO */
+  at: string;
+  status: VisitStatus;
+  date: DateKey;
+  /** HH:MM */
+  time: string;
+}
+
+export interface Visit {
+  id: string;
+  name: string;
+  birthDate?: DateKey;
+  parent: string;
+  phone?: string;
+  parent2?: string;
+  phone2?: string;
+  date: DateKey;
+  /** HH:MM */
+  time: string;
+  status: VisitStatus;
+  /** ISO; scris de client la schimbarea statutului, de server la înscriere și la expirare. */
+  statusChangedAt: string;
+  history: VisitHistoryEntry[];
+  desiredStartDate?: DateKey;
+  desiredGroupId: string | null;
+  source?: string;
+  /** Sensibil (SENSITIVE_FIELDS): exclus din export, redactat în istoric, golit la 12 luni de la statusChangedAt. */
+  healthNotes?: string;
+  postVisitNotes?: string;
+  notes?: string;
+  /** Obligatoriu ne-gol doar când status === 'Înscris'; interzis altfel. */
+  childId: string;
+  archived?: boolean;
+  archivedAt?: string | null;
+}
+
 export interface RecordsSnapshot {
   children: Child[];
   payments: Payment[];
   expenses: Expense[];
   groups: Group[];
   categories: ExpenseCategory[];
+  visits: Visit[];
 }
 
 export interface RecordByType {
@@ -104,4 +146,5 @@ export interface RecordByType {
   expenses: Expense;
   groups: Group;
   categories: ExpenseCategory;
+  visits: Visit;
 }

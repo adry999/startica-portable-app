@@ -3,7 +3,7 @@ import type { RecordRepository, RevisionRequest, RunRevisionTransaction } from '
 import type { AuditTrail } from '#shared/contracts/audit-trail.mjs';
 
 /** Tipurile pt. care dialogul generic are un formular (grupele/categoriile au ecrane proprii). */
-export type EditableRecordType = 'children' | 'payments' | 'expenses';
+export type EditableRecordType = 'children' | 'payments' | 'expenses' | 'visits';
 
 /** Contractul HTTP existent al /api/record; se păstrează neschimbat la migrare. */
 export interface RecordSaveRequest extends RevisionRequest {
@@ -79,6 +79,18 @@ export interface RecordEditorEntry {
   record: any;
   mode: 'create' | 'update';
   revision: number;
+  /** Din `openEditor(type, id, options)`; înlocuiește POST-ul implicit către /api/record la salvare (ex. înscrierea unui copil dintr-o vizită). */
+  submit?: (record: any) => Promise<unknown>;
+}
+
+/** Al treilea argument opțional al `openEditor` — precompletare, titlu și salvare alternativă (ex. înscrierea din `visits`). */
+export interface OpenEditorOptions {
+  /** Cu `id` nelipsă, fișa nouă pornește ca `{ id: <generat>, ...prefill }` în loc de goală. */
+  prefill?: Record<string, unknown>;
+  /** Înlocuiește titlul calculat implicit de `fields.title(record, mode)`. */
+  title?: string;
+  /** Înlocuiește `/api/record` la salvare; dialogul se închide la fel, dacă promisiunea se rezolvă. */
+  submit?: (record: any) => Promise<unknown>;
 }
 
 /** Doar câmpurile din starea sesiunii pe care dialogul le citește sau le scrie. */

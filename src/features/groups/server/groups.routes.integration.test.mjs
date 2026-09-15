@@ -23,7 +23,7 @@ test('Nu se șterge grupa folosită de un copil arhivat; exportul și restaurare
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [archivedChild], payments: [], expenses: [], groups: [group], categories: [] }, 0),
+    request({ children: [archivedChild], payments: [], expenses: [], groups: [group], categories: [], visits: [] }, 0),
   );
   assert.equal(imported.status, 200, imported.body.error);
   const before = imported.body;
@@ -61,7 +61,7 @@ test('Se poate șterge o grupă fără copii atribuiți', async t => {
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [], payments: [], expenses: [], groups: [group], categories: [] }, 0),
+    request({ children: [], payments: [], expenses: [], groups: [group], categories: [], visits: [] }, 0),
   );
   assert.equal(imported.status, 200, imported.body.error);
 

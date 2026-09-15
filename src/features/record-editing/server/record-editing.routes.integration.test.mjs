@@ -39,7 +39,7 @@ test('refuză crearea cu un id deja folosit (409)', async t => {
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [child], payments: [], expenses: [], groups: [], categories: [] }, 0),
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
   );
   assert.equal(imported.status, 200, imported.body.error);
   const conflict = await app.post('/api/record', {
@@ -71,7 +71,7 @@ test('actualizează o înregistrare existentă', async t => {
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [child], payments: [], expenses: [], groups: [], categories: [] }, 0),
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
   );
   const updated = await app.post('/api/record', {
     type: 'children',
@@ -109,7 +109,7 @@ test('refuză o grupă cu nume duplicat, indiferent de literă mare/mică', asyn
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [], payments: [], expenses: [], groups: [group], categories: [] }, 0),
+    request({ children: [], payments: [], expenses: [], groups: [group], categories: [], visits: [] }, 0),
   );
   const result = await app.post('/api/record', {
     type: 'groups',
@@ -126,7 +126,7 @@ test('refuză ștergerea definitivă a unei înregistrări nearhivate', async t 
   const app = await startApplication(t);
   const imported = await app.post(
     '/api/import',
-    request({ children: [child], payments: [], expenses: [], groups: [], categories: [] }, 0),
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
   );
   const result = await app.post('/api/record-delete', {
     type: 'children',
@@ -150,7 +150,10 @@ test('refuză ștergerea definitivă a unui copil cu achitări', async t => {
   };
   const imported = await app.post(
     '/api/import',
-    request({ children: [archivedChild], payments: [payment], expenses: [], groups: [], categories: [] }, 0),
+    request(
+      { children: [archivedChild], payments: [payment], expenses: [], groups: [], categories: [], visits: [] },
+      0,
+    ),
   );
   const result = await app.post('/api/record-delete', {
     type: 'children',
@@ -162,12 +165,66 @@ test('refuză ștergerea definitivă a unui copil cu achitări', async t => {
   assert.match(result.body.error, /Șterge mai întâi achitările/);
 });
 
+test('refuză ștergerea definitivă a unui copil înscris dintr-o vizită nearhivată', async t => {
+  const app = await startApplication(t);
+  const archivedChild = { ...child, archived: true };
+  const visit = {
+    id: 'VIZ-1',
+    name: 'Ana',
+    parent: 'Maria',
+    date: '2026-09-01',
+    time: '10:00',
+    status: 'Înscris',
+    statusChangedAt: '2026-09-01T10:00:00.000Z',
+    childId: child.id,
+  };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [archivedChild], payments: [], expenses: [], groups: [], categories: [], visits: [visit] }, 0),
+  );
+  const result = await app.post('/api/record-delete', {
+    type: 'children',
+    id: child.id,
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /Arhivează mai întâi vizita/);
+});
+
+test('permite ștergerea unui copil dintr-o vizită arhivată', async t => {
+  const app = await startApplication(t);
+  const archivedChild = { ...child, archived: true };
+  const visit = {
+    id: 'VIZ-1',
+    name: 'Ana',
+    parent: 'Maria',
+    date: '2026-09-01',
+    time: '10:00',
+    status: 'Înscris',
+    statusChangedAt: '2026-09-01T10:00:00.000Z',
+    childId: child.id,
+    archived: true,
+  };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [archivedChild], payments: [], expenses: [], groups: [], categories: [], visits: [visit] }, 0),
+  );
+  const result = await app.post('/api/record-delete', {
+    type: 'children',
+    id: child.id,
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 200, result.body.error);
+});
+
 test('șterge definitiv o înregistrare arhivată, cu backup înainte', async t => {
   const app = await startApplication(t);
   const archivedChild = { ...child, archived: true };
   const imported = await app.post(
     '/api/import',
-    request({ children: [archivedChild], payments: [], expenses: [], groups: [], categories: [] }, 0),
+    request({ children: [archivedChild], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
   );
   const deleted = await app.post('/api/record-delete', {
     type: 'children',

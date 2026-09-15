@@ -65,7 +65,7 @@ test('Backupul automat este rărit; cel dinaintea unui import rămâne obligator
   assert.equal(automatic(), 1, 'Numărul de backupuri automate nu crește cu numărul de salvări.');
 
   const imported = await app.post('/api/import', {
-    state: { children: [CHILD], payments: [], expenses: [], groups: [], categories: [] },
+    state: { children: [CHILD], payments: [], expenses: [], groups: [], categories: [], visits: [] },
     confirm: 'IMPORT',
     revision,
     requestId: randomUUID(),

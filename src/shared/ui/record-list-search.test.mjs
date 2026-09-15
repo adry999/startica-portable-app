@@ -53,7 +53,7 @@ function baseGroup(overrides = {}) {
  * @returns {import('#shared/contracts/record-types.mjs').RecordsSnapshot}
  */
 function baseRecords(overrides = {}) {
-  return { children: [], payments: [], expenses: [], groups: [], categories: [], ...overrides };
+  return { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [], ...overrides };
 }
 
 test('un termen gol se potrivește mereu', () => {

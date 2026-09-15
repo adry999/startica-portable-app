@@ -1,4 +1,10 @@
-import { emptyState, normalizeRecord, CHILD_STATUSES, TYPES } from '#shared/domain/record-schema.mjs';
+import {
+  emptyState,
+  normalizeRecord,
+  CHILD_STATUSES,
+  TYPES,
+  stripSensitiveFields,
+} from '#shared/domain/record-schema.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { cents } from '#shared/domain/money.mjs';
@@ -278,13 +284,14 @@ export function exportWorkbook(records, XLSX) {
       ['STARTICA_EXPORT_2'],
       ['Creat', today()],
       ['Reimportul folosește fila Startica_Date, care păstrează toate câmpurile.'],
+      ['Datele medicale (vizite, copii) nu sunt exportate; un reimport le lasă goale.'],
     ]),
     'Startica_Format',
   );
   const raw = [['Tip', 'ID', 'Fragment', 'Date complete']];
   for (const type of TYPES)
     for (const r of records[type]) {
-      const json = JSON.stringify(r);
+      const json = JSON.stringify(stripSensitiveFields(type, r));
       for (let i = 0; i < json.length; i += 16000) raw.push([type, r.id, i / 16000, json.slice(i, i + 16000)]);
     }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raw), 'Startica_Date');

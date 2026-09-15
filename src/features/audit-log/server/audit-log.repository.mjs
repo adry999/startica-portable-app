@@ -1,4 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { redactSensitiveFields } from '#shared/domain/record-schema.mjs';
 
 export const AUDIT_PAGE_SIZE = 100;
 
@@ -34,7 +35,16 @@ export function createAuditLogRepository(database) {
     occurredAt = new Date(),
   }) {
     if (typeof action !== 'string' || !action.trim()) fail('Acțiunea din istoric lipsește.');
-    insertChange.run(occurredAt.toISOString(), action, recordType, recordId, serialize(before), serialize(after));
+    // Un singur punct de redactare, ca să acopere orice cale de scriere (editare,
+    // înscriere, restaurare, import); recordType null (intrări de configurare) nu are câmpuri sensibile.
+    insertChange.run(
+      occurredAt.toISOString(),
+      action,
+      recordType,
+      recordId,
+      serialize(redactSensitiveFields(recordType, before)),
+      serialize(redactSensitiveFields(recordType, after)),
+    );
   }
 
   /**

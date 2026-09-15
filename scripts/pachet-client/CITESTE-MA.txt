@@ -125,6 +125,72 @@ DACĂ NU PORNEȘTE
 3. Dacă aplicația nu pornește deloc, trimite folderul Jurnale din
    %LOCALAPPDATA%\Startica\Jurnale persoanei care oferă suport.
 
+VIZITE
+
+Modulul Vizite te ajută să ții evidența familiilor care vin la o vizită de
+cunoaștere înainte de a-și înscrie copilul. Funcția este activă din versiunea
+1.5.0.
+
+Ce poți face:
+1. Adaugi o vizită: în navigare, alege „Vizite", apasă „Adaugă vizită" și
+   completează: numele copilului, contactul părintelui (și al celui de-al
+   doilea, dacă e cazul), data și ora dorită a vizitei. Opțional, poți nota
+   data de start dorită, grupa dorită și cum a aflat familia de grădiniță
+   (sursa). Statutul inițial e „Programată".
+
+2. Urmărești calendarul: pe ecranul Vizite vezi calendarul lunar cu orele și
+   numele copiilor. Sub calendar, patru numere arată vizite din ultimele
+   12 luni: programate (pentru viitor), efectuate, înscriși (copii înscriși
+   după vizită) și renunțat.
+
+3. Schimbi statutul după ce se întâmplă vizita: din lista de vizite, apasă
+   butonul corespunzător: „Efectuată" (vizita a avut loc), „Neprezentată"
+   (familia nu a venit), sau „Renunțat" (familia a abandonat ideea). După ce
+   marcezi o vizită „Efectuată", apare butonul „Înscrie copilul".
+
+4. Reprogramezi o vizită: dacă se schimbă data sau ora unei vizite existente,
+   modifică-o în editorul vizitei — statutul revine automat la „Programată",
+   se adaugă modificarea în istoricul vizitei. Vizita rămâne o singură
+   înregistrare; nu se creează o vizită nouă.
+
+5. Înscrii copilul din vizită: după ce marcezi vizita „Efectuată", apasă
+   „Înscrie copilul". Se deschide formularul de înscris copil, precompletat
+   cu: numele, data nașterii (dacă ai notat-o), părinții și contactele,
+   grupa și data dorită din vizită. Completezi restul (de exemplu, starea
+   sănătății), salvezi, și copilul apare în lista Copii; vizita devine
+   „Înscris".
+
+Date medicale și alergii:
+
+Pe fiecare vizită și pe fișa copilului (după înscris) poți nota date medicale
+— alergii, nevoi speciale de îngrijire. Aceste note sunt sensibile:
+
+- Nu apar niciodată în exportul Excel și nici în Istoric (care arată
+  modificările făcute).
+
+- Se șterg automat la 12 luni de la ultima schimbare de statut al vizitei
+  (pentru vizite) sau la 12 luni de la arhivarea fișei copilului (pentru copii
+  care au plecat). Dacă deschizi o vizită veche și o modifici din nou, timer-ul
+  de 12 luni reîncep.
+
+- Important: datele medicale rămân în clar (necriptate) în baza locală de pe
+  calculator și în copiile din folderul Google Drive. Sunt păstrate la fel ca
+  orice alte date din aplicație. Verifică cu persoana responsabilă pentru
+  protecția datelor din grădiniță cum trebuie să funcționeze consimțământul și
+  retenția acestor informații sensibile.
+
+Reminders (amintiri):
+
+- Pe ecranul Panou (Dashboard), apare un card „Vizite azi/mâine" cu vizitele
+  programate pentru ziua de azi și de mâine.
+
+- Din ecranul Vizite, puteți activa notificări Windows: butonul
+  „Activează notificările" apare dacă browserul nu are încă permisiune.
+  La clic, se cere permisiune (o singură dată); odată acordată, Windows te
+  anunță de vizitele care vor avea loc în următoarele 30 de minute, cât
+  aplicația e deschisă. Notificările nu funcționează dacă fereastra e
+  închisă sau dacă sunt dezactivate în setările Windows.
+
 DEZINSTALARE
 Din Panoul de control → Aplicații, sau din meniul Start → clic dreapta
 pe Startica → Dezinstalează. Evidența rămâne în %LOCALAPPDATA%\Startica.
