@@ -23,6 +23,7 @@ import { createVisitsService, createVisitsRoutes } from '#features/visits/index.
 import { createChildrenRoutes } from '#features/children/index.server.mjs';
 import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
+import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 
@@ -39,6 +40,7 @@ const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
  *   logFile?: string,
  *   autoBackupIntervalMs?: number,
  *   allowShutdown?: boolean,
+ *   fetch?: typeof fetch,
  * }} [options]
  */
 export function createApplication(options = {}) {
@@ -138,6 +140,11 @@ export function createApplication(options = {}) {
       replaceAllRecords,
       dataDirectory: dataDir,
       backupDirectory: backupDir,
+    }),
+    ...createTelegramRoutes({
+      dataDirectory: dataDir,
+      telegramService: createTelegramService({ fetch: options.fetch ?? globalThis.fetch }),
+      auditTrail: auditLogRepository,
     }),
   ];
 
