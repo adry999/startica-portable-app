@@ -35,7 +35,12 @@ export function createExcelTransferController({
       // Serverul revalidează; avertizările locale despre sursă se păstrează.
       if (!parsed.errors.length) {
         const checked = await requestJson('/api/import-preview', { state: parsed.state });
-        report = { ...checked, warnings: [...parsed.warnings] };
+        // Serverul revalidează pe o stare deja adusă la zi local, deci notele lui sunt de regulă goale.
+        report = {
+          ...checked,
+          warnings: [...parsed.warnings],
+          notes: [...(parsed.notes || []), ...(checked.notes || [])],
+        };
       }
       sessionState.importData = report.errors.length ? null : { state: report.state, revision: sessionState.revision };
       importConfirm.value = '';
@@ -44,6 +49,9 @@ export function createExcelTransferController({
       importPreview.innerHTML =
         `<p>${escapeHtml(file.name)}</p>` +
         `<p class="notice">Datele curente (${records.children.length} copii, ${records.payments.length} plăți, ${records.expenses.length} cheltuieli) vor fi înlocuite după backup.</p>` +
+        (report.notes || [])
+          .map(/** @param {string} note */ note => `<p class="notice">${escapeHtml(note)}</p>`)
+          .join('') +
         (report.summary ? recordsSummaryMarkup(report.summary) : '') +
         report.errors.map(/** @param {string} error */ error => `<p class="danger">${escapeHtml(error)}</p>`).join('') +
         `<details open><summary>${report.warnings.length} avertizări</summary>${report.warnings.map(/** @param {{ id?: string, reason: string }} warning */ warning => `<p>${escapeHtml(warning.id || '')} ${escapeHtml(warning.reason)}</p>`).join('')}</details>`;

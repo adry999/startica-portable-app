@@ -1,7 +1,7 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { validateState } from '#shared/domain/record-schema.mjs';
 import { summary } from '#shared/domain/records-report.mjs';
-import { readBackupSnapshot } from './backup-snapshot.mjs';
+import { readBackupSnapshotDetails } from './backup-snapshot.mjs';
 import { assertUsableExternalFolder } from './external-backup-folder.mjs';
 
 /** @typedef {import('../backup.types.mjs').BackupRoutesDependencies} BackupRoutesDependencies */
@@ -38,8 +38,10 @@ export function createBackupRoutes({
       path: '/api/backup-preview',
       /** @param {{ url: URL }} request */
       handle: ({ url }) => {
-        const snapshot = readBackupSnapshot(backupService.resolveBackupFile(url.searchParams.get('name')));
-        return { ...summary(snapshot), errors: previewErrors(snapshot) };
+        const { snapshot, notes } = readBackupSnapshotDetails(
+          backupService.resolveBackupFile(url.searchParams.get('name')),
+        );
+        return { ...summary(snapshot), errors: previewErrors(snapshot), notes };
       },
     },
     {
@@ -53,9 +55,10 @@ export function createBackupRoutes({
       /** @param {{ body: any }} request */
       handle: ({ body }) => {
         if (body.confirm !== RESTORE_CONFIRMATION) fail('Confirmă restaurarea.');
-        const snapshot = validateState(readBackupSnapshot(backupService.resolveBackupFile(body.name)));
+        const { snapshot } = readBackupSnapshotDetails(backupService.resolveBackupFile(body.name));
+        const state = validateState(snapshot);
         return runRevisionTransaction(body, { action: 'restaurare', backupBefore: true }, () =>
-          replaceAllRecords(snapshot, 'restaurare'),
+          replaceAllRecords(state, 'restaurare'),
         );
       },
     },

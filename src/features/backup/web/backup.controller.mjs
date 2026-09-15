@@ -41,6 +41,9 @@ export function createBackupController({
     restoreData = { name, revision: sessionState.revision };
     restorePreview.innerHTML =
       recordsSummaryMarkup(preview) +
+      (preview.notes || [])
+        .map(/** @param {string} note */ note => `<p class="notice">${escapeHtml(note)}</p>`)
+        .join('') +
       preview.errors.map(/** @param {string} error */ error => `<p class="danger">${escapeHtml(error)}</p>`).join('');
     commitRestore.disabled = !!preview.errors.length;
   }
