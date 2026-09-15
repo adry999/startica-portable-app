@@ -22,7 +22,7 @@ const STATUS_COLUMNS = {
 function statusRowMarkup({ child, obligation }) {
   return (
     `<tr><td>${escapeHtml(contractNumberOf(child))}</td><td>${escapeHtml(child.name)}${child.archived ? ' (arhivat)' : ''}</td>` +
-    `<td>${formatMoney(obligation.expected)}</td><td>${formatMoney(obligation.paid)}</td><td>${formatMoney(obligation.rest)}</td><td>${formatMoney(obligation.credit)}</td>` +
+    `<td class="amount">${formatMoney(obligation.expected)}</td><td class="amount">${formatMoney(obligation.paid)}</td><td class="amount">${formatMoney(obligation.rest)}</td><td class="amount">${formatMoney(obligation.credit)}</td>` +
     `<td>${formatDate(obligation.due)}</td><td>${escapeHtml(obligation.label)}</td></tr>`
   );
 }

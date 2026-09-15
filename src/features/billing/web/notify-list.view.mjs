@@ -99,7 +99,7 @@ export function createNotifyListView({
             `<tr class="${obligation.daysToDue < 0 ? 'late-row' : ''}"><td>${escapeHtml(contractNumberOf(child))}</td>` +
             `<td>${recordActionButton('profile', 'children', child.id, child.name)}</td><td>${formatParentContacts(child)}</td>` +
             `<td>${escapeHtml(groupNameOf(child.groupId, groups) || '—')}</td><td>${formatDate(obligation.due)}</td><td>${escapeHtml(termLabel(obligation.daysToDue))}</td>` +
-            `<td>${formatMoney(obligation.expected)}</td><td>${formatMoney(obligation.paid)}</td><td><strong>${formatMoney(obligation.rest)}</strong></td>` +
+            `<td class="amount">${formatMoney(obligation.expected)}</td><td class="amount">${formatMoney(obligation.paid)}</td><td class="amount"><strong>${formatMoney(obligation.rest)}</strong></td>` +
             `<td>${escapeHtml(obligation.label)}${hint}</td>` +
             `<td><button type="button" class="action-btn" data-action="copy-message" data-message="${escapeHtml(messages[index])}">Copiază</button></td></tr>`
           );

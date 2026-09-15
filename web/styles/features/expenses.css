@@ -47,3 +47,15 @@
   border-radius: 99px;
   background: #fff;
 }
+#expenses table th:nth-child(5),
+#expenses table td:nth-child(5) {
+  text-align: right;
+  white-space: nowrap;
+}
+@media (max-width: 1050px) {
+  /* Indicii urmează ordinea din HEADINGS (expenses-list.view.mjs); descrierea e goală la toate cheltuielile reale */
+  #expenses table th:nth-child(4),
+  #expenses table td:nth-child(4) {
+    display: none;
+  }
+}
