@@ -6,6 +6,7 @@ import type { RunRevisionTransaction } from '#shared/contracts/persistence.mjs';
 export interface BackupFileEntry {
   name: string;
   modified: string;
+  bytes: number;
 }
 
 export interface BackupFolderSummary {
@@ -45,6 +46,7 @@ export interface BackupServiceDependencies {
   database: DatabaseSync;
   databaseFile: string;
   backupDirectory: string;
+  dataDirectory: string;
   readSetting: (key: string) => string;
   writeSetting: (key: string, value: string) => void;
   autoBackupIntervalMs: number;
@@ -57,6 +59,8 @@ export interface BackupService {
   health(): BackupHealth;
   listBackups(): BackupFileEntry[];
   resolveBackupFile(name: unknown): string;
+  listExternalBackups(dir: string): BackupFileEntry[];
+  resolveExternalBackupFile(dir: string, name: unknown): string;
   cancelScheduledBackup(): void;
 }
 
@@ -76,6 +80,10 @@ export interface BackupControllerDependencies {
     backupButton: HTMLButtonElement;
     restoreButton: HTMLButtonElement;
     restoreDialog: HTMLDialogElement;
+    restoreSource: HTMLFieldSetElement;
+    restoreExternal: HTMLElement;
+    restoreFolder: HTMLInputElement;
+    restoreFolderLoad: HTMLButtonElement;
     backupSelect: HTMLSelectElement;
     restoreConfirm: HTMLInputElement;
     restorePreview: HTMLElement;
