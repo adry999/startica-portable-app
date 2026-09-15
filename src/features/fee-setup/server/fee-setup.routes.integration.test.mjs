@@ -25,7 +25,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
     }),
   );
   let response = await app.post('/api/import', {
-    state: { children, payments: [], expenses: [], groups: [], categories: [] },
+    state: { children, payments: [], expenses: [], groups: [], categories: [], visits: [] },
     confirm: 'IMPORT',
     revision: 0,
     requestId: randomUUID(),
