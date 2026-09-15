@@ -1,6 +1,7 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { confirmOnSecondClick } from '#shared/ui/confirm-twice-button.mjs';
 import { listExpenseCategoryNames } from '../domain/expense-category-names.mjs';
+import { canonicalCategoryName } from '../domain/canonical-category-name.mjs';
 
 /** @typedef {import('../expenses.types.mjs').ExpenseCategoriesControllerDependencies} ExpenseCategoriesControllerDependencies */
 
@@ -39,9 +40,15 @@ export function createExpenseCategoriesController({
 
   createForm.onsubmit = async event => {
     event.preventDefault();
-    const name = nameInput.value.trim();
+    const records = readRecords();
+    const name = canonicalCategoryName(nameInput.value, records);
     if (!name) {
       showNotice('Completează numele categoriei.', true);
+      return;
+    }
+    // Fără diacritice sau cu altă capitalizare, tot categoria de azi e — nu una nouă.
+    if (records.categories.some(category => category.name === name)) {
+      showNotice('Categoria există deja.', true);
       return;
     }
     try {

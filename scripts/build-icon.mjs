@@ -1,6 +1,6 @@
-// Regenereaza web/assets/startica.ico din web/assets/startica-icon.svg: Chrome headless
-// rasterizeaza fiecare cadru exact la marimea lui (fara scalare ulterioara de Windows la
-// afisare in taskbar), apoi cadrele PNG sunt impachetate manual intr-un .ico. Fara dependente.
+// Regenerează web/assets/startica.ico din web/assets/startica-icon.svg: Chrome headless
+// rasterizează fiecare cadru exact la mărimea lui (fără scalare ulterioară de Windows la
+// afișare în taskbar), apoi cadrele PNG sunt împachetate manual într-un .ico. Fără dependențe.
 // Rulare: node scripts/build-icon.mjs
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
@@ -11,8 +11,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const SVG_PATH = join(ROOT, 'web/assets/startica-icon.svg');
 const OUTPUT_PATH = join(ROOT, 'web/assets/startica.ico');
-// 20/24/40 acopera scalarile intermediare din taskbar/Explorer (100%-200% DPI); Windows nu
-// mai are ce sa interpoleze intre cadre invecinate.
+// 20/24/40 acoperă scalările intermediare din taskbar/Explorer (100%-200% DPI); Windows nu
+// mai are ce să interpoleze între cadre învecinate.
 const SIZES = [16, 20, 24, 32, 40, 48, 256];
 
 const CHROME_CANDIDATES = [
@@ -25,7 +25,7 @@ function findChrome() {
   for (const candidate of CHROME_CANDIDATES) {
     if (candidate && existsSync(candidate)) return candidate;
   }
-  throw new Error('Chrome nu a fost gasit la caile stiute; regenereaza iconul de pe o masina cu Chrome instalat.');
+  throw new Error('Chrome nu a fost găsit la căile știute; regenerează iconul de pe o mașină cu Chrome instalat.');
 }
 
 /** @param {string} chromePath @param {string} svgMarkup @param {number} size @param {string} workDir */
@@ -54,7 +54,7 @@ function rasterize(chromePath, svgMarkup, size, workDir) {
   return readFileSync(pngPath);
 }
 
-/** @param {Buffer} png IHDR incepe la octetul 16: latime, inaltime (4+4, big-endian), apoi color type. */
+/** @param {Buffer} png IHDR începe la octetul 16: lățime, înălțime (4+4, big-endian), apoi color type. */
 function readPngHeader(png) {
   return {
     width: png.readUInt32BE(16),
@@ -74,13 +74,13 @@ function buildIco(frames) {
   const entries = [];
   for (const { size, png } of frames) {
     const entry = Buffer.alloc(16);
-    const byteSize = size === 256 ? 0 : size; // 0 = 256, singura valoare reprezentabila pe un octet
+    const byteSize = size === 256 ? 0 : size; // 0 = 256, singura valoare reprezentabilă pe un octet
     entry.writeUInt8(byteSize, 0);
     entry.writeUInt8(byteSize, 1);
-    entry.writeUInt8(0, 2); // fara paleta
+    entry.writeUInt8(0, 2); // fără paletă
     entry.writeUInt8(0, 3); // rezervat
     entry.writeUInt16LE(1, 4); // plane-uri de culoare
-    entry.writeUInt16LE(32, 6); // biti per pixel (RGBA)
+    entry.writeUInt16LE(32, 6); // biți per pixel (RGBA)
     entry.writeUInt32LE(png.length, 8);
     entry.writeUInt32LE(offset, 12);
     offset += png.length;
@@ -98,16 +98,16 @@ function main() {
       const png = rasterize(chromePath, svgMarkup, size, workDir);
       const { width, height, colorType } = readPngHeader(png);
       if (width !== size || height !== size)
-        throw new Error(`Cadrul ${size}px a iesit ${width}x${height}, nu ${size}x${size}.`);
-      // colorType 6 = RGBA, 4 = gri+alfa; oricare confirma ca fundalul a ramas transparent.
+        throw new Error(`Cadrul ${size}px a ieșit ${width}x${height}, nu ${size}x${size}.`);
+      // colorType 6 = RGBA, 4 = gri+alfa; oricare confirmă că fundalul a rămas transparent.
       if (colorType !== 6 && colorType !== 4)
         throw new Error(`Cadrul ${size}px nu are canal alfa (colorType=${colorType}).`);
-      console.log(`Cadru ${size}px: ${width}x${height}, colorType=${colorType}, ${png.length} octeti`);
+      console.log(`Cadru ${size}px: ${width}x${height}, colorType=${colorType}, ${png.length} octeți`);
       return { size, png };
     });
     const ico = buildIco(frames);
     writeFileSync(OUTPUT_PATH, ico);
-    console.log(`Scris ${OUTPUT_PATH} (${ico.length} octeti, ${frames.length} cadre)`);
+    console.log(`Scris ${OUTPUT_PATH} (${ico.length} octeți, ${frames.length} cadre)`);
   } finally {
     rmSync(workDir, { recursive: true, force: true });
   }

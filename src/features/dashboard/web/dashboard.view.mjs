@@ -122,16 +122,18 @@ export function createDashboardView({
     const toNotify = evaluations.filter(r => r.obligation.notify).length;
     const unassigned = records.payments.filter(p => !p.archived && !p.childId).length;
     const attentionItems = [
-      // Fără taxă, „0 de notificat” ar ascunde copiii necalculați în loc să confirme că sunt la zi.
+      // Numărul rămâne toNotify chiar cu copii fără taxă, ca „0 de notificat” să confirme
+      // că sunt la zi în loc să dispară sub un card fals „nicio acțiune”.
       missingFeeCount > 0
         ? {
-            count: missingFeeCount,
+            count: toNotify,
             icon: '!',
             title: 'Achitări de urmărit',
-            detail: `Nu se pot calcula: ${missingFeeCount} ${missingFeeCount === 1 ? 'copil' : 'copii'} fără taxă. Completează în Taxe și grupe →`,
-            action: 'Completează',
-            view: 'fees',
+            detail: `${toNotify} de notificat · ${missingFeeCount} fără taxă (nu se pot calcula)`,
+            action: toNotify === 0 ? 'Completează' : 'Vezi lista',
+            view: toNotify === 0 ? 'fees' : 'notify',
             tone: 'urgent',
+            forceShow: true,
           }
         : {
             count: toNotify,
@@ -141,6 +143,7 @@ export function createDashboardView({
             action: 'Vezi lista',
             view: 'notify',
             tone: 'urgent',
+            forceShow: false,
           },
       {
         count: review.items.length,
@@ -153,6 +156,7 @@ export function createDashboardView({
         action: 'Verifică',
         view: 'review',
         tone: 'review',
+        forceShow: false,
       },
       {
         count: unassigned,
@@ -165,9 +169,10 @@ export function createDashboardView({
         action: 'Asociază',
         view: 'assign',
         tone: 'assign',
+        forceShow: false,
       },
     ];
-    const allClear = attentionItems.every(item => item.count === 0);
+    const allClear = attentionItems.every(item => item.count === 0 && !item.forceShow);
     alerts.innerHTML = allClear
       ? '<div class="attention-empty"><strong>Nicio acțiune în listele urmărite.</strong>' +
         (records.children.length || records.payments.length
@@ -176,7 +181,7 @@ export function createDashboardView({
         '</div>'
       : attentionItems
           .map(item => {
-            const clear = item.count === 0;
+            const clear = item.count === 0 && !item.forceShow;
             const detail = clear ? 'Nicio acțiune necesară pe această listă.' : item.detail;
             return `<article class="alert alert-${item.tone}${clear ? ' alert-clear' : ''}"><span class="alert-count">${item.count}</span><i aria-hidden="true">${item.icon}</i><div><strong>${item.title}</strong><small>${detail}</small></div><button class="alert-action" data-view="${item.view}">${clear ? 'Vezi lista' : item.action}<span aria-hidden="true">→</span></button></article>`;
           })

@@ -55,17 +55,34 @@ Reguli de siguranță (copiile nu sunt criptate):
   azi.
 
 DACĂ SE STRICĂ SAU SE PIERDE CALCULATORUL
+
+Mai întâi: dacă vechiul calculator încă merge, închide Startica pe el sau
+dezinstaleaz-o. Două calculatoare care scriu în același folder Drive și-ar
+șterge reciproc copiile.
+
+Restaurare pe un PC nou:
+
 1. Pe calculatorul nou instalează Startica (Startica_Setup_x.y.z.exe)
    și Google Drive for desktop cu contul grădiniței.
-2. Așteaptă sincronizarea folderului Startica-backup.
-3. La prima pornire a Startica alege „evidență goală".
-4. Copiază cel mai nou fișier startica_….db din folderul Drive în
-   %LOCALAPPDATA%\Startica\Startica_Backup.
-5. În Startica: Backup și setări → Restaurare → alege fișierul →
-   verifică previzualizarea (număr de copii, plăți, cheltuieli) →
-   confirmă.
-6. Apoi setează din nou folderul extern (restaurarea nu aduce setările
-   și nici istoricul modificărilor).
+2. Așteaptă ca Google Drive să sincronizeze folderul de backup (fișierele
+   au bifa verde).
+3. La prima pornire: la întrebarea „Nu am găsit nicio evidență Startica
+   veche. Alegi folderul manual?" răspunde Nu (No). Sau dacă se găsesc
+   date vechi: „Am găsit evidența Startica în: …" → Nu, apoi
+   „Pornesc cu o evidență goală?" → Da (Yes).
+4. Deschide Backup și setări → Restaurare → Din folderul extern.
+5. Lipește calea completă a folderului tău de backup din Google Drive
+   (de exemplu: G:\My Drive\Startica-backup).
+6. Apasă Caută copii.
+7. Alege copia marcată „cea mai recentă".
+8. Verifică previzualizarea: numerele de copii și plăți trebuie să se
+   potrivească cu datele tale.
+9. Scrie RESTAUREAZA în câmpul de confirmare.
+10. Apasă Restaurează.
+
+Folderul extern se setează automat pentru viitoarele copii. Restaurarea
+aduce fișele, achitările și cheltuielile; istoricul modificărilor nu se
+restaurează.
 
 DACĂ NU PORNEȘTE
 1. Verifică existența Google Chrome sau Microsoft Edge pe calculator.

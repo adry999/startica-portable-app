@@ -2,7 +2,17 @@
 // Isolated headless Chrome test; never uses the user's Chrome profile or production DB.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  statSync,
+  copyFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createApplication } from '../startica_server.mjs';
@@ -461,6 +471,16 @@ try {
       ),
     'Assign queue did not refresh',
   );
+  // La 6 coloane, tabelul gol nu depășește 1024 px de la sine; se forțează lățimea ca regresia (celula centrată iese din tabelul derulat) să fie verificabilă.
+  await viewport(1024);
+  assert.equal(
+    await evaluate(
+      "(()=>{const table=document.querySelector('#assignTable').parentElement;const prev=table.style.minWidth;table.style.minWidth='2000px';const cell=document.querySelector('#assignTable .empty');const range=document.createRange();range.selectNodeContents(cell);const ok=[...range.getClientRects()].every(r=>r.left>=0&&r.right<=innerWidth);table.style.minWidth=prev;return ok;})()",
+    ),
+    true,
+  );
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#statusHead th.amount')).textAlign"), 'right');
+  await viewport(1440);
   // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
   const summaryFixture = await evaluate(`(async()=>{
     const {sessionState:session,eventBus}=await import('/src/app/web/app-session.mjs');
@@ -604,6 +624,67 @@ try {
   );
   await viewport(1440);
 
+  // A2/§6: restaurare din folderul extern — copiază cel mai recent backup local, ca o descărcare Drive deja terminată.
+  const externalDir = join(dir, 'extern');
+  mkdirSync(externalDir, { recursive: true });
+  const localBackupsDir = join(dir, 'backups');
+  const backupNamePattern = /^startica_[\p{L}\p{N}_. -]+\.db$/u;
+  const newestLocalBackup = readdirSync(localBackupsDir)
+    .filter(name => backupNamePattern.test(name))
+    .map(name => ({ name, mtimeMs: statSync(join(localBackupsDir, name)).mtimeMs }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].name;
+  copyFileSync(join(localBackupsDir, newestLocalBackup), join(externalDir, newestLocalBackup));
+  const childrenBeforeExternalRestore = (await (await fetch(url + '/api/state')).json()).state.children.length;
+
+  await evaluate(
+    "document.querySelector('[data-view=settings]').click();document.getElementById('restoreButton').click()",
+  );
+  await until(() => evaluate("document.getElementById('restoreDialog').open"), 'Restore dialog did not open');
+  await evaluate("document.querySelector('#restoreSource input[value=extern]').click()");
+  assert.equal(await evaluate("document.getElementById('restoreExternal').hidden"), false);
+  await evaluate(
+    `document.getElementById('restoreFolder').value=${JSON.stringify(externalDir)};document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}))`,
+  );
+  await evaluate("document.getElementById('restoreFolderLoad').click()");
+  await until(
+    () => evaluate("document.getElementById('backupSelect').options.length>0"),
+    'External backup list did not load',
+  );
+  assert.match(
+    await evaluate("document.getElementById('backupSelect').textContent"),
+    /cea mai recentă/,
+    'Newest external backup missing the "cea mai recentă" suffix',
+  );
+  assert.equal(
+    await evaluate(
+      "(()=>{const select=document.getElementById('backupSelect').getBoundingClientRect();const modal=document.querySelector('#restoreDialog .modal').getBoundingClientRect();return select.right<=modal.right+1;})()",
+    ),
+    true,
+    'Backup select overflows the restore dialog',
+  );
+  await until(() => evaluate("!document.getElementById('commitRestore').disabled"), 'External restore preview failed');
+  const externalPreviewText = await evaluate("document.getElementById('restorePreview').textContent");
+  assert.match(externalPreviewText, /\d+ copii/, externalPreviewText);
+  assert.match(externalPreviewText, /Total achitări/, externalPreviewText);
+  await evaluate(
+    "document.getElementById('restoreConfirm').value='RESTAUREAZA';document.getElementById('restoreConfirm').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('commitRestore').click()",
+  );
+  await until(() => evaluate("!document.getElementById('restoreDialog').open"), 'External restore failed');
+  await until(
+    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
+    'External restore must show saved status',
+  );
+  assert.equal(
+    (await (await fetch(url + '/api/state')).json()).state.children.length,
+    childrenBeforeExternalRestore,
+    'Children count changed after restoring from the external folder',
+  );
+  assert.equal(
+    (await (await fetch(url + '/api/health')).json()).externalDir,
+    externalDir,
+    'externalDir was not configured from the folder used to restore',
+  );
+
   // §4.7: fiecare ecran din navigare trebuie să devină activ, fără excepții/erori de consolă noi și fără scroll orizontal.
   const screenViews = await evaluate("[...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)");
   assert.equal(screenViews.length, 12);
@@ -631,7 +712,7 @@ try {
   await screenshot('dashboard-desktop-populated');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, audit; all 12 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
+    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, restore from external folder, audit; all 12 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
   );
 } catch (error) {
   console.error(error);

@@ -24,7 +24,9 @@ function createHarness(t, { autoBackupIntervalMs = 0 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'startica-backup-service-'));
   const databaseFile = join(dir, 'startica.db');
   const backupDirectory = join(dir, 'backups');
+  const dataDirectory = join(dir, 'data');
   mkdirSync(backupDirectory);
+  mkdirSync(dataDirectory);
   const database = new DatabaseSync(databaseFile);
   applySchema(database);
   /** @type {Map<string, string>} */
@@ -35,6 +37,7 @@ function createHarness(t, { autoBackupIntervalMs = 0 } = {}) {
     database,
     databaseFile,
     backupDirectory,
+    dataDirectory,
     readSetting,
     writeSetting,
     autoBackupIntervalMs,
@@ -43,7 +46,7 @@ function createHarness(t, { autoBackupIntervalMs = 0 } = {}) {
   t.after(() => service.cancelScheduledBackup());
   t.after(() => database.close());
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  return { dir, database, backupDirectory, service, readSetting, writeSetting };
+  return { dir, database, backupDirectory, dataDirectory, service, readSetting, writeSetting };
 }
 
 test('backup() produce un fișier valid, recitibil ca stare', t => {
@@ -100,6 +103,21 @@ test('resolveBackupFile respinge un nume cu separator de cale', t => {
   assert.throws(() => service.resolveBackupFile('sub/startica_x.db'));
 });
 
+test('resolveExternalBackupFile respinge folderul relativ, folderul inexistent, numele cu cale sau în afara formatului și fișierul lipsă', t => {
+  const { service, dir } = createHarness(t);
+  const external = join(dir, 'extern');
+  mkdirSync(external);
+  const name = 'startica_2026-01-01T00-00-00-000Z_manual_aaaaaaaa.db';
+  writeFileSync(join(external, name), 'continut');
+
+  assert.throws(() => service.resolveExternalBackupFile('extern-relativ', name));
+  assert.throws(() => service.resolveExternalBackupFile(join(dir, 'nu-exista'), name));
+  assert.throws(() => service.resolveExternalBackupFile(external, '..\\startica_x.db'));
+  assert.throws(() => service.resolveExternalBackupFile(external, 'nume-invalid.db'));
+  assert.throws(() => service.resolveExternalBackupFile(external, 'startica_lipsa_manual_bbbbbbbb.db'));
+  assert.equal(service.resolveExternalBackupFile(external, name), join(external, name));
+});
+
 // Fișiere fictive .db (fără schema reală) doar pentru fileList()/selectBackupsToKeep(),
 // care lucrează pe nume și mtime, nu pe conținut.
 function writeFakeBackup(dir, mtimeMs, index, content = 'continut fictiv') {
@@ -109,6 +127,26 @@ function writeFakeBackup(dir, mtimeMs, index, content = 'continut fictiv') {
   utimesSync(file, new Date(mtimeMs), new Date(mtimeMs));
   return { file, name };
 }
+
+test('listExternalBackups ignoră fișierele .tmp și cele străine, întoarce cele mai noi primele cu bytes', t => {
+  const { service, dir } = createHarness(t);
+  const external = join(dir, 'extern');
+  mkdirSync(external);
+  const now = Date.now();
+  const older = writeFakeBackup(external, now - 2000, 0, 'a'.repeat(10));
+  const newer = writeFakeBackup(external, now - 1000, 1, 'b'.repeat(20));
+  writeFileSync(join(external, older.name + '.tmp'), 'partial');
+  writeFileSync(join(external, 'notite.txt'), 'strain');
+
+  const backups = service.listExternalBackups(external);
+
+  assert.deepEqual(
+    backups.map(entry => entry.name),
+    [newer.name, older.name],
+  );
+  assert.equal(backups[0].bytes, 20);
+  assert.equal(backups[1].bytes, 10);
+});
 
 test('copia externă urmează aceeași retenție ca cea locală', t => {
   const { service, dir, writeSetting } = createHarness(t);

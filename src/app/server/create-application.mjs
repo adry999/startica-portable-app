@@ -64,6 +64,7 @@ export function createApplication(options = {}) {
     database: db,
     databaseFile: dbFile,
     backupDirectory: backupDir,
+    dataDirectory: dataDir,
     readSetting,
     writeSetting: settings.setSetting,
     autoBackupIntervalMs,

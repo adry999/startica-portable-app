@@ -1,6 +1,6 @@
 # backup
 
-Copiile locale și externe ale bazei, previzualizarea și restaurarea unui backup, configurarea folderului extern. Ecranul „Stare” arată sănătatea backupului (`renderBackupHealth`); dialogul de restaurare și formularul de setări stau tot aici.
+Copiile locale și externe ale bazei, previzualizarea și restaurarea unui backup (din lista locală sau citit pe loc dintr-un folder extern), configurarea folderului extern. Ecranul „Stare” arată sănătatea backupului (`renderBackupHealth`); dialogul de restaurare și formularul de setări stau tot aici.
 
 Modul **independent**: nu depinde de alt feature, nu publică și nu consumă evenimente. Scrierea în istoric folosește portul `AuditTrail`, injectat de `app/`.
 
@@ -10,8 +10,8 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 
 | Export | Rol |
 | --- | --- |
-| `createBackupService({ database, databaseFile, backupDirectory, readSetting, writeSetting, autoBackupIntervalMs })` | `backup`, `safeBackup`, `autoBackup`, `health`, `listBackups`, `resolveBackupFile`, `cancelScheduledBackup` |
-| `createBackupRoutes({ backupService, readSetting, writeSetting, auditTrail, runRevisionTransaction, replaceAllRecords, dataDirectory, backupDirectory })` | `GET /api/health`, `GET /api/backups`, `GET /api/backup-preview`, `POST /api/backup`, `POST /api/restore`, `POST /api/settings` |
+| `createBackupService({ database, databaseFile, backupDirectory, dataDirectory, readSetting, writeSetting, autoBackupIntervalMs })` | `backup`, `safeBackup`, `autoBackup`, `health`, `listBackups`, `resolveBackupFile`, `listExternalBackups`, `resolveExternalBackupFile`, `cancelScheduledBackup` |
+| `createBackupRoutes({ backupService, readSetting, writeSetting, auditTrail, runRevisionTransaction, replaceAllRecords, dataDirectory, backupDirectory })` | `GET /api/health`, `GET /api/backups`, `GET /api/external-backups`, `GET /api/backup-preview`, `POST /api/backup`, `POST /api/restore`, `POST /api/settings` |
 
 ### `index.web.mjs`
 
@@ -37,7 +37,7 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 
 ## Consumatori
 
-Composition root-ul serverului creează serviciul cu conexiunea reală la bază și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`) și `runRevisionTransaction`/`replaceAllRecords` din `core`. Composition root-ul de web creează view-ul și controller-ul cu elementele DOM ale ecranului „Stare” și `sessionState`-ul comun al aplicației.
+Composition root-ul serverului creează serviciul cu conexiunea reală la bază, `backupDirectory` și `dataDirectory`, și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`) și `runRevisionTransaction`/`replaceAllRecords` din `core`. Composition root-ul de web creează view-ul și controller-ul cu elementele DOM ale ecranului „Stare” și `sessionState`-ul comun al aplicației.
 
 ## Structură
 
@@ -71,6 +71,9 @@ backup/
 - **Copia externă se verifică prin hash**, nu doar prin dimensiune: `sha256Hex` pe fișierul local și pe copie trebuie să coincidă înainte de redenumire.
 - **Backupul automat rărit, dar cu reîncercare imediată** dacă ultima copie (locală sau externă) a eșuat — altfel utilizatorul ar afla abia după expirarea intervalului.
 - **`/api/backup-preview` reconstruiește raportul de import** (`summary` + `errors`) direct din regulile de validare.
+- **Restaurarea dintr-un folder extern citește fișierul pe loc**, cu aceeași validare de folder ca la Setări (`assertUsableExternalFolder`); nu se copiază nimic în `Startica_Backup` înainte de restaurare. `GET /api/external-backups?dir=` listează copiile din acel folder (cu `bytes`), `dir` opțional pe `GET /api/backup-preview` și `POST /api/restore` alege între lista locală și folderul extern, prin helper-ul comun `resolveRestoreFile`.
+- **O eroare de citire a unui fișier extern care nu vine deja din `fail()`** (fișier „online-only” din Drive, neîncă descărcat) se împachetează într-un mesaj interpretabil de operator, cu stiva originală doar în jurnal — vezi `readRestoreSnapshot` din `backup.routes.mjs`.
+- **Ordinea la `POST /api/restore` cu sursă externă**: tranzacția (backup de siguranță, audit `restaurare` cu sursa/folderul/numele, apoi înlocuirea înregistrărilor) se încheie înainte de orice atingere a setării `externalDir`. Abia după COMMIT: dacă `externalDir` era gol, se configurează folderul folosit (`configureExternalDir`, extras și refolosit de `POST /api/settings`) și se face o copie de configurare; dacă e alt folder, rămâne neschimbat, cu avertisment; dacă e același, nimic. Setarea înainte de tranzacție ar trimite în Drive copia goală dinaintea restaurării.
 
 ## Teste
 
@@ -79,5 +82,5 @@ node --test "src/features/backup/**/*.test.mjs"
 ```
 
 - Retenție: funcție pură.
-- Serviciu: `DatabaseSync` reală într-un folder temporar, cu `applySchema`; setări memorate într-o hartă în memorie.
-- Rute: `startTestApplication`, capătul la capăt HTTP (backup manual, previzualizare, restaurare, setări).
+- Serviciu: `DatabaseSync` reală într-un folder temporar, cu `applySchema`; setări memorate într-o hartă în memorie; inclusiv `resolveExternalBackupFile`/`listExternalBackups`.
+- Rute: `startTestApplication`, capătul la capăt HTTP (backup manual, previzualizare, restaurare, setări). Proba „calculator nou”: o aplicație A cu date reale și folder extern configurat, apoi o aplicație B pornită goală într-un alt folder temporar, care listează, previzualizează și restaurează din folderul lui A — starea, `externalDir` și istoricul lui B ajung identice, plus variantele din §6 al designului (folder deja configurat, aceeași sursă, copie deteriorată, folder rezervat sau relativ, nume invalid).
