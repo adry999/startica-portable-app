@@ -2,8 +2,9 @@ import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
+import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { allowedNextStatuses, applyVisitStatus, rescheduleVisit } from '../domain/visit-status.mjs';
-import { parseVisitPasteTemplate } from '../domain/visit-paste-template.mjs';
+import { parseVisitPasteTemplate, VISIT_PASTE_TEMPLATE } from '../domain/visit-paste-template.mjs';
 
 // Implementează structural RecordEditorFields din #features/record-editing —
 // fără să îl importe, ca feature-urile să rămână izolate unele de altele.
@@ -28,7 +29,7 @@ function markup(record, context) {
   // apoi îl lipește aici în loc să retasteze fiecare câmp.
   const pasteTemplateSection =
     context.mode === 'create'
-      ? `<div class="full paste-template"><button type="button" class="action-btn" id="vizPasteTemplate">Lipește din clipboard</button> <small class="field-hint">Datele trebuie scrise ca AAAA-LL-ZZ</small><p class="field-hint" id="vizPasteError" hidden></p></div>`
+      ? `<div class="full paste-template"><button type="button" class="action-btn" id="vizPasteTemplate">Lipește din clipboard</button> <button type="button" class="action-btn" id="vizCopyTemplate">Copiază șablonul</button> <small class="field-hint">Datele trebuie scrise ca AAAA-LL-ZZ</small><p class="field-hint" id="vizPasteError" hidden></p></div>`
       : '';
   return (
     pasteTemplateSection +
@@ -48,8 +49,11 @@ function markup(record, context) {
       'Vizita',
       textFieldMarkup('date', 'Data vizitei', record.date || context.today(), 'date', 'required') +
         textFieldMarkup('time', 'Ora vizitei', record.time || '10:00', 'time', 'required') +
-        selectFieldMarkup('status', 'Statut', currentStatus, statusChoices) +
-        '<p class="notice full">Schimbarea datei sau orei reprogramează vizita.</p>',
+        // La creare vizita nu poate porni decât „Programată” (vezi statusChoices mai sus) —
+        // un select cu o singură opțiune forțată e doar zgomot vizual.
+        (context.mode === 'create' ? '' : selectFieldMarkup('status', 'Statut', currentStatus, statusChoices)) +
+        // Reprogramarea presupune o vizită deja existentă; la creare nu are ce reprograma.
+        (context.mode === 'create' ? '' : '<p class="notice full">Schimbarea datei sau orei reprogramează vizita.</p>'),
     ) +
     formSectionMarkup(
       'Dorințe',
@@ -97,24 +101,34 @@ function bind(formElement, context) {
     birthDateInput.oninput = event =>
       (ageHint.textContent = 'Vârstă: ' + formatAge(/** @type {HTMLInputElement} */ (event.target).value));
 
-  const pasteButton = /** @type {HTMLButtonElement | null} */ (formElement.querySelector('#vizPasteTemplate'));
   const pasteError = /** @type {HTMLElement | null} */ (formElement.querySelector('#vizPasteError'));
+  // Element de feedback comun celor două butoane (lipit din/copiat în clipboard),
+  // ca eroarea de citire și confirmarea de copiere să apară în același loc.
+  const showPasteFeedback = (/** @type {string} */ message) => {
+    if (!pasteError) return;
+    pasteError.hidden = false;
+    pasteError.textContent = message;
+  };
+  const clearPasteFeedback = () => {
+    if (!pasteError) return;
+    pasteError.hidden = true;
+    pasteError.textContent = '';
+  };
+
+  const pasteButton = /** @type {HTMLButtonElement | null} */ (formElement.querySelector('#vizPasteTemplate'));
   if (pasteButton)
     pasteButton.onclick = async () => {
       try {
         const text = await navigator.clipboard.readText();
         applyParsedVisitFields(formElement, parseVisitPasteTemplate(text, { groups: context.records.groups }));
-        if (pasteError) {
-          pasteError.hidden = true;
-          pasteError.textContent = '';
-        }
+        clearPasteFeedback();
       } catch {
-        if (pasteError) {
-          pasteError.hidden = false;
-          pasteError.textContent = 'Nu am putut citi din clipboard. Completează câmpurile manual.';
-        }
+        showPasteFeedback('Nu am putut citi din clipboard. Completează câmpurile manual.');
       }
     };
+
+  const copyButton = /** @type {HTMLButtonElement | null} */ (formElement.querySelector('#vizCopyTemplate'));
+  if (copyButton) copyButton.onclick = () => copyToClipboard(VISIT_PASTE_TEMPLATE, 'Șablon copiat.', showPasteFeedback);
 }
 
 /**
