@@ -3,7 +3,7 @@ import type { RecordRepository, RevisionRequest, RunRevisionTransaction } from '
 import type { AuditTrail } from '#shared/contracts/audit-trail.mjs';
 
 /** Tipurile pt. care dialogul generic are un formular (grupele/categoriile au ecrane proprii). */
-export type EditableRecordType = 'children' | 'payments' | 'expenses';
+export type EditableRecordType = 'children' | 'payments' | 'expenses' | 'visits';
 
 /** Contractul HTTP existent al /api/record; se păstrează neschimbat la migrare. */
 export interface RecordSaveRequest extends RevisionRequest {

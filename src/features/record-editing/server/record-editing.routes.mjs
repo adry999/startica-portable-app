@@ -10,7 +10,7 @@ const SAVE_ACTION = 'salvare';
 const DELETE_ACTION = 'ștergere definitivă';
 // Grupele și categoriile au rute proprii de ștergere; aici doar tipurile cu arhivare.
 /** @type {import('../record-editing.types.mjs').EditableRecordType[]} */
-const DELETABLE_TYPES = ['children', 'payments', 'expenses'];
+const DELETABLE_TYPES = ['children', 'payments', 'expenses', 'visits'];
 
 /** @param {RecordEditingRoutesDependencies} dependencies */
 export function createRecordEditingRoutes({ recordRepository, auditTrail, runRevisionTransaction }) {
@@ -48,6 +48,11 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
         recordRepository.readSnapshot().payments.some(payment => payment.childId === request.id)
       )
         fail('Șterge mai întâi achitările copilului, altfel ar rămâne fără copil valid.');
+      if (
+        request.type === 'children' &&
+        recordRepository.readSnapshot().visits.some(visit => visit.childId === request.id && !visit.archived)
+      )
+        fail('Arhivează mai întâi vizita care l-a înscris, altfel ar rămâne fără copil valid.');
       recordRepository.remove(request.type, request.id);
       auditTrail.recordChange({
         action: DELETE_ACTION,

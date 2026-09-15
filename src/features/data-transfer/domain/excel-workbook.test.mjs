@@ -38,6 +38,16 @@ const payment = () =>
       { month: '2026-10', amount: 500 },
     ],
   });
+const visit = () =>
+  normalizeRecord('visits', {
+    id: 'VIZ-test',
+    name: 'Copil vizitator',
+    parent: 'Maria',
+    date: '2026-09-08',
+    time: '10:00',
+    status: 'Programată',
+    statusChangedAt: '2026-09-01T10:00:00.000Z',
+  });
 
 test('Export/reimport complet prin fișier XLSX în memorie', () => {
   const state = {
@@ -48,6 +58,7 @@ test('Export/reimport complet prin fișier XLSX în memorie', () => {
     expenses: [normalizeRecord('expenses', { id: 'EXP-test', date: '2026-09-08', amount: 10.25, category: 'Test' })],
     groups: [{ id: 'GRP-test', name: 'Grupa test', capacity: 10 }],
     categories: [],
+    visits: [],
   };
   // Extra long field exercises chunking; validation normally caps text at 10k.
   state.payments[0].notes = 'text';
@@ -83,6 +94,7 @@ test('V5 original: numărul de înregistrări și totalurile rămân identice', 
     expenses: 1201,
     groups: 10,
     categories: 0,
+    visits: 0,
     paymentTotal: 10105096,
     expenseTotal: 1564059,
   });
@@ -129,7 +141,7 @@ test('Doi părinți și achitarea mixtă trec prin export și import', () => {
     ],
     allocations: [{ month: '2026-09', amount: 1500 }],
   });
-  const state = { children: [child], payments: [payment], expenses: [], groups: [], categories: [] };
+  const state = { children: [child], payments: [payment], expenses: [], groups: [], categories: [], visits: [] };
   const wb = XLSX.read(XLSX.write(exportWorkbook(state, XLSX), { type: 'buffer', bookType: 'xlsx' }), {
       type: 'buffer',
     }),
@@ -167,11 +179,52 @@ test('exportul Excel însumează componentele plății fără erori de virgulă 
     ],
     allocations: [{ month: '2026-09', amount: 1234.57 }],
   });
-  const state = { children: [child], payments: [payment1, payment2], expenses: [], groups: [], categories: [] };
+  const state = {
+    children: [child],
+    payments: [payment1, payment2],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+  };
   const wb = exportWorkbook(state, XLSX);
   const rows = XLSX.utils.sheet_to_json(wb.Sheets.Achitari);
   assert.equal(rows[0].Cash, 0.1);
   assert.equal(rows[0].Card, 0.2);
   assert.equal(rows[1].Cash, 1234.56);
   assert.equal(rows[1].Transfer, 0.01);
+});
+
+test('Datele medicale nu ajung în fila Startica_Date, iar reimportul le lasă goale', () => {
+  const childRecord = normalizeRecord('children', { ...child(), healthNotes: 'Alergie la nuci' });
+  const visitRecord = normalizeRecord('visits', { ...visit(), healthNotes: 'Astm ușor' });
+  const state = {
+    children: [childRecord],
+    payments: [],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [visitRecord],
+  };
+  const wb = exportWorkbook(state, XLSX);
+  const rawRows = XLSX.utils.sheet_to_json(wb.Sheets.Startica_Date, { header: 1 });
+  const rawJson = rawRows.map(row => row[3]).join('');
+  assert.ok(!rawJson.includes('healthNotes'));
+  assert.ok(!rawJson.includes('Alergie la nuci'));
+  assert.ok(!rawJson.includes('Astm ușor'));
+
+  const formatText = XLSX.utils
+    .sheet_to_json(wb.Sheets.Startica_Format, { header: 1 })
+    .map(row => row[0])
+    .join('\n');
+  assert.match(formatText, /Datele medicale \(vizite, copii\) nu sunt exportate/);
+
+  const back = readWorkbook(
+    XLSX.read(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
+    XLSX,
+    findRecordIssues,
+  );
+  assert.deepEqual(back.errors, []);
+  assert.equal(back.state.visits[0].healthNotes, '');
+  assert.equal(back.state.children[0].healthNotes, undefined);
 });
