@@ -481,6 +481,11 @@ th.amount {
 .money-line {
   white-space: nowrap;
 }
+.month-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
 .cal-weekday {
   padding-bottom: 4px;
   color: var(--muted);

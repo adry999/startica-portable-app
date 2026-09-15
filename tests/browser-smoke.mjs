@@ -741,6 +741,17 @@ try {
   assert.match(await evaluate("document.getElementById('visitsCalendar').textContent"), /14:00.*Vizită test/);
   assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Vizită test/);
   assert.equal(await evaluate("document.getElementById('visitsCount').textContent"), '1');
+  // Verify visits calendar grid layout: #visitsCalendar should have display: grid and cells should be side-by-side
+  const gridDisplay = await evaluate("getComputedStyle(document.getElementById('visitsCalendar')).display");
+  assert.equal(gridDisplay, 'grid', 'Visits calendar should use CSS grid layout');
+  const cellPositions = await evaluate(
+    "Array.from(document.querySelectorAll('#visitsCalendar .cal-cell')).slice(0, 2).map(el => el.getBoundingClientRect().top)",
+  );
+  assert.equal(
+    cellPositions.length >= 2 && cellPositions[0] === cellPositions[1],
+    true,
+    'Calendar cells should be side-by-side in grid rows, not stacked vertically',
+  );
   await evaluate('document.querySelector(\'[data-visit-action="Efectuată"]\').click()');
   await until(() => evaluate('!document.querySelector(\'[data-visit-action="Efectuată"]\')'), 'Status update failed');
   assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Efectuată/);
