@@ -1,2 +1,2 @@
-// Telegram: exporturile web-ului vin din telegram-settings.controller.mjs și telegram-settings.view.mjs (task T4).
-export {};
+export { createTelegramSettingsController } from './web/telegram-settings.controller.mjs';
+export { renderTelegramStatus } from './web/telegram-settings.view.mjs';
