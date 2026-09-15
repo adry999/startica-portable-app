@@ -1,5 +1,6 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { monthCalendarMarkup } from '#shared/ui/month-calendar.mjs';
 import { summarizeCashForMonth, sumUnallocatedAdvance } from '../domain/cash-summary.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -8,36 +9,25 @@ import { summarizeCashForMonth, sumUnallocatedAdvance } from '../domain/cash-sum
 /** @typedef {{ child: Child, obligation: { notify: boolean } }} ChildMonthEvaluationLike */
 /** @typedef {{ items: { length: number } }} ReviewCenterLike */
 
-const CAL_WEEKDAYS = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
 // Culoarea ține de luna calendaristică, nu de poziția din fereastra de 12
 // luni — altfel aceeași lună schimba culoare la fiecare mutare a lunii selectate.
 const BAR_COLORS = ['orange', 'yellow', 'mint'];
 
-function calendarCellHTML(cell) {
+function birthdayCellContentHTML(cell) {
   const chips = cell.names
     .map(
       n =>
         `<span class="cal-chip" title="${escapeHtml(n.name)} · împlinește ${n.turningAge} ${n.turningAge === 1 ? 'an' : 'ani'}">${escapeHtml(n.name)}</span>`,
     )
     .join('');
-  const cls = [
-    'cal-cell',
-    cell.inMonth ? '' : 'cal-outside',
-    cell.isToday ? 'cal-today' : '',
-    cell.isCurrentWeek ? 'cal-current-week' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
   const confetti = cell.isToday && cell.names.length ? '<span class="cal-confetti" aria-hidden="true">🎉</span>' : '';
-  return `<div class="${cls}">${confetti}<span class="cal-daynum">${cell.day}</span>${chips ? `<div class="cal-chips">${chips}</div>` : ''}</div>`;
+  return `${confetti}<span class="cal-daynum">${cell.day}</span>${chips ? `<div class="cal-chips">${chips}</div>` : ''}`;
 }
 
 // Calendar lunar cu adevărat, nu o listă: săptămâna curentă evidențiată prin
 // fundalul rândului, ziua de naștere afișată direct pe ziua ei.
 function birthdaysCalendarHTML(weeks) {
-  const header = CAL_WEEKDAYS.map(l => `<div class="cal-weekday">${l}</div>`).join('');
-  const cells = weeks.flat().map(calendarCellHTML).join('');
-  return header + cells;
+  return monthCalendarMarkup(weeks, birthdayCellContentHTML);
 }
 
 /** @param {UpcomingBirthday} r */
