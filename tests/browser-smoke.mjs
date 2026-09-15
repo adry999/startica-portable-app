@@ -133,10 +133,10 @@ try {
   );
   assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
   assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
-  assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 12);
+  assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 13);
   assert.equal(
     await evaluate("new Set([...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)).size"),
-    12,
+    13,
   );
   assert.deepEqual(
     await evaluate(
@@ -706,9 +706,58 @@ try {
     'externalDir was not configured from the folder used to restore',
   );
 
+  // Vizite: creare din editor, apariție în calendar și listă cu badge, schimbare statut, înscriere copil, card din Panou.
+  const childrenBeforeVisits = (await (await fetch(url + '/api/state')).json()).state.children.length;
+  await evaluate("document.querySelector('#primaryNav [data-view=visits]').click()");
+  assert.equal(await evaluate("document.querySelector('.view.active').id"), 'visits');
+  await evaluate("document.querySelector('[data-create=visits]').click()");
+  await until(() => evaluate("document.getElementById('editorForm')?.elements.name"), 'Visits editor did not open');
+  await evaluate(
+    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='2026-09-15';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
+  );
+  await until(() => evaluate("!document.getElementById('editor').open"), 'Visit save failed');
+  assert.match(await evaluate("document.getElementById('visitsCalendar').textContent"), /14:00.*Vizită test/);
+  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Vizită test/);
+  assert.equal(await evaluate("document.getElementById('visitsCount').textContent"), '1');
+  await evaluate('document.querySelector(\'[data-visit-action="Efectuată"]\').click()');
+  await until(() => evaluate('!document.querySelector(\'[data-visit-action="Efectuată"]\')'), 'Status update failed');
+  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Efectuată/);
+  const childrenBeforeEnrol = (await (await fetch(url + '/api/state')).json()).state.children.length;
+  await evaluate('document.querySelector(\'[data-visit-action="enrol"]\').click()');
+  await until(
+    () => evaluate("document.getElementById('editorForm')?.elements.parent"),
+    'Child enrol editor did not open',
+  );
+  assert.equal(
+    await evaluate("document.getElementById('editorForm').elements.name.value"),
+    'Vizită test',
+    'Child name not prefilled from visit',
+  );
+  assert.equal(
+    await evaluate("document.getElementById('editorForm').elements.parent.value"),
+    'Părinte vizită',
+    'Child parent not prefilled from visit',
+  );
+  await evaluate("document.getElementById('editorForm').requestSubmit()");
+  await until(() => evaluate("!document.getElementById('editor').open"), 'Child enrol save failed');
+  const childrenAfterEnrol = (await (await fetch(url + '/api/state')).json()).state.children.length;
+  assert.equal(childrenAfterEnrol, childrenBeforeEnrol + 1, 'Children count did not increase by 1');
+  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Înscris/);
+  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
+  assert.equal(
+    await evaluate("!!document.querySelector('#alerts .alert-visits')"),
+    true,
+    'Visits card not found in dashboard alerts',
+  );
+  assert.equal(
+    await evaluate("document.getElementById('visitsNotifyButton').hidden"),
+    false,
+    'Notify button should be visible in headless Chrome (Notification.permission is default, not unsupported)',
+  );
+
   // §4.7: fiecare ecran din navigare trebuie să devină activ, fără excepții/erori de consolă noi și fără scroll orizontal.
   const screenViews = await evaluate("[...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)");
-  assert.equal(screenViews.length, 12);
+  assert.equal(screenViews.length, 13);
   for (const view of screenViews) {
     const exceptionsBefore = errors.length;
     const consoleErrorsBefore = consoleErrors.length;
@@ -733,7 +782,7 @@ try {
   await screenshot('dashboard-desktop-populated');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, dashboard, profile, review, restore preview, restore from external folder, audit; all 12 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
+    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, visits creation/enrolment/dashboard card, dashboard, profile, review, restore preview, restore from external folder, audit; all 13 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
   );
 } catch (error) {
   console.error(error);
