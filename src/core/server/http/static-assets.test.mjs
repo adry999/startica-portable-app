@@ -44,6 +44,11 @@ test('lista albă acceptă doar modulele de browser', () => {
   for (const path of PRIVATE_PATHS) assert.equal(isBrowserModule(path), false, path);
 });
 
+test('pictograma ICO e în lista albă și fișierul mapat există', () => {
+  assert.equal(isStaticAsset('/assets/startica.ico'), true);
+  assert.equal(existsSync(join(ROOT, STATIC_FILES['/assets/startica.ico'])), true);
+});
+
 test('fiecare foaie de stil din index.html e în lista albă și fișierul mapat există', () => {
   const html = readFileSync(join(ROOT, 'web/index.html'), 'utf8');
   const stylesheetHrefs = [...html.matchAll(/<link\s+[^>]*>/g)]

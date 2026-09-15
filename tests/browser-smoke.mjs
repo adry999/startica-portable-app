@@ -112,6 +112,15 @@ try {
   );
   assert.doesNotMatch(aliasResolution, /Failed to resolve module specifier/, aliasResolution);
   assert.match(aliasResolution, /\/src\/shared\/alias-probe\.mjs/, aliasResolution);
+  // Pictogramă netă în bara de activități Windows: ICO multi-dimensiune (16/32/48/256), nu SVG rasterizat de Chrome.
+  const icoResponse = await fetch(url + '/assets/startica.ico');
+  assert.equal(icoResponse.status, 200);
+  assert.equal(icoResponse.headers.get('content-type'), 'image/x-icon');
+  assert.equal(await evaluate("document.querySelectorAll('link[rel~=icon]').length"), 2);
+  assert.equal(
+    await evaluate('document.querySelector(\'link[href="/assets/startica.ico"]\')?.sizes.value'),
+    '16x16 32x32 48x48 256x256',
+  );
   assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
   assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
   assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 12);

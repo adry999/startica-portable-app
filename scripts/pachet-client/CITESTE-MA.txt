@@ -10,6 +10,11 @@ INSTALARE
 4. La final, Startica pornește automat și apare scurtătura pe Desktop
    și în meniul Start.
 
+PENTRU ACCES RAPID
+Fixează în taskbar scurtătura Startica din meniul Start (clic
+dreapta → Fixează), nu fereastra deschisă: fereastra fixată ar porni
+doar browserul, fără server.
+
 ACTUALIZARE (ai deja Startica instalată)
 1. Rulează noul Startica_Setup_<versiune>.exe, la fel ca la instalare.
    Nu dezinstala versiunea veche înainte.
