@@ -1,6 +1,7 @@
 import { emptyState, normalizeRecord, CHILD_STATUSES, TYPES } from '#shared/domain/record-schema.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
+import { cents } from '#shared/domain/money.mjs';
 import { buildImportReport } from './import-report.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -238,15 +239,18 @@ export function exportWorkbook(records, XLSX) {
         records.children.find(c => c.id === payment.childId)?.name || payment.childName || payment.sourceName || '',
       Metoda: payment.method,
       Suma: payment.amount,
-      Cash: paymentTenders(payment)
-        .filter(p => p.method === 'Cash')
-        .reduce((n, p) => n + p.amount, 0),
-      Card: paymentTenders(payment)
-        .filter(p => p.method === 'Card')
-        .reduce((n, p) => n + p.amount, 0),
-      Transfer: paymentTenders(payment)
-        .filter(p => p.method === 'Transfer')
-        .reduce((n, p) => n + p.amount, 0),
+      Cash:
+        paymentTenders(payment)
+          .filter(p => p.method === 'Cash')
+          .reduce((n, p) => n + cents(p.amount), 0) / 100,
+      Card:
+        paymentTenders(payment)
+          .filter(p => p.method === 'Card')
+          .reduce((n, p) => n + cents(p.amount), 0) / 100,
+      Transfer:
+        paymentTenders(payment)
+          .filter(p => p.method === 'Transfer')
+          .reduce((n, p) => n + cents(p.amount), 0) / 100,
       Detalii_metode: paymentTenders(payment)
         .map(p => `${p.method}: ${p.amount}`)
         .join('; '),

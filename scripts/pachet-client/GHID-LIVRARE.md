@@ -22,8 +22,16 @@ Pentru cine pregătește și instalează pachetul la client, nu pentru client
 - [ ] La prima pornire: dacă apare dialogul de preluare a evidenței vechi, se confirmă folderul găsit și data ultimei modificări înainte de a accepta.
 - [ ] Datele sunt cele cunoscute (număr de copii, ultimele achitări și cheltuieli); versiunea afișată în bara laterală corespunde.
 - [ ] **Backup și setări**: folderul extern (Google Drive sau similar) e configurat; **Salvează și testează copia** reușește. Copierea în folderul extern nu confirmă și încărcarea în cloud — asta se verifică separat, în aplicația Google Drive sau echivalent.
+- [ ] Configurarea folderului extern în Google Drive for desktop cu contul grădiniței, folder „Disponibil offline", nepartajat.
+- [ ] Verificare în doi pași activă pe contul Google.
+- [ ] Acordul explicit al clientului că copiile din Drive sunt necriptate.
+- [ ] Probă de restaurare: copiază ultimul backup din folderul extern în `%LOCALAPPDATA%\Startica\Startica_Backup` și deschide doar previzualizarea (fără să confirmi).
 - [ ] Închiderea ferestrei oprește aplicația (apare un backup nou în `%LOCALAPPDATA%\Startica\Startica_Backup`).
 - [ ] Dacă a fost o actualizare de pe ZIP: folderul vechi rămâne pe loc; se poate șterge după câteva zile de verificare, la decizia clientului.
+
+## Întreținere
+
+- Lunar: pe drive.google.com ultimul `startica_*.db` are data de azi.
 
 ## Notă despre backup extern
 

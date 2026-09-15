@@ -14,8 +14,8 @@ export const RESPONSE_SENT = Symbol('response-sent');
  * }} RouteDefinition
  */
 
-/** @param {{ root: string, sessionToken: string, routes: RouteDefinition[] }} options */
-export function createRouteDispatcher({ root, sessionToken, routes }) {
+/** @param {{ root: string, sessionToken: string, routes: RouteDefinition[], log?: (message: unknown) => void }} options */
+export function createRouteDispatcher({ root, sessionToken, routes, log = console.error }) {
   const getRoutes = new Map(routes.filter(route => route.method === 'GET').map(route => [route.path, route.handle]));
   const postRoutes = new Map(routes.filter(route => route.method === 'POST').map(route => [route.path, route.handle]));
 
@@ -37,10 +37,22 @@ export function createRouteDispatcher({ root, sessionToken, routes }) {
       const result = postHandler({ body, url, response });
       if (result !== RESPONSE_SENT) sendResponse(response, result);
     } catch (error) {
-      const failure = /** @type {Error & { status?: number }} */ (error);
+      const failure = /** @type {Error & { status?: number, code?: string, errcode?: number }} */ (error);
       // A doua scriere ar arunca ERR_HTTP_HEADERS_SENT dacă antetele au plecat deja.
       if (response.headersSent) {
-        console.error('Eroare după trimiterea răspunsului: ' + failure.message);
+        log('Eroare după trimiterea răspunsului: ' + failure.message);
+        return;
+      }
+      // Erorile Node/SQLite și cele de programare (nu fail() de domeniu) nu au mesaj pentru utilizator; doar în jurnal.
+      if (
+        failure.code ||
+        failure.errcode ||
+        failure instanceof TypeError ||
+        failure instanceof RangeError ||
+        failure instanceof ReferenceError
+      ) {
+        log(failure.stack || failure);
+        sendResponse(response, { error: 'Eroare de sistem (disc, fișiere sau internă). Detalii în jurnal.' }, 500);
         return;
       }
       sendResponse(response, { error: failure.message }, failure.status || 400);

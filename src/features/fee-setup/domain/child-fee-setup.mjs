@@ -1,5 +1,6 @@
 import { monthOK } from '#shared/domain/calendar-month.mjs';
 import { requireThat, requireAmount, normalizeRecord, STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
+import { defaultSetupMonth } from '#shared/domain/child-setup-month.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
 /** @typedef {{ from: string, groupId?: string | null, fee?: number | null, status?: string }} ChildFeeSetup */
@@ -43,11 +44,7 @@ export function applyChildFeeSetup(child, setup) {
 /** @param {Child} child */
 export const hasMissingFee = child => !child.feeHistory?.length;
 
-// Luna din care se aplică taxa și statutul. Începerea frecventării este cea
-// corectă: din ea se calculează și lunile trecute. Contractul și luna curentă
-// sunt rezerve pentru fișele incomplete.
-/**
- * @param {Child} child
- * @param {string} today
- */
-export const defaultSetupMonth = (child, today) => (child.attendanceDate || child.contractDate || today).slice(0, 7);
+// Reexportat pentru codul existent din acest feature (mutat în shared, ca și
+// editorul copilului din #features/children să-l poată folosi fără să
+// importe alt feature).
+export { defaultSetupMonth };

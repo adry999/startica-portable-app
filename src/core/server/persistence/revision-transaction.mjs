@@ -49,7 +49,17 @@ export function createRevisionTransaction({ database, recordRepository, backups,
         'Datele au fost schimbate în altă filă. Reîncarcă datele și verifică formularul înainte să salvezi din nou.',
         409,
       );
-    if (backupBefore) backups.backup('inainte-' + action);
+    if (backupBefore)
+      try {
+        backups.backup('inainte-' + action);
+      } catch (e) {
+        // Singura eroare de sistem pe care operatorul o poate repara singur; mesaj specific, nu generic.
+        console.error(/** @type {Error} */ (e).stack || e);
+        fail(
+          'Backupul de siguranță dinaintea operației nu a putut fi creat; nu s-a modificat nimic. Verifică folderul de backup și spațiul pe disc.',
+          500,
+        );
+      }
     database.exec('BEGIN IMMEDIATE');
     try {
       if (request.revision !== recordRepository.currentRevision()) fail('Date modificate în altă filă.', 409);

@@ -139,3 +139,39 @@ test('Doi părinți și achitarea mixtă trec prin export și import', () => {
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Copii)[0].Telefon_2, '+373456');
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Achitari)[0].Card, 500.2);
 });
+
+test('exportul Excel însumează componentele plății fără erori de virgulă mobilă', () => {
+  const child = normalizeRecord('children', {
+    id: 'C1',
+    name: 'Copil',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 1500 }],
+  });
+  const payment1 = normalizeRecord('payments', {
+    id: 'P1',
+    childId: child.id,
+    date: '2026-09-08',
+    tenders: [
+      { method: 'Cash', amount: 0.1 },
+      { method: 'Card', amount: 0.2 },
+    ],
+    allocations: [{ month: '2026-09', amount: 0.3 }],
+  });
+  const payment2 = normalizeRecord('payments', {
+    id: 'P2',
+    childId: child.id,
+    date: '2026-09-09',
+    tenders: [
+      { method: 'Cash', amount: 1234.56 },
+      { method: 'Transfer', amount: 0.01 },
+    ],
+    allocations: [{ month: '2026-09', amount: 1234.57 }],
+  });
+  const state = { children: [child], payments: [payment1, payment2], expenses: [], groups: [], categories: [] };
+  const wb = exportWorkbook(state, XLSX);
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets.Achitari);
+  assert.equal(rows[0].Cash, 0.1);
+  assert.equal(rows[0].Card, 0.2);
+  assert.equal(rows[1].Cash, 1234.56);
+  assert.equal(rows[1].Transfer, 0.01);
+});

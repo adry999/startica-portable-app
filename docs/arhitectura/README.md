@@ -1,5 +1,7 @@
 # Arhitectura Startica: analiză și plan de refactorizare incrementală
 
+**Notă (15.09.2026):** documentul descrie arhitectura și pașii migrării până la v1.2.1. De la v1.3.0, pornirea și livrarea se fac prin `Startica.exe` și instalerul Inno Setup, descrise în `docs/superpowers/specs/2026-09-15-desktop-app-design.md`; mențiunile despre `Porneste_Startica.vbs` de mai jos sunt istorice.
+
 Stare, 15 septembrie 2026: **pașii 0–12 aplicați** (plasa de siguranță, aliasurile `#`, configurarea per mediu, shared kernel, infrastructura de server și de browser, toate feature-urile, inclusiv `billing` și `dashboard`, composition root-ul în `src/app`, împărțirea `web/app.css` și granițele stricte de import, vezi §6); planul de refactorizare e complet. Folderul `referinta/` conține implementările de referință pentru cele două module, rulate și verificate într-un mediu izolat (vezi §7). Ambele au fost preluate de acolo; codul viu este cel din `src/features/`.
 
 Pasul 10 a mutat ultimele ecrane și composition root-ul:

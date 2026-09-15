@@ -15,8 +15,11 @@ import { readBackupSnapshot } from './backup-snapshot.mjs';
 /** @typedef {import('../backup.types.mjs').SafeBackupResult} SafeBackupResult */
 /** @typedef {import('../backup.types.mjs').BackupServiceDependencies} BackupServiceDependencies */
 
-const BACKUP_NAME = /^startica_[A-Za-z0-9_.-]+\.db$/;
-const TEMPORARY_NAME = /^startica_[A-Za-z0-9_.-]+\.db\.tmp$/;
+// Fișiere mai vechi au nume cu diacritice și spații (motivul nenormalizat, ex.
+// "inainte-ștergere definitivă"): trebuie recunoscute în continuare, ca să
+// rămână vizibile și restaurabile, chiar dacă backup() nu le mai produce așa.
+const BACKUP_NAME = /^startica_[\p{L}\p{N}_. -]+\.db$/u;
+const TEMPORARY_NAME = /^startica_[\p{L}\p{N}_. -]+\.db\.tmp$/u;
 // Un .tmp mai nou decât atât poate aparține unui backup aflat în curs.
 const TEMPORARY_GRACE_MS = 3600000;
 
@@ -40,6 +43,25 @@ function permanentBackupsSummary(dir) {
   }
 }
 
+// Folderul extern urmează aceeași retenție ca cel local (vezi pruneExternal),
+// deci suma tuturor copiilor arată exact cât se păstrează acolo, nu doar ultima.
+function externalBackupsSummary(dir) {
+  if (!dir) return { count: 0, bytes: 0 };
+  try {
+    const files = readdirSync(dir).filter(name => BACKUP_NAME.test(name));
+    return { count: files.length, bytes: files.reduce((sum, name) => sum + statSync(join(dir, name)).size, 0) };
+  } catch {
+    return { count: 0, bytes: 0 };
+  }
+}
+
+// Aceeași retenție ca local: fără ea, fiecare backup automat rămânea în Drive pentru totdeauna.
+function pruneExternal(external) {
+  const files = fileList(external),
+    keep = selectBackupsToKeep(files);
+  for (const file of files) if (!keep.has(file.name)) unlinkSync(join(external, file.name));
+}
+
 // Un backup întrerupt (cădere de curent, disc plin) lasă în urmă un fișier
 // .db.tmp de dimensiunea bazei. fileList() nu îl vede, deci retenția nu îl
 // atinge niciodată.
@@ -54,6 +76,21 @@ function pruneTemporary(dir) {
       console.warn(`Backupul temporar ${file} nu a putut fi curățat: ${/** @type {Error} */ (error).message}`);
     }
   }
+}
+
+// Motivul poate ajunge cu diacritice sau spații (ex. "ștergere definitivă");
+// numele fișierului trebuie să rămână ASCII simplu, portabil pe orice disc sau
+// utilitar extern de sincronizare.
+/**
+ * @param {string} reason
+ * @returns {string}
+ */
+function normalizeReason(reason) {
+  return reason
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-');
 }
 
 /** @param {BackupServiceDependencies} dependencies */
@@ -109,6 +146,11 @@ export function createBackupService({
       renameSync(copy, join(external, name));
       writeSetting('lastExternal', new Date().toISOString());
       writeSetting('externalError', '');
+      try {
+        pruneExternal(external);
+      } catch (e) {
+        warning += ' Curățarea copiilor externe a eșuat: ' + /** @type {Error} */ (e).message;
+      }
     } catch (e) {
       const failure = /** @type {Error} */ (e);
       removeFileIfPresent(copy);
@@ -120,7 +162,7 @@ export function createBackupService({
     } catch (error) {
       console.warn(`Curățarea folderului extern ${external} a eșuat: ${/** @type {Error} */ (error).message}`);
     }
-    return warning;
+    return warning.trim();
   }
 
   // Copie verificată: VACUUM INTO într-un .tmp, deschidere și verificare a
@@ -131,7 +173,7 @@ export function createBackupService({
    * @returns {BackupResult}
    */
   function backup(reason = 'manual') {
-    const name = `startica_${fileTimestamp()}_${reason}_${randomUUID().slice(0, 8)}.db`,
+    const name = `startica_${fileTimestamp()}_${normalizeReason(reason)}_${randomUUID().slice(0, 8)}.db`,
       file = join(backupDirectory, name),
       temp = file + '.tmp';
     try {
@@ -204,17 +246,19 @@ export function createBackupService({
 
   /** @returns {BackupHealth} */
   function health() {
+    const external = readSetting('externalDir');
     return {
       ok: true,
       database: databaseFile,
       backup: backupDirectory,
-      externalDir: readSetting('externalDir'),
+      externalDir: external,
       lastLocal: readSetting('lastLocal') || fileList(backupDirectory)[0]?.modified || '',
       lastExternal: readSetting('lastExternal'),
       localError: readSetting('localError'),
       externalError: externalFailure(),
       cloudVerified: false,
       permanentBackups: permanentBackupsSummary(backupDirectory),
+      externalBackups: externalBackupsSummary(external),
     };
   }
 

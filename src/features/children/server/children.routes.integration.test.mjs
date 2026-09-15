@@ -36,7 +36,9 @@ test('API CSV: import atomic, backup, jurnal, protecție la conflicte și reînc
   assert.equal((await post('/api/children-csv', { ...body, confirm: '' })).status, 400);
   assert.equal((await post('/api/children-csv', { ...body, revision: 1 })).status, 409);
   renameSync(join(dir, 'backups'), join(dir, 'offline'));
-  assert.equal((await post('/api/children-csv', body)).status, 400);
+  const backupFailure = await post('/api/children-csv', body);
+  assert.equal(backupFailure.status, 500);
+  assert.match(backupFailure.body.error, /Backupul de siguranță dinaintea operației nu a putut fi creat/);
   assert.equal(app.envelope().state.children.length, 0);
   renameSync(join(dir, 'offline'), join(dir, 'backups'));
   const r = await post('/api/children-csv', body);

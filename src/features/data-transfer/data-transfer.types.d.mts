@@ -26,6 +26,8 @@ export interface ImportReport {
   summary?: RecordsSummary;
   warnings: ContentWarning[];
   errors: string[];
+  /** Note despre aducerea la zi a unui format vechi (vezi upgradeSnapshot); lipsă când s-a oprit înainte de validare. */
+  notes?: string[];
 }
 
 export interface FinancialHistorySource {
