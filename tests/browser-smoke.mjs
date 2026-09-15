@@ -752,6 +752,33 @@ try {
     true,
     'Calendar cells should be side-by-side in grid rows, not stacked vertically',
   );
+  // Clic pe cipul din calendar: arată detaliul vizitei cu acțiuni rapide, fără să filtreze lista la ziua aceea.
+  await evaluate("document.querySelector('#visitsCalendar [data-visit-id]').click()");
+  assert.equal(
+    await evaluate("document.getElementById('visitsDetail').hidden"),
+    false,
+    'Visit detail panel did not open on chip click',
+  );
+  assert.match(await evaluate("document.getElementById('visitsDetail').textContent"), /Vizită test/);
+  assert.equal(
+    await evaluate('!!document.querySelector(\'#visitsDetail [data-visit-action="Efectuată"]\')'),
+    true,
+    'Detail panel missing the quick status action button',
+  );
+  assert.equal(
+    await evaluate(
+      "document.querySelector('#visitsCalendar [data-date=\"2026-09-15\"]').classList.contains('is-selected')",
+    ),
+    false,
+    'Clicking a visit chip should not also select the day (day-select must not fire)',
+  );
+  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Vizită test/);
+  await evaluate("document.querySelector('#visitsCalendar [data-visit-id]').click()");
+  assert.equal(
+    await evaluate("document.getElementById('visitsDetail').hidden"),
+    true,
+    'Visit detail panel did not close on the second chip click',
+  );
   await evaluate('document.querySelector(\'[data-visit-action="Efectuată"]\').click()');
   await until(() => evaluate('!document.querySelector(\'[data-visit-action="Efectuată"]\')'), 'Status update failed');
   assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Efectuată/);
@@ -776,6 +803,35 @@ try {
   const childrenAfterEnrol = (await (await fetch(url + '/api/state')).json()).state.children.length;
   assert.equal(childrenAfterEnrol, childrenBeforeEnrol + 1, 'Children count did not increase by 1');
   assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Înscris/);
+  // Vizită deja Efectuată: cipul din calendar oferă „Înscrie copilul”, cablat la același onQuickAction(id, 'enrol').
+  await evaluate(`(async()=>{
+    const {submitMutation}=await import('/src/app/web/app-session.mjs');
+    await submitMutation('/api/record',{type:'visits',mode:'create',record:{id:'VIZ-SMOKE-DONE',name:'Vizită gata test',parent:'Părinte gata',phone:'0722333444',date:'2026-09-17',time:'11:00',status:'Efectuată',statusChangedAt:'2026-09-15T09:00:00.000Z',history:[{at:'2026-09-15T09:00:00.000Z',status:'Efectuată',date:'2026-09-17',time:'11:00'}]}});
+  })()`);
+  await until(
+    () => evaluate("document.getElementById('visitsTable').textContent.includes('Vizită gata test')"),
+    'Visit creation via API failed',
+  );
+  await evaluate('document.querySelector(\'#visitsCalendar [data-visit-id="VIZ-SMOKE-DONE"]\').click()');
+  assert.equal(
+    await evaluate("document.getElementById('visitsDetail').hidden"),
+    false,
+    'Detail panel did not open for the Efectuată visit',
+  );
+  assert.equal(
+    await evaluate('!!document.querySelector(\'#visitsDetail [data-visit-action="enrol"]\')'),
+    true,
+    'Missing „Înscrie copilul” button in visit detail for an Efectuată visit',
+  );
+  await evaluate('document.querySelector(\'#visitsDetail [data-visit-action="enrol"]\').click()');
+  await until(() => evaluate("document.getElementById('editor').open"), 'Enrol editor did not open from visit detail');
+  assert.match(
+    await evaluate("document.getElementById('editorTitle').textContent"),
+    /Vizită gata test/,
+    'Editor title missing the visit name — detail button did not reach onQuickAction(id, "enrol")',
+  );
+  await evaluate("document.querySelector('[data-close=editor]').click()");
+  await until(() => evaluate("!document.getElementById('editor').open"), 'Editor did not close after cancel');
   await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
   assert.equal(
     await evaluate("!!document.querySelector('#alerts .alert-visits')"),

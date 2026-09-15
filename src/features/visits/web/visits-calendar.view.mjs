@@ -7,7 +7,7 @@ import { visitStatusChipClass } from './visit-labels.mjs';
 
 /** @param {Visit} visit */
 function chipHTML(visit) {
-  return `<span class="cal-chip ${visitStatusChipClass(visit.status)}" title="${escapeHtml(visit.status)}">${escapeHtml(visit.time)} ${escapeHtml(visit.name)}</span>`;
+  return `<span class="cal-chip ${visitStatusChipClass(visit.status)}" data-visit-id="${escapeHtml(visit.id)}" title="${escapeHtml(visit.status)}">${escapeHtml(visit.time)} ${escapeHtml(visit.name)}</span>`;
 }
 
 /**
@@ -43,11 +43,19 @@ export function createVisitsCalendarView({ elements: { calendar } }) {
    *   visitsByDate: Map<string, Visit[]>,
    *   selectedDate: string | null,
    *   onSelectDate: (date: string) => void,
+   *   onSelectVisit: (visitId: string) => void,
    * }} state
    */
-  function render({ weeks, visitsByDate, selectedDate, onSelectDate }) {
+  function render({ weeks, visitsByDate, selectedDate, onSelectDate, onSelectVisit }) {
     calendar.innerHTML = monthCalendarMarkup(weeks, day => dayCellContent(day, visitsByDate, selectedDate));
     calendar.onclick = event => {
+      // Un cip e mereu în interiorul butonului zilei; verificat primul, ca
+      // deschiderea detaliului să nu declanșeze și filtrarea pe ziua aceea.
+      const chip = /** @type {HTMLElement} */ (event.target).closest('[data-visit-id]');
+      if (chip) {
+        onSelectVisit(/** @type {any} */ (chip).dataset.visitId);
+        return;
+      }
       const button = /** @type {HTMLElement} */ (event.target).closest('[data-date]');
       if (!button) return;
       onSelectDate(/** @type {any} */ (button).dataset.date);

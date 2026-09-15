@@ -11,6 +11,7 @@ import { applyVisitStatus } from '../domain/visit-status.mjs';
 import { buildChildPrefill } from '../domain/visit-child-prefill.mjs';
 import { createVisitsListView } from './visits-list.view.mjs';
 import { createVisitsCalendarView } from './visits-calendar.view.mjs';
+import { createVisitDetailView } from './visit-detail.view.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
@@ -52,6 +53,7 @@ function readVisitSortValue(field, row, records) {
  *   elements: {
  *     funnel: HTMLElement,
  *     calendar: HTMLElement,
+ *     detail: HTMLElement,
  *     prevMonthButton: HTMLElement,
  *     nextMonthButton: HTMLElement,
  *     monthLabel: HTMLElement,
@@ -78,6 +80,7 @@ export function createVisitsController({
   elements: {
     funnel,
     calendar,
+    detail,
     prevMonthButton,
     nextMonthButton,
     monthLabel,
@@ -103,6 +106,8 @@ export function createVisitsController({
     month: isoDateOf(readNow()).slice(0, 7),
     /** @type {string | null} */
     selectedDate: null,
+    /** @type {string | null} */
+    selectedVisitId: null,
     search: '',
     status: '',
     allMonths: false,
@@ -117,6 +122,7 @@ export function createVisitsController({
 
   const listView = createVisitsListView({ elements: { head, table } });
   const calendarView = createVisitsCalendarView({ elements: { calendar } });
+  const detailView = createVisitDetailView({ elements: { detail } });
 
   function render() {
     const records = readRecords();
@@ -150,7 +156,15 @@ export function createVisitsController({
       visitsByDate,
       selectedDate: state.selectedDate,
       onSelectDate: selectDate,
+      onSelectVisit: selectVisit,
     });
+
+    // O vizită selectată poate dispărea între randări (arhivare, statut care o scoate din
+    // listă); tratată ca nimic selectat, fără să blocheze restul ecranului.
+    const selectedVisit = state.selectedVisitId
+      ? (records.visits.find(visit => visit.id === state.selectedVisitId) ?? null)
+      : null;
+    detailView.render({ visit: selectedVisit, records, onQuickAction });
 
     const normalizedSearch = normalizeSearchText(state.search);
     const rows = (
@@ -173,6 +187,12 @@ export function createVisitsController({
   /** @param {string} date */
   function selectDate(date) {
     state.selectedDate = state.selectedDate === date ? null : date;
+    render();
+  }
+
+  /** @param {string} visitId */
+  function selectVisit(visitId) {
+    state.selectedVisitId = state.selectedVisitId === visitId ? null : visitId;
     render();
   }
 
