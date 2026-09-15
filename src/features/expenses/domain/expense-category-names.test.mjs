@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_EXPENSE_CATEGORIES, listExpenseCategoryNames } from './expense-category-names.mjs';
 
-const emptyRecords = () => ({ children: [], payments: [], expenses: [], groups: [], categories: [] });
+const emptyRecords = () => ({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] });
 
 test('fără categorii sau cheltuieli proprii, întoarce doar sugestiile implicite, sortate ro', () => {
   const expected = [...DEFAULT_EXPENSE_CATEGORIES].sort((a, b) => a.localeCompare(b, 'ro'));

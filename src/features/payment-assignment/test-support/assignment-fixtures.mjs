@@ -49,5 +49,6 @@ export function createAssignmentRecords() {
     expenses: [],
     groups: [],
     categories: [],
+    visits: [],
   };
 }
