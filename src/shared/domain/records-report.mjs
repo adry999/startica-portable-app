@@ -7,6 +7,7 @@ export function summary(s) {
     expenses: s.expenses.length,
     groups: s.groups.length,
     categories: s.categories.length,
+    visits: s.visits.length,
     paymentTotal: total(s.payments),
     expenseTotal: total(s.expenses),
   };

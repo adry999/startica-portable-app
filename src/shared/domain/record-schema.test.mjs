@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeRecord, validateState, CHILD_STATUSES, STATUS_HISTORY_VALUES } from './record-schema.mjs';
+import {
+  normalizeRecord,
+  validateState,
+  CHILD_STATUSES,
+  STATUS_HISTORY_VALUES,
+  VISIT_STATUSES,
+  stripSensitiveFields,
+  redactSensitiveFields,
+} from './record-schema.mjs';
 
 const child = () =>
   normalizeRecord('children', {
@@ -23,6 +31,16 @@ const payment = () =>
       { month: '2026-09', amount: 2000 },
       { month: '2026-10', amount: 500 },
     ],
+  });
+const visit = () =>
+  normalizeRecord('visits', {
+    id: 'VIZ-test',
+    name: 'Copil vizitator',
+    parent: 'Maria',
+    date: '2026-09-08',
+    time: '10:00',
+    status: 'Programată',
+    statusChangedAt: '2026-09-01T10:00:00.000Z',
   });
 
 test('Statutul copilului este restrâns la valorile pe care aplicația le înțelege', () => {
@@ -165,4 +183,162 @@ test('Normalizarea păstrează fiecare câmp real și elimină restul', () => {
   assert.ok(!('altceva' in withJunk));
   // Un câmp al altui tip nu trece nici el.
   assert.ok(!('tenders' in normalizeRecord('expenses', { ...real.expenses, tenders: [] })));
+});
+
+test('O vizită validă se normalizează cu implicitele ei', () => {
+  const normalized = visit();
+  assert.equal(normalized.status, 'Programată');
+  assert.equal(normalized.childId, '');
+  assert.deepEqual(normalized.history, []);
+  assert.equal(normalized.desiredGroupId, null);
+  assert.equal(normalized.healthNotes, '');
+});
+
+test('Vizita refuză o oră care nu are forma HH:MM', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), time: '9:00' }), /Ora vizitei/);
+  assert.throws(() => normalizeRecord('visits', { ...visit(), time: '25:00' }), /Ora vizitei/);
+  assert.doesNotThrow(() => normalizeRecord('visits', { ...visit(), time: '09:00' }));
+});
+
+test('Vizita refuză o dată invalidă a vizitei sau a nașterii', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), date: '2026-02-30' }), /Data vizitei/);
+  assert.throws(() => normalizeRecord('visits', { ...visit(), birthDate: '2026-13-01' }), /Data nașterii/);
+});
+
+test('Vizita refuză un statut în afara VISIT_STATUSES', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), status: 'Anulată' }), /Statut/);
+  for (const status of VISIT_STATUSES.filter(s => s !== 'Înscris'))
+    assert.doesNotThrow(() => normalizeRecord('visits', { ...visit(), status }));
+});
+
+test('Vizita refuză o dată de schimbare a statutului invalidă', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), statusChangedAt: 'ieri' }), /schimbării de statut/);
+});
+
+test('Vizita cere childId doar la statutul Înscris; oriunde altundeva e interzis', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), status: 'Înscris' }), /copil asociat/);
+  assert.doesNotThrow(() => normalizeRecord('visits', { ...visit(), status: 'Înscris', childId: 'ID-copil' }));
+  assert.throws(
+    () => normalizeRecord('visits', { ...visit(), status: 'Efectuată', childId: 'ID-copil' }),
+    /Doar o vizită înscrisă/,
+  );
+});
+
+test('Istoricul vizitei refuză o intrare invalidă, mai mult de 1000 de intrări sau ordinea greșită', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('visits', {
+        ...visit(),
+        history: [{ at: 'nu', status: 'Programată', date: '2026-09-08', time: '10:00' }],
+      }),
+    /history/,
+  );
+  assert.throws(
+    () =>
+      normalizeRecord('visits', {
+        ...visit(),
+        history: new Array(1001).fill({
+          at: '2026-01-01T00:00:00.000Z',
+          status: 'Programată',
+          date: '2026-01-01',
+          time: '10:00',
+        }),
+      }),
+    /history/,
+  );
+  assert.throws(
+    () =>
+      normalizeRecord('visits', {
+        ...visit(),
+        history: [
+          { at: '2026-09-02T00:00:00.000Z', status: 'Programată', date: '2026-09-08', time: '10:00' },
+          { at: '2026-09-01T00:00:00.000Z', status: 'Efectuată', date: '2026-09-08', time: '10:00' },
+        ],
+      }),
+    /ordonate cronologic/,
+  );
+  const ordered = normalizeRecord('visits', {
+    ...visit(),
+    history: [
+      { at: '2026-09-01T00:00:00.000Z', status: 'Programată', date: '2026-09-08', time: '10:00' },
+      { at: '2026-09-02T00:00:00.000Z', status: 'Efectuată', date: '2026-09-08', time: '10:00' },
+    ],
+  });
+  assert.equal(ordered.history.length, 2);
+});
+
+test('desiredGroupId al vizitei acceptă un id valid și refuză un format invalid', () => {
+  assert.throws(() => normalizeRecord('visits', { ...visit(), desiredGroupId: 'grupă invalidă!' }), /Grupa dorită/);
+  assert.doesNotThrow(() => normalizeRecord('visits', { ...visit(), desiredGroupId: 'GRP-1' }));
+});
+
+test('validateState refuză o vizită cu childId sau desiredGroupId inexistent', () => {
+  const withMissingChild = { ...visit(), status: 'Înscris', childId: 'ID-fantoma' };
+  assert.throws(
+    () =>
+      validateState({
+        children: [],
+        payments: [],
+        expenses: [],
+        groups: [],
+        categories: [],
+        visits: [withMissingChild],
+      }),
+    /copilul ID-fantoma nu există/,
+  );
+  const withMissingGroup = { ...visit(), desiredGroupId: 'GRP-fantoma' };
+  assert.throws(
+    () =>
+      validateState({
+        children: [],
+        payments: [],
+        expenses: [],
+        groups: [],
+        categories: [],
+        visits: [withMissingGroup],
+      }),
+    /grupa GRP-fantoma nu există/,
+  );
+});
+
+test('validateState acceptă o vizită cu childId și desiredGroupId existente', () => {
+  const childRecord = child();
+  const groupRecord = normalizeRecord('groups', { id: 'GRP-1', name: 'Grupa mare' });
+  const enrolled = { ...visit(), status: 'Înscris', childId: childRecord.id, desiredGroupId: groupRecord.id };
+  assert.doesNotThrow(() =>
+    validateState({
+      children: [childRecord],
+      payments: [],
+      expenses: [],
+      groups: [groupRecord],
+      categories: [],
+      visits: [enrolled],
+    }),
+  );
+});
+
+test('children.healthNotes trece prin normalizare ca orice câmp text opțional', () => {
+  const withHealthNotes = normalizeRecord('children', { ...child(), healthNotes: 'Alergie la nuci' });
+  assert.equal(withHealthNotes.healthNotes, 'Alergie la nuci');
+  assert.equal(normalizeRecord('children', child()).healthNotes, undefined);
+});
+
+test('stripSensitiveFields elimină healthNotes din vizite și copii, fără să atingă alte tipuri', () => {
+  const stripped = stripSensitiveFields('visits', { ...visit(), healthNotes: 'Alergie' });
+  assert.ok(!('healthNotes' in stripped));
+  const strippedChild = stripSensitiveFields('children', { ...child(), healthNotes: 'Astm' });
+  assert.ok(!('healthNotes' in strippedChild));
+  const paymentRecord = payment();
+  assert.deepEqual(stripSensitiveFields('payments', paymentRecord), paymentRecord);
+});
+
+test('redactSensitiveFields înlocuiește o valoare medicală ne-goală, dar lasă valoarea goală neschimbată', () => {
+  const redacted = redactSensitiveFields('visits', { ...visit(), healthNotes: 'Alergie la nuci' });
+  assert.equal(redacted.healthNotes, '[date medicale]');
+  const stillEmpty = redactSensitiveFields('visits', { ...visit(), healthNotes: '' });
+  assert.equal(stillEmpty.healthNotes, '');
+  const redactedChild = redactSensitiveFields('children', { ...child(), healthNotes: 'Astm' });
+  assert.equal(redactedChild.healthNotes, '[date medicale]');
+  assert.equal(redactSensitiveFields('payments', null), null);
+  assert.equal(redactSensitiveFields(null, { healthNotes: 'x' }).healthNotes, 'x');
 });
