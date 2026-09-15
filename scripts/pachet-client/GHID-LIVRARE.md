@@ -37,7 +37,7 @@ Dacă calculatorul clientului se strică sau se pierde, procedura de restaurare 
 - [ ] **Înainte de orice**: dacă calculatorul vechi încă funcționează, închide Startica pe el sau dezinstaleaz-o. Două calculatoare care scriu în același folder Drive și-ar șterge reciproc copiile.
 - [ ] Pe calculatorul nou: instalează Startica și Google Drive for desktop cu contul grădiniței.
 - [ ] Așteaptă ca Google Drive să sincronizeze folderul de backup (fișierele au bifa verde).
-- [ ] La prima pornire, dacă Startica întreabă de o evidență veche, alege „Pornire cu evidență goală".
+- [ ] La prima pornire: la întrebarea „Nu am găsit nicio evidență Startica veche. Alegi folderul manual?" răspunde Nu (No). Sau dacă se găsesc date vechi: „Am găsit evidența Startica în: …" → Nu, apoi „Pornesc cu o evidență goală?" → Da (Yes).
 - [ ] Deschide Backup și setări → Restaurare → Din folderul extern.
 - [ ] Lipește calea completă a folderului de backup din Google Drive (de exemplu: G:\My Drive\Startica-backup).
 - [ ] Apasă Caută copii.

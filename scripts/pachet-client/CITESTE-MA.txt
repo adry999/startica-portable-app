@@ -66,8 +66,10 @@ Restaurare pe un PC nou:
    și Google Drive for desktop cu contul grădiniței.
 2. Așteaptă ca Google Drive să sincronizeze folderul de backup (fișierele
    au bifa verde).
-3. La prima pornire, dacă Startica întreabă de o evidență veche, alege
-   „Pornire cu evidență goală".
+3. La prima pornire: la întrebarea „Nu am găsit nicio evidență Startica
+   veche. Alegi folderul manual?" răspunde Nu (No). Sau dacă se găsesc
+   date vechi: „Am găsit evidența Startica în: …" → Nu, apoi
+   „Pornesc cu o evidență goală?" → Da (Yes).
 4. Deschide Backup și setări → Restaurare → Din folderul extern.
 5. Lipește calea completă a folderului tău de backup din Google Drive
    (de exemplu: G:\My Drive\Startica-backup).
