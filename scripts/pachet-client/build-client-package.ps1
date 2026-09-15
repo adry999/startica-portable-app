@@ -86,7 +86,7 @@ try {
     New-Item -ItemType Directory -Path $extractRoot -Force | Out-Null
 
     $headPaths = @(
-        'src', 'web', 'package.json', 'startica_server.mjs', 'scripts/pachet-client/CITESTE-MA.txt'
+        'src', 'web', 'package.json', 'startica_server.mjs', 'startica_telegram.mjs', 'scripts/pachet-client/CITESTE-MA.txt'
     )
     & git -C $repo archive --format=tar --output $archivePath HEAD -- $headPaths
     if ($LASTEXITCODE -ne 0) { throw 'git archive de la HEAD a esuat (lipseste un fisier necesar in commit?).' }
@@ -97,6 +97,7 @@ try {
     Move-Item -LiteralPath (Join-Path $extractRoot 'web') -Destination (Join-Path $appStage 'web')
     Move-Item -LiteralPath (Join-Path $extractRoot 'package.json') -Destination (Join-Path $appStage 'package.json')
     Move-Item -LiteralPath (Join-Path $extractRoot 'startica_server.mjs') -Destination (Join-Path $appStage 'startica_server.mjs')
+    Move-Item -LiteralPath (Join-Path $extractRoot 'startica_telegram.mjs') -Destination (Join-Path $appStage 'startica_telegram.mjs')
     Move-Item -LiteralPath (Join-Path $extractRoot 'scripts\pachet-client\CITESTE-MA.txt') -Destination (Join-Path $appStage 'CITESTE-MA.txt')
 
     # Testele nu au ce cauta in pachetul livrat clientului.
