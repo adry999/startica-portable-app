@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
@@ -303,4 +303,34 @@ test('GET /api/external-backups pe un folder gol întoarce o listă goală', asy
   } finally {
     rmSync(empty, { recursive: true, force: true });
   }
+});
+
+test('normalizarea separatorului de cale: folder + separator stocat fără separator, și restaurare recunoaște aceeași cale', async t => {
+  const { folder, name } = await seedExternalBackup(t);
+  const { get, post } = await startTestApplication(t, {
+    prefix: 'startica-normalize-separator-',
+    autoBackupIntervalMs: 0,
+  });
+  const folderWithSeparator = folder + sep;
+
+  const configured = await post('/api/settings', { externalDir: folderWithSeparator });
+  assert.equal(configured.status, 200, configured.body.error);
+
+  const health = await get('/api/health');
+  assert.equal(health.externalDir, folder, 'folderul extern trebuie stocat normalizat, fără separator terminal');
+
+  const restored = await post('/api/restore', {
+    name,
+    dir: folderWithSeparator,
+    confirm: 'RESTAUREAZA',
+    revision: 0,
+    requestId: 'restore-normalized-separator-01',
+  });
+
+  assert.equal(restored.status, 200, restored.body.error);
+  assert.doesNotMatch(
+    restored.body.warning || '',
+    /Folderul extern configurat rămâne/,
+    'aceeași cale cu/fără separator trebuie recunoscută',
+  );
 });
