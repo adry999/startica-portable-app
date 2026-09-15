@@ -4,6 +4,8 @@ import { today } from '#shared/domain/calendar-month.mjs';
 import { recordsSummaryMarkup } from '#shared/ui/records-summary.mjs';
 
 /** @typedef {import('../backup.types.mjs').BackupControllerDependencies} BackupControllerDependencies */
+/** @typedef {import('../backup.types.mjs').BackupHealth} BackupHealth */
+/** @typedef {import('#shared/contracts/persistence.mjs').RevisionEnvelope} RevisionEnvelope */
 
 // O zi în ms, ca la starea de sănătate a backupului: peste atât, cea mai recentă copie externă atrage atenția.
 const STALE_AFTER_MS = 86400000;
@@ -174,7 +176,9 @@ export function createBackupController({
     const wasExternalDirEmpty = !sessionState.health.externalDir;
     commitRestore.disabled = true;
     try {
-      const result = await submitMutation('/api/restore', { name, dir, confirm: restoreConfirm.value }, revision);
+      const result = /** @type {RevisionEnvelope & { health?: BackupHealth }} */ (
+        await submitMutation('/api/restore', { name, dir, confirm: restoreConfirm.value }, revision)
+      );
       restoreDialog.close();
       if (dir)
         showNotice(

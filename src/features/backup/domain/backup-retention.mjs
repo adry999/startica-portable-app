@@ -1,10 +1,11 @@
 /** @typedef {import('../backup.types.mjs').BackupFileEntry} BackupFileEntry */
+/** @typedef {Pick<BackupFileEntry, 'name' | 'modified'>} RetainableBackupFile */
 
 // Ce se păstrează: ultimele 20 de copii, câte una pentru fiecare din ultimele
 // 30 de zile și 12 luni cu backup, plus copiile dinaintea unei operațiuni
 // ireversibile, care nu expiră.
 /**
- * @param {BackupFileEntry[]} files
+ * @param {RetainableBackupFile[]} files
  * @returns {Set<string>}
  */
 export function selectBackupsToKeep(files) {

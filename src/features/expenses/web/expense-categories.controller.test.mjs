@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createExpenseCategoriesController } from './expense-categories.controller.mjs';
 
+/** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
+
 /** @param {any} value */
 const asAny = value => /** @type {any} */ (value);
 
@@ -9,7 +11,8 @@ const asAny = value => /** @type {any} */ (value);
 function createHarness({ categories = [] } = {}) {
   const notices = [];
   const submitted = [];
-  const records = { categories, expenses: [] };
+  /** @type {RecordsSnapshot} */
+  const records = { categories, expenses: [], children: [], payments: [], groups: [] };
   const createForm = asAny({ reset: () => {} });
   const nameInput = asAny({ value: '', setAttribute: () => {} });
   createExpenseCategoriesController({
