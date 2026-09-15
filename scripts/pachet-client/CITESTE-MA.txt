@@ -54,6 +54,39 @@ Reguli de siguranță (copiile nu sunt criptate):
 - Lunar, pe drive.google.com, ultimul fișier startica_*.db are data de
   azi.
 
+NOTIFICĂRI TELEGRAM (REZUMAT ZILNIC)
+
+1. Creează botul în Telegram: deschide @BotFather, trimite /newbot,
+   completează numele și username-ul, și copiază token-ul.
+2. În Startica: Backup și setări → Notificări Telegram → paste token-ul
+   în câmpul „Token-ul botului" și apasă „Conectează".
+3. În aplicația Telegram: deschide botul creat, apasă Start.
+4. Înapoi în Startica: apasă din nou „Conectează" și primești imediat
+   un mesaj de probă pe telefon.
+
+Rezumatul zilnic sosește la 08:00 și conține:
+- Zile de naștere din următoarele 3 zile
+- Vizitele astazi și mâine cu oră, nume și telefon
+- Copii din „De notificat" pe luna curentă
+
+Condiții:
+- Mesajul sosește numai dacă ești autentificat în Windows (ecran
+  blocat e în regulă).
+- Calculator adormit la 08:00 → rezumatul vine la trezire.
+- Calculator oprit toată ziua → niciun rezumat pentru ziua aceea.
+
+Siguranța token-ului:
+- Token-ul nu se include în backupuri. După restaurare pe alt
+  calculator, trebuie re-lipit (2 minute).
+- Nicicând nu-i da token-ul nimănui: cine îl are poate scrie ca
+  botul. Dacă e compromis, revocă-l din @BotFather și reconectează.
+- Butonul „Deconectează" șterge fișierul local.
+
+Depanare:
+- Dacă rezumatul nu mai vine, deschide Backup și setări și verifică
+  data din „ultimul rezumat". Dacă e mai veche de 48 de ore, verifică
+  Jurnale\telegram.log (în %LOCALAPPDATA%\Startica\Jurnale\).
+
 DACĂ SE STRICĂ SAU SE PIERDE CALCULATORUL
 
 Mai întâi: dacă vechiul calculator încă merge, închide Startica pe el sau
