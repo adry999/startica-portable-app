@@ -655,6 +655,13 @@ try {
     /cea mai recentă/,
     'Newest external backup missing the "cea mai recentă" suffix',
   );
+  assert.equal(
+    await evaluate(
+      "(()=>{const select=document.getElementById('backupSelect').getBoundingClientRect();const modal=document.querySelector('#restoreDialog .modal').getBoundingClientRect();return select.right<=modal.right+1;})()",
+    ),
+    true,
+    'Backup select overflows the restore dialog',
+  );
   await until(() => evaluate("!document.getElementById('commitRestore').disabled"), 'External restore preview failed');
   const externalPreviewText = await evaluate("document.getElementById('restorePreview').textContent");
   assert.match(externalPreviewText, /\d+ copii/, externalPreviewText);

@@ -16,6 +16,11 @@
 #restorePreview {
   margin: 15px 0;
 }
+#backupSelect {
+  /* fără min-width: 0, gridul .label își întinde coloana după cea mai lungă opțiune și iese din dialog */
+  width: 100%;
+  min-width: 0;
+}
 .restore-source {
   display: flex;
   flex-wrap: wrap;
