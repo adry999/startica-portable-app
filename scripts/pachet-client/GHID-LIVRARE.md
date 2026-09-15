@@ -20,6 +20,7 @@ Pentru cine pregătește și instalează pachetul la client, nu pentru client
 - [ ] Dacă există o instalare veche din ZIP: nu se șterge nimic înainte — lansatorul o găsește singur și oferă preluarea evidenței la prima pornire.
 - [ ] Instalerul rulat; la avertismentul SmartScreen ("Editor necunoscut"), "Mai multe informații" → "Rulează oricum".
 - [ ] La prima pornire: dacă apare dialogul de preluare a evidenței vechi, se confirmă folderul găsit și data ultimei modificări înainte de a accepta.
+- [ ] Prima operațiune: Taxe și grupe → Aplică la rândurile afișate → Salvează completările (fără taxe, De notificat și Situația plăților nu pot calcula restanțele).
 - [ ] Datele sunt cele cunoscute (număr de copii, ultimele achitări și cheltuieli); versiunea afișată în bara laterală corespunde.
 - [ ] **Backup și setări**: folderul extern (Google Drive sau similar) e configurat; **Salvează și testează copia** reușește. Copierea în folderul extern nu confirmă și încărcarea în cloud — asta se verifică separat, în aplicația Google Drive sau echivalent.
 - [ ] Configurarea folderului extern în Google Drive for desktop cu contul grădiniței, folder „Disponibil offline", nepartajat.

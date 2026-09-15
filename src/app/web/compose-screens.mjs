@@ -19,7 +19,7 @@ import {
   expenseEditorFields,
   listExpenseCategoryNames,
 } from '#features/expenses/index.web.mjs';
-import { createFeeSetupController } from '#features/fee-setup/index.web.mjs';
+import { createFeeSetupController, hasMissingFee } from '#features/fee-setup/index.web.mjs';
 import { createGroupsController } from '#features/groups/index.web.mjs';
 import {
   createPaymentAssignmentApi,
@@ -338,7 +338,13 @@ export function composeScreens(dependencies) {
 
   // Listele citesc filtrul de categorie înainte ca lista de categorii să-i refacă opțiunile.
   renderCycle.addScreen('dashboard', ({ month, review, activeEvaluations }) =>
-    renderDashboard({ month, review, evaluations: activeEvaluations }),
+    renderDashboard({
+      month,
+      review,
+      evaluations: activeEvaluations,
+      // Aceeași regulă ca badge-ul „Taxe și grupe”, ca Dashboard să nu spună „nicio acțiune” cu taxe lipsă.
+      missingFeeCount: activeEvaluations.filter(({ child }) => hasMissingFee(child)).length,
+    }),
   );
   renderCycle.addScreen('children-summary', ({ review }) => renderChildrenSummary({ review }));
   renderCycle.addScreen('payment-status', ({ month, evaluations }) => renderPaymentStatus({ month, evaluations }));
