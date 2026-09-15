@@ -254,7 +254,7 @@ try {
     $taskPath4 = 'Startica\' + $taskName4
     $telegramTaskPaths += $taskPath4
 
-    $register4 = Start-Process -FilePath $launcherExe -ArgumentList ('--register-task --quiet --home "' + $home4 + '"') -Wait -PassThru
+    $register4 = Start-Process -FilePath $launcherExe -ArgumentList ('--register-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
     $launcherProcesses += $register4
     Assert ($register4.ExitCode -eq 0) 'Scenariul 4: --register-task iese cu codul 0'
 
@@ -266,7 +266,7 @@ try {
     $queryXml4 = ($queryXml4Lines -join "`n")
     Assert ($queryXml4 -match '--telegram') 'Scenariul 4: actiunea din XML contine --telegram'
 
-    $telegramArgs4 = '--telegram --quiet --home "' + $home4 + '"'
+    $telegramArgs4 = '--telegram --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"'
 
     # startica_telegram.mjs e proprietatea T2/T3 (nu inca in acest worktree la data scrierii):
     # fara el, node.exe iese cu "module not found" si codul lansatorului nu mai e 0 - asteptat,
@@ -297,7 +297,7 @@ try {
         Write-Output 'ASTEPTARE (T2/T3 neterminate): startica_telegram.mjs lipseste; pasii --telegram/telegram.log/telegram.json raman neverificati end-to-end.'
     }
 
-    $unregister4 = Start-Process -FilePath $launcherExe -ArgumentList ('--unregister-task --quiet --home "' + $home4 + '"') -Wait -PassThru
+    $unregister4 = Start-Process -FilePath $launcherExe -ArgumentList ('--unregister-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
     $launcherProcesses += $unregister4
     Assert ($unregister4.ExitCode -eq 0) 'Scenariul 4: --unregister-task iese cu codul 0'
 
