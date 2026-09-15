@@ -103,8 +103,8 @@ export function createBackupController({
 
   async function loadExternalBackups() {
     clearRestoreSelection();
+    restorePreview.innerHTML = '<p class="notice">Se caută copii în folder…</p>';
     const dir = restoreFolder.value.trim();
-    restoreFolderLoad.disabled = true;
     try {
       const { backups } = await requestJson('/api/external-backups?dir=' + encodeURIComponent(dir));
       if (selectedSource() !== 'extern' || restoreFolder.value.trim() !== dir) return;
@@ -125,8 +125,6 @@ export function createBackupController({
     } catch (error) {
       if (selectedSource() !== 'extern' || restoreFolder.value.trim() !== dir) return;
       restorePreview.innerHTML = `<p class="danger">${escapeHtml(/** @type {Error} */ (error).message)}</p>`;
-    } finally {
-      restoreFolderLoad.disabled = false;
     }
   }
 
@@ -183,7 +181,7 @@ export function createBackupController({
       if (dir)
         showNotice(
           'Datele au fost restaurate din folderul extern.' +
-            (wasExternalDirEmpty && result.health && result.health.externalDir === dir
+            (wasExternalDirEmpty && !!result.health?.externalDir
               ? ' Folderul a fost setat pentru copiile viitoare.'
               : ''),
         );

@@ -80,6 +80,23 @@
 .table-wrap {
   overflow: auto;
   container-type: inline-size;
+  /* Umbrele fixe de la capete apar doar când tabelul e derulat orizontal: straturile „local" le acoperă la margini. */
+  background:
+    linear-gradient(90deg, #fff 30%, rgba(255, 255, 255, 0)) left / 40px 100% no-repeat local,
+    linear-gradient(270deg, #fff 30%, rgba(255, 255, 255, 0)) right / 40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0)) left / 14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0)) right / 14px 100% no-repeat scroll,
+    #fff;
+}
+/* Fundalul stă pe rând, nu pe celulă, ca o coloană fixată cu `background: inherit` să preia și hover-ul. */
+.table-wrap tbody tr {
+  background: #fff;
+}
+.table-wrap tbody tr:hover {
+  background: #faf7ef;
+}
+.table-wrap tbody tr.archived-row:hover {
+  background: #fff;
 }
 /* Celula cu colspan e lată cât tabelul derulat; fixată la lățimea vizibilă ca textul centrat să rămână pe ecran. */
 .table-wrap td.empty {
@@ -94,12 +111,6 @@
   top: 0;
   z-index: 1;
   background: #fff;
-}
-.table-wrap tbody tr:hover td {
-  background: #faf7ef;
-}
-.table-wrap tbody tr.archived-row:hover td {
-  background: transparent;
 }
 .table-sort {
   display: inline-flex;

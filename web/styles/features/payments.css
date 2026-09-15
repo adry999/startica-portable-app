@@ -36,3 +36,14 @@
 #payments table th:nth-child(4) {
   text-align: right;
 }
+/* „Copil / sursă" (HEADINGS din payments-list.view.mjs); rămâne vizibilă la derularea orizontală. */
+#payments .table-wrap th:nth-child(3),
+#payments .table-wrap td:nth-child(3) {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: inherit;
+}
+#payments .table-wrap th:nth-child(3) {
+  background: #fff;
+}
