@@ -25,7 +25,16 @@ namespace Startica
         {
             bool quietHint = false;
             for (int i = 0; i < args.Length; i++)
-                if (string.Equals(args[i], "--quiet", StringComparison.OrdinalIgnoreCase)) quietHint = true;
+            {
+                string arg = args[i];
+                // --telegram/--register-task/--unregister-task implică --quiet (Options.Parse),
+                // dar detecția aici trebuie să acopere și cazul unei erori de argumente înainte de Parse.
+                if (string.Equals(arg, "--quiet", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "--telegram", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "--register-task", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(arg, "--unregister-task", StringComparison.OrdinalIgnoreCase))
+                    quietHint = true;
+            }
 
             Options options;
             try
@@ -46,10 +55,12 @@ namespace Startica
                 Directory.CreateDirectory(logDirectory);
                 logger = new Logger(Path.Combine(logDirectory, "lansator.log"));
                 logger.Info("Pornire: home=" + options.Home + " app-dir=" + options.AppDir + " port=" + options.Port +
-                    (options.Stop ? " --stop" : ""));
+                    (options.Stop ? " --stop" : "") +
+                    (options.Telegram ? " --telegram" : "") +
+                    (options.RegisterTask ? " --register-task" : "") +
+                    (options.UnregisterTask ? " --unregister-task" : ""));
 
-                new Launcher(options, logger).Run();
-                return 0;
+                return new Launcher(options, logger).Run();
             }
             catch (Exception ex)
             {
@@ -75,6 +86,9 @@ namespace Startica
         public bool Stop;
         public bool NoMigrate;
         public bool Quiet;
+        public bool Telegram;
+        public bool RegisterTask;
+        public bool UnregisterTask;
 
         public static Options Parse(string[] args)
         {
@@ -101,8 +115,19 @@ namespace Startica
                 else if (string.Equals(arg, "--stop", StringComparison.OrdinalIgnoreCase)) options.Stop = true;
                 else if (string.Equals(arg, "--no-migrate", StringComparison.OrdinalIgnoreCase)) options.NoMigrate = true;
                 else if (string.Equals(arg, "--quiet", StringComparison.OrdinalIgnoreCase)) options.Quiet = true;
+                else if (string.Equals(arg, "--telegram", StringComparison.OrdinalIgnoreCase)) options.Telegram = true;
+                else if (string.Equals(arg, "--register-task", StringComparison.OrdinalIgnoreCase)) options.RegisterTask = true;
+                else if (string.Equals(arg, "--unregister-task", StringComparison.OrdinalIgnoreCase)) options.UnregisterTask = true;
                 else throw new StarticaException("Argument necunoscut: " + arg);
             }
+
+            // --stop/--telegram/--register-task/--unregister-task sunt moduri exclusive: fiecare
+            // înlocuiește pornirea normală, iar combinarea lor nu are un sens definit.
+            int exclusiveModes = (options.Stop ? 1 : 0) + (options.Telegram ? 1 : 0) +
+                (options.RegisterTask ? 1 : 0) + (options.UnregisterTask ? 1 : 0);
+            if (exclusiveModes > 1)
+                throw new StarticaException("Argumentele --stop, --telegram, --register-task și --unregister-task se exclud reciproc.");
+            if (options.Telegram || options.RegisterTask || options.UnregisterTask) options.Quiet = true;
 
             options.Home = NormalizeDirectory(options.Home);
             if (options.ProfileDir == null) options.ProfileDir = Path.Combine(options.Home, "Interfata");
@@ -207,14 +232,22 @@ namespace Startica
             _expectedDatabase = Path.GetFullPath(Path.Combine(_options.Home, DatabaseRelativePath));
         }
 
-        public void Run()
+        // Codul de ieșire devine codul procesului lansator (Task Scheduler îl citește la
+        // --telegram/--register-task pentru RestartOnFailure); pornirea normală rămâne 0.
+        public int Run()
         {
+            // Cele trei moduri de utilitate nu ating fereastra, mutexul sau migrarea:
+            // rulează, scriu un rând în jurnal și ies, indiferent dacă Startica e pornită.
+            if (_options.Telegram) return RunTelegramJob();
+            if (_options.RegisterTask) return RunRegisterTaskCommand();
+            if (_options.UnregisterTask) return RunUnregisterTaskCommand();
+
             if (IsDefaultHome()) CleanupOldLauncherProfiles();
 
             if (_options.Stop)
             {
                 Stop();
-                return;
+                return 0;
             }
 
             if (!File.Exists(_expectedDatabase) && !_options.NoMigrate && !_options.Quiet)
@@ -223,7 +256,7 @@ namespace Startica
                 if (!proceed)
                 {
                     _logger.Info("Pornire anulată de utilizator la migrare.");
-                    return;
+                    return 0;
                 }
             }
 
@@ -248,7 +281,7 @@ namespace Startica
                             "Startica pornește deja, dar serverul nu răspunde încă. Închide fereastra Startica existentă și încearcă din nou.");
                     OpenWindow(browserPath, "http://127.0.0.1:" + health.Port, _options.ProfileDir);
                     _logger.Info("Fereastră deschisă (instanță neproprietară).");
-                    return;
+                    return 0;
                 }
 
                 Process serverProcess = null;
@@ -262,13 +295,163 @@ namespace Startica
                 OpenWindow(browserPath, "http://127.0.0.1:" + health.Port, _options.ProfileDir);
                 _logger.Info("Fereastră deschisă, server pe portul " + health.Port + ".");
 
+                // Auto-vindecare pentru home-ul implicit: o sarcină ștearsă de un "optimizator"
+                // revine la prima pornire. Niciodată fatal - Startica trebuie să pornească oricum.
+                if (IsDefaultHome())
+                {
+                    try { RegisterTelegramTask(); }
+                    catch (Exception ex) { _logger.Warn("Nu am putut reînregistra sarcina Telegram: " + ex.Message); }
+                }
+
                 Supervise(browserPath);
+                return 0;
             }
             finally
             {
                 if (ownsMutex) { try { mutex.ReleaseMutex(); } catch (Exception) { } }
                 mutex.Close();
             }
+        }
+
+        // === Sarcina Telegram (--telegram), pornită de Task Scheduler la 08:00 ===
+
+        private int RunTelegramJob()
+        {
+            string nodePath = FindNode();
+            string scriptPath = Path.Combine(_options.AppDir, "startica_telegram.mjs");
+            ProcessStartInfo info = new ProcessStartInfo(nodePath);
+            info.Arguments = "--disable-warning=ExperimentalWarning \"" + scriptPath + "\"";
+            info.WorkingDirectory = _options.AppDir;
+            info.UseShellExecute = false;
+            info.CreateNoWindow = true;
+            info.EnvironmentVariables["STARTICA_PROFILE"] = "production";
+            info.EnvironmentVariables["STARTICA_HOME"] = _options.Home;
+
+            Process process = Process.Start(info);
+            int exitCode;
+            if (process.WaitForExit(300000))
+            {
+                exitCode = process.ExitCode;
+            }
+            else
+            {
+                // Procesul nu are voie să rămână agățat 96 de porniri de sarcină/zi mai târziu.
+                process.Kill();
+                exitCode = 1;
+            }
+            _logger.Info("Rezumat Telegram: cod " + exitCode);
+            return exitCode;
+        }
+
+        // === Sarcina programată Task Scheduler (--register-task / --unregister-task), §3.4 ===
+
+        private const string TelegramTaskFolderName = "Startica";
+        private const string TelegramTaskBaseName = "Rezumat Telegram";
+
+        // Numele include hash-ul home-ului doar când home-ul nu e cel implicit, ca testele
+        // (--home într-un folder temporar) să nu atingă sarcina reală a utilizatorului.
+        private string TelegramTaskName()
+        {
+            if (IsDefaultHome()) return TelegramTaskBaseName;
+            return TelegramTaskBaseName + " " + ComputeHomeIdentity(_options.Home).Substring(0, 8);
+        }
+
+        private int RunRegisterTaskCommand()
+        {
+            try
+            {
+                RegisterTelegramTask();
+                _logger.Info("Sarcină „" + TelegramTaskName() + "” înregistrată.");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Nu am putut înregistra sarcina Telegram: " + ex.Message);
+                return 1;
+            }
+        }
+
+        private int RunUnregisterTaskCommand()
+        {
+            try
+            {
+                UnregisterTelegramTask();
+                _logger.Info("Sarcină „" + TelegramTaskName() + "” ștearsă (sau nu exista).");
+            }
+            catch (Exception ex)
+            {
+                // dezinstalarea nu are voie să eșueze din cauza sarcinii - datele rămân oricum
+                _logger.Warn("Ștergerea sarcinii Telegram a eșuat: " + ex.Message);
+            }
+            return 0;
+        }
+
+        // Schedule.Service prin COM legat târziu, ca WScript.Shell mai jos (TryReadShortcut):
+        // niciun assembly de interop dedicat. Idempotent (TASK_CREATE_OR_UPDATE), ~50 ms.
+        private void RegisterTelegramTask()
+        {
+            dynamic scheduler = Activator.CreateInstance(Type.GetTypeFromProgID("Schedule.Service"));
+            scheduler.Connect();
+
+            dynamic rootFolder = scheduler.GetFolder("\\");
+            dynamic folder = GetOrCreateTelegramFolder(rootFolder);
+
+            dynamic taskDefinition = scheduler.NewTask(0);
+
+            dynamic registrationInfo = taskDefinition.RegistrationInfo;
+            registrationInfo.Description = "Trimite rezumatul zilnic Telegram (zile de naștere, vizite, restanțe) la ora 08:00.";
+            registrationInfo.Author = "Startica";
+
+            dynamic principal = taskDefinition.Principal;
+            principal.LogonType = 3; // TASK_LOGON_INTERACTIVE_TOKEN
+            principal.RunLevel = 0;  // TASK_RUNLEVEL_LUA
+
+            dynamic settings = taskDefinition.Settings;
+            settings.StartWhenAvailable = true;
+            settings.DisallowStartIfOnBatteries = false;
+            settings.StopIfGoingOnBatteries = false;
+            settings.WakeToRun = false;
+            settings.ExecutionTimeLimit = "PT10M";
+            settings.MultipleInstances = 2; // TASK_INSTANCES_IGNORE_NEW
+            settings.Hidden = true;
+            settings.RestartCount = 6;
+            settings.RestartInterval = "PT30M";
+
+            dynamic trigger = taskDefinition.Triggers.Create(2); // TASK_TRIGGER_DAILY
+            trigger.StartBoundary = DateTime.Today.AddHours(8).ToString("yyyy-MM-ddTHH:mm:ss");
+            trigger.DaysInterval = 1;
+            trigger.Enabled = true;
+
+            dynamic action = taskDefinition.Actions.Create(0); // TASK_ACTION_EXEC
+            action.Path = Path.Combine(_options.AppDir, "Startica.exe");
+            string arguments = "--telegram --quiet";
+            if (!IsDefaultHome()) arguments += " --home \"" + _options.Home + "\"";
+            action.Arguments = arguments;
+
+            folder.RegisterTaskDefinition(TelegramTaskName(), taskDefinition,
+                6 /* TASK_CREATE_OR_UPDATE */, null, null, 3 /* TASK_LOGON_INTERACTIVE_TOKEN */);
+        }
+
+        // GetFolder reușește direct la a doua și următoarele porniri (calea comună, fără
+        // excepție); CreateFolder rulează o singură dată, la prima înregistrare.
+        private static dynamic GetOrCreateTelegramFolder(dynamic rootFolder)
+        {
+            try { return rootFolder.GetFolder(TelegramTaskFolderName); }
+            catch (Exception) { return rootFolder.CreateFolder(TelegramTaskFolderName, null); }
+        }
+
+        private void UnregisterTelegramTask()
+        {
+            dynamic scheduler = Activator.CreateInstance(Type.GetTypeFromProgID("Schedule.Service"));
+            scheduler.Connect();
+
+            dynamic rootFolder = scheduler.GetFolder("\\");
+            dynamic folder;
+            try { folder = rootFolder.GetFolder(TelegramTaskFolderName); }
+            catch (Exception) { return; } // niciun folder Startica -> nimic de șters
+
+            try { folder.DeleteTask(TelegramTaskName(), 0); }
+            catch (Exception) { /* sarcina lipsă nu e eroare */ }
         }
 
         private bool IsDefaultHome()
