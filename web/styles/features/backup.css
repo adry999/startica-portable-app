@@ -16,3 +16,37 @@
 #restorePreview {
   margin: 15px 0;
 }
+.restore-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin: 0 0 16px;
+}
+.restore-source legend {
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.restore-source label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.restore-source input[type='radio'] {
+  width: 18px;
+  height: 18px;
+}
+#restoreExternal {
+  margin-bottom: 16px;
+}
+#restoreExternal .btn {
+  margin: 8px 0 12px;
+}
