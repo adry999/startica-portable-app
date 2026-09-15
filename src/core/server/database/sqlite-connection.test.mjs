@@ -23,7 +23,9 @@ test('openDatabaseReadOnly citește înregistrările scrise printr-o conexiune d
     .prepare('INSERT INTO records(kind, id, payload) VALUES (?, ?, ?)')
     .run('children', 'CHILD-1', '{"name":"Ana"}');
 
-  const { db: readOnlyDb } = openDatabaseReadOnly({ dataDir });
+  const opened = openDatabaseReadOnly({ dataDir });
+  assert.ok(opened);
+  const { db: readOnlyDb } = opened;
   const rows = readOnlyDb
     .prepare('SELECT kind, id, payload FROM records')
     .all()
@@ -38,7 +40,9 @@ test('openDatabaseReadOnly refuză o scriere, ca procesul separat să nu poată 
   const { dataDir, backupDir } = createTemporaryHome(t);
   const { db: writableDb } = openDatabase({ dataDir, backupDir });
 
-  const { db: readOnlyDb } = openDatabaseReadOnly({ dataDir });
+  const opened = openDatabaseReadOnly({ dataDir });
+  assert.ok(opened);
+  const { db: readOnlyDb } = opened;
   try {
     assert.throws(
       () =>

@@ -89,9 +89,10 @@ test('sendMessage trimite chat_id, text și parse_mode HTML', async () => {
   const service = createTelegramService({ fetch });
   await service.sendMessage({ token: VALID_TOKEN, chatId: 42, text: 'Salut' });
   const call = calls.find(c => c.url.includes('/sendMessage'));
-  assert.equal(call.body.chat_id, 42);
-  assert.equal(call.body.text, 'Salut');
-  assert.equal(call.body.parse_mode, 'HTML');
+  assert.ok(call);
+  assert.equal(/** @type {any} */ (call.body).chat_id, 42);
+  assert.equal(/** @type {any} */ (call.body).text, 'Salut');
+  assert.equal(/** @type {any} */ (call.body).parse_mode, 'HTML');
 });
 
 test('sendMessage trimite bucățile în ordine și se oprește la prima eroare', async () => {
@@ -136,7 +137,7 @@ test('findPrivateChat aruncă o eroare distinctă când nu există nicio convers
   await assert.rejects(
     () => service.findPrivateChat(VALID_TOKEN),
     error => {
-      assert.equal(error.telegramReason, 'no-private-chat');
+      assert.equal(/** @type {any} */ (error).telegramReason, 'no-private-chat');
       return true;
     },
   );

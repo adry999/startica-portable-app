@@ -25,7 +25,6 @@ export function createFakeTelegramApi(responses = {}) {
     return config;
   }
 
-  /** @type {typeof fetch} */
   async function fakeFetch(url, init = {}) {
     const method = init.method || 'GET';
     const body = init.body ? JSON.parse(String(init.body)) : null;
@@ -54,7 +53,7 @@ export function createFakeTelegramApi(responses = {}) {
     throw new Error(`Cale Bot API neașteptată în test: ${path}`);
   }
 
-  return { fetch: fakeFetch, calls };
+  return { fetch: /** @type {any} */ (fakeFetch), calls };
 }
 
 // Ajutoare pentru cazurile de eșec din §6, gata de folosit în teste.

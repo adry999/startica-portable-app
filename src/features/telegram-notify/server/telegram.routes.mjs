@@ -41,6 +41,11 @@ function isWebhookConflict(error) {
   return error?.error_code === 409 || error?.status === 409;
 }
 
+/** @param {unknown} error @returns {error is Error & { telegramReason?: string }} */
+function isTelegramError(error) {
+  return error instanceof Error;
+}
+
 /** @param {TelegramRoutesDependencies} dependencies */
 export function createTelegramRoutes({ dataDirectory, telegramService, auditTrail }) {
   function buildStatus() {
@@ -73,7 +78,7 @@ export function createTelegramRoutes({ dataDirectory, telegramService, auditTrai
     try {
       chat = await telegramService.findPrivateChat(token);
     } catch (error) {
-      if (error?.telegramReason === 'no-private-chat') fail(startButtonMessage(botUsername));
+      if (isTelegramError(error) && error.telegramReason === 'no-private-chat') fail(startButtonMessage(botUsername));
       if (isWebhookConflict(error)) fail(WEBHOOK_CONFLICT_MESSAGE);
       const { message } = telegramService.classifyTelegramFailure(error);
       fail(message);
