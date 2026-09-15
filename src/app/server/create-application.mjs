@@ -19,6 +19,7 @@ import { createGroupsRoutes } from '#features/groups/index.server.mjs';
 import { createExpenseCategoriesRoutes } from '#features/expenses/index.server.mjs';
 import { createFeeSetupRoutes } from '#features/fee-setup/index.server.mjs';
 import { createRecordEditingRoutes } from '#features/record-editing/index.server.mjs';
+import { createVisitsService, createVisitsRoutes } from '#features/visits/index.server.mjs';
 import { createChildrenRoutes } from '#features/children/index.server.mjs';
 import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
@@ -85,6 +86,7 @@ export function createApplication(options = {}) {
 
   const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
   const paymentAssignmentService = createPaymentAssignmentService(recordWriteDependencies);
+  const visitsService = createVisitsService(recordWriteDependencies);
   // readEnvelope() nu are câmpul „ok” din RevisionEnvelope (nu e rezultatul unei scrieri);
   // rutele de previzualizare citesc doar state/revision/updatedAt din el.
   const readEnvelope = /** @type {() => import('#shared/contracts/persistence.mjs').RevisionEnvelope} */ (
@@ -115,6 +117,7 @@ export function createApplication(options = {}) {
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
+    ...createVisitsRoutes({ visitsService }),
     ...createRecordEditingRoutes(recordWriteDependencies),
     ...createChildrenRoutes({ ...recordWriteDependencies, readEnvelope }),
     ...createDataTransferRoutes({
@@ -156,6 +159,7 @@ export function createApplication(options = {}) {
     backup: backups.backup,
     safeBackup: backups.safeBackup,
     health: backups.health,
+    expireHealthNotes: visitsService.expireHealthNotes,
     envelope: recordRepository.readEnvelope,
     close: () =>
       /** @type {Promise<void>} */ (
