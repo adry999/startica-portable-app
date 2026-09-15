@@ -167,7 +167,7 @@ export function createVisitsController({
     summaryText.innerHTML = `<strong>${rows.length}</strong> ${rows.length === 1 ? 'vizită' : 'vizite'}`;
 
     const upcoming = countVisitsForDays(/** @type {any} */ (records.visits), todayStr);
-    renderVisitsCount(upcoming.today + upcoming.tomorrow);
+    renderVisitsCount(funnelStats.scheduled);
   }
 
   /** @param {string} date */

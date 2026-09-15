@@ -44,6 +44,7 @@ function createHarness({ visits = [buildVisit()] } = {}) {
   const openEditorCalls = [];
   const enrolCalls = [];
   const profileOpened = [];
+  const visitsCountCalls = [];
 
   const elements = {
     funnel: createElement(),
@@ -76,9 +77,20 @@ function createHarness({ visits = [buildVisit()] } = {}) {
       return { childId: 'ID-nou' };
     },
     openProfile: id => profileOpened.push(id),
+    renderVisitsCount: count => visitsCountCalls.push(count),
   });
 
-  return { controller, elements, records, notices, submitted, openEditorCalls, enrolCalls, profileOpened };
+  return {
+    controller,
+    elements,
+    records,
+    notices,
+    submitted,
+    openEditorCalls,
+    enrolCalls,
+    profileOpened,
+    visitsCountCalls,
+  };
 }
 
 const clickTableAction = (table, id, action) =>
@@ -251,4 +263,21 @@ test('„Înscrie copilul” deschide editorul de copii precompletat cu title ș
   assert.deepEqual(enrolCalls[0], ['VIZ-1', child]);
   assert.deepEqual(notices, [['Copil înscris. Vizita a fost marcată „Înscris”.']]);
   assert.deepEqual(profileOpened, ['ID-nou']);
+});
+
+test('nav badge counts all scheduled visits from today onward, not just today and tomorrow', () => {
+  const { controller, visitsCountCalls } = createHarness({
+    visits: [
+      buildVisit({ id: 'VIZ-1', date: '2026-09-15', status: 'Programată' }),
+      buildVisit({ id: 'VIZ-2', date: '2026-09-16', status: 'Programată' }),
+      buildVisit({ id: 'VIZ-3', date: '2026-09-20', status: 'Programată' }),
+      buildVisit({ id: 'VIZ-4', date: '2026-10-05', status: 'Programată' }),
+      buildVisit({ id: 'VIZ-5', date: '2026-09-14', status: 'Programată' }),
+    ],
+  });
+
+  controller.render();
+
+  assert.equal(visitsCountCalls.length, 1);
+  assert.equal(visitsCountCalls[0], 4);
 });
