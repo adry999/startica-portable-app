@@ -412,6 +412,28 @@ try {
     () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
     'Settings retry must show green',
   );
+
+  // Telegram: nimic configurat în aplicația de test; un token cu format greșit e respins
+  // sincron în telegram.service.mjs, înainte de orice apel către api.telegram.org — instrumentăm
+  // fetch ca să dovedim că niciun apel real de rețea nu pleacă spre Telegram.
+  assert.equal(await evaluate("document.getElementById('telegramStatus').textContent"), 'Neconfigurat.');
+  assert.equal(await evaluate("document.getElementById('telegramTest').hidden"), true);
+  assert.equal(await evaluate("document.getElementById('telegramDisconnect').hidden"), true);
+  await evaluate(
+    "window.telegramFetchCalls=[];window.testFetchTelegram=window.fetch;window.fetch=(...args)=>{if(String(args[0]).includes('telegram.org'))window.telegramFetchCalls.push(String(args[0]));return window.testFetchTelegram(...args);}",
+  );
+  await evaluate(
+    "document.getElementById('telegramToken').value='abc';document.getElementById('telegramForm').requestSubmit()",
+  );
+  await until(
+    () => evaluate("document.getElementById('message').textContent.includes('Token invalid')"),
+    'Malformed Telegram token did not show the expected error',
+  );
+  assert.deepEqual(await evaluate('window.telegramFetchCalls'), []);
+  assert.equal(await evaluate("document.getElementById('telegramTest').hidden"), true);
+  assert.equal(await evaluate("document.getElementById('telegramDisconnect').hidden"), true);
+  await evaluate('window.fetch=window.testFetchTelegram');
+
   await evaluate(
     "window.fetch=async()=>{throw new TypeError('Test offline')};window.dispatchEvent(new Event('focus'))",
   );
@@ -782,7 +804,7 @@ try {
   await screenshot('dashboard-desktop-populated');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, offline/reconnect; load, child, XSS, payment allocations, visits creation/enrolment/dashboard card, dashboard, profile, review, restore preview, restore from external folder, audit; all 13 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
+    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, Telegram settings panel (unconfigured state, malformed token rejected without a real network call), offline/reconnect; load, child, XSS, payment allocations, visits creation/enrolment/dashboard card, dashboard, profile, review, restore preview, restore from external folder, audit; all 13 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
   );
 } catch (error) {
   console.error(error);
