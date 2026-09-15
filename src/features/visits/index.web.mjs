@@ -5,5 +5,6 @@ export { createVisitsApi } from './web/visits.api.mjs';
 export { createVisitsController } from './web/visits.controller.mjs';
 export { createVisitsListView } from './web/visits-list.view.mjs';
 export { createVisitsCalendarView } from './web/visits-calendar.view.mjs';
+export { createVisitDetailView } from './web/visit-detail.view.mjs';
 export { visitEditorFields } from './web/visit-editor-fields.mjs';
 export { createVisitRemindersController } from './web/visit-reminders.controller.mjs';

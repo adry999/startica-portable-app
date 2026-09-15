@@ -49,6 +49,7 @@ function createHarness({ visits = [buildVisit()] } = {}) {
   const elements = {
     funnel: createElement(),
     calendar: createElement(),
+    detail: createElement(),
     prevMonthButton: createElement(),
     nextMonthButton: createElement(),
     monthLabel: createElement(),
@@ -95,7 +96,13 @@ function createHarness({ visits = [buildVisit()] } = {}) {
 
 const clickTableAction = (table, id, action) =>
   table.onclick({ target: { closest: () => ({ dataset: { id, visitAction: action } }) } });
-const clickCalendarDate = (calendar, date) => calendar.onclick({ target: { closest: () => ({ dataset: { date } }) } });
+// closest() e sensibil la selector, ca la un DOM real: un cip nu e și o zi.
+const clickCalendarDate = (calendar, date) =>
+  calendar.onclick({ target: { closest: selector => (selector === '[data-date]' ? { dataset: { date } } : null) } });
+const clickCalendarChip = (calendar, visitId) =>
+  calendar.onclick({
+    target: { closest: selector => (selector === '[data-visit-id]' ? { dataset: { visitId } } : null) },
+  });
 
 test('randarea implicită arată luna curentă și vizitele ei nearhivate', () => {
   const { controller, elements } = createHarness({
@@ -204,6 +211,20 @@ test('un clic pe o zi din calendar restrânge lista la ziua aceea, iar al doilea
 
   clickCalendarDate(elements.calendar, '2026-09-10');
   assert.match(elements.table.innerHTML, /Bogdan Ionescu/);
+});
+
+test('un clic pe cipul unei vizite din calendar deschide detaliul, iar al doilea clic pe același cip îl închide', () => {
+  const visit = buildVisit({ id: 'VIZ-1', name: 'Ana Popescu', status: 'Programată' });
+  const { controller, elements } = createHarness({ visits: [visit] });
+  controller.render();
+
+  clickCalendarChip(elements.calendar, 'VIZ-1');
+  assert.equal(elements.detail.hidden, false);
+  assert.match(elements.detail.innerHTML, /Ana Popescu/);
+
+  clickCalendarChip(elements.calendar, 'VIZ-1');
+  assert.equal(elements.detail.hidden, true);
+  assert.doesNotMatch(elements.detail.innerHTML, /Ana Popescu/);
 });
 
 test('un buton rapid de statut trimite applyVisitStatus prin submitMutation', () => {

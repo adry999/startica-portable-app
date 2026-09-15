@@ -16,7 +16,7 @@ const HEADINGS = ['Data', 'Ora', 'Copil (vârstă)', 'Părinte / telefon', 'Stat
 const SORT_FIELDS = ['date', 'time', 'name', 'parent', 'status', 'group', null];
 
 /** @param {Visit} visit */
-function quickStatusButtonsMarkup(visit) {
+export function quickStatusButtonsMarkup(visit) {
   return allowedNextStatuses(visit.status)
     .map(
       status =>
@@ -26,7 +26,7 @@ function quickStatusButtonsMarkup(visit) {
 }
 
 /** @param {Visit} visit */
-function enrolButtonMarkup(visit) {
+export function enrolButtonMarkup(visit) {
   return visit.status === 'Efectuată'
     ? `<button type="button" class="action-btn btn-primary" data-visit-action="enrol" data-id="${escapeHtml(visit.id)}">Înscrie copilul</button>`
     : '';

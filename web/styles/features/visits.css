@@ -51,6 +51,26 @@
   background: var(--border);
   color: var(--muted);
 }
+#visitsCalendar .cal-chip {
+  cursor: pointer;
+}
+.visit-detail {
+  margin-top: 12px;
+  padding: 16px 18px;
+}
+.visit-detail-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.visit-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
 
 @media (max-width: 720px) {
   /* Sub 720px celula arată doar numărul de vizite; detaliile rămân în listă. */

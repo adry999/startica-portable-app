@@ -230,6 +230,7 @@ export function composeScreens(dependencies) {
     elements: {
       funnel: element('visitsFunnel'),
       calendar: element('visitsCalendar'),
+      detail: element('visitsDetail'),
       prevMonthButton: element('visitsPrevMonth'),
       nextMonthButton: element('visitsNextMonth'),
       monthLabel: element('visitsMonthLabel'),
