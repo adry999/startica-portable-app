@@ -2,11 +2,7 @@ import { TYPES, emptyState } from './record-schema.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 
-// Reproduce exact regula migrării 002 (schema SQLite): un copil cu câmp text
-// `group` primește o entitate `groups` proprie (dedup după numele normalizat) și
-// `groupId`; câmp gol → groupId null. Un instantaneu vechi de backup sau un export
-// Excel STARTICA_EXPORT_2 dinainte de entitatea „grupe” ajunge aici cu exact acest
-// format, iar validateState() ar respinge sau ar pierde datele fără această trecere.
+// Aceeași regulă ca migrarea 002: fără ea, validateState() pierde grupele din backupurile și exporturile vechi.
 /**
  * @param {any} input
  * @returns {{ snapshot: RecordsSnapshot, notes: string[] }}

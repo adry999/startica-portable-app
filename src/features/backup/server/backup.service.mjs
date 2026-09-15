@@ -162,7 +162,7 @@ export function createBackupService({
     } catch (error) {
       console.warn(`Curățarea folderului extern ${external} a eșuat: ${/** @type {Error} */ (error).message}`);
     }
-    return warning;
+    return warning.trim();
   }
 
   // Copie verificată: VACUUM INTO într-un .tmp, deschidere și verificare a
