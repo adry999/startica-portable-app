@@ -1,2 +1,5 @@
-// Telegram: exporturile serverului vin din telegram-config.repository.mjs, telegram-state.repository.mjs, telegram.service.mjs și telegram.routes.mjs (task T2/T3).
-export {};
+export { readTelegramConfig, writeTelegramConfig, removeTelegramConfig } from './server/telegram-config.repository.mjs';
+export { readTelegramState, writeTelegramState, removeTelegramState } from './server/telegram-state.repository.mjs';
+export { createTelegramService, classifyTelegramFailure } from './server/telegram.service.mjs';
+export { createTelegramRoutes } from './server/telegram.routes.mjs';
+export { buildDailyDigest, splitDigest, pruneSentKeys } from './domain/daily-digest.mjs';
