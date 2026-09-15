@@ -773,6 +773,24 @@ try {
   // altfel oninput-ul deja legat n-ar recalcula vârsta.
   assert.notEqual(pasteFillResult.ageHint, ageHintBeforePaste);
   assert.match(pasteFillResult.ageHint, /^Vârstă: /);
+  // Copiază șablonul: butonul apare doar la creare, ca cel de lipire. Scrierea reală în
+  // clipboard nu e mai testabilă aici decât citirea (vezi comentariul de mai sus) — verificăm
+  // că butonul există, că apăsarea lui nu aruncă, și că textul scris e exact constanta
+  // exportată, sursă unică pentru buton și pentru parser (nu poate diverge de FIELD_BY_LABEL).
+  assert.equal(await evaluate("!!document.getElementById('vizCopyTemplate')"), true);
+  const copyTemplateResult = await evaluate(`(async()=>{
+    const {VISIT_PASTE_TEMPLATE}=await import('/src/features/visits/index.web.mjs');
+    let threw=false;
+    try { document.getElementById('vizCopyTemplate').click(); } catch { threw=true; }
+    await new Promise(r=>setTimeout(r,50));
+    return { threw, template: VISIT_PASTE_TEMPLATE, feedback: document.getElementById('vizPasteError').textContent };
+  })()`);
+  assert.equal(copyTemplateResult.threw, false, 'Clicking Copiază șablonul threw');
+  assert.equal(
+    copyTemplateResult.template,
+    'Copil: \nData nașterii: \nPărinte 1: \nTelefon 1: \nPărinte 2: \nTelefon 2: \nData vizitei: \nOra: \nData dorită start: \nGrupa dorită: \nCum a aflat: \n',
+  );
+  assert.match(copyTemplateResult.feedback, /Șablon copiat\.|Copierea în clipboard a eșuat/);
   await evaluate(
     `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='2026-09-15';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
   );

@@ -1,4 +1,5 @@
 export { buildChildPrefill } from './domain/visit-child-prefill.mjs';
+export { VISIT_PASTE_TEMPLATE } from './domain/visit-paste-template.mjs';
 export { countVisitsForDays } from './domain/visit-statistics.mjs';
 export { selectDueReminders } from './domain/visit-reminders.mjs';
 export { createVisitsApi } from './web/visits.api.mjs';
