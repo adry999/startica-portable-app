@@ -106,6 +106,7 @@ test('runTelegramDigest citește instantaneul serverului pornit și trimite, ret
   assert.ok(Object.hasOwn(stateAfterFirstRun.sentKeys, 'zi:2026-09-15'));
   assert.ok(Object.hasOwn(stateAfterFirstRun.sentKeys, 'plata:CH-ANA:2026-09'));
   assert.equal(stateAfterFirstRun.lastError, '');
+  assert.ok(log1.entries.some(entry => entry.level === 'INFO' && /^Trimis: \d+ chei$/.test(entry.message)));
 
   const exit2 = await runTelegramDigest({
     home,
@@ -154,4 +155,77 @@ test('runTelegramDigest citește instantaneul serverului pornit și trimite, ret
 
   const stateAfterAll = await get('/api/state');
   assert.equal(stateAfterAll.revision, revisionBefore, 'baza serverului rămâne neschimbată după toate rulările');
+});
+
+test('cheia zilei se calculează din data locală, nu din UTC', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-telegram-digest-tz-'));
+  const dataDir = join(home, 'Startica_Date');
+
+  const { post } = await startTestApplication(t, {
+    prefix: 'startica-telegram-digest-tz-app-',
+    dataDir,
+    backupDir: join(home, 'Startica_Backup'),
+  });
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  const imported = await post('/api/import', importRequest(emptyImport(), 0));
+  assert.equal(imported.status, 200, imported.body.error);
+
+  writeTelegramConfig(dataDir, { token: TOKEN, chatId: 555666777, chatName: 'Ion Popescu', botUsername: 'StaricaBot' });
+
+  const telegram = fakeFetch({ mode: 'success' });
+  // Ora locală (constructor local, nu ISO UTC): la fusul mașinii curente, ora asta ar cădea
+  // pe ziua anterioară dacă cheia s-ar calcula din toISOString().
+  const exit = await runTelegramDigest({
+    home,
+    now: new Date(2026, 8, 18, 0, 30),
+    fetch: telegram.fetchImpl,
+    log: fakeLog(),
+  });
+
+  assert.equal(exit, 0);
+  const state = readTelegramState(dataDir);
+  assert.ok(Object.hasOwn(state.sentKeys, 'zi:2026-09-18'));
+  assert.ok(!Object.hasOwn(state.sentKeys, 'zi:2026-09-17'));
+});
+
+test('o rulare ratată, reluată seara târziu, nu mai trimite rezumatul zilei', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-telegram-digest-late-'));
+  const dataDir = join(home, 'Startica_Date');
+
+  const visit = {
+    id: 'VIZ-MARIA',
+    name: 'Georgescu Maria',
+    parent: 'Elena Georgescu',
+    phone: '0722123456',
+    date: '2026-09-18',
+    time: '10:00',
+    status: 'Programată',
+    statusChangedAt: '2026-09-10T08:00:00.000Z',
+  };
+
+  const { post } = await startTestApplication(t, {
+    prefix: 'startica-telegram-digest-late-app-',
+    dataDir,
+    backupDir: join(home, 'Startica_Backup'),
+  });
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  const imported = await post('/api/import', importRequest(emptyImport({ visits: [visit] }), 0));
+  assert.equal(imported.status, 200, imported.body.error);
+
+  writeTelegramConfig(dataDir, { token: TOKEN, chatId: 555666777, chatName: 'Ion Popescu', botUsername: 'StaricaBot' });
+
+  const telegram = fakeFetch({ mode: 'success' });
+  const log = fakeLog();
+  const exit = await runTelegramDigest({
+    home,
+    now: new Date(2026, 8, 18, 23, 0),
+    fetch: telegram.fetchImpl,
+    log,
+  });
+
+  assert.equal(exit, 0);
+  assert.equal(telegram.calls.length, 0, 'nicio rulare ratată de seară nu mai trimite rezumatul de azi');
+  const state = readTelegramState(dataDir);
+  assert.ok(!Object.hasOwn(state.sentKeys, 'zi:2026-09-18'));
+  assert.ok(log.entries.some(entry => entry.message === 'Rezumat ratat: prea târziu pentru azi'));
 });

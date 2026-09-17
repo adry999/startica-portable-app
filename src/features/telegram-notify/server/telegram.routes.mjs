@@ -48,6 +48,23 @@ function isTelegramError(error) {
 
 /** @param {TelegramRoutesDependencies} dependencies */
 export function createTelegramRoutes({ dataDirectory, telegramService, auditTrail }) {
+  // Cele patru apeluri Telegram (getMe, findPrivateChat, sendMessage × 2) au
+  // aceeași formă: clasifică eșecul și oprește cererea; doar mesajul diferă.
+  /**
+   * @template T
+   * @param {() => Promise<T>} action
+   * @param {(failure: import('../telegram-notify.types.mjs').TelegramFailure, error: unknown) => string} [translate]
+   * @returns {Promise<T>}
+   */
+  async function callTelegramOrFail(action, translate = failure => failure.message) {
+    try {
+      return await action();
+    } catch (error) {
+      const failure = telegramService.classifyTelegramFailure(error);
+      fail(translate(failure, error));
+    }
+  }
+
   function buildStatus() {
     const config = readTelegramConfig(dataDirectory);
     const state = readTelegramState(dataDirectory);
@@ -66,35 +83,27 @@ export function createTelegramRoutes({ dataDirectory, telegramService, auditTrai
   }
 
   async function connect(token) {
-    let botUsername;
-    try {
-      botUsername = await telegramService.getMe(token);
-    } catch (error) {
-      const { kind, message } = telegramService.classifyTelegramFailure(error);
-      fail(kind === 'transient' ? message : BAD_TOKEN_MESSAGE);
-    }
+    const botUsername = await callTelegramOrFail(
+      () => telegramService.getMe(token),
+      failure => (failure.kind === 'transient' ? failure.message : BAD_TOKEN_MESSAGE),
+    );
 
-    let chat;
-    try {
-      chat = await telegramService.findPrivateChat(token);
-    } catch (error) {
-      if (isTelegramError(error) && error.telegramReason === 'no-private-chat') fail(startButtonMessage(botUsername));
-      if (isWebhookConflict(error)) fail(WEBHOOK_CONFLICT_MESSAGE);
-      const { message } = telegramService.classifyTelegramFailure(error);
-      fail(message);
-    }
+    const chat = await callTelegramOrFail(
+      () => telegramService.findPrivateChat(token),
+      (failure, error) => {
+        if (isTelegramError(error) && error.telegramReason === 'no-private-chat')
+          return startButtonMessage(botUsername);
+        if (isWebhookConflict(error)) return WEBHOOK_CONFLICT_MESSAGE;
+        return failure.message;
+      },
+    );
 
     const before = readTelegramConfig(dataDirectory);
     writeTelegramConfig(dataDirectory, { token, chatId: chat.chatId, chatName: chat.chatName, botUsername });
 
     // Eșecul mesajului de probă DUPĂ scrierea fișierului lasă configurarea pe
     // loc și întoarce doar eroarea clasificată: botul e deja verificat funcțional.
-    try {
-      await telegramService.sendMessage({ token, chatId: chat.chatId, text: TEST_MESSAGE });
-    } catch (error) {
-      const { message } = telegramService.classifyTelegramFailure(error);
-      fail(message);
-    }
+    await callTelegramOrFail(() => telegramService.sendMessage({ token, chatId: chat.chatId, text: TEST_MESSAGE }));
 
     auditTrail.recordChange({
       action: AUDIT_ACTION,
@@ -109,12 +118,9 @@ export function createTelegramRoutes({ dataDirectory, telegramService, auditTrai
   async function sendTestMessage() {
     const config = readTelegramConfig(dataDirectory);
     if (!config?.chatId) fail(NOT_CONNECTED_MESSAGE);
-    try {
-      await telegramService.sendMessage({ token: config.token, chatId: config.chatId, text: TEST_MESSAGE });
-    } catch (error) {
-      const { message } = telegramService.classifyTelegramFailure(error);
-      fail(message);
-    }
+    await callTelegramOrFail(() =>
+      telegramService.sendMessage({ token: config.token, chatId: config.chatId, text: TEST_MESSAGE }),
+    );
     return { ok: true, status: buildStatus() };
   }
 

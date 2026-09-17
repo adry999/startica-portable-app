@@ -2,6 +2,24 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 
 // Markup comun pentru dialogul de editare generic și câmpurile fiecărui tip de înregistrare.
 
+/** @typedef {import('#shared/contracts/record-types.mjs').Group} Group */
+
+/**
+ * @param {Group[]} groupsSortedByName
+ * @param {string} selectedGroupId
+ */
+export function groupOptionsMarkup(groupsSortedByName, selectedGroupId) {
+  return (
+    `<option value="">Fără grupă</option>` +
+    groupsSortedByName
+      .map(
+        group =>
+          `<option value="${escapeHtml(group.id)}" ${group.id === selectedGroupId ? 'selected' : ''}>${escapeHtml(group.name)}</option>`,
+      )
+      .join('')
+  );
+}
+
 export function textFieldMarkup(name, label, value = '', type = 'text', extra = '') {
   return `<label class="field">${label}<input name="${name}" type="${type}" value="${escapeHtml(value)}" ${extra}></label>`;
 }

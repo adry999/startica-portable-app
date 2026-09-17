@@ -3,10 +3,11 @@ import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { VISIT_STATUSES } from '#shared/domain/record-schema.mjs';
 import { buildMonthGrid } from '#shared/domain/month-grid.mjs';
+import { isoDateOf } from '#shared/domain/calendar-month.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { sortListRows, applyManualSort } from '#shared/ui/record-list-sort.mjs';
-import { summarizeVisitFunnel, countVisitsForDays } from '../domain/visit-statistics.mjs';
+import { summarizeVisitFunnel } from '../domain/visit-statistics.mjs';
 import { applyVisitStatus } from '../domain/visit-status.mjs';
 import { buildChildPrefill } from '../domain/visit-child-prefill.mjs';
 import { createVisitsListView } from './visits-list.view.mjs';
@@ -15,13 +16,10 @@ import { createVisitDetailView } from './visit-detail.view.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
+/** @typedef {import('#shared/contracts/record-types.mjs').VisitStatus} VisitStatus */
 /** @typedef {import('#shared/ui/record-list-sort.mjs').ListSortState} ListSortState */
 
 const ALLOWED_SORT_FIELDS = ['date', 'time', 'name', 'parent', 'status', 'group'];
-
-/** @param {Date} date */
-const isoDateOf = date =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 /**
  * @param {string} monthKey format YYYY-MM
@@ -131,10 +129,7 @@ export function createVisitsController({
 
     monthLabel.textContent = formatMonthName(state.month);
 
-    // domain/visit-statistics.mjs și domain/visit-status.mjs au propriul tip
-    // local, minimal, `Visit` (independent de contractul canonic din
-    // #shared/contracts); cast la limita dintre cele două.
-    const funnelStats = summarizeVisitFunnel(/** @type {any} */ (records.visits), todayStr);
+    const funnelStats = summarizeVisitFunnel(records.visits, todayStr);
     funnel.innerHTML =
       `<article class="card yellow"><p>Programate</p><strong>${funnelStats.scheduled}</strong><small>de azi înainte</small></article>` +
       `<article class="card mint"><p>Efectuate</p><strong>${funnelStats.done}</strong><small>ultimele 12 luni</small></article>` +
@@ -180,7 +175,6 @@ export function createVisitsController({
     listView.render({ visits: rows, records, sortState: state.sort, onSort, onQuickAction });
     summaryText.innerHTML = `<strong>${rows.length}</strong> ${rows.length === 1 ? 'vizită' : 'vizite'}`;
 
-    const upcoming = countVisitsForDays(/** @type {any} */ (records.visits), todayStr);
     renderVisitsCount(funnelStats.scheduled);
   }
 
@@ -225,7 +219,7 @@ export function createVisitsController({
         mode: 'update',
         // Statutul vine dintr-un `data-*` din DOM (string neîncorsetat); allowedNextStatuses()
         // din markup limitează opțiunile reale, applyVisitStatus() verifică tranziția oricum.
-        record: /** @type {any} */ (applyVisitStatus(/** @type {any} */ (visit), newStatus, readNow().toISOString())),
+        record: applyVisitStatus(visit, /** @type {VisitStatus} */ (newStatus), readNow().toISOString()),
       });
     } catch (error) {
       showNotice(/** @type {Error} */ (error).message, true);

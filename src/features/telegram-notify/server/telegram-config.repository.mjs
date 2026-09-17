@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readJsonFile, writeJsonFileAtomically } from '#core/server/files/json-file.mjs';
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 
 /** @typedef {import('../telegram-notify.types.mjs').TelegramConfig} TelegramConfig */
@@ -16,14 +16,7 @@ export function telegramConfigFilePath(dataDir) {
  * @returns {TelegramConfig | null}
  */
 export function readTelegramConfig(dataDir) {
-  const file = telegramConfigFilePath(dataDir);
-  if (!existsSync(file)) return null;
-  try {
-    return JSON.parse(readFileSync(file, 'utf8'));
-  } catch (error) {
-    console.error(`Fișierul ${file} este corupt: ${/** @type {Error} */ (error).message}`);
-    return null;
-  }
+  return /** @type {TelegramConfig | null} */ (readJsonFile(telegramConfigFilePath(dataDir)));
 }
 
 /**
@@ -31,10 +24,7 @@ export function readTelegramConfig(dataDir) {
  * @param {TelegramConfig} config
  */
 export function writeTelegramConfig(dataDir, config) {
-  mkdirSync(dataDir, { recursive: true });
-  const file = telegramConfigFilePath(dataDir);
-  writeFileSync(file + '.tmp', JSON.stringify(config));
-  renameSync(file + '.tmp', file);
+  writeJsonFileAtomically(telegramConfigFilePath(dataDir), config);
 }
 
 /** @param {string} dataDir */

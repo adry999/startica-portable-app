@@ -1,26 +1,11 @@
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
+import { groupOptionsMarkup } from '#shared/ui/form-fields.mjs';
 import { defaultSetupMonth } from '../domain/child-fee-setup.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
 /** @typedef {import('#shared/contracts/record-types.mjs').Group} Group */
-
-/**
- * @param {Group[]} groupsSortedByName
- * @param {string} selectedGroupId
- */
-export function groupOptionsMarkup(groupsSortedByName, selectedGroupId) {
-  return (
-    `<option value="">Fără grupă</option>` +
-    groupsSortedByName
-      .map(
-        group =>
-          `<option value="${escapeHtml(group.id)}" ${group.id === selectedGroupId ? 'selected' : ''}>${escapeHtml(group.name)}</option>`,
-      )
-      .join('')
-  );
-}
 
 /**
  * @param {Child} child

@@ -1,6 +1,5 @@
 import { formatMoney } from '#shared/format/money-format.mjs';
 
-/** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {{ children: number, payments: number, expenses: number, paymentTotal: number, expenseTotal: number }} RecordsSummary */
 
 /** @param {RecordsSummary} summary */

@@ -1,19 +1,7 @@
-// Forma minimă din §3.1 a specului, folosită doar în domain/visits; S1 aduce tipul canonic în record-types.d.mts.
-/**
- * @typedef {{
- *   id: string,
- *   name: string,
- *   phone: string,
- *   status: string,
- *   date: string,
- *   time: string,
- *   history: { at: string, status: string, date: string, time: string }[],
- *   statusChangedAt: string,
- *   healthNotes?: string,
- *   archived?: boolean,
- * }} Visit
- */
+/** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
+/** @typedef {import('#shared/contracts/record-types.mjs').VisitStatus} VisitStatus */
 
+/** @type {Record<VisitStatus, VisitStatus[]>} */
 const NEXT_STATUSES = {
   Programată: ['Efectuată', 'Neprezentată', 'Renunțat'],
   Efectuată: ['Renunțat'],
@@ -23,8 +11,8 @@ const NEXT_STATUSES = {
 };
 
 /**
- * @param {string} status
- * @returns {string[]}
+ * @param {VisitStatus} status
+ * @returns {VisitStatus[]}
  */
 export function allowedNextStatuses(status) {
   return NEXT_STATUSES[status] ?? [];
@@ -52,7 +40,7 @@ export function rescheduleVisit(visit, { date, time }, now) {
 
 /**
  * @param {Visit} visit
- * @param {string} status
+ * @param {VisitStatus} status
  * @param {string} now
  * @returns {Visit}
  */

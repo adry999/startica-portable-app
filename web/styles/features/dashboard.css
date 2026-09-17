@@ -59,8 +59,7 @@
 .children-summary article:nth-child(3) {
   background: var(--mint-soft);
 }
-.children-summary small,
-.children-summary .subtext {
+.children-summary small {
   display: block;
   color: var(--muted);
   font-size: 12px;

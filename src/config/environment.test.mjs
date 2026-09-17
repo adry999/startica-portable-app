@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, loadEnvironment } from './environment.mjs';
+import { join } from 'node:path';
+import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, loadEnvironment, dataLayout } from './environment.mjs';
 
 test('fără variabile, profilul este development și deschide browserul', () => {
   assert.deepEqual(loadEnvironment({}), {
@@ -60,6 +61,15 @@ test('STARTICA_HOME relativ sau gol oprește pornirea', () => {
 test('STARTICA_NO_BROWSER oprește browserul doar cu valoarea 1', () => {
   assert.equal(loadEnvironment({ STARTICA_NO_BROWSER: '0' }).openBrowser, true);
   assert.equal(loadEnvironment({ STARTICA_NO_BROWSER: '1' }).openBrowser, false);
+});
+
+test('dataLayout construiește cele trei foldere sub rădăcina de date', () => {
+  const home = process.platform === 'win32' ? 'C:\\Startica' : '/home/test/.startica';
+  assert.deepEqual(dataLayout(home), {
+    dataDir: join(home, 'Startica_Date'),
+    backupDir: join(home, 'Startica_Backup'),
+    logDir: join(home, 'Jurnale'),
+  });
 });
 
 test('refuză un profil sau un port invalid', () => {

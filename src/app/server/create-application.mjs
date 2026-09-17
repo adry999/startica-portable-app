@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_AUTO_BACKUP_INTERVAL_MS } from '#config/environment.mjs';
+import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, dataLayout } from '#config/environment.mjs';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
@@ -45,8 +45,9 @@ const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
  */
 export function createApplication(options = {}) {
   const root = options.root || ROOT,
-    dataDir = options.dataDir || join(root, 'Startica_Date'),
-    backupDir = options.backupDir || join(root, 'Startica_Backup');
+    layout = dataLayout(root),
+    dataDir = options.dataDir || layout.dataDir,
+    backupDir = options.backupDir || layout.backupDir;
   const autoBackupIntervalMs = Number.isFinite(options.autoBackupIntervalMs)
     ? /** @type {number} */ (options.autoBackupIntervalMs)
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;

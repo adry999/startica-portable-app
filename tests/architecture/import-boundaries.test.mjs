@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findImportViolations, readImportSpecifiers } from './import-boundary-rules.mjs';
+import { findImportViolations, findSourceTextViolations, readImportSpecifiers } from './import-boundary-rules.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
 const sourceFile = (path, ...specifiers) => ({ path, specifiers });
 const rulesFor = sourceFiles => findImportViolations(sourceFiles).map(violation => violation.rule);
+
+const textFile = (path, text) => ({ path, text });
+const textRulesFor = sourceFiles => findSourceTextViolations(sourceFiles).map(violation => violation.rule);
 
 /** @param {string} projectRoot folderul care conține src/ */
 function collectSourceFiles(projectRoot) {
@@ -46,6 +49,19 @@ function collectApplicationFiles() {
     ...collectRepoFiles('tests', /\.mjs$/, 'tests/architecture/'),
     ...rootFiles,
   ];
+}
+
+/** Textul fiecărui fișier `.mjs` din `src/`, pentru regulile aplicate pe conținut. */
+function collectApplicationSourceTexts() {
+  return readdirSync(join(REPO_ROOT, 'src'), { withFileTypes: true, recursive: true })
+    .filter(entry => entry.isFile() && entry.name.endsWith('.mjs'))
+    .map(entry => {
+      const absolutePath = join(entry.parentPath, entry.name);
+      return {
+        path: relative(REPO_ROOT, absolutePath).split(sep).join('/'),
+        text: readFileSync(absolutePath, 'utf8'),
+      };
+    });
 }
 
 test('citește specificatorii din import, export, import dinamic și tipuri JSDoc', () => {
@@ -172,4 +188,75 @@ test('codul de referință din docs/arhitectura respectă granițele', () => {
 
 test('codul aplicației, scripturile și testele respectă granițele', () => {
   assert.deepEqual(findImportViolations(collectApplicationFiles()), []);
+});
+
+test('semnalează new Date() sau Date.now() fără argument în domain, dar nu în calendar-month.mjs', () => {
+  assert.deepEqual(
+    textRulesFor([
+      textFile('src/features/visits/domain/visit-status.mjs', 'export const changedAt = () => new Date();'),
+    ]),
+    ['clock-in-domain'],
+  );
+  assert.deepEqual(
+    textRulesFor([
+      textFile(
+        'src/features/visits/domain/visit-status.mjs',
+        'export const bornAt = child => new Date(child.birthDate);',
+      ),
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    textRulesFor([
+      textFile('src/shared/domain/calendar-month.mjs', 'export const today = () => isoDateOf(new Date());'),
+    ]),
+    [],
+  );
+});
+
+test('semnalează process.env în afara src/config/environment.mjs', () => {
+  assert.deepEqual(
+    textRulesFor([
+      textFile('src/features/backup/server/backup.service.mjs', 'const port = process.env.STARTICA_PORT;'),
+    ]),
+    ['env-outside-config'],
+  );
+  assert.deepEqual(
+    textRulesFor([
+      textFile('src/config/environment.mjs', 'export function loadEnvironment(variables = process.env) {}'),
+    ]),
+    [],
+  );
+});
+
+test('semnalează console. în cod de browser și în shared, dar nu în server', () => {
+  assert.deepEqual(textRulesFor([textFile('src/features/visits/web/visits.controller.mjs', "console.log('debug');")]), [
+    'console-in-browser-code',
+  ]);
+  assert.deepEqual(textRulesFor([textFile('src/shared/domain/money.mjs', "console.error('nu ar trebui');")]), [
+    'console-in-browser-code',
+  ]);
+  assert.deepEqual(
+    textRulesFor([textFile('src/features/visits/server/visits.repository.mjs', "console.log('debug');")]),
+    [],
+  );
+});
+
+test('semnalează un octet de control, cu numărul liniei unde apare', () => {
+  const violations = findSourceTextViolations([
+    textFile('src/features/visits/domain/visit-status.mjs', 'const a = 1;\nconst b = "text\x00rupt";'),
+  ]);
+  assert.deepEqual(
+    violations.map(v => v.rule),
+    ['control-bytes-in-source'],
+  );
+  assert.equal(violations[0].line, 2);
+  assert.deepEqual(
+    textRulesFor([textFile('src/features/visits/domain/visit-status.mjs', 'const a = 1;\nconst b = "text curat";')]),
+    [],
+  );
+});
+
+test('codul aplicației nu are octeți de control, process.env în afara config, console în browser/shared sau ceasul folosit direct în domain', () => {
+  assert.deepEqual(findSourceTextViolations(collectApplicationSourceTexts()), []);
 });

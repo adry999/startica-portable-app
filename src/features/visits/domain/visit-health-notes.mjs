@@ -1,8 +1,6 @@
 import { daysBetween } from '#shared/domain/calendar-month.mjs';
 
-/** @typedef {{ id: string, healthNotes: string, statusChangedAt: string }} VisitHealthNotes */
-/** @typedef {{ id: string, healthNotes: string, archived: boolean, archivedAt: string }} ArchivableChild */
-/** @typedef {{ visits: VisitHealthNotes[], children: ArchivableChild[] }} HealthNotesSnapshot */
+/** @typedef {Pick<import('#shared/contracts/record-types.mjs').RecordsSnapshot, 'visits' | 'children'>} HealthNotesSnapshot */
 /**
  * Id-urile înregistrărilor a căror `healthNotes` trebuie golită.
  * @typedef {{ visits: string[], children: string[] }} ExpiredHealthNotes
@@ -21,8 +19,11 @@ export function selectExpiredHealthNotes(snapshot, todayStr) {
     .map(visit => visit.id);
   const children = snapshot.children
     .filter(
+      // archivedAt e opțional în tip, dar un copil arhivat îl are mereu completat de normalizeRecord.
       child =>
-        child.healthNotes && child.archived && daysBetween(child.archivedAt.slice(0, 10), todayStr) >= RETENTION_DAYS,
+        child.healthNotes &&
+        child.archived &&
+        daysBetween((child.archivedAt ?? '').slice(0, 10), todayStr) >= RETENTION_DAYS,
     )
     .map(child => child.id);
   return { visits, children };

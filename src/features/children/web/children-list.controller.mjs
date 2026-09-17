@@ -51,7 +51,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
  *   showNotice: (message: string, isError?: boolean) => void,
  * }} dependencies
  */
-export function createChildrenListView({
+export function createChildrenListController({
   elements: { search, archive, head, table, summaryText, bulkButton },
   readRecords,
   submitMutation,

@@ -132,17 +132,6 @@
   color: #b83d63;
   font-size: 11px;
 }
-.side-note {
-  margin-top: auto;
-  padding: 12px;
-  border-radius: 16px;
-  background: var(--mint-soft);
-  font-size: 12px;
-}
-.side-note strong {
-  display: block;
-  font-family: 'Baloo 2';
-}
 .workspace {
   min-width: 0;
 }
@@ -260,11 +249,6 @@
 .panel-head strong {
   color: var(--orange);
   font-family: 'Baloo 2';
-}
-.footer-note {
-  margin-top: 20px;
-  color: var(--muted);
-  font-size: 12px;
 }
 .topbar {
   height: auto;
@@ -420,8 +404,7 @@
   flex: 0 1 auto;
   flex-wrap: wrap;
 }
-.reload-button,
-.payment-button {
+.reload-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -429,16 +412,6 @@
 }
 .reload-button > span:first-child {
   font-size: 19px;
-  line-height: 1;
-}
-.payment-button > span:first-child {
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.22);
-  font-size: 18px;
   line-height: 1;
 }
 .save-indicator {
@@ -566,9 +539,6 @@
   .nav-group + .nav-group {
     margin-top: 14px;
   }
-  .side-note {
-    display: none;
-  }
   .topbar {
     height: auto;
     padding: 14px 17px;
@@ -641,8 +611,7 @@
     padding: 0;
     border: 0;
   }
-  .reload-button,
-  .payment-button {
+  .reload-button {
     flex: 1;
     min-width: 0;
     justify-content: center;

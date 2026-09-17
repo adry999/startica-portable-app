@@ -18,13 +18,14 @@ Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (c
 | `readTelegramState(dataDirectory)` | fișier `telegram-stare.json`: `{ lastRun, lastSuccess, lastError, sentKeys }` |
 | `writeTelegramState(dataDirectory, state)` | scriere atomică |
 | `buildDailyDigest({ todayStr, birthdays, visits, overdue, sentKeys })` | `{ text, keys }` — rezumatul pentru ziua de azi |
+| `classifyTelegramFailure(error)` | `{ kind: 'transient' \| 'permanent', message }` |
+| `pruneSentKeys(sentKeys, todayStr)` | elimină cheile mai vechi de 60 de zile |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `createTelegramSettingsController({ dataDirectory, requestJson, showNotice, renderTelegramSettings })` | leagă formularul de conectare, butoanele de test și deconectare; la navigare și după acțiune: `GET /api/telegram-status` → view |
-| `createTelegramSettingsView({ container })` | randează starea, formularul, toolbar-ul și mesajele de eroare în elementele din `<article id="telegramSettings">` |
+| `createTelegramSettingsController({ elements: { status, form, tokenInput, testButton, disconnectButton }, requestJson, showNotice })` | leagă formularul de conectare, butoanele de test și deconectare; la navigare și după acțiune: `GET /api/telegram-status` → randare; întoarce `{ activate }` |
 
 ## Dependențe
 
@@ -32,8 +33,8 @@ Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (c
 | --- | --- |
 | `#core/server/errors/domain-error.mjs` | `fail()` pentru token invalid, erori de rețea clasificate, bază nemigrată |
 | `#core/server/files/rotating-log-file.mjs` | jurnal rotit `telegram.log` în `Jurnale\` |
-| `#shared/domain/record-schema.mjs` | `emptyState` pentru testele unui rezumat |
-| `#shared/format/html-escape.mjs`, `#shared/format/date-format.mjs`, `#shared/format/money-format.mjs`, `#shared/format/month-name.mjs` | formatarea pentru mesajul Telegram |
+| `#core/server/files/json-file.mjs` | citire/scriere atomică pentru `telegram.json` și `telegram-stare.json` |
+| `#shared/format/html-escape.mjs`, `#shared/format/date-format.mjs`, `#shared/format/money-format.mjs` | formatarea pentru mesajul Telegram (`formatDate`, `formatMonthName`, `formatLongDate` din `date-format.mjs`) |
 | `#shared/contracts/audit-trail.mjs` | audit `configurare telegram` |
 | `node:fs`, `node:path` | citire/scriere fișiere config și stare |
 | `globalThis.fetch` (parametru) | apeluri Bot API |
@@ -48,13 +49,13 @@ Composition root-ul serverului (`create-application.mjs`) creează serviciul cu 
 telegram-notify/
 ├── README.md
 ├── telegram-notify.types.d.mts         # TelegramConfig, TelegramState, TelegramStatus, DigestInputs, TelegramFailure
-├── index.server.mjs                    # (placeholder)
-├── index.web.mjs                       # (placeholder)
+├── index.server.mjs                    # barrel-ul server-ului
+├── index.web.mjs                       # barrel-ul web-ului
 ├── domain/
-│   ├── daily-digest.mjs (+ .test.mjs)  # buildDailyDigest, splitDigest, pruneSentKeys
+│   ├── daily-digest.mjs (+ .test.mjs)  # buildDailyDigest, splitDigest (intern), pruneSentKeys
 ├── server/
-│   ├── telegram-config.repository.mjs (+ .test.mjs)
-│   ├── telegram-state.repository.mjs (+ .test.mjs)
+│   ├── telegram-config.repository.mjs (+ .test.mjs)  # pe #core/server/files/json-file.mjs
+│   ├── telegram-state.repository.mjs (+ .test.mjs)   # pe #core/server/files/json-file.mjs
 │   ├── telegram.service.mjs (+ .test.mjs)
 │   └── telegram.routes.mjs (+ .integration.test.mjs)
 ├── web/
@@ -75,6 +76,7 @@ telegram-notify/
 - **Rezumat cu bucăți sub 4096 caractere.** Tăiat la limită de linie; eșec la a doua bucată = reîncercare ziua următoare, mesaj dublat parțial (acceptat).
 - **Nicio date medicale.** `healthNotes` nu e citit; formatul HTML, `parse_mode: 'HTML'`, e lizibil pe telefon și nu necesită emoji.
 - **Registrul de trimiteri pentru deduplicare.** Zilele de naștere și vizitele se retrimit pe 3 zile (pregătire); restanțierii apar cu detalii doar luni și când intră în listă. Cheile se șterg după 60 de zile.
+- **Rulare ratată, reluată seara.** După ora 18:00 o rulare ratată nu mai trimite rezumatul de azi; a doua zi la 08:00 pleacă normal.
 
 ## Teste
 

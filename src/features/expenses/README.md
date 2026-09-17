@@ -17,7 +17,7 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | Export | Rol |
 | --- | --- |
 | `createExpenseCategoriesController(dependencies)` | chips-urile de categorii și filtrul de categorie; `{ render }` |
-| `createExpensesListView(dependencies)` | lista „Cheltuieli”; `{ render }` |
+| `createExpensesListController(dependencies)` | lista „Cheltuieli”; `{ render }` |
 | `expenseEditorFields` | câmpurile cheltuielii în dialogul generic |
 | `listExpenseCategoryNames(records)` | sugestiile de categorie (implicite, salvate, folosite) |
 

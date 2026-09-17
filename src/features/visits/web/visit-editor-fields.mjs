@@ -1,7 +1,13 @@
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
-import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
+import {
+  textFieldMarkup,
+  selectFieldMarkup,
+  textareaFieldMarkup,
+  formSectionMarkup,
+  groupOptionsMarkup,
+} from '#shared/ui/form-fields.mjs';
 import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { allowedNextStatuses, applyVisitStatus, rescheduleVisit } from '../domain/visit-status.mjs';
 import { parseVisitPasteTemplate, VISIT_PASTE_TEMPLATE } from '../domain/visit-paste-template.mjs';
@@ -18,13 +24,10 @@ function markup(record, context) {
   // La creare vizita nu poate porni decât „Programată”; „Înscris” nu apare
   // niciodată aici — îl pune doar ruta de înscriere.
   const statusChoices = context.mode === 'create' ? [] : allowedNextStatuses(currentStatus);
-  const groupOptions = [...context.records.groups]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(
-      g =>
-        `<option value="${escapeHtml(g.id)}" ${g.id === record.desiredGroupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`,
-    )
-    .join('');
+  const groupOptions = groupOptionsMarkup(
+    [...context.records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro')),
+    record.desiredGroupId || '',
+  );
   // Doar la creare: operatorul completează un șablon fix pe hârtie/telefon în timpul apelului,
   // apoi îl lipește aici în loc să retasteze fiecare câmp.
   const pasteTemplateSection =
@@ -58,7 +61,7 @@ function markup(record, context) {
     formSectionMarkup(
       'Dorințe',
       textFieldMarkup('desiredStartDate', 'Data dorită de start', record.desiredStartDate, 'date') +
-        `<label class="field">Grupa dorită<select name="desiredGroupId"><option value="">Fără grupă</option>${groupOptions}</select></label>` +
+        `<label class="field">Grupa dorită<select name="desiredGroupId">${groupOptions}</select></label>` +
         textFieldMarkup('source', 'Cum a aflat de grădiniță', record.source),
     ) +
     formSectionMarkup(
@@ -167,7 +170,14 @@ function read(formData, formElement, context) {
       ? rescheduleVisit(result, { date, time }, now)
       : { ...result, date, time };
   const nextStatus = String(formData.status || result.status);
-  if (nextStatus !== result.status) result = applyVisitStatus(result, nextStatus, now);
+  // Statutul vine dintr-un `<select>` din DOM (string neîncorsetat); markup-ul oferă
+  // doar tranzițiile din allowedNextStatuses(), applyVisitStatus() verifică oricum.
+  if (nextStatus !== result.status)
+    result = applyVisitStatus(
+      result,
+      /** @type {import('#shared/contracts/record-types.mjs').VisitStatus} */ (nextStatus),
+      now,
+    );
   return normalizeRecord('visits', result);
 }
 

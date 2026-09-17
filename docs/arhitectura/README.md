@@ -243,7 +243,8 @@ Aplicatie_Startica/
 │   │   │   └── create-application.integration.test.mjs → tests/application.test.mjs (ciclu de viață)
 │   │   └── web/
 │   │       ├── main.mjs                            → web/app.js (bootstrap)
-│   │       ├── compose-features.mjs                # porturi, abonări, legarea ecranelor
+│   │       ├── compose-screens.mjs                 # leagă ecranele feature-urilor de index.html, porturile de browser
+│   │       ├── global-actions.mjs                  # handler-ul global de click, filtre, tipărire, starea formularelor
 │   │       ├── navigation.mjs                      → views.mjs go() + app.js nav mobil
 │   │       ├── month-picker.mjs                    → app.js:122–229
 │   │       ├── render-cycle.mjs                    → views.mjs render(), cu renderGuarded
@@ -382,6 +383,8 @@ Aplicatie_Startica/
 ```
 
 Un feature are, de regulă: `README.md`, `<feature>.types.d.mts`, `index.server.mjs` și/sau `index.web.mjs`, apoi `domain/`, `server/`, `web/` și `test-support/`, doar cele necesare.
+
+Feature-urile adăugate după plan (`visits`, `telegram-notify`) urmează aceeași formă și sunt descrise în README-ul fiecăruia.
 
 ### 3.2 Rolul folderelor principale
 
@@ -579,7 +582,7 @@ Căile `Startica_Date`, `Startica_Backup` și `Jurnale` rămân relative la fold
 
 - Format: `type(scope): subject`, la imperativ, scurt, în engleză.
 - Tipuri: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `chore`, `perf`.
-- Scope-uri: `audit-log`, `payment-assignment`, `backup`, `billing`, `children`, `dashboard`, `data-transfer`, `expenses`, `fee-setup`, `groups`, `payments`, `record-editing`, `review-center`, `core`, `shared`, `config`, `app`, `packaging`, `docs`.
+- Scope-uri: `audit-log`, `payment-assignment`, `backup`, `billing`, `children`, `dashboard`, `data-transfer`, `expenses`, `fee-setup`, `groups`, `payments`, `record-editing`, `review-center`, `telegram-notify`, `visits`, `core`, `shared`, `config`, `app`, `packaging`, `docs`, `launcher`, `web`.
 - Mesajele nu menționează AI sau agenți și nu au trailer `Co-Authored-By`.
 - Un pas din plan înseamnă un commit sau un PR, cu `npm run check` verde.
 - Opțional la pasul 0: hook `commit-msg` în `.githooks/`, activat cu `git config core.hooksPath .githooks`, care verifică formatul.
@@ -667,7 +670,7 @@ const dispatchRequest = createRouteDispatcher({
 ```
 
 ```js
-// src/app/web/compose-features.mjs
+// src/app/web/compose-screens.mjs
 const eventBus = createDomainEventBus({
   eventNames: DOMAIN_EVENT_NAMES,
   onListenerError: error => noticeBanner.showError(describeFailure(error).message),

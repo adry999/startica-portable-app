@@ -43,7 +43,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
  *   showNotice: (message: string, isError?: boolean) => void,
  * }} dependencies
  */
-export function createExpensesListView({
+export function createExpensesListController({
   elements: { search, monthFrom, monthTo, category, archive, head, table, summaryText, bulkButton },
   readRecords,
   submitMutation,

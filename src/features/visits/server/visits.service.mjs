@@ -70,10 +70,7 @@ export function createVisitsService({ recordRepository, auditTrail, runRevisionT
    */
   function expireHealthNotes(todayStr = today()) {
     const snapshot = recordRepository.readSnapshot();
-    const expired = selectExpiredHealthNotes(
-      /** @type {import('../domain/visit-health-notes.mjs').HealthNotesSnapshot} */ (snapshot),
-      todayStr,
-    );
+    const expired = selectExpiredHealthNotes(snapshot, todayStr);
     const expiredCount = expired.visits.length + expired.children.length;
     if (expiredCount === 0) return { expired: 0 };
 

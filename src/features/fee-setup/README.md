@@ -17,6 +17,7 @@ Modul **independent**: nu importă alt feature. Depinde de `groups` doar prin da
 | Export | Rol |
 | --- | --- |
 | `createFeeSetupController({ elements, readRecords, readToday, submitMutation, showNotice, renderMissingFeeCount })` | întoarce `{ render }`; leagă filtrul, completarea în masă și salvarea la crearea sa |
+| `hasMissingFee(child)` | taxa lipsă; consumat de `src/app/web/compose-screens.mjs` la calculul `missingFeeCount` pentru Dashboard |
 
 ## Cum rămâne decuplat
 

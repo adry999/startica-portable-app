@@ -10,7 +10,7 @@ Modul **independent**: nu importă alt feature. Copiii vin din `RecordsSnapshot`
 
 | Export | Rol |
 | --- | --- |
-| `createPaymentsListView({ elements, readRecords, submitMutation, showNotice })` | lista „Achitări”; `render()` reface și opțiunile filtrului de copil, filtrele și sortarea redesenează doar rândurile |
+| `createPaymentsListController({ elements, readRecords, submitMutation, showNotice })` | lista „Achitări”; `render()` reface și opțiunile filtrului de copil, filtrele și sortarea redesenează doar rândurile |
 | `paymentEditorFields` | `{ idPrefix: 'PAY', title, markup, bind, read }` pentru dialogul generic de editare |
 
 Intern: `web/allocation-rows.mjs` (`addAllocationRow`, `readAllocationRows`, `renderAllocationBalance`), folosit de câmpurile din editor.
@@ -22,7 +22,7 @@ payments/
 ├── README.md
 ├── index.web.mjs
 └── web/
-    ├── payments-list.view.mjs      # ★ lista „Achitări”
+    ├── payments-list.controller.mjs # ★ lista „Achitări”
     ├── payment-editor-fields.mjs   # ★ câmpurile achitării în editor
     └── allocation-rows.mjs         # repartizarea pe luni: rânduri, sold, +Lună
 ```

@@ -1,8 +1,7 @@
 import type { AuditTrail } from '#shared/contracts/audit-trail.mjs';
 
-// Contractele domeniului rezumatului zilnic (§5 din specificație), ale
-// fișierelor de configurare/stare și ale rutelor (§4, §6). Restul (web/) se
-// adaugă odată cu T4.
+// Contractele domeniului rezumatului zilnic, ale fișierelor de
+// configurare/stare, ale rutelor și ale serviciului Telegram.
 
 /** Conținutul `telegram.json`, scris doar de server. */
 export interface TelegramConfig {

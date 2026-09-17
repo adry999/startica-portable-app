@@ -1,3 +1,5 @@
+import { isoDateOf } from './calendar-month.mjs';
+
 /**
  * @typedef {{
  *   date: string,
@@ -26,9 +28,6 @@ export function buildMonthGrid(monthKey, todayStr) {
   const totalCells = Math.ceil((leading + daysInMonth) / 7) * 7;
   const gridStart = new Date(year, month, 1 - leading);
 
-  const isoDate = d =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
   const t = new Date(todayStr + 'T12:00:00');
   const dow = t.getDay();
   const weekStart = new Date(t);
@@ -38,13 +37,13 @@ export function buildMonthGrid(monthKey, todayStr) {
   // Comparate ca text (YYYY-MM-DD), nu ca Date: gridStart e la miezul nopții,
   // iar weekStart moștenea ora 12:00 de la `t` — comparația de Date excludea
   // greșit prima zi a săptămânii.
-  const weekStartStr = isoDate(weekStart);
-  const weekEndStr = isoDate(weekEnd);
+  const weekStartStr = isoDateOf(weekStart);
+  const weekEndStr = isoDateOf(weekEnd);
 
   const days = Array.from({ length: totalCells }, (_, i) => {
     const d = new Date(gridStart);
     d.setDate(gridStart.getDate() + i);
-    const dateStr = isoDate(d);
+    const dateStr = isoDateOf(d);
     return {
       date: dateStr,
       day: d.getDate(),

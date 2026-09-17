@@ -7,7 +7,7 @@ import { measureAssignmentRisk } from '../domain/unassigned-payment-risk.mjs';
 /** @typedef {import('../payment-assignment.types.mjs').AssignmentRisk} AssignmentRisk */
 /** @typedef {import('../payment-assignment.types.mjs').PaymentAssignmentControllerDependencies} PaymentAssignmentControllerDependencies */
 
-export const ASSIGNMENT_QUEUE_LIMIT = 200;
+const ASSIGNMENT_QUEUE_LIMIT = 200;
 
 /** @param {PaymentAssignmentControllerDependencies} dependencies */
 export function createPaymentAssignmentController({

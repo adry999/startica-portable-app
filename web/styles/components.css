@@ -74,9 +74,6 @@
   margin-top: 4px;
   color: var(--muted);
 }
-.table-panel {
-  margin-top: 15px;
-}
 .table-wrap {
   overflow: auto;
   container-type: inline-size;
@@ -147,7 +144,6 @@
   background: var(--mint-soft);
   color: #2c7a52;
 }
-.cardpay,
 .partial {
   background: var(--yellow-soft);
   color: #8a6d00;

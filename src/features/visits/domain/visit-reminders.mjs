@@ -1,10 +1,9 @@
-/** @typedef {import('./visit-status.mjs').Visit} Visit */
+import { isoDateOf } from '#shared/domain/calendar-month.mjs';
+
+/** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
 /** @typedef {{ key: string, title: string, body: string }} VisitReminder */
 
 const REMINDER_WINDOW_MINUTES = 30;
-
-const isoDate = date =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 const pluralVisits = count => (count === 1 ? '1 vizită' : `${count} vizite`);
 
@@ -17,7 +16,7 @@ const pluralVisits = count => (count === 1 ? '1 vizită' : `${count} vizite`);
  */
 export function selectDueReminders(visits, now, notifiedKeys) {
   const notified = new Set(notifiedKeys);
-  const todayStr = isoDate(now);
+  const todayStr = isoDateOf(now);
   const scheduled = visits
     .filter(visit => !visit.archived && visit.status === 'Programată')
     .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));

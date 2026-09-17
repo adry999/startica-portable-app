@@ -56,7 +56,7 @@ const ALLOWED_SORT_FIELDS = /** @type {string[]} */ (SORT_FIELDS.filter(Boolean)
  *   showNotice: (message: string, isError?: boolean) => void,
  * }} dependencies
  */
-export function createPaymentsListView({
+export function createPaymentsListController({
   elements: { search, child, method, monthFrom, monthTo, archive, head, table, summaryText, bulkButton },
   readRecords,
   submitMutation,
