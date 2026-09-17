@@ -2,16 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { selectDueReminders } from './visit-reminders.mjs';
 
+/** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
+
+/** @returns {Visit} */
 function buildVisit(overrides = {}) {
   return {
     id: 'VIZ-1',
     name: 'Ana Popescu',
+    parent: 'Maria Popescu',
     phone: '0722000000',
     status: 'Programată',
     date: '2026-09-10',
     time: '10:00',
     statusChangedAt: '2026-09-01T10:00:00.000Z',
     history: [],
+    desiredGroupId: null,
+    childId: '',
     archived: false,
     ...overrides,
   };

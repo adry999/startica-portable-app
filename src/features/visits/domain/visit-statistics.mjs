@@ -1,6 +1,6 @@
 import { daysBetween, shiftDays } from '#shared/domain/calendar-month.mjs';
 
-/** @typedef {import('./visit-status.mjs').Visit} Visit */
+/** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
 
 const RETENTION_DAYS = 365;
 

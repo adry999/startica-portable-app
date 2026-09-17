@@ -1,5 +1,5 @@
 import { DomainEvent } from '#shared/contracts/domain-events.mjs';
-import { shiftDays } from '#shared/domain/calendar-month.mjs';
+import { shiftDays, isoDateOf } from '#shared/domain/calendar-month.mjs';
 import { selectDueReminders } from '../domain/visit-reminders.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -7,10 +7,6 @@ import { selectDueReminders } from '../domain/visit-reminders.mjs';
 
 const POLL_INTERVAL_MS = 60000;
 const BLOCKED_HINT = 'Notificările sunt blocate în browser; vizitele apar în Panou.';
-
-/** @param {Date} date */
-const isoDateOf = date =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 /** Cheia „zi:<dată>” și „vizita:<id>:<dată>:<oră>” rămân utile doar cât vizează azi sau mâine;
  * orice altă cheie e din zile trecute și s-ar aduna la nesfârșit dacă nu ar fi ștearsă. */
@@ -65,7 +61,7 @@ export function createVisitRemindersController({
     const todayStr = isoDateOf(now);
     const tomorrowStr = shiftDays(todayStr, 1);
     const notifiedKeys = rememberedKeys.read();
-    const due = selectDueReminders(/** @type {any} */ (readRecords().visits), now, notifiedKeys);
+    const due = selectDueReminders(readRecords().visits, now, notifiedKeys);
     for (const reminder of due) notifications.show(reminder.title, reminder.body, reminder.key, goToVisits);
     const nextKeys = keepCurrentKeys([...notifiedKeys, ...due.map(reminder => reminder.key)], todayStr, tomorrowStr);
     rememberedKeys.write(nextKeys);
