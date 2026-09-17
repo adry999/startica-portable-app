@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { validateState, normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { total } from '#shared/domain/money.mjs';
+import { fail } from '#core/server/errors/domain-error.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Payment} Payment */
@@ -38,7 +39,7 @@ export function planFinancialHistoryImport(input, currentRecords) {
     input.sourceName.length > 250 ||
     !/^[a-f0-9]{64}$/.test(input.sourceHash || '')
   )
-    throw Error('Sursă V5 invalidă.');
+    fail('Sursă V5 invalidă.');
   const source = /** @type {RecordsSnapshot} */ (validateState(input.state)),
     mapping = new Map(),
     used = new Set();
@@ -51,9 +52,7 @@ export function planFinancialHistoryImport(input, currentRecords) {
         contractKey(c.contractNumber || c.id) === contractKey(child.id),
     );
     if (matches.length !== 1 || used.has(matches[0].id))
-      throw Error(
-        `Copilul ${child.id} nu are o corespondență unică după contract, nume și data nașterii. Import oprit.`,
-      );
+      fail(`Copilul ${child.id} nu are o corespondență unică după contract, nume și data nașterii. Import oprit.`);
     mapping.set(child.id, matches[0].id);
     used.add(matches[0].id);
   }
@@ -76,7 +75,7 @@ export function planFinancialHistoryImport(input, currentRecords) {
           skipped[type]++;
           continue;
         }
-        throw Error(
+        fail(
           `${original.id}: ID deja existent sau sursă modificată. Nu suprascriem operațiunea; verifică înainte de import.`,
         );
       }
@@ -85,7 +84,7 @@ export function planFinancialHistoryImport(input, currentRecords) {
       const addition = /** @type {any} */ (structuredClone(original));
       if (type === 'payments' && addition.childId) {
         const target = mapping.get(addition.childId);
-        if (!target) throw Error(`${addition.id}: copilul din sursă nu poate fi asociat.`);
+        if (!target) fail(`${addition.id}: copilul din sursă nu poate fi asociat.`);
         addition.childId = target;
       }
       const provisional =
