@@ -34,10 +34,10 @@ function buildBirthdaysSection(birthdays, todayStr) {
 }
 
 function visitLine(visit) {
-  const parts = [visit.time, escapeHtml(visit.name)];
-  if (visit.phone) parts.push(escapeHtml(visit.phone));
-  if (visit.parent) parts.push(escapeHtml(visit.parent));
-  return `• ${parts.join(' · ')}`;
+  const segments = [visit.time, escapeHtml(visit.name)];
+  if (visit.phone) segments.push(escapeHtml(visit.phone));
+  if (visit.parent) segments.push(escapeHtml(visit.parent));
+  return `• ${segments.join(' · ')}`;
 }
 
 // „Vizite azi” și „Vizite mâine” sunt sub-secțiuni ale aceluiași bloc (fără

@@ -14,27 +14,27 @@ const reviewTag = (category, labels) =>
   `<span class="review-tag ${escapeHtml(category)}">${escapeHtml(labels[category] || category)}</span>`;
 
 /**
- * @param {ReviewItem} item
+ * @param {ReviewItem} reviewItem
  * @param {RecordsSnapshot['children']} children
  * @param {RecordsSnapshot['groups']} groups
  * @param {Record<string, string>} labels
  */
-function reviewRow(item, children, groups, labels) {
-  const payment = item.type === 'payments',
-    // item.record e Child | Payment; câmpurile citite mai jos depind de item.type.
-    record = /** @type {any} */ (item.record);
+function reviewRow(reviewItem, children, groups, labels) {
+  const payment = reviewItem.type === 'payments',
+    // reviewItem.record e Child | Payment; câmpurile citite mai jos depind de reviewItem.type.
+    record = /** @type {any} */ (reviewItem.record);
   const details = payment
     ? `${formatDate(record.date)} · ${formatMoney(record.amount)}${record.sourceName ? ` · sursă: ${escapeHtml(record.sourceName)}` : ''}${record.childId ? ` · copil: ${escapeHtml(childNameOf(record, children))}` : ''}`
     : `Contract: ${escapeHtml(record.contractNumber || record.id)} · Grupă: ${escapeHtml(groupNameOf(record.groupId, groups) || 'necompletată')}`;
-  const tags = item.categories.map(category => reviewTag(category, labels)).join('');
-  const confirm = item.canConfirm
-    ? recordActionButton('confirm-review', 'payments', item.id, 'Confirmă asocierea')
+  const tags = reviewItem.categories.map(category => reviewTag(category, labels)).join('');
+  const confirm = reviewItem.canConfirm
+    ? recordActionButton('confirm-review', 'payments', reviewItem.id, 'Confirmă asocierea')
     : '';
   return (
-    `<div class="review-row"><span><strong>${escapeHtml(item.name)}</strong> · ${escapeHtml(item.id)}` +
+    `<div class="review-row"><span><strong>${escapeHtml(reviewItem.name)}</strong> · ${escapeHtml(reviewItem.id)}` +
     `<div class="review-tags">${tags}</div><small>${details}</small>` +
-    `<small>${item.reasons.map(reason => escapeHtml(reason)).join(' · ')}</small></span>` +
-    `<div class="review-actions">${recordActionButton('edit', item.type, item.id, payment ? 'Corectează achitarea' : 'Corectează fișa')}${confirm}</div></div>`
+    `<small>${reviewItem.reasons.map(reason => escapeHtml(reason)).join(' · ')}</small></span>` +
+    `<div class="review-actions">${recordActionButton('edit', reviewItem.type, reviewItem.id, payment ? 'Corectează achitarea' : 'Corectează fișa')}${confirm}</div></div>`
   );
 }
 
@@ -70,7 +70,7 @@ export function createReviewCenterView({ elements: { progress, list, filter, sea
     const reviewRows = /** @type {HTMLElement} */ (list.querySelector('#reviewRows'));
     const pagedRows = /** @type {ReviewItem[]} */ (paginateRows('review', rows));
     reviewRows.innerHTML =
-      pagedRows.map(item => reviewRow(item, children, groups, center.labels)).join('') ||
+      pagedRows.map(reviewItem => reviewRow(reviewItem, children, groups, center.labels)).join('') ||
       '<p class="empty">Nu există înregistrări pentru filtrul ales.</p>';
   };
 }

@@ -2,7 +2,6 @@ import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatParentContacts } from '#shared/format/parent-contacts-format.mjs';
 
-/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewRow} ChildrenCsvPreviewRow */
 /** @typedef {import('../children.types.mjs').ChildrenCsvPreviewReport} ChildrenCsvPreviewReport */
 
 const CSV_MAX_BYTES = 2000000;

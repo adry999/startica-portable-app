@@ -2,7 +2,6 @@ import { dateOK } from '#shared/domain/calendar-month.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
-/** @typedef {import('../children.types.mjs').ChildrenCsvPreviewRow} ChildrenCsvPreviewRow */
 /** @typedef {import('../children.types.mjs').ChildrenCsvPreviewReport} ChildrenCsvPreviewReport */
 
 const clean = value => String(value ?? '').trim();
@@ -20,16 +19,16 @@ const contractKey = value =>
 const headers = {
   contract: ['ID (Nr. contract)', 'Nr. contract'],
   name: ['Nume/prenume copil:', 'Nume copil'],
-  parent: ['Parinte', 'Părinte', 'Parinte 1'],
+  parent: ['Părinte', 'Parinte 1'],
   phone: ['Nr.de contact', 'Telefon', 'Telefon 1'],
-  parent2: ['Parinte 2'],
+  parent2: ['Părinte 2'],
   phone2: ['Telefon 2'],
-  birthDate: ['Data nasterii'],
+  birthDate: ['Data nașterii'],
   contractDate: ['Data contract'],
-  attendanceDate: ['Data frecventarii'],
-  contractLabel: ['Nume parinte / Nr. contract'],
-  drafted: ['Data intocmirii'],
-  age: ['Varsta'],
+  attendanceDate: ['Data frecventării'],
+  contractLabel: ['Nume părinte / Nr. contract'],
+  drafted: ['Data întocmirii'],
+  age: ['Vârsta'],
 };
 
 // Parsare CSV strictă pentru aplicație (nu o conversie Excel). Telefoanele și

@@ -52,14 +52,14 @@ export function createDataTransferRoutes({
           /** @type {('payments' | 'expenses')[]} */
           const recordTypesToSave = ['payments', 'expenses'];
           for (const type of recordTypesToSave)
-            for (const r of plan.additions[type]) {
-              recordRepository.save(type, r);
+            for (const addition of plan.additions[type]) {
+              recordRepository.save(type, addition);
               auditTrail.recordChange({
                 action: FINANCIAL_IMPORT_AUDIT_ACTION,
                 recordType: type,
-                recordId: r.id,
+                recordId: addition.id,
                 before: null,
-                after: r,
+                after: addition,
               });
             }
         });

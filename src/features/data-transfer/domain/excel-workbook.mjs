@@ -290,9 +290,9 @@ export function exportWorkbook(records, XLSX) {
   );
   const raw = [['Tip', 'ID', 'Fragment', 'Date complete']];
   for (const type of TYPES)
-    for (const r of records[type]) {
-      const json = JSON.stringify(stripSensitiveFields(type, r));
-      for (let i = 0; i < json.length; i += 16000) raw.push([type, r.id, i / 16000, json.slice(i, i + 16000)]);
+    for (const record of records[type]) {
+      const json = JSON.stringify(stripSensitiveFields(type, record));
+      for (let i = 0; i < json.length; i += 16000) raw.push([type, record.id, i / 16000, json.slice(i, i + 16000)]);
     }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(raw), 'Startica_Date');
   return wb;
