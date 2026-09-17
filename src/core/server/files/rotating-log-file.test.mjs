@@ -11,6 +11,20 @@ function tempLogDir(t) {
   return dir;
 }
 
+// Trebuie să ruleze prima: avertismentul „o singură dată per proces” e memorat la nivel de modul.
+test('avertizează o singură dată în stderr, la eșecul repetat de scriere', t => {
+  const dir = tempLogDir(t);
+  const fileUsedAsDir = join(dir, 'nu-e-director');
+  writeFileSync(fileUsedAsDir, 'sunt un fișier, nu un director');
+  const file = join(fileUsedAsDir, 'startica.log');
+  const stderrWrite = t.mock.method(process.stderr, 'write', () => true);
+  const log = createRotatingLogFile({ file });
+  log.write('INFO', 'prima linie pierdută');
+  log.write('INFO', 'a doua linie pierdută');
+  assert.equal(stderrWrite.mock.callCount(), 1);
+  assert.ok(String(stderrWrite.mock.calls[0].arguments[0]).includes(file));
+});
+
 test('scrie linia cu prefix ISO și nivel', t => {
   const file = join(tempLogDir(t), 'startica.log');
   createRotatingLogFile({ file }).write('INFO', 'Startica: http://127.0.0.1:8765');
