@@ -6,11 +6,17 @@ Modul **independent**: nu importă alt feature. Achitările, grupele și indicii
 
 ## Public API
 
+### `index.server.mjs`
+
+| Export | Rol |
+| --- | --- |
+| `evaluateChildrenForMonth(records, month, asOf)` | evaluează obligația fiecărui copil pe o lună, cu indexul de încasări calculat o singură dată; consumat și de rezumatul zilnic Telegram (`src/app/server/telegram-digest.mjs`) |
+
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
-| `evaluateChildrenForMonth(records, month, asOf)` | evaluează obligația fiecărui copil pe o lună, cu indexul de încasări calculat o singură dată |
+| `evaluateChildrenForMonth(records, month, asOf)` | aceeași funcție, reexportată pentru ecranele web |
 | `createPaymentStatusView({ elements, readToday, requestRender })` | întoarce `renderPaymentStatus({ month, evaluations })` |
 | `createNotifyListView({ elements, readRecords, readToday, requestRender, renderNotifyCount })` | întoarce `renderNotifyList({ month, evaluations, unassignedPaymentHintsByChild })` |
 

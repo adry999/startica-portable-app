@@ -60,7 +60,7 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 
 ### Erori și stări
 
-- **Server:** `fail(message, status)` din `#core/server/errors/domain-error.mjs`. Codurile sunt: 400 input invalid, 403 gardă (Host, Origin, token), 404 rută inexistentă, 409 conflict (revizie, înregistrare schimbată sau ștearsă), 413 corp prea mare. Există un singur `catch`, în route dispatcher.
+- **Server:** `fail(message, status)` din `#core/server/errors/domain-error.mjs`. Codurile sunt: 400 input invalid, 403 gardă (Host, Origin, token), 404 rută inexistentă, 409 conflict (revizie, înregistrare schimbată sau ștearsă), 413 corp prea mare. Există un singur `catch`, în route dispatcher. Un `catch` local, într-o rută sau într-un serviciu, e permis doar când traduce o eroare de sistem (fs, rețea, SQLite) într-un mesaj pe care operatorul poate acționa, de exemplu `readRestoreSnapshot` din `backup.routes.mjs` și rutele Telegram; nu are voie să înghită eroarea în tăcere.
 - **Client:** `ApiError` are `kind` cu trei valori:
   - `network`: stare necunoscută; operația rămâne pending și se reia cu același `requestId`;
   - `rejected`;
