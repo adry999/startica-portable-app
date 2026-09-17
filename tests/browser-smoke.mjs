@@ -16,6 +16,9 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createApplication } from '../startica_server.mjs';
+import { isoDateOf } from '#shared/domain/calendar-month.mjs';
+// Vizita de probă e pe ziua curentă: badge-ul numără doar vizitele de azi înainte, iar calendarul arată luna curentă.
+const visitDate = isoDateOf(new Date());
 const dir = mkdtempSync(join(tmpdir(), 'startica-browser-'));
 const screenshotDir =
   process.env.STARTICA_UI_SCREENSHOTS === '1' ? mkdtempSync(join(tmpdir(), 'startica-ui-shots-')) : null;
@@ -792,7 +795,7 @@ try {
   );
   assert.match(copyTemplateResult.feedback, /Șablon copiat\.|Copierea în clipboard a eșuat/);
   await evaluate(
-    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='2026-09-15';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
+    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='${visitDate}';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
   );
   await until(() => evaluate("!document.getElementById('editor').open"), 'Visit save failed');
   assert.match(await evaluate("document.getElementById('visitsCalendar').textContent"), /14:00.*Vizită test/);
@@ -824,7 +827,7 @@ try {
   );
   assert.equal(
     await evaluate(
-      "document.querySelector('#visitsCalendar [data-date=\"2026-09-15\"]').classList.contains('is-selected')",
+      `document.querySelector('#visitsCalendar [data-date="${visitDate}"]').classList.contains('is-selected')`,
     ),
     false,
     'Clicking a visit chip should not also select the day (day-select must not fire)',
@@ -863,7 +866,7 @@ try {
   // Vizită deja Efectuată: cipul din calendar oferă „Înscrie copilul”, cablat la același onQuickAction(id, 'enrol').
   await evaluate(`(async()=>{
     const {submitMutation}=await import('/src/app/web/app-session.mjs');
-    await submitMutation('/api/record',{type:'visits',mode:'create',record:{id:'VIZ-SMOKE-DONE',name:'Vizită gata test',parent:'Părinte gata',phone:'0722333444',date:'2026-09-17',time:'11:00',status:'Efectuată',statusChangedAt:'2026-09-15T09:00:00.000Z',history:[{at:'2026-09-15T09:00:00.000Z',status:'Efectuată',date:'2026-09-17',time:'11:00'}]}});
+    await submitMutation('/api/record',{type:'visits',mode:'create',record:{id:'VIZ-SMOKE-DONE',name:'Vizită gata test',parent:'Părinte gata',phone:'0722333444',date:'${visitDate}',time:'11:00',status:'Efectuată',statusChangedAt:'2026-09-15T09:00:00.000Z',history:[{at:'2026-09-15T09:00:00.000Z',status:'Efectuată',date:'${visitDate}',time:'11:00'}]}});
   })()`);
   await until(
     () => evaluate("document.getElementById('visitsTable').textContent.includes('Vizită gata test')"),
