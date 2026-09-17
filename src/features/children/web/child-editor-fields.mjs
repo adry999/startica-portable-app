@@ -2,7 +2,13 @@ import { normalizeRecord, CHILD_STATUSES, STATUS_HISTORY_VALUES } from '#shared/
 import { defaultSetupMonth } from '#shared/domain/child-setup-month.mjs';
 import { escapeHtml } from '#shared/format/html-escape.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
-import { textFieldMarkup, selectFieldMarkup, textareaFieldMarkup, formSectionMarkup } from '#shared/ui/form-fields.mjs';
+import {
+  textFieldMarkup,
+  selectFieldMarkup,
+  textareaFieldMarkup,
+  formSectionMarkup,
+  groupOptionsMarkup,
+} from '#shared/ui/form-fields.mjs';
 
 // Implementează structural RecordEditorFields din #features/record-editing —
 // fără să îl importe, ca feature-urile să rămână izolate unele de altele.
@@ -25,13 +31,10 @@ const upsertHistory = (rows, from, key, value) => [...rows.filter(row => row.fro
  * @param {any} context RecordEditorContext (din #features/record-editing, neimportat aici)
  */
 function markup(record, context) {
-  const groupOptions = [...context.records.groups]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(
-      g =>
-        `<option value="${escapeHtml(g.id)}" ${g.id === record.groupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`,
-    )
-    .join('');
+  const groupOptions = groupOptionsMarkup(
+    [...context.records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro')),
+    record.groupId || '',
+  );
   // Fără istoric (adăugare), luna implicită e cea din care se calculează
   // corect lunile trecute; cu istoric deja existent, luna curentă rămâne implicită.
   const defaultMonth =
@@ -44,7 +47,7 @@ function markup(record, context) {
       textFieldMarkup('name', 'Nume copil', record.name, 'text', 'required') +
         `<label class="field">Data nașterii<input name="birthDate" type="date" value="${escapeHtml(record.birthDate)}" id="childBirthDate"><small class="field-hint" id="childAgeHint">Vârstă: ${formatAge(record.birthDate)}</small></label>` +
         selectFieldMarkup('status', 'Statut', record.status || 'Activ', CHILD_STATUSES) +
-        `<label class="field">Grupă<select name="groupId"><option value="">Fără grupă</option>${groupOptions}</select></label>`,
+        `<label class="field">Grupă<select name="groupId">${groupOptions}</select></label>`,
     ) +
     formSectionMarkup(
       'Părinți',

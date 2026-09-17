@@ -1,6 +1,7 @@
 import { monthOK } from '#shared/domain/calendar-month.mjs';
+import { groupOptionsMarkup } from '#shared/ui/form-fields.mjs';
 import { hasMissingFee } from '../domain/child-fee-setup.mjs';
-import { groupOptionsMarkup, feeSetupRowMarkup } from './fee-setup.view.mjs';
+import { feeSetupRowMarkup } from './fee-setup.view.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 
