@@ -123,3 +123,59 @@ export function findImportViolations(sourceFiles) {
   }
   return violations;
 }
+
+// Ceasul aplicației (today(), acum) e centralizat aici, ca regulile de domeniu să rămână testabile prin readNow injectat.
+const CALENDAR_MONTH_PATH = 'src/shared/domain/calendar-month.mjs';
+const DOMAIN_PATH = /^src\/(features\/[^/]+\/domain\/|shared\/domain\/)/;
+const ENVIRONMENT_CONFIG_PATH = 'src/config/environment.mjs';
+
+const CLOCK_PATTERN = /\bDate\.now\s*\(\s*\)|\bnew\s+Date\s*\(\s*\)/g;
+const ENV_PATTERN = /\bprocess\.env\b/g;
+const CONSOLE_PATTERN = /\bconsole\.[a-zA-Z]+\s*\(/g;
+const CONTROL_BYTE_PATTERN = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
+
+/** @param {string} text */
+function lineStartsOf(text) {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) starts.push(i + 1);
+  return starts;
+}
+
+/** @param {number[]} lineStarts @param {number} index */
+function lineAt(lineStarts, index) {
+  let low = 0,
+    high = lineStarts.length - 1;
+  while (low < high) {
+    const mid = (low + high + 1) >> 1;
+    if (lineStarts[mid] <= index) low = mid;
+    else high = mid - 1;
+  }
+  return low + 1;
+}
+
+/**
+ * Reguli aplicate direct pe textul sursă, nu pe specificatorii de import.
+ * @param {{ path: string, text: string }[]} sourceFiles
+ * @returns {{ path: string, line: number, rule: string }[]}
+ */
+export function findSourceTextViolations(sourceFiles) {
+  const violations = [];
+  for (const { path, text } of sourceFiles) {
+    if (!path.startsWith('src/') || isTestFile(path)) continue;
+    const lineStarts = lineStartsOf(text);
+    const report = (index, rule) => violations.push({ path, line: lineAt(lineStarts, index), rule });
+
+    if (DOMAIN_PATH.test(path) && path !== CALENDAR_MONTH_PATH)
+      for (const match of text.matchAll(CLOCK_PATTERN)) report(match.index, 'clock-in-domain');
+
+    if (path !== ENVIRONMENT_CONFIG_PATH)
+      for (const match of text.matchAll(ENV_PATTERN)) report(match.index, 'env-outside-config');
+
+    const location = locate(path);
+    if (location.runtime === 'web' || location.area === 'shared')
+      for (const match of text.matchAll(CONSOLE_PATTERN)) report(match.index, 'console-in-browser-code');
+
+    for (const match of text.matchAll(CONTROL_BYTE_PATTERN)) report(match.index, 'control-bytes-in-source');
+  }
+  return violations;
+}
