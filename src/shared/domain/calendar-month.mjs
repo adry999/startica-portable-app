@@ -1,7 +1,7 @@
-export const today = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+/** @param {Date} date */
+export const isoDateOf = date =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+export const today = () => isoDateOf(new Date());
 export function monthOK(v) {
   return (
     typeof v === 'string' &&

@@ -1,4 +1,4 @@
-import { isAbsolute } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 // Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări (vezi features/backup/server/backup.service.mjs).
 export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
@@ -40,6 +40,17 @@ function parseHome(rawHome) {
   if (!rawHome || !isAbsolute(rawHome))
     throw new Error(`STARTICA_HOME invalid: „${rawHome}”. Folosește o cale absolută.`);
   return rawHome;
+}
+
+/** Folderele aplicației față de rădăcina de date (lansator: STARTICA_HOME; dezvoltare: folderul aplicației).
+ * @param {string} home
+ */
+export function dataLayout(home) {
+  return {
+    dataDir: join(home, 'Startica_Date'),
+    backupDir: join(home, 'Startica_Backup'),
+    logDir: join(home, 'Jurnale'),
+  };
 }
 
 /**

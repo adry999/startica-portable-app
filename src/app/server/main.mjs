@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { format } from 'node:util';
-import { loadEnvironment } from '#config/environment.mjs';
+import { loadEnvironment, dataLayout } from '#config/environment.mjs';
 import { createRotatingLogFile } from '#core/server/files/rotating-log-file.mjs';
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 import { createApplication } from './create-application.mjs';
@@ -19,7 +19,8 @@ function redirectConsoleToLogFile(logFile) {
 
 export function startServer() {
   const environment = loadEnvironment();
-  const logFile = environment.home ? join(environment.home, 'Jurnale', 'startica.log') : undefined;
+  const layout = environment.home ? dataLayout(environment.home) : undefined;
+  const logFile = layout ? join(layout.logDir, 'startica.log') : undefined;
   if (logFile) redirectConsoleToLogFile(logFile);
   const portFile = environment.home ? join(environment.home, 'startica.port') : null;
   // Implicit ar opri tot procesul, pierzând fereastra fără explicație.
@@ -43,10 +44,10 @@ export function startServer() {
     }
   });
   app = createApplication({
-    ...(environment.home
+    ...(layout
       ? {
-          dataDir: join(environment.home, 'Startica_Date'),
-          backupDir: join(environment.home, 'Startica_Backup'),
+          dataDir: layout.dataDir,
+          backupDir: layout.backupDir,
           home: environment.home,
           logFile,
         }
