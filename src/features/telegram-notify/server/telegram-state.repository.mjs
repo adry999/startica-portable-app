@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readJsonFile, writeJsonFileAtomically } from '#core/server/files/json-file.mjs';
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 
 /** @typedef {import('../telegram-notify.types.mjs').TelegramState} TelegramState */
@@ -21,14 +21,10 @@ export function telegramStateFilePath(dataDir) {
  * @returns {TelegramState}
  */
 export function readTelegramState(dataDir) {
-  const file = telegramStateFilePath(dataDir);
-  if (!existsSync(file)) return emptyState();
-  try {
-    return { ...emptyState(), ...JSON.parse(readFileSync(file, 'utf8')) };
-  } catch (error) {
-    console.error(`Fișierul ${file} este corupt: ${/** @type {Error} */ (error).message}`);
-    return emptyState();
-  }
+  return {
+    ...emptyState(),
+    .../** @type {Partial<TelegramState> | null} */ (readJsonFile(telegramStateFilePath(dataDir))),
+  };
 }
 
 /**
@@ -36,10 +32,7 @@ export function readTelegramState(dataDir) {
  * @param {TelegramState} state
  */
 export function writeTelegramState(dataDir, state) {
-  mkdirSync(dataDir, { recursive: true });
-  const file = telegramStateFilePath(dataDir);
-  writeFileSync(file + '.tmp', JSON.stringify(state));
-  renameSync(file + '.tmp', file);
+  writeJsonFileAtomically(telegramStateFilePath(dataDir), state);
 }
 
 /** @param {string} dataDir */
