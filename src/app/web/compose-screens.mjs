@@ -1,5 +1,6 @@
 import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
+import { createNotificationsPort, createRememberedKeysPort } from './browser-ports.mjs';
 import { createAuditLogApi, createAuditLogController, createAuditLogView } from '#features/audit-log/index.web.mjs';
 import { createBackupController, createBackupHealthView } from '#features/backup/index.web.mjs';
 import { createNotifyListView, createPaymentStatusView } from '#features/billing/index.web.mjs';
@@ -8,14 +9,14 @@ import {
   childEditorFields,
   createChildProfileView,
   createChildrenCsvDialog,
-  createChildrenListView,
+  createChildrenListController,
   listUpcomingBirthdays,
 } from '#features/children/index.web.mjs';
 import { createChildrenSummaryView, createDashboardView } from '#features/dashboard/index.web.mjs';
 import { createExcelTransferController, loadXLSX } from '#features/data-transfer/index.web.mjs';
 import {
   createExpenseCategoriesController,
-  createExpensesListView,
+  createExpensesListController,
   expenseEditorFields,
   listExpenseCategoryNames,
 } from '#features/expenses/index.web.mjs';
@@ -26,7 +27,7 @@ import {
   createPaymentAssignmentController,
   createPaymentAssignmentView,
 } from '#features/payment-assignment/index.web.mjs';
-import { createPaymentsListView, paymentEditorFields } from '#features/payments/index.web.mjs';
+import { createPaymentsListController, paymentEditorFields } from '#features/payments/index.web.mjs';
 import { createRecordEditorDialog } from '#features/record-editing/index.web.mjs';
 import { createReviewCenterView, findRecordIssues } from '#features/review-center/index.web.mjs';
 import { createTelegramSettingsController } from '#features/telegram-notify/index.web.mjs';
@@ -253,45 +254,11 @@ export function composeScreens(dependencies) {
     renderVisitsCount: count => setNavCount('visitsCount', count),
   });
 
-  // Fereastra Notification poate lipsi (headless, browsere vechi) sau localStorage poate
-  // arunca într-un profil de navigare privată blocat; portul rămâne tăcut, nu aplicația.
-  const notifications = {
-    permission: () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission),
-    request: () =>
-      typeof Notification === 'undefined' ? Promise.resolve('unsupported') : Notification.requestPermission(),
-    show: (title, body, key, onClick) => {
-      if (typeof Notification === 'undefined') return;
-      const notification = new Notification(title, { body, tag: key });
-      notification.onclick = () => {
-        window.focus();
-        onClick?.();
-      };
-    },
-  };
-  const REMINDER_KEYS_STORAGE_KEY = 'startica.visitReminders';
-  const rememberedKeys = {
-    read: () => {
-      try {
-        const raw = localStorage.getItem(REMINDER_KEYS_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    },
-    write: keys => {
-      try {
-        localStorage.setItem(REMINDER_KEYS_STORAGE_KEY, JSON.stringify(keys));
-      } catch {
-        // Profil de navigare privată sau stocare blocată: memento-urile nu persistă, dar aplicația continuă.
-      }
-    },
-  };
   createVisitRemindersController({
     readRecords,
     readNow: () => new Date(),
-    notifications,
-    rememberedKeys,
+    notifications: createNotificationsPort(),
+    rememberedKeys: createRememberedKeysPort('startica.visitReminders'),
     eventBus,
     elements: { button: element('visitsNotifyButton'), hint: element('visitsNotifyHint') },
     goToVisits: () => navigation.go('visits'),
@@ -347,7 +314,7 @@ export function composeScreens(dependencies) {
     showNotice,
   });
   const listDependencies = { readRecords, submitMutation, showNotice };
-  const childrenList = createChildrenListView({
+  const childrenList = createChildrenListController({
     elements: {
       search: element('childrenSearch'),
       archive: element('childrenArchive'),
@@ -358,7 +325,7 @@ export function composeScreens(dependencies) {
     },
     ...listDependencies,
   });
-  const paymentsList = createPaymentsListView({
+  const paymentsList = createPaymentsListController({
     elements: {
       search: element('paymentsSearch'),
       child: element('paymentsChild'),
@@ -373,7 +340,7 @@ export function composeScreens(dependencies) {
     },
     ...listDependencies,
   });
-  const expensesList = createExpensesListView({
+  const expensesList = createExpensesListController({
     elements: {
       search: element('expensesSearch'),
       monthFrom: element('expensesMonthFrom'),

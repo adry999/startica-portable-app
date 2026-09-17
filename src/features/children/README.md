@@ -11,13 +11,14 @@ Modul **independent**: nu importă alt feature. Grupele și achitările vin din 
 | Export | Rol |
 | --- | --- |
 | `createChildrenRoutes({ recordRepository, auditTrail, runRevisionTransaction, readEnvelope })` | `POST /api/children-csv-preview`, `POST /api/children-csv`, corpuri neschimbate |
+| `listUpcomingBirthdays(children, days, todayStr)` | zilele de naștere apropiate; consumat și de rezumatul zilnic Telegram (`src/app/server/telegram-digest.mjs`) |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
 | `buildBirthdayCalendar(children, todayStr)`, `listUpcomingBirthdays(children, days, todayStr)` | calendarul lunar și zilele de naștere apropiate (Dashboard) |
-| `createChildrenListView({ elements, readRecords, submitMutation, showNotice })` | lista „Copii”: căutare, arhivare, sortare, arhivare în masă; întoarce `{ render }` |
+| `createChildrenListController({ elements, readRecords, submitMutation, showNotice })` | lista „Copii”: căutare, arhivare, sortare, arhivare în masă; întoarce `{ render }` |
 | `createChildProfileView({ elements: { body, dialog }, readRecords, readSelectedMonth })` | întoarce `{ openChildProfile }` |
 | `createChildrenCsvDialog({ elements, sessionState, requestJson, submitMutation, showNotice })` | butonul de import, alegerea fișierului, previzualizarea și confirmarea |
 | `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `src/app/web/compose-screens.mjs`) |
@@ -48,7 +49,7 @@ children/
 │   ├── children.routes.mjs                       # ★ POST /api/children-csv-preview, /api/children-csv
 │   └── children.routes.integration.test.mjs
 └── web/
-    ├── children-list.view.mjs                    # ★ lista „Copii”
+    ├── children-list.controller.mjs              # ★ lista „Copii”
     ├── child-profile.view.mjs                    # ★ fișa copilului (dialog)
     ├── child-editor-fields.mjs                   # câmpurile copilului în editorul generic
     ├── child-labels.mjs (+test)                  # statusBadgeClass
