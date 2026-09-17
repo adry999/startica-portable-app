@@ -1,7 +1,8 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadEnvironment } from '#config/environment.mjs';
+import { loadEnvironment, dataLayout } from '#config/environment.mjs';
+import { isoDateOf } from '#shared/domain/calendar-month.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { createRotatingLogFile } from '#core/server/files/rotating-log-file.mjs';
@@ -18,9 +19,11 @@ import {
   pruneSentKeys,
 } from '#features/telegram-notify/index.server.mjs';
 
-// Aceeași regulă ca create-application.mjs/main.mjs: folderul de date al
-// lansatorului (STARTICA_HOME) sau, în dezvoltare, folderul aplicației.
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+
+// Un rezumat de seară nu mai ajută la nimic; a doua zi la 08:00 pleacă normal,
+// pentru că nu se scrie cheia `zi:` la o rulare ratată.
+const LATE_RUN_HOUR = 18;
 
 function resolveHome(home) {
   if (home) return home;
@@ -28,8 +31,9 @@ function resolveHome(home) {
 }
 
 function defaultLog(home) {
-  const file = join(home, 'Jurnale', 'telegram.log');
-  mkdirSync(join(home, 'Jurnale'), { recursive: true });
+  const logDir = dataLayout(home).logDir;
+  const file = join(logDir, 'telegram.log');
+  mkdirSync(logDir, { recursive: true });
   return createRotatingLogFile({ file });
 }
 
@@ -43,8 +47,8 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
   const home = resolveHome(homeOption);
   const log = logOption || defaultLog(home);
   try {
-    const dataDir = join(home, 'Startica_Date');
-    const todayStr = now.toISOString().slice(0, 10);
+    const dataDir = dataLayout(home).dataDir;
+    const todayStr = isoDateOf(now);
 
     const config = readTelegramConfig(dataDir);
     if (!config) {
@@ -59,6 +63,10 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
     const state = readTelegramState(dataDir);
     if (Object.hasOwn(state.sentKeys, `zi:${todayStr}`)) {
       log.write('INFO', 'Trimis deja azi');
+      return 0;
+    }
+    if (now.getHours() >= LATE_RUN_HOUR) {
+      log.write('INFO', 'Rezumat ratat: prea târziu pentru azi');
       return 0;
     }
 
@@ -106,6 +114,7 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
     );
     const nowIso = now.toISOString();
     writeTelegramState(dataDir, { ...state, sentKeys, lastRun: nowIso, lastSuccess: nowIso, lastError: '' });
+    log.write('INFO', `Trimis: ${keys.length} chei`);
     return 0;
   } catch (error) {
     // Un proces programat fără fereastră nu are cui să-i arate o excepție: se
