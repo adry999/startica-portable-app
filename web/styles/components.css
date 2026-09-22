@@ -328,6 +328,71 @@ dialog::backdrop {
   height: 18px;
   flex: 0 0 auto;
 }
+.toggle-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+}
+.toggle-field input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 40px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: #ddd7cc;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.toggle-field input[type='checkbox']::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+.toggle-field input[type='checkbox']:checked {
+  background: var(--orange);
+}
+.toggle-field input[type='checkbox']:checked::before {
+  transform: translateX(18px);
+}
+.settings-list {
+  display: flex;
+  flex-direction: column;
+}
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.setting-row:first-child {
+  padding-top: 0;
+}
+.setting-row-detail {
+  margin-left: 50px;
+  max-width: 320px;
+}
+.settings-list + .form-section {
+  margin-top: 16px;
+}
+#notificationPreferencesForm > .btn {
+  margin-top: 18px;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -575,6 +640,10 @@ th.amount {
   .filter-bar > label,
   .filter-bar .filter-search {
     flex-basis: 100%;
+  }
+  .setting-row-detail {
+    margin-left: 0;
+    max-width: none;
   }
 }
 @media (max-width: 560px) {
