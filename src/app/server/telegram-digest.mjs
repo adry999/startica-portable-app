@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnvironment, dataLayout } from '#config/environment.mjs';
 import { isoDateOf } from '#shared/domain/calendar-month.mjs';
-import { parseNotificationPreferences, isDigestRunTooLate } from '#shared/domain/notification-preferences.mjs';
+import { clampNotificationPreferences, isDigestRunTooLate } from '#shared/domain/notification-preferences.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { readSettingValue } from '#core/server/settings/settings-repository.mjs';
@@ -33,6 +33,26 @@ function defaultLog(home) {
   const file = join(logDir, 'telegram.log');
   mkdirSync(logDir, { recursive: true });
   return createRotatingLogFile({ file });
+}
+
+// Un rând `notificationPreferences` corupt revine tăcut la implicite în orice alt
+// apelant (formularul de setări nu are un jurnal la care să scrie), dar aici
+// contează: un operator cu preferințe resetate misterios n-are altă urmă (audit 2026-09-22).
+/**
+ * @param {string | undefined} raw
+ * @param {{ write(level: string, message: string): void }} log
+ */
+function readNotificationPreferences(raw, log) {
+  if (!raw) return clampNotificationPreferences(null);
+  try {
+    return clampNotificationPreferences(JSON.parse(raw));
+  } catch (error) {
+    log.write(
+      'WARN',
+      `Preferințe de notificare corupte, folosesc implicitele: ${/** @type {Error} */ (error).message}`,
+    );
+    return clampNotificationPreferences(null);
+  }
 }
 
 /**
@@ -75,8 +95,9 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
       records = createRecordRepository(opened.db).readSnapshot();
       // Coloana `value` e mereu text (settings-repository scrie doar string-uri);
       // tipul SQLite generic al node:sqlite nu poate exprima asta.
-      preferences = parseNotificationPreferences(
+      preferences = readNotificationPreferences(
         /** @type {string | undefined} */ (readSettingValue(opened.db, 'notificationPreferences')),
+        log,
       );
     } catch (error) {
       const message = 'Baza nu a putut fi citită; pornește Startica.';

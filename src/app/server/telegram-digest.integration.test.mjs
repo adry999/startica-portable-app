@@ -263,7 +263,7 @@ test('preferințele salvate în settings controlează ce apare în rezumat și o
   writeTelegramConfig(dataDir, { token: TOKEN, chatId: 555666777, chatName: 'Ion Popescu', botUsername: 'StaricaBot' });
 
   // 19:00 e „prea târziu” cu tăierea implicită (18:00), dar cu digestTime 20:00
-  // (tăiere 20+10 plafonat la 23) rulează normal.
+  // (tăiere 20:00+10h, peste miezul nopții) rulează normal.
   const telegram = fakeFetch({ mode: 'success' });
   const exit = await runTelegramDigest({
     home,
@@ -278,5 +278,39 @@ test('preferințele salvate în settings controlează ce apare în rezumat și o
     telegram.calls[0].body.text,
     /Zile de naștere/,
     'zile de naștere dezactivate: secțiunea lipsește',
+  );
+});
+
+test('un rând notificationPreferences corupt revine la implicite, cu avertisment în jurnal', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-telegram-digest-corrupt-prefs-'));
+  const dataDir = join(home, 'Startica_Date');
+
+  const { post, app } = await startTestApplication(t, {
+    prefix: 'startica-telegram-digest-corrupt-prefs-app-',
+    dataDir,
+    backupDir: join(home, 'Startica_Backup'),
+  });
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+  const imported = await post('/api/import', importRequest(emptyImport(), 0));
+  assert.equal(imported.status, 200, imported.body.error);
+
+  const { createSettingsRepository } = await import('#core/server/settings/settings-repository.mjs');
+  createSettingsRepository(app.db).setSetting('notificationPreferences', '{nu e json valid');
+  writeTelegramConfig(dataDir, { token: TOKEN, chatId: 555666777, chatName: 'Ion Popescu', botUsername: 'StaricaBot' });
+
+  const telegram = fakeFetch({ mode: 'success' });
+  const log = fakeLog();
+  const exit = await runTelegramDigest({
+    home,
+    now: new Date('2026-09-15T08:00:00.000Z'),
+    fetch: telegram.fetchImpl,
+    log,
+  });
+
+  assert.equal(exit, 0);
+  assert.equal(telegram.calls.length, 1, 'trimite pe implicite, nu se oprește la o valoare coruptă');
+  assert.ok(
+    log.entries.some(entry => entry.level === 'WARN' && /Preferințe de notificare corupte/.test(entry.message)),
+    'jurnalul spune ce s-a întâmplat, nu doar revine tăcut',
   );
 });

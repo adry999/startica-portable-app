@@ -25,8 +25,8 @@ Baseline: `npm run check` — 568 teste, 566 trec, 0 eșuate, 2 sărite (CSV rea
 - Validarea (`clampNotificationPreferences`) nu aruncă niciodată — plafonează sau revine la implicit. Corect pentru un formular de setări, unde un fișier stricat sau un input în afara intervalului nu are voie să oprească rezumatul zilnic.
 - Regexul orei (`^([01]\d|2[0-3]):([0-5]\d)$`) e duplicat identic în JS și C# (nu se putea altfel, dar merită un comentariu de sincronizare în ambele — momentan doar în C# există nota „server writes here, this parses").
 
-**Inconsecvență mică:**
-`parseNotificationPreferences` revine tăcut la implicite pe JSON corupt, fără să scrie nimic în jurnal — spre deosebire de `readJsonFile` din `#core/server/files/json-file.mjs`, care face `console.error` pe exact același caz (fișier corupt). Diferență: aici sursa e coloana `settings.value` din SQLite, nu un fișier — dar rezultatul practic e identic (o valoare stricată dispare fără urmă). Un operator cu preferințe resetate misterios n-are niciun indiciu în `startica.log`.
+**Inconsecvență mică, reparată în sesiune:**
+`parseNotificationPreferences` revenea tăcut la implicite pe JSON corupt, fără să scrie nimic în jurnal — spre deosebire de `readJsonFile` din `#core/server/files/json-file.mjs`, care face `console.error` pe exact același caz. Fixat: vezi §5.
 
 ## 3. Bug găsit și reparat: fereastra de reluare se prăbușea pentru o oră de rezumat târzie
 
@@ -82,11 +82,11 @@ $ node --input-type=module -e "import {lateRunHourFor} from './src/shared/domain
 **Nu era bine, reparat în sesiune:**
 - Bug-ul de la §3 (colapsul ferestrei de reluare la ore târzii) — reparat, testat.
 
-**Nu e bine, rămâne de reparat:**
-- `parseNotificationPreferences` nu jurnalizează pe date corupte, spre deosebire de restul codului cu același rol.
+**Nu era bine, reparat în sesiune:**
+- `parseNotificationPreferences` nu jurnaliza pe date corupte. Fixat: `telegram-digest.mjs` (singurul apelant cu jurnal disponibil) are acum `readNotificationPreferences(raw, log)`, care scrie `WARN` pe JSON stricat; ruta `GET /api/notification-settings` rămâne tăcută (nu are jurnal injectat, iar rezultatul e vizibil imediat în ecran). Test de integrare nou, verifică mesajul din jurnal.
+- Lipsea un scenariu pentru `ReadDigestTime()` (C#) cu `notify-schedule.json` stricat. Adăugat în Scenariul 4 din `desktop-lifecycle.ps1`: JSON invalid → revine tăcut la 08:00, reînregistrarea nu se oprește.
 
 **De îmbunătățit (fără urgență):**
-- Un test C# (sau măcar un scenariu suplimentar în `desktop-lifecycle.ps1`) pentru `ReadDigestTime()` cu fișier stricat — la fel de ieftin ca cel adăugat pentru ora validă.
 - `compose-screens.mjs` continuă să crească fără un plan de împărțire (S1/M1, vechi, tot deschis).
 
 **De schimbat, decizie de discutat:**
