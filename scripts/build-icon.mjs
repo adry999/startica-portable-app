@@ -14,6 +14,11 @@ const OUTPUT_PATH = join(ROOT, 'web/assets/startica.ico');
 // 20/24/40 acoperă scalările intermediare din taskbar/Explorer (100%-200% DPI); Windows nu
 // mai are ce să interpoleze între cadre învecinate.
 const SIZES = [16, 20, 24, 32, 40, 48, 256];
+// PNG-uri separate pentru web/manifest.json: fereastra Chrome/Edge pornită cu --app= își ia
+// iconița din taskbar din manifest (dacă există), nu din .ico-ul launcher-ului — fără ele,
+// Chrome cade pe favicon-ul mic din <link rel="icon"> și Windows îl scalează pixelat.
+const MANIFEST_SIZES = [192, 512];
+const MANIFEST_OUTPUT = size => join(ROOT, `web/assets/startica-${size}.png`);
 
 const CHROME_CANDIDATES = [
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -89,25 +94,36 @@ function buildIco(frames) {
   return Buffer.concat([header, ...entries, ...frames.map(frame => frame.png)]);
 }
 
+/** @param {(size: number) => Buffer} rasterizeSize @param {number} size */
+function rasterizeChecked(rasterizeSize, size) {
+  const png = rasterizeSize(size);
+  const { width, height, colorType } = readPngHeader(png);
+  if (width !== size || height !== size)
+    throw new Error(`Cadrul ${size}px a ieșit ${width}x${height}, nu ${size}x${size}.`);
+  // colorType 6 = RGBA, 4 = gri+alfa; oricare confirmă că fundalul a rămas transparent.
+  if (colorType !== 6 && colorType !== 4)
+    throw new Error(`Cadrul ${size}px nu are canal alfa (colorType=${colorType}).`);
+  console.log(`Cadru ${size}px: ${width}x${height}, colorType=${colorType}, ${png.length} octeți`);
+  return png;
+}
+
 function main() {
   const svgMarkup = readFileSync(SVG_PATH, 'utf8');
   const chromePath = findChrome();
   const workDir = mkdtempSync(join(tmpdir(), 'startica-icon-'));
   try {
-    const frames = SIZES.map(size => {
-      const png = rasterize(chromePath, svgMarkup, size, workDir);
-      const { width, height, colorType } = readPngHeader(png);
-      if (width !== size || height !== size)
-        throw new Error(`Cadrul ${size}px a ieșit ${width}x${height}, nu ${size}x${size}.`);
-      // colorType 6 = RGBA, 4 = gri+alfa; oricare confirmă că fundalul a rămas transparent.
-      if (colorType !== 6 && colorType !== 4)
-        throw new Error(`Cadrul ${size}px nu are canal alfa (colorType=${colorType}).`);
-      console.log(`Cadru ${size}px: ${width}x${height}, colorType=${colorType}, ${png.length} octeți`);
-      return { size, png };
-    });
+    const rasterizeSize = size => rasterize(chromePath, svgMarkup, size, workDir);
+    const frames = SIZES.map(size => ({ size, png: rasterizeChecked(rasterizeSize, size) }));
     const ico = buildIco(frames);
     writeFileSync(OUTPUT_PATH, ico);
     console.log(`Scris ${OUTPUT_PATH} (${ico.length} octeți, ${frames.length} cadre)`);
+
+    for (const size of MANIFEST_SIZES) {
+      const png = rasterizeChecked(rasterizeSize, size);
+      const outPath = MANIFEST_OUTPUT(size);
+      writeFileSync(outPath, png);
+      console.log(`Scris ${outPath} (${png.length} octeți)`);
+    }
   } finally {
     rmSync(workDir, { recursive: true, force: true });
   }

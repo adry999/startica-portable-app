@@ -28,6 +28,9 @@ export const STATIC_FILES = {
   '/assets/startica-logo.svg': 'web/assets/startica-logo.svg',
   '/assets/startica-icon.svg': 'web/assets/startica-icon.svg',
   '/assets/startica.ico': 'web/assets/startica.ico',
+  '/assets/startica-192.png': 'web/assets/startica-192.png',
+  '/assets/startica-512.png': 'web/assets/startica-512.png',
+  '/manifest.json': 'web/manifest.json',
   '/assets/fonts/baloo2-latin.woff2': 'web/assets/fonts/baloo2-latin.woff2',
   '/assets/fonts/baloo2-latin-ext.woff2': 'web/assets/fonts/baloo2-latin-ext.woff2',
   '/assets/fonts/nunito-latin.woff2': 'web/assets/fonts/nunito-latin.woff2',
@@ -39,13 +42,17 @@ const mimeFor = path =>
     ? 'image/svg+xml'
     : path.endsWith('.ico')
       ? 'image/x-icon'
-      : path.endsWith('.woff2')
-        ? 'font/woff2'
-        : path.endsWith('.css')
-          ? 'text/css; charset=utf-8'
-          : path.endsWith('.js') || path.endsWith('.mjs')
-            ? 'text/javascript; charset=utf-8'
-            : 'text/html; charset=utf-8';
+      : path.endsWith('.png')
+        ? 'image/png'
+        : path.endsWith('.woff2')
+          ? 'font/woff2'
+          : path.endsWith('.css')
+            ? 'text/css; charset=utf-8'
+            : path.endsWith('.js') || path.endsWith('.mjs')
+              ? 'text/javascript; charset=utf-8'
+              : path === '/manifest.json'
+                ? 'application/manifest+json'
+                : 'text/html; charset=utf-8';
 
 const INLINE_IMPORT_MAP = /<script type="importmap">([\s\S]*?)<\/script>/g;
 
