@@ -11,7 +11,7 @@ import { readTelegramState, removeTelegramState } from './telegram-state.reposit
 /** @typedef {import('../telegram-notify.types.mjs').TelegramRoutesDependencies} TelegramRoutesDependencies */
 
 const AUDIT_ACTION = 'configurare telegram';
-const TEST_MESSAGE = 'Startica: notificările funcționează. Rezumatul zilnic vine la 08:00.';
+const TEST_MESSAGE = 'Startica: notificările funcționează. Rezumatul zilnic vine la ora aleasă în Notificări.';
 const STALE_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 
 const BAD_TOKEN_MESSAGE = 'Token invalid. Copiază-l din nou din @BotFather.';
@@ -19,7 +19,7 @@ const WEBHOOK_CONFLICT_MESSAGE = 'Botul are un webhook setat; creează un bot no
 const NOT_CONNECTED_MESSAGE = 'Conectează întâi botul.';
 
 const startButtonMessage = botUsername =>
-  `Deschide botul @${botUsername} în Telegram, apasă Start, apoi apasă din nou „Conectează”.`;
+  `Deschide botul @${botUsername} în Telegram și apasă Start (sau, într-un grup, scrie „/start@${botUsername}”), apoi apasă din nou „Conectează”.`;
 
 function isOlderThan48h(isoString) {
   if (!isoString) return true;
@@ -48,7 +48,7 @@ function isTelegramError(error) {
 
 /** @param {TelegramRoutesDependencies} dependencies */
 export function createTelegramRoutes({ dataDirectory, telegramService, auditTrail }) {
-  // Cele patru apeluri Telegram (getMe, findPrivateChat, sendMessage × 2) au
+  // Cele patru apeluri Telegram (getMe, findConnectedChat, sendMessage × 2) au
   // aceeași formă: clasifică eșecul și oprește cererea; doar mesajul diferă.
   /**
    * @template T
@@ -89,10 +89,9 @@ export function createTelegramRoutes({ dataDirectory, telegramService, auditTrai
     );
 
     const chat = await callTelegramOrFail(
-      () => telegramService.findPrivateChat(token),
+      () => telegramService.findConnectedChat(token),
       (failure, error) => {
-        if (isTelegramError(error) && error.telegramReason === 'no-private-chat')
-          return startButtonMessage(botUsername);
+        if (isTelegramError(error) && error.telegramReason === 'no-chat-found') return startButtonMessage(botUsername);
         if (isWebhookConflict(error)) return WEBHOOK_CONFLICT_MESSAGE;
         return failure.message;
       },

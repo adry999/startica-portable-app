@@ -110,7 +110,7 @@ test('sendMessage trimite bucățile în ordine și se oprește la prima eroare'
   assert.equal(sendCalls.length, 2, 'a treia bucată nu se mai trimite după eșecul celei de-a doua');
 });
 
-test('findPrivateChat alege ultima conversație privată și ignoră grupurile', async () => {
+test('findConnectedChat alege ultima conversație validă dintre mai multe private', async () => {
   const { fetch } = createFakeTelegramApi({
     getUpdates: {
       status: 200,
@@ -118,26 +118,67 @@ test('findPrivateChat alege ultima conversație privată și ignoră grupurile',
         ok: true,
         result: [
           privateChatUpdate({ chatId: 10, firstName: 'Prima' }),
-          groupChatUpdate(),
           privateChatUpdate({ chatId: 20, firstName: 'Elena', lastName: 'Pop' }),
         ],
       },
     },
   });
   const service = createTelegramService({ fetch });
-  const chat = await service.findPrivateChat(VALID_TOKEN);
+  const chat = await service.findConnectedChat(VALID_TOKEN);
   assert.deepEqual(chat, { chatId: 20, chatName: 'Elena Pop' });
 });
 
-test('findPrivateChat aruncă o eroare distinctă când nu există nicio conversație privată', async () => {
+test('findConnectedChat acceptă un grup, dar doar la comanda /start', async () => {
   const { fetch } = createFakeTelegramApi({
-    getUpdates: { status: 200, body: { ok: true, result: [groupChatUpdate()] } },
+    getUpdates: {
+      status: 200,
+      body: {
+        ok: true,
+        result: [privateChatUpdate({ chatId: 10 }), groupChatUpdate({ chatId: -222, title: 'Educatoare' })],
+      },
+    },
+  });
+  const service = createTelegramService({ fetch });
+  const chat = await service.findConnectedChat(VALID_TOKEN);
+  assert.deepEqual(chat, { chatId: -222, chatName: 'Educatoare' });
+});
+
+test('findConnectedChat ignoră un mesaj de grup care nu e /start', async () => {
+  const { fetch } = createFakeTelegramApi({
+    getUpdates: {
+      status: 200,
+      body: {
+        ok: true,
+        result: [privateChatUpdate({ chatId: 10, firstName: 'Prima' }), groupChatUpdate({ text: 'Bună ziua' })],
+      },
+    },
+  });
+  const service = createTelegramService({ fetch });
+  const chat = await service.findConnectedChat(VALID_TOKEN);
+  assert.deepEqual(chat, { chatId: 10, chatName: 'Prima' }, 'mesajul de grup fără /start nu concurează');
+});
+
+test('findConnectedChat acceptă și supergrupurile', async () => {
+  const { fetch } = createFakeTelegramApi({
+    getUpdates: {
+      status: 200,
+      body: { ok: true, result: [groupChatUpdate({ chatId: -333, title: 'Super', type: 'supergroup' })] },
+    },
+  });
+  const service = createTelegramService({ fetch });
+  const chat = await service.findConnectedChat(VALID_TOKEN);
+  assert.deepEqual(chat, { chatId: -333, chatName: 'Super' });
+});
+
+test('findConnectedChat aruncă o eroare distinctă când nu există nicio conversație validă', async () => {
+  const { fetch } = createFakeTelegramApi({
+    getUpdates: { status: 200, body: { ok: true, result: [groupChatUpdate({ text: 'Bună ziua' })] } },
   });
   const service = createTelegramService({ fetch });
   await assert.rejects(
-    () => service.findPrivateChat(VALID_TOKEN),
+    () => service.findConnectedChat(VALID_TOKEN),
     error => {
-      assert.equal(/** @type {any} */ (error).telegramReason, 'no-private-chat');
+      assert.equal(/** @type {any} */ (error).telegramReason, 'no-chat-found');
       return true;
     },
   );

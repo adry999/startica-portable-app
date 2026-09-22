@@ -89,16 +89,26 @@ export function createTelegramService({ fetch: fetchImpl }) {
     return result.username;
   }
 
-  // Ignoră grupurile/canalele/supergrupurile; reține ultima conversație
-  // privată, ca operatorul să nu vadă niciodată un „chat id” de copiat.
+  // Reține ultima conversație validă, ca operatorul să nu vadă niciodată un „chat
+  // id” de copiat: o conversație privată (orice mesaj) sau un grup/supergrup, dar
+  // acolo doar la comanda /start — cu „Privacy mode” pornit din oficiu în BotFather,
+  // Telegram nu livrează botului alte mesaje din grup, doar comenzi și mențiuni.
   /** @param {string} token */
-  async function findPrivateChat(token) {
+  async function findConnectedChat(token) {
     const updates = await callTelegramApi(fetchImpl, token, 'getUpdates', { limit: 100 });
-    const privateChats = updates.filter(update => update.message?.chat?.type === 'private');
-    if (!privateChats.length)
-      throw Object.assign(new Error('Nicio conversație privată găsită.'), { telegramReason: 'no-private-chat' });
-    const chat = privateChats[privateChats.length - 1].message.chat;
-    return { chatId: chat.id, chatName: chat.first_name + (chat.last_name ? ' ' + chat.last_name : '') };
+    const validChats = updates.filter(update => {
+      const chat = update.message?.chat;
+      if (!chat) return false;
+      if (chat.type === 'private') return true;
+      if (chat.type === 'group' || chat.type === 'supergroup') return update.message.text?.startsWith('/start');
+      return false;
+    });
+    if (!validChats.length)
+      throw Object.assign(new Error('Nicio conversație găsită.'), { telegramReason: 'no-chat-found' });
+    const chat = validChats[validChats.length - 1].message.chat;
+    const chatName =
+      chat.type === 'private' ? chat.first_name + (chat.last_name ? ' ' + chat.last_name : '') : chat.title;
+    return { chatId: chat.id, chatName };
   }
 
   // Bucățile se trimit în ordine, oprindu-se la prima eroare: nu are rost să
@@ -115,5 +125,5 @@ export function createTelegramService({ fetch: fetchImpl }) {
       );
   }
 
-  return { getMe, findPrivateChat, sendMessage, classifyTelegramFailure };
+  return { getMe, findConnectedChat, sendMessage, classifyTelegramFailure };
 }

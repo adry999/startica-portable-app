@@ -76,9 +76,9 @@ test('un getMe cu 401 întoarce 400 și nu scrie niciun fișier', async t => {
   assert.equal(existsSync(telegramConfigFilePath(dataDirectory)), false);
 });
 
-test('un getUpdates fără conversație privată întoarce 400 cu mesajul de Start și nu scrie niciun fișier', async t => {
+test('un getUpdates fără nicio conversație validă întoarce 400 cu mesajul de Start și nu scrie niciun fișier', async t => {
   const { fetch } = createFakeTelegramApi({
-    getUpdates: { status: 200, body: { ok: true, result: [groupChatUpdate()] } },
+    getUpdates: { status: 200, body: { ok: true, result: [groupChatUpdate({ text: 'Bună ziua' })] } },
   });
   const { origin, dataDirectory } = await startTelegramServer(t, { fetch });
   const response = await postJson(origin, '/api/telegram-connect', { token: VALID_TOKEN });
@@ -145,6 +145,22 @@ test('o conectare reușită scrie fișierul, trimite mesajul de probă și audit
   assert.deepEqual(change.before, { chatId: '' });
   assert.deepEqual(change.after, { chatId: 555, chatName: 'Elena Pop', botUsername: 'startica_bot' });
   assert.equal(JSON.stringify(change).includes(VALID_TOKEN), false);
+});
+
+test('o conectare la un grup (cu /start) scrie chatName din titlul grupului', async t => {
+  const { fetch, calls } = createFakeTelegramApi({
+    getUpdates: {
+      status: 200,
+      body: { ok: true, result: [groupChatUpdate({ chatId: -777, title: 'Educatoare grupa mare' })] },
+    },
+  });
+  const { origin } = await startTelegramServer(t, { fetch });
+  const response = await postJson(origin, '/api/telegram-connect', { token: VALID_TOKEN });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status.chatName, 'Educatoare grupa mare');
+  const sendCall = calls.find(call => call.url.includes('/sendMessage'));
+  assert.equal(sendCall.body.chat_id, -777);
 });
 
 test('eșecul mesajului de probă după scriere lasă configurarea pe loc și întoarce eroarea clasificată', async t => {

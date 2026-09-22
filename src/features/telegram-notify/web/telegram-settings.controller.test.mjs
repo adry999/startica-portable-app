@@ -70,6 +70,7 @@ test('starea neconfigurată arată „Neconfigurat.” și ascunde butoanele din
   assert.equal(elements.status.innerHTML, '<p>Neconfigurat.</p>');
   assert.equal(elements.testButton.hidden, true);
   assert.equal(elements.disconnectButton.hidden, true);
+  assert.equal(elements.form.hidden, false);
 });
 
 test('starea conectată arată chatName, botUsername și data ultimului rezumat, cu butoanele vizibile', async () => {
@@ -81,6 +82,11 @@ test('starea conectată arată chatName, botUsername și data ultimului rezumat,
   assert.doesNotMatch(elements.status.innerHTML, /danger/);
   assert.equal(elements.testButton.hidden, false);
   assert.equal(elements.disconnectButton.hidden, false);
+  assert.equal(
+    elements.form.hidden,
+    true,
+    'formularul de token nu are ce căuta gol lângă un bot deja conectat și numit mai sus',
+  );
 });
 
 test('lastError prezent adaugă un paragraf de eroare separat', async () => {
@@ -182,6 +188,7 @@ test('deconectarea reușită arată notificarea, reîncarcă starea și ascunde 
   assert.equal(elements.status.innerHTML, '<p>Neconfigurat.</p>');
   assert.equal(elements.testButton.hidden, true);
   assert.equal(elements.disconnectButton.hidden, true);
+  assert.equal(elements.form.hidden, false, 'formularul de token reapare, gata pentru un alt bot');
   assert.deepEqual(
     calls.map(([path]) => path),
     ['/api/telegram-disconnect', '/api/telegram-status'],

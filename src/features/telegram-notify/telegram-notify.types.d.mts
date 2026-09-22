@@ -40,7 +40,7 @@ export interface TelegramFailure {
 
 export interface TelegramService {
   getMe(token: string): Promise<string>;
-  findPrivateChat(token: string): Promise<{ chatId: number | string; chatName: string }>;
+  findConnectedChat(token: string): Promise<{ chatId: number | string; chatName: string }>;
   sendMessage(options: { token: string; chatId: number | string; text: string }): Promise<void>;
   classifyTelegramFailure(error: unknown): TelegramFailure;
 }

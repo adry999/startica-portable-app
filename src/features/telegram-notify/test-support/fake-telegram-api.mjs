@@ -84,7 +84,7 @@ export function privateChatUpdate({ chatId = 111, firstName = 'Maria', lastName 
   return { update_id: 1, message: { chat: { id: chatId, type, first_name: firstName, last_name: lastName } } };
 }
 
-/** @param {{ chatId?: number, title?: string }} [options] */
-export function groupChatUpdate({ chatId = -222, title = 'Grup' } = {}) {
-  return { update_id: 2, message: { chat: { id: chatId, type: 'group', title } } };
+/** @param {{ chatId?: number, title?: string, type?: string, text?: string }} [options] */
+export function groupChatUpdate({ chatId = -222, title = 'Grup', type = 'group', text = '/start' } = {}) {
+  return { update_id: 2, message: { chat: { id: chatId, type, title }, text } };
 }

@@ -10,7 +10,7 @@ Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (c
 
 | Export | Rol |
 | --- | --- |
-| `createTelegramService({ fetch })` | `getMe`, `findPrivateChat`, `sendMessage`, `classifyTelegramFailure` |
+| `createTelegramService({ fetch })` | `getMe`, `findConnectedChat`, `sendMessage`, `classifyTelegramFailure` |
 | `createTelegramRoutes({ dataDirectory, telegramService, auditTrail })` | `GET /api/telegram-status`, `POST /api/telegram-connect`, `POST /api/telegram-test`, `POST /api/telegram-disconnect` |
 | `readTelegramConfig(dataDirectory)` | fișier `telegram.json`: `{ token, chatId, chatName, botUsername } \| null` |
 | `writeTelegramConfig(dataDirectory, config)` | scriere atomică |
@@ -71,7 +71,7 @@ telegram-notify/
 - **Deschidere strict de citire.** `openDatabaseReadOnly` deschide baza în WAL fără migrări, coexistând cu serverul care ține o tranzacție `BEGIN IMMEDIATE`.
 - **Token în `telegram.json`, nu în setări.** Secretul nu intră în backupuri, iar restaurarea pe un calculator nou cere re-lipirea token-ului (2 minute).
 - **Stare în `telegram-stare.json`.** Două fișiere cu câte un singur scriitor; nicio cursă între server și proces; procesul citește și scrie, serverul citește doar pentru afișare stării.
-- **Descoperirea conversației prin `getUpdates`.** Operatorul apasă Start în bot, apoi „Conectează" în Startica; niciun „chat id" de copiat.
+- **Descoperirea conversației prin `getUpdates`.** Operatorul apasă Start în bot (conversație privată) sau scrie „/start@NumeleBotului" într-un grup, apoi „Conectează" în Startica; niciun „chat id" de copiat. Un mesaj de grup fără `/start` e ignorat — cu „Privacy mode" pornit din oficiu în BotFather, Telegram nu livrează botului decât comenzi și mențiuni oricum.
 - **Un mesaj pe zi, la ora aleasă.** Fără interval; proces la trezire sau pornire calcul dacă ora a trecut. Ora e o preferință (`digestTime`, implicit 08:00), oglindită și în `notify-schedule.json` pentru lansator; schimbarea ei se aplică la următoarea (re)pornire a sarcinii programate, nu instant.
 - **Rezumat cu bucăți sub 4096 caractere.** Tăiat la limită de linie; eșec la a doua bucată = reîncercare ziua următoare, mesaj dublat parțial (acceptat).
 - **Nicio date medicale.** `healthNotes` nu e citit; formatul HTML, `parse_mode: 'HTML'`, e lizibil pe telefon și nu necesită emoji.
@@ -86,7 +86,7 @@ node --test "src/features/telegram-notify/**/*.test.mjs"
 ```
 
 - **Domeniu:** rezumat complet (text cu caracter per caracter), zi fără nimic, luni vs. alte zile, `keys` pentru deduplicare, formate de dată și bani, `splitDigest` la 4096 caractere, `pruneSentKeys` pe 60 de zile.
-- **Serviciu:** `classifyTelegramFailure` pe timeout, 5xx, 429, 401, 400, 403, `ok: false`; `sendMessage` trimite în ordine și se oprește la prima eroare; `findPrivateChat` pe o listă de conversații, ignoră grupuri.
+- **Serviciu:** `classifyTelegramFailure` pe timeout, 5xx, 429, 401, 400, 403, `ok: false`; `sendMessage` trimite în ordine și se oprește la prima eroare; `findConnectedChat` pe o listă de conversații — privată (orice mesaj) sau grup/supergrup (doar /start).
 - **Repository-uri:** fișier lipsă → `null` / stare goală; JSON corupt → la fel, cu `console.error`; scriere atomică (fără `.tmp` rămas).
 - **Rute:** integrare cu `fake-telegram-api`, token de formă greșit → 400 fără apel; `getMe` 401 → 400 și niciun fișier; `getUpdates` gol → 400 cu text de Start; conversație privată → fișier scris, mesaj de probă trimis, audit fără token; `status` după conectare; `test` trimite; `disconnect` șterge și scrie audit; `stale` pe `lastSuccess` de 3 zile.
 - **Deschidere de citire:** `openDatabaseReadOnly` întoarce `null` fără fișier; citeste instantaneu consistent; refuză `INSERT`.

@@ -25,6 +25,9 @@ export function createTelegramSettingsController({
     status.innerHTML = renderTelegramStatus(current);
     testButton.hidden = !current.configured;
     disconnectButton.hidden = !current.configured;
+    // Botul conectat e deja numit în starea de mai sus; formularul de token nu are
+    // ce căuta gol lângă el — reconectarea la alt bot trece prin Deconectează.
+    form.hidden = current.configured;
   }
 
   async function refreshStatus() {
