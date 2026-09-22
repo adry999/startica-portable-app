@@ -23,15 +23,17 @@ export function summarizeVisitFunnel(visits, todayStr) {
 /**
  * @param {Visit[]} visits
  * @param {string} todayStr
+ * @param {number} [horizonDays] Câte zile după azi să includă (0 = doar azi, 1 = azi și mâine, implicit).
  * @returns {{ today: number, tomorrow: number, items: Visit[] }}
  */
-export function countVisitsForDays(visits, todayStr) {
+export function countVisitsForDays(visits, todayStr, horizonDays = 1) {
   const tomorrowStr = shiftDays(todayStr, 1);
+  const includedDates = new Set(Array.from({ length: horizonDays + 1 }, (_, i) => shiftDays(todayStr, i)));
   const items = visits
-    .filter(
-      visit =>
-        !visit.archived && visit.status === 'Programată' && (visit.date === todayStr || visit.date === tomorrowStr),
-    )
+    // Sortare doar după oră (§3.5): în intervalul azi+mâine, o vizită de mâine dimineață
+    // vine înaintea uneia de azi după-amiază. Pentru un orizont mai larg, secțiunile
+    // rezumatului Telegram regrupează după dată, deci ordinea aici rămâne cea din §3.5.
+    .filter(visit => !visit.archived && visit.status === 'Programată' && includedDates.has(visit.date))
     .sort((a, b) => a.time.localeCompare(b.time));
   return {
     today: items.filter(visit => visit.date === todayStr).length,

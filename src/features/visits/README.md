@@ -12,18 +12,18 @@ Modul **dependent** de `children` (la înscriere, fișa copilului nou se salveaz
 | --- | --- |
 | `createVisitsService({ recordRepository, auditTrail, runRevisionTransaction })` | `{ enrolChild, expireHealthNotes }` |
 | `createVisitsRoutes({ visitsService })` | `POST /api/visits-enrol` |
-| `countVisitsForDays(visits, todayStr)` | vizitele programate de azi/mâine (pur, din `domain/`) — folosit și de digest-ul Telegram |
+| `countVisitsForDays(visits, todayStr, horizonDays?)` | vizitele programate de azi + un orizont (implicit 1 = azi și mâine), pur, din `domain/` — folosit și de digest-ul Telegram |
 
 ### `index.web.mjs`
 
 | Export | Rol |
 | --- | --- |
 | `createVisitsController({ elements, readRecords, readNow, submitMutation, showNotice, openEditor, enrolChild, openProfile, renderVisitsCount })` | controller: filtru, lună, zi selectată, calendar, listă, pâlnie, butoane rapide de statut, pornirea înscrierii |
-| `createVisitRemindersController({ readRecords, readNow, notifications, rememberedKeys, eventBus, elements, goToVisits })` | memento-uri Windows la fiecare minut și la reîncărcarea datelor; permisiunea din butonul ecranului „Vizite” |
+| `createVisitRemindersController({ readRecords, readNow, notifications, rememberedKeys, eventBus, elements, goToVisits, readPreferences? })` | memento-uri Windows la fiecare minut și la reîncărcarea datelor; permisiunea din butonul ecranului „Vizite”; `readPreferences` (implicit toate pornite, 30 min) vine din ecranul „Notificări” |
 | `visitEditorFields` | secțiuni editor: copil, părinți, vizita, dorințe, date medicale, post-vizită |
 | `applyParsedVisitFields(formElement, parsed)` | scrie în formular câmpurile deja parsate din șablonul lipit din clipboard |
 | `createVisitsApi({ submitMutation })` | `enrolChild(visitId, child)` → `POST /api/visits-enrol` |
-| `countVisitsForDays(visits, todayStr)` | folosit și de Dashboard (`summarizeUpcomingVisits`) |
+| `countVisitsForDays(visits, todayStr, horizonDays?)` | folosit și de Dashboard (`summarizeUpcomingVisits`) |
 | `VISIT_PASTE_TEMPLATE` | textul gol al șablonului de copiat pentru operator |
 
 ## Dependențe
@@ -34,6 +34,7 @@ Modul **dependent** de `children` (la înscriere, fișa copilului nou se salveaz
 | `#shared/domain/record-schema.mjs` | `normalizeRecord`, `VISIT_STATUSES` |
 | `#shared/domain/record-integrity.mjs` | `assertRecordReferencesExist` la înscriere |
 | `#shared/domain/calendar-month.mjs` | `today`, `daysBetween`, `shiftDays`, `isoDateOf` |
+| `#shared/domain/notification-preferences.mjs` | `DEFAULT_NOTIFICATION_PREFERENCES` — implicit pentru `selectDueReminders`/`createVisitRemindersController` când nimeni nu injectează `readPreferences` |
 | `#shared/domain/month-grid.mjs` | `buildMonthGrid` pentru calendar |
 | `#shared/domain/record-labels.mjs` | `groupNameOf` |
 | `#shared/contracts/record-types.mjs` | `Visit`, `VisitStatus`, `RecordsSnapshot`, `Child`, `Group` (tipuri) |

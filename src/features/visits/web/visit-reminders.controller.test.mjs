@@ -48,8 +48,18 @@ function createElements() {
   };
 }
 
-/** @param {{ notificationsOptions?: any, initialKeys?: string[], visits?: any[] }} [args] */
-function createHarness({ notificationsOptions = {}, initialKeys = [], visits = [] } = {}) {
+/**
+ * @param {{
+ *   notificationsOptions?: any,
+ *   initialKeys?: string[],
+ *   visits?: any[],
+ *   readPreferences?: () => Pick<
+ *     import('#shared/domain/notification-preferences.mjs').NotificationPreferences,
+ *     'windowsVisitsTodayEnabled' | 'windowsVisitSoonEnabled' | 'windowsVisitSoonMinutes'
+ *   >,
+ * }} [args]
+ */
+function createHarness({ notificationsOptions = {}, initialKeys = [], visits = [], readPreferences } = {}) {
   const fakeNotifications = createFakeNotifications(notificationsOptions);
   const fakeRememberedKeys = createFakeRememberedKeys(initialKeys);
   const elements = createElements();
@@ -65,6 +75,7 @@ function createHarness({ notificationsOptions = {}, initialKeys = [], visits = [
     eventBus,
     elements,
     goToVisits: () => goToVisitsCalls.push(true),
+    ...(readPreferences ? { readPreferences } : {}),
   });
 
   return { controller, elements, eventBus, goToVisitsCalls, ...fakeNotifications, ...fakeRememberedKeys };
@@ -180,4 +191,20 @@ test('clicul de pe notificare cheamă goToVisits', () => {
   });
   shown[0].onClick();
   assert.deepEqual(goToVisitsCalls, [true]);
+});
+
+test('respectă preferințele: „vizite azi” dezactivat nu produce mementoul de zi', () => {
+  const { shown } = createHarness({
+    notificationsOptions: { initialPermission: 'granted' },
+    visits: [scheduledVisit({ date: '2026-09-15', time: '10:00' })],
+    readPreferences: () => ({
+      windowsVisitsTodayEnabled: false,
+      windowsVisitSoonEnabled: true,
+      windowsVisitSoonMinutes: 30,
+    }),
+  });
+  assert.equal(
+    shown.some(reminder => reminder.key.startsWith('zi:')),
+    false,
+  );
 });

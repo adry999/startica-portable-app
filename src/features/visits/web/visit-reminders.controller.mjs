@@ -1,5 +1,6 @@
 import { DomainEvent } from '#shared/contracts/domain-events.mjs';
 import { shiftDays, isoDateOf } from '#shared/domain/calendar-month.mjs';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '#shared/domain/notification-preferences.mjs';
 import { selectDueReminders } from '../domain/visit-reminders.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -44,6 +45,10 @@ function keepCurrentKeys(keys, todayStr, tomorrowStr) {
  *   eventBus: { subscribe: (eventName: string, listener: (payload: unknown) => unknown) => () => void },
  *   elements: { button: HTMLElement, hint: HTMLElement },
  *   goToVisits: () => void,
+ *   readPreferences?: () => Pick<
+ *     import('#shared/domain/notification-preferences.mjs').NotificationPreferences,
+ *     'windowsVisitsTodayEnabled' | 'windowsVisitSoonEnabled' | 'windowsVisitSoonMinutes'
+ *   >,
  * }} dependencies
  */
 export function createVisitRemindersController({
@@ -54,6 +59,7 @@ export function createVisitRemindersController({
   eventBus,
   elements: { button, hint },
   goToVisits,
+  readPreferences = () => DEFAULT_NOTIFICATION_PREFERENCES,
 }) {
   function checkReminders() {
     if (notifications.permission() !== 'granted') return;
@@ -61,7 +67,7 @@ export function createVisitRemindersController({
     const todayStr = isoDateOf(now);
     const tomorrowStr = shiftDays(todayStr, 1);
     const notifiedKeys = rememberedKeys.read();
-    const due = selectDueReminders(readRecords().visits, now, notifiedKeys);
+    const due = selectDueReminders(readRecords().visits, now, notifiedKeys, readPreferences());
     for (const reminder of due) notifications.show(reminder.title, reminder.body, reminder.key, goToVisits);
     const nextKeys = keepCurrentKeys([...notifiedKeys, ...due.map(reminder => reminder.key)], todayStr, tomorrowStr);
     rememberedKeys.write(nextKeys);

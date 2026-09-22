@@ -1,6 +1,6 @@
 # telegram-notify
 
-Rezumatul zilnic prin Telegram cu aplicația închisă (zile de naștere, vizite, copii de notificat), configurarea botului, conectarea și testul de funcționare. Procesul se pornește din sarcina programată Windows la 08:00 și trimite rezumatul pe telefon. Ecranul „Backup și setări" conține panoul de conectare, starea și butonul de test; procesul de fond citește doar baza de date și se sincronizează prin fișiere de stare.
+Rezumatul zilnic prin Telegram cu aplicația închisă (zile de naștere, vizite, copii de notificat), configurarea botului, conectarea și testul de funcționare. Procesul se pornește din sarcina programată Windows, la ora aleasă în ecranul „Notificări" (implicit 08:00), și trimite rezumatul pe telefon. Ecranul „Notificări" conține panoul de conectare, starea și butonul de test; procesul de fond citește doar baza de date și se sincronizează prin fișiere de stare. Ce apare în rezumat (secțiuni activabile, orizonturi, cadența restanțelor, ora) e o preferință cross-feature (`notificationPreferences` în `settings`), citită prin `#shared/domain/notification-preferences.mjs` — nu ține de acest modul.
 
 Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (copii, vizite, plăți) se fac în `src/app/server/telegram-digest.mjs` (compositor).
 
@@ -17,7 +17,7 @@ Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (c
 | `removeTelegramConfig(dataDirectory)` | ștergere |
 | `readTelegramState(dataDirectory)` | fișier `telegram-stare.json`: `{ lastRun, lastSuccess, lastError, sentKeys }` |
 | `writeTelegramState(dataDirectory, state)` | scriere atomică |
-| `buildDailyDigest({ todayStr, birthdays, visits, overdue, sentKeys })` | `{ text, keys }` — rezumatul pentru ziua de azi |
+| `buildDailyDigest({ todayStr, birthdays, visits, overdue, sentKeys, preferences? })` | `{ text, keys }` — rezumatul pentru ziua de azi; `text: ''` dacă ziua e goală și `nothingToReportEnabled` e oprit |
 | `classifyTelegramFailure(error)` | `{ kind: 'transient' \| 'permanent', message }` |
 | `pruneSentKeys(sentKeys, todayStr)` | elimină cheile mai vechi de 60 de zile |
 
@@ -41,7 +41,7 @@ Modulul **independent**: nu depinde de alt feature. Importurile multi-feature (c
 
 ## Consumatori
 
-Composition root-ul serverului (`create-application.mjs`) creează serviciul cu `fetch` și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`). Composition root-ul de web creează controller-ul cu `requestJson` și `showNotice` comune aplicației și view-ul cu containerul din `#settings`. Compositor-ul `src/app/server/telegram-digest.mjs` agregă datele de la copii/vizite/plăți și apelează `buildDailyDigest` și `runTelegramDigest`.
+Composition root-ul serverului (`create-application.mjs`) creează serviciul cu `fetch` și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`). Composition root-ul de web creează controller-ul cu `requestJson` și `showNotice` comune aplicației și view-ul cu containerul din `#notifications` (ecranul „Notificări"). Compositor-ul `src/app/server/telegram-digest.mjs` agregă datele de la copii/vizite/plăți, citește `notificationPreferences` din `settings` (`#shared/domain/notification-preferences.mjs`) și apelează `buildDailyDigest` și `runTelegramDigest`. Ruta `POST /api/notification-settings` (`src/app/server/notification-settings.routes.mjs`, tot un compositor, nu un feature) salvează preferințele și oglindește ora rezumatului în `notify-schedule.json`, citit de lansator la (re)înregistrarea sarcinii programate.
 
 ## Structură
 
@@ -67,16 +67,17 @@ telegram-notify/
 
 ## Decizii
 
-- **Proces separat, nu tray.** Task Scheduler pornește sarcina la 08:00 cu `Startica.exe --telegram --quiet`; lansatorul o ascunde și nu blochează serverul.
+- **Proces separat, nu tray.** Task Scheduler pornește sarcina la ora aleasă (implicit 08:00) cu `Startica.exe --telegram --quiet`; lansatorul o ascunde și nu blochează serverul.
 - **Deschidere strict de citire.** `openDatabaseReadOnly` deschide baza în WAL fără migrări, coexistând cu serverul care ține o tranzacție `BEGIN IMMEDIATE`.
 - **Token în `telegram.json`, nu în setări.** Secretul nu intră în backupuri, iar restaurarea pe un calculator nou cere re-lipirea token-ului (2 minute).
 - **Stare în `telegram-stare.json`.** Două fișiere cu câte un singur scriitor; nicio cursă între server și proces; procesul citește și scrie, serverul citește doar pentru afișare stării.
 - **Descoperirea conversației prin `getUpdates`.** Operatorul apasă Start în bot, apoi „Conectează" în Startica; niciun „chat id" de copiat.
-- **Un mesaj pe zi, la 08:00, fix.** Oră fixă, fără setare; proces la trezire sau pornire calcul dacă ora a trecut; fără interval.
+- **Un mesaj pe zi, la ora aleasă.** Fără interval; proces la trezire sau pornire calcul dacă ora a trecut. Ora e o preferință (`digestTime`, implicit 08:00), oglindită și în `notify-schedule.json` pentru lansator; schimbarea ei se aplică la următoarea (re)pornire a sarcinii programate, nu instant.
 - **Rezumat cu bucăți sub 4096 caractere.** Tăiat la limită de linie; eșec la a doua bucată = reîncercare ziua următoare, mesaj dublat parțial (acceptat).
 - **Nicio date medicale.** `healthNotes` nu e citit; formatul HTML, `parse_mode: 'HTML'`, e lizibil pe telefon și nu necesită emoji.
-- **Registrul de trimiteri pentru deduplicare.** Zilele de naștere și vizitele se retrimit pe 3 zile (pregătire); restanțierii apar cu detalii doar luni și când intră în listă. Cheile se șterg după 60 de zile.
-- **Rulare ratată, reluată seara.** După ora 18:00 o rulare ratată nu mai trimite rezumatul de azi; a doua zi la 08:00 pleacă normal.
+- **Registrul de trimiteri pentru deduplicare.** Zilele de naștere și vizitele se retrimit pe orizontul ales (implicit 3 zile: azi, mâine, poimâine); restanțierii apar cu detalii după cadența aleasă (implicit doar luni, sau la prima intrare în listă). Cheile se șterg după 60 de zile.
+- **Rulare ratată, reluată seara.** Tăierea e relativă la ora rezumatului (implicit +10h, deci 18:00): peste ea, o rulare ratată nu mai trimite rezumatul de azi; a doua zi pleacă normal.
+- **Secțiuni activabile și cadență a restanțelor, prin `#shared/domain/notification-preferences.mjs`.** Fiecare secțiune (zile de naștere, vizite, restanțe) se poate opri din ecranul „Notificări"; restanțele au trei cadențe (`daily`/`monday`/`never`). O zi goală poate fie trimite „Nimic de semnalat", fie nu trimite nimic (`nothingToReportEnabled`).
 
 ## Teste
 

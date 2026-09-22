@@ -38,6 +38,8 @@ import {
   createVisitsController,
   visitEditorFields,
 } from '#features/visits/index.web.mjs';
+import { createNotificationPreferencesController } from './notification-preferences.controller.mjs';
+import { createNotificationPreferencesStore } from './notification-preferences-store.mjs';
 
 /**
  * Leagă id-urile din index.html de ecranele fiecărui feature și le înregistrează în ciclul de randare.
@@ -111,7 +113,36 @@ export function composeScreens(dependencies) {
     requestJson,
     showNotice,
   });
-  navigation.registerScreen('settings', { activate: telegramSettings.activate });
+  // Cache-ul e împărțit cu memento-urile Windows ale vizitelor, mai jos: ambele
+  // citesc aceleași preferințe, dar doar ecranul „Notificări” le și salvează.
+  const notificationPreferencesStore = createNotificationPreferencesStore({ requestJson });
+  // Memento-urile Windows ale vizitelor (mai jos) verifică din primul minut, nu doar după
+  // ce operatorul deschide ecranul „Notificări”: încărcăm o dată, fără să blocăm pornirea.
+  void notificationPreferencesStore.load().catch(() => {});
+  const notificationPreferences = createNotificationPreferencesController({
+    elements: {
+      form: element('notificationPreferencesForm'),
+      birthdaysEnabled: element('notifBirthdaysEnabled'),
+      birthdaysDaysBefore: element('notifBirthdaysDaysBefore'),
+      visitsEnabled: element('notifVisitsEnabled'),
+      visitsHorizonDays: element('notifVisitsHorizonDays'),
+      overdueEnabled: element('notifOverdueEnabled'),
+      overdueCadence: element('notifOverdueCadence'),
+      nothingToReportEnabled: element('notifNothingToReportEnabled'),
+      digestTime: element('notifDigestTime'),
+      windowsVisitsTodayEnabled: element('notifWindowsVisitsTodayEnabled'),
+      windowsVisitSoonEnabled: element('notifWindowsVisitSoonEnabled'),
+      windowsVisitSoonMinutes: element('notifWindowsVisitSoonMinutes'),
+    },
+    store: notificationPreferencesStore,
+    showNotice,
+  });
+  navigation.registerScreen('notifications', {
+    activate: () => {
+      telegramSettings.activate();
+      notificationPreferences.activate();
+    },
+  });
   createExcelTransferController({
     elements: {
       importButton: element('importButton'),
@@ -262,6 +293,7 @@ export function composeScreens(dependencies) {
     eventBus,
     elements: { button: element('visitsNotifyButton'), hint: element('visitsNotifyHint') },
     goToVisits: () => navigation.go('visits'),
+    readPreferences: () => notificationPreferencesStore.preferences,
   });
 
   // ─── Ecranele randate la fiecare reîncărcare a datelor ──────────────────────

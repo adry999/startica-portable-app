@@ -347,6 +347,33 @@ namespace Startica
 
         private const string TelegramTaskFolderName = "Startica";
         private const string TelegramTaskBaseName = "Rezumat Telegram";
+        private const string NotifyScheduleFileName = "notify-schedule.json";
+        private const string DefaultDigestTime = "08:00";
+        private static readonly Regex DigestTimePattern = new Regex(@"^([01]\d|2[0-3]):([0-5]\d)$");
+
+        // Ora rezumatului, oglindită de server în notify-schedule.json (ecranul „Notificări”);
+        // lansatorul nu are driver SQLite, deci nu poate citi tabela settings direct.
+        private string ReadDigestTime()
+        {
+            // Serverul scrie sub Startica_Date (dataLayout(home).dataDir), nu direct in Home.
+            string path = Path.Combine(_options.Home, "Startica_Date", NotifyScheduleFileName);
+            if (!File.Exists(path)) return DefaultDigestTime;
+            string text;
+            try { text = File.ReadAllText(path, Encoding.UTF8); }
+            catch (IOException) { return DefaultDigestTime; }
+            if (string.IsNullOrWhiteSpace(text)) return DefaultDigestTime;
+
+            Dictionary<string, object> parsed;
+            try { parsed = (Dictionary<string, object>)new JavaScriptSerializer().DeserializeObject(text); }
+            catch (Exception) { return DefaultDigestTime; }
+            if (parsed == null) return DefaultDigestTime;
+
+            object digestTimeValue;
+            parsed.TryGetValue("digestTime", out digestTimeValue);
+            string digestTime = digestTimeValue as string;
+            if (digestTime == null || !DigestTimePattern.IsMatch(digestTime)) return DefaultDigestTime;
+            return digestTime;
+        }
 
         // Numele include hash-ul home-ului doar când home-ul nu e cel implicit, ca testele
         // (--home într-un folder temporar) să nu atingă sarcina reală a utilizatorului.
@@ -399,7 +426,8 @@ namespace Startica
             dynamic taskDefinition = scheduler.NewTask(0);
 
             dynamic registrationInfo = taskDefinition.RegistrationInfo;
-            registrationInfo.Description = "Trimite rezumatul zilnic Telegram (zile de naștere, vizite, restanțe) la ora 08:00.";
+            string digestTime = ReadDigestTime();
+            registrationInfo.Description = "Trimite rezumatul zilnic Telegram (zile de naștere, vizite, restanțe) la ora " + digestTime + ".";
             registrationInfo.Author = "Startica";
 
             dynamic principal = taskDefinition.Principal;
@@ -418,7 +446,9 @@ namespace Startica
             settings.RestartInterval = "PT30M";
 
             dynamic trigger = taskDefinition.Triggers.Create(2); // TASK_TRIGGER_DAILY
-            trigger.StartBoundary = DateTime.Today.AddHours(8).ToString("yyyy-MM-ddTHH:mm:ss");
+            int digestHour = int.Parse(digestTime.Substring(0, 2));
+            int digestMinute = int.Parse(digestTime.Substring(3, 2));
+            trigger.StartBoundary = DateTime.Today.AddHours(digestHour).AddMinutes(digestMinute).ToString("yyyy-MM-ddTHH:mm:ss");
             trigger.DaysInterval = 1;
             trigger.Enabled = true;
 
