@@ -57,20 +57,27 @@
   <div class="toolbar"><button class="btn btn-ghost" id="telegramTest">Mesaj de probă</button><button class="btn btn-ghost" id="telegramDisconnect">Deconectează</button></div>
 </article><article class="panel"><h3>Ce trimite rezumatul zilnic Telegram</h3>
   <form id="notificationPreferencesForm">
-    <label><input type="checkbox" id="notifBirthdaysEnabled">Zile de naștere</label>
-    <label>cu câte zile înainte<input type="number" id="notifBirthdaysDaysBefore" min="0" max="14" step="1"></label>
-    <label><input type="checkbox" id="notifVisitsEnabled">Vizite</label>
-    <label>orizont, în zile de la azi<input type="number" id="notifVisitsHorizonDays" min="0" max="14" step="1"></label>
-    <label><input type="checkbox" id="notifOverdueEnabled">Rest de plată</label>
-    <label>detalii<select id="notifOverdueCadence"><option value="daily">Zilnic</option><option value="monday">Doar luni</option><option value="never">Niciodată</option></select></label>
-    <label><input type="checkbox" id="notifNothingToReportEnabled">Trimite și „Nimic de semnalat” într-o zi goală</label>
-    <label>Ora rezumatului<input type="time" id="notifDigestTime"></label>
-    <p>Ora se aplică la următoarea pornire a Startica (sarcina programată se reînregistrează atunci).</p>
-    <hr>
-    <label><input type="checkbox" id="notifWindowsVisitsTodayEnabled">Vizite azi, ca notificare Windows (cere fereastra Startica deschisă)</label>
-    <label><input type="checkbox" id="notifWindowsVisitSoonEnabled">Vizită în curând, ca notificare Windows</label>
-    <label>cu câte minute înainte<input type="number" id="notifWindowsVisitSoonMinutes" min="5" max="120" step="5"></label>
-    <button class="btn btn-primary">Salvează preferințele</button>
+    <div class="form-grid">
+      <label class="field checkbox-field"><input type="checkbox" id="notifBirthdaysEnabled"><span>Zile de naștere</span></label>
+      <label class="field">Cu câte zile înainte<input type="number" id="notifBirthdaysDaysBefore" min="0" max="14" step="1"></label>
+      <label class="field checkbox-field"><input type="checkbox" id="notifVisitsEnabled"><span>Vizite</span></label>
+      <label class="field">Orizont, în zile de la azi<input type="number" id="notifVisitsHorizonDays" min="0" max="14" step="1"></label>
+      <label class="field checkbox-field"><input type="checkbox" id="notifOverdueEnabled"><span>Rest de plată</span></label>
+      <label class="field">Detalii<select id="notifOverdueCadence"><option value="daily">Zilnic</option><option value="monday">Doar luni</option><option value="never">Niciodată</option></select></label>
+      <label class="field checkbox-field full"><input type="checkbox" id="notifNothingToReportEnabled"><span>Trimite și „Nimic de semnalat” într-o zi goală</span></label>
+      <label class="field">Ora rezumatului<input type="time" id="notifDigestTime"></label>
+      <p class="field-hint full">Ora se aplică la următoarea pornire a Startica (sarcina programată se reînregistrează atunci).</p>
+      <fieldset class="form-section">
+        <legend>Memento-uri Windows</legend>
+        <div class="form-section-grid">
+          <label class="field checkbox-field"><input type="checkbox" id="notifWindowsVisitsTodayEnabled"><span>Vizite azi</span></label>
+          <p class="field-hint full">Cere fereastra Startica deschisă cât timp aplicația rulează.</p>
+          <label class="field checkbox-field"><input type="checkbox" id="notifWindowsVisitSoonEnabled"><span>Vizită în curând</span></label>
+          <label class="field">Cu câte minute înainte<input type="number" id="notifWindowsVisitSoonMinutes" min="5" max="120" step="5"></label>
+        </div>
+      </fieldset>
+    </div>
+    <button class="btn btn-primary" id="notificationPreferencesSave">Salvează preferințele</button>
   </form>
 </article></section>
 </div></section></main>
