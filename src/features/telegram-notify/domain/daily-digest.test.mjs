@@ -227,3 +227,92 @@ test('pruneSentKeys păstrează exact 59 de zile și șterge de la 60 în sus', 
 
   assert.deepEqual(Object.keys(pruned).sort(), ['zi:kept-59', 'zi:kept-today']);
 });
+
+test('secțiunea zile de naștere dispare când e dezactivată în preferințe', () => {
+  const { text } = buildDailyDigest({
+    todayStr: '2026-09-15',
+    birthdays: fullBirthdays,
+    visits: [],
+    overdue: [],
+    sentKeys: {},
+    preferences: {
+      birthdaysEnabled: false,
+      visitsEnabled: true,
+      overdueEnabled: true,
+      overdueCadence: 'monday',
+      nothingToReportEnabled: true,
+    },
+  });
+  assert.doesNotMatch(text, /Zile de naștere/);
+});
+
+test('cadența „daily” arată toți copiii cu detalii, oricare ar fi ziua sau registrul', () => {
+  const { text } = buildDailyDigest({
+    todayStr: '2026-09-15', // marți, nu luni
+    birthdays: [],
+    visits: [],
+    overdue: fullOverdue,
+    sentKeys: sentKeysWithTwoAlreadyNotified,
+    preferences: {
+      birthdaysEnabled: true,
+      visitsEnabled: true,
+      overdueEnabled: true,
+      overdueCadence: 'daily',
+      nothingToReportEnabled: true,
+    },
+  });
+  assert.match(text, /• Stan Tudor/);
+  assert.match(text, /• Copil Doi/);
+  assert.match(text, /• Copil Trei/);
+});
+
+test('cadența „never” nu arată niciodată detalii și nu promite luni', () => {
+  const { text, keys } = buildDailyDigest({
+    todayStr: '2026-09-21', // luni
+    birthdays: [],
+    visits: [],
+    overdue: fullOverdue,
+    sentKeys: {},
+    preferences: {
+      birthdaysEnabled: true,
+      visitsEnabled: true,
+      overdueEnabled: true,
+      overdueCadence: 'never',
+      nothingToReportEnabled: true,
+    },
+  });
+  assert.doesNotMatch(text, /• Stan Tudor/);
+  assert.match(text, /Detaliile sunt în Startica/);
+  assert.deepEqual(keys, ['zi:2026-09-21']);
+});
+
+test('cu „nimic de semnalat” dezactivat, o zi goală nu produce mesaj de trimis', () => {
+  const { text, keys } = buildDailyDigest({
+    todayStr: '2026-09-16',
+    birthdays: [],
+    visits: [],
+    overdue: [],
+    sentKeys: {},
+    preferences: {
+      birthdaysEnabled: true,
+      visitsEnabled: true,
+      overdueEnabled: true,
+      overdueCadence: 'monday',
+      nothingToReportEnabled: false,
+    },
+  });
+  assert.equal(text, '');
+  assert.deepEqual(keys, []);
+});
+
+test('vizitele mai departe de mâine intră într-o secțiune separată, cu dată', () => {
+  const { text } = buildDailyDigest({
+    todayStr: '2026-09-15',
+    birthdays: [],
+    visits: [{ name: 'Copil Peste Trei Zile', date: '2026-09-18', time: '09:00', phone: '', parent: '' }],
+    overdue: [],
+    sentKeys: {},
+  });
+  assert.match(text, /Vizite în zilele următoare/);
+  assert.match(text, /18\.09 09:00 · Copil Peste Trei Zile/);
+});

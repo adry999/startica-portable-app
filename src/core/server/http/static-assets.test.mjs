@@ -49,6 +49,14 @@ test('pictograma ICO e în lista albă și fișierul mapat există', () => {
   assert.equal(existsSync(join(ROOT, STATIC_FILES['/assets/startica.ico'])), true);
 });
 
+test('manifestul web și pictogramele PNG sunt în lista albă și fișierele mapate există', () => {
+  const paths = ['/manifest.json', '/assets/startica-192.png', '/assets/startica-512.png'];
+  for (const path of paths) {
+    assert.equal(isStaticAsset(path), true, path);
+    assert.equal(existsSync(join(ROOT, STATIC_FILES[path])), true, path);
+  }
+});
+
 test('fiecare foaie de stil din index.html e în lista albă și fișierul mapat există', () => {
   const html = readFileSync(join(ROOT, 'web/index.html'), 'utf8');
   const stylesheetHrefs = [...html.matchAll(/<link\s+[^>]*>/g)]

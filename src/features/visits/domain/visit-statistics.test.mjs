@@ -80,3 +80,30 @@ test('countVisitsForDays trece corect peste granița de an', () => {
   assert.equal(result.today, 1);
   assert.equal(result.tomorrow, 1);
 });
+
+test('countVisitsForDays cu orizont 0 ia doar azi', () => {
+  const visits = [
+    buildVisit({ id: 'VIZ-1', date: '2026-09-10', time: '09:00' }),
+    buildVisit({ id: 'VIZ-2', date: '2026-09-11', time: '09:00' }),
+  ];
+
+  const result = countVisitsForDays(visits, '2026-09-10', 0);
+
+  assert.deepEqual(
+    result.items.map(item => item.id),
+    ['VIZ-1'],
+  );
+  assert.equal(result.tomorrow, 0);
+});
+
+test('countVisitsForDays cu orizont mai mare de 1 include zilele următoare', () => {
+  const visits = [
+    buildVisit({ id: 'VIZ-1', date: '2026-09-10', time: '09:00' }),
+    buildVisit({ id: 'VIZ-2', date: '2026-09-12', time: '09:00' }),
+    buildVisit({ id: 'VIZ-3', date: '2026-09-13', time: '09:00' }),
+  ];
+
+  const result = countVisitsForDays(visits, '2026-09-10', 3);
+
+  assert.deepEqual(result.items.map(item => item.id).sort(), ['VIZ-1', 'VIZ-2', 'VIZ-3']);
+});

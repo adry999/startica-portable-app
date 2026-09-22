@@ -95,3 +95,51 @@ test('selectDueReminders ignoră vizitele nearhivate cu alt statut și pe cele a
 
   assert.equal(reminders.length, 0);
 });
+
+test('selectDueReminders oprește mementoul „Vizite azi” dacă e dezactivat', () => {
+  const visits = [buildVisit({ date: '2026-09-10', time: '10:00' })];
+  const now = new Date('2026-09-10T08:00:00');
+
+  const reminders = selectDueReminders(visits, now, [], {
+    windowsVisitsTodayEnabled: false,
+    windowsVisitSoonEnabled: true,
+    windowsVisitSoonMinutes: 30,
+  });
+
+  assert.equal(
+    reminders.some(r => r.key.startsWith('zi:')),
+    false,
+  );
+});
+
+test('selectDueReminders oprește mementoul „vizită în curând” dacă e dezactivat', () => {
+  const visits = [buildVisit({ date: '2026-09-10', time: '10:15' })];
+  const now = new Date('2026-09-10T10:00:00');
+
+  const reminders = selectDueReminders(visits, now, [], {
+    windowsVisitsTodayEnabled: false,
+    windowsVisitSoonEnabled: false,
+    windowsVisitSoonMinutes: 30,
+  });
+
+  assert.deepEqual(reminders, []);
+});
+
+test('selectDueReminders folosește fereastra configurată, nu 30 fix', () => {
+  const visits = [buildVisit({ date: '2026-09-10', time: '11:00' })];
+  const now = new Date('2026-09-10T10:15:00'); // 45 min înainte
+
+  const scurt = selectDueReminders(visits, now, [], {
+    windowsVisitsTodayEnabled: false,
+    windowsVisitSoonEnabled: true,
+    windowsVisitSoonMinutes: 30,
+  });
+  assert.deepEqual(scurt, []);
+
+  const lung = selectDueReminders(visits, now, [], {
+    windowsVisitsTodayEnabled: false,
+    windowsVisitSoonEnabled: true,
+    windowsVisitSoonMinutes: 60,
+  });
+  assert.equal(lung.length, 1);
+});

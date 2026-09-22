@@ -265,6 +265,31 @@ try {
     Assert ($LASTEXITCODE -eq 0) 'Scenariul 4: schtasks /Query gaseste sarcina inregistrata'
     $queryXml4 = ($queryXml4Lines -join "`n")
     Assert ($queryXml4 -match '--telegram') 'Scenariul 4: actiunea din XML contine --telegram'
+    Assert ($queryXml4 -match 'T08:00:00') 'Scenariul 4: fara notify-schedule.json, ora ramane implicita 08:00'
+
+    # Ora rezumatului e configurabila din ecranul "Notificari" (oglindita de server in
+    # notify-schedule.json); --register-task o citeste la fiecare (re)inregistrare.
+    $telegramDataDir4 = Join-Path $home4 'Startica_Date'
+    New-Item -ItemType Directory -Path $telegramDataDir4 -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $telegramDataDir4 'notify-schedule.json') -Value '{"digestTime":"19:45"}' -Encoding UTF8
+    $reregister4 = Start-Process -FilePath $launcherExe -ArgumentList ('--register-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
+    $launcherProcesses += $reregister4
+    Assert ($reregister4.ExitCode -eq 0) 'Scenariul 4: reinregistrarea cu ora configurata iese cu codul 0'
+    & schtasks.exe /Query /TN $taskPath4 /XML | Set-Variable -Name queryXml4bLines
+    Assert ($LASTEXITCODE -eq 0) 'Scenariul 4: schtasks /Query gaseste sarcina dupa reinregistrare'
+    $queryXml4b = ($queryXml4bLines -join "`n")
+    Assert ($queryXml4b -match 'T19:45:00') 'Scenariul 4: ora din notify-schedule.json a fost aplicata la reinregistrare'
+
+    # Fisier stricat (JSON invalid, camp lipsa, ora nevalida): ReadDigestTime trebuie
+    # sa revina tacut la implicit 08:00, nu sa opreasca reinregistrarea (audit 2026-09-22).
+    Set-Content -LiteralPath (Join-Path $telegramDataDir4 'notify-schedule.json') -Value '{nu e json valid' -Encoding UTF8
+    $reregister4b = Start-Process -FilePath $launcherExe -ArgumentList ('--register-task --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"') -Wait -PassThru
+    $launcherProcesses += $reregister4b
+    Assert ($reregister4b.ExitCode -eq 0) 'Scenariul 4: reinregistrarea cu notify-schedule.json stricat iese cu codul 0'
+    & schtasks.exe /Query /TN $taskPath4 /XML | Set-Variable -Name queryXml4cLines
+    Assert ($LASTEXITCODE -eq 0) 'Scenariul 4: schtasks /Query gaseste sarcina dupa notify-schedule.json stricat'
+    $queryXml4c = ($queryXml4cLines -join "`n")
+    Assert ($queryXml4c -match 'T08:00:00') 'Scenariul 4: notify-schedule.json stricat revine la ora implicita 08:00'
 
     $telegramArgs4 = '--telegram --quiet --home "' + $home4 + '" --app-dir "' + $repoRoot + '"'
 
