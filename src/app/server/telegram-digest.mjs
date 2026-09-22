@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnvironment, dataLayout } from '#config/environment.mjs';
 import { isoDateOf } from '#shared/domain/calendar-month.mjs';
-import { parseNotificationPreferences, lateRunHourFor } from '#shared/domain/notification-preferences.mjs';
+import { parseNotificationPreferences, isDigestRunTooLate } from '#shared/domain/notification-preferences.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { readSettingValue } from '#core/server/settings/settings-repository.mjs';
@@ -91,7 +91,7 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
 
     // Ora de tăiere e relativă la ora rezumatului (implicit 08:00 + 10h = 18:00);
     // un rezumat de seară nu mai ajută la nimic, a doua zi pleacă normal.
-    if (now.getHours() >= lateRunHourFor(preferences.digestTime)) {
+    if (isDigestRunTooLate(now, preferences.digestTime)) {
       log.write('INFO', 'Rezumat ratat: prea târziu pentru azi');
       return 0;
     }

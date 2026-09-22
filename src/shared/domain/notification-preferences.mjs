@@ -94,11 +94,19 @@ export function parseNotificationPreferences(json) {
 const LATE_RUN_GRACE_HOURS = 10;
 
 /**
+ * Momentul (azi, ora rezumatului + 10h) după care o rulare ratată nu mai trimite
+ * rezumatul de azi. Fără plafon la 23: pentru o oră de rezumat târzie (ex. 20:00),
+ * `setHours` trece firesc peste miezul nopții — audit 2026-09-22 (plafonul vechi la
+ * ora 23 prăbușea grația la 0h pentru un rezumat setat la 23:00).
+ * @param {Date} now
  * @param {string} digestTime `HH:mm`
- * @returns {number} ora (0-23) după care o rulare ratată nu mai trimite rezumatul de azi
+ * @returns {boolean}
  */
-export function lateRunHourFor(digestTime) {
+export function isDigestRunTooLate(now, digestTime) {
   const match = DIGEST_TIME_PATTERN.test(digestTime) ? digestTime : DEFAULT_NOTIFICATION_PREFERENCES.digestTime;
-  const hour = Number(match.slice(0, 2));
-  return Math.min(23, hour + LATE_RUN_GRACE_HOURS);
+  const [hour, minute] = match.split(':').map(Number);
+  const cutoff = new Date(now);
+  cutoff.setHours(hour, minute, 0, 0);
+  cutoff.setHours(cutoff.getHours() + LATE_RUN_GRACE_HOURS);
+  return now >= cutoff;
 }
