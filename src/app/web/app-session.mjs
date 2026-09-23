@@ -19,6 +19,11 @@ export function showNotice(text, isError = false) {
   noticeBanner.show(text, isError);
 }
 
+export function hideNotice() {
+  noticeBanner ??= createNoticeBanner(/** @type {HTMLElement} */ (byId('message')));
+  noticeBanner.hide();
+}
+
 export const eventBus = createDomainEventBus({
   eventNames: DOMAIN_EVENT_NAMES,
   onListenerError: error => showNotice(describeFailure(error).message, true),

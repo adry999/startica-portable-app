@@ -1,7 +1,7 @@
 /** @typedef {{ activate: () => void, deactivate?: () => void }} NavigableScreen */
 
-/** @param {{ byId: (id: string) => HTMLElement | null }} dependencies */
-export function createNavigation({ byId }) {
+/** @param {{ byId: (id: string) => HTMLElement | null, hideNotice?: () => void }} dependencies */
+export function createNavigation({ byId, hideNotice }) {
   /** @type {Map<string, NavigableScreen>} */
   const screens = new Map();
 
@@ -15,6 +15,8 @@ export function createNavigation({ byId }) {
 
   /** @param {string} viewId */
   function go(viewId) {
+    // Un mesaj de pe ecranul părăsit (ex. „salvat") n-are ce căuta pe următorul.
+    hideNotice?.();
     document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === viewId));
     /** @type {HTMLElement | undefined} */
     let currentNav;

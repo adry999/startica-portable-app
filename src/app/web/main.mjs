@@ -8,6 +8,7 @@ import {
   acceptResult,
   checkConnection,
   eventBus,
+  hideNotice,
   loadSession,
   renderSaveStatus,
   requestJson,
@@ -36,7 +37,7 @@ const readRecords = () => sessionState.state;
 // Feature-urile trimit corpuri tipate diferit; store-ul le completează cu revizia și requestId-ul.
 const submitMutation = /** @type {(path: string, body: any, base?: number) => Promise<any>} */ (submitStoreMutation);
 
-const navigation = createNavigation({ byId });
+const navigation = createNavigation({ byId, hideNotice });
 
 const renderCycle = createRenderCycle({
   readRecords,
