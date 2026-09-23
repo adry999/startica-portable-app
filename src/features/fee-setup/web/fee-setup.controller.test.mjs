@@ -2,6 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createFeeSetupController } from './fee-setup.controller.mjs';
 
+// sortTable() caută antetul tabelului prin document.getElementById; în Node, fără DOM,
+// stub-ul întoarce null și sortarea rămâne pasivă (comportamentul dinainte de sortare).
+globalThis.document ??= /** @type {any} */ ({ getElementById: () => null });
+
 /** @param {any} value */
 const asAny = value => /** @type {any} */ (value);
 
@@ -33,7 +37,15 @@ function createFeeRow({ id, name, fee, feeInitial, group, groupInitial, status, 
 
 /** @param {any[]} [rows] */
 function createFakeTable(rows = []) {
-  return asAny({ innerHTML: '', querySelectorAll: selector => (selector === 'tr[data-child]' ? rows : []) });
+  const listeners = {};
+  return asAny({
+    innerHTML: '',
+    querySelectorAll: selector => (selector === 'tr[data-child]' ? rows : []),
+    addEventListener: (type, handler) => {
+      listeners[type] = handler;
+    },
+    _fire: type => listeners[type]?.(),
+  });
 }
 
 /**
@@ -48,21 +60,24 @@ function createHarness({
 } = {}) {
   const notices = [];
   const submittedRequests = [];
+  const saveBar = { hidden: true };
   const elements = {
     info: createElement(),
     table,
     pending: createElement(),
+    search: createElement({ value: '' }),
     filter: createElement({ value: '' }),
     bulkAmount: createElement(),
     bulkGroup: createElement(),
     bulkStatus: createElement(),
     applyAll: createElement(),
+    saveBar,
     save: createElement(),
     failure: createElement(),
   };
 
   const controller = createFeeSetupController({
-    elements,
+    elements: asAny(elements),
     readRecords,
     readToday,
     submitMutation: async (path, body) => {
@@ -73,7 +88,7 @@ function createHarness({
     renderMissingFeeCount,
   });
 
-  return { controller, elements, notices, submittedRequests };
+  return { controller, elements, notices, submittedRequests, saveBar };
 }
 
 test('save.onclick trimite doar rândurile schimbate, cu doar câmpurile modificate, plus id și luna de aplicare', async () => {
@@ -200,4 +215,116 @@ test('render() numără copiii nearhivați fără taxă și scrie textul info, i
 
   assert.deepEqual(missingCounts, [1]);
   assert.match(elements.info.textContent, /1 copii fără taxă completată/);
+});
+
+test('căutarea reduce rândurile afișate la copiii care se potrivesc', () => {
+  const records = {
+    children: [
+      { id: 'C-1', name: 'Ana Pop', archived: false, feeHistory: [] },
+      { id: 'C-2', name: 'Bogdan Ionescu', archived: false, feeHistory: [] },
+    ],
+    groups: [],
+  };
+  const { controller, elements } = createHarness({ readRecords: () => records });
+  elements.filter.value = 'all';
+  elements.search.value = 'ionescu';
+
+  controller.render();
+
+  assert.match(elements.pending.textContent, /1 rânduri afișate/);
+});
+
+test('o editare directă într-un rând arată bara de salvare', () => {
+  const rows = [
+    createFeeRow({
+      id: 'C-1',
+      name: 'Ana',
+      fee: '150',
+      feeInitial: '100',
+      group: '',
+      groupInitial: '',
+      status: 'Activ',
+      statusInitial: 'Activ',
+      from: '2026-09',
+    }),
+  ];
+  const { elements, saveBar } = createHarness({ table: createFakeTable(rows) });
+
+  elements.table._fire('input');
+
+  assert.equal(saveBar.hidden, false);
+});
+
+test('applyAll arată bara de salvare', () => {
+  const rows = [
+    createFeeRow({
+      id: 'C-1',
+      name: 'Ana',
+      fee: '100',
+      feeInitial: '100',
+      group: '',
+      groupInitial: '',
+      status: 'Activ',
+      statusInitial: 'Activ',
+      from: '2026-09',
+    }),
+  ];
+  const { elements, saveBar } = createHarness({ table: createFakeTable(rows) });
+  elements.bulkAmount.value = '150';
+
+  elements.applyAll.onclick();
+
+  assert.equal(saveBar.hidden, false);
+});
+
+test('salvarea reușită ascunde bara de salvare', async () => {
+  const rows = [
+    createFeeRow({
+      id: 'C-1',
+      name: 'Ana',
+      fee: '150',
+      feeInitial: '100',
+      group: '',
+      groupInitial: '',
+      status: 'Activ',
+      statusInitial: 'Activ',
+      from: '2026-09',
+    }),
+  ];
+  const { elements, saveBar } = createHarness({ table: createFakeTable(rows) });
+  saveBar.hidden = false;
+
+  await elements.save.onclick();
+
+  assert.equal(saveBar.hidden, true);
+});
+
+test('render() păstrează o editare neatinsă încă din tabel, la o nouă filtrare', () => {
+  const records = {
+    children: [
+      { id: 'C-1', name: 'Ana', archived: false, feeHistory: [] },
+      { id: 'C-2', name: 'Bogdan', archived: false, feeHistory: [{ from: '2026-01', amount: 100 }] },
+    ],
+    groups: [],
+  };
+  const rows = [
+    createFeeRow({
+      id: 'C-1',
+      name: 'Ana',
+      fee: '250',
+      feeInitial: '',
+      group: '',
+      groupInitial: '',
+      status: 'Activ',
+      statusInitial: 'Activ',
+      from: '2026-09',
+    }),
+  ];
+  const table = createFakeTable(rows);
+  const { controller, saveBar } = createHarness({ table, readRecords: () => records });
+
+  controller.render();
+
+  assert.equal(rows[0].querySelector('[data-fee]').value, '250');
+  assert.equal(saveBar.hidden, false);
 });
