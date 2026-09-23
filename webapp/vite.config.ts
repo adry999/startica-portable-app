@@ -13,11 +13,21 @@ export default defineConfig({
       '@shared': resolvePath('./src/shared'),
       '@features': resolvePath('./src/features'),
       '@domain': resolvePath('../src/shared/domain'),
+      '@contracts': resolvePath('../src/shared/contracts'),
+      '@core': resolvePath('../src/core'),
+      // Backend files (e.g. app-session-store.mjs) import each other via the
+      // '#xxx/*' subpath imports from the root package.json. Vite doesn't read
+      // that map, so it needs the same targets under the literal '#' prefix too.
+      '#shared': resolvePath('../src/shared'),
+      '#core': resolvePath('../src/core'),
+      '#app': resolvePath('../src/app'),
+      '#config': resolvePath('../src/config'),
+      '#features': resolvePath('../src/features'),
     },
   },
   server: {
     fs: {
-      // @domain resolves outside webapp/, into the backend's src/shared/domain.
+      // @domain/@contracts/@core/#... resolve outside webapp/, into the backend's src/.
       allow: ['..'],
     },
   },

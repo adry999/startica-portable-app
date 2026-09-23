@@ -24,7 +24,14 @@
       "@app/*": ["src/app/*"],
       "@shared/*": ["src/shared/*"],
       "@features/*": ["src/features/*"],
-      "@domain/*": ["../src/shared/domain/*"]
+      "@domain/*": ["../src/shared/domain/*"],
+      "@contracts/*": ["../src/shared/contracts/*"],
+      "@core/*": ["../src/core/*"],
+      "#shared/*": ["../src/shared/*"],
+      "#core/*": ["../src/core/*"],
+      "#app/*": ["../src/app/*"],
+      "#config/*": ["../src/config/*"],
+      "#features/*": ["../src/features/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { total } from '@domain/money.mjs';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { useAppSession } from '@shared/api/session';
 
 interface Child {
   id: string;
@@ -32,11 +33,23 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toast = useToast();
   const sample = total([{ amount: 10 }, { amount: 5.5 }]);
+  const session = useAppSession();
+
+  useEffect(() => {
+    // Încărcare o singură dată la montare — sesiunea e un singleton la nivel de modul, nu per componentă.
+    session.load().catch(() => {
+      // Eroarea e deja în session.state.saveError — sidebar-ul (pasul 4) o citește direct.
+    });
+  }, []);
 
   return (
     <main style={{ padding: 40, display: 'grid', gap: 24 }}>
       <h1>Startica — scaffold</h1>
       <p>@domain/money.mjs total([10, 5.5]) = {sample}</p>
+      <p>
+        Sesiune: {session.state.ready ? `pornit, token ${session.state.token.slice(0, 8)}…` : 'se încarcă…'}
+        {session.state.connectionError && ` — ${session.state.connectionError}`}
+      </p>
 
       <Card tone="orange" decorative>
         <p>Încasări</p>
