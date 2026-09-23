@@ -28,6 +28,9 @@ import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
 import { createNotificationSettingsRoutes } from './notification-settings.routes.mjs';
+import { parseExchangeRates, clampExchangeRates } from '#shared/domain/exchange-rates.mjs';
+import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 // Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
@@ -173,6 +176,21 @@ export function createApplication(options = {}) {
     dispatchRequest(req, res, /** @type {import('node:net').AddressInfo} */ (server.address()).port),
   );
 
+  // Apelat o dată la pornire (main.mjs): dacă ziua curentă n-are deja un curs
+  // salvat, îl cere de la BNM. Nu aruncă niciodată — un eșec doar lasă cursul
+  // lipsă, tratat de eurToMdlRate() prin căderea pe ultima zi cunoscută.
+  async function refreshExchangeRateIfMissing() {
+    const date = today();
+    const current = parseExchangeRates(readSetting('exchangeRates'));
+    if (Object.hasOwn(current, date)) return;
+    const result = await fetchBnmEurRate({ fetch: options.fetch ?? globalThis.fetch, date });
+    if ('error' in result) {
+      console.error('Curs BNM la pornire: ' + result.error);
+      return;
+    }
+    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates({ ...current, [date]: result.rate })));
+  }
+
   return {
     server,
     db,
@@ -181,6 +199,7 @@ export function createApplication(options = {}) {
     safeBackup: backups.safeBackup,
     health: backups.health,
     expireHealthNotes: visitsService.expireHealthNotes,
+    refreshExchangeRateIfMissing,
     envelope: recordRepository.readEnvelope,
     close: () =>
       /** @type {Promise<void>} */ (

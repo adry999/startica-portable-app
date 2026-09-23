@@ -92,6 +92,11 @@ export function startServer() {
       } catch (e) {
         console.error('Expirare date medicale: ' + /** @type {Error} */ (e).message);
       }
+      try {
+        app.refreshExchangeRateIfMissing();
+      } catch (e) {
+        console.error('Curs BNM la pornire: ' + /** @type {Error} */ (e).message);
+      }
     }, 0);
   });
   // Lansatorul folosește existența fișierului ca să afle dacă instanța găsită mai este vie.
