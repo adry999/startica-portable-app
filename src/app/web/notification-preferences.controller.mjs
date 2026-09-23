@@ -69,14 +69,23 @@ function readForm(fields) {
  * }} dependencies
  */
 export function createNotificationPreferencesController({ elements, store, showNotice }) {
+  /** @type {NotificationPreferences | null} */
+  let loaded = null;
+
+  // Comparat cu ultima stare cunoscută ca sigură (încărcată sau salvată), nu doar „s-a atins ceva”:
+  // revenirea manuală la valorile inițiale trebuie să ascundă bara la loc, nu s-o lase agățată.
+  function isDirty() {
+    return loaded !== null && JSON.stringify(readForm(elements)) !== JSON.stringify(loaded);
+  }
+
   async function refresh() {
-    fillForm(await store.load(), elements);
+    loaded = await store.load();
+    fillForm(loaded, elements);
     elements.saveBar.hidden = true;
   }
 
-  // Bara de salvare stă ascunsă până la prima editare, ca butonul să nu ceară derulare până jos degeaba.
   elements.form.addEventListener('input', () => {
-    elements.saveBar.hidden = false;
+    elements.saveBar.hidden = !isDirty();
   });
 
   elements.form.onsubmit = async event => {
@@ -84,7 +93,8 @@ export function createNotificationPreferencesController({ elements, store, showN
     const submitButton = /** @type {HTMLButtonElement} */ (elements.form.querySelector('button'));
     submitButton.disabled = true;
     try {
-      fillForm(await store.save(readForm(elements)), elements);
+      loaded = await store.save(readForm(elements));
+      fillForm(loaded, elements);
       elements.saveBar.hidden = true;
       showNotice('Preferințele de notificare au fost salvate.');
     } catch (error) {

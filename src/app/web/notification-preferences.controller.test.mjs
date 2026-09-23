@@ -115,16 +115,33 @@ test('activate() lasă bara de salvare ascunsă', async () => {
 });
 
 test('o editare arată bara de salvare', async () => {
-  const { controller, saveBar, fireInput } = createHarness();
+  const { controller, elements, saveBar, fireInput } = createHarness();
   await controller.activate();
 
+  elements.digestTime.value = '09:15';
   fireInput();
 
   assert.equal(saveBar.hidden, false);
 });
 
+test('revenirea la valoarea încărcată ascunde bara de salvare la loc', async () => {
+  const { controller, elements, saveBar, fireInput } = createHarness();
+  await controller.activate();
+
+  elements.digestTime.value = '09:15';
+  fireInput();
+  assert.equal(saveBar.hidden, false);
+
+  elements.digestTime.value = '08:00';
+  fireInput();
+
+  assert.equal(saveBar.hidden, true);
+});
+
 test('salvarea reușită ascunde din nou bara de salvare', async () => {
-  const { elements, saveBar, fireInput } = createHarness();
+  const { controller, elements, saveBar, fireInput } = createHarness();
+  await controller.activate();
+  elements.digestTime.value = '09:15';
   fireInput();
 
   await submitForm(elements);
@@ -133,7 +150,11 @@ test('salvarea reușită ascunde din nou bara de salvare', async () => {
 });
 
 test('salvarea eșuată lasă bara de salvare vizibilă', async () => {
-  const { elements, saveBar, fireInput } = createHarness({ saveError: new Error('Rețea indisponibilă.') });
+  const { controller, elements, saveBar, fireInput } = createHarness({
+    saveError: new Error('Rețea indisponibilă.'),
+  });
+  await controller.activate();
+  elements.digestTime.value = '09:15';
   fireInput();
 
   await submitForm(elements);

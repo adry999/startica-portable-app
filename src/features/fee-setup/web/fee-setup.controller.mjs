@@ -184,12 +184,13 @@ export function createFeeSetupController({
 
   filter.onchange = render;
   search.oninput = render;
-  // Un rând tastat direct nu trece prin render(): bara trebuie arătată la primul input.
+  // Un rând tastat direct nu trece prin render(): bara se reevaluează la fiecare tastă,
+  // ca revenirea la valoarea inițială să ascundă bara la loc, nu doar apariția unei diferențe.
   table.addEventListener('input', () => {
-    saveBar.hidden = false;
+    saveBar.hidden = !hasPendingEdits();
   });
   table.addEventListener('change', () => {
-    saveBar.hidden = false;
+    saveBar.hidden = !hasPendingEdits();
   });
 
   applyAll.onclick = () => {
