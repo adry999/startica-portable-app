@@ -1,0 +1,59 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: 22px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--slate);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 300px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-14);
+}
+
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font: inherit;
+  font-size: 13px;
+}
+
+.search kbd {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--subtle);
+  background: var(--neutral-soft);
+  border-radius: var(--radius-xs);
+  padding: 2px var(--space-6);
+}

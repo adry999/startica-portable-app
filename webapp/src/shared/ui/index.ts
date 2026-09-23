@@ -4,3 +4,4 @@ export { SegmentedControl, type SegmentedControlOption, type SegmentedControlPro
 export { Drawer, type DrawerProps } from './Drawer';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
+export { MonthPicker, type MonthPickerProps } from './MonthPicker';

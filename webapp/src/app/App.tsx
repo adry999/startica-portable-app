@@ -3,6 +3,9 @@ import { total } from '@domain/money.mjs';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useAppSession } from '@shared/api/session';
+import { AppShell } from './shell/AppShell';
+import { today } from '@domain/calendar-month.mjs';
+import type { ViewKey } from './shell/nav-items';
 
 interface Child {
   id: string;
@@ -26,30 +29,17 @@ const columns: DataTableColumn<Child>[] = [
   { key: 'fee', header: 'Taxă', render: c => `${c.fee} lei`, sortValue: c => c.fee, align: 'end' },
 ];
 
-// Scaffold placeholder: dovedește tooling-ul webapp/ (Vite, TS, @domain/@shared, design tokens,
-// shared/ui) funcțional înainte de shell-ul și ecranele reale (pașii 4-5 din spec).
-export function App() {
-  const [view, setView] = usePersistedState<'table' | 'monthly'>('scaffold.view', 'table');
+// Placeholder de conținut: dovedește shared/ui în interiorul shell-ului real (AppShell).
+// Ecranele propriu-zise (Dashboard etc.) vin la pasul 5 din spec și înlocuiesc acest bloc.
+function ScaffoldContent() {
+  const [tableView, setTableView] = usePersistedState<'table' | 'monthly'>('scaffold.view', 'table');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const toast = useToast();
   const sample = total([{ amount: 10 }, { amount: 5.5 }]);
-  const session = useAppSession();
-
-  useEffect(() => {
-    // Încărcare o singură dată la montare — sesiunea e un singleton la nivel de modul, nu per componentă.
-    session.load().catch(() => {
-      // Eroarea e deja în session.state.saveError — sidebar-ul (pasul 4) o citește direct.
-    });
-  }, []);
 
   return (
-    <main style={{ padding: 40, display: 'grid', gap: 24 }}>
-      <h1>Startica — scaffold</h1>
+    <>
       <p>@domain/money.mjs total([10, 5.5]) = {sample}</p>
-      <p>
-        Sesiune: {session.state.ready ? `pornit, token ${session.state.token.slice(0, 8)}…` : 'se încarcă…'}
-        {session.state.connectionError && ` — ${session.state.connectionError}`}
-      </p>
 
       <Card tone="orange" decorative>
         <p>Încasări</p>
@@ -58,8 +48,8 @@ export function App() {
 
       <SegmentedControl
         ariaLabel="Vizualizare"
-        value={view}
-        onChange={setView}
+        value={tableView}
+        onChange={setTableView}
         options={[
           { value: 'table', label: 'Tabel' },
           { value: 'monthly', label: 'Pe luni' },
@@ -81,6 +71,25 @@ export function App() {
       >
         Arhivează selectate
       </button>
-    </main>
+    </>
+  );
+}
+
+export function App() {
+  const session = useAppSession();
+  const [view, setView] = usePersistedState<ViewKey>('nav.view', 'dashboard');
+  const [month, setMonth] = useState(() => today().slice(0, 7));
+
+  useEffect(() => {
+    // Încărcare o singură dată la montare — sesiunea e un singleton la nivel de modul, nu per componentă.
+    session.load().catch(() => {
+      // Eroarea e deja în session.state.saveError — SaveStatusCard din sidebar o citește direct.
+    });
+  }, []);
+
+  return (
+    <AppShell view={view} onNavigate={setView} month={month} onMonthChange={setMonth}>
+      <ScaffoldContent />
+    </AppShell>
   );
 }
