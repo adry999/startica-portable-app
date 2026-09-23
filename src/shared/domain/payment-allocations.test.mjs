@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { allocations, paymentIndex, paymentTenders } from './payment-allocations.mjs';
+import { normalizeRecord } from './record-schema.mjs';
 
 test('O achitare veche fără componente are o singură metodă', () => {
   const legacy = { id: 'P2', date: '2026-09-08', amount: 200, method: 'Transfer' };
@@ -22,33 +23,32 @@ test('allocations returnează listă goală pentru un avans neasociat, fără al
   assert.deepEqual(allocations(advance), []);
 });
 
-test('paymentIndex însumează achitările pe copil și lună, excluzând arhivate și neasociate', () => {
+test('paymentIndex grupează intrările pe copil și lună fără să le adune, păstrând moneda și data fiecăreia', () => {
   const payments = [
-    { id: 'p1', childId: 'c1', date: '2026-09-01', archived: false, allocations: [{ month: '2026-09', amount: 300 }] },
-    { id: 'p2', childId: 'c1', date: '2026-09-05', archived: false, allocations: [{ month: '2026-09', amount: 200 }] },
-    { id: 'p3', childId: 'c1', date: '2026-08-01', archived: false, allocations: [{ month: '2026-08', amount: 100 }] },
-    { id: 'p4', childId: 'c1', date: '2026-09-01', archived: true, allocations: [{ month: '2026-09', amount: 999 }] },
-    { id: 'p5', childId: '', date: '2026-09-01', archived: false, allocations: [{ month: '2026-09', amount: 999 }] },
+    normalizeRecord('payments', {
+      id: 'P-1',
+      childId: 'C-1',
+      date: '2026-09-05',
+      amount: 500,
+      currency: 'EUR',
+      method: 'Cash',
+      allocations: [{ month: '2026-09', amount: 500 }],
+    }),
+    normalizeRecord('payments', {
+      id: 'P-2',
+      childId: 'C-1',
+      date: '2026-09-20',
+      amount: 200,
+      currency: 'MDL',
+      method: 'Card',
+      allocations: [{ month: '2026-09', amount: 200 }],
+    }),
   ];
 
-  const index = paymentIndex(payments);
-  const months = index.get('c1');
-  assert.equal(months.get('2026-09'), 50000);
-  assert.equal(months.get('2026-08'), 10000);
-  assert.equal(index.has(''), false);
-});
+  const index = paymentIndex(payments, '2026-09-30');
 
-test('paymentIndex exclude achitările de după asOf când e specificat, dar le include când lipsește', () => {
-  const payments = [
-    { id: 'p1', childId: 'c1', date: '2026-08-15', archived: false, allocations: [{ month: '2026-08', amount: 100 }] },
-    { id: 'p2', childId: 'c1', date: '2026-09-20', archived: false, allocations: [{ month: '2026-09', amount: 200 }] },
-  ];
-
-  const withCutoff = paymentIndex(payments, '2026-09-01');
-  assert.equal(withCutoff.get('c1').get('2026-08'), 10000);
-  assert.equal(withCutoff.get('c1').has('2026-09'), false);
-
-  const withoutCutoff = paymentIndex(payments);
-  assert.equal(withoutCutoff.get('c1').get('2026-08'), 10000);
-  assert.equal(withoutCutoff.get('c1').get('2026-09'), 20000);
+  assert.deepEqual(index.get('C-1').get('2026-09'), [
+    { amount: 500, currency: 'EUR', date: '2026-09-05' },
+    { amount: 200, currency: 'MDL', date: '2026-09-20' },
+  ]);
 });

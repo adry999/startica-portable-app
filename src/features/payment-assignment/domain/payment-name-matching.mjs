@@ -90,9 +90,12 @@ export function suggestChildren(payment, children, index, limit = 5) {
     }
 
     const paid = index.get(child.id) || new Map();
+    // index grupează pe monedă+dată, nu mai adună (vezi payment-allocations.mjs) — aici e doar
+    // un indiciu de scor, nu o sumă financiară, deci adunăm cifrele fără conversie de curs.
+    const paidCentsFor = m => (paid.get(m) || []).reduce((sum, entry) => sum + cents(entry.amount), 0);
     const unpaid = months.filter(m => {
       const f = feeFor(child, m);
-      return f !== null && (paid.get(m) || 0) < cents(f);
+      return f !== null && paidCentsFor(m) < cents(f);
     });
     if (months.length && unpaid.length === months.length) {
       score += 2;
