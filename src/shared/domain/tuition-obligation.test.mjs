@@ -225,6 +225,34 @@ test('obligation: fără niciun curs cunoscut pentru o conversie necesară, obli
   assert.equal(result.label, 'De verificat');
 });
 
+test('obligation: copil retras înainte de lună, dar cu o plată neconvertibilă alocată acelei luni — "De verificat" învinge "Fără obligație"', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-01-01',
+    withdrawalDate: '2026-08-15',
+    feeHistory: [{ from: '2026-01', amount: 500, currency: 'EUR' }],
+  });
+  const mdlPayment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 1000,
+    currency: 'MDL',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 1000 }],
+  });
+
+  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, {});
+
+  assert.equal(result.expected, null);
+  assert.equal(result.paid, null);
+  assert.equal(result.rest, null);
+  assert.equal(result.credit, null);
+  assert.equal(result.label, 'De verificat');
+});
+
 test('obligation cu index (calea rapidă) dă același rezultat ca fără index, cu conversie', () => {
   const eurChild = normalizeRecord('children', {
     id: 'C-EUR',

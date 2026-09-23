@@ -59,8 +59,8 @@ export function obligation(child, month, payments, asOf = today(), index = null,
             .map(a => ({ amount: a.amount, currency: p.currency || 'MDL', date: p.date })),
         );
   const paid = sumEntriesInCurrency(paidEntries, feeCurrency, rates);
-  const unknown = !inactive && (!start || !status || fee === null || paid === null);
-  const expected = inactive ? 0 : unknown ? null : fee;
+  const unknown = (!inactive && (!start || !status || fee === null)) || paid === null;
+  const expected = unknown ? null : inactive ? 0 : fee;
   const rest = expected === null ? null : Math.max(0, cents(expected) - cents(paid)) / 100;
   const credit = expected === null ? null : Math.max(0, cents(paid) - cents(expected)) / 100;
   const [year, m] = month.split('-').map(Number);
@@ -72,10 +72,10 @@ export function obligation(child, month, payments, asOf = today(), index = null,
   // unei presupuneri; trebuie marcată explicit pentru verificare.
   const notify = !inactive && !unknown && rest !== null && rest > 0;
   const daysToDue = daysBetween(asOf, due);
-  const label = inactive
-    ? 'Fără obligație'
-    : unknown
-      ? 'De verificat'
+  const label = unknown
+    ? 'De verificat'
+    : inactive
+      ? 'Fără obligație'
       : rest === 0
         ? 'Plătit'
         : asOf > due
