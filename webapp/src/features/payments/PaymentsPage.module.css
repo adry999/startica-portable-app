@@ -1,0 +1,148 @@
+.notice {
+  color: var(--subtle);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-16);
+}
+
+.primaryButton {
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--white);
+  font-weight: 800;
+  font-size: 13px;
+  padding: var(--space-8) var(--space-16);
+  box-shadow: var(--shadow-button-primary);
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.summaryCard {
+  min-height: 96px;
+}
+
+.summaryLabel {
+  margin: 0 0 var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.summaryValue {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.filtersCard {
+  margin-bottom: var(--space-16);
+}
+
+.filtersRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.filterField select,
+.filterField input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+  color: var(--slate);
+  min-width: 140px;
+}
+
+.selectionBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--slate);
+  color: var(--white);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-10) var(--space-16);
+  margin-bottom: var(--space-12);
+  box-shadow: var(--shadow-floating-bar);
+}
+
+.badgeStack {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.rowActions {
+  display: flex;
+  gap: var(--space-10);
+}
+
+.linkButton {
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 0;
+}
+
+.linkButton:disabled {
+  color: var(--subtle);
+  cursor: not-allowed;
+}
+
+.monthsStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.monthGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.monthHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-8);
+}
+
+.monthTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  text-transform: capitalize;
+}
