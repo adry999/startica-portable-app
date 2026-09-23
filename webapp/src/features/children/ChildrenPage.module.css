@@ -1,0 +1,392 @@
+.notice {
+  color: var(--subtle);
+}
+
+.headerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: var(--shadow-button-primary);
+}
+
+.btnWhite {
+  border: none;
+  background: var(--white);
+  color: var(--slate);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-lg);
+  padding: var(--space-16) var(--space-20);
+  gap: var(--space-12);
+}
+
+.statCard strong {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  margin-right: var(--space-8);
+}
+
+.statCard span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.statMain {
+  display: flex;
+  align-items: baseline;
+}
+
+.statLink {
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 800;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-20);
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 180px;
+  background: var(--cream);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.select {
+  background: var(--white);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.selectionBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  background: var(--slate);
+  color: var(--white);
+  font-size: 13px;
+  padding: var(--space-10) var(--space-20);
+}
+
+.selectionBar button {
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.selectionDivider {
+  opacity: 0.5;
+}
+
+.selectionArchive {
+  color: var(--pink) !important;
+}
+
+.selectionCancel {
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.childCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.childCell div {
+  display: flex;
+  flex-direction: column;
+}
+
+.childCell small {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.toneOrange {
+  background: var(--orange-soft);
+}
+
+.toneMint {
+  background: var(--mint-soft);
+}
+
+.toneYellow {
+  background: var(--yellow-soft);
+}
+
+.tonePink {
+  background: var(--pink-soft);
+}
+
+.parentCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.parentCell small {
+  color: var(--subtle);
+  font-size: 12px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.rowMenu {
+  position: relative;
+  display: inline-block;
+}
+
+.rowMenu summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-xs);
+}
+
+.rowMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.rowMenuPanel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  min-width: 160px;
+  padding: var(--space-6);
+}
+
+.rowMenuPanel button {
+  border: none;
+  background: none;
+  text-align: left;
+  padding: var(--space-8) var(--space-10);
+  font-size: 13px;
+  border-radius: var(--radius-xs);
+  color: var(--slate);
+}
+
+.rowMenuPanel button:hover {
+  background: var(--neutral-soft);
+}
+
+.rowMenuDanger {
+  color: var(--raspberry) !important;
+}
+
+.backLink {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0;
+  margin-bottom: var(--space-16);
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-20);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-16);
+}
+
+.profileAvatar {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--orange-ink);
+}
+
+.profileHeadInfo {
+  flex: 1;
+}
+
+.profileName {
+  font-family: var(--font-heading);
+  font-size: 36px;
+}
+
+.profileMeta {
+  margin: var(--space-4) 0 var(--space-8);
+  font-size: 13px;
+}
+
+.profileBadges {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.profileActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.profileGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.profileLeft,
+.profileRight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.profileSection {
+  border-radius: var(--radius-lg);
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-8);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.parentContactRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) 0;
+}
+
+.parentContactRow button {
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.groupRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.groupSquare {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.miniCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-12);
+}
+
+.miniCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+}
+
+.miniCard strong {
+  font-family: var(--font-heading);
+  font-size: 20px;
+}

@@ -7,6 +7,7 @@ import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { DashboardPage } from '@features/dashboard';
+import { ChildrenPage } from '@features/children';
 
 interface Child {
   id: string;
@@ -90,7 +91,13 @@ export function App() {
 
   return (
     <AppShell view={view} onNavigate={setView} month={month} onMonthChange={setMonth}>
-      {view === 'dashboard' ? <DashboardPage month={month} onNavigate={setView} /> : <ScaffoldContent />}
+      {view === 'dashboard' ? (
+        <DashboardPage month={month} onNavigate={setView} />
+      ) : view === 'children' ? (
+        <ChildrenPage month={month} onNavigate={setView} />
+      ) : (
+        <ScaffoldContent />
+      )}
     </AppShell>
   );
 }
