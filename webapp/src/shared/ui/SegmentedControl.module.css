@@ -1,0 +1,24 @@
+.track {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  background: #f1ece2;
+  border-radius: var(--radius-pill);
+}
+
+.option {
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-14);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.active {
+  background: var(--white);
+  color: var(--slate);
+  box-shadow: var(--shadow-card);
+}

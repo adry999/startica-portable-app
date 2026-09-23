@@ -1,0 +1,97 @@
+.wrap {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-12) var(--space-16);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.table thead th {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.alignEnd {
+  text-align: right;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  text-transform: inherit;
+  letter-spacing: inherit;
+}
+
+.checkboxCell {
+  width: 32px;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background: #faf7ef;
+}
+
+tr[data-selected] {
+  background: var(--cream);
+  box-shadow: inset 4px 0 0 var(--orange);
+}
+
+.empty {
+  padding: var(--space-40);
+  text-align: center;
+  color: var(--subtle);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-12) var(--space-16);
+}
+
+.pageButtons {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.pageButton {
+  min-width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.pageButtonActive {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}

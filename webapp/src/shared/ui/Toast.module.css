@@ -1,0 +1,33 @@
+.stack {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-24);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  z-index: 1000;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  background: var(--slate);
+  color: var(--white);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-12) var(--space-16);
+  box-shadow: var(--shadow-floating-bar);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.action {
+  border: none;
+  background: none;
+  color: var(--yellow);
+  font: inherit;
+  font-weight: 800;
+  padding: 0;
+}

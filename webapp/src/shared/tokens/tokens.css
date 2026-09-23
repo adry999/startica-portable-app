@@ -1,0 +1,134 @@
+/* Fonturi locale: aplicația rulează și fără internet, deci nu depinde de
+   fonts.googleapis.com. Aceleași fișiere ca web/styles/base.css — nu se
+   duplică design-ul, doar sursa (webapp/public/assets/fonts). */
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('/assets/fonts/baloo2-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url('/assets/fonts/baloo2-latin-ext.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/assets/fonts/nunito-latin.woff2') format('woff2');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/assets/fonts/nunito-latin-ext.woff2') format('woff2');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* Culori de bază — identice cu web/styles/base.css, nu redenumite. */
+  --orange: #ef8a1d;
+  --orange-soft: #fcead3;
+  --slate: #3a4750;
+  --muted: #6b7780;
+  --mint: #a8d8be;
+  --mint-soft: #e7f4ec;
+  --yellow: #f9d257;
+  --yellow-soft: #fdf3d2;
+  --pink: #f3a6be;
+  --pink-soft: #fce9ef;
+  --raspberry: #e9527c;
+  --cream: #fffaf0;
+  --border: #ede7dc;
+  --white: #fff;
+
+  /* Adăugate pentru redesign (text pe fundaluri soft, contrast >= 4.5:1). */
+  --orange-ink: #a34f00;
+  --mint-ink: #2e6b4c;
+  --yellow-ink: #7a5d00;
+  --pink-ink: #b0284f;
+  --subtle: #9aa3a9;
+  --neutral-soft: #f4f1ea;
+  --neutral-softer: #f7f4ee;
+  --success-dot: #3f9a6b;
+  --row-divider: #f3eee5;
+  --input-border: #c9c4ba;
+
+  /* Tipografie. */
+  --font-heading: 'Baloo 2', Arial, sans-serif;
+  --font-body: Nunito, Arial, sans-serif;
+  --text-eyebrow-letter-spacing: 0.09em;
+
+  /* Raze — 8-10 (celule, butoane mici), 12 (inputuri), 14-16 (rânduri, casete),
+     20-24 (carduri), 999 (pill-uri, butoane). */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-input: 12px;
+  --radius-md: 14px;
+  --radius-md-lg: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* Umbre. */
+  --shadow-card: 0 8px 24px rgba(58, 71, 80, 0.1);
+  --shadow-button-primary: 0 8px 18px rgba(239, 138, 29, 0.32);
+  --shadow-floating-bar: 0 12px 28px rgba(58, 71, 80, 0.25);
+  --shadow-panel: -20px 0 60px rgba(58, 71, 80, 0.2);
+
+  /* Spațiere: 4 / 6 / 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 40. */
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-40: 40px;
+}
+
+/* Reset minim, oglinda web/styles/base.css: aceleași fonturi aplicate global, nu doar disponibile ca variabile. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--slate);
+  font-family: var(--font-body), Arial, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading), Arial, sans-serif;
+  margin: 0;
+  line-height: 1.15;
+}
+
+button {
+  cursor: pointer;
+  color: inherit;
+}
