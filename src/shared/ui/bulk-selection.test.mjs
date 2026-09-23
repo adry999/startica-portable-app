@@ -7,7 +7,30 @@ import {
   bulkActionResultMessage,
   pickRecordsToToggle,
   buildArchiveMutationBody,
+  createBulkSelectionController,
 } from './bulk-selection.mjs';
+
+// wireRowCheckboxes() caută caseta „selectează tot” prin document.getElementById; în Node,
+// fără DOM, stub-ul întoarce null și acea ramură rămâne pur și simplu neexercitată.
+globalThis.document ??= /** @type {any} */ ({ getElementById: () => null });
+
+/** @param {any} value */
+const asAny = value => /** @type {any} */ (value);
+
+function fakeButton() {
+  const classes = new Set();
+  return asAny({
+    hidden: false,
+    disabled: false,
+    textContent: '',
+    dataset: {},
+    classList: { contains: c => classes.has(c), add: c => classes.add(c), remove: c => classes.delete(c) },
+  });
+}
+
+function fakeCheckbox(id, checked = false) {
+  return asAny({ dataset: { id }, checked, onchange: null });
+}
 
 test('selectAllCheckboxMarkup include id-ul specific listei', () => {
   assert.equal(
@@ -52,6 +75,31 @@ test('pickRecordsToToggle sare peste id-uri lipsă și peste fișe deja în star
   ];
   assert.deepEqual(pickRecordsToToggle(['a', 'b', 'missing'], records, true), [{ id: 'a', archived: false }]);
   assert.deepEqual(pickRecordsToToggle(['b', 'c'], records, false), [{ id: 'b', archived: true }]);
+});
+
+test('butonul de acțiune în masă e ascuns cât timp nu e nimic selectat, și apare la prima bifare', () => {
+  const bulkButton = fakeButton();
+  const checkbox = fakeCheckbox('a');
+  const table = asAny({ querySelectorAll: selector => (selector === '.row-select' ? [checkbox] : []) });
+  const controller = createBulkSelectionController({
+    recordType: 'children',
+    typeLabel: 'copii',
+    elements: { table, selectAllId: 'childrenSelectAll', bulkButton },
+    readRecords: () => [],
+    submitMutation: async () => ({}),
+    showNotice: () => {},
+  });
+
+  controller.wireRowCheckboxes();
+  assert.equal(bulkButton.hidden, true);
+
+  checkbox.checked = true;
+  checkbox.onchange();
+  assert.equal(bulkButton.hidden, false);
+
+  checkbox.checked = false;
+  checkbox.onchange();
+  assert.equal(bulkButton.hidden, true);
 });
 
 test('buildArchiveMutationBody pune archivedAt doar când se arhivează', () => {

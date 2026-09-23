@@ -93,6 +93,8 @@ export function createBulkSelectionController({
   function updateBulkActionButton() {
     if (!bulkButton) return;
     cancelPendingConfirmation(bulkButton);
+    // Dezactivat singur tot ocupa loc în toolbar; fără nimic selectat, nu are ce acțiune să arate.
+    bulkButton.hidden = selectedIds.size === 0;
     bulkButton.disabled = selectedIds.size === 0;
     bulkButton.textContent = bulkActionButtonLabel({
       selectedCount: selectedIds.size,
