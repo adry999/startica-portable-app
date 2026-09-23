@@ -1,0 +1,243 @@
+.notice {
+  color: var(--subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-16);
+}
+
+.tileOpen {
+  outline: 2px solid var(--slate);
+  outline-offset: -2px;
+}
+
+.tileHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.tileName {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+}
+
+.tilePill {
+  flex: none;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-8);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tileOccupancy {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  margin: var(--space-4) 0;
+}
+
+.occupancyBar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.6);
+  overflow: hidden;
+  margin-bottom: var(--space-8);
+}
+
+.occupancyBar span {
+  display: block;
+  height: 100%;
+  background: var(--slate);
+}
+
+.tileMeta {
+  margin: 0 0 var(--space-10);
+  font-size: 13px;
+}
+
+.avatarStack {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
+  margin-right: -8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+}
+
+.avatarExtra {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--neutral-soft);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 10px;
+  margin-left: var(--space-4);
+}
+
+.newTile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.newTileForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.newTileForm input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+}
+
+.primaryButton {
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--white);
+  font-weight: 800;
+  font-size: 13px;
+  padding: var(--space-8) var(--space-16);
+  box-shadow: var(--shadow-button-primary);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.editor {
+  margin-top: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.editorRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.field input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+  color: var(--slate);
+  min-width: 160px;
+}
+
+.editorSubtitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.emptyMembers {
+  margin: 0;
+  padding: var(--space-16);
+  border: 1px dashed var(--mint);
+  border-radius: var(--radius-md);
+  color: var(--mint-ink);
+  text-align: center;
+}
+
+.memberGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8) var(--space-16);
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  background: var(--neutral-softer);
+  border-radius: var(--radius-md);
+  padding: var(--space-8) var(--space-10);
+}
+
+.memberName {
+  flex: 1;
+  font-weight: 700;
+}
+
+.memberAge {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.removeButton {
+  border: none;
+  background: none;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--muted);
+  line-height: 1;
+  padding: 0 var(--space-4);
+}
+
+.addRow {
+  display: flex;
+  gap: var(--space-10);
+}
+
+.addRow select {
+  flex: 1;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+}
+
+.deleteRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.deleteButton {
+  border: none;
+  background: none;
+  color: var(--raspberry);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 0;
+}
