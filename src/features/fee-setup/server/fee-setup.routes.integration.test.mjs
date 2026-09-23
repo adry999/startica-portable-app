@@ -56,7 +56,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   assert.equal(after.expected, 2000);
   assert.equal(after.due, '2026-09-14', 'Scadența vine tot din data contractului.');
   assert.equal(response.state.children[0].groupId, 'GRP-mica');
-  assert.deepEqual(response.state.children[0].feeHistory, [{ from: '2025-02', amount: 2000 }]);
+  assert.deepEqual(response.state.children[0].feeHistory, [{ from: '2025-02', amount: 2000, currency: 'MDL' }]);
   assert.deepEqual(response.state.children[0].statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 
   // O singură revizie pentru toate fișele, plus copia obligatorie și jurnalul.

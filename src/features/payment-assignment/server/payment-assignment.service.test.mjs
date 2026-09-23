@@ -33,7 +33,7 @@ test('asociază achitarea, păstrează restul câmpurilor și o trece în istori
   service.assignPaymentsToChildren(assignRequest([{ id: 'PAY-MIHAI', childId: 'CHILD-MIHAI' }]));
 
   const assigned = storedPayment('PAY-MIHAI');
-  assert.deepEqual(assigned, { ...unassigned, childId: 'CHILD-MIHAI' });
+  assert.deepEqual(assigned, { ...unassigned, childId: 'CHILD-MIHAI', currency: 'MDL' });
   assert.deepEqual(
     transaction.calls.map(call => call.options),
     [{ action: 'asociere-achitari', backupBefore: true }],

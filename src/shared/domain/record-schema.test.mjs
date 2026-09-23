@@ -382,3 +382,71 @@ test('redactSensitiveFields înlocuiește o valoare medicală ne-goală, dar las
   assert.equal(redactSensitiveFields('payments', null), null);
   assert.equal(redactSensitiveFields(null, { healthNotes: 'x' }).healthNotes, 'x');
 });
+
+test('normalizeRecord(children) pune currency "MDL" pe o intrare feeHistory fără monedă', () => {
+  const record = normalizeRecord('children', {
+    id: 'C-1',
+    name: 'Ana',
+    parent: 'Maria',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  assert.deepEqual(record.feeHistory, [{ from: '2026-09', amount: 2000, currency: 'MDL' }]);
+});
+
+test('normalizeRecord(children) păstrează currency EUR când e trimisă explicit', () => {
+  const record = normalizeRecord('children', {
+    id: 'C-1',
+    name: 'Ana',
+    parent: 'Maria',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  assert.deepEqual(record.feeHistory, [{ from: '2026-09', amount: 500, currency: 'EUR' }]);
+});
+
+test('normalizeRecord(children) respinge o monedă necunoscută în feeHistory', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('children', {
+        id: 'C-1',
+        name: 'Ana',
+        parent: 'Maria',
+        feeHistory: [{ from: '2026-09', amount: 500, currency: 'USD' }],
+      }),
+    /monedă/i,
+  );
+});
+
+test('normalizeRecord(payments) pune currency "MDL" implicit', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 500,
+    method: 'Cash',
+  });
+  assert.equal(record.currency, 'MDL');
+});
+
+test('normalizeRecord(payments) păstrează currency EUR când e trimisă explicit', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 500,
+    method: 'Cash',
+    currency: 'EUR',
+  });
+  assert.equal(record.currency, 'EUR');
+});
+
+test('normalizeRecord(payments) respinge o monedă necunoscută', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('payments', {
+        id: 'P-1',
+        date: '2026-09-15',
+        amount: 500,
+        method: 'Cash',
+        currency: 'USD',
+      }),
+    /monedă/i,
+  );
+});

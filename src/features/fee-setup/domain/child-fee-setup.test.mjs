@@ -25,7 +25,7 @@ function baseChild(overrides = {}) {
 test('scrie taxa și statutul în istoric pe luna indicată și actualizează valoarea curentă', () => {
   const updated = applyChildFeeSetup(baseChild(), { from: '2025-02', fee: 2000, status: 'Activ' });
   assert.equal(updated.fee, 2000);
-  assert.deepEqual(updated.feeHistory, [{ from: '2025-02', amount: 2000 }]);
+  assert.deepEqual(updated.feeHistory, [{ from: '2025-02', amount: 2000, currency: 'MDL' }]);
   assert.equal(updated.status, 'Activ');
   assert.deepEqual(updated.statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 });
@@ -33,7 +33,7 @@ test('scrie taxa și statutul în istoric pe luna indicată și actualizează va
 test('o a doua completare pe aceeași lună rescrie intrarea din istoric, nu o dublează', () => {
   const first = applyChildFeeSetup(baseChild(), { from: '2025-02', fee: 2000, status: 'Activ' });
   const second = applyChildFeeSetup(first, { from: '2025-02', fee: 3000, status: 'Suspendat' });
-  assert.deepEqual(second.feeHistory, [{ from: '2025-02', amount: 3000 }]);
+  assert.deepEqual(second.feeHistory, [{ from: '2025-02', amount: 3000, currency: 'MDL' }]);
   assert.deepEqual(second.statusHistory, [{ from: '2025-02', status: 'Suspendat' }]);
 });
 
@@ -66,7 +66,7 @@ test('câmpurile netrimise rămân neschimbate', () => {
   assert.equal(untouched.fee, 2000);
   assert.equal(untouched.groupId, 'GRP-mica');
   assert.equal(untouched.status, 'Activ');
-  assert.deepEqual(untouched.feeHistory, [{ from: '2025-02', amount: 2000 }]);
+  assert.deepEqual(untouched.feeHistory, [{ from: '2025-02', amount: 2000, currency: 'MDL' }]);
   assert.deepEqual(untouched.statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 });
 

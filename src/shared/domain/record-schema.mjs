@@ -8,6 +8,7 @@ export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
 // situație nu este confirmată; nu este o stare din care se pot calcula
 // obligații, deci nu apare în statusHistory.
 export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
+export const CURRENCIES = ['MDL', 'EUR'];
 // Drumul unei vizite: „reprogramată” e un eveniment în history, nu un statut propriu.
 export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'];
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -102,6 +103,7 @@ const FIELDS = {
     'method',
     'tenders',
     'amount',
+    'currency',
     'allocations',
     'type',
     'notes',
@@ -236,8 +238,11 @@ export function normalizeRecord(type, input) {
           `${field}: lună invalidă sau repetată.`,
         );
         seen.add(historyEntry.from);
-        if (valueKey === 'amount') requireAmount(historyEntry.amount, 'Taxa istorică', true);
-        else requireThat(STATUS_HISTORY_VALUES.includes(historyEntry.status), 'Statut istoric invalid.');
+        if (valueKey === 'amount') {
+          requireAmount(historyEntry.amount, 'Taxa istorică', true);
+          historyEntry.currency ??= 'MDL';
+          requireThat(CURRENCIES.includes(historyEntry.currency), `${field}: monedă necunoscută.`);
+        } else requireThat(STATUS_HISTORY_VALUES.includes(historyEntry.status), 'Statut istoric invalid.');
       }
       record[field].sort((a, b) => a.from.localeCompare(b.from));
     }
@@ -333,6 +338,8 @@ export function normalizeRecord(type, input) {
       record.childId ??= '';
       text(record.childId, 'ID copil');
       if (record.childId) requireThat(/^[A-Za-z0-9_-]{1,100}$/.test(record.childId), 'ID copil invalid.');
+      record.currency ??= 'MDL';
+      requireThat(CURRENCIES.includes(record.currency), 'Monedă necunoscută.');
       record.method ||= 'Cash';
       record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');
