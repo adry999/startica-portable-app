@@ -23,6 +23,8 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 - Zero dependențe runtime. SheetJS rămâne vendorizat. Ca devDependencies sunt permise doar `prettier` și `typescript` (numai pentru `tsc --noEmit`).
 - Fără framework, bundler sau transpilare: ce e în repo rulează exact așa la client.
 
+**Excepție (din 2026-09-23, vezi Decision log): `webapp/`.** Stratul de interfață web e în redesign pe React+Vite+TypeScript, pe branch `redesign/react-vite` — vezi `docs/superpowers/specs/2026-09-23-ui-redesign-react-migration-design.md`. Doar `webapp/` poate folosi React, Vite, TypeScript real, TanStack Query, Vitest, React Testing Library ca devDependencies. Restul stack-ului de mai sus (backend, `server/`, `domain/`, teste backend) rămâne neschimbat.
+
 ### Stadiul migrării
 
 - Planul din `docs/arhitectura/README.md` (§6, pașii 0–12) e aplicat integral. Codul nou intră direct în structura țintă.
@@ -144,3 +146,7 @@ const attendanceReport = createAttendanceReportController({
 ```
 feat(attendance-report): add monthly attendance summary
 ```
+
+## Decision log
+
+- **2026-09-23 — React+Vite doar pentru `webapp/`.** Motiv: redesign complet (14 ecrane, din handoff claude.ai/design) expune o problemă recurentă — componente reimplementate diferit de fiecare dată (tabele, sortare/filtrare), agravată de faptul că implementarea se face în sesiuni/agenți diferiți, unde o convenție scrisă e ușor de ocolit. O graniță de componente (import obligatoriu) rezolvă structural, nu doar prin disciplină. Respins explicit: Nuxt/Supabase (proiect separat, deja abandonat 2026-09-22). Detalii: `docs/superpowers/specs/2026-09-23-ui-redesign-react-migration-design.md`.
