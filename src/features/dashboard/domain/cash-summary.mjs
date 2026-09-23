@@ -29,10 +29,9 @@ function toMdl(amount, currency, date, rates) {
  */
 export function summarizeCashForMonth(records, month, rates = {}) {
   const payments = records.payments.filter(p => !p.archived && p.date.startsWith(month));
-  const income =
-    total(
-      payments.map(p => ({ amount: toMdl(p.amount, /** @type {any} */ (p).currency || 'MDL', p.date, rates) })),
-    );
+  const income = total(
+    payments.map(p => ({ amount: toMdl(p.amount, /** @type {any} */ (p).currency || 'MDL', p.date, rates) })),
+  );
   const byMethod = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
   for (const p of payments) {
     const paymentCurrency = /** @type {any} */ (p).currency || 'MDL';

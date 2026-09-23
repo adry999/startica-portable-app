@@ -79,7 +79,7 @@ test('evaluateChildrenForMonth trece cursul mai departe la obligation() pentru c
   };
   const rates = { '2026-09-10': 20.1352 };
 
-  const [evaluation] = evaluateChildrenForMonth(recordsData, '2026-09', '2026-09-30', rates);
+  const [evaluation] = evaluateChildrenForMonth(/** @type {any} */ (recordsData), '2026-09', '2026-09-30', rates);
 
   assert.equal(evaluation.obligation.paid, 100);
 });

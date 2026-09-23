@@ -132,7 +132,7 @@ test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () =>
 });
 
 test('summarizeCashForMonth convertește o plată EUR în MDL cu cursul zilei ei', () => {
-  const records = {
+  const records = asAny({
     payments: [
       normalizeRecord('payments', {
         id: 'P-EUR',
@@ -145,7 +145,7 @@ test('summarizeCashForMonth convertește o plată EUR în MDL cu cursul zilei ei
       }),
     ],
     expenses: [],
-  };
+  });
   const rates = { '2026-09-10': 20 };
 
   const summary = summarizeCashForMonth(records, '2026-09', rates);
@@ -154,7 +154,7 @@ test('summarizeCashForMonth convertește o plată EUR în MDL cu cursul zilei ei
 });
 
 test('summarizeCashForMonth fără curs cunoscut nu convertește (1:1), nu exclude plata', () => {
-  const records = {
+  const records = asAny({
     payments: [
       normalizeRecord('payments', {
         id: 'P-EUR',
@@ -167,7 +167,7 @@ test('summarizeCashForMonth fără curs cunoscut nu convertește (1:1), nu exclu
       }),
     ],
     expenses: [],
-  };
+  });
 
   const summary = summarizeCashForMonth(records, '2026-09', {});
 
@@ -175,7 +175,7 @@ test('summarizeCashForMonth fără curs cunoscut nu convertește (1:1), nu exclu
 });
 
 test('summarizeCashForMonth pe plăți MDL rămâne exact ca înainte, fără rates', () => {
-  const records = {
+  const records = asAny({
     payments: [
       normalizeRecord('payments', {
         id: 'P-MDL',
@@ -187,7 +187,7 @@ test('summarizeCashForMonth pe plăți MDL rămâne exact ca înainte, fără ra
       }),
     ],
     expenses: [],
-  };
+  });
 
   const summary = summarizeCashForMonth(records, '2026-09');
 

@@ -20,6 +20,7 @@ export async function fetchBnmEurRate({ fetch: fetchImpl, date }) {
     if (rate === null) return { error: 'Răspunsul BNM nu conține un curs EUR valid.' };
     return { rate };
   } catch (error) {
-    return { error: 'Fără internet sau BNM indisponibil: ' + (/** @type {Error} */ (error).message || 'eroare necunoscută') };
+    const message = /** @type {Error} */ (error).message || 'eroare necunoscută';
+    return { error: 'Fără internet sau BNM indisponibil: ' + message };
   }
 }

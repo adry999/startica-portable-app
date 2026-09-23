@@ -55,7 +55,8 @@ export function eurToMdlRate(rates, date) {
   const earlierDates = Object.keys(rates)
     .filter(known => known <= date)
     .sort();
-  return earlierDates.length ? rates[earlierDates.at(-1)] : undefined;
+  const lastKnown = earlierDates.at(-1);
+  return lastKnown === undefined ? undefined : rates[lastKnown];
 }
 
 /**
@@ -66,7 +67,8 @@ export function eurToMdlRate(rates, date) {
  */
 export function latestKnownRate(rates) {
   const dates = Object.keys(rates).sort();
-  return dates.length ? rates[dates.at(-1)] : undefined;
+  const lastDate = dates.at(-1);
+  return lastDate === undefined ? undefined : rates[lastDate];
 }
 
 /**
@@ -100,9 +102,10 @@ export function bnmDateParam(dateKey) {
  * @returns {number | null}
  */
 export function parseBnmEurRate(xmlText) {
-  const match = /<Valute[^>]*>(?:(?!<\/Valute>)[\s\S])*?<CharCode>EUR<\/CharCode>[\s\S]*?<Value>([\d.,]+)<\/Value>[\s\S]*?<\/Valute>/.exec(
-    xmlText || '',
-  );
+  const match =
+    /<Valute[^>]*>(?:(?!<\/Valute>)[\s\S])*?<CharCode>EUR<\/CharCode>[\s\S]*?<Value>([\d.,]+)<\/Value>[\s\S]*?<\/Valute>/.exec(
+      xmlText || '',
+    );
   if (!match) return null;
   const rate = Number(match[1].replace(',', '.'));
   return Number.isFinite(rate) && rate > 0 ? rate : null;
