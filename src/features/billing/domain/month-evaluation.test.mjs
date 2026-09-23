@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { evaluateChildrenForMonth } from './month-evaluation.mjs';
 
 /**
@@ -51,4 +52,34 @@ test('obligation ține cont de achitările existente, ca la un apel direct', () 
 test('asOf implicit este ziua curentă', () => {
   const rows = evaluateChildrenForMonth(records([baseChild()], []), '2025-02');
   assert.ok(rows[0].obligation.due);
+});
+
+test('evaluateChildrenForMonth trece cursul mai departe la obligation() pentru conversie', () => {
+  const recordsData = {
+    children: [
+      normalizeRecord('children', {
+        id: 'C-EUR',
+        name: 'Ion',
+        status: 'Activ',
+        attendanceDate: '2026-09-01',
+        feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+      }),
+    ],
+    payments: [
+      normalizeRecord('payments', {
+        id: 'P-MDL',
+        childId: 'C-EUR',
+        date: '2026-09-10',
+        amount: 2013.52,
+        currency: 'MDL',
+        method: 'Cash',
+        allocations: [{ month: '2026-09', amount: 2013.52 }],
+      }),
+    ],
+  };
+  const rates = { '2026-09-10': 20.1352 };
+
+  const [evaluation] = evaluateChildrenForMonth(recordsData, '2026-09', '2026-09-30', rates);
+
+  assert.equal(evaluation.obligation.paid, 100);
 });

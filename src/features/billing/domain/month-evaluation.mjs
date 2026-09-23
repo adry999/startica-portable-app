@@ -4,6 +4,7 @@ import { obligation } from '#shared/domain/tuition-obligation.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
+/** @typedef {import('#shared/domain/exchange-rates.mjs').ExchangeRates} ExchangeRates */
 /** @typedef {ReturnType<typeof obligation>} ChildObligation */
 /** @typedef {{ child: Child, obligation: ChildObligation }} ChildMonthEvaluation */
 
@@ -14,12 +15,13 @@ import { obligation } from '#shared/domain/tuition-obligation.mjs';
  * @param {RecordsSnapshot} records
  * @param {string} month
  * @param {string} [asOf]
+ * @param {ExchangeRates} [rates]
  * @returns {ChildMonthEvaluation[]}
  */
-export function evaluateChildrenForMonth(records, month, asOf = today()) {
+export function evaluateChildrenForMonth(records, month, asOf = today(), rates = {}) {
   const index = paymentIndex(records.payments, asOf);
   return records.children.map(child => ({
     child,
-    obligation: obligation(child, month, records.payments, asOf, index),
+    obligation: obligation(child, month, records.payments, asOf, index, rates),
   }));
 }
