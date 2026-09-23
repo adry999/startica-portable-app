@@ -1,4 +1,5 @@
 import { setNavCount } from '#shared/ui/nav-count-badge.mjs';
+import { createChartTooltip } from '#shared/ui/chart-tooltip.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { createNotificationsPort, createRememberedKeysPort } from './browser-ports.mjs';
 import { createAuditLogApi, createAuditLogController, createAuditLogView } from '#features/audit-log/index.web.mjs';
@@ -299,6 +300,7 @@ export function composeScreens(dependencies) {
 
   // ─── Ecranele randate la fiecare reîncărcare a datelor ──────────────────────
 
+  createChartTooltip({ container: element('bars') });
   const renderDashboard = createDashboardView({
     elements: {
       incomeStat: element('incomeStat'),

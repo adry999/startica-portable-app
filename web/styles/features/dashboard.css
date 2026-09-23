@@ -115,6 +115,22 @@
   gap: 8px;
   padding-top: 20px;
 }
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: var(--slate);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.chart-tooltip[hidden] {
+  display: none;
+}
 .bar {
   height: 100%;
   display: flex;
@@ -227,6 +243,7 @@
   margin: 0;
 }
 .revenue-panel {
+  position: relative;
   min-height: 318px;
 }
 .attention-panel {

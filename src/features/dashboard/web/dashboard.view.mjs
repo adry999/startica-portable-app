@@ -204,7 +204,7 @@ export function createDashboardView({
     bars.innerHTML = history
       .map(
         r =>
-          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" title="${r.month}: ${formatMoney(r.value)}"><i data-height="${(r.value / max) * 100}"></i><small>${r.month.slice(5)}</small></div>`,
+          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" tabindex="0" data-month="${r.month}" data-value="${r.value}"><i data-height="${(r.value / max) * 100}"></i><small>${r.month.slice(5)}</small></div>`,
       )
       .join('');
     // CSP nu are 'unsafe-inline' pe style-src; înălțimea vine din date, deci
