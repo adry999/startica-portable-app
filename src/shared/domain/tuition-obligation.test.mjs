@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeRecord } from './record-schema.mjs';
 import { obligation, dueDayFor, firstUnpaidMonth } from './tuition-obligation.mjs';
+import { paymentIndex } from './payment-allocations.mjs';
 
 const child = () =>
   normalizeRecord('children', {
@@ -120,6 +121,160 @@ test('Încasări după data reală, repartizări, avans, scadență și taxe ist
   assert.equal(obligation({ ...childRecord, withdrawalDate: '2026-09-20' }, '2026-10', []).expected, 0);
   assert.equal(obligation({ ...childRecord, dueDay: 31 }, '2027-02', []).due, '2027-02-28');
   assert.equal(obligation(childRecord, '2026-09', [{ ...paymentRecord, date: '2026-10-01' }], '2026-09-08').paid, 0);
+});
+
+test('obligation: taxă EUR, achitare EUR — fără conversie, scade direct', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const eurPayment = normalizeRecord('payments', {
+    id: 'P-EUR',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 300,
+    currency: 'EUR',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 300 }],
+  });
+
+  const result = obligation(eurChild, '2026-09', [eurPayment], '2026-09-30');
+
+  assert.equal(result.expected, 500);
+  assert.equal(result.paid, 300);
+  assert.equal(result.rest, 200);
+});
+
+test('obligation: taxă EUR, achitare MDL — convertește MDL în EUR cu cursul zilei achitării', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const mdlPayment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 2013.52,
+    currency: 'MDL',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 2013.52 }],
+  });
+  const rates = { '2026-09-10': 20.1352 };
+
+  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+
+  assert.equal(result.expected, 500);
+  assert.equal(result.paid, 100);
+  assert.equal(result.rest, 400);
+});
+
+test('obligation: conversie folosește cursul zilei achitării, nu al zilei "asOf"', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const mdlPayment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-EUR',
+    date: '2026-09-05',
+    amount: 1000,
+    currency: 'MDL',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 1000 }],
+  });
+  // Curs diferit la data plății față de curs "azi" — trebuie folosit cel de la 09-05.
+  const rates = { '2026-09-05': 20, '2026-09-30': 25 };
+
+  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+
+  assert.equal(result.paid, 50); // 1000 / 20, nu 1000 / 25
+});
+
+test('obligation: fără niciun curs cunoscut pentru o conversie necesară, obligația devine "De verificat"', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const mdlPayment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 1000,
+    currency: 'MDL',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 1000 }],
+  });
+
+  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, {});
+
+  assert.equal(result.expected, null);
+  assert.equal(result.paid, null);
+  assert.equal(result.rest, null);
+  assert.equal(result.label, 'De verificat');
+});
+
+test('obligation cu index (calea rapidă) dă același rezultat ca fără index, cu conversie', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const mdlPayment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 2013.52,
+    currency: 'MDL',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 2013.52 }],
+  });
+  const rates = { '2026-09-10': 20.1352 };
+  const index = paymentIndex([mdlPayment], '2026-09-30');
+
+  const withIndex = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', index, rates);
+  const withoutIndex = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+
+  assert.equal(withIndex.paid, withoutIndex.paid);
+  assert.equal(withIndex.paid, 100);
+});
+
+test('obligation: fișă existentă fără currency (date vechi) se comportă ca MDL, neschimbat', () => {
+  const legacyChild = normalizeRecord('children', {
+    id: 'C-OLD',
+    name: 'Maria',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  const legacyPayment = normalizeRecord('payments', {
+    id: 'P-OLD',
+    childId: 'C-OLD',
+    date: '2026-09-10',
+    amount: 2000,
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 2000 }],
+  });
+
+  const result = obligation(legacyChild, '2026-09', [legacyPayment], '2026-09-30');
+
+  assert.equal(result.expected, 2000);
+  assert.equal(result.paid, 2000);
+  assert.equal(result.rest, 0);
+  assert.equal(result.label, 'Plătit');
 });
 
 test('firstUnpaidMonth caută până la 120 de luni, pentru o frecventare de peste 5 ani', () => {

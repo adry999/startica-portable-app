@@ -1,6 +1,7 @@
 import { today, shiftDays, daysBetween } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 import { allocations } from './payment-allocations.mjs';
+import { eurToMdlRate, convertAmount } from './exchange-rates.mjs';
 
 // Cu câte zile înainte de scadență trece eticheta pe „Scadent în curând”.
 const NOTICE_DAYS = 3;
@@ -10,33 +11,55 @@ export function dueDayFor(child) {
   const fromContract = Number(child.contractDate?.slice(8, 10));
   return fromContract >= 1 && fromContract <= 31 ? fromContract : child.dueDay || 10;
 }
+// Sumează o listă de intrări (din paymentIndex, sau construită direct din
+// `payments` când nu există index) în moneda taxei, convertind fiecare la
+// cursul zilei EI, nu la un curs unic pentru toată suma — altfel două plăți
+// din zile cu curs diferit s-ar aduna greșit.
+/**
+ * @param {{ amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string }[]} entries
+ * @param {import('#shared/contracts/record-types.mjs').Currency} targetCurrency
+ * @param {import('./exchange-rates.mjs').ExchangeRates} rates
+ * @returns {number | null}
+ */
+function sumEntriesInCurrency(entries, targetCurrency, rates) {
+  let sumCents = 0;
+  for (const entry of entries) {
+    const converted =
+      entry.currency === targetCurrency
+        ? entry.amount
+        : convertAmount(entry.amount, entry.currency, targetCurrency, eurToMdlRate(rates, entry.date));
+    if (converted === null) return null;
+    sumCents += cents(converted);
+  }
+  return sumCents / 100;
+}
 // `index` este opțional: dacă lipsește, se calculează pe loc, ca apelurile
 // izolate (un singur copil, o singură lună) să rămână simple.
-/** @param {Map<string, Map<string, number>> | null} [index] */
-export function obligation(child, month, payments, asOf = today(), index = null) {
+/** @param {Map<string, Map<string, {amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string}[]>> | null} [index] */
+export function obligation(child, month, payments, asOf = today(), index = null, rates = {}) {
   const start = child.attendanceDate?.slice(0, 7),
     end = child.withdrawalDate?.slice(0, 7);
   const history = [...(child.statusHistory || [])]
     .sort((a, b) => a.from.localeCompare(b.from))
     .filter(r => r.from <= month);
   const status = history.at(-1)?.status || (!child.statusHistory?.length && child.status === 'Activ' ? 'Activ' : null);
-  const paid = index
-    ? (index.get(child.id)?.get(month) || 0) / 100
-    : payments
-        .filter(p => !p.archived && p.childId === child.id && p.date <= asOf)
-        .reduce(
-          (sum, p) =>
-            sum +
-            allocations(p)
-              .filter(a => a.month === month)
-              .reduce((n, a) => n + cents(a.amount), 0),
-          0,
-        ) / 100;
   const inactive = (start && month < start) || (end && month > end) || status === 'Suspendat' || status === 'Retras';
   const fees = [...(child.feeHistory || [])].sort((a, b) => a.from.localeCompare(b.from));
   // O taxă curentă fără dată de aplicare nu se aplică niciodată lunilor trecute.
-  const fee = fees.filter(f => f.from <= month).at(-1)?.amount ?? null;
-  const unknown = !inactive && (!start || !status || fee === null);
+  const feeEntry = fees.filter(f => f.from <= month).at(-1) ?? null;
+  const fee = feeEntry?.amount ?? null;
+  const feeCurrency = feeEntry?.currency ?? 'MDL';
+  const paidEntries = index
+    ? (index.get(child.id)?.get(month) ?? [])
+    : payments
+        .filter(p => !p.archived && p.childId === child.id && p.date <= asOf)
+        .flatMap(p =>
+          allocations(p)
+            .filter(a => a.month === month)
+            .map(a => ({ amount: a.amount, currency: p.currency || 'MDL', date: p.date })),
+        );
+  const paid = sumEntriesInCurrency(paidEntries, feeCurrency, rates);
+  const unknown = !inactive && (!start || !status || fee === null || paid === null);
   const expected = inactive ? 0 : unknown ? null : fee;
   const rest = expected === null ? null : Math.max(0, cents(expected) - cents(paid)) / 100;
   const credit = expected === null ? null : Math.max(0, cents(paid) - cents(expected)) / 100;
