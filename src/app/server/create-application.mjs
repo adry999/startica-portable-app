@@ -26,6 +26,7 @@ import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
+import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
 import { createNotificationSettingsRoutes } from './notification-settings.routes.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -153,6 +154,11 @@ export function createApplication(options = {}) {
       readSetting,
       writeSetting: settings.setSetting,
       auditTrail: auditLogRepository,
+    }),
+    ...createExchangeRatesRoutes({
+      readSetting,
+      writeSetting: settings.setSetting,
+      fetch: options.fetch ?? globalThis.fetch,
     }),
   ];
 
