@@ -22,3 +22,6 @@ Livrare/
 # Compilate cu launcher/build-launcher.ps1, nu se urmaresc in git.
 launcher/bin/
 launcher/obj/
+
+# ─── Worktree-uri de lucru ────────────────────────────────────────────────────
+.worktrees/
