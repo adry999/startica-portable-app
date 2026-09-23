@@ -25,3 +25,6 @@ launcher/obj/
 
 # ─── Worktree-uri de lucru ────────────────────────────────────────────────────
 .worktrees/
+
+# ─── webapp/ (React+Vite, redesign/react-vite) ───────────────────────────────
+webapp/dist/

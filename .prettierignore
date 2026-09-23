@@ -13,3 +13,6 @@ web/index.html
 # Documentație și resurse grafice: în afara scopului acestui pas.
 *.md
 web/assets/
+
+# webapp/: build generat, nu se reformatează.
+webapp/dist/

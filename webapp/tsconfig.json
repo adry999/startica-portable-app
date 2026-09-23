@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    // allowJs sans checkJs: resolve @domain/*.mjs imports from the backend's src/shared/domain
+    // (typed via JSDoc under the backend's own, more lenient tsconfig) without re-linting
+    // those files under webapp's stricter strict/noImplicitAny.
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@shared/*": ["src/shared/*"],
+      "@features/*": ["src/features/*"],
+      "@domain/*": ["../src/shared/domain/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}
