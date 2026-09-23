@@ -8,6 +8,8 @@ export type DateKey = string;
 export type ChildStatus = 'Activ' | 'Suspendat' | 'Retras' | 'De verificat';
 export type EffectiveChildStatus = Exclude<ChildStatus, 'De verificat'>;
 
+export type Currency = 'MDL' | 'EUR';
+
 export interface Child {
   id: string;
   name: string;
@@ -26,7 +28,7 @@ export interface Child {
   status: ChildStatus;
   statusHistory: { from: MonthKey; status: EffectiveChildStatus }[];
   fee: number | null;
-  feeHistory: { from: MonthKey; amount: number }[];
+  feeHistory: { from: MonthKey; amount: number; currency?: Currency }[];
   dueDay: number;
   notes?: string;
   verification?: string;
@@ -57,6 +59,8 @@ export interface Payment {
   method: string;
   tenders?: PaymentTender[];
   amount: number;
+  /** Implicit 'MDL' dacă lipsește — vezi normalizeRecord(). */
+  currency?: Currency;
   allocations: PaymentAllocation[];
   type?: string;
   notes?: string;
