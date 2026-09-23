@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { obligation } from '#shared/domain/tuition-obligation.mjs';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { summarizeCashForMonth, sumUnallocatedAdvance } from './cash-summary.mjs';
 
 /** @param {any} value */
@@ -128,4 +129,84 @@ test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () =>
     summarizeCashForMonth(asAny({ ...records, payments: [{ ...payment, archived: true }] }), '2026-09').income,
     0,
   );
+});
+
+test('summarizeCashForMonth convertește o plată EUR în MDL cu cursul zilei ei', () => {
+  const records = {
+    payments: [
+      normalizeRecord('payments', {
+        id: 'P-EUR',
+        childId: 'C-1',
+        date: '2026-09-10',
+        amount: 100,
+        currency: 'EUR',
+        method: 'Cash',
+        allocations: [{ month: '2026-09', amount: 100 }],
+      }),
+    ],
+    expenses: [],
+  };
+  const rates = { '2026-09-10': 20 };
+
+  const summary = summarizeCashForMonth(records, '2026-09', rates);
+
+  assert.equal(summary.income, 2000); // 100 EUR * 20
+});
+
+test('summarizeCashForMonth fără curs cunoscut nu convertește (1:1), nu exclude plata', () => {
+  const records = {
+    payments: [
+      normalizeRecord('payments', {
+        id: 'P-EUR',
+        childId: 'C-1',
+        date: '2026-09-10',
+        amount: 100,
+        currency: 'EUR',
+        method: 'Cash',
+        allocations: [{ month: '2026-09', amount: 100 }],
+      }),
+    ],
+    expenses: [],
+  };
+
+  const summary = summarizeCashForMonth(records, '2026-09', {});
+
+  assert.equal(summary.income, 100);
+});
+
+test('summarizeCashForMonth pe plăți MDL rămâne exact ca înainte, fără rates', () => {
+  const records = {
+    payments: [
+      normalizeRecord('payments', {
+        id: 'P-MDL',
+        childId: 'C-1',
+        date: '2026-09-10',
+        amount: 2000,
+        method: 'Cash',
+        allocations: [{ month: '2026-09', amount: 2000 }],
+      }),
+    ],
+    expenses: [],
+  };
+
+  const summary = summarizeCashForMonth(records, '2026-09');
+
+  assert.equal(summary.income, 2000);
+});
+
+test('sumUnallocatedAdvance convertește avansul unei plăți EUR cu cursul zilei ei', () => {
+  const payments = [
+    normalizeRecord('payments', {
+      id: 'P-EUR',
+      childId: 'C-1',
+      date: '2026-09-10',
+      amount: 100,
+      currency: 'EUR',
+      method: 'Cash',
+      allocations: [],
+    }),
+  ];
+  const rates = { '2026-09-10': 20 };
+
+  assert.equal(sumUnallocatedAdvance(payments, '2026-09-30', rates), 2000);
 });
