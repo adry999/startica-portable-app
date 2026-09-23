@@ -8,6 +8,7 @@ import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { DashboardPage } from '@features/dashboard';
 import { ChildrenPage } from '@features/children';
+import { GroupsPage } from '@features/groups';
 
 interface Child {
   id: string;
@@ -95,6 +96,8 @@ export function App() {
         <DashboardPage month={month} onNavigate={setView} />
       ) : view === 'children' ? (
         <ChildrenPage month={month} onNavigate={setView} />
+      ) : view === 'groups' ? (
+        <GroupsPage />
       ) : (
         <ScaffoldContent />
       )}

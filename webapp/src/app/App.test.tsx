@@ -41,8 +41,8 @@ describe('App', () => {
         <App />
       </ToastProvider>,
     );
-    // „Copii” are acum ecranul real (pasul 5); „Grupe” rămâne pe placeholder-ul de scaffold.
-    await userEvent.click(screen.getByRole('button', { name: 'Grupe' }));
+    // „Copii" și „Grupe" au acum ecranele reale (pasul 5); „Vizite" rămâne pe placeholder-ul de scaffold.
+    await userEvent.click(screen.getByRole('button', { name: 'Vizite' }));
     expect(screen.getByText(/total\(\[10, 5\.5\]\) = 15\.5/)).toBeInTheDocument();
   });
 });
