@@ -13,6 +13,10 @@ import { summarizeCashForMonth, sumUnallocatedAdvance } from '../domain/cash-sum
 // luni — altfel aceeași lună schimba culoare la fiecare mutare a lunii selectate.
 const BAR_COLORS = ['orange', 'yellow', 'mint'];
 
+// Eticheta de pe bară stă mereu vizibilă (nu doar la hover), deci trebuie scurtă:
+// fără „lei" și fără zecimale — suma exactă, cu tot cu monedă, rămâne în tooltip-ul de la hover.
+const formatCompactMoney = value => new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 }).format(value);
+
 function birthdayCellContentHTML(cell) {
   const chips = cell.names
     .map(
@@ -204,7 +208,9 @@ export function createDashboardView({
     bars.innerHTML = history
       .map(
         r =>
-          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" tabindex="0" data-month="${r.month}" data-value="${r.value}"><i data-height="${(r.value / max) * 100}"></i><small>${r.month.slice(5)}</small></div>`,
+          `<div class="bar ${BAR_COLORS[Number(r.month.slice(5, 7)) % 3]}" tabindex="0" data-month="${r.month}" data-value="${r.value}">` +
+          `<span class="bar-value">${formatCompactMoney(r.value)}</span>` +
+          `<i data-height="${(r.value / max) * 100}"></i><small>${r.month.slice(5)}</small></div>`,
       )
       .join('');
     // CSP nu are 'unsafe-inline' pe style-src; înălțimea vine din date, deci

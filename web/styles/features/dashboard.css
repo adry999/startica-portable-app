@@ -139,6 +139,12 @@
   align-items: center;
   gap: 7px;
 }
+.bar-value {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--slate);
+  white-space: nowrap;
+}
 .bar i {
   display: block;
   width: min(28px, 75%);
