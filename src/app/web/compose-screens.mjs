@@ -133,6 +133,7 @@ export function composeScreens(dependencies) {
       windowsVisitsTodayEnabled: element('notifWindowsVisitsTodayEnabled'),
       windowsVisitSoonEnabled: element('notifWindowsVisitSoonEnabled'),
       windowsVisitSoonMinutes: element('notifWindowsVisitSoonMinutes'),
+      saveBar: element('notificationPreferencesSaveBar'),
     },
     store: notificationPreferencesStore,
     showNotice,

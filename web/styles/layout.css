@@ -197,6 +197,29 @@
 .view.active {
   display: block;
 }
+.save-bar {
+  position: fixed;
+  left: 245px;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 32px;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -6px 18px rgba(58, 71, 80, 0.12);
+}
+.save-bar p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--slate);
+}
+.save-bar[hidden] {
+  display: none;
+}
 .view-head {
   display: flex;
   align-items: end;
@@ -496,6 +519,10 @@
     height: auto;
     padding: 13px;
     overflow: visible;
+  }
+  .save-bar {
+    left: 0;
+    padding: 12px 16px;
   }
   .brand {
     padding-bottom: 10px;

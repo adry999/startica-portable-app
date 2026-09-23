@@ -14,6 +14,7 @@
  *   windowsVisitsTodayEnabled: HTMLInputElement,
  *   windowsVisitSoonEnabled: HTMLInputElement,
  *   windowsVisitSoonMinutes: HTMLInputElement,
+ *   saveBar: HTMLElement,
  * }} NotificationPreferencesFields
  */
 
@@ -70,7 +71,13 @@ function readForm(fields) {
 export function createNotificationPreferencesController({ elements, store, showNotice }) {
   async function refresh() {
     fillForm(await store.load(), elements);
+    elements.saveBar.hidden = true;
   }
+
+  // Bara de salvare stă ascunsă până la prima editare, ca butonul să nu ceară derulare până jos degeaba.
+  elements.form.addEventListener('input', () => {
+    elements.saveBar.hidden = false;
+  });
 
   elements.form.onsubmit = async event => {
     event.preventDefault();
@@ -78,6 +85,7 @@ export function createNotificationPreferencesController({ elements, store, showN
     submitButton.disabled = true;
     try {
       fillForm(await store.save(readForm(elements)), elements);
+      elements.saveBar.hidden = true;
       showNotice('Preferințele de notificare au fost salvate.');
     } catch (error) {
       showNotice(/** @type {Error} */ (error).message, true);

@@ -24,8 +24,17 @@ function createHarness({ storeResponse = DEFAULT_NOTIFICATION_PREFERENCES, saveR
   const notices = [];
   const saveCalls = [];
   const submitButton = { disabled: false };
+  const formListeners = {};
+  const saveBar = { hidden: true };
   const elements = {
-    form: { onsubmit: null, querySelector: () => submitButton },
+    form: {
+      onsubmit: null,
+      querySelector: () => submitButton,
+      addEventListener: (type, handler) => {
+        formListeners[type] = handler;
+      },
+    },
+    saveBar,
     birthdaysEnabled: fakeCheckbox(true),
     birthdaysDaysBefore: fakeField('2'),
     visitsEnabled: fakeCheckbox(true),
@@ -48,7 +57,7 @@ function createHarness({ storeResponse = DEFAULT_NOTIFICATION_PREFERENCES, saveR
   };
   const showNotice = (...args) => notices.push(args);
   const controller = createNotificationPreferencesController({ elements: asAny(elements), store, showNotice });
-  return { elements, notices, saveCalls, controller, submitButton };
+  return { elements, notices, saveCalls, controller, submitButton, saveBar, fireInput: () => formListeners.input?.() };
 }
 
 const submitForm = async elements => elements.form.onsubmit(asAny({ preventDefault: () => {} }));
@@ -95,4 +104,39 @@ test('salvarea eșuată arată eroarea și reactivează butonul', async () => {
 
   assert.deepEqual(notices, [['Rețea indisponibilă.', true]]);
   assert.equal(submitButton.disabled, false);
+});
+
+test('activate() lasă bara de salvare ascunsă', async () => {
+  const { controller, saveBar } = createHarness();
+
+  await controller.activate();
+
+  assert.equal(saveBar.hidden, true);
+});
+
+test('o editare arată bara de salvare', async () => {
+  const { controller, saveBar, fireInput } = createHarness();
+  await controller.activate();
+
+  fireInput();
+
+  assert.equal(saveBar.hidden, false);
+});
+
+test('salvarea reușită ascunde din nou bara de salvare', async () => {
+  const { elements, saveBar, fireInput } = createHarness();
+  fireInput();
+
+  await submitForm(elements);
+
+  assert.equal(saveBar.hidden, true);
+});
+
+test('salvarea eșuată lasă bara de salvare vizibilă', async () => {
+  const { elements, saveBar, fireInput } = createHarness({ saveError: new Error('Rețea indisponibilă.') });
+  fireInput();
+
+  await submitForm(elements);
+
+  assert.equal(saveBar.hidden, false);
 });
