@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import styles from './Card.module.css';
 
-export type CardTone = 'white' | 'orange' | 'mint' | 'yellow' | 'pink';
+export type CardTone = 'white' | 'orange' | 'mint' | 'yellow' | 'pink' | 'dashed';
 
 export interface CardProps {
   tone?: CardTone;

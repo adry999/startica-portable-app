@@ -1,15 +1,47 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { ToastProvider } from '@shared/ui';
 
+function jsonResponse(body: unknown) {
+  return { ok: true, status: 200, json: async () => body };
+}
+
+const emptyState = { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] };
+
 describe('App', () => {
-  it('randează totalul calculat de domain/money.mjs, importat direct din backend', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: emptyState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+  });
+
+  it('pornește pe Dashboard, în interiorul shell-ului', () => {
     render(
       <ToastProvider>
         <App />
       </ToastProvider>,
     );
+    expect(screen.getByRole('button', { name: /Dashboard/ })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+  });
+
+  it('navigarea din sidebar schimbă conținutul (dovedește ruta către @domain/money.mjs prin ecranul placeholder)', async () => {
+    render(
+      <ToastProvider>
+        <App />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
     expect(screen.getByText(/total\(\[10, 5\.5\]\) = 15\.5/)).toBeInTheDocument();
   });
 });

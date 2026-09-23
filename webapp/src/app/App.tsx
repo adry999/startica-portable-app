@@ -6,6 +6,7 @@ import { useAppSession } from '@shared/api/session';
 import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
+import { DashboardPage } from '@features/dashboard';
 
 interface Child {
   id: string;
@@ -89,7 +90,7 @@ export function App() {
 
   return (
     <AppShell view={view} onNavigate={setView} month={month} onMonthChange={setMonth}>
-      <ScaffoldContent />
+      {view === 'dashboard' ? <DashboardPage month={month} onNavigate={setView} /> : <ScaffoldContent />}
     </AppShell>
   );
 }

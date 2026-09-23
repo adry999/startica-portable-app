@@ -1,0 +1,291 @@
+.notice {
+  color: var(--subtle);
+}
+
+.kpiRow {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: var(--space-16);
+}
+
+.kpiCard {
+  min-height: 128px;
+}
+
+.kpiLabel {
+  margin: 0 0 var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.kpiValue {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 36px;
+  margin-bottom: var(--space-8);
+}
+
+.methodBar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.methodCash {
+  background: var(--orange);
+}
+
+.methodCard {
+  background: var(--yellow);
+}
+
+.methodTransfer {
+  background: var(--mint);
+}
+
+.methodLegend {
+  display: block;
+  margin-top: var(--space-6);
+  font-size: 12px;
+}
+
+.mintLink {
+  border: none;
+  background: none;
+  color: var(--mint-ink);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0;
+}
+
+.advanceHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.pillNeutral {
+  background: var(--neutral-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-8);
+  white-space: nowrap;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: var(--space-16);
+}
+
+.panelTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.panelSubtitle {
+  margin: 2px 0 var(--space-16);
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-8);
+  height: 160px;
+}
+
+.barColumn {
+  flex: 1;
+  max-width: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.barValue {
+  font-size: 10px;
+  color: var(--subtle);
+}
+
+.barCurrent,
+.barPast,
+.barEmpty {
+  width: 100%;
+  border-radius: 10px 10px 4px 4px;
+}
+
+.barCurrent {
+  background: var(--orange);
+}
+
+.barPast {
+  background: #f6c98f;
+}
+
+.barEmpty {
+  background: #f1ece2;
+}
+
+.barLabelCurrent {
+  color: var(--orange-ink);
+  font-weight: 800;
+}
+
+.attentionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.attentionRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-10) var(--space-12);
+}
+
+.attentionRowClear {
+  background: #f7f4ee;
+  color: var(--subtle);
+}
+
+.tonePink {
+  background: var(--pink-soft);
+}
+
+.toneYellow {
+  background: var(--yellow-soft);
+}
+
+.toneMint {
+  background: var(--mint-soft);
+}
+
+.attentionCount {
+  flex: none;
+  width: 52px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.attentionText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.attentionText small {
+  font-size: 12px;
+}
+
+.attentionAction {
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: inherit;
+  white-space: nowrap;
+}
+
+.attentionEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.birthdaysGrid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-20);
+}
+
+.birthdaysUpcoming {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.birthdayRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  background: var(--yellow-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-8) var(--space-10);
+}
+
+.avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.birthdayRow > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.birthdayRow small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.birthdaysCalendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-8);
+}
+
+.calendarCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-6);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-soft);
+}
+
+.calendarCell strong {
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.calendarCellToday {
+  outline: 2px solid var(--orange-soft);
+}
+
+.calendarChip {
+  font-size: 11px;
+  background: var(--white);
+  border-radius: var(--radius-xs);
+  padding: 1px var(--space-6);
+}

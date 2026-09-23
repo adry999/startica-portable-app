@@ -30,6 +30,13 @@ export default defineConfig({
       // @domain/@contracts/@core/#... resolve outside webapp/, into the backend's src/.
       allow: ['..'],
     },
+    proxy: {
+      // Dev-only: the real backend (`npm start` from the repo root, default port
+      // 8765) enforces an exact Host header (127.0.0.1:<port>, see
+      // src/core/server/http/request-guards.mjs) — Vite's proxy rewrites Host to
+      // match the target by default, so this works without extra config.
+      '/api': 'http://127.0.0.1:8765',
+    },
   },
   build: {
     outDir: 'dist',

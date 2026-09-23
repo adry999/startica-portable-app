@@ -37,6 +37,14 @@
   color: var(--pink-ink);
 }
 
+/* Culoarea marginii diferă puțin în spec pe ecran (Dashboard #e6d9c4, Grupe #e0d5c2) —
+   se folosește aici cea de pe Dashboard; diferența e minoră, nu justifică două tonuri. */
+.dashed {
+  background: var(--white);
+  border: 1.5px dashed #e6d9c4;
+  box-shadow: none;
+}
+
 .decorative::after {
   content: '';
   position: absolute;
