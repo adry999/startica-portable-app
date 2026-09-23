@@ -62,6 +62,10 @@ Lipsă curs pentru o zi (nici automat, nici manual) → se folosește cel mai re
 - La completarea taxei (Taxe și grupe) și la editarea unui copil (Copii → Editează), câmpul de taxă capătă un selector de monedă lângă el (EUR/MDL), implicit MDL.
 - La înregistrarea/editarea unei achitări, un selector similar de monedă (EUR/MDL), implicit MDL, lângă câmpul de sumă.
 - Dashboard (Încasări, Cheltuieli, Diferență, graficul „Evoluția încasărilor") — toate sumele agregate se convertesc în MDL, cu cursul zilei fiecărei achitări, înainte de adunare. Cheltuielile rămân MDL pur (fără conversie, sunt deja MDL).
+- Regula de mai sus se aplică oriunde se adună o sumă peste **mai mulți copii** (nu doar Dashboard) — găsit și la „De notificat", cardul „Sumă de încasat" (suma resturilor tuturor copiilor notificați). Rândul unui singur copil rămâne mereu în moneda lui; doar totalurile cros-copil se convertesc.
+- Două reguli de curs, după ce reprezintă suma convertită:
+  - **Sumă deja încasată** (o achitare concretă, cu dată) → cursul din ziua **achitării** (regula din §Calculul obligației, istorică).
+  - **Sumă încă neîncasată** (rest agregat, ex. „Sumă de încasat") → cursul **curent** (ultimul cunoscut), pentru că nu există o dată de achitare — e o proiecție „cât ar costa azi", nu un fapt istoric.
 
 ## Testare
 
