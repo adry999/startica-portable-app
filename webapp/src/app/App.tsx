@@ -9,6 +9,8 @@ import type { ViewKey } from './shell/nav-items';
 import { DashboardPage } from '@features/dashboard';
 import { ChildrenPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
+import { PaymentsPage } from '@features/payments';
+import { ExpensesPage } from '@features/expenses';
 
 interface Child {
   id: string;
@@ -92,15 +94,27 @@ export function App() {
 
   return (
     <AppShell view={view} onNavigate={setView} month={month} onMonthChange={setMonth}>
-      {view === 'dashboard' ? (
-        <DashboardPage month={month} onNavigate={setView} />
-      ) : view === 'children' ? (
-        <ChildrenPage month={month} onNavigate={setView} />
-      ) : view === 'groups' ? (
-        <GroupsPage />
-      ) : (
-        <ScaffoldContent />
-      )}
+      {renderView(view, month, setView)}
     </AppShell>
   );
+}
+
+// Switch, nu un ternar înlănțuit: fiecare ecran are propria formă de props
+// (unele au nevoie de month/onNavigate, altele nu), plus e mai ușor de citit
+// pe măsură ce se adaugă ecrane noi (pasul 5 continuă).
+function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) => void) {
+  switch (view) {
+    case 'dashboard':
+      return <DashboardPage month={month} onNavigate={onNavigate} />;
+    case 'children':
+      return <ChildrenPage month={month} onNavigate={onNavigate} />;
+    case 'groups':
+      return <GroupsPage />;
+    case 'payments':
+      return <PaymentsPage />;
+    case 'expenses':
+      return <ExpensesPage month={month} />;
+    default:
+      return <ScaffoldContent />;
+  }
 }
