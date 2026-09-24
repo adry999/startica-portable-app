@@ -1,74 +1,55 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { request } from 'node:http';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { startTestApplication } from './support/start-test-application.mjs';
 
-/** Cerere fără normalizarea căii pe care o face fetch(). */
-const rawGet = (origin, rawPath) =>
-  new Promise((resolve, reject) => {
-    const { hostname, port } = new URL(origin);
-    request({ hostname, port, path: rawPath, method: 'GET' }, response => {
-      let body = '';
-      response.setEncoding('utf8');
-      response.on('data', chunk => (body += chunk));
-      response.on('end', () =>
-        resolve({ status: response.statusCode, contentType: response.headers['content-type'], body }),
-      );
-    })
-      .on('error', reject)
-      .end();
-  });
-
-function createSourceRoot(t) {
-  const root = mkdtempSync(join(tmpdir(), 'startica-source-root-'));
+// Rădăcină izolată cu o formă minimă de build Vite (webapp/dist), plus un
+// „canar” în afara lui dist — exact unde ar ateriza o traversare reușită —
+// ca testul de mai jos să verifice prin HTTP real, nu doar unitar.
+function createDistRoot(t) {
+  const root = mkdtempSync(join(tmpdir(), 'startica-dist-root-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const writeSource = (path, content) => {
-    mkdirSync(dirname(join(root, path)), { recursive: true });
-    writeFileSync(join(root, path), content);
-  };
-  writeSource('src/shared/format/alias-probe.mjs', "export const aliasProbe = 'browser';");
-  writeSource('src/features/audit-log/server/audit-log.repository.mjs', "export const serverOnly = 'secret';");
+  const distRoot = join(root, 'webapp', 'dist');
+  mkdirSync(join(distRoot, 'assets'), { recursive: true });
+  writeFileSync(join(distRoot, 'index.html'), '<!doctype html><div id="root"></div>');
+  writeFileSync(join(distRoot, 'assets', 'index-abc123.js'), "console.log('probe');");
+  writeFileSync(join(root, 'webapp', 'package.json'), '{"secret":"nu ar trebui servit"}');
   return root;
 }
 
-test('serverul livrează modulele de browser din src/ și refuză codul de server, traversarea și fișierele lipsă', async t => {
-  const root = createSourceRoot(t);
+test('serverul livrează fișierele din webapp/dist, cade pe index.html pentru SPA și refuză traversarea/fișierele lipsă', async t => {
+  const root = createDistRoot(t);
   const { origin } = await startTestApplication(t, { prefix: 'startica-http-modules-', root });
 
-  const served = await rawGet(origin, '/src/shared/format/alias-probe.mjs');
-  assert.equal(served.status, 200);
-  assert.match(served.contentType, /^text\/javascript/);
-  assert.match(served.body, /aliasProbe/);
+  const asset = await fetch(origin + '/assets/index-abc123.js');
+  assert.equal(asset.status, 200);
+  assert.match(asset.headers.get('content-type'), /^text\/javascript/);
+  assert.match(await asset.text(), /probe/);
 
-  for (const path of [
-    '/src/features/audit-log/server/audit-log.repository.mjs',
-    '/src/shared/format/%2e%2e/%2e%2e/features/audit-log/server/audit-log.repository.mjs',
-    '/src/shared/format/../../features/audit-log/server/audit-log.repository.mjs',
-    '/src/shared/format/missing.mjs',
-  ]) {
-    const refused = await rawGet(origin, path);
+  // Fără router propriu: orice cale fără extensie primește index.html, randat de React.
+  const spaFallback = await fetch(origin + '/copii');
+  assert.equal(spaFallback.status, 200);
+  assert.match(await spaFallback.text(), /id="root"/);
+
+  for (const path of ['/assets/../../package.json', '/assets/%2e%2e/%2e%2e/package.json', '/assets/missing.js']) {
+    const refused = await fetch(origin + path);
     assert.equal(refused.status, 404, path);
-    assert.doesNotMatch(refused.body, /secret/, path);
+    assert.doesNotMatch(await refused.text(), /secret/, path);
   }
 });
 
-test('pagina principală permite doar import map-ul ei, prin hash', async t => {
+test('pagina principală și API-ul au aceeași CSP, fără hash-uri de script inline', async t => {
   const { origin } = await startTestApplication(t, { prefix: 'startica-csp-' });
 
   const page = await fetch(origin + '/');
-  const html = await page.text();
-  const importMap = html.match(/<script type="importmap">([\s\S]*?)<\/script>/)?.[1];
-  assert.ok(importMap, 'index.html nu conține import map-ul');
-  assert.deepEqual(Object.keys(JSON.parse(importMap).imports), ['#app/', '#core/', '#shared/', '#features/']);
-  const importMapHash = createHash('sha256').update(importMap).digest('base64');
-  assert.ok(page.headers.get('content-security-policy').includes(`script-src 'self' 'sha256-${importMapHash}';`));
+  const pageCsp = page.headers.get('content-security-policy');
+  assert.ok(pageCsp.includes("script-src 'self';"), pageCsp);
+  assert.doesNotMatch(pageCsp, /sha256-/, 'build-ul Vite nu are scripturi inline de permis');
 
   const health = await fetch(origin + '/api/health');
-  assert.ok(health.headers.get('content-security-policy').includes("script-src 'self';"));
+  assert.equal(health.headers.get('content-security-policy'), pageCsp);
 });
 
 test('Node rezolvă aliasurile # din package.json', () => {

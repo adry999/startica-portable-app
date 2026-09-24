@@ -32,8 +32,10 @@ if (!existsSync(sourceFile))
   );
 const bytes = readFileSync(sourceFile),
   sha = bytes => createHash('sha256').update(bytes).digest('hex');
+// Vendor-ul din web/vendor a dispărut la cutover (redesign React) — SheetJS
+// vine acum din dependența npm a webapp/-ului, singurul loc din repo cu deps reale.
 const require = createRequire(import.meta.url),
-  XLSX = require('../web/vendor/xlsx.full.min.js');
+  XLSX = require('../webapp/node_modules/xlsx/xlsx.js');
 const report = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX, findRecordIssues);
 assert.deepEqual(report.errors, []);
 // Verificarea exactă a numerelor are sens doar pentru fișierul V5 original;

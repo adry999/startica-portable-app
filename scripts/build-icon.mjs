@@ -1,4 +1,4 @@
-// Regenerează web/assets/startica.ico din web/assets/startica-icon.svg: Chrome headless
+// Regenerează webapp/public/assets/startica.ico din startica-icon.svg: Chrome headless
 // rasterizează fiecare cadru exact la mărimea lui (fără scalare ulterioară de Windows la
 // afișare în taskbar), apoi cadrele PNG sunt împachetate manual într-un .ico. Fără dependențe.
 // Rulare: node scripts/build-icon.mjs
@@ -9,16 +9,16 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
-const SVG_PATH = join(ROOT, 'web/assets/startica-icon.svg');
-const OUTPUT_PATH = join(ROOT, 'web/assets/startica.ico');
+const SVG_PATH = join(ROOT, 'webapp/public/assets/startica-icon.svg');
+const OUTPUT_PATH = join(ROOT, 'webapp/public/assets/startica.ico');
 // 20/24/40 acoperă scalările intermediare din taskbar/Explorer (100%-200% DPI); Windows nu
 // mai are ce să interpoleze între cadre învecinate.
 const SIZES = [16, 20, 24, 32, 40, 48, 256];
-// PNG-uri separate pentru web/manifest.json: fereastra Chrome/Edge pornită cu --app= își ia
-// iconița din taskbar din manifest (dacă există), nu din .ico-ul launcher-ului — fără ele,
-// Chrome cade pe favicon-ul mic din <link rel="icon"> și Windows îl scalează pixelat.
+// PNG-uri separate pentru webapp/public/manifest.json: fereastra Chrome/Edge pornită cu
+// --app= își ia iconița din taskbar din manifest (dacă există), nu din .ico-ul launcher-ului —
+// fără ele, Chrome cade pe favicon-ul mic din <link rel="icon"> și Windows îl scalează pixelat.
 const MANIFEST_SIZES = [192, 512];
-const MANIFEST_OUTPUT = size => join(ROOT, `web/assets/startica-${size}.png`);
+const MANIFEST_OUTPUT = size => join(ROOT, `webapp/public/assets/startica-${size}.png`);
 
 const CHROME_CANDIDATES = [
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',

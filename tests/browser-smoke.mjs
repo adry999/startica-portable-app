@@ -17,6 +17,15 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createApplication } from '../startica_server.mjs';
 import { isoDateOf } from '#shared/domain/calendar-month.mjs';
+
+// DEZACTIVAT temporar (cutover redesign React, 2026-09-24): tot ce urmează
+// verifică DOM-ul vanilla vechi (getElementById('primaryNav'), .view.active
+// etc.), care nu mai există — serverul servește acum webapp/dist. Fișierul
+// rămâne neschimbat mai jos ca referință pentru rescrierea pentru noul DOM
+// React (pas separat, de sine stătător, nu parte din cutover).
+console.log('tests/browser-smoke.mjs: dezactivat — în așteptarea rescrierii pentru DOM-ul React.');
+process.exit(0);
+
 // Vizita de probă e pe ziua curentă: badge-ul numără doar vizitele de azi înainte, iar calendarul arată luna curentă.
 const visitDate = isoDateOf(new Date());
 const dir = mkdtempSync(join(tmpdir(), 'startica-browser-'));

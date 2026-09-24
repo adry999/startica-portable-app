@@ -8,8 +8,10 @@ import { readWorkbook, exportWorkbook, mapV5ChildStatus } from './excel-workbook
 
 const require = createRequire(import.meta.url);
 // Cale calculată, nu literal: tsc rezolvă static un require(literal) și ar verifica
-// tot bundle-ul vendorizat SheetJS, care nu e scris pentru type-checking strict.
-const vendorXlsxPath = fileURLToPath(new URL('../../../../web/vendor/xlsx.full.min.js', import.meta.url));
+// tot bundle-ul SheetJS, care nu e scris pentru type-checking strict.
+// De la cutover (redesign React), vendor-ul din web/vendor a dispărut — SheetJS
+// vine din dependența npm a webapp/-ului, singurul loc din repo cu deps reale.
+const vendorXlsxPath = fileURLToPath(new URL('../../../../webapp/node_modules/xlsx/xlsx.js', import.meta.url));
 const XLSX = require(vendorXlsxPath);
 
 // review-center deține findRecordIssues; niciun test de aici nu verifică avertizările

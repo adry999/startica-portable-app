@@ -1,6 +1,6 @@
 import { fail } from '../errors/domain-error.mjs';
 import { assertAllowedRequest, assertAuthorizedWrite, readJsonBody } from './request-guards.mjs';
-import { isStaticAsset, isBrowserModule, sendBrowserModule, sendStaticAsset } from './static-assets.mjs';
+import { isStaticAsset, sendStaticAsset } from './static-assets.mjs';
 import { sendResponse } from './json-response.mjs';
 
 // Handlerul a răspuns singur; nu se mai trimite nimic.
@@ -24,12 +24,14 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
       const url = assertAllowedRequest(request, port);
       const path = url.pathname;
       if (request.method === 'GET') {
-        if (isStaticAsset(path)) return sendStaticAsset(response, root, path);
-        if (isBrowserModule(path)) return sendBrowserModule(response, root, path);
         const getHandler = getRoutes.get(path);
         // await pe o valoare simplă e un no-op: rutele existente rămân sincrone,
         // Telegram (§4) e prima care așteaptă un apel de rețea înainte de răspuns.
         if (getHandler) return sendResponse(response, await getHandler({ url, response }));
+        // Ruta API înregistrată are întâietate; restul cade pe fișierele din build
+        // (sau pe index.html — SPA fără router propriu). /api/* nu ajunge niciodată
+        // aici din greșeală ca index.html: o cale API neînregistrată rămâne 404.
+        if (!path.startsWith('/api/') && isStaticAsset(root, path)) return sendStaticAsset(response, root, path);
       }
       if (request.method !== 'POST') fail('Pagina nu există.', 404);
       assertAuthorizedWrite(request, sessionToken);

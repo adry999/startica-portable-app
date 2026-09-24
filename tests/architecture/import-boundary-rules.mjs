@@ -89,7 +89,8 @@ export function findImportViolations(sourceFiles) {
         continue;
       }
       const target = resolveTarget(path, specifier);
-      // Aplicația nu are dependențe runtime; bibliotecile externe sunt vendorizate în web/vendor.
+      // src/ nu are dependențe runtime externe; singura excepție (SheetJS) trăiește doar
+      // ca dependență npm a webapp/-ului, în afara acestei verificări.
       if (target === null) {
         report('external-package');
         continue;
