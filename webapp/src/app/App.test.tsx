@@ -38,7 +38,7 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
 
-  it('navigarea din sidebar schimbă conținutul (dovedește ruta către @domain/money.mjs prin ecranul placeholder)', async () => {
+  it('navigarea din sidebar schimbă conținutul', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <ToastProvider>
@@ -46,8 +46,19 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
-    // „Copii" și „Grupe" au acum ecranele reale (pasul 5); „Vizite" rămâne pe placeholder-ul de scaffold.
     await userEvent.click(screen.getByRole('button', { name: 'Vizite' }));
-    expect(screen.getByText(/total\(\[10, 5\.5\]\) = 15\.5/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Vizite' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Adaugă vizită' })).toBeInTheDocument();
+  });
+
+  it('o cale necunoscută revine la Dashboard', () => {
+    render(
+      <MemoryRouter initialEntries={['/ceva-inexistent']}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
 });

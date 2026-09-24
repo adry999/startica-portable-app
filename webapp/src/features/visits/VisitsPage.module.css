@@ -1,0 +1,222 @@
+.notice {
+  color: var(--subtle);
+}
+
+.dim {
+  color: var(--subtle);
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: var(--shadow-button-primary);
+  margin-left: auto;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-radius: var(--radius-lg);
+  padding: var(--space-16) var(--space-20);
+}
+
+.statCard strong {
+  font-family: var(--font-heading);
+  font-size: 24px;
+}
+
+.statCard span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.calendarCard {
+  margin-bottom: var(--space-16);
+}
+
+.calendarToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-8);
+}
+
+.calendarHeadCell {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+  text-align: center;
+  padding-bottom: var(--space-4);
+}
+
+.calendarCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 72px;
+  border: 1px solid var(--row-divider);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  padding: var(--space-6);
+  text-align: left;
+  cursor: pointer;
+}
+
+.calendarCell strong {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.calendarCellOutside {
+  background: var(--neutral-soft);
+  opacity: 0.6;
+}
+
+.calendarCellToday {
+  border-color: var(--orange);
+}
+
+.calendarCellSelected {
+  background: var(--cream);
+  border-color: var(--orange);
+}
+
+.calendarChip {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  padding: 1px var(--space-4);
+  background: var(--neutral-soft);
+  color: var(--slate);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chipProgramata {
+  background: var(--yellow-soft, var(--yellow));
+}
+
+.chipEfectuata {
+  background: var(--mint-soft, var(--mint));
+}
+
+.chipNeprezentata {
+  background: var(--neutral-soft);
+}
+
+.chipInscris {
+  background: var(--orange-soft, var(--orange));
+}
+
+.chipRenuntat {
+  background: var(--pink-soft, var(--pink));
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-16) var(--space-20);
+  flex-wrap: wrap;
+}
+
+.search {
+  flex: 1;
+  min-width: 180px;
+  background: var(--cream);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.select {
+  background: var(--white);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-10);
+}
+
+.linkButton {
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 800;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.linkButton:disabled {
+  color: var(--subtle);
+  cursor: not-allowed;
+}
+
+.linkButtonPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-10);
+  font-weight: 800;
+  font-size: 12px;
+  white-space: nowrap;
+}
