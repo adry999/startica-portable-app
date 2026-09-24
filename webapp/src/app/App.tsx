@@ -6,6 +6,7 @@ import { useAppSession } from '@shared/api/session';
 import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
+import type { SearchResult } from './shell/search-records';
 import { DashboardPage } from '@features/dashboard';
 import { ChildrenPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
@@ -92,6 +93,7 @@ export function App() {
   const session = useAppSession();
   const [view, setView] = usePersistedState<ViewKey>('nav.view', 'dashboard');
   const [month, setMonth] = useState(() => today().slice(0, 7));
+  const [searchFocus, setSearchFocus] = useState<SearchResult | null>(null);
 
   useEffect(() => {
     // Încărcare o singură dată la montare — sesiunea e un singleton la nivel de modul, nu per componentă.
@@ -100,9 +102,20 @@ export function App() {
     });
   }, []);
 
+  function onSelectSearchResult(result: SearchResult) {
+    setSearchFocus(result);
+    setView(result.type);
+  }
+
   return (
-    <AppShell view={view} onNavigate={setView} month={month} onMonthChange={setMonth}>
-      {renderView(view, month, setView)}
+    <AppShell
+      view={view}
+      onNavigate={setView}
+      month={month}
+      onMonthChange={setMonth}
+      onSelectSearchResult={onSelectSearchResult}
+    >
+      {renderView(view, month, setView, searchFocus, () => setSearchFocus(null))}
     </AppShell>
   );
 }
@@ -110,16 +123,34 @@ export function App() {
 // Switch, nu un ternar înlănțuit: fiecare ecran are propria formă de props
 // (unele au nevoie de month/onNavigate, altele nu), plus e mai ușor de citit
 // pe măsură ce se adaugă ecrane noi (pasul 5 continuă).
-function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) => void) {
+function renderView(
+  view: ViewKey,
+  month: string,
+  onNavigate: (view: ViewKey) => void,
+  searchFocus: SearchResult | null,
+  onFocusConsumed: () => void,
+) {
   switch (view) {
     case 'dashboard':
       return <DashboardPage month={month} onNavigate={onNavigate} />;
     case 'children':
-      return <ChildrenPage month={month} onNavigate={onNavigate} />;
+      return (
+        <ChildrenPage
+          month={month}
+          onNavigate={onNavigate}
+          focusChildId={searchFocus?.type === 'children' ? searchFocus.id : null}
+          onFocusConsumed={onFocusConsumed}
+        />
+      );
     case 'groups':
       return <GroupsPage />;
     case 'payments':
-      return <PaymentsPage />;
+      return (
+        <PaymentsPage
+          focusPaymentId={searchFocus?.type === 'payments' ? searchFocus.id : null}
+          onFocusConsumed={onFocusConsumed}
+        />
+      );
     case 'expenses':
       return <ExpensesPage month={month} />;
     case 'status':

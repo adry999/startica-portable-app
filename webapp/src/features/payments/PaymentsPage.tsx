@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge, Card, DataTable, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -25,11 +25,24 @@ const VIEW_MODE_OPTIONS = [
 
 const METHOD_TONE: Record<string, BadgeTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
 
-export function PaymentsPage() {
+export interface PaymentsPageProps {
+  /** Setat de căutarea globală din topbar — deschide direct formularul achitării găsite. */
+  focusPaymentId?: string | null;
+  onFocusConsumed?: () => void;
+}
+
+export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPageProps = {}) {
   const data = usePayments();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
   const [formTarget, setFormTarget] = useState<Payment | 'new' | null>(null);
+
+  useEffect(() => {
+    if (!focusPaymentId || data.status !== 'ready') return;
+    const payment = data.records.payments.find(p => p.id === focusPaymentId);
+    if (payment) setFormTarget(payment);
+    onFocusConsumed?.();
+  }, [focusPaymentId, data.status, onFocusConsumed]);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
