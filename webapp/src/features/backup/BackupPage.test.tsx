@@ -5,6 +5,12 @@ import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
 import { BackupPage } from './BackupPage';
 
+const { writeFileMock } = vi.hoisted(() => ({ writeFileMock: vi.fn() }));
+vi.mock('xlsx', async importOriginal => {
+  const actual = await importOriginal<typeof import('xlsx')>();
+  return { ...actual, writeFile: writeFileMock };
+});
+
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
@@ -100,5 +106,24 @@ describe('BackupPage', () => {
 
     await user.click(restoreButton);
     expect(await screen.findByText('Datele au fost restaurate.')).toBeInTheDocument();
+  });
+
+  it('"Export Excel complet" declanșează descărcarea', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Export Excel complet'));
+    await waitFor(() => expect(writeFileMock).toHaveBeenCalled());
+  });
+
+  it('"Import Excel" deschide panoul cu câmpul de confirmare', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Import Excel'));
+    expect(screen.getByRole('dialog', { name: 'Import Excel' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Scrie IMPORT pentru a înlocui datele')).toBeInTheDocument();
   });
 });

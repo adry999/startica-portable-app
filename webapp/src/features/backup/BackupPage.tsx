@@ -2,6 +2,8 @@ import type { FormEvent } from 'react';
 import { Badge, Card, Drawer, useToast, type BadgeTone } from '@shared/ui';
 import { useBackup, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
+import { useExcelTransfer } from './useExcelTransfer';
+import { ExcelImportDialog } from './ExcelImportDialog';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
@@ -9,7 +11,16 @@ const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yello
 export function BackupPage() {
   const data = useBackup();
   const restore = useRestore(data.health?.externalDir ?? '');
+  const excel = useExcelTransfer();
   const toast = useToast();
+
+  async function exportExcel() {
+    try {
+      await excel.exportAll();
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
 
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
@@ -110,16 +121,22 @@ export function BackupPage() {
           Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet păstrează
           câmpurile și poate fi reimportat.
         </p>
-        {/* TODO: pasul Formulare — import/export Excel complet. */}
         <div className={styles.toolbar}>
-          <button type="button" className={styles.btnGhost} disabled title="Vine în pasul următor">
+          <button type="button" className={styles.btnGhost} onClick={excel.importDialog.openDialog}>
             Import Excel
           </button>
-          <button type="button" className={styles.btnGhost} disabled title="Vine în pasul următor">
+          <button
+            type="button"
+            className={styles.btnGhost}
+            disabled={excel.exporting}
+            onClick={() => void exportExcel()}
+          >
             Export Excel complet
           </button>
         </div>
       </Card>
+
+      <ExcelImportDialog data={excel.importDialog} onClose={excel.importDialog.closeDialog} />
 
       <Drawer
         open={restore.open}
