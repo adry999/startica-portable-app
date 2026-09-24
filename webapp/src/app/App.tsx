@@ -15,6 +15,7 @@ import { StatusPage } from '@features/status';
 import { FeeSetupPage } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
+import { AuditLogPage } from '@features/audit-log';
 
 interface Child {
   id: string;
@@ -126,6 +127,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <AssignPage month={month} />;
     case 'review':
       return <ReviewPage />;
+    case 'audit':
+      return <AuditLogPage />;
     default:
       return <ScaffoldContent />;
   }
