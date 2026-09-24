@@ -1,5 +1,6 @@
 import { Badge, Card, useToast, type BadgeTone } from '@shared/ui';
 import { useReview, type ReviewRowView } from './useReview';
+import type { ViewKey } from '../../app/shell/nav-items';
 import styles from './ReviewPage.module.css';
 
 const CATEGORY_TONE: Record<string, BadgeTone> = {
@@ -11,7 +12,11 @@ const CATEGORY_TONE: Record<string, BadgeTone> = {
   children: 'neutral',
 };
 
-export function ReviewPage() {
+export interface ReviewPageProps {
+  onNavigate: (view: ViewKey) => void;
+}
+
+export function ReviewPage({ onNavigate }: ReviewPageProps) {
   const data = useReview();
   const toast = useToast();
 
@@ -83,7 +88,13 @@ export function ReviewPage() {
           <p className={styles.empty}>Nu există înregistrări pentru filtrul ales.</p>
         ) : (
           data.rows.map(row => (
-            <ReviewRow key={`${row.type} ${row.id}`} row={row} onConfirm={confirm} labels={data.labels} />
+            <ReviewRow
+              key={`${row.type} ${row.id}`}
+              row={row}
+              onConfirm={confirm}
+              labels={data.labels}
+              onNavigate={onNavigate}
+            />
           ))
         )}
       </Card>
@@ -95,10 +106,12 @@ function ReviewRow({
   row,
   onConfirm,
   labels,
+  onNavigate,
 }: {
   row: ReviewRowView;
   onConfirm: (paymentId: string) => void;
   labels: Record<string, string>;
+  onNavigate: (view: ViewKey) => void;
 }) {
   return (
     <div className={styles.row}>
@@ -118,8 +131,11 @@ function ReviewRow({
         <small className={styles.rowReasons}>{row.reasons.join(' · ')}</small>
       </div>
       <div className={styles.rowActions}>
-        {/* TODO: pasul Formulare — deschide editorul de fișă/achitare complet. */}
-        <button type="button" className={styles.linkButton} disabled title="Vine în pasul următor">
+        <button
+          type="button"
+          className={styles.linkButton}
+          onClick={() => onNavigate(row.type === 'payments' ? 'payments' : 'children')}
+        >
           {row.type === 'payments' ? 'Corectează achitarea' : 'Corectează fișa'}
         </button>
         {row.canConfirm && (

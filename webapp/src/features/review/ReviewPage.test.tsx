@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
 import { ReviewPage } from './ReviewPage';
+import type { ViewKey } from '../../app/shell/nav-items';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -30,10 +31,10 @@ const fixtureState = {
   visits: [],
 };
 
-function renderPage() {
+function renderPage(onNavigate: (view: ViewKey) => void = () => {}) {
   return render(
     <ToastProvider>
-      <ReviewPage />
+      <ReviewPage onNavigate={onNavigate} />
     </ToastProvider>,
   );
 }
@@ -81,6 +82,16 @@ describe('ReviewPage', () => {
 
     expect(screen.getByText('Import CSV')).toBeInTheDocument();
     expect(screen.getByText('Copil neasociat')).toBeInTheDocument();
+  });
+
+  it('„Corectează achitarea" navighează spre Achitări', async () => {
+    await loadedSession();
+    const onNavigate = vi.fn();
+    renderPage(onNavigate);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Corectează achitarea'));
+    expect(onNavigate).toHaveBeenCalledWith('payments');
   });
 
   it('resetarea filtrelor golește căutarea', async () => {

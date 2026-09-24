@@ -131,7 +131,7 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
     case 'assign':
       return <AssignPage month={month} />;
     case 'review':
-      return <ReviewPage />;
+      return <ReviewPage onNavigate={onNavigate} />;
     case 'audit':
       return <AuditLogPage />;
     case 'notifications':
