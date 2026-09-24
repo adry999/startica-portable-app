@@ -48,7 +48,7 @@ $cscArguments = @(
     '/platform:anycpu'
     '/optimize+'
     '/langversion:5'
-    '/win32icon:web\assets\startica.ico'
+    '/win32icon:webapp\public\assets\startica.ico'
     '/win32manifest:launcher\Startica.manifest'
     '/r:System.Management.dll'
     '/r:System.Windows.Forms.dll'

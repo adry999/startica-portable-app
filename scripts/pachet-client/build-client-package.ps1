@@ -73,7 +73,7 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 # Cale scurta sub TEMP: caile din src\app\... ale proiectului sunt deja
 # adanci, iar MAX_PATH loveste usor daca radacina de stagiu e lunga.
 $guid = [guid]::NewGuid().ToString('N').Substring(0, 8)
-# $appStage este continutul {app}: Startica.exe, runtime\node.exe, src\, web\ etc, direct la radacina.
+# $appStage este continutul {app}: Startica.exe, runtime\node.exe, src\, webapp\dist\ etc, direct la radacina.
 $appStage = Join-Path $env:TEMP ('startica-package-' + $guid)
 # Extragerea intermediara a git archive sta separat: fisierele nefolosite din
 # arhiva git (ex. scripts\pachet-client\) nu trebuie sa ajunga in {app}.
@@ -86,7 +86,7 @@ try {
     New-Item -ItemType Directory -Path $extractRoot -Force | Out-Null
 
     $headPaths = @(
-        'src', 'web', 'package.json', 'startica_server.mjs', 'startica_telegram.mjs', 'scripts/pachet-client/CITESTE-MA.txt'
+        'src', 'package.json', 'startica_server.mjs', 'startica_telegram.mjs', 'scripts/pachet-client/CITESTE-MA.txt'
     )
     & git -C $repo archive --format=tar --output $archivePath HEAD -- $headPaths
     if ($LASTEXITCODE -ne 0) { throw 'git archive de la HEAD a esuat (lipseste un fisier necesar in commit?).' }
@@ -94,7 +94,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Extragerea arhivei git a esuat.' }
 
     Move-Item -LiteralPath (Join-Path $extractRoot 'src') -Destination (Join-Path $appStage 'src')
-    Move-Item -LiteralPath (Join-Path $extractRoot 'web') -Destination (Join-Path $appStage 'web')
     Move-Item -LiteralPath (Join-Path $extractRoot 'package.json') -Destination (Join-Path $appStage 'package.json')
     Move-Item -LiteralPath (Join-Path $extractRoot 'startica_server.mjs') -Destination (Join-Path $appStage 'startica_server.mjs')
     Move-Item -LiteralPath (Join-Path $extractRoot 'startica_telegram.mjs') -Destination (Join-Path $appStage 'startica_telegram.mjs')
@@ -105,6 +104,28 @@ try {
         Remove-Item -Force
     Get-ChildItem -LiteralPath (Join-Path $appStage 'src') -Recurse -Directory -Filter 'test-support' |
         Remove-Item -Recurse -Force
+
+    # webapp/dist nu e urmarit in git (e build output); se construieste acum, din webapp/ al arborelui
+    # de lucru curat (verificarea git status de mai sus garanteaza ca fisierele urmarite corespund HEAD).
+    # Server-ul citeste front-end-ul din <radacina-aplicatiei>/webapp/dist (static-assets.mjs), deci
+    # sub-calea webapp\dist trebuie pastrata neschimbata in stagiu, nu aplatizata.
+    $webappDir = Join-Path $repo 'webapp'
+    Push-Location $webappDir
+    try {
+        & npm ci
+        if ($LASTEXITCODE -ne 0) { throw 'npm ci in webapp/ a esuat.' }
+        & npm run build
+        if ($LASTEXITCODE -ne 0) { throw 'npm run build in webapp/ a esuat.' }
+    } finally {
+        Pop-Location
+    }
+    $webappDistSource = Join-Path $webappDir 'dist'
+    if (-not (Test-Path -LiteralPath (Join-Path $webappDistSource 'index.html') -PathType Leaf)) {
+        throw ('Build-ul webapp nu a produs webapp\dist\index.html: ' + $webappDistSource)
+    }
+    $webappDistStage = Join-Path $appStage 'webapp\dist'
+    New-Item -ItemType Directory -Path $webappDistStage -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $webappDistSource '*') -Destination $webappDistStage -Recurse
 
     # Lansatorul nu e urmarit in git; se construieste acum, din arborele de lucru curat.
     $buildLauncherScript = Join-Path $repo 'launcher\build-launcher.ps1'
@@ -160,8 +181,8 @@ try {
     if (-not (Test-Path -LiteralPath (Join-Path $appStage 'src\app\server\create-application.mjs') -PathType Leaf)) {
         throw 'Lipseste src\app\server\create-application.mjs din pachetul construit.'
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $appStage 'web\index.html') -PathType Leaf)) {
-        throw 'Lipseste web\index.html din pachetul construit.'
+    if (-not (Test-Path -LiteralPath (Join-Path $appStage 'webapp\dist\index.html') -PathType Leaf)) {
+        throw 'Lipseste webapp\dist\index.html din pachetul construit.'
     }
 
     $issPath = Join-Path $repo 'scripts\pachet-client\Startica.iss'

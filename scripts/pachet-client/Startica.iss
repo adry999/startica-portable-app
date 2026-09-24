@@ -23,7 +23,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
-SetupIconFile={#RepoRoot}web\assets\startica.ico
+SetupIconFile={#RepoRoot}webapp\public\assets\startica.ico
 UninstallDisplayIcon={app}\Startica.exe
 OutputBaseFilename=Startica_Setup_{#AppVersion}
 OutputDir={#OutputDir}
@@ -38,10 +38,12 @@ Name: "romanian"; MessagesFile: "{#SourcePath}Romanian.isl"
 [Files]
 Source: "{#StageDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
-; La actualizare, module vechi din src/web care nu mai exista in noua versiune nu trebuie sa ramana amestecate (datele nu sunt in {app}).
+; La actualizare, module vechi din src/web/webapp care nu mai exista in noua versiune nu trebuie sa ramana amestecate
+; (datele nu sunt in {app}); webapp\dist are fisiere cu hash in nume, deci s-ar acumula la nesfarsit fara asta.
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\src"
 Type: filesandordirs; Name: "{app}\web"
+Type: filesandordirs; Name: "{app}\webapp"
 
 [Tasks]
 Name: "desktopicon"; Description: "Creează o scurtătură pe &desktop"; GroupDescription: "Scurtături suplimentare:"
