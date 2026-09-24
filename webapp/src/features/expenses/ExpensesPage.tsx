@@ -31,6 +31,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [newCategoryName, setNewCategoryName] = useState('');
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
 
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
@@ -68,6 +70,23 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     try {
       await data.deleteCategory(id);
       toast.show({ message: 'Categorie ștearsă.' });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  function startEditingCategory(id: string, name: string) {
+    setEditingCategoryId(id);
+    setEditingCategoryName(name);
+  }
+
+  async function commitEditingCategory() {
+    if (!editingCategoryId) return;
+    const id = editingCategoryId;
+    setEditingCategoryId(null);
+    try {
+      await data.renameCategory(id, editingCategoryName);
+      toast.show({ message: 'Categorie redenumită.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -240,19 +259,48 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
                 Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.
               </span>
             ) : (
-              data.categories.map(cat => (
-                <span key={cat.id} className={styles.chip}>
-                  {cat.name}
-                  <button
-                    type="button"
-                    aria-label={`Șterge ${cat.name}`}
-                    title="Șterge categoria"
-                    onClick={() => void handleDeleteCategory(cat.id, cat.name)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
+              data.categories.map(cat =>
+                editingCategoryId === cat.id ? (
+                  <span key={cat.id} className={styles.chip}>
+                    <input
+                      autoFocus
+                      className={styles.chipEditInput}
+                      style={{ width: `${Math.max(4, editingCategoryName.length)}ch` }}
+                      value={editingCategoryName}
+                      aria-label={`Redenumește ${cat.name}`}
+                      onChange={event => setEditingCategoryName(event.target.value)}
+                      onBlur={() => void commitEditingCategory()}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          void commitEditingCategory();
+                        } else if (event.key === 'Escape') {
+                          setEditingCategoryId(null);
+                        }
+                      }}
+                    />
+                  </span>
+                ) : (
+                  <span key={cat.id} className={styles.chip}>
+                    <button
+                      type="button"
+                      className={styles.chipLabel}
+                      title="Redenumește categoria"
+                      onClick={() => startEditingCategory(cat.id, cat.name)}
+                    >
+                      {cat.name}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Șterge ${cat.name}`}
+                      title="Șterge categoria"
+                      onClick={() => void handleDeleteCategory(cat.id, cat.name)}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ),
+              )
             )}
           </div>
           <form className={styles.chipForm} onSubmit={handleCreateCategory}>

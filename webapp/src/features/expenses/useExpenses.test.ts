@@ -145,6 +145,63 @@ describe('useExpenses', () => {
     await expect(result.current.createCategory('chirie')).rejects.toThrow('Categoria există deja.');
   });
 
+  it('renameCategory actualizează categoria și toate cheltuielile care îi purtau numele', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    const calls: { path: string; body: Record<string, unknown> }[] = [];
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options: RequestInit) => {
+      const body = JSON.parse(options.body as string);
+      calls.push({ path, body });
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() => result.current.renameCategory('cat2', 'Salarii educatoare'));
+
+    expect(calls[0]).toEqual({
+      path: '/api/record',
+      body: expect.objectContaining({
+        type: 'categories',
+        mode: 'update',
+        record: expect.objectContaining({ id: 'cat2', name: 'Salarii educatoare' }),
+      }),
+    });
+    // e1 și e5 aveau category: 'Salarii' — e5 e arhivată, dar redenumirea se propagă oricum.
+    const expenseUpdates = calls.slice(1).map(call => call.body.record as { id: string; category: string });
+    expect(expenseUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'e1', category: 'Salarii educatoare' }),
+        expect.objectContaining({ id: 'e5', category: 'Salarii educatoare' }),
+      ]),
+    );
+    expect(expenseUpdates).toHaveLength(2);
+  });
+
+  it('renameCategory nu trimite nicio cerere când numele rămâne neschimbat', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockClear();
+
+    await act(() => result.current.renameCategory('cat2', 'Salarii'));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('renameCategory respinge un nume care coincide cu altă categorie existentă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    await expect(result.current.renameCategory('cat2', 'Chirie')).rejects.toThrow('Categoria există deja.');
+  });
+
+  it('renameCategory respinge un nume gol', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    await expect(result.current.renameCategory('cat2', '   ')).rejects.toThrow('Completează numele categoriei.');
+  });
+
   it('deleteCategory cheamă /api/category-delete cu id-ul categoriei', async () => {
     await loadedSession();
     const { result } = renderHook(() => useExpenses('2026-09'));

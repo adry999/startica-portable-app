@@ -38,6 +38,7 @@ export interface ExpensesData {
   monthTotal: number;
   categorySummary: CategorySummaryItem[];
   createCategory: (typed: string) => Promise<void>;
+  renameCategory: (id: string, typed: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   setExpenseArchived: (expense: Expense, archived: boolean) => Promise<void>;
   createExpense: (input: ExpenseFormInput) => Promise<void>;
@@ -115,6 +116,22 @@ export function useExpenses(month: string): ExpensesData {
     });
   }
 
+  async function renameCategory(id: string, typed: string) {
+    const category = records.categories.find(c => c.id === id);
+    if (!category) throw new Error('Categoria nu mai există.');
+    const name = canonicalCategoryName(typed, records);
+    if (!name) throw new Error('Completează numele categoriei.');
+    if (name === category.name) return;
+    if (records.categories.some(c => c.id !== id && c.name === name)) throw new Error('Categoria există deja.');
+    await session.mutate('/api/record', { type: 'categories', mode: 'update', record: { ...category, name } });
+    // Categoria e doar o etichetă text pentru cheltuieli (fără FK) — redenumirea
+    // trebuie propagată manual la cheltuielile care încă țin numele vechi.
+    const affected = records.expenses.filter(expense => expense.category === category.name);
+    for (const expense of affected) {
+      await session.mutate('/api/record', { type: 'expenses', mode: 'update', record: { ...expense, category: name } });
+    }
+  }
+
   async function deleteCategory(id: string) {
     await session.mutate('/api/category-delete', { id });
   }
@@ -163,6 +180,7 @@ export function useExpenses(month: string): ExpensesData {
       monthTotal: 0,
       categorySummary: [],
       createCategory,
+      renameCategory,
       deleteCategory,
       setExpenseArchived,
       createExpense,
@@ -184,6 +202,7 @@ export function useExpenses(month: string): ExpensesData {
     monthTotal: total(monthExpenses),
     categorySummary: buildCategorySummary(monthExpenses),
     createCategory,
+    renameCategory,
     deleteCategory,
     setExpenseArchived,
     createExpense,

@@ -8,14 +8,14 @@ import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { VIEW_PATHS, viewForPathname } from './shell/routes';
-import { DashboardPage } from '@features/dashboard';
+import { DashboardPage, useDashboard } from '@features/dashboard';
 import { ChildrenPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
-import { FeeSetupPage } from '@features/fee-setup';
+import { FeeSetupPage, useFeeSetup } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
 import { AuditLogPage } from '@features/audit-log';
@@ -135,8 +135,20 @@ export function App() {
 
   const onNavigate = (nextView: ViewKey) => navigate(VIEW_PATHS[nextView]);
 
+  // Contoarele din sidebar reutilizează exact numerele deja afișate pe Dashboard
+  // (attentionItems) și pe Taxe și grupe (missingCount) — nicio logică nouă.
+  const dashboard = useDashboard(month);
+  const feeSetup = useFeeSetup();
+  const counts: Partial<Record<ViewKey, number>> = {
+    fees: feeSetup.missingCount,
+    review: dashboard.attentionItems.find(item => item.view === 'review')?.count ?? 0,
+    assign: dashboard.attentionItems.find(item => item.view === 'assign')?.count ?? 0,
+    notify: dashboard.attentionItems.find(item => item.view === 'notify')?.count ?? 0,
+    visits: dashboard.attentionItems.find(item => item.view === 'visits')?.count ?? 0,
+  };
+
   return (
-    <AppShell view={view} onNavigate={onNavigate} month={month} onMonthChange={setMonth}>
+    <AppShell view={view} onNavigate={onNavigate} month={month} onMonthChange={setMonth} counts={counts}>
       <Routes>
         <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />

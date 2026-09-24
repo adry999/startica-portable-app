@@ -67,7 +67,13 @@ describe('ExpensesPage', () => {
             return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
           }
           if (body.type === 'categories') {
-            const updated = { ...fixtureState, categories: [...fixtureState.categories, body.record] };
+            const updated = {
+              ...fixtureState,
+              categories:
+                body.mode === 'create'
+                  ? [...fixtureState.categories, body.record]
+                  : fixtureState.categories.map(c => (c.id === body.record.id ? body.record : c)),
+            };
             return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
           }
           throw new Error(`tip neașteptat: ${body.type}`);
@@ -154,6 +160,21 @@ describe('ExpensesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
     expect(await screen.findByText('Categorie adăugată.')).toBeInTheDocument();
+  });
+
+  it('redenumește o categorie la click pe chip, apoi Enter', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Chirie' }));
+    const input = screen.getByLabelText('Redenumește Chirie');
+    await user.clear(input);
+    await user.type(input, 'Chirie sediu{Enter}');
+
+    expect(await screen.findByText('Categorie redenumită.')).toBeInTheDocument();
   });
 
   it('șterge o categorie după confirmare', async () => {

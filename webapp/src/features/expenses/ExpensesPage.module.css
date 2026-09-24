@@ -173,6 +173,28 @@
   padding: 0 var(--space-6);
 }
 
+.chipLabel {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+.chipLabel:hover {
+  text-decoration: underline;
+}
+
+.chipEditInput {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: inherit;
+  outline: none;
+}
+
 .chipForm {
   display: flex;
   gap: var(--space-6);
