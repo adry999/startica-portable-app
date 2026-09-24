@@ -12,6 +12,7 @@ import { GroupsPage } from '@features/groups';
 import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
+import { NotifyPage } from '@features/notify';
 import { FeeSetupPage } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
@@ -123,6 +124,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <ExpensesPage month={month} />;
     case 'status':
       return <StatusPage month={month} />;
+    case 'notify':
+      return <NotifyPage month={month} onNavigate={onNavigate} />;
     case 'fees':
       return <FeeSetupPage />;
     case 'assign':
