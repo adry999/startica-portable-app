@@ -1,0 +1,33 @@
+.notice {
+  color: var(--subtle);
+  margin: 0 0 var(--space-16);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-8);
+}
+
+.period {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}

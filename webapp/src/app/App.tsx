@@ -11,6 +11,7 @@ import { ChildrenPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
+import { StatusPage } from '@features/status';
 
 interface Child {
   id: string;
@@ -114,6 +115,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <PaymentsPage />;
     case 'expenses':
       return <ExpensesPage month={month} />;
+    case 'status':
+      return <StatusPage month={month} />;
     default:
       return <ScaffoldContent />;
   }
