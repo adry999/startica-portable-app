@@ -12,6 +12,7 @@ import { GroupsPage } from '@features/groups';
 import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
+import { FeeSetupPage } from '@features/fee-setup';
 
 interface Child {
   id: string;
@@ -117,6 +118,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <ExpensesPage month={month} />;
     case 'status':
       return <StatusPage month={month} />;
+    case 'fees':
+      return <FeeSetupPage />;
     default:
       return <ScaffoldContent />;
   }

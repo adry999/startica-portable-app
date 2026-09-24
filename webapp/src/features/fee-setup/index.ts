@@ -1,0 +1,1 @@
+export { FeeSetupPage } from './FeeSetupPage';
