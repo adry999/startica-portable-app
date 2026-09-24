@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -60,11 +60,27 @@ describe('PaymentsPage', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (path: string) => {
+      vi.fn(async (path: string, init?: RequestInit) => {
         if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/record') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const updated = {
+            ...fixtureState,
+            payments:
+              body.mode === 'create'
+                ? [...fixtureState.payments, body.record]
+                : fixtureState.payments.map(p => (p.id === body.record.id ? body.record : p)),
+          };
+          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+        }
+        if (path === '/api/record-delete') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const updated = { ...fixtureState, payments: fixtureState.payments.filter(p => p.id !== body.id) };
+          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+        }
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -116,11 +132,46 @@ describe('PaymentsPage', () => {
     expect(screen.getAllByText(/^2026 Sep/).length).toBeGreaterThan(0);
   });
 
-  it('deschide panoul placeholder pentru achitare nouă', async () => {
+  it('adaugă o achitare nouă din formular', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
+    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+
+    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c2');
+    await user.type(within(dialog).getByLabelText('Cash'), '600');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
+  });
+
+  it('editează o achitare existentă din meniul rândului', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByRole('button', { name: 'Editează' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Editează: achitare' });
+    const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
+    expect(cashInput.value).toBe('1500');
+    await user.clear(cashInput);
+    await user.type(cashInput, '1600');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Achitare actualizată.')).toBeInTheDocument();
+  });
+
+  it('ștergerea definitivă rămâne dezactivată pentru o achitare activă', async () => {
     await loadedSession();
     renderPage();
 
-    await userEvent.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
-    expect(screen.getByText('Formular complet — pasul următor din plan.')).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
   });
 });

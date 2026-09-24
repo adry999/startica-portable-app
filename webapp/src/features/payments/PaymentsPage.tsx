@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
+import { Badge, Card, DataTable, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
@@ -11,6 +11,9 @@ import {
   type PaymentRowView,
   type PaymentsData,
 } from './usePayments';
+import { PaymentFormDrawer } from './PaymentFormDrawer';
+import type { PaymentFormValues } from './payment-form';
+import type { Payment } from '@contracts/record-types.mjs';
 import styles from './PaymentsPage.module.css';
 
 type ViewMode = 'table' | 'months';
@@ -26,11 +29,34 @@ export function PaymentsPage() {
   const data = usePayments();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
-  const [newPaymentOpen, setNewPaymentOpen] = useState(false);
+  const [formTarget, setFormTarget] = useState<Payment | 'new' | null>(null);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
     return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+
+  async function submitPaymentForm(values: PaymentFormValues) {
+    try {
+      const previous = formTarget && formTarget !== 'new' ? formTarget : null;
+      if (previous) {
+        await data.updatePayment(previous, values);
+        setFormTarget(null);
+        toast.show({ message: 'Achitare actualizată.' });
+        return;
+      }
+      const saved = await data.createPayment(values, () =>
+        window.confirm(
+          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
+        ),
+      );
+      if (saved) {
+        setFormTarget(null);
+        toast.show({ message: 'Achitare adăugată.' });
+      }
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
 
   return (
     <>
@@ -41,7 +67,7 @@ export function PaymentsPage() {
           onChange={setViewMode}
           ariaLabel="Mod de afișare"
         />
-        <button type="button" className={styles.primaryButton} onClick={() => setNewPaymentOpen(true)}>
+        <button type="button" className={styles.primaryButton} onClick={() => setFormTarget('new')}>
           + Achitare nouă
         </button>
       </div>
@@ -49,12 +75,19 @@ export function PaymentsPage() {
       <SummaryCards summary={data.summary} />
       <Filters data={data} />
 
-      {viewMode === 'table' ? <TableView data={data} toast={toast} /> : <MonthsView rows={data.rows} />}
+      {viewMode === 'table' ? (
+        <TableView data={data} toast={toast} onEdit={setFormTarget} />
+      ) : (
+        <MonthsView rows={data.rows} />
+      )}
 
-      <Drawer open={newPaymentOpen} title="Achitare nouă" width={560} onClose={() => setNewPaymentOpen(false)}>
-        {/* TODO(pasul următor din plan): formularul complet de achitare (3b). */}
-        <p className={styles.notice}>Formular complet — pasul următor din plan.</p>
-      </Drawer>
+      <PaymentFormDrawer
+        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        target={formTarget}
+        records={data.records}
+        onSubmit={submitPaymentForm}
+        onClose={() => setFormTarget(null)}
+      />
     </>
   );
 }
@@ -145,7 +178,15 @@ function Filters({ data }: { data: PaymentsData }) {
   );
 }
 
-function TableView({ data, toast }: { data: PaymentsData; toast: ReturnType<typeof useToast> }) {
+function TableView({
+  data,
+  toast,
+  onEdit,
+}: {
+  data: PaymentsData;
+  toast: ReturnType<typeof useToast>;
+  onEdit: (payment: Payment) => void;
+}) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
 
   const selectedRows = data.rows.filter(row => selectedRowKeys.has(row.id));
@@ -170,6 +211,17 @@ function TableView({ data, toast }: { data: PaymentsData; toast: ReturnType<type
         await data.archivePayment(row.id);
         toast.show({ message: 'Achitare arhivată.' });
       }
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteForever(row: PaymentRowView) {
+    if (!window.confirm(`Ștergi definitiv achitarea ${row.id}? Nu poate fi anulată, spre deosebire de arhivare.`))
+      return;
+    try {
+      await data.deletePayment(row.id);
+      toast.show({ message: 'Achitare ștearsă definitiv.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -261,11 +313,23 @@ function TableView({ data, toast }: { data: PaymentsData; toast: ReturnType<type
                 <button type="button" className={styles.linkButton} onClick={() => toggleArchived(row)}>
                   {row.archived ? 'Dezarhivează' : 'Arhivează'}
                 </button>
-                {/* TODO(pasul următor din plan): formular de editare + confirmare de ștergere. */}
-                <button type="button" className={styles.linkButton} disabled title="Vine în pasul următor">
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  onClick={() => {
+                    const payment = data.records.payments.find(p => p.id === row.id);
+                    if (payment) onEdit(payment);
+                  }}
+                >
                   Editează
                 </button>
-                <button type="button" className={styles.linkButton} disabled title="Vine în pasul următor">
+                <button
+                  type="button"
+                  className={styles.linkButton}
+                  disabled={!row.archived}
+                  title={row.archived ? undefined : 'Arhivează întâi achitarea'}
+                  onClick={() => void deleteForever(row)}
+                >
                   Șterge
                 </button>
               </div>

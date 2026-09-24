@@ -1,0 +1,126 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.section {
+  border: 1px solid var(--row-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-12) var(--space-16) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.section legend {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+  padding: 0 var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.notice {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+  font-weight: 400;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.allocationRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.allocationRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-8);
+}
+
+.allocationField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.allocationField input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-6) var(--space-8);
+  font: inherit;
+  font-size: 13px;
+}
+
+.removeRow {
+  border: none;
+  background: var(--neutral-soft);
+  border-radius: var(--radius-xs);
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: var(--raspberry);
+  flex: none;
+}
+
+.balance {
+  margin: var(--space-8) 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.btnGhostSmall {
+  align-self: flex-start;
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-12);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: var(--shadow-button-primary);
+}

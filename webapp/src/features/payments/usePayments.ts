@@ -7,6 +7,7 @@ import { summarizePaymentsByMethod } from '#shared/ui/record-list-summary.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
+import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
 import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type PaymentsStatus = 'loading' | 'ready' | 'failed';
@@ -65,6 +66,7 @@ export interface PaymentsSummary {
 export interface PaymentsData {
   status: PaymentsStatus;
   failureMessage: string;
+  records: RecordsSnapshot;
   rows: PaymentRowView[];
   childOptions: ChildOption[];
   summary: PaymentsSummary;
@@ -83,6 +85,9 @@ export interface PaymentsData {
   archivePayment: (id: string) => Promise<void>;
   unarchivePayment: (id: string) => Promise<void>;
   archiveMany: (ids: string[]) => Promise<void>;
+  createPayment: (values: PaymentFormValues, confirmDuplicate: () => boolean) => Promise<boolean>;
+  updatePayment: (previous: Payment, values: PaymentFormValues) => Promise<void>;
+  deletePayment: (id: string) => Promise<void>;
 }
 
 const EMPTY_SUMMARY: PaymentsSummary = { count: 0, total: 0, cash: 0, card: 0, transfer: 0 };
@@ -146,10 +151,31 @@ export function usePayments(): PaymentsData {
     for (const id of ids) await archivePayment(id);
   }
 
+  // `confirmDuplicate` e injectat de pagină (window.confirm), ca hook-ul să
+  // rămână testabil fără un dialog real de browser — la fel ca `context.confirm`
+  // din record-editor-dialog.mjs.
+  async function createPayment(values: PaymentFormValues, confirmDuplicate: () => boolean): Promise<boolean> {
+    const record = buildPaymentRecord(null, `PAY-${crypto.randomUUID()}`, values);
+    const duplicate = findDuplicatePayment(records, record);
+    if (duplicate && !confirmDuplicate()) return false;
+    await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+    return true;
+  }
+
+  async function updatePayment(previous: Payment, values: PaymentFormValues) {
+    const record = buildPaymentRecord(previous, previous.id, values);
+    await session.mutate('/api/record', { type: 'payments', mode: 'update', record });
+  }
+
+  async function deletePayment(id: string) {
+    await session.mutate('/api/record-delete', { type: 'payments', id });
+  }
+
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
       failureMessage: saveError,
+      records,
       rows: [],
       childOptions: [],
       summary: EMPTY_SUMMARY,
@@ -168,6 +194,9 @@ export function usePayments(): PaymentsData {
       archivePayment,
       unarchivePayment,
       archiveMany,
+      createPayment,
+      updatePayment,
+      deletePayment,
     };
   }
 
@@ -191,6 +220,7 @@ export function usePayments(): PaymentsData {
   return {
     status: 'ready',
     failureMessage: '',
+    records,
     rows,
     childOptions,
     summary: {
@@ -215,5 +245,8 @@ export function usePayments(): PaymentsData {
     archivePayment,
     unarchivePayment,
     archiveMany,
+    createPayment,
+    updatePayment,
+    deletePayment,
   };
 }

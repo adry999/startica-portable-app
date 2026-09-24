@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { usePayments } from './usePayments';
+import type { Payment } from '@contracts/record-types.mjs';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -213,5 +214,97 @@ describe('usePayments', () => {
 
     await act(() => result.current.archiveMany(['p1', 'p2']));
     expect(archivedIds).toEqual(['p1', 'p2']);
+  });
+
+  const newPaymentValues = {
+    childId: 'c2',
+    date: '2026-09-20',
+    tenders: { Cash: '', Card: '600', Transfer: '' },
+    sourceName: '',
+    reviewed: false,
+    allocations: [{ month: '2026-09', amount: '600' }],
+    notes: '',
+  };
+
+  it('createPayment trimite mutația de creare cu id PAY- generat', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record');
+      const body = JSON.parse(options.body as string);
+      expect(body.mode).toBe('create');
+      expect(body.record.id).toMatch(/^PAY-/);
+      expect(body.record.amount).toBe(600);
+      expect(body.record.method).toBe('Card');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    const confirmDuplicate = vi.fn(() => true);
+    const saved = await act(() => result.current.createPayment(newPaymentValues, confirmDuplicate));
+    expect(saved).toBe(true);
+    expect(confirmDuplicate).not.toHaveBeenCalled();
+  });
+
+  it('createPayment cu un duplicat cere confirmare și renunță dacă e refuzată', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    const duplicateValues = {
+      childId: 'c1',
+      date: '2026-09-10',
+      tenders: { Cash: '1500', Card: '', Transfer: '' },
+      sourceName: '',
+      reviewed: false,
+      allocations: [{ month: '2026-09', amount: '1500' }],
+      notes: '',
+    };
+
+    const confirmDuplicate = vi.fn(() => false);
+    const saved = await act(() => result.current.createPayment(duplicateValues, confirmDuplicate));
+    expect(saved).toBe(false);
+    expect(confirmDuplicate).toHaveBeenCalled();
+  });
+
+  it('updatePayment păstrează id-ul plății existente', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+    const payment = result.current.rows.find(row => row.id === 'p1')!;
+    const previous = fixtureState.payments.find(p => p.id === 'p1') as unknown as Payment;
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record');
+      const body = JSON.parse(options.body as string);
+      expect(body.mode).toBe('update');
+      expect(body.record.id).toBe('p1');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() =>
+      result.current.updatePayment(previous, {
+        childId: payment.childId,
+        date: payment.date,
+        tenders: { Cash: '1500', Card: '', Transfer: '' },
+        sourceName: '',
+        reviewed: false,
+        allocations: [{ month: '2026-09', amount: '1500' }],
+        notes: '',
+      }),
+    );
+  });
+
+  it('deletePayment cheamă /api/record-delete cu tipul și id-ul', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record-delete');
+      const body = JSON.parse(options.body as string);
+      expect(body.type).toBe('payments');
+      expect(body.id).toBe('p5');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() => result.current.deletePayment('p5'));
   });
 });
