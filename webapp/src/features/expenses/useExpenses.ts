@@ -1,10 +1,19 @@
 import { useAppSession } from '@shared/api/session';
 import { total } from '@domain/money.mjs';
+import { normalizeRecord } from '@domain/record-schema.mjs';
 import { stripDiacritics } from '#shared/format/text-search.mjs';
 import { listExpenseCategoryNames } from '#features/expenses/domain/expense-category-names.mjs';
 import { canonicalCategoryName } from '#features/expenses/domain/canonical-category-name.mjs';
 import type { BadgeTone } from '@shared/ui';
 import type { Expense, ExpenseCategory, RecordsSnapshot } from '@contracts/record-types.mjs';
+
+export interface ExpenseFormInput {
+  date: string;
+  amount: string;
+  category: string;
+  description: string;
+  notes: string;
+}
 
 export type ExpensesStatus = 'loading' | 'ready' | 'failed';
 
@@ -31,6 +40,9 @@ export interface ExpensesData {
   createCategory: (typed: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   setExpenseArchived: (expense: Expense, archived: boolean) => Promise<void>;
+  createExpense: (input: ExpenseFormInput) => Promise<void>;
+  updateExpense: (previous: Expense, input: ExpenseFormInput) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
 }
 
 // Culorile exacte din spec (README redesign, secțiunea Cheltuieli) pentru cele
@@ -115,6 +127,31 @@ export function useExpenses(month: string): ExpensesData {
     });
   }
 
+  function expenseFromInput(base: Partial<Expense>, input: ExpenseFormInput) {
+    return normalizeRecord('expenses', {
+      ...base,
+      date: input.date,
+      amount: Number(input.amount),
+      category: canonicalCategoryName(input.category, records),
+      description: input.description.trim(),
+      notes: input.notes,
+    }) as Expense;
+  }
+
+  async function createExpense(input: ExpenseFormInput) {
+    const record = expenseFromInput({ id: `EXP-${crypto.randomUUID()}` }, input);
+    await session.mutate('/api/record', { type: 'expenses', mode: 'create', record });
+  }
+
+  async function updateExpense(previous: Expense, input: ExpenseFormInput) {
+    const record = expenseFromInput(previous, input);
+    await session.mutate('/api/record', { type: 'expenses', mode: 'update', record });
+  }
+
+  async function deleteExpense(id: string) {
+    await session.mutate('/api/record-delete', { type: 'expenses', id });
+  }
+
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
@@ -128,6 +165,9 @@ export function useExpenses(month: string): ExpensesData {
       createCategory,
       deleteCategory,
       setExpenseArchived,
+      createExpense,
+      updateExpense,
+      deleteExpense,
     };
   }
 
@@ -146,5 +186,8 @@ export function useExpenses(month: string): ExpensesData {
     createCategory,
     deleteCategory,
     setExpenseArchived,
+    createExpense,
+    updateExpense,
+    deleteExpense,
   };
 }

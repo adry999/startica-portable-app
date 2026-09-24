@@ -182,4 +182,79 @@ describe('useExpenses', () => {
     });
     await act(() => result.current.setExpenseArchived(expense, false));
   });
+
+  it('createExpense trimite un id EXP- generat și categoria canonicalizată', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record');
+      const body = JSON.parse(options.body as string);
+      expect(body.type).toBe('expenses');
+      expect(body.mode).toBe('create');
+      expect(body.record.id).toMatch(/^EXP-/);
+      expect(body.record.amount).toBe(120);
+      expect(body.record.category).toBe('Chirie'); // "chirie" fără diacritice se potrivește cu categoria existentă
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() =>
+      result.current.createExpense({
+        date: '2026-09-20',
+        amount: '120',
+        category: 'chirie',
+        description: 'Reparație robinet',
+        notes: '',
+      }),
+    );
+  });
+
+  it('updateExpense păstrează id-ul existent și trimite mode "update"', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+    const expense = result.current.expenses.find(e => e.id === 'e2')!;
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record');
+      const body = JSON.parse(options.body as string);
+      expect(body.mode).toBe('update');
+      expect(body.record.id).toBe('e2');
+      expect(body.record.amount).toBe(500);
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() =>
+      result.current.updateExpense(expense, {
+        date: expense.date,
+        amount: '500',
+        category: expense.category,
+        description: expense.description,
+        notes: '',
+      }),
+    );
+  });
+
+  it('createExpense cu sumă invalidă respinge fără să trimită cererea', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    await expect(
+      result.current.createExpense({ date: '2026-09-20', amount: '0', category: 'Altele', description: '', notes: '' }),
+    ).rejects.toThrow();
+  });
+
+  it('deleteExpense cheamă /api/record-delete cu tipul și id-ul', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record-delete');
+      const body = JSON.parse(options.body as string);
+      expect(body.type).toBe('expenses');
+      expect(body.id).toBe('e5');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await act(() => result.current.deleteExpense('e5'));
+  });
 });

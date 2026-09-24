@@ -59,7 +59,10 @@ describe('ExpensesPage', () => {
           if (body.type === 'expenses') {
             const updated = {
               ...fixtureState,
-              expenses: fixtureState.expenses.map(e => (e.id === body.record.id ? body.record : e)),
+              expenses:
+                body.mode === 'create'
+                  ? [...fixtureState.expenses, body.record]
+                  : fixtureState.expenses.map(e => (e.id === body.record.id ? body.record : e)),
             };
             return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
           }
@@ -72,6 +75,11 @@ describe('ExpensesPage', () => {
         if (path === '/api/category-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           const updated = { ...fixtureState, categories: fixtureState.categories.filter(c => c.id !== body.id) };
+          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+        }
+        if (path === '/api/record-delete') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const updated = { ...fixtureState, expenses: fixtureState.expenses.filter(e => e.id !== body.id) };
           return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
         }
         throw new Error(`neașteptat: ${path}`);
@@ -157,6 +165,62 @@ describe('ExpensesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Șterge Chirie' }));
 
     expect(await screen.findByText('Categorie ștearsă.')).toBeInTheDocument();
+  });
+
+  it('adaugă o cheltuială nouă din formular', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.type(screen.getByLabelText('Suma'), '250');
+    await user.type(screen.getByLabelText('Descriere'), 'Detergenți');
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
+    expect(screen.getByText('Detergenți')).toBeInTheDocument();
+  });
+
+  it('editează o cheltuială existentă din meniul rândului', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const row = screen.getByText('Salariu septembrie').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Editează' }));
+
+    const amountInput = screen.getByLabelText('Suma') as HTMLInputElement;
+    expect(amountInput.value).toBe('3000');
+    await user.clear(amountInput);
+    await user.type(amountInput, '3200');
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Cheltuială actualizată.')).toBeInTheDocument();
+  });
+
+  it('ștergerea definitivă rămâne dezactivată pentru o cheltuială activă și funcționează pentru una arhivată', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const activeRow = screen.getByText('Salariu septembrie').closest('tr')!;
+    await user.click(within(activeRow).getByLabelText('Mai multe acțiuni'));
+    expect(within(activeRow).getByRole('button', { name: 'Șterge definitiv' })).toBeDisabled();
+
+    await user.click(screen.getByRole('radio', { name: 'Arhivați · 1' }));
+    const archivedRow = screen.getByText('Chirie sediu').closest('tr')!;
+    await user.click(within(archivedRow).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(archivedRow).getByRole('button', { name: 'Șterge definitiv' }));
+
+    expect(await screen.findByText('Cheltuială ștearsă definitiv.')).toBeInTheDocument();
   });
 
   it('comută pe vizualizarea „Pe zile” și grupează cheltuielile pe dată', async () => {

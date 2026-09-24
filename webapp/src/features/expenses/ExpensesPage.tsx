@@ -2,11 +2,12 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { total } from '@domain/money.mjs';
+import { today } from '@domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
-import { useExpenses, categoryStyleFor } from './useExpenses';
+import { useExpenses, categoryStyleFor, type ExpenseFormInput } from './useExpenses';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
 
@@ -29,7 +30,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newExpenseDrawerOpen, setNewExpenseDrawerOpen] = useState(false);
+  const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
 
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
@@ -75,6 +76,28 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   async function toggleArchived(expense: Expense) {
     try {
       await data.setExpenseArchived(expense, !expense.archived);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function submitExpenseForm(input: ExpenseFormInput) {
+    try {
+      if (formTarget && formTarget !== 'new') await data.updateExpense(formTarget, input);
+      else await data.createExpense(input);
+      setFormTarget(null);
+      toast.show({ message: formTarget !== 'new' && formTarget ? 'Cheltuială actualizată.' : 'Cheltuială adăugată.' });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteExpenseForever(expense: Expense) {
+    if (!window.confirm(`Ștergi definitiv cheltuiala ${expense.id}? Nu poate fi anulată, spre deosebire de arhivare.`))
+      return;
+    try {
+      await data.deleteExpense(expense.id);
+      toast.show({ message: 'Cheltuială ștearsă definitiv.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -140,13 +163,19 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         <details className={styles.rowMenu} onClick={event => event.stopPropagation()}>
           <summary aria-label="Mai multe acțiuni">⋯</summary>
           <div className={styles.rowMenuPanel}>
-            {/* TODO: pasul Formulare — editare completă a cheltuielii */}
-            <button type="button">Editează</button>
+            <button type="button" onClick={() => setFormTarget(expense)}>
+              Editează
+            </button>
             <button type="button" onClick={() => void toggleArchived(expense)}>
               {expense.archived ? 'Reactivează' : 'Arhivează'}
             </button>
-            {/* TODO: pasul Formulare — ștergere definitivă, cu confirmare */}
-            <button type="button" className={styles.rowMenuDanger}>
+            <button
+              type="button"
+              className={styles.rowMenuDanger}
+              disabled={!expense.archived}
+              title={expense.archived ? undefined : 'Arhivează întâi cheltuiala'}
+              onClick={() => void deleteExpenseForever(expense)}
+            >
               Șterge definitiv
             </button>
           </div>
@@ -171,7 +200,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         <button type="button" className={styles.btnGhost}>
           Exportă
         </button>
-        <button type="button" className={styles.btnPrimary} onClick={() => setNewExpenseDrawerOpen(true)}>
+        <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
           + Cheltuială nouă
         </button>
       </div>
@@ -321,11 +350,97 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         )}
       </Card>
 
-      <Drawer open={newExpenseDrawerOpen} title="Cheltuială nouă" onClose={() => setNewExpenseDrawerOpen(false)}>
-        {/* TODO: pasul Formulare — formular complet, cu „+ Atașează bon” */}
-        <p>Formular complet — pasul următor din plan.</p>
-      </Drawer>
+      <ExpenseFormDrawer
+        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        target={formTarget}
+        categoryNames={data.categoryNames}
+        onSubmit={submitExpenseForm}
+        onClose={() => setFormTarget(null)}
+      />
     </>
+  );
+}
+
+function ExpenseFormDrawer({
+  target,
+  categoryNames,
+  onSubmit,
+  onClose,
+}: {
+  target: Expense | 'new' | null;
+  categoryNames: string[];
+  onSubmit: (input: ExpenseFormInput) => void;
+  onClose: () => void;
+}) {
+  const editing = target !== null && target !== 'new' ? target : null;
+  const [date, setDate] = useState(editing?.date || today());
+  const [amount, setAmount] = useState(editing?.amount !== undefined ? String(editing.amount) : '');
+  const [category, setCategory] = useState(editing?.category || 'Altele');
+  const [description, setDescription] = useState(editing?.description || '');
+  const [notes, setNotes] = useState(editing?.notes || '');
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    onSubmit({ date, amount, category, description, notes });
+  }
+
+  return (
+    <Drawer
+      open={target !== null}
+      title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
+      width={520}
+      onClose={onClose}
+      footer={
+        <button
+          type="button"
+          className={styles.btnPrimary}
+          onClick={() => onSubmit({ date, amount, category, description, notes })}
+        >
+          Salvează
+        </button>
+      }
+    >
+      <form className={styles.editorForm} onSubmit={handleSubmit}>
+        <label className={styles.editorField}>
+          Data cheltuielii
+          <input type="date" required value={date} onChange={event => setDate(event.target.value)} />
+        </label>
+        <label className={styles.editorField}>
+          Suma
+          <input
+            type="number"
+            required
+            min={0.01}
+            step="0.01"
+            value={amount}
+            onChange={event => setAmount(event.target.value)}
+          />
+        </label>
+        <label className={styles.editorField}>
+          Categorie
+          <input
+            type="text"
+            required
+            list="expenseCategoryOptions"
+            value={category}
+            onChange={event => setCategory(event.target.value)}
+          />
+          <datalist id="expenseCategoryOptions">
+            {categoryNames.map(name => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        </label>
+        <label className={styles.editorField}>
+          Descriere
+          <input type="text" value={description} onChange={event => setDescription(event.target.value)} />
+        </label>
+        <label className={styles.editorField}>
+          Observații
+          <textarea value={notes} onChange={event => setNotes(event.target.value)} rows={3} />
+        </label>
+      </form>
+    </Drawer>
   );
 }
 
