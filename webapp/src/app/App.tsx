@@ -182,6 +182,7 @@ function PaymentsRoute() {
       onOpenCreate={() => navigate('/achitari/nou')}
       onOpenEdit={id => navigate(`/achitari/${id}`)}
       onCloseForm={() => navigate('/achitari')}
+      onOpenChild={id => navigate(`/copii/${id}`)}
     />
   );
 }

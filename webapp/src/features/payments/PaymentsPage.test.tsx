@@ -44,7 +44,7 @@ const fixtureState = {
   visits: [],
 };
 
-function PaymentsHarness() {
+function PaymentsHarness({ onOpenChild = () => {} }: { onOpenChild?: (id: string) => void }) {
   const [formTargetId, setFormTargetId] = useState<string | null>(null);
   return (
     <PaymentsPage
@@ -52,14 +52,15 @@ function PaymentsHarness() {
       onOpenCreate={() => setFormTargetId('nou')}
       onOpenEdit={id => setFormTargetId(id)}
       onCloseForm={() => setFormTargetId(null)}
+      onOpenChild={onOpenChild}
     />
   );
 }
 
-function renderPage() {
+function renderPage(onOpenChild?: (id: string) => void) {
   return render(
     <ToastProvider>
-      <PaymentsHarness />
+      <PaymentsHarness onOpenChild={onOpenChild} />
     </ToastProvider>,
   );
 }
@@ -117,6 +118,42 @@ describe('PaymentsPage', () => {
     expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(0);
     expect(screen.getByText('Import CSV')).toBeInTheDocument();
     expect(screen.getByText('Neasociată')).toBeInTheDocument();
+  });
+
+  it('click pe un rând cu copil asociat deschide fișa copilului', async () => {
+    await loadedSession();
+    const onOpenChild = vi.fn();
+    renderPage(onOpenChild);
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await userEvent.click(row);
+
+    expect(onOpenChild).toHaveBeenCalledWith('c1');
+  });
+
+  it('click pe un rând neasociat nu apelează onOpenChild', async () => {
+    await loadedSession();
+    const onOpenChild = vi.fn();
+    renderPage(onOpenChild);
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Import CSV').closest('tr')!;
+    await userEvent.click(row);
+
+    expect(onOpenChild).not.toHaveBeenCalled();
+  });
+
+  it('click pe butoanele din rând nu deschide fișa copilului', async () => {
+    await loadedSession();
+    const onOpenChild = vi.fn();
+    renderPage(onOpenChild);
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await userEvent.click(within(row).getByRole('button', { name: 'Editează' }));
+
+    expect(onOpenChild).not.toHaveBeenCalled();
   });
 
   it('arhivează o achitare din rândul tabelului', async () => {

@@ -31,9 +31,11 @@ export interface PaymentsPageProps {
   onOpenCreate: () => void;
   onOpenEdit: (id: string) => void;
   onCloseForm: () => void;
+  /** Click pe un rând cu copil asociat — deschide fișa copilului (/copii/:id). */
+  onOpenChild: (id: string) => void;
 }
 
-export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseForm }: PaymentsPageProps) {
+export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseForm, onOpenChild }: PaymentsPageProps) {
   const data = usePayments();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
@@ -90,7 +92,7 @@ export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseFo
       <Filters data={data} />
 
       {viewMode === 'table' ? (
-        <TableView data={data} toast={toast} onEdit={onOpenEdit} />
+        <TableView data={data} toast={toast} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
       ) : (
         <MonthsView rows={data.rows} />
       )}
@@ -196,10 +198,12 @@ function TableView({
   data,
   toast,
   onEdit,
+  onOpenChild,
 }: {
   data: PaymentsData;
   toast: ReturnType<typeof useToast>;
   onEdit: (id: string) => void;
+  onOpenChild: (id: string) => void;
 }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
 
@@ -259,6 +263,7 @@ function TableView({
         selectable
         selectedRowKeys={selectedRowKeys}
         onSelectedRowKeysChange={setSelectedRowKeys}
+        onRowClick={row => !row.unassigned && onOpenChild(row.childId)}
         emptyState={<span>Nu există achitări pentru filtrele alese.</span>}
         columns={[
           {
@@ -322,8 +327,9 @@ function TableView({
           {
             key: 'actions',
             header: '',
+            align: 'end',
             render: row => (
-              <div className={styles.rowActions}>
+              <div className={styles.rowActions} onClick={event => event.stopPropagation()}>
                 <button type="button" className={styles.linkButton} onClick={() => toggleArchived(row)}>
                   {row.archived ? 'Dezarhivează' : 'Arhivează'}
                 </button>
