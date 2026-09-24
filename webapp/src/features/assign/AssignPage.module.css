@@ -1,0 +1,112 @@
+.notice {
+  color: var(--subtle);
+  margin: 0 0 var(--space-16);
+}
+
+.riskRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.riskCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.riskLabel {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.riskValue {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-10) var(--space-20);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: var(--shadow-button-primary);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+}
+
+.summary {
+  margin: 0 0 var(--space-12);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: var(--space-10) var(--space-12);
+  border-bottom: 1px solid var(--row-divider);
+  font-size: 13px;
+  vertical-align: top;
+}
+
+.table select {
+  width: 100%;
+  min-width: 220px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-6) var(--space-8);
+  font: inherit;
+  font-size: 13px;
+}
+
+.alignEnd {
+  text-align: right;
+}
+
+.empty {
+  text-align: center;
+  color: var(--subtle);
+  padding: var(--space-20);
+}
+
+.saveRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-16);
+}

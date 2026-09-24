@@ -13,6 +13,7 @@ import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { FeeSetupPage } from '@features/fee-setup';
+import { AssignPage } from '@features/assign';
 
 interface Child {
   id: string;
@@ -120,6 +121,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <StatusPage month={month} />;
     case 'fees':
       return <FeeSetupPage />;
+    case 'assign':
+      return <AssignPage month={month} />;
     default:
       return <ScaffoldContent />;
   }
