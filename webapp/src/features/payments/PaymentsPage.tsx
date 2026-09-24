@@ -94,7 +94,7 @@ export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseFo
       {viewMode === 'table' ? (
         <TableView data={data} toast={toast} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
       ) : (
-        <MonthsView rows={data.rows} />
+        <MonthsView rows={data.rows} onEdit={onOpenEdit} />
       )}
 
       <PaymentFormDrawer
@@ -354,7 +354,7 @@ function TableView({
   );
 }
 
-function MonthsView({ rows }: { rows: PaymentRowView[] }) {
+function MonthsView({ rows, onEdit }: { rows: PaymentRowView[]; onEdit: (id: string) => void }) {
   const groups = new Map<string, PaymentRowView[]>();
   for (const row of rows) {
     const monthKey = row.date.slice(0, 7);
@@ -377,11 +377,11 @@ function MonthsView({ rows }: { rows: PaymentRowView[] }) {
               <p className={styles.monthTitle}>{formatMonthLabel(month)}</p>
               <strong>{formatMoney(subtotal)}</strong>
             </div>
-            {/* TODO(pasul următor din plan): panou de detaliu lateral de 400px la click pe rând. */}
             <DataTable<PaymentRowView>
               rows={monthRows}
               rowKey={row => row.id}
               pageSize={monthRows.length || 1}
+              onRowClick={row => onEdit(row.id)}
               columns={[
                 { key: 'date', header: 'Data', render: row => row.dateLabel },
                 { key: 'child', header: 'Copil / sursă', render: row => row.childLabel },

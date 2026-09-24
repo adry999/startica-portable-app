@@ -9,6 +9,13 @@ function jsonResponse(body: unknown) {
 
 // Fixtură minimă, dar validă față de record-schema.mjs: un copil cu ziua de naștere
 // mâine (turningAge testabil), o achitare Cash luna curentă, o cheltuială aceeași lună.
+// Data nașterii e relativă la „azi" real, nu fixă — fixă devine flaky pe măsură ce trece timpul.
+const BIRTH_YEAR = 2020;
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+const BIRTHDAY_TOMORROW = `${BIRTH_YEAR}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+const EXPECTED_TURNING_AGE = tomorrow.getFullYear() - BIRTH_YEAR;
+
 const fixtureState = {
   children: [
     {
@@ -21,7 +28,7 @@ const fixtureState = {
       fee: 1500,
       feeHistory: [],
       dueDay: 10,
-      birthDate: '2020-09-24',
+      birthDate: BIRTHDAY_TOMORROW,
       archived: false,
     },
   ],
@@ -92,7 +99,7 @@ describe('useDashboard', () => {
     expect(result.current.upcomingBirthdays).toHaveLength(1);
     expect(result.current.upcomingBirthdays[0].child.name).toBe('Andrei Popescu');
     expect(result.current.upcomingBirthdays[0].daysUntil).toBe(1);
-    expect(result.current.upcomingBirthdays[0].turningAge).toBe(6);
+    expect(result.current.upcomingBirthdays[0].turningAge).toBe(EXPECTED_TURNING_AGE);
   });
 
   it('generează 12 luni de istoric, ultima fiind luna cerută', async () => {

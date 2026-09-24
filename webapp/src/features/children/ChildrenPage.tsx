@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
+import { downloadCsv } from '@shared/csv-export';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
@@ -70,6 +71,7 @@ function ChildrenListView({
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
+  const [moveGroupId, setMoveGroupId] = useState('');
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ro-RO');
@@ -119,6 +121,46 @@ function ChildrenListView({
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
+  }
+
+  async function moveSelectedToGroup(groupId: string) {
+    const ids = [...selectedRowKeys];
+    const targets = data.rows.filter(row => ids.includes(row.id));
+    if (targets.length === 0) return;
+    const nextGroupId = groupId === '__none__' ? null : groupId;
+    try {
+      for (const row of targets) {
+        await session.mutate('/api/record', {
+          type: 'children',
+          mode: 'update',
+          record: { ...row.child, groupId: nextGroupId },
+        });
+      }
+      setSelectedRowKeys(new Set());
+      setMoveGroupId('');
+      toast.show({ message: `${targets.length} ${targets.length === 1 ? 'copil mutat' : 'copii mutați'} în grupă.` });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  function exportSelected() {
+    const ids = [...selectedRowKeys];
+    const targets = data.rows.filter(row => ids.includes(row.id));
+    if (targets.length === 0) return;
+    downloadCsv(
+      `copii-${month}.csv`,
+      ['Nume', 'Contract', 'Părinte', 'Telefon', 'Grupă', 'Scadență', 'Plată lună curentă'],
+      targets.map(row => [
+        row.name,
+        row.contractLabel,
+        row.parent,
+        row.phone,
+        row.groupName,
+        row.dueDateLabel,
+        row.payment.label,
+      ]),
+    );
   }
 
   async function toggleArchived(row: ChildRow) {
@@ -331,10 +373,26 @@ function ChildrenListView({
           <div className={styles.selectionBar}>
             <span>{selectedRowKeys.size} selectați</span>
             <span className={styles.selectionDivider}>|</span>
-            {/* TODO: pasul Formulare */}
-            <button type="button">Mută în grupă</button>
-            {/* TODO: pasul Formulare */}
-            <button type="button">Exportă</button>
+            <select
+              className={styles.select}
+              value={moveGroupId}
+              onChange={event => setMoveGroupId(event.target.value)}
+              aria-label="Mută în grupa"
+            >
+              <option value="">Mută în grupă…</option>
+              <option value="__none__">Fără grupă</option>
+              {data.groups.map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+            <button type="button" disabled={!moveGroupId} onClick={() => void moveSelectedToGroup(moveGroupId)}>
+              Mută
+            </button>
+            <button type="button" onClick={exportSelected}>
+              Exportă
+            </button>
             <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
               Arhivează
             </button>
@@ -434,7 +492,6 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
           </div>
         </div>
         <div className={styles.profileActions}>
-          {/* TODO: pasul Formulare */}
           <button type="button" className={styles.btnWhite} onClick={() => setEditDrawerOpen(true)}>
             Editează fișa
           </button>

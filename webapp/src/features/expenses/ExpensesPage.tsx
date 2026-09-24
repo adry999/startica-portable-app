@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { downloadCsv } from '@shared/csv-export';
 import { total } from '@domain/money.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -45,6 +46,20 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         matchesRecordListSearch('expenses', expense, data.records, normalizedSearch),
     );
   }, [data.expenses, data.records, search, monthFrom, monthTo, category, archiveFilter]);
+
+  function exportFiltered() {
+    downloadCsv(
+      `cheltuieli-${month}.csv`,
+      ['Data', 'Categorie', 'Sumă', 'Descriere', 'Notițe'],
+      filteredExpenses.map(expense => [
+        formatDate(expense.date),
+        expense.category,
+        expense.amount,
+        expense.description,
+        expense.notes ?? '',
+      ]),
+    );
+  }
 
   const dailyGroups = useMemo(() => {
     const byDate = new Map<string, Expense[]>();
@@ -215,8 +230,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             { value: 'daily', label: 'Pe zile' },
           ]}
         />
-        {/* TODO: pasul Formulare — export real */}
-        <button type="button" className={styles.btnGhost}>
+        <button type="button" className={styles.btnGhost} onClick={exportFiltered}>
           Exportă
         </button>
         <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>

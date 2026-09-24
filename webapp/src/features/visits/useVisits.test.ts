@@ -7,6 +7,21 @@ function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
+// Datele fixturii sunt relative la „azi" real (nu valori fixe): hook-ul își pornește
+// luna calendarului din today(), deci o dată fixă „îngheață" corect doar în ziua
+// scrierii testului și devine flaky pe măsură ce trece timpul (ca la ziua de naștere
+// din useDashboard.test.ts — nu repetăm aceeași greșeală aici).
+function isoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+const now = new Date();
+const TODAY = isoDate(now);
+const CURRENT_MONTH = TODAY.slice(0, 7);
+const NEXT_MONTH = isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 15)).slice(0, 7);
+const PREVIOUS_MONTH = isoDate(new Date(now.getFullYear(), now.getMonth() - 1, 15)).slice(0, 7);
+const OTHER_MONTH_DATE = isoDate(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+const EMPTY_DATE = isoDate(new Date(now.getFullYear(), now.getMonth() - 2, 10));
+
 const fixtureState = {
   children: [],
   payments: [],
@@ -19,11 +34,11 @@ const fixtureState = {
       name: 'Andrei Popescu',
       parent: 'Maria Popescu',
       phone: '0722000001',
-      date: '2026-09-24',
+      date: TODAY,
       time: '10:00',
       status: 'Programată',
-      statusChangedAt: '2026-09-20T10:00:00.000Z',
-      history: [{ at: '2026-09-20T10:00:00.000Z', status: 'Programată', date: '2026-09-24', time: '10:00' }],
+      statusChangedAt: `${TODAY}T10:00:00.000Z`,
+      history: [{ at: `${TODAY}T10:00:00.000Z`, status: 'Programată', date: TODAY, time: '10:00' }],
       desiredGroupId: null,
       childId: '',
       archived: false,
@@ -33,10 +48,10 @@ const fixtureState = {
       name: 'Maria Ionescu',
       parent: 'Ioana Ionescu',
       phone: '',
-      date: '2026-09-24',
+      date: TODAY,
       time: '11:30',
       status: 'Efectuată',
-      statusChangedAt: '2026-09-20T10:00:00.000Z',
+      statusChangedAt: `${TODAY}T10:00:00.000Z`,
       history: [],
       desiredGroupId: 'g1',
       childId: '',
@@ -47,15 +62,15 @@ const fixtureState = {
       name: 'Ionuț Marin',
       parent: 'Elena Marin',
       phone: '',
-      date: '2026-08-01',
+      date: OTHER_MONTH_DATE,
       time: '09:00',
       status: 'Renunțat',
-      statusChangedAt: '2026-08-01T10:00:00.000Z',
+      statusChangedAt: `${OTHER_MONTH_DATE}T10:00:00.000Z`,
       history: [],
       desiredGroupId: null,
       childId: '',
       archived: true,
-      archivedAt: '2026-08-02T00:00:00.000Z',
+      archivedAt: `${OTHER_MONTH_DATE}T00:00:00.000Z`,
     },
   ],
 };
@@ -141,33 +156,33 @@ describe('useVisits', () => {
   it('click pe o zi din calendar (selectedDate) restrânge lista la ziua aceea', async () => {
     await loadedSession();
     const { result } = renderHook(() => useVisits());
-    act(() => result.current.setSelectedDate('2026-09-24'));
+    act(() => result.current.setSelectedDate(TODAY));
     expect(result.current.rows).toHaveLength(2);
-    act(() => result.current.setSelectedDate('2026-09-01'));
+    act(() => result.current.setSelectedDate(EMPTY_DATE));
     expect(result.current.rows).toHaveLength(0);
   });
 
   it('goToNextMonth/goToPreviousMonth/goToToday schimbă luna calendarului și resetează ziua selectată', async () => {
     await loadedSession();
     const { result } = renderHook(() => useVisits());
-    act(() => result.current.setSelectedDate('2026-09-24'));
+    act(() => result.current.setSelectedDate(TODAY));
 
     act(() => result.current.goToNextMonth());
-    expect(result.current.month).toBe('2026-10');
+    expect(result.current.month).toBe(NEXT_MONTH);
     expect(result.current.selectedDate).toBeNull();
 
     act(() => result.current.goToPreviousMonth());
     act(() => result.current.goToPreviousMonth());
-    expect(result.current.month).toBe('2026-08');
+    expect(result.current.month).toBe(PREVIOUS_MONTH);
 
     act(() => result.current.goToToday());
-    expect(result.current.month).toBe('2026-09');
+    expect(result.current.month).toBe(CURRENT_MONTH);
   });
 
   it('calendarul grupează vizitele nearhivate pe ziua lor, sortate după oră', async () => {
     await loadedSession();
     const { result } = renderHook(() => useVisits());
-    const day = result.current.weeks.flat().find(d => d.date === '2026-09-24')!;
+    const day = result.current.weeks.flat().find(d => d.date === TODAY)!;
     expect(day.visits.map(v => v.id)).toEqual(['VIZ-1', 'VIZ-2']);
   });
 

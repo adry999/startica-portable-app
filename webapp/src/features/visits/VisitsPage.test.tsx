@@ -9,6 +9,14 @@ function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
+// Vizitele trebuie să cadă în luna curentă (filtrul implicit din useVisits pornește
+// din today()) — o dată fixă ar deveni flaky pe măsură ce trece timpul, ca la ziua
+// de naștere din useDashboard.test.ts.
+const TODAY = (() => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+})();
+
 const fixtureState = {
   children: [],
   payments: [],
@@ -21,11 +29,11 @@ const fixtureState = {
       name: 'Andrei Popescu',
       parent: 'Maria Popescu',
       phone: '0722000001',
-      date: '2026-09-24',
+      date: TODAY,
       time: '10:00',
       status: 'Programată',
-      statusChangedAt: '2026-09-20T10:00:00.000Z',
-      history: [{ at: '2026-09-20T10:00:00.000Z', status: 'Programată', date: '2026-09-24', time: '10:00' }],
+      statusChangedAt: `${TODAY}T10:00:00.000Z`,
+      history: [{ at: `${TODAY}T10:00:00.000Z`, status: 'Programată', date: TODAY, time: '10:00' }],
       desiredGroupId: null,
       childId: '',
       archived: false,
@@ -35,10 +43,10 @@ const fixtureState = {
       name: 'Maria Ionescu',
       parent: 'Ioana Ionescu',
       phone: '',
-      date: '2026-09-24',
+      date: TODAY,
       time: '11:30',
       status: 'Efectuată',
-      statusChangedAt: '2026-09-20T10:00:00.000Z',
+      statusChangedAt: `${TODAY}T10:00:00.000Z`,
       history: [],
       desiredGroupId: 'g1',
       childId: '',
