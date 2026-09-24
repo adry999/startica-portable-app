@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -75,10 +76,23 @@ const fixtureState = {
   visits: [],
 };
 
+function ChildrenHarness() {
+  const [childId, setChildId] = useState<string | null>(null);
+  return (
+    <ChildrenPage
+      month="2026-09"
+      onNavigate={() => {}}
+      childId={childId}
+      onOpenChild={setChildId}
+      onCloseChild={() => setChildId(null)}
+    />
+  );
+}
+
 function renderPage() {
   return render(
     <ToastProvider>
-      <ChildrenPage month="2026-09" onNavigate={() => {}} />
+      <ChildrenHarness />
     </ToastProvider>,
   );
 }

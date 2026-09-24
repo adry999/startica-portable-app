@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge, Card, DataTable, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -26,34 +26,35 @@ const VIEW_MODE_OPTIONS = [
 const METHOD_TONE: Record<string, BadgeTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
 
 export interface PaymentsPageProps {
-  /** Setat de căutarea globală din topbar — deschide direct formularul achitării găsite. */
-  focusPaymentId?: string | null;
-  onFocusConsumed?: () => void;
+  /** Sursa formularului deschis — controlată din URL (/achitari/nou sau /achitari/:paymentId) de ruta din App.tsx. */
+  formTargetId: string | null;
+  onOpenCreate: () => void;
+  onOpenEdit: (id: string) => void;
+  onCloseForm: () => void;
 }
 
-export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPageProps = {}) {
+export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseForm }: PaymentsPageProps) {
   const data = usePayments();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
-  const [formTarget, setFormTarget] = useState<Payment | 'new' | null>(null);
-
-  useEffect(() => {
-    if (!focusPaymentId || data.status !== 'ready') return;
-    const payment = data.records.payments.find(p => p.id === focusPaymentId);
-    if (payment) setFormTarget(payment);
-    onFocusConsumed?.();
-  }, [focusPaymentId, data.status, onFocusConsumed]);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
     return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+
+  const formTarget: Payment | 'new' | null =
+    formTargetId === 'nou'
+      ? 'new'
+      : formTargetId
+        ? (data.records.payments.find(p => p.id === formTargetId) ?? null)
+        : null;
 
   async function submitPaymentForm(values: PaymentFormValues) {
     try {
       const previous = formTarget && formTarget !== 'new' ? formTarget : null;
       if (previous) {
         await data.updatePayment(previous, values);
-        setFormTarget(null);
+        onCloseForm();
         toast.show({ message: 'Achitare actualizată.' });
         return;
       }
@@ -63,7 +64,7 @@ export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPagePr
         ),
       );
       if (saved) {
-        setFormTarget(null);
+        onCloseForm();
         toast.show({ message: 'Achitare adăugată.' });
       }
     } catch (error) {
@@ -80,7 +81,7 @@ export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPagePr
           onChange={setViewMode}
           ariaLabel="Mod de afișare"
         />
-        <button type="button" className={styles.primaryButton} onClick={() => setFormTarget('new')}>
+        <button type="button" className={styles.primaryButton} onClick={onOpenCreate}>
           + Achitare nouă
         </button>
       </div>
@@ -89,7 +90,7 @@ export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPagePr
       <Filters data={data} />
 
       {viewMode === 'table' ? (
-        <TableView data={data} toast={toast} onEdit={setFormTarget} />
+        <TableView data={data} toast={toast} onEdit={onOpenEdit} />
       ) : (
         <MonthsView rows={data.rows} />
       )}
@@ -99,7 +100,7 @@ export function PaymentsPage({ focusPaymentId, onFocusConsumed }: PaymentsPagePr
         target={formTarget}
         records={data.records}
         onSubmit={submitPaymentForm}
-        onClose={() => setFormTarget(null)}
+        onClose={onCloseForm}
       />
     </>
   );
@@ -198,7 +199,7 @@ function TableView({
 }: {
   data: PaymentsData;
   toast: ReturnType<typeof useToast>;
-  onEdit: (payment: Payment) => void;
+  onEdit: (id: string) => void;
 }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
 
@@ -326,14 +327,7 @@ function TableView({
                 <button type="button" className={styles.linkButton} onClick={() => toggleArchived(row)}>
                   {row.archived ? 'Dezarhivează' : 'Arhivează'}
                 </button>
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  onClick={() => {
-                    const payment = data.records.payments.find(p => p.id === row.id);
-                    if (payment) onEdit(payment);
-                  }}
-                >
+                <button type="button" className={styles.linkButton} onClick={() => onEdit(row.id)}>
                   Editează
                 </button>
                 <button

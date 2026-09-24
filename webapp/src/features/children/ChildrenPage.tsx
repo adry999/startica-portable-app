@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -16,9 +16,10 @@ import styles from './ChildrenPage.module.css';
 export interface ChildrenPageProps {
   month: string;
   onNavigate: (view: ViewKey) => void;
-  /** Setate de căutarea globală din topbar — deschide direct fișa copilului găsit. */
-  focusChildId?: string | null;
-  onFocusConsumed?: () => void;
+  /** Sursa fișei deschise — controlată din URL (/copii/:childId) de ruta din App.tsx. */
+  childId: string | null;
+  onOpenChild: (id: string) => void;
+  onCloseChild: () => void;
 }
 
 const AVATAR_TONES = ['toneOrange', 'toneMint', 'toneYellow', 'tonePink'] as const;
@@ -39,20 +40,12 @@ function initials(name: string): string {
     .join('');
 }
 
-/** „Copii" (1c) + „Fișa copilului" (1e) — fișa e o stare internă, nu o intrare nouă în ViewKey. */
-export function ChildrenPage({ month, onNavigate, focusChildId, onFocusConsumed }: ChildrenPageProps) {
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!focusChildId) return;
-    setSelectedChildId(focusChildId);
-    onFocusConsumed?.();
-  }, [focusChildId, onFocusConsumed]);
-
-  if (selectedChildId) {
-    return <ChildProfileView childId={selectedChildId} month={month} onBack={() => setSelectedChildId(null)} />;
+/** „Copii" (1c) + „Fișa copilului" (1e) — fișa e o rută imbricată (/copii/:childId), nu o intrare nouă în ViewKey. */
+export function ChildrenPage({ month, onNavigate, childId, onOpenChild, onCloseChild }: ChildrenPageProps) {
+  if (childId) {
+    return <ChildProfileView childId={childId} month={month} onBack={onCloseChild} />;
   }
-  return <ChildrenListView month={month} onNavigate={onNavigate} onOpenChild={setSelectedChildId} />;
+  return <ChildrenListView month={month} onNavigate={onNavigate} onOpenChild={onOpenChild} />;
 }
 
 type ArchiveFilter = 'active' | 'archived' | 'all';

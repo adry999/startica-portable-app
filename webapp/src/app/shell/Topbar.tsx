@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MonthPicker } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
+import { pathForSearchResult } from './routes';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './Topbar.module.css';
 
@@ -10,13 +12,13 @@ export interface TopbarProps {
   view: ViewKey;
   month: string;
   onMonthChange: (month: string) => void;
-  onSelectResult: (result: SearchResult) => void;
 }
 
 /** Antetul paginii — eyebrow+titlu la stânga, acțiuni la dreapta (căutare globală doar pe Dashboard + selector lună). */
-export function Topbar({ view, month, onMonthChange, onSelectResult }: TopbarProps) {
+export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   const { eyebrow, title } = VIEW_TITLES[view];
   const session = useAppSession();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +44,7 @@ export function Topbar({ view, month, onMonthChange, onSelectResult }: TopbarPro
   function select(result: SearchResult) {
     setQuery('');
     setOpen(false);
-    onSelectResult(result);
+    navigate(pathForSearchResult(result));
   }
 
   return (

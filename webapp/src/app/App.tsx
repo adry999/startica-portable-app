@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { total } from '@domain/money.mjs';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -6,7 +7,7 @@ import { useAppSession } from '@shared/api/session';
 import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
-import type { SearchResult } from './shell/search-records';
+import { VIEW_PATHS, viewForPathname } from './shell/routes';
 import { DashboardPage } from '@features/dashboard';
 import { ChildrenPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
@@ -89,11 +90,30 @@ function ScaffoldContent() {
   );
 }
 
+const LAST_VIEW_KEY = 'nav.view';
+
+function readLastView(): ViewKey | null {
+  try {
+    return localStorage.getItem(LAST_VIEW_KEY) as ViewKey | null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLastView(view: ViewKey) {
+  try {
+    localStorage.setItem(LAST_VIEW_KEY, view);
+  } catch {
+    // Stocare indisponibilă — se pierde doar comoditatea de a reveni la ultimul modul.
+  }
+}
+
 export function App() {
   const session = useAppSession();
-  const [view, setView] = usePersistedState<ViewKey>('nav.view', 'dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
   const [month, setMonth] = useState(() => today().slice(0, 7));
-  const [searchFocus, setSearchFocus] = useState<SearchResult | null>(null);
+  const view = viewForPathname(location.pathname);
 
   useEffect(() => {
     // Încărcare o singură dată la montare — sesiunea e un singleton la nivel de modul, nu per componentă.
@@ -102,74 +122,66 @@ export function App() {
     });
   }, []);
 
-  function onSelectSearchResult(result: SearchResult) {
-    setSearchFocus(result);
-    setView(result.type);
-  }
+  useEffect(() => {
+    // Lansarea aplicației deschide mereu '/' — redirecționăm o singură dată spre ultimul modul vizitat,
+    // ca să păstrăm comoditatea din varianta cu stare persistată, fără să reținem și o fișă/formular anume.
+    if (location.pathname !== '/') return;
+    const lastView = readLastView();
+    if (lastView && lastView !== 'dashboard' && VIEW_PATHS[lastView]) navigate(VIEW_PATHS[lastView], { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => writeLastView(view), [view]);
+
+  const onNavigate = (nextView: ViewKey) => navigate(VIEW_PATHS[nextView]);
 
   return (
-    <AppShell
-      view={view}
-      onNavigate={setView}
-      month={month}
-      onMonthChange={setMonth}
-      onSelectSearchResult={onSelectSearchResult}
-    >
-      {renderView(view, month, setView, searchFocus, () => setSearchFocus(null))}
+    <AppShell view={view} onNavigate={onNavigate} month={month} onMonthChange={setMonth}>
+      <Routes>
+        <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
+        <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
+        <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
+        <Route path="/grupe" element={<GroupsPage />} />
+        <Route path="/achitari" element={<PaymentsRoute />} />
+        <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
+        <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
+        <Route path="/situatia-platilor" element={<StatusPage month={month} />} />
+        <Route path="/de-notificat" element={<NotifyPage month={month} onNavigate={onNavigate} />} />
+        <Route path="/taxe-si-grupe" element={<FeeSetupPage />} />
+        <Route path="/asociere-achitari" element={<AssignPage month={month} />} />
+        <Route path="/de-verificat" element={<ReviewPage onNavigate={onNavigate} />} />
+        <Route path="/istoric" element={<AuditLogPage />} />
+        <Route path="/notificari" element={<NotificationsPage />} />
+        <Route path="/backup-si-setari" element={<BackupPage />} />
+        <Route path="*" element={<ScaffoldContent />} />
+      </Routes>
     </AppShell>
   );
 }
 
-// Switch, nu un ternar înlănțuit: fiecare ecran are propria formă de props
-// (unele au nevoie de month/onNavigate, altele nu), plus e mai ușor de citit
-// pe măsură ce se adaugă ecrane noi (pasul 5 continuă).
-function renderView(
-  view: ViewKey,
-  month: string,
-  onNavigate: (view: ViewKey) => void,
-  searchFocus: SearchResult | null,
-  onFocusConsumed: () => void,
-) {
-  switch (view) {
-    case 'dashboard':
-      return <DashboardPage month={month} onNavigate={onNavigate} />;
-    case 'children':
-      return (
-        <ChildrenPage
-          month={month}
-          onNavigate={onNavigate}
-          focusChildId={searchFocus?.type === 'children' ? searchFocus.id : null}
-          onFocusConsumed={onFocusConsumed}
-        />
-      );
-    case 'groups':
-      return <GroupsPage />;
-    case 'payments':
-      return (
-        <PaymentsPage
-          focusPaymentId={searchFocus?.type === 'payments' ? searchFocus.id : null}
-          onFocusConsumed={onFocusConsumed}
-        />
-      );
-    case 'expenses':
-      return <ExpensesPage month={month} />;
-    case 'status':
-      return <StatusPage month={month} />;
-    case 'notify':
-      return <NotifyPage month={month} onNavigate={onNavigate} />;
-    case 'fees':
-      return <FeeSetupPage />;
-    case 'assign':
-      return <AssignPage month={month} />;
-    case 'review':
-      return <ReviewPage onNavigate={onNavigate} />;
-    case 'audit':
-      return <AuditLogPage />;
-    case 'notifications':
-      return <NotificationsPage />;
-    case 'settings':
-      return <BackupPage />;
-    default:
-      return <ScaffoldContent />;
-  }
+function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view: ViewKey) => void }) {
+  const { childId } = useParams();
+  const navigate = useNavigate();
+  return (
+    <ChildrenPage
+      month={month}
+      onNavigate={onNavigate}
+      childId={childId ?? null}
+      onOpenChild={id => navigate(`/copii/${id}`)}
+      onCloseChild={() => navigate('/copii')}
+    />
+  );
+}
+
+function PaymentsRoute() {
+  const { paymentId } = useParams();
+  const navigate = useNavigate();
+  return (
+    <PaymentsPage
+      formTargetId={paymentId ?? null}
+      onOpenCreate={() => navigate('/achitari/nou')}
+      onOpenEdit={id => navigate(`/achitari/${id}`)}
+      onCloseForm={() => navigate('/achitari')}
+    />
+  );
 }

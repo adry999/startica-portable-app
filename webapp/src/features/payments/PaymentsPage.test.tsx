@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -43,10 +44,22 @@ const fixtureState = {
   visits: [],
 };
 
+function PaymentsHarness() {
+  const [formTargetId, setFormTargetId] = useState<string | null>(null);
+  return (
+    <PaymentsPage
+      formTargetId={formTargetId}
+      onOpenCreate={() => setFormTargetId('nou')}
+      onOpenEdit={id => setFormTargetId(id)}
+      onCloseForm={() => setFormTargetId(null)}
+    />
+  );
+}
+
 function renderPage() {
   return render(
     <ToastProvider>
-      <PaymentsPage />
+      <PaymentsHarness />
     </ToastProvider>,
   );
 }

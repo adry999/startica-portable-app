@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { ToastProvider } from '@shared/ui';
@@ -27,9 +28,11 @@ describe('App', () => {
 
   it('pornește pe Dashboard, în interiorul shell-ului', () => {
     render(
-      <ToastProvider>
-        <App />
-      </ToastProvider>,
+      <MemoryRouter initialEntries={['/']}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </MemoryRouter>,
     );
     expect(screen.getByRole('button', { name: /Dashboard/ })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
@@ -37,9 +40,11 @@ describe('App', () => {
 
   it('navigarea din sidebar schimbă conținutul (dovedește ruta către @domain/money.mjs prin ecranul placeholder)', async () => {
     render(
-      <ToastProvider>
-        <App />
-      </ToastProvider>,
+      <MemoryRouter initialEntries={['/']}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </MemoryRouter>,
     );
     // „Copii" și „Grupe" au acum ecranele reale (pasul 5); „Vizite" rămâne pe placeholder-ul de scaffold.
     await userEvent.click(screen.getByRole('button', { name: 'Vizite' }));

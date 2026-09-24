@@ -1,8 +1,9 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { Topbar } from './Topbar';
+import { Topbar, type TopbarProps } from './Topbar';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -17,25 +18,46 @@ const fixtureState = {
   visits: [],
 };
 
+function LocationDisplay() {
+  return <p data-testid="location">{useLocation().pathname}</p>;
+}
+
+function renderTopbar(props: TopbarProps) {
+  return render(
+    <MemoryRouter initialEntries={['/']}>
+      <Topbar {...props} />
+      <Routes>
+        <Route path="*" element={<LocationDisplay />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
 describe('Topbar', () => {
   it('arată eyebrow și titlul ecranului curent', () => {
-    render(<Topbar view="payments" month="2026-09" onMonthChange={() => {}} onSelectResult={() => {}} />);
+    renderTopbar({ view: 'payments', month: '2026-09', onMonthChange: () => {} });
     expect(screen.getByText('Contabilitate')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Achitări' })).toBeInTheDocument();
   });
 
   it('arată căutarea globală doar pe Dashboard', () => {
     const { rerender } = render(
-      <Topbar view="dashboard" month="2026-09" onMonthChange={() => {}} onSelectResult={() => {}} />,
+      <MemoryRouter initialEntries={['/']}>
+        <Topbar view="dashboard" month="2026-09" onMonthChange={() => {}} />
+      </MemoryRouter>,
     );
     expect(screen.getByPlaceholderText('Caută copil, părinte, achitare…')).toBeInTheDocument();
 
-    rerender(<Topbar view="payments" month="2026-09" onMonthChange={() => {}} onSelectResult={() => {}} />);
+    rerender(
+      <MemoryRouter initialEntries={['/']}>
+        <Topbar view="payments" month="2026-09" onMonthChange={() => {}} />
+      </MemoryRouter>,
+    );
     expect(screen.queryByPlaceholderText('Caută copil, părinte, achitare…')).not.toBeInTheDocument();
   });
 
   it('afișează selectorul de lună pe orice ecran', () => {
-    render(<Topbar view="expenses" month="2026-09" onMonthChange={() => {}} onSelectResult={() => {}} />);
+    renderTopbar({ view: 'expenses', month: '2026-09', onMonthChange: () => {} });
     expect(screen.getByRole('button', { name: 'Septembrie 2026' })).toBeInTheDocument();
   });
 
@@ -53,19 +75,18 @@ describe('Topbar', () => {
       );
     });
 
-    it('scrierea unui query arată rezultate live, iar click apelează onSelectResult', async () => {
+    it('scrierea unui query arată rezultate live, iar click navighează la fișa copilului', async () => {
       const session = renderHook(() => useAppSession());
       await act(() => session.result.current.load());
 
-      const onSelectResult = vi.fn();
       const user = userEvent.setup();
-      render(<Topbar view="dashboard" month="2026-09" onMonthChange={() => {}} onSelectResult={onSelectResult} />);
+      renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
 
       await user.type(screen.getByPlaceholderText('Caută copil, părinte, achitare…'), 'andrei');
       const result = await screen.findByText('Andrei Popescu');
       await user.click(result);
 
-      expect(onSelectResult).toHaveBeenCalledWith(expect.objectContaining({ type: 'children', id: 'c1' }));
+      expect(await screen.findByTestId('location')).toHaveTextContent('/copii/c1');
     });
   });
 });
