@@ -6,7 +6,10 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { useChildren, type ChildRow } from './useChildren';
 import { useChildProfile } from './useChildProfile';
-import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import { ChildFormDrawer } from './ChildFormDrawer';
+import { ChildrenCsvDialog } from './ChildrenCsvDialog';
+import { buildChildRecord, type ChildFormValues } from './child-form';
+import type { Child, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '../../app/shell/nav-items';
 import styles from './ChildrenPage.module.css';
 
@@ -63,7 +66,8 @@ function ChildrenListView({
   const [groupFilter, setGroupFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
-  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ro-RO');
@@ -122,6 +126,32 @@ function ChildrenListView({
         mode: 'update',
         record: { ...row.child, archived: !row.archived, archivedAt: row.archived ? null : new Date().toISOString() },
       });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function submitChildForm(values: ChildFormValues) {
+    try {
+      const previous = formTarget && formTarget !== 'new' ? formTarget : null;
+      const record = buildChildRecord(previous, `ID-${crypto.randomUUID()}`, values);
+      await session.mutate('/api/record', {
+        type: 'children',
+        mode: previous ? 'update' : 'create',
+        record,
+      });
+      setFormTarget(null);
+      toast.show({ message: previous ? 'Fișă actualizată.' : 'Copil adăugat.' });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteChildForever(row: ChildRow) {
+    if (!window.confirm(`Ștergi definitiv fișa ${row.name}? Nu poate fi anulată, spre deosebire de arhivare.`)) return;
+    try {
+      await session.mutate('/api/record-delete', { type: 'children', id: row.id });
+      toast.show({ message: 'Fișă ștearsă definitiv.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -195,13 +225,19 @@ function ChildrenListView({
         <details className={styles.rowMenu} onClick={event => event.stopPropagation()}>
           <summary aria-label="Mai multe acțiuni">⋯</summary>
           <div className={styles.rowMenuPanel}>
-            {/* TODO: pasul Formulare — editare completă a fișei */}
-            <button type="button">Editează</button>
+            <button type="button" onClick={() => setFormTarget(row.child)}>
+              Editează
+            </button>
             <button type="button" onClick={() => toggleArchived(row)}>
               {row.archived ? 'Reactivează' : 'Arhivează'}
             </button>
-            {/* TODO: pasul Formulare — ștergere definitivă, cu confirmare */}
-            <button type="button" className={styles.rowMenuDanger}>
+            <button
+              type="button"
+              className={styles.rowMenuDanger}
+              disabled={!row.archived}
+              title={row.archived ? undefined : 'Arhivează întâi fișa'}
+              onClick={() => void deleteChildForever(row)}
+            >
               Șterge definitiv
             </button>
           </div>
@@ -213,11 +249,10 @@ function ChildrenListView({
   return (
     <>
       <div className={styles.headerActions}>
-        {/* TODO: pasul Formulare — import CSV real */}
-        <button type="button" className={styles.btnGhost}>
+        <button type="button" className={styles.btnGhost} onClick={() => setCsvDialogOpen(true)}>
           Import CSV
         </button>
-        <button type="button" className={styles.btnPrimary} onClick={() => setAddDrawerOpen(true)}>
+        <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
           + Adaugă copil
         </button>
       </div>
@@ -319,9 +354,14 @@ function ChildrenListView({
         />
       </Card>
 
-      <Drawer open={addDrawerOpen} title="Copil nou" onClose={() => setAddDrawerOpen(false)}>
-        <p>Formular complet — pasul următor din plan.</p>
-      </Drawer>
+      <ChildFormDrawer
+        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        target={formTarget}
+        groups={data.groups}
+        onSubmit={submitChildForm}
+        onClose={() => setFormTarget(null)}
+      />
+      <ChildrenCsvDialog open={csvDialogOpen} onClose={() => setCsvDialogOpen(false)} />
     </>
   );
 }
@@ -356,6 +396,17 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
         mode: 'update',
         record: { ...child, groupId: groupId || null },
       });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function submitChildEdit(values: ChildFormValues) {
+    try {
+      const record = buildChildRecord(child, child.id, values);
+      await session.mutate('/api/record', { type: 'children', mode: 'update', record });
+      setEditDrawerOpen(false);
+      toast.show({ message: 'Fișă actualizată.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -451,9 +502,13 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
         </div>
       </div>
 
-      <Drawer open={editDrawerOpen} title="Editează fișa" onClose={() => setEditDrawerOpen(false)}>
-        <p>Formular complet — pasul următor din plan.</p>
-      </Drawer>
+      <ChildFormDrawer
+        key={editDrawerOpen ? child.id : 'closed'}
+        target={editDrawerOpen ? child : null}
+        groups={data.groups}
+        onSubmit={submitChildEdit}
+        onClose={() => setEditDrawerOpen(false)}
+      />
       <Drawer open={paymentDrawerOpen} title="Plată nouă" onClose={() => setPaymentDrawerOpen(false)}>
         <p>Formular complet — pasul următor din plan.</p>
       </Drawer>
