@@ -1,0 +1,126 @@
+.notice {
+  color: var(--subtle);
+  margin: var(--space-8) 0;
+}
+
+.error {
+  color: var(--raspberry);
+  margin: var(--space-8) 0;
+}
+
+.panel {
+  margin-bottom: var(--space-16);
+}
+
+.panelTitle {
+  margin: 0 0 var(--space-12);
+  font-family: var(--font-heading);
+}
+
+.details {
+  margin-top: var(--space-12);
+  font-size: 13px;
+}
+
+.details p {
+  margin: var(--space-4) 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+  max-width: 480px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+  margin-bottom: var(--space-12);
+}
+
+.field input,
+.field select {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font: inherit;
+  font-size: 13px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+  box-shadow: var(--shadow-button-primary);
+}
+
+.btnPrimary:disabled,
+.btnGhost:disabled {
+  opacity: 0.6;
+}
+
+.sourceField {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-16);
+  display: flex;
+  gap: var(--space-16);
+}
+
+.sourceField legend {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: var(--space-8);
+}
+
+.externalFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.preview {
+  background: var(--neutral-softer);
+  border-radius: var(--radius-md);
+  padding: var(--space-12);
+  margin-bottom: var(--space-16);
+  font-size: 13px;
+}
+
+.preview p {
+  margin: var(--space-4) 0;
+}

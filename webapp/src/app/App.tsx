@@ -17,6 +17,7 @@ import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
 import { AuditLogPage } from '@features/audit-log';
 import { NotificationsPage } from '@features/notifications';
+import { BackupPage } from '@features/backup';
 
 interface Child {
   id: string;
@@ -132,6 +133,8 @@ function renderView(view: ViewKey, month: string, onNavigate: (view: ViewKey) =>
       return <AuditLogPage />;
     case 'notifications':
       return <NotificationsPage />;
+    case 'settings':
+      return <BackupPage />;
     default:
       return <ScaffoldContent />;
   }
