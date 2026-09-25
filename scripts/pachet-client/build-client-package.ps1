@@ -125,7 +125,7 @@ try {
     }
     $webappDistStage = Join-Path $appStage 'webapp\dist'
     New-Item -ItemType Directory -Path $webappDistStage -Force | Out-Null
-    Copy-Item -LiteralPath (Join-Path $webappDistSource '*') -Destination $webappDistStage -Recurse
+    Copy-Item -Path (Join-Path $webappDistSource '*') -Destination $webappDistStage -Recurse
 
     # Lansatorul nu e urmarit in git; se construieste acum, din arborele de lucru curat.
     $buildLauncherScript = Join-Path $repo 'launcher\build-launcher.ps1'
