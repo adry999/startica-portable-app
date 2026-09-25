@@ -302,18 +302,25 @@ function ChildrenListView({
       </div>
 
       <div className={styles.statsRow}>
-        <Card className={styles.statCard}>
-          <strong>{data.summary.activeCount}</strong>
-          <span>Copii activi</span>
+        <Card tone="orange" className={styles.statCard}>
+          <strong className={styles.statValueOrange}>{data.summary.activeCount}</strong>
+          <div>
+            <span>Copii activi</span>
+            <small>statut curent din fișă</small>
+          </div>
         </Card>
-        <Card className={styles.statCard}>
-          <strong>{data.summary.occupiedGroupsCount}</strong>
-          <span>Grupe ocupate</span>
+        <Card tone="mint" className={styles.statCard}>
+          <strong className={styles.statValueMint}>{data.summary.occupiedGroupsCount}</strong>
+          <div>
+            <span>Grupe ocupate</span>
+            <small>din {data.groups.length} grupe</small>
+          </div>
         </Card>
-        <Card className={styles.statCard}>
+        <Card tone="yellow" className={styles.statCard}>
+          <strong className={styles.statValueYellow}>{data.summary.incompleteCount}</strong>
           <div className={styles.statMain}>
-            <strong>{data.summary.incompleteCount}</strong>
             <span>Fișe de verificat</span>
+            <small>în centrul de verificare</small>
           </div>
           <button type="button" className={styles.statLink} onClick={() => onNavigate('review')}>
             Verifică →

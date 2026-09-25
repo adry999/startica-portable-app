@@ -141,7 +141,7 @@ describe('ChildrenPage', () => {
     expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
     expect(screen.queryByText('Ionuț Marin')).not.toBeInTheDocument(); // arhivat, ascuns din filtrul implicit
 
-    const activeStatCard = screen.getByText('Copii activi').closest('div')!;
+    const activeStatCard = screen.getByText('Copii activi').closest('div')!.parentElement!;
     expect(within(activeStatCard).getByText('2')).toBeInTheDocument();
   });
 

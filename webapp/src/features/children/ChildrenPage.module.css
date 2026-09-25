@@ -43,46 +43,68 @@
 .statsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-16);
+  gap: 14px;
   margin-bottom: var(--space-16);
 }
 
 .statCard {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-radius: var(--radius-lg);
-  padding: var(--space-16) var(--space-20);
-  gap: var(--space-12);
+  gap: 16px;
+  border-radius: 20px;
+  padding: 16px 20px;
 }
 
 .statCard strong {
   font-family: var(--font-heading);
-  font-size: 24px;
-  margin-right: var(--space-8);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.statValueOrange {
+  color: var(--orange-ink);
+}
+
+.statValueMint {
+  color: var(--mint-ink);
+}
+
+.statValueYellow {
+  color: var(--yellow-ink);
+}
+
+.statCard > div {
+  display: flex;
+  flex-direction: column;
 }
 
 .statCard span {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.statCard small {
+  font-size: 12px;
   color: var(--muted);
 }
 
 .statMain {
-  display: flex;
-  align-items: baseline;
+  flex: 1;
 }
 
 .statLink {
   border: none;
   background: none;
-  color: var(--orange-ink);
+  color: var(--yellow-ink);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
 .tableCard {
   padding: 0;
+  border-radius: 22px;
   overflow: hidden;
 }
 
@@ -90,7 +112,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-12);
-  padding: var(--space-16) var(--space-20);
+  padding: 14px 16px;
   flex-wrap: wrap;
 }
 

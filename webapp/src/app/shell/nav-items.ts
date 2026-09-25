@@ -72,7 +72,7 @@ export const NAV_GROUPS: NavGroup[] = [
 /** Eyebrow + titlu pentru topbar, câte unul per ecran. */
 export const VIEW_TITLES: Record<ViewKey, { eyebrow: string; title: string }> = {
   dashboard: { eyebrow: 'Privire de ansamblu', title: 'Rezumatul lunii' },
-  children: { eyebrow: 'Administrare', title: 'Copii' },
+  children: { eyebrow: 'Evidență', title: 'Copii' },
   groups: { eyebrow: 'Administrare', title: 'Grupe' },
   visits: { eyebrow: 'Administrare', title: 'Vizite' },
   payments: { eyebrow: 'Contabilitate', title: 'Achitări' },
