@@ -65,7 +65,7 @@ describe('DashboardPage', () => {
     await act(() => session.result.current.load());
 
     render(<DashboardPage month="2026-09" onNavigate={() => {}} />);
-    expect(screen.getByText('Încasări')).toBeInTheDocument();
+    expect(screen.getByText('Încasări', { selector: 'p' })).toBeInTheDocument();
     // Venit, diferență (egale, fără cheltuieli în fixtură) și legenda pe metodă arată aceeași sumă.
     expect(screen.getAllByText(/1\.500,00 lei/).length).toBeGreaterThanOrEqual(2);
   });

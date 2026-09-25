@@ -40,6 +40,7 @@ export interface DashboardData {
   byMethod: Record<string, number>;
   advance: number;
   revenueHistory: RevenueBar[];
+  expenseHistory: RevenueBar[];
   attentionItems: AttentionItem[];
   allClear: boolean;
   hasAnyRecords: boolean;
@@ -70,6 +71,7 @@ export function useDashboard(month: string): DashboardData {
       byMethod: {},
       advance: 0,
       revenueHistory: [],
+      expenseHistory: [],
       attentionItems: [],
       allClear: true,
       hasAnyRecords: false,
@@ -93,11 +95,14 @@ export function useDashboard(month: string): DashboardData {
   const visitsSummary = countVisitsForDays(records.visits, todayStr, 1);
 
   const revenueHistory: RevenueBar[] = [];
+  const expenseHistory: RevenueBar[] = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(`${month}-15T12:00:00`);
     d.setMonth(d.getMonth() - i);
     const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    revenueHistory.push({ month: m, value: summarizeCashForMonth(records, m).income });
+    const monthCash = summarizeCashForMonth(records, m);
+    revenueHistory.push({ month: m, value: monthCash.income });
+    expenseHistory.push({ month: m, value: monthCash.expense });
   }
 
   const attentionItems: AttentionItem[] = [
@@ -172,6 +177,7 @@ export function useDashboard(month: string): DashboardData {
     byMethod: cash.byMethod,
     advance,
     revenueHistory,
+    expenseHistory,
     attentionItems,
     allClear: attentionItems.every(item => item.count === 0 && !item.forceShow),
     hasAnyRecords: records.children.length > 0 || records.payments.length > 0,

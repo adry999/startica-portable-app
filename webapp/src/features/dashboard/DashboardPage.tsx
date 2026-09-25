@@ -1,8 +1,26 @@
-import { Card } from '@shared/ui';
+import { useState } from 'react';
+import { Card, SegmentedControl } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
 import type { ViewKey } from '../../app/shell/nav-items';
 import styles from './DashboardPage.module.css';
+
+const AVATAR_TONE_CLASS = [styles.avatarOrange, styles.avatarMint, styles.avatarPink];
+const MONTH_NAMES = [
+  'ianuarie',
+  'februarie',
+  'martie',
+  'aprilie',
+  'mai',
+  'iunie',
+  'iulie',
+  'august',
+  'septembrie',
+  'octombrie',
+  'noiembrie',
+  'decembrie',
+];
 
 const METHOD_LABELS: Record<string, string> = { Cash: 'Cash', Card: 'Card', Transfer: 'Transfer' };
 const METHOD_BAR_CLASS: Record<string, string> = {
@@ -30,15 +48,22 @@ export interface DashboardPageProps {
   onNavigate: (view: ViewKey) => void;
 }
 
+const CHART_MODE_OPTIONS = [
+  { value: 'income' as const, label: 'Încasări' },
+  { value: 'expense' as const, label: 'Cheltuieli' },
+];
+
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const data = useDashboard(month);
+  const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
     return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const currentMonthIndex = data.revenueHistory.length - 1;
-  const maxRevenue = Math.max(1, ...data.revenueHistory.map(r => r.value));
+  const revenueView = chartMode === 'expense' ? data.expenseHistory : data.revenueHistory;
+  const maxRevenue = Math.max(1, ...revenueView.map(r => r.value));
 
   return (
     <>
@@ -92,28 +117,44 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
       <div className={styles.row2}>
         <Card className={styles.revenuePanel}>
-          <p className={styles.panelTitle}>Evoluția încasărilor</p>
-          <p className={styles.panelSubtitle}>Ultimele 12 luni</p>
+          <div className={styles.panelHead}>
+            <div>
+              <p className={styles.panelTitle}>Evoluția încasărilor</p>
+              <p className={styles.panelSubtitle}>Ultimele 12 luni</p>
+            </div>
+            <SegmentedControl
+              ariaLabel="Evoluția încasărilor sau cheltuielilor"
+              options={CHART_MODE_OPTIONS}
+              value={chartMode}
+              onChange={setChartMode}
+            />
+          </div>
           <div className={styles.bars}>
-            {data.revenueHistory.map((bar, index) => (
+            {revenueView.map((bar, index) => (
               <div key={bar.month} className={styles.barColumn}>
-                <span className={styles.barValue}>{formatCompactMoney(bar.value)}</span>
                 <div
                   className={
                     index === currentMonthIndex ? styles.barCurrent : bar.value === 0 ? styles.barEmpty : styles.barPast
                   }
                   style={{ height: bar.value === 0 ? 6 : Math.max(6, (bar.value / maxRevenue) * 100) }}
                 />
-                <small className={index === currentMonthIndex ? styles.barLabelCurrent : undefined}>
-                  {bar.month.slice(5)}
-                </small>
               </div>
+            ))}
+          </div>
+          <div className={styles.barLabels}>
+            {revenueView.map((bar, index) => (
+              <small key={bar.month} className={index === currentMonthIndex ? styles.barLabelCurrent : undefined}>
+                {bar.month.slice(5)}
+              </small>
             ))}
           </div>
         </Card>
 
         <Card className={styles.attentionPanel}>
-          <p className={styles.panelTitle}>Necesită atenție</p>
+          <div>
+            <p className={styles.panelEyebrow}>Necesită atenție</p>
+            <p className={styles.panelTitle}>Rezolvă pentru date corecte</p>
+          </div>
           {data.allClear ? (
             <div className={styles.attentionEmpty}>
               <strong>Nicio acțiune în listele urmărite.</strong>
@@ -134,46 +175,52 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
       </div>
 
       <Card className={styles.birthdaysCard}>
-        <p className={styles.panelTitle}>Zile de naștere</p>
         <div className={styles.birthdaysGrid}>
           <div className={styles.birthdaysUpcoming}>
+            <div>
+              <p className={styles.panelEyebrowMint}>Zile de naștere</p>
+              <p className={styles.panelTitle}>În următoarele 5 zile</p>
+            </div>
             {data.upcomingBirthdays.length === 0 && (
               <p className={styles.notice}>Nicio zi de naștere în următoarele 5 zile.</p>
             )}
             {data.upcomingBirthdays.map(
-              (row: { child: { id: string; name: string }; daysUntil: number; turningAge: number }) => (
+              (row: { child: { id: string; name: string }; daysUntil: number; turningAge: number }, index: number) => (
                 <div key={row.child.id} className={styles.birthdayRow}>
-                  <span className={styles.avatar}>{initials(row.child.name)}</span>
+                  <span className={`${styles.avatar} ${AVATAR_TONE_CLASS[index % AVATAR_TONE_CLASS.length]}`}>
+                    {initials(row.child.name)}
+                  </span>
                   <div>
                     <strong>{row.child.name}</strong>
                     <small>
                       împlinește {row.turningAge} {row.turningAge === 1 ? 'an' : 'ani'}
                     </small>
                   </div>
-                  <span className={styles.pillNeutral}>
+                  <span className={styles.birthdayPill}>
                     {row.daysUntil === 0 ? 'azi' : row.daysUntil === 1 ? 'mâine' : `în ${row.daysUntil} zile`}
                   </span>
                 </div>
               ),
             )}
           </div>
-          <div className={styles.birthdaysCalendar}>
-            {data.birthdayWeeks
-              .flat()
-              .filter((cell: { inMonth: boolean }) => cell.inMonth)
-              .map(cell => (
-                <div
-                  key={cell.date}
-                  className={`${styles.calendarCell} ${cell.isToday ? styles.calendarCellToday : ''}`}
-                >
-                  <strong>{cell.day}</strong>
-                  {cell.names.map((n: { name: string }) => (
-                    <span key={n.name} className={styles.calendarChip}>
-                      {n.name}
-                    </span>
-                  ))}
-                </div>
-              ))}
+          <div className={styles.birthdaysMonth}>
+            <div className={styles.birthdaysMonthHead}>
+              <strong>Toată luna {MONTH_NAMES[Number(month.slice(5, 7)) - 1]}</strong>
+            </div>
+            <div className={styles.birthdaysCalendar}>
+              {data.birthdayWeeks
+                .flat()
+                .filter((cell: { inMonth: boolean; names: unknown[] }) => cell.inMonth && cell.names.length > 0)
+                .map(cell => {
+                  const upcoming = cell.date >= todayFn();
+                  return (
+                    <div key={cell.date} className={upcoming ? styles.calendarCellUpcoming : styles.calendarCellPast}>
+                      <strong>{cell.day}</strong>
+                      <span>{cell.names.map((n: { name: string }) => n.name).join(', ')}</span>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
       </Card>
@@ -186,7 +233,6 @@ function AttentionRow({ item, onNavigate }: { item: AttentionItem; onNavigate: (
   return (
     <article className={`${styles.attentionRow} ${clear ? styles.attentionRowClear : ATTENTION_TONE_CLASS[item.tone]}`}>
       <span className={styles.attentionCount}>{item.count}</span>
-      <span aria-hidden="true">{item.icon}</span>
       <div className={styles.attentionText}>
         <strong>{item.title}</strong>
         <small>{clear ? 'Nicio acțiune necesară pe această listă.' : item.detail}</small>

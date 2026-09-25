@@ -135,10 +135,39 @@
 }
 
 .revenuePanel,
-.attentionPanel,
 .birthdaysCard {
   padding: 24px 26px;
   gap: 20px;
+}
+
+.attentionPanel {
+  padding: 24px 22px;
+  gap: 14px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-16);
+}
+
+.panelEyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--raspberry);
+}
+
+.panelEyebrowMint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange-ink);
 }
 
 .panelTitle {
@@ -149,7 +178,7 @@
 }
 
 .panelSubtitle {
-  margin: 2px 0 var(--space-16);
+  margin: 2px 0 0;
   font-size: 13px;
   color: var(--subtle);
 }
@@ -157,8 +186,10 @@
 .bars {
   display: flex;
   align-items: flex-end;
-  gap: var(--space-8);
-  height: 160px;
+  gap: 14px;
+  height: 190px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 6px;
 }
 
 .barColumn {
@@ -166,18 +197,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
-}
-
-.barValue {
-  font-size: 10px;
-  color: var(--subtle);
+  justify-content: flex-end;
+  height: 100%;
 }
 
 .barCurrent,
 .barPast,
 .barEmpty {
   width: 100%;
+  max-width: 34px;
   border-radius: 10px 10px 4px 4px;
 }
 
@@ -191,6 +219,21 @@
 
 .barEmpty {
   background: #f1ece2;
+}
+
+.barLabels {
+  display: flex;
+  gap: 14px;
+  padding: 0 6px;
+  margin-top: -10px;
+}
+
+.barLabels small {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--subtle);
+  font-weight: 600;
 }
 
 .barLabelCurrent {
@@ -207,9 +250,9 @@
 .attentionRow {
   display: flex;
   align-items: center;
-  gap: var(--space-10);
+  gap: 14px;
   border-radius: var(--radius-md-lg);
-  padding: var(--space-10) var(--space-12);
+  padding: 10px 12px 10px 10px;
 }
 
 .attentionRowClear {
@@ -229,15 +272,31 @@
   background: var(--mint-soft);
 }
 
+.tonePink .attentionCount,
+.tonePink .attentionAction {
+  color: var(--pink-ink);
+}
+
+.toneYellow .attentionCount,
+.toneYellow .attentionAction {
+  color: var(--yellow-ink);
+}
+
+.toneMint .attentionCount,
+.toneMint .attentionAction {
+  color: var(--mint-ink);
+}
+
 .attentionCount {
   flex: none;
-  width: 52px;
+  min-width: 52px;
   height: 44px;
+  padding: 0 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--white);
-  border-radius: var(--radius-sm);
+  border-radius: 12px;
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 20px;
@@ -273,13 +332,13 @@
 .birthdaysGrid {
   display: grid;
   grid-template-columns: 380px 1fr;
-  gap: var(--space-20);
+  gap: 32px;
 }
 
 .birthdaysUpcoming {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: 14px;
 }
 
 .birthdayRow {
@@ -287,21 +346,35 @@
   align-items: center;
   gap: var(--space-10);
   background: var(--yellow-soft);
-  border-radius: var(--radius-md);
-  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-10) var(--space-12);
 }
 
 .avatar {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 14px;
+}
+
+.avatarOrange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.avatarMint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.avatarPink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
 }
 
 .birthdayRow > div {
@@ -315,33 +388,74 @@
   color: var(--muted);
 }
 
+.birthdayPill {
+  background: var(--white);
+  color: var(--yellow-ink);
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.birthdaysMonth {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.birthdaysMonthHead strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
 .birthdaysCalendar {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-8);
 }
 
-.calendarCell {
+.calendarCellUpcoming,
+.calendarCellPast {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-6);
-  border-radius: var(--radius-sm);
-  background: var(--neutral-soft);
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
-.calendarCell strong {
+.calendarCellUpcoming strong,
+.calendarCellPast strong {
+  flex: none;
+  width: 24px;
   font-family: var(--font-heading);
+  font-weight: 800;
   font-size: 18px;
 }
 
-.calendarCellToday {
-  outline: 2px solid var(--orange-soft);
+.calendarCellUpcoming span,
+.calendarCellPast span {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.calendarChip {
-  font-size: 11px;
-  background: var(--white);
-  border-radius: var(--radius-xs);
-  padding: 1px var(--space-6);
+.calendarCellUpcoming {
+  background: var(--yellow-soft);
+}
+
+.calendarCellUpcoming strong {
+  color: var(--orange-ink);
+}
+
+.calendarCellPast {
+  background: #f7f4ee;
+  opacity: 0.7;
+}
+
+.calendarCellPast strong {
+  color: var(--subtle);
 }
