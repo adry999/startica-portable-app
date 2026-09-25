@@ -12,10 +12,12 @@
 #define RepoRoot SourcePath + "..\..\"
 
 [Setup]
-AppId={{A7C3D6E1-5B2F-4E8A-9C41-3F0D2B7E6A15}
-AppName=Startica
+; AppId + numele diferite de instalerul vanilla (1.6.x): cele doua trebuie sa coexiste pe acelasi
+; PC ca doua aplicatii distincte, nu ca o actualizare in loc a aceleiasi instalari.
+AppId={{6DC8B704-9D60-4381-BD7C-5FFAAD8F1335}
+AppName=Startica V2
 AppVersion={#AppVersion}
-DefaultDirName={localappdata}\Programs\Startica
+DefaultDirName={localappdata}\Programs\Startica V2
 DisableProgramGroupPage=yes
 DisableDirPage=auto
 UsePreviousAppDir=yes
@@ -48,18 +50,23 @@ Type: filesandordirs; Name: "{app}\webapp"
 [Tasks]
 Name: "desktopicon"; Description: "Creează o scurtătură pe &desktop"; GroupDescription: "Scurtături suplimentare:"
 
+; --home pe fiecare pornire: home-ul implicit al lansatorului e acelasi pentru orice instalare
+; Startica.exe, indiferent de {app} sau AppName. Fara asta, V2 ar scrie in aceeasi evidenta si
+; ar rescrie aceeasi sarcina programata Telegram ca instalarea vanilla existenta pe acelasi PC.
+#define V2Home "{localappdata}\StarticaV2"
+
 [Icons]
-Name: "{autoprograms}\Startica"; Filename: "{app}\Startica.exe"; IconFilename: "{app}\Startica.exe"
-Name: "{autodesktop}\Startica"; Filename: "{app}\Startica.exe"; IconFilename: "{app}\Startica.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Startica V2"; Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"""; IconFilename: "{app}\Startica.exe"
+Name: "{autodesktop}\Startica V2"; Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"""; IconFilename: "{app}\Startica.exe"; Tasks: desktopicon
 
 [Run]
 ; Inregistreaza sarcina programata Telegram inaintea pasului postinstall - actualizarea o reinregistreaza oricum.
-Filename: "{app}\Startica.exe"; Parameters: "--register-task --quiet"; Flags: runhidden waituntilterminated
-Filename: "{app}\Startica.exe"; Description: "Pornește Startica"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"" --register-task --quiet"; Flags: runhidden waituntilterminated
+Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"""; Description: "Pornește Startica V2"; Flags: postinstall nowait skipifsilent
 
 [UninstallRun]
-Filename: "{app}\Startica.exe"; Parameters: "--unregister-task --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "UnregisterTelegramTask"; Check: StarticaExeExists
-Filename: "{app}\Startica.exe"; Parameters: "--stop --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "StopStartica"; Check: StarticaExeExists
+Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"" --unregister-task --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "UnregisterTelegramTask"; Check: StarticaExeExists
+Filename: "{app}\Startica.exe"; Parameters: "--home ""{#V2Home}"" --stop --quiet"; Flags: runhidden waituntilterminated; RunOnceId: "StopStartica"; Check: StarticaExeExists
 
 [Code]
 function StarticaExeExists(): Boolean;
