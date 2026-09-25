@@ -4,7 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
 import { ChildrenPage } from './ChildrenPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — butoanele „Import CSV"/„+ Adaugă copil" ajung acolo, nu în pagină. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -92,7 +98,10 @@ function ChildrenHarness() {
 function renderPage() {
   return render(
     <ToastProvider>
-      <ChildrenHarness />
+      <TopbarActionsProvider>
+        <TopbarActionsSlot />
+        <ChildrenHarness />
+      </TopbarActionsProvider>
     </ToastProvider>,
   );
 }

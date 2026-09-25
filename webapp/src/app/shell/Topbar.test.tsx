@@ -56,9 +56,14 @@ describe('Topbar', () => {
     expect(screen.queryByPlaceholderText('Caută copil, părinte, achitare…')).not.toBeInTheDocument();
   });
 
-  it('afișează selectorul de lună pe orice ecran', () => {
-    renderTopbar({ view: 'expenses', month: '2026-09', onMonthChange: () => {} });
+  it('afișează selectorul de lună doar pe Dashboard', () => {
+    renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
     expect(screen.getByRole('button', { name: 'Septembrie 2026' })).toBeInTheDocument();
+  });
+
+  it('nu afișează selectorul de lună pe celelalte ecrane', () => {
+    renderTopbar({ view: 'expenses', month: '2026-09', onMonthChange: () => {} });
+    expect(screen.queryByRole('button', { name: 'Septembrie 2026' })).not.toBeInTheDocument();
   });
 
   describe('cu date încărcate', () => {

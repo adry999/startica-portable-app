@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { TopbarActionsProvider } from './TopbarActions';
 import { deriveSaveStatus } from './save-status';
 import type { ViewKey } from './nav-items';
 import styles from './AppShell.module.css';
@@ -22,18 +23,20 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   const saveStatus = deriveSaveStatus(session.state);
 
   return (
-    <div className={styles.shell}>
-      <Sidebar
-        activeView={view}
-        onNavigate={onNavigate}
-        counts={counts}
-        version={session.state.version}
-        saveStatus={{ ...saveStatus, onRetry: () => void session.load() }}
-      />
-      <div className={styles.workspace}>
-        <Topbar view={view} month={month} onMonthChange={onMonthChange} />
-        <main className={styles.content}>{children}</main>
+    <TopbarActionsProvider>
+      <div className={styles.shell}>
+        <Sidebar
+          activeView={view}
+          onNavigate={onNavigate}
+          counts={counts}
+          version={session.state.version}
+          saveStatus={{ ...saveStatus, onRetry: () => void session.load() }}
+        />
+        <div className={styles.workspace}>
+          <Topbar view={view} month={month} onMonthChange={onMonthChange} />
+          <main className={styles.content}>{children}</main>
+        </div>
       </div>
-    </div>
+    </TopbarActionsProvider>
   );
 }

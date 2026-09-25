@@ -4,9 +4,8 @@
 
 .headerActions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: var(--space-12);
-  margin-bottom: var(--space-16);
 }
 
 .btnGhost {

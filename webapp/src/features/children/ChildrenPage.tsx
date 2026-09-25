@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
+import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { downloadCsv } from '@shared/csv-export';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -72,6 +73,17 @@ function ChildrenListView({
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [moveGroupId, setMoveGroupId] = useState('');
+
+  useTopbarActions(
+    <div className={styles.headerActions}>
+      <button type="button" className={styles.btnGhost} onClick={() => setCsvDialogOpen(true)}>
+        Import CSV
+      </button>
+      <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
+        + Adaugă copil
+      </button>
+    </div>,
+  );
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ro-RO');
@@ -292,15 +304,6 @@ function ChildrenListView({
 
   return (
     <>
-      <div className={styles.headerActions}>
-        <button type="button" className={styles.btnGhost} onClick={() => setCsvDialogOpen(true)}>
-          Import CSV
-        </button>
-        <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
-          + Adaugă copil
-        </button>
-      </div>
-
       <div className={styles.statsRow}>
         <Card tone="orange" className={styles.statCard}>
           <strong className={styles.statValueOrange}>{data.summary.activeCount}</strong>
