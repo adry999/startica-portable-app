@@ -251,3 +251,13 @@ Fiecare ecran are teste (`*.test.tsx` / `*.test.ts`) — actualizează-le odată
 - Rezumat săptămânal Telegram (2g)
 
 Niciuna nu e implementată acum în aplicație — nu se construiesc fără decizie explicită a utilizatorului.
+
+## Decis explicit împotrivă (2026-09-25) — nu se construiesc, design-ul rămâne fără ele
+
+Din fișa copilului (1e), trei secțiuni pe care design-ul le arată dar schema `Child` reală nu le are:
+
+- **Date personale (IDNP, adresă)** — câmpuri inexistente în `record-schema.mjs`; nu se calculează, nu se raportează nicăieri. Nu se adaugă în schemă.
+- **Note multiple, cu dată** — schema are un singur câmp text (`child.notes`). Rămâne așa; nu devine listă/istoric.
+- **Documente (upload PDF)** — funcție nouă, fără stocare de fișiere în backend azi. Nu se construiește.
+
+Fișa copilului implementată (`ChildrenPage.tsx`) omite deliberat aceste trei secțiuni — nu e un gol de umplut, e decizia utilizatorului.
