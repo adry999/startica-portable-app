@@ -331,7 +331,7 @@ function ChildrenListView({
         </Card>
       </div>
 
-      <Card className={styles.tableCard}>
+      <div className={styles.tableCard}>
         <div className={styles.toolbar}>
           <input
             className={styles.search}
@@ -413,6 +413,7 @@ function ChildrenListView({
         )}
 
         <DataTable
+          bare
           columns={columns}
           rows={filteredRows}
           rowKey={row => row.id}
@@ -422,7 +423,7 @@ function ChildrenListView({
           onRowClick={row => onOpenChild(row.id)}
           emptyState={<p>Niciun copil nu corespunde filtrelor curente.</p>}
         />
-      </Card>
+      </div>
 
       <ChildFormDrawer
         key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}

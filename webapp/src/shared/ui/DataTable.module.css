@@ -1,8 +1,12 @@
 .wrap {
   background: var(--white);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  border-radius: 22px;
+  border: 1px solid var(--border);
   overflow: hidden;
+}
+
+.wrapBare {
+  overflow: visible;
 }
 
 .table {
@@ -20,11 +24,11 @@
 }
 
 .table thead th {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  color: var(--muted);
+  color: var(--subtle);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
 }
 
 .alignEnd {
@@ -80,14 +84,14 @@ tr[data-selected] {
 }
 
 .pageButton {
-  min-width: 28px;
-  height: 28px;
+  min-width: 32px;
+  height: 32px;
   border: none;
-  border-radius: var(--radius-xs);
+  border-radius: 10px;
   background: transparent;
   font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--muted);
 }
 

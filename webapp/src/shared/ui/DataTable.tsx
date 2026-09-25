@@ -21,6 +21,9 @@ export interface DataTableProps<Row> {
   selectable?: boolean;
   selectedRowKeys?: ReadonlySet<string>;
   onSelectedRowKeysChange?: (keys: ReadonlySet<string>) => void;
+  /** Fără fundal/bordură/umbră proprii — pentru ecranele care pun tabelul într-un container deja bordat
+   * (bară de filtre + bară de selecție + tabel, ca un singur card, nu cutie-în-cutie). */
+  bare?: boolean;
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -40,6 +43,7 @@ export function DataTable<Row>({
   selectable = false,
   selectedRowKeys,
   onSelectedRowKeysChange,
+  bare = false,
 }: DataTableProps<Row>) {
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
   const [page, setPage] = useState(0);
@@ -98,7 +102,7 @@ export function DataTable<Row>({
   const allOnPageSelected = pageRows.length > 0 && pageRows.every(row => selectedRowKeys?.has(rowKey(row)));
 
   return (
-    <div className={styles.wrap}>
+    <div className={bare ? styles.wrapBare : styles.wrap}>
       <table className={styles.table}>
         <thead>
           <tr>
