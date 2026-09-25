@@ -45,7 +45,7 @@ function initials(name: string): string {
 /** „Copii" (1c) + „Fișa copilului" (1e) — fișa e o rută imbricată (/copii/:childId), nu o intrare nouă în ViewKey. */
 export function ChildrenPage({ month, onNavigate, childId, onOpenChild, onCloseChild }: ChildrenPageProps) {
   if (childId) {
-    return <ChildProfileView childId={childId} month={month} onBack={onCloseChild} />;
+    return <ChildProfileView childId={childId} month={month} onBack={onCloseChild} onNavigate={onNavigate} />;
   }
   return <ChildrenListView month={month} onNavigate={onNavigate} onOpenChild={onOpenChild} />;
 }
@@ -437,7 +437,17 @@ function ChildrenListView({
   );
 }
 
-function ChildProfileView({ childId, month, onBack }: { childId: string; month: string; onBack: () => void }) {
+function ChildProfileView({
+  childId,
+  month,
+  onBack,
+  onNavigate,
+}: {
+  childId: string;
+  month: string;
+  onBack: () => void;
+  onNavigate: (view: ViewKey) => void;
+}) {
   const data = useChildProfile(childId, month);
   const session = useAppSession();
   const toast = useToast();
@@ -485,9 +495,12 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
 
   return (
     <>
-      <button type="button" className={styles.backLink} onClick={onBack}>
-        ← Copii / {child.name}
-      </button>
+      <p className={styles.breadcrumb}>
+        <button type="button" onClick={onBack}>
+          Copii
+        </button>{' '}
+        / {child.name}
+      </p>
 
       <Card tone="orange" decorative className={styles.profileHeader}>
         <span className={styles.profileAvatar}>{initials(child.name)}</span>
@@ -496,11 +509,9 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
           <p className={styles.profileMeta}>
             {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {data.age} · Contract{' '}
             {data.contractLabel}
+            <span className={styles.profileBadgeMint}>{child.status}</span>
+            <span className={styles.profileBadgeOrange}>{data.groupName}</span>
           </p>
-          <div className={styles.profileBadges}>
-            <Badge tone="neutral">{child.status}</Badge>
-            <Badge tone="neutral">{data.groupName}</Badge>
-          </div>
         </div>
         <div className={styles.profileActions}>
           <button type="button" className={styles.btnWhite} onClick={() => setEditDrawerOpen(true)}>
@@ -566,7 +577,12 @@ function ChildProfileView({ childId, month, onBack }: { childId: string; month: 
           </div>
 
           <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Istoric plăți</p>
+            <div className={styles.sectionHead}>
+              <p className={styles.sectionTitle}>Istoric plăți</p>
+              <button type="button" className={styles.sectionLink} onClick={() => onNavigate('payments')}>
+                Toate achitările →
+              </button>
+            </div>
             <PaymentHistoryTable payments={data.payments} />
           </Card>
         </div>

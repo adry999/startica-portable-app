@@ -48,6 +48,7 @@
 
 .statCard {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 16px;
   border-radius: 20px;
@@ -280,18 +281,24 @@
   color: var(--raspberry) !important;
 }
 
-.backLink {
+.breadcrumb {
+  margin: 0 0 var(--space-16);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.breadcrumb button {
   border: none;
   background: none;
-  color: var(--muted);
-  font-weight: 700;
-  font-size: 13px;
   padding: 0;
-  margin-bottom: var(--space-16);
+  font: inherit;
+  color: var(--orange-ink);
+  font-weight: 700;
 }
 
 .profileHeader {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: var(--space-20);
   border-radius: var(--radius-xl);
@@ -323,13 +330,29 @@
 }
 
 .profileMeta {
-  margin: var(--space-4) 0 var(--space-8);
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: var(--space-4) 0 0;
+  font-size: 14px;
+  color: #5b666e;
 }
 
-.profileBadges {
-  display: flex;
-  gap: var(--space-8);
+.profileBadgeMint,
+.profileBadgeOrange {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+}
+
+.profileBadgeMint {
+  color: var(--mint-ink);
+}
+
+.profileBadgeOrange {
+  color: var(--orange-ink);
 }
 
 .profileActions {
@@ -361,6 +384,26 @@
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 15px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sectionHead .sectionTitle {
+  margin: 0;
+}
+
+.sectionLink {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: var(--space-8);
 }
 
 .parentContactRow {

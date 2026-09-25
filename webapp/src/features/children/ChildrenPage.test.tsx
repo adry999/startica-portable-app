@@ -154,7 +154,7 @@ describe('ChildrenPage', () => {
     expect(within(activeStatCard).getByText('2')).toBeInTheDocument();
   });
 
-  it('deschide fișa copilului la click pe rând și revine la listă cu ← Copii', async () => {
+  it('deschide fișa copilului la click pe rând și revine la listă din breadcrumb', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
@@ -164,7 +164,7 @@ describe('ChildrenPage', () => {
     expect(screen.getByRole('heading', { name: 'Andrei Popescu' })).toBeInTheDocument();
     expect(screen.getByText(/Contract 7/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /← Copii/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
     expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Andrei Popescu' })).not.toBeInTheDocument();
   });
