@@ -73,7 +73,6 @@ export function GroupsBoard({ data }: { data: GroupsData }) {
   return (
     <div className={styles.board}>
       <div className={styles.boardHead}>
-        <h2 className={styles.boardTitle}>Grupe</h2>
         <input
           className={styles.search}
           type="search"
@@ -82,6 +81,16 @@ export function GroupsBoard({ data }: { data: GroupsData }) {
           onChange={event => setSearch(event.target.value)}
           aria-label="Caută copil în tablă"
         />
+        <button
+          type="button"
+          className={styles.btnGhost}
+          onClick={() => setCollapsed(Object.fromEntries(columns.map(c => [c.key, true])))}
+        >
+          Restrânge tot
+        </button>
+        <button type="button" className={styles.btnGhost} onClick={() => setCollapsed({})}>
+          Deschide tot
+        </button>
         <button type="button" className={styles.btnPrimary} onClick={() => setNewGroupOpen(open => !open)}>
           + Grupă nouă
         </button>
@@ -101,20 +110,6 @@ export function GroupsBoard({ data }: { data: GroupsData }) {
           onCancel={() => setNewGroupOpen(false)}
         />
       )}
-
-      <div className={styles.boardToolbar}>
-        <span>Trage un copil dintr-o coloană în alta pentru a-l realoca.</span>
-        <button
-          type="button"
-          className={styles.btnGhost}
-          onClick={() => setCollapsed(Object.fromEntries(columns.map(c => [c.key, true])))}
-        >
-          Restrânge tot
-        </button>
-        <button type="button" className={styles.btnGhost} onClick={() => setCollapsed({})}>
-          Deschide tot
-        </button>
-      </div>
 
       <div className={styles.columns}>
         {visibleColumns.map(column =>

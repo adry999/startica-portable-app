@@ -1,22 +1,19 @@
 .board {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
-  height: calc(100vh - 160px);
+  gap: var(--space-12);
+  height: calc(100vh - 130px);
 }
 
 .boardHead {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-12);
 }
 
-.boardTitle {
-  flex: 1;
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 30px;
+.boardHead .search {
+  margin-right: auto;
 }
 
 .search {
@@ -48,19 +45,6 @@
   font-weight: 800;
   font-size: 13px;
   white-space: nowrap;
-}
-
-.boardToolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  font-size: 13px;
-  color: var(--muted);
-  margin-top: -6px;
-}
-
-.boardToolbar span {
-  flex: 1;
 }
 
 .newGroupInline {
