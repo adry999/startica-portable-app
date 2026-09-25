@@ -29,6 +29,7 @@ export interface GroupCardView {
 export interface UnassignedChild {
   id: string;
   name: string;
+  ageLabel: string;
 }
 
 export interface GroupsData {
@@ -169,7 +170,7 @@ export function useGroups(): GroupsData {
   const unassignedChildren = activeChildren
     .filter(child => !child.groupId)
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(child => ({ id: child.id, name: child.name }));
+    .map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) }));
 
   return {
     status: 'ready',

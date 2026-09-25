@@ -1,9 +1,16 @@
 import { useState, type FormEvent } from 'react';
-import { Card, useToast, type CardTone } from '@shared/ui';
+import { Card, SegmentedControl, useToast, type CardTone } from '@shared/ui';
+import { usePersistedState } from '@shared/state/usePersistedState';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
+import { GroupsBoard } from './GroupsBoard';
 import styles from './GroupsPage.module.css';
 
 const TILE_TONES: CardTone[] = ['orange', 'mint', 'yellow'];
+type ViewMode = 'cards' | 'board';
+const VIEW_OPTIONS = [
+  { value: 'cards' as const, label: 'Carduri' },
+  { value: 'board' as const, label: 'Tablă' },
+];
 
 function tileTone(index: number, overCapacity: boolean): CardTone {
   return overCapacity ? 'pink' : TILE_TONES[index % TILE_TONES.length];
@@ -12,6 +19,7 @@ function tileTone(index: number, overCapacity: boolean): CardTone {
 export function GroupsPage() {
   const data = useGroups();
   const toast = useToast();
+  const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
@@ -19,8 +27,32 @@ export function GroupsPage() {
 
   const openGroup = data.groups.find(group => group.id === data.openGroupId) ?? null;
 
+  if (viewMode === 'board') {
+    return (
+      <>
+        <div className={styles.viewToggleRow}>
+          <SegmentedControl
+            ariaLabel="Vizualizare Grupe"
+            options={VIEW_OPTIONS}
+            value={viewMode}
+            onChange={setViewMode}
+          />
+        </div>
+        <GroupsBoard data={data} />
+      </>
+    );
+  }
+
   return (
     <>
+      <div className={styles.viewToggleRow}>
+        <SegmentedControl
+          ariaLabel="Vizualizare Grupe"
+          options={VIEW_OPTIONS}
+          value={viewMode}
+          onChange={setViewMode}
+        />
+      </div>
       <div className={styles.grid}>
         {data.groups.map((group, index) => (
           <GroupTile

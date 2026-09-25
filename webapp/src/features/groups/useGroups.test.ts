@@ -84,7 +84,9 @@ describe('useGroups', () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    expect(result.current.unassignedChildren).toEqual([{ id: 'c4', name: 'Vlad Marin' }]);
+    expect(result.current.unassignedChildren).toHaveLength(1);
+    expect(result.current.unassignedChildren[0]).toMatchObject({ id: 'c4', name: 'Vlad Marin' });
+    expect(result.current.unassignedChildren[0].ageLabel).toBeTruthy();
   });
 
   it('toggleGroup deschide și închide un singur editor la un moment dat', async () => {
