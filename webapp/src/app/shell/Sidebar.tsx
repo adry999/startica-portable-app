@@ -17,7 +17,7 @@ export function Sidebar({ activeView, onNavigate, counts, version, saveStatus }:
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logo} />
+        <img src="/assets/startica-logo.svg" alt="Startica" height={38} />
         <small className={styles.version}>{version}</small>
       </div>
 

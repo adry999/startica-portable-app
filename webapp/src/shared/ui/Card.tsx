@@ -5,8 +5,8 @@ export type CardTone = 'white' | 'orange' | 'mint' | 'yellow' | 'pink' | 'dashed
 
 export interface CardProps {
   tone?: CardTone;
-  /** Cerc decorativ alb 45% în colț, ca pe cardurile KPI din Dashboard. */
-  decorative?: boolean;
+  /** Cerc decorativ jos-dreapta, ca pe cardurile KPI din Dashboard. `'lg'` = cardul Încasări. */
+  decorative?: boolean | 'lg';
   onClick?: () => void;
   className?: string;
   children: ReactNode;
@@ -14,7 +14,13 @@ export interface CardProps {
 
 /** Container radius 20-24 folosit pentru KPI-uri, statistici și grupări de conținut. */
 export function Card({ tone = 'white', decorative = false, onClick, className, children }: CardProps) {
-  const classes = [styles.card, styles[tone], decorative ? styles.decorative : null, className]
+  const classes = [
+    styles.card,
+    styles[tone],
+    decorative ? styles.decorative : null,
+    decorative === 'lg' ? styles.decorativeLarge : null,
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 

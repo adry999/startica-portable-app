@@ -10,6 +10,11 @@ const METHOD_BAR_CLASS: Record<string, string> = {
   Card: styles.methodCard,
   Transfer: styles.methodTransfer,
 };
+const METHOD_DOT_CLASS: Record<string, string> = {
+  Cash: styles.legendDotCash,
+  Card: styles.legendDotCard,
+  Transfer: styles.legendDotTransfer,
+};
 const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
   urgent: styles.tonePink,
   review: styles.toneYellow,
@@ -38,8 +43,8 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   return (
     <>
       <div className={styles.kpiRow}>
-        <Card tone="orange" decorative className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Încasări</p>
+        <Card tone="orange" decorative="lg" className={styles.kpiCard}>
+          <p className={`${styles.kpiLabel} ${styles.kpiLabelIncome}`}>Încasări</p>
           <strong className={styles.kpiValue}>{formatMoney(data.income)}</strong>
           <div className={styles.methodBar}>
             {Object.entries(data.byMethod)
@@ -52,16 +57,20 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
                 />
               ))}
           </div>
-          <small className={styles.methodLegend}>
+          <div className={styles.methodLegend}>
             {Object.entries(data.byMethod)
               .filter(([method, value]) => METHOD_LABELS[method] && value > 0)
-              .map(([method, value]) => `${METHOD_LABELS[method]}: ${formatMoney(value)}`)
-              .join(' · ')}
-          </small>
+              .map(([method, value]) => (
+                <span key={method} className={styles.legendItem}>
+                  <span className={`${styles.legendDot} ${METHOD_DOT_CLASS[method]}`} />
+                  {METHOD_LABELS[method]} {formatCompactMoney(value)}
+                </span>
+              ))}
+          </div>
         </Card>
 
         <Card tone="mint" decorative className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Cheltuieli</p>
+          <p className={`${styles.kpiLabel} ${styles.kpiLabelExpense}`}>Cheltuieli</p>
           <strong className={styles.kpiValue}>{formatMoney(data.expense)}</strong>
           <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses')}>
             + Adaugă cheltuială
@@ -69,17 +78,15 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
         </Card>
 
         <Card tone="yellow" decorative className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Diferență</p>
+          <p className={`${styles.kpiLabel} ${styles.kpiLabelNet}`}>Diferență</p>
           <strong className={styles.kpiValue}>{formatMoney(data.net)}</strong>
-          <small>încasări − cheltuieli</small>
+          <small className={styles.netHint}>încasări − cheltuieli</small>
         </Card>
 
         <Card tone="dashed" className={styles.kpiCard}>
-          <div className={styles.advanceHead}>
-            <p className={styles.kpiLabel}>Avansuri nerepartizate</p>
-            <span className={styles.pillNeutral}>Toate lunile, până azi</span>
-          </div>
+          <p className={`${styles.kpiLabel} ${styles.kpiLabelAdvance}`}>Avansuri nerepartizate</p>
           <strong className={styles.kpiValue}>{formatMoney(data.advance)}</strong>
+          <span className={styles.pillNeutral}>Toate lunile, până azi</span>
         </Card>
       </div>
 

@@ -35,7 +35,7 @@ describe('App', () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole('button', { name: /Dashboard/ })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
   });
 
   it('navigarea din sidebar schimbă conținutul', async () => {
@@ -59,6 +59,6 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
   });
 });

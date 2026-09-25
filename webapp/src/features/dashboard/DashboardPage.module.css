@@ -10,12 +10,31 @@
 
 .kpiCard {
   min-height: 128px;
+  border-radius: 22px;
 }
 
 .kpiLabel {
-  margin: 0 0 var(--space-8);
-  font-size: 13px;
-  font-weight: 700;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kpiLabelIncome {
+  color: var(--orange-ink);
+}
+
+.kpiLabelExpense {
+  color: var(--mint-ink);
+}
+
+.kpiLabelNet {
+  color: var(--yellow-ink);
+}
+
+.kpiLabelAdvance {
+  color: var(--muted);
 }
 
 .kpiValue {
@@ -23,7 +42,9 @@
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 36px;
-  margin-bottom: var(--space-8);
+  line-height: 1;
+  color: var(--slate);
+  margin: 0;
 }
 
 .methodBar {
@@ -31,7 +52,8 @@
   height: 8px;
   border-radius: var(--radius-pill);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.6);
+  background: #fff;
+  margin-top: 4px;
 }
 
 .methodCash {
@@ -47,9 +69,34 @@
 }
 
 .methodLegend {
-  display: block;
-  margin-top: var(--space-6);
+  display: flex;
+  gap: 14px;
   font-size: 12px;
+  color: #5b666e;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.legendDotCash {
+  background: var(--orange);
+}
+
+.legendDotCard {
+  background: var(--yellow);
+}
+
+.legendDotTransfer {
+  background: var(--mint);
 }
 
 .mintLink {
@@ -59,22 +106,25 @@
   font-weight: 700;
   font-size: 13px;
   padding: 0;
+  margin-top: auto;
+  align-self: flex-start;
 }
 
-.advanceHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
+.netHint {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: auto;
 }
 
 .pillNeutral {
+  align-self: flex-start;
+  margin-top: auto;
   background: var(--neutral-soft);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   border-radius: var(--radius-pill);
-  padding: 2px var(--space-8);
+  padding: 3px 10px;
   white-space: nowrap;
 }
 
@@ -84,11 +134,18 @@
   gap: var(--space-16);
 }
 
+.revenuePanel,
+.attentionPanel,
+.birthdaysCard {
+  padding: 24px 26px;
+  gap: 20px;
+}
+
 .panelTitle {
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .panelSubtitle {

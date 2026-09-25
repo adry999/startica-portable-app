@@ -50,6 +50,7 @@
 }
 
 .search kbd {
+  font-family: inherit;
   font-size: 11px;
   font-weight: 700;
   color: var(--subtle);
