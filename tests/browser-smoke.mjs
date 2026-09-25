@@ -1,43 +1,54 @@
 // Browser connector cannot start with this machine's Node 22.17 runtime.
 // Isolated headless Chrome test; never uses the user's Chrome profile or production DB.
+//
+// Rescris pentru redesign-ul React (cutover 2026-09-24): serverul servește
+// webapp/dist, nu mai există DOM vanilla (getElementById('primaryNav') etc.).
+// Scop redus deliberat față de vechiul fișier (~970 linii, sute de verificări
+// fine pe id-uri/clase vanilla): regulile de business ale fiecărui ecran au
+// deja teste Vitest+RTL în webapp/src/features/**; acest fișier verifică doar
+// ce RTL (jsdom) nu poate — layout real în Chrome, overflow la lățimi reale,
+// navigare reală prin URL, o mutație prin HTTP real văzută în UI după reload,
+// și o cădere+recuperare de rețea reală (interceptare Fetch pe /api/*).
+//
+// Precondiție: webapp/dist trebuie construit (`cd webapp && npm run build`)
+// înainte de a rula acest test — la fel ca înainte de cutover, nu se
+// reconstruiește automat aici.
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import {
-  mkdtempSync,
-  readFileSync,
-  existsSync,
-  rmSync,
-  writeFileSync,
-  mkdirSync,
-  readdirSync,
-  statSync,
-  copyFileSync,
-} from 'node:fs';
+import { mkdtempSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { createApplication } from '../startica_server.mjs';
-import { isoDateOf } from '#shared/domain/calendar-month.mjs';
 
-// DEZACTIVAT temporar (cutover redesign React, 2026-09-24): tot ce urmează
-// verifică DOM-ul vanilla vechi (getElementById('primaryNav'), .view.active
-// etc.), care nu mai există — serverul servește acum webapp/dist. Fișierul
-// rămâne neschimbat mai jos ca referință pentru rescrierea pentru noul DOM
-// React (pas separat, de sine stătător, nu parte din cutover).
-console.log('tests/browser-smoke.mjs: dezactivat — în așteptarea rescrierii pentru DOM-ul React.');
-process.exit(0);
+const distIndex = new URL('../webapp/dist/index.html', import.meta.url);
+if (!existsSync(distIndex))
+  throw Error('webapp/dist nu este construit. Rulează "cd webapp && npm run build" înainte de acest test.');
 
-// Vizita de probă e pe ziua curentă: badge-ul numără doar vizitele de azi înainte, iar calendarul arată luna curentă.
-const visitDate = isoDateOf(new Date());
 const dir = mkdtempSync(join(tmpdir(), 'startica-browser-'));
-const screenshotDir =
-  process.env.STARTICA_UI_SCREENSHOTS === '1' ? mkdtempSync(join(tmpdir(), 'startica-ui-shots-')) : null;
-// autoBackupIntervalMs: 0 => backup după fiecare scriere. Testul verifică
-// dialogul de restaurare, care previzualizează cel mai recent backup; politica
-// de rărire este acoperită separat, în src/features/backup/domain/backup-retention.test.mjs.
 const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), autoBackupIntervalMs: 0 });
 await new Promise(r => app.server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${app.server.address().port}`;
 console.log('UI test server ready');
+
+const session = await (await fetch(url + '/api/session')).json();
+let revision = (await (await fetch(url + '/api/state')).json()).revision;
+
+// Mutații de test prin server, nu prin pagină: modulele interne nu mai sunt
+// importabile pe cale (dist e bundle-uit de Vite) — exact contractul folosit
+// de testele de integrare din src/**/*.integration.test.mjs.
+async function createRecord(type, record) {
+  const response = await fetch(url + '/api/record', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Token': session.token },
+    body: JSON.stringify({ type, mode: 'create', record, revision, requestId: randomUUID() }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 200, body.error);
+  revision = body.revision;
+  return body;
+}
+
 const executable = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 if (!existsSync(executable)) throw Error('Chrome not installed.');
 const chrome = spawn(
@@ -59,6 +70,7 @@ let ws,
 const pending = new Map(),
   errors = [],
   consoleErrors = [];
+let apiBlocked = false;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function until(fn, message) {
   for (let n = 0; n < 100; n++) {
@@ -93,6 +105,15 @@ try {
     // Verificat separat de excepții: un console.error nu oprește execuția, dar tot semnalează un bug.
     if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error')
       consoleErrors.push(m.params.args.map(a => a.value ?? a.description ?? '').join(' '));
+    // Interceptare Fetch pentru simularea căderii de rețea, doar pe /api/* (vezi mai jos) —
+    // orice cerere prinsă de pattern trebuie fie continuată, fie respinsă, altfel rămâne blocată.
+    if (m.method === 'Fetch.requestPaused') {
+      const { requestId } = m.params;
+      const action = apiBlocked
+        ? command('Fetch.failRequest', { requestId, errorReason: 'ConnectionRefused' })
+        : command('Fetch.continueRequest', { requestId });
+      action.catch(() => {});
+    }
     if (m.id) {
       const p = pending.get(m.id);
       pending.delete(m.id);
@@ -119,21 +140,12 @@ try {
     return r.result.value;
   };
   await command('Runtime.enable');
-  await until(
-    () => evaluate("document.getElementById('saveIndicator')?.dataset.state==='saved'"),
-    'Application failed to load',
-  );
-  // Raportările și alocările rămân în aceeași lună, indiferent când rulează testul.
-  await evaluate(
-    "document.getElementById('selectedMonth').value='2026-09';document.getElementById('selectedMonth').dispatchEvent(new Event('change'))",
-  );
+  await command('Page.enable');
+
+  const saveStatusState = () => evaluate("document.querySelector('[role=status]')?.dataset.state");
+  await until(() => saveStatusState().then(s => s === 'saved'), 'Application failed to load');
   console.log('Application loaded');
-  // Un modul inexistent cerut la /src/... dovedește că import map-ul a trecut de CSP și a rezolvat aliasul.
-  const aliasResolution = await evaluate(
-    "import('#shared/alias-probe.mjs').then(() => 'loaded', error => String(error.message))",
-  );
-  assert.doesNotMatch(aliasResolution, /Failed to resolve module specifier/, aliasResolution);
-  assert.match(aliasResolution, /\/src\/shared\/alias-probe\.mjs/, aliasResolution);
+
   // Pictogramă netă în bara de activități Windows: ICO multi-dimensiune (16–256), nu SVG rasterizat de Chrome.
   const icoResponse = await fetch(url + '/assets/startica.ico');
   assert.equal(icoResponse.status, 200);
@@ -143,832 +155,111 @@ try {
     await evaluate('document.querySelector(\'link[href="/assets/startica.ico"]\')?.sizes.value'),
     '16x16 20x20 24x24 32x32 40x40 48x48 256x256',
   );
-  assert.equal(await evaluate("!!document.querySelector('.system-status #saveIndicator')"), true);
-  assert.equal(await evaluate("!!document.querySelector('.system-status #backupStatus')"), true);
-  assert.equal(await evaluate("document.querySelectorAll('#primaryNav .nav').length"), 14);
+
+  // Versiunea afișată în sidebar trebuie să fie cea servită de /api/session, nu o valoare fixă.
+  assert.equal(await evaluate("document.querySelector('aside small')?.textContent"), session.version);
+
+  // Meniul lateral: 14 ecrane, exact unul marcat curent (Dashboard, la încărcare).
+  assert.equal(await evaluate("document.querySelectorAll('aside nav button').length"), 14);
+  assert.equal(await evaluate("document.querySelectorAll('aside nav button[aria-current=page]').length"), 1);
   assert.equal(
-    await evaluate("new Set([...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)).size"),
-    14,
+    await evaluate("document.querySelector('aside nav button[aria-current=page]')?.children[1]?.textContent"),
+    'Dashboard',
   );
-  assert.deepEqual(
-    await evaluate(
-      "['activeChildrenStat','occupiedGroupsStat','incompleteChildrenStat'].map(id=>document.getElementById(id).textContent)",
-    ),
-    ['0', '0', '0'],
-  );
-  assert.equal(await evaluate("!!document.querySelector('#alerts .attention-empty')"), true);
+
   const viewport = async width => {
     await command('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
     await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   };
   const noPageOverflow = async () =>
     assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true);
-  const screenshot = async name => {
-    if (!screenshotDir) return;
-    const { data } = await command('Page.captureScreenshot', { format: 'png' });
-    const path = join(screenshotDir, name + '.png');
-    writeFileSync(path, Buffer.from(data, 'base64'));
-    console.log('UI screenshot: ' + path);
-  };
-  for (const width of [1440, 1024, 390]) {
+  // Doar lățimi desktop: sidebar-ul (248px, fix) nu are breakpoint mobil în redesign — spre
+  // deosebire de vanilla, care avea meniu hamburger sub 720px. App-ul se deschide oricum
+  // maximizat într-o fereastră Chrome --app, nu la lățimi de telefon.
+  for (const width of [1440, 1024]) {
     await viewport(width);
     await noPageOverflow();
-    if (width === 390)
-      assert.equal(await evaluate("document.querySelector('.topbar').getBoundingClientRect().height < 360"), true);
-    await evaluate("document.getElementById('monthTrigger').click()");
-    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), false);
-    assert.equal(
-      await evaluate(
-        "(()=>{const r=document.getElementById('monthMenu').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;})()",
-      ),
-      true,
-    );
-    assert.equal(
-      await evaluate(
-        "(()=>{const menu=document.getElementById('monthMenu').getBoundingClientRect();const trigger=document.getElementById('monthTrigger').getBoundingClientRect();return menu.top-trigger.bottom>=0&&menu.top-trigger.bottom<=12;})()",
-      ),
-      true,
-    );
-    await screenshot('dashboard-' + width);
-    await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-    assert.equal(await evaluate("document.getElementById('monthMenu').hidden"), true);
-    await evaluate(
-      "document.getElementById('monthTrigger').focus();document.getElementById('monthTrigger').dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}))",
-    );
-    assert.equal(
-      await evaluate("document.activeElement.dataset.month === document.getElementById('selectedMonth').value"),
-      true,
-    );
-    await evaluate(
-      "document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}))",
-    );
-    assert.equal(await evaluate("document.activeElement.dataset.month.endsWith('-10')"), true);
-    await evaluate("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");
-    assert.equal(await evaluate('document.activeElement.id'), 'monthTrigger');
-  }
-  assert.equal(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
-  await evaluate("document.getElementById('navToggle').click()");
-  assert.equal(await evaluate("document.getElementById('navToggle').getAttribute('aria-expanded')"), 'true');
-  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
-  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
-  assert.equal(await evaluate("document.querySelector('.view.active').id"), 'children');
-  assert.equal(await evaluate("document.getElementById('navToggle').getAttribute('aria-expanded')"), 'false');
-  assert.equal(await evaluate("document.querySelector('#primaryNav [aria-current=page]').dataset.view"), 'children');
-  await noPageOverflow();
-  await screenshot('children-mobile');
-  await evaluate(
-    "document.getElementById('navToggle').click();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))",
-  );
-  assert.equal(await evaluate('document.activeElement.id'), 'navToggle');
-  await viewport(1440);
-  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('primaryNav')).display"), 'none');
-  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
-  await until(() => evaluate("document.querySelector('.brand img')?.naturalWidth > 0"), 'Official logo failed to load');
-  await evaluate(
-    "document.querySelector('#primaryNav [data-view=groups]').click();document.getElementById('groupNameInput').value='Grupa test';document.getElementById('groupCapacityInput').value='12';document.getElementById('groupCreateForm').requestSubmit()",
-  );
-  await until(
-    () => evaluate("document.querySelectorAll('#groupsGrid [data-group]').length===1"),
-    'Group creation failed',
-  );
-  const groupId = (await (await fetch(url + '/api/state')).json()).state.groups[0].id;
-  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
-  await evaluate(
-    "document.querySelector('[data-create=children]').click();document.getElementById('editorForm').elements.name.dispatchEvent(new Event('input',{bubbles:true}))",
-  );
-  assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'pending');
-  await evaluate("document.querySelector('[data-close=editor]').click()");
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
-    'Cancel should clear draft status',
-  );
-  await evaluate("document.querySelector('[data-create=children]').click()");
-  assert.equal(
-    await evaluate(
-      "(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Test';f.elements.name.dispatchEvent(new Event('input',{bubbles:true}));const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;})()",
-    ),
-    true,
-  );
-  // Hold the response after the server has committed, then simulate its loss.
-  // Retrying must reuse the request ID and produce just one child.
-  await evaluate(
-    "window.testFetch=window.fetch;window.fetch=async(...args)=>{if(args[0]==='/api/record'){const response=await window.testFetch(...args);return new Promise((resolve,reject)=>{window.failSave=()=>reject(new TypeError('Test lost response'));});}return window.testFetch(...args);}",
-  );
-  await evaluate(
-    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Copil <test>';f.elements.parent.value='Părinte test';f.elements.parent2.value='Al doilea părinte';f.elements.phone2.value='060123456';f.elements.groupId.value=${JSON.stringify(groupId)};f.elements.attendanceDate.value='2026-09-01';f.elements.fee.value='2000';f.elements.feeFrom.value='2026-09';f.elements.statusFrom.value='2026-09';f.requestSubmit();})()`,
-  );
-  await until(() => evaluate("typeof window.failSave==='function'"), 'Save did not reach test server');
-  assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'pending');
-  assert.match(await evaluate("document.getElementById('saveStatus').textContent"), /Se salvează/);
-  await evaluate('window.fetch=window.testFetch;window.failSave()');
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='error'"),
-    'Lost response must show red',
-  );
-  await evaluate("document.querySelector('[data-close=editor]').click()");
-  assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'error');
-  await evaluate("document.getElementById('reloadButton').click()");
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Child save failed');
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
-    'Retry must confirm saved status',
-  );
-  assert.equal((await (await fetch(url + '/api/state')).json()).state.children.length, 1);
-  assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Copil <test>/);
-  assert.equal(await evaluate("document.querySelector('test') !== null"), false);
-  assert.equal(await evaluate("document.getElementById('activeChildrenStat').textContent"), '1');
-  assert.equal(await evaluate("document.getElementById('occupiedGroupsStat').textContent"), '1');
-  await evaluate(
-    "document.getElementById('childrenSearch').value='Aucun rezultat';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
-  );
-  assert.equal(await evaluate("!!document.querySelector('#childrenTable .empty')"), true);
-  assert.equal(await evaluate("document.getElementById('activeChildrenStat').textContent"), '1');
-  await evaluate(
-    "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
-  );
-  await evaluate(
-    "document.getElementById('childrenSearch').value='parinte test';document.getElementById('childrenSearch').dispatchEvent(new Event('input'))",
-  );
-  assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Copil <test>/);
-  assert.equal(await evaluate("typeof document.querySelector('#childrenHead [data-sort=name]').onclick"), 'function');
-  await evaluate(
-    "document.getElementById('childrenSearch').value='';document.getElementById('childrenSearch').dispatchEvent(new Event('input'));document.querySelector('#childrenHead [data-sort=name]').click()",
-  );
-  assert.equal(
-    await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"),
-    'ascending',
-  );
-  await evaluate("document.querySelector('#childrenHead [data-sort=name]').click()");
-  assert.equal(
-    await evaluate("document.querySelector('#childrenHead [data-sort=name]').parentElement.getAttribute('aria-sort')"),
-    'descending',
-  );
-  await evaluate("document.querySelector('[data-create=payments]').click()");
-  assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Al doilea părinte/);
-  await evaluate(
-    "(()=>{const f=document.getElementById('editorForm'),picker=f.querySelector('[data-child-picker]'),search=picker.querySelector('.child-picker-input');search.focus();picker.querySelector('.combobox-option[data-id]:not([data-id=\"\"])').dispatchEvent(new MouseEvent('mousedown',{bubbles:true}));f.elements.date.value='2026-09-08';f.elements.tenderCash.value='1000';f.elements.tenderCard.value='2000';f.elements.tenderCard.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('[data-month]').value='2026-09';document.querySelector('[data-amount]').value='2000';document.getElementById('addAllocation').click();const rows=document.querySelectorAll('.allocation');rows[1].querySelector('[data-month]').value='2026-10';rows[1].querySelector('[data-amount]').value='500';})()",
-  );
-  assert.equal(await evaluate("document.getElementById('editorForm').elements.amount.value"), '3000.00');
-  await evaluate("document.getElementById('editorForm').requestSubmit()");
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Payment save failed');
-  assert.match(await evaluate("document.getElementById('paymentsTable').textContent"), /Cash:.*Card:/);
-  assert.match(await evaluate("document.getElementById('incomeMethods').textContent"), /Cash:.*1.?000.*Card:.*2.?000/);
-  await evaluate("document.querySelector('[data-action=edit][data-type=payments]').click()");
-  assert.equal(await evaluate("document.getElementById('editorForm').elements.tenderCash.value"), '1000');
-  assert.equal(await evaluate("document.getElementById('editorForm').elements.tenderCard.value"), '2000');
-  await evaluate("document.querySelector('[data-close=editor]').click()");
-  assert.match(await evaluate("document.getElementById('incomeStat').textContent"), /3.?000/);
-  assert.match(await evaluate("document.getElementById('advanceStat').textContent"), /500/);
-  const originalMonth = await evaluate("document.getElementById('selectedMonth').value");
-  const originalAdvance = await evaluate("document.getElementById('advanceStat').textContent");
-  await evaluate(
-    "document.getElementById('monthTrigger').click();document.getElementById('monthPrevYear').click();document.querySelector('#monthOptions button').click()",
-  );
-  assert.notEqual(await evaluate("document.getElementById('selectedMonth').value"), originalMonth);
-  assert.equal(await evaluate("document.getElementById('advanceStat').textContent"), originalAdvance);
-  assert.equal(await evaluate("!!document.querySelector('#alerts .attention-empty')"), false);
-  assert.equal(await evaluate("!!document.querySelector('#alerts .alert-clear')"), true);
-  await evaluate(
-    `document.getElementById('selectedMonth').value=${JSON.stringify(originalMonth)};document.getElementById('selectedMonth').dispatchEvent(new Event('change'))`,
-  );
-  await evaluate("document.querySelector('[data-view=status]').click()");
-  assert.match(await evaluate("document.getElementById('statusTable').textContent"), /Plătit/);
-  await evaluate("document.querySelector('[data-action=edit][data-type=children]').click()");
-  await evaluate(
-    "(()=>{const f=document.getElementById('editorForm');f.elements.status.value='Retras';f.elements.statusFrom.value='2026-10';f.elements.withdrawalDate.value='2026-09-30';f.requestSubmit();})()",
-  );
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Child status edit failed');
-  await evaluate("document.querySelector('[data-action=edit][data-type=children]').click()");
-  assert.equal(await evaluate("document.getElementById('editorForm').elements.status.value"), 'Retras');
-  await evaluate(
-    "(()=>{const f=document.getElementById('editorForm');f.elements.phone.value='123';f.requestSubmit();})()",
-  );
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Phone edit failed');
-  assert.match(await evaluate("document.getElementById('childrenTable').textContent"), /Retras/);
-  assert.match(await evaluate("document.getElementById('statusTable').textContent"), /Plătit/);
-  await evaluate("document.querySelector('[data-view=fees]').click()");
-  await evaluate(
-    "document.getElementById('feesFilter').value='all';document.getElementById('feesFilter').dispatchEvent(new Event('change',{bubbles:true}))",
-  );
-  assert.equal(
-    await evaluate("document.querySelector('#feesTable tr[data-child] select[data-status]').value"),
-    'Retras',
-  );
-  await evaluate("document.getElementById('feesSave').click()");
-  await until(
-    () => evaluate("document.getElementById('feesError').textContent!==''"),
-    'Untouched row should be rejected',
-  );
-  assert.match(await evaluate("document.getElementById('feesError').textContent"), /Nu ai completat nicio taxă/);
-  const beforeFeeOnlyEdit = (await (await fetch(url + '/api/state')).json()).state.children.find(
-    c => c.name === 'Copil <test>',
-  );
-  assert.equal(beforeFeeOnlyEdit.status, 'Retras');
-  await evaluate(
-    "(()=>{const input=document.querySelector('#feesTable tr[data-child] input[data-fee]');input.value='2500';input.dispatchEvent(new Event('input',{bubbles:true}));})()",
-  );
-  await evaluate("document.getElementById('feesSave').click()");
-  await until(async () => {
-    const child = (await (await fetch(url + '/api/state')).json()).state.children.find(c => c.name === 'Copil <test>');
-    return child?.feeHistory?.at(-1)?.amount === 2500;
-  }, 'Fee-only edit did not persist');
-  const afterFeeOnlyEdit = (await (await fetch(url + '/api/state')).json()).state.children.find(
-    c => c.name === 'Copil <test>',
-  );
-  assert.equal(afterFeeOnlyEdit.status, 'Retras');
-  assert.equal(afterFeeOnlyEdit.groupId, groupId);
-  await evaluate("document.querySelector('[data-action=profile]').click()");
-  assert.match(await evaluate("document.getElementById('profileBody').textContent"), /3.?000/);
-  await evaluate(
-    "document.querySelector('[data-close=profile]').click();document.querySelector('[data-view=review]').click()",
-  );
-  assert.match(await evaluate("document.getElementById('reviewList').textContent"), /Avans nerepartizat/);
-  await evaluate(
-    "document.querySelector('[data-view=settings]').click();document.getElementById('restoreButton').click()",
-  );
-  await until(
-    () =>
-      evaluate(
-        "document.getElementById('restorePreview').textContent.includes('3000') || document.getElementById('restorePreview').textContent.includes('3.000') || document.getElementById('restorePreview').textContent.includes('3 000')",
-      ),
-    'Restore preview failed',
-  );
-  await evaluate(
-    "document.querySelector('[data-close=restoreDialog]').click();document.querySelector('[data-view=audit]').click()",
-  );
-  await until(
-    () => evaluate("document.getElementById('auditList').textContent.includes('modificare')"),
-    'Audit UI failed',
-  );
-  assert(
-    await evaluate(
-      "document.querySelectorAll('#auditList details').length > 0 && document.getElementById('auditMore').hidden && document.getElementById('auditFailure').textContent === ''",
-    ),
-    'Audit page state failed',
-  );
-  await evaluate(
-    "document.querySelector('[data-view=settings]').click();const dir=document.getElementById('externalDir');dir.value='C:\\\\does-not-exist-startica-test';dir.dispatchEvent(new Event('input',{bubbles:true}));window.dispatchEvent(new Event('focus'))",
-  );
-  assert.equal(await evaluate("document.getElementById('saveIndicator').dataset.state"), 'pending');
-  await sleep(300);
-  assert.match(await evaluate("document.getElementById('externalDir').value"), /does-not-exist/);
-  await evaluate("document.getElementById('settingsForm').requestSubmit()");
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='error'"),
-    'Invalid settings must show red',
-  );
-  await evaluate(
-    "document.getElementById('externalDir').value='';document.getElementById('externalDir').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('settingsForm').requestSubmit()",
-  );
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
-    'Settings retry must show green',
-  );
-
-  // Telegram: nimic configurat în aplicația de test; un token cu format greșit e respins
-  // sincron în telegram.service.mjs, înainte de orice apel către api.telegram.org — instrumentăm
-  // fetch ca să dovedim că niciun apel real de rețea nu pleacă spre Telegram.
-  await evaluate("document.querySelector('[data-view=notifications]').click()");
-  await until(
-    () => evaluate("document.getElementById('telegramStatus').textContent === 'Neconfigurat.'"),
-    'Telegram status did not load on activating the Notificări screen',
-  );
-  assert.equal(await evaluate("document.getElementById('telegramTest').hidden"), true);
-  assert.equal(await evaluate("document.getElementById('telegramDisconnect').hidden"), true);
-  // Preferințele de notificare se încarcă pe implicite la prima activare a ecranului.
-  await until(
-    () => evaluate("document.getElementById('notifDigestTime').value === '08:00'"),
-    'Notification preferences form did not load defaults',
-  );
-  assert.equal(await evaluate("document.getElementById('notifBirthdaysEnabled').checked"), true);
-  await evaluate(
-    "window.telegramFetchCalls=[];window.testFetchTelegram=window.fetch;window.fetch=(...args)=>{if(String(args[0]).includes('telegram.org'))window.telegramFetchCalls.push(String(args[0]));return window.testFetchTelegram(...args);}",
-  );
-  await evaluate(
-    "document.getElementById('telegramToken').value='abc';document.getElementById('telegramForm').requestSubmit()",
-  );
-  await until(
-    () => evaluate("document.getElementById('message').textContent.includes('Token invalid')"),
-    'Malformed Telegram token did not show the expected error',
-  );
-  assert.deepEqual(await evaluate('window.telegramFetchCalls'), []);
-  assert.equal(await evaluate("document.getElementById('telegramTest').hidden"), true);
-  assert.equal(await evaluate("document.getElementById('telegramDisconnect').hidden"), true);
-  await evaluate('window.fetch=window.testFetchTelegram');
-
-  await evaluate(
-    "window.fetch=async()=>{throw new TypeError('Test offline')};window.dispatchEvent(new Event('focus'))",
-  );
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='error'"),
-    'Offline server must show red',
-  );
-  await evaluate("window.fetch=window.testFetch;document.getElementById('reloadButton').click()");
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
-    'Connection recovery must show green',
-  );
-  const csv =
-    'ID (Nr. contract),Nume copil,Parinte,Telefon,Data nasterii,Data frecventarii\n888,CSV <test>,Parinte CSV,060999999,01.01.2022,01.09.2026';
-  const chooseCsv = `(()=>{const dt=new DataTransfer();dt.items.add(new File([${JSON.stringify(csv)}],'copii.csv',{type:'text/csv'}));const input=document.getElementById('childrenCsvInput');input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`;
-  await evaluate("document.querySelector('[data-view=children]').click()");
-  await evaluate(chooseCsv);
-  await until(() => evaluate("document.getElementById('csvDialog').open"), 'CSV preview did not open');
-  assert.match(await evaluate("document.getElementById('csvPreview').textContent"), /1 copii noi/);
-  assert.equal((await (await fetch(url + '/api/state')).json()).state.children.length, 1);
-  assert.equal(await evaluate("document.getElementById('commitCsv').disabled"), true);
-  await evaluate(
-    "document.getElementById('csvConfirm').value='IMPORT COPII';document.getElementById('csvConfirm').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('commitCsv').click()",
-  );
-  await until(() => evaluate("!document.getElementById('csvDialog').open"), 'CSV import failed');
-  const imported = (await (await fetch(url + '/api/state')).json()).state;
-  assert.equal(imported.children.length, 2);
-  assert.equal(imported.payments.length, 1);
-  assert.equal(imported.payments[0].amount, 3000);
-  await evaluate(chooseCsv);
-  await until(() => evaluate("document.getElementById('csvDialog').open"), 'CSV reimport preview failed');
-  assert.match(await evaluate("document.getElementById('csvPreview').textContent"), /0 copii noi · 1 existenți/);
-  assert.equal(await evaluate("document.querySelector('test') !== null"), false);
-  await evaluate("document.querySelector('[data-close=csvDialog]').click()");
-  await evaluate(`(async()=>{
-    const {submitMutation}=await import('/src/app/web/app-session.mjs');
-    await submitMutation('/api/record',{type:'payments',mode:'create',record:{id:'PAY-SMOKE-ASSIGN',date:'2026-09-02',amount:1234,sourceName:'CSV',allocations:[{month:'2026-09',amount:1234}]}});
-  })()`);
-  await until(() => evaluate("document.getElementById('assignCount').textContent==='1'"), 'Assign count badge failed');
-  await evaluate("document.querySelector('#primaryNav [data-view=assign]').click()");
-  await until(
-    () => evaluate("document.querySelectorAll('#assignTable tr[data-payment]').length===1"),
-    'Assign queue failed',
-  );
-  await evaluate("document.getElementById('assignFillSuggested').click()");
-  assert.match(await evaluate("document.querySelector('#assignTable .child-picker-input').value"), /^CSV <test>/);
-  await evaluate("document.getElementById('assignSave').click()");
-  await until(
-    async () =>
-      (await (await fetch(url + '/api/state')).json()).state.payments.find(p => p.id === 'PAY-SMOKE-ASSIGN')?.childId,
-    'Assign save failed',
-  );
-  await until(
-    () =>
-      evaluate(
-        "document.querySelector('#assignTable .empty')!==null && document.getElementById('assignCount').textContent==='0'",
-      ),
-    'Assign queue did not refresh',
-  );
-  // La 6 coloane, tabelul gol nu depășește 1024 px de la sine; se forțează lățimea ca regresia (celula centrată iese din tabelul derulat) să fie verificabilă.
-  await viewport(1024);
-  assert.equal(
-    await evaluate(
-      "(()=>{const table=document.querySelector('#assignTable').parentElement;const prev=table.style.minWidth;table.style.minWidth='2000px';const cell=document.querySelector('#assignTable .empty');const range=document.createRange();range.selectNodeContents(cell);const ok=[...range.getClientRects()].every(r=>r.left>=0&&r.right<=innerWidth);table.style.minWidth=prev;return ok;})()",
-    ),
-    true,
-  );
-  assert.equal(await evaluate("getComputedStyle(document.querySelector('#statusHead th.amount')).textAlign"), 'right');
-  await viewport(1440);
-  // Read-only UI fixtures: no API writes; restore the loaded state afterwards.
-  const summaryFixture = await evaluate(`(async()=>{
-    const {sessionState:session,eventBus}=await import('/src/app/web/app-session.mjs');
-    const render=()=>eventBus.publish('records.reloaded',{revision:session.revision});
-    const original=session.state;
-    try {
-      const sample=structuredClone(original.children[0]);
-      session.state={...original,payments:[],expenses:[],children:[
-        {...sample,id:'summary-active',name:'Copil neevaluabil',archived:false,status:'Activ',feeHistory:[],groupId:original.groups[0].id},
-        {...sample,id:'summary-suspended',archived:false,status:'Suspendat',groupId:original.groups[0].id},
-        {...sample,id:'summary-archived',name:'Copil arhivat exclusiv',archived:true,status:'Activ',groupId:original.groups[0].id}
-      ]};
-      render();
-      return {
-        active:document.getElementById('activeChildrenStat').textContent,
-        groups:document.getElementById('occupiedGroupsStat').textContent,
-        review:Number(document.getElementById('incompleteChildrenStat').textContent),
-        groupText:document.getElementById('groupsGrid').textContent,
-        allClear:!!document.querySelector('#alerts .attention-empty'),
-        notifyText:document.getElementById('notifyTable').textContent,
-        notifyStats:document.getElementById('notifyStats').textContent
-      };
-    } finally {session.state=original;render();}
-  })()`);
-  assert.equal(summaryFixture.active, '1');
-  assert.equal(summaryFixture.groups, '1');
-  assert.ok(summaryFixture.review > 0);
-  assert.doesNotMatch(summaryFixture.groupText, /Copil arhivat exclusiv/);
-  assert.equal(summaryFixture.allClear, false);
-  assert.doesNotMatch(summaryFixture.notifyText, /Copil neevaluabil/);
-  assert.match(summaryFixture.notifyStats, /Nu pot fi evaluați\s*1/);
-  await viewport(390);
-  for (const view of ['children', 'payments', 'expenses', 'review']) {
-    await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
-    await noPageOverflow();
   }
   await viewport(1440);
-  await evaluate(
-    "window.testPrint=[];window.print=()=>window.testPrint.push(document.body.dataset.printView);document.querySelector('#primaryNav [data-view=notify]').click();document.getElementById('printNotify').click();document.querySelector('#primaryNav [data-view=status]').click();document.getElementById('printButton').click()",
-  );
-  assert.deepEqual(await evaluate('window.testPrint'), ['notify', 'status']);
-  await evaluate("window.dispatchEvent(new Event('afterprint'))");
-  assert.equal(await evaluate('document.body.dataset.printView === undefined'), true);
 
-  // Versiunea afișată în bara laterală trebuie să vină din package.json, nu dintr-o valoare fixă în cod.
-  const packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
-  await until(() => evaluate("document.getElementById('appVersion').textContent !== ''"), 'App version failed to load');
-  assert.equal(await evaluate("document.getElementById('appVersion').textContent"), `Startica v${packageVersion}`);
-
-  // Fișă cu taxă neachitată dinainte de luna selectată, ca „De notificat” să aibă garantat un rând.
-  await evaluate("document.querySelector('[data-create=children]').click()");
-  await evaluate(
-    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Notificat <test>';f.elements.parent.value='Părinte notificat';f.elements.groupId.value=${JSON.stringify(groupId)};f.elements.attendanceDate.value='2026-01-01';f.elements.fee.value='1500';f.elements.feeFrom.value='2026-01';f.elements.statusFrom.value='2026-01';f.requestSubmit();})()`,
-  );
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Notify fixture save failed');
-  await evaluate("document.querySelector('#primaryNav [data-view=notify]').click()");
-  await until(
-    () => evaluate("document.getElementById('notifyTable').textContent.includes('Notificat <test>')"),
-    'Fișa neachitată nu a apărut pe De notificat',
-  );
-  assert.equal(await evaluate("!!document.querySelector('#notifyTable [data-action=copy-message]')"), true);
-
-  // §4.7/M5: emulare reală a media print (nu simularea window.print de mai sus), verificând print.css.
-  await command('Emulation.setEmulatedMedia', { media: 'print' });
-  await evaluate("document.body.dataset.printView='notify'");
-  assert.equal(await evaluate("getComputedStyle(document.getElementById('copyAllMessages')).display"), 'none');
-  assert.equal(await evaluate("getComputedStyle(document.getElementById('printNotify')).display"), 'none');
-  assert.notEqual(await evaluate("getComputedStyle(document.getElementById('notify')).display"), 'none');
-  assert.match(await evaluate("document.getElementById('notifyTable').textContent"), /Notificat <test>/);
-  assert.equal(await evaluate("getComputedStyle(document.querySelector('#notifyHead th:last-child')).display"), 'none');
-  await evaluate('delete document.body.dataset.printView');
-
-  await evaluate(
-    "[...document.querySelectorAll('#notifyTable tr')].find(tr=>tr.textContent.includes('Notificat <test>')).querySelector('[data-action=profile]').click()",
-  );
-  await evaluate("document.body.dataset.printView='profile'");
-  assert.equal(
+  // Navigare reală prin URL pe ecranele din checklist-ul de livrare (GHID-LIVRARE.md):
+  // Dashboard, Copii, Achitări, Cheltuieli, De verificat, Backup și setări.
+  const screens = [
+    ['Dashboard', '/', 'Dashboard'],
+    ['Copii', '/copii', 'Copii'],
+    ['Achitări', '/achitari', 'Achitări'],
+    ['Cheltuieli', '/cheltuieli', 'Cheltuieli'],
+    ['De verificat', '/de-verificat', 'De verificat'],
+    ['Backup și setări', '/backup-si-setari', 'Backup și setări'],
+  ];
+  for (const [navLabel, path, title] of screens) {
     await evaluate(
-      "[...document.querySelectorAll('#profile .modal-head button')].every(b=>getComputedStyle(b).display==='none')",
-    ),
-    true,
-  );
-  assert.equal(await evaluate("document.getElementById('profileBody').textContent.length > 0"), true);
-  await evaluate("delete document.body.dataset.printView;document.querySelector('[data-close=profile]').click()");
-  await command('Emulation.setEmulatedMedia', { media: 'screen' });
-
-  // Sumele se verifică abia aici, cu toate tabelele populate: pe tabele goale verificarea ar trece orbește.
-  await evaluate(`(async()=>{
-    const {submitMutation}=await import('/src/app/web/app-session.mjs');
-    await submitMutation('/api/record',{type:'expenses',mode:'create',record:{id:'EXP-SMOKE-LAYOUT',date:'2026-09-03',amount:123456.78,category:'Bucătărie',description:''}});
-    await submitMutation('/api/record',{type:'categories',mode:'create',record:{id:'CAT-SMOKE-LAYOUT',name:'Bucătărie'}});
-  })()`);
-  const wrappedMoney = selector =>
-    evaluate(`(()=>{
-      const cells=[...document.querySelectorAll(${JSON.stringify(selector)})].filter(cell=>cell.offsetParent!==null&&cell.textContent.trim());
-      const wrapped=cells.filter(cell=>{const range=document.createRange();range.selectNodeContents(cell);const rects=[...range.getClientRects()];return rects.some(rect=>rect.top>=rects[0].bottom-1);});
-      return {checked:cells.length,wrapped:wrapped.map(cell=>cell.textContent.trim())};
-    })()`);
-  const moneySelectorByView = {
-    dashboard: '#dashboard .card strong',
-    expenses: '#expensesTable td:nth-child(5)',
-    payments: '#paymentsTable td.amount, #paymentsTable .money-line',
-    status: '#statusTable td.amount',
-    notify: '#notifyTable td.amount',
-  };
-  for (const width of [800, 1024, 1280]) {
-    await viewport(width);
-    for (const [view, selector] of Object.entries(moneySelectorByView)) {
-      await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
-      await noPageOverflow();
-      const { checked, wrapped } = await wrappedMoney(selector);
-      assert.ok(checked > 0, `${view} @ ${width}px: nicio sumă de verificat în ${selector}`);
-      assert.deepEqual(wrapped, [], `${view} @ ${width}px: sume rupte pe două rânduri`);
-    }
-  }
-  await viewport(1280);
-  await evaluate("document.querySelector('#primaryNav [data-view=expenses]').click()");
-  const categoryConfirm = await evaluate(`(()=>{
-    const button=document.querySelector('#categoriesChips [data-remove]');
-    if(!button) return null;
-    button.click();
-    const range=document.createRange();range.selectNodeContents(button);const rects=[...range.getClientRects()];
-    return {text:button.textContent,wrapped:rects.some(rect=>rect.top>=rects[0].bottom-1),width:button.getBoundingClientRect().width};
-  })()`);
-  assert.ok(categoryConfirm, 'Cheltuieli: nicio categorie de verificat');
-  assert.match(categoryConfirm.text, /^Sigur\? Șterge Bucătărie$/);
-  assert.equal(
-    categoryConfirm.wrapped,
-    false,
-    `Confirmarea ștergerii categoriei se rupe: ${JSON.stringify(categoryConfirm)}`,
-  );
-  assert.ok(categoryConfirm.width > 20, `Butonul de confirmare nu s-a lățit: ${JSON.stringify(categoryConfirm)}`);
-  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
-  const editButton = await evaluate(
-    "(()=>{const button=document.querySelector('#childrenTable [data-action=edit]');return button&&{right:button.getBoundingClientRect().right,innerWidth};})()",
-  );
-  assert.ok(editButton, 'Copii: niciun buton de editare de verificat');
-  assert.ok(
-    editButton.right <= editButton.innerWidth,
-    `Copii @ 1280px: butonul de editare iese din ecran ${JSON.stringify(editButton)}`,
-  );
-  // Items 1+2: coloana sticky rămâne vizibilă (nu derulează sub marginea din stânga) când tabelul Copii se derulează orizontal.
-  await viewport(800);
-  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
-  await evaluate("document.querySelector('#children .table-wrap').scrollLeft = 200");
-  assert.equal(
-    await evaluate(
-      "document.querySelector('#childrenTable td:nth-child(3)').getBoundingClientRect().left >= document.querySelector('#children .table-wrap').getBoundingClientRect().left",
-    ),
-    true,
-    'Coloana sticky din Copii a derulat sub marginea din stânga a tabelului',
-  );
-  await viewport(1280);
-  await viewport(1440);
-
-  // A2/§6: restaurare din folderul extern — copiază cel mai recent backup local, ca o descărcare Drive deja terminată.
-  const externalDir = join(dir, 'extern');
-  mkdirSync(externalDir, { recursive: true });
-  const localBackupsDir = join(dir, 'backups');
-  const backupNamePattern = /^startica_[\p{L}\p{N}_. -]+\.db$/u;
-  const newestLocalBackup = readdirSync(localBackupsDir)
-    .filter(name => backupNamePattern.test(name))
-    .map(name => ({ name, mtimeMs: statSync(join(localBackupsDir, name)).mtimeMs }))
-    .sort((a, b) => b.mtimeMs - a.mtimeMs)[0].name;
-  copyFileSync(join(localBackupsDir, newestLocalBackup), join(externalDir, newestLocalBackup));
-  const childrenBeforeExternalRestore = (await (await fetch(url + '/api/state')).json()).state.children.length;
-
-  await evaluate(
-    "document.querySelector('[data-view=settings]').click();document.getElementById('restoreButton').click()",
-  );
-  await until(() => evaluate("document.getElementById('restoreDialog').open"), 'Restore dialog did not open');
-  // Item 3: sursa comută pe „extern” cu un folder gol precompletat, ceea ce pornește automat o căutare;
-  // click pe „Caută copii” cât timp acel request e în zbor nu trebuie ignorat (butonul nu se mai dezactivează).
-  // Ambele acțiuni rulează sincron, într-un singur Runtime.evaluate, ca niciunul dintre cele două fetch-uri
-  // să nu apuce să se rezolve între ele — reproduce exact cursa descrisă în regulă, nu doar contractul final.
-  const emptyExternalDir = join(dir, 'goale');
-  mkdirSync(emptyExternalDir, { recursive: true });
-  await evaluate(`
-    document.getElementById('restoreFolder').value=${JSON.stringify(emptyExternalDir)};
-    document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}));
-    document.querySelector('#restoreSource input[value=extern]').click();
-    document.getElementById('restoreFolder').value=${JSON.stringify(externalDir)};
-    document.getElementById('restoreFolder').dispatchEvent(new Event('input',{bubbles:true}));
-    document.getElementById('restoreFolderLoad').click();
-  `);
-  assert.equal(await evaluate("document.getElementById('restoreExternal').hidden"), false);
-  await until(
-    () => evaluate("document.getElementById('backupSelect').options.length>0"),
-    'External backup list did not load',
-  );
-  assert.match(
-    await evaluate("document.getElementById('backupSelect').textContent"),
-    /cea mai recentă/,
-    'Newest external backup missing the "cea mai recentă" suffix',
-  );
-  assert.equal(
-    await evaluate(
-      "(()=>{const select=document.getElementById('backupSelect').getBoundingClientRect();const modal=document.querySelector('#restoreDialog .modal').getBoundingClientRect();return select.right<=modal.right+1;})()",
-    ),
-    true,
-    'Backup select overflows the restore dialog',
-  );
-  await until(() => evaluate("!document.getElementById('commitRestore').disabled"), 'External restore preview failed');
-  const externalPreviewText = await evaluate("document.getElementById('restorePreview').textContent");
-  assert.match(externalPreviewText, /\d+ copii/, externalPreviewText);
-  assert.match(externalPreviewText, /Total achitări/, externalPreviewText);
-  await evaluate(
-    "document.getElementById('restoreConfirm').value='RESTAUREAZA';document.getElementById('restoreConfirm').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('commitRestore').click()",
-  );
-  await until(() => evaluate("!document.getElementById('restoreDialog').open"), 'External restore failed');
-  await until(
-    () => evaluate("document.getElementById('saveIndicator').dataset.state==='saved'"),
-    'External restore must show saved status',
-  );
-  assert.equal(
-    (await (await fetch(url + '/api/state')).json()).state.children.length,
-    childrenBeforeExternalRestore,
-    'Children count changed after restoring from the external folder',
-  );
-  assert.equal(
-    (await (await fetch(url + '/api/health')).json()).externalDir,
-    externalDir,
-    'externalDir was not configured from the folder used to restore',
-  );
-
-  // Vizite: creare din editor, apariție în calendar și listă cu badge, schimbare statut, înscriere copil, card din Panou.
-  const childrenBeforeVisits = (await (await fetch(url + '/api/state')).json()).state.children.length;
-  await evaluate("document.querySelector('#primaryNav [data-view=visits]').click()");
-  assert.equal(await evaluate("document.querySelector('.view.active').id"), 'visits');
-  await evaluate("document.querySelector('[data-create=visits]').click()");
-  await until(() => evaluate("document.getElementById('editorForm')?.elements.name"), 'Visits editor did not open');
-  // Lipește din clipboard: butonul apare doar la creare. Acces real la clipboard nu e testabil
-  // aici — conexiunea CDP a acestui test e la nivel de pagină, nu de browser, deci nu poate
-  // acorda permisiunea prin Browser.grantPermissions; fără ea, navigator.clipboard.readText()
-  // eșuează sigur în Chrome headless. Testăm în schimb calea de eroare reală (fără permisiune)
-  // și, separat, funcția pură de completare a câmpurilor, apelată direct cu date construite.
-  assert.equal(await evaluate("!!document.getElementById('vizPasteTemplate')"), true);
-  assert.match(await evaluate("document.getElementById('editorFields').textContent"), /AAAA-LL-ZZ/);
-  await evaluate("document.getElementById('vizPasteTemplate').click()");
-  await until(
-    () => evaluate("document.getElementById('vizPasteError').hidden === false"),
-    'Clipboard denial did not show the inline error',
-  );
-  assert.match(
-    await evaluate("document.getElementById('vizPasteError').textContent"),
-    /Nu am putut citi din clipboard/,
-  );
-  const ageHintBeforePaste = await evaluate("document.getElementById('vizAgeHint').textContent");
-  const pasteFillResult = await evaluate(`(async()=>{
-    const {applyParsedVisitFields}=await import('/src/features/visits/index.web.mjs');
-    const f=document.getElementById('editorForm');
-    applyParsedVisitFields(f,{name:'Copil lipit',parent:'Părinte lipit',phone:'0711222333',date:'2026-09-21',birthDate:'2022-05-04'});
-    return {
-      name:f.elements.name.value,
-      parent:f.elements.parent.value,
-      phone:f.elements.phone.value,
-      date:f.elements.date.value,
-      birthDate:f.elements.birthDate.value,
-      ageHint:document.getElementById('vizAgeHint').textContent,
-    };
-  })()`);
-  assert.equal(pasteFillResult.name, 'Copil lipit');
-  assert.equal(pasteFillResult.parent, 'Părinte lipit');
-  assert.equal(pasteFillResult.phone, '0711222333');
-  assert.equal(pasteFillResult.date, '2026-09-21');
-  assert.equal(pasteFillResult.birthDate, '2022-05-04');
-  // Dovedește că applyParsedVisitFields a declanșat input real pe birthDate (nu doar a scris .value),
-  // altfel oninput-ul deja legat n-ar recalcula vârsta.
-  assert.notEqual(pasteFillResult.ageHint, ageHintBeforePaste);
-  assert.match(pasteFillResult.ageHint, /^Vârstă: /);
-  // Copiază șablonul: butonul apare doar la creare, ca cel de lipire. Scrierea reală în
-  // clipboard nu e mai testabilă aici decât citirea (vezi comentariul de mai sus) — verificăm
-  // că butonul există, că apăsarea lui nu aruncă, și că textul scris e exact constanta
-  // exportată, sursă unică pentru buton și pentru parser (nu poate diverge de FIELD_BY_LABEL).
-  assert.equal(await evaluate("!!document.getElementById('vizCopyTemplate')"), true);
-  const copyTemplateResult = await evaluate(`(async()=>{
-    const {VISIT_PASTE_TEMPLATE}=await import('/src/features/visits/index.web.mjs');
-    let threw=false;
-    try { document.getElementById('vizCopyTemplate').click(); } catch { threw=true; }
-    await new Promise(r=>setTimeout(r,50));
-    return { threw, template: VISIT_PASTE_TEMPLATE, feedback: document.getElementById('vizPasteError').textContent };
-  })()`);
-  assert.equal(copyTemplateResult.threw, false, 'Clicking Copiază șablonul threw');
-  assert.equal(
-    copyTemplateResult.template,
-    'Copil: \nData nașterii: \nPărinte 1: \nTelefon 1: \nPărinte 2: \nTelefon 2: \nData vizitei: \nOra: \nData dorită start: \nGrupa dorită: \nCum a aflat: \n',
-  );
-  assert.match(copyTemplateResult.feedback, /Șablon copiat\.|Copierea în clipboard a eșuat/);
-  await evaluate(
-    `(()=>{const f=document.getElementById('editorForm');f.elements.name.value='Vizită test';f.elements.date.value='${visitDate}';f.elements.time.value='14:00';f.elements.parent.value='Părinte vizită';f.elements.phone.value='0700123456';f.requestSubmit();})()`,
-  );
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Visit save failed');
-  assert.match(await evaluate("document.getElementById('visitsCalendar').textContent"), /14:00.*Vizită test/);
-  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Vizită test/);
-  assert.equal(await evaluate("document.getElementById('visitsCount').textContent"), '1');
-  // Verify visits calendar grid layout: #visitsCalendar should have display: grid and cells should be side-by-side
-  const gridDisplay = await evaluate("getComputedStyle(document.getElementById('visitsCalendar')).display");
-  assert.equal(gridDisplay, 'grid', 'Visits calendar should use CSS grid layout');
-  const cellPositions = await evaluate(
-    "Array.from(document.querySelectorAll('#visitsCalendar .cal-cell')).slice(0, 2).map(el => el.getBoundingClientRect().top)",
-  );
-  assert.equal(
-    cellPositions.length >= 2 && cellPositions[0] === cellPositions[1],
-    true,
-    'Calendar cells should be side-by-side in grid rows, not stacked vertically',
-  );
-  // Clic pe cipul din calendar: arată detaliul vizitei cu acțiuni rapide, fără să filtreze lista la ziua aceea.
-  await evaluate("document.querySelector('#visitsCalendar [data-visit-id]').click()");
-  assert.equal(
-    await evaluate("document.getElementById('visitsDetail').hidden"),
-    false,
-    'Visit detail panel did not open on chip click',
-  );
-  assert.match(await evaluate("document.getElementById('visitsDetail').textContent"), /Vizită test/);
-  assert.equal(
-    await evaluate('!!document.querySelector(\'#visitsDetail [data-visit-action="Efectuată"]\')'),
-    true,
-    'Detail panel missing the quick status action button',
-  );
-  assert.equal(
-    await evaluate(
-      `document.querySelector('#visitsCalendar [data-date="${visitDate}"]').classList.contains('is-selected')`,
-    ),
-    false,
-    'Clicking a visit chip should not also select the day (day-select must not fire)',
-  );
-  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Vizită test/);
-  await evaluate("document.querySelector('#visitsCalendar [data-visit-id]').click()");
-  assert.equal(
-    await evaluate("document.getElementById('visitsDetail').hidden"),
-    true,
-    'Visit detail panel did not close on the second chip click',
-  );
-  await evaluate('document.querySelector(\'[data-visit-action="Efectuată"]\').click()');
-  await until(() => evaluate('!document.querySelector(\'[data-visit-action="Efectuată"]\')'), 'Status update failed');
-  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Efectuată/);
-  const childrenBeforeEnrol = (await (await fetch(url + '/api/state')).json()).state.children.length;
-  await evaluate('document.querySelector(\'[data-visit-action="enrol"]\').click()');
-  await until(
-    () => evaluate("document.getElementById('editorForm')?.elements.parent"),
-    'Child enrol editor did not open',
-  );
-  assert.equal(
-    await evaluate("document.getElementById('editorForm').elements.name.value"),
-    'Vizită test',
-    'Child name not prefilled from visit',
-  );
-  assert.equal(
-    await evaluate("document.getElementById('editorForm').elements.parent.value"),
-    'Părinte vizită',
-    'Child parent not prefilled from visit',
-  );
-  await evaluate("document.getElementById('editorForm').requestSubmit()");
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Child enrol save failed');
-  const childrenAfterEnrol = (await (await fetch(url + '/api/state')).json()).state.children.length;
-  assert.equal(childrenAfterEnrol, childrenBeforeEnrol + 1, 'Children count did not increase by 1');
-  assert.match(await evaluate("document.getElementById('visitsTable').textContent"), /Înscris/);
-  // Vizită deja Efectuată: cipul din calendar oferă „Înscrie copilul”, cablat la același onQuickAction(id, 'enrol').
-  await evaluate(`(async()=>{
-    const {submitMutation}=await import('/src/app/web/app-session.mjs');
-    await submitMutation('/api/record',{type:'visits',mode:'create',record:{id:'VIZ-SMOKE-DONE',name:'Vizită gata test',parent:'Părinte gata',phone:'0722333444',date:'${visitDate}',time:'11:00',status:'Efectuată',statusChangedAt:'2026-09-15T09:00:00.000Z',history:[{at:'2026-09-15T09:00:00.000Z',status:'Efectuată',date:'${visitDate}',time:'11:00'}]}});
-  })()`);
-  await until(
-    () => evaluate("document.getElementById('visitsTable').textContent.includes('Vizită gata test')"),
-    'Visit creation via API failed',
-  );
-  await evaluate('document.querySelector(\'#visitsCalendar [data-visit-id="VIZ-SMOKE-DONE"]\').click()');
-  assert.equal(
-    await evaluate("document.getElementById('visitsDetail').hidden"),
-    false,
-    'Detail panel did not open for the Efectuată visit',
-  );
-  assert.equal(
-    await evaluate('!!document.querySelector(\'#visitsDetail [data-visit-action="enrol"]\')'),
-    true,
-    'Missing „Înscrie copilul” button in visit detail for an Efectuată visit',
-  );
-  await evaluate('document.querySelector(\'#visitsDetail [data-visit-action="enrol"]\').click()');
-  await until(() => evaluate("document.getElementById('editor').open"), 'Enrol editor did not open from visit detail');
-  assert.match(
-    await evaluate("document.getElementById('editorTitle').textContent"),
-    /Vizită gata test/,
-    'Editor title missing the visit name — detail button did not reach onQuickAction(id, "enrol")',
-  );
-  await evaluate("document.querySelector('[data-close=editor]').click()");
-  await until(() => evaluate("!document.getElementById('editor').open"), 'Editor did not close after cancel');
-  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
-  assert.equal(
-    await evaluate("!!document.querySelector('#alerts .alert-visits')"),
-    true,
-    'Visits card not found in dashboard alerts',
-  );
-  assert.equal(
-    await evaluate("document.getElementById('visitsNotifyButton').hidden"),
-    false,
-    'Notify button should be visible in headless Chrome (Notification.permission is default, not unsupported)',
-  );
-
-  // §4.7: fiecare ecran din navigare trebuie să devină activ, fără excepții/erori de consolă noi și fără scroll orizontal.
-  const screenViews = await evaluate("[...document.querySelectorAll('#primaryNav .nav')].map(b=>b.dataset.view)");
-  assert.equal(screenViews.length, 14);
-  for (const view of screenViews) {
-    const exceptionsBefore = errors.length;
-    const consoleErrorsBefore = consoleErrors.length;
-    await evaluate(`document.querySelector('#primaryNav [data-view=${view}]').click()`);
-    assert.equal(await evaluate("document.querySelector('.view.active').id"), view, 'Ecran inactiv: ' + view);
-    assert.equal(
-      errors.length,
-      exceptionsBefore,
-      'Excepție la navigarea către ' + view + ': ' + JSON.stringify(errors.slice(exceptionsBefore)),
+      `[...document.querySelectorAll('aside nav button')].find(b=>b.children[1]?.textContent===${JSON.stringify(navLabel)})?.click()`,
     );
-    assert.equal(
-      consoleErrors.length,
-      consoleErrorsBefore,
-      'Eroare în consolă la navigarea către ' + view + ': ' + JSON.stringify(consoleErrors.slice(consoleErrorsBefore)),
-    );
+    await until(() => evaluate('location.pathname').then(p => p === path), `Navigare la ${navLabel} a eșuat`);
+    assert.equal(await evaluate("document.querySelector('header h1')?.textContent"), title);
     await noPageOverflow();
   }
 
-  await evaluate("document.querySelector('#primaryNav [data-view=children]').click()");
-  await screenshot('children-desktop-populated');
-  await evaluate("document.querySelector('#primaryNav [data-view=dashboard]').click()");
-  await screenshot('dashboard-desktop-populated');
-  assert.deepEqual(errors, []);
-  console.log(
-    'PASS: header saved/draft/saving/error states, cancel, lost-response retry without duplicates, settings preservation/retry, Telegram settings panel (unconfigured state, malformed token rejected without a real network call) and notification preferences form defaults, offline/reconnect; load, child, XSS, payment allocations, visits creation/enrolment/dashboard card, dashboard, profile, review, restore preview, restore from external folder, audit; all 14 screens navigable without errors/overflow; print.css for De notificat and profile; app version.',
+  // Mutație reală prin HTTP (nu prin pagină — modulele interne nu mai sunt importabile pe cale
+  // în dist-ul construit): un copil și o plată, verificate în UI după reload.
+  const marker = 'Smoke ' + randomUUID().slice(0, 8);
+  await createRecord('children', {
+    id: 'SMOKE-CHILD',
+    name: marker,
+    parent: 'Părinte smoke',
+    phone: '',
+    status: 'Activ',
+  });
+  await createRecord('payments', {
+    id: 'SMOKE-PAY',
+    date: '2026-09-08',
+    childId: 'SMOKE-CHILD',
+    amount: 500,
+    tenders: [{ method: 'Cash', amount: 500 }],
+  });
+  await evaluate('location.reload()');
+  await until(() => saveStatusState().then(s => s === 'saved'), 'Reload după mutație a eșuat');
+  await evaluate(
+    `[...document.querySelectorAll('aside nav button')].find(b=>b.children[1]?.textContent==='Copii')?.click()`,
   );
-} catch (error) {
-  console.error(error);
-  process.exitCode = 1;
+  await until(
+    () => evaluate("document.querySelector('main')?.textContent").then(t => t?.includes(marker)),
+    'Copilul creat prin API nu apare pe ecranul Copii',
+  );
+  await evaluate(
+    `[...document.querySelectorAll('aside nav button')].find(b=>b.children[1]?.textContent==='Achitări')?.click()`,
+  );
+  await until(
+    () => evaluate("document.querySelector('main')?.textContent").then(t => t?.includes(marker)),
+    'Plata creată prin API nu apare pe ecranul Achitări',
+  );
+
+  // Totul de mai sus trebuie să fi rulat fără erori — verificat aici, înainte de căderea
+  // de rețea intenționată de mai jos (care produce, real, un console.error de raportare).
+  assert.deepEqual(errors, [], 'Excepții necapturate în consolă');
+  assert.deepEqual(consoleErrors, [], 'console.error în timpul rulării');
+
+  // Cădere de rețea reală la reload, doar pe cererile /api/* (Network.emulateNetworkConditions
+  // ar bloca și documentul HTML însuși), apoi recuperare prin butonul de reîncercare.
+  await command('Fetch.enable', { patterns: [{ urlPattern: '*/api/*' }] });
+  apiBlocked = true;
+  await command('Page.reload', { ignoreCache: true });
+  await until(() => saveStatusState().then(s => s === 'error'), 'Căderea de rețea trebuie să arate roșu');
+  apiBlocked = false;
+  await evaluate("document.querySelector('[role=status] button')?.click()");
+  await until(() => saveStatusState().then(s => s === 'saved'), 'Reîncercarea trebuie să arate verde la reconectare');
+  await command('Fetch.disable');
+  // errors/consoleErrors nu se re-verifică aici: căderea de rețea de mai sus a produs,
+  // intenționat și real, exact un console.error de raportare (showNotice(..., true)).
+
+  console.log('Browser smoke OK');
 } finally {
-  ws?.close();
-  chrome.kill();
-  app.server.closeAllConnections();
-  await app.close();
-  await sleep(1200);
-  if (
-    resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-browser-') ||
-    resolve(dir).startsWith(resolve(tmpdir()) + '/startica-browser-')
-  ) {
-    try {
-      rmSync(dir, { recursive: true, force: true });
-    } catch {
-      console.log('Temporary test folder retained: ' + dir);
-    }
+  try {
+    ws?.close();
+  } catch {
+    // ignorat: browser-ul poate fi deja închis
   }
+  chrome.kill();
+  await app.close();
 }
