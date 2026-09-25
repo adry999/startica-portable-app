@@ -689,7 +689,7 @@ namespace Startica
             string arguments = "--app=" + address +
                 " --user-data-dir=\"" + profileDir + "\"" +
                 " --new-window --no-first-run --no-default-browser-check" +
-                " --disable-background-mode --disable-extensions";
+                " --disable-background-mode --disable-extensions --start-maximized";
             ProcessStartInfo info = new ProcessStartInfo(browserPath, arguments);
             info.UseShellExecute = true;
             Process.Start(info);
