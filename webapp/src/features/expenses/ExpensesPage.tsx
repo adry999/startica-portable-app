@@ -4,6 +4,7 @@ import {
   Card,
   DataTable,
   Drawer,
+  FilterPills,
   RowMenu,
   SegmentedControl,
   SelectionBar,
@@ -359,19 +360,6 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             onChange={event => setMonthTo(event.target.value)}
             aria-label="Până la luna"
           />
-          <select
-            className={styles.select}
-            value={category}
-            onChange={event => setCategory(event.target.value)}
-            aria-label="Filtru categorie"
-          >
-            <option value="">Categorie ▾</option>
-            {data.categoryNames.map(name => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </select>
           <SegmentedControl
             ariaLabel="Filtru arhivare"
             value={archiveFilter}
@@ -383,6 +371,24 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             ]}
           />
         </div>
+
+        <FilterPills
+          groups={[
+            {
+              label: 'Categorie',
+              value: category,
+              onChange: setCategory,
+              options: [
+                { value: '', label: 'Toate', tone: 'neutral' },
+                ...data.categoryNames.map(name => ({
+                  value: name,
+                  label: name,
+                  tone: categoryStyleFor(name).tone,
+                })),
+              ],
+            },
+          ]}
+        />
 
         <p className={styles.summaryText}>
           <strong>{filteredExpenses.length}</strong> cheltuieli ·{' '}
