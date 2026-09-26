@@ -32,10 +32,21 @@ export default defineConfig({
     },
     proxy: {
       // Dev-only: the real backend (`npm start` from the repo root, default port
-      // 8765) enforces an exact Host header (127.0.0.1:<port>, see
-      // src/core/server/http/request-guards.mjs) — Vite's proxy rewrites Host to
-      // match the target by default, so this works without extra config.
-      '/api': 'http://127.0.0.1:8765',
+      // 8765) enforces an exact Host header (127.0.0.1:<port>) AND an exact
+      // Origin header on writes (see src/core/server/http/request-guards.mjs).
+      // Vite's proxy rewrites Host to match the target by default, but leaves
+      // Origin as the page's own (http://localhost:5173) — mismatched against
+      // the backend's port, so every write (POST /api/record, etc.) gets a 403
+      // "Origine nepermisă." unless we rewrite it here too.
+      '/api': {
+        target: 'http://127.0.0.1:8765',
+        changeOrigin: true,
+        configure: proxy => {
+          proxy.on('proxyReq', proxyReq => {
+            proxyReq.setHeader('origin', 'http://127.0.0.1:8765');
+          });
+        },
+      },
     },
   },
   build: {

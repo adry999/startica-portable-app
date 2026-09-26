@@ -3,7 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
 import { VisitsPage } from './VisitsPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Programează vizită" ajunge acolo, nu în pagină. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -58,7 +64,10 @@ const fixtureState = {
 function renderPage() {
   return render(
     <ToastProvider>
-      <VisitsPage />
+      <TopbarActionsProvider>
+        <TopbarActionsSlot />
+        <VisitsPage />
+      </TopbarActionsProvider>
     </ToastProvider>,
   );
 }
@@ -107,7 +116,7 @@ describe('VisitsPage', () => {
     await act(() => session.result.current.load());
 
     renderPage();
-    expect(screen.getByText('Programate')).toBeInTheDocument();
+    expect(screen.getByText('programate')).toBeInTheDocument();
     const table = screen.getByRole('table');
     expect(within(table).getByText('Andrei Popescu')).toBeInTheDocument();
     expect(within(table).getByText('Maria Ionescu')).toBeInTheDocument();
@@ -120,7 +129,7 @@ describe('VisitsPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: '+ Adaugă vizită' }));
+    await user.click(screen.getByRole('button', { name: '+ Programează vizită' }));
     expect(screen.getByRole('dialog', { name: 'Adaugă: vizită' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nume copil'), 'Radu Ionescu');
@@ -184,6 +193,7 @@ describe('VisitsPage', () => {
     await user.click(screen.getByLabelText('Arhivate'));
     await user.click(screen.getByLabelText('Toate lunile'));
 
-    expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    expect(within(table).getByText('Andrei Popescu')).toBeInTheDocument();
   });
 });

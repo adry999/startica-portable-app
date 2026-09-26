@@ -74,7 +74,7 @@ export const VIEW_TITLES: Record<ViewKey, { eyebrow: string; title: string }> = 
   dashboard: { eyebrow: 'Privire de ansamblu', title: 'Rezumatul lunii' },
   children: { eyebrow: 'Evidență', title: 'Copii' },
   groups: { eyebrow: 'Administrare', title: 'Grupe' },
-  visits: { eyebrow: 'Administrare', title: 'Vizite' },
+  visits: { eyebrow: 'Înscrieri', title: 'Vizite' },
   payments: { eyebrow: 'Contabilitate', title: 'Achitări' },
   expenses: { eyebrow: 'Contabilitate', title: 'Cheltuieli' },
   status: { eyebrow: 'Contabilitate', title: 'Situația plăților' },
