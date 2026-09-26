@@ -471,6 +471,10 @@
   color: var(--subtle);
 }
 
+.selectedDayRow {
+  background: var(--cream);
+}
+
 .rowActions {
   display: flex;
   justify-content: flex-end;

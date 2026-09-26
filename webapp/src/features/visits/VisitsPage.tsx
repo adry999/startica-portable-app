@@ -188,8 +188,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     .slice(0, 5);
 
   const columns: DataTableColumn<Visit>[] = [
-    { key: 'date', header: 'Data', sortValue: row => row.date, render: row => formatDate(row.date) },
-    { key: 'time', header: 'Ora', sortValue: row => row.time, render: row => row.time },
+    {
+      key: 'date',
+      header: 'Data',
+      sortValue: row => `${row.date} ${row.time}`,
+      render: row => (
+        <div>
+          <strong>{formatDate(row.date)}</strong>
+          <br />
+          <small className={styles.dim}>{row.time}</small>
+        </div>
+      ),
+    },
     {
       key: 'child',
       header: 'Copil',
@@ -532,6 +542,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             data.setSelectedDate(row.date);
             setFormTarget(row);
           }}
+          rowClassName={row => (row.date === data.selectedDate ? styles.selectedDayRow : undefined)}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
         />
         <p className={styles.tableHint}>Click pe rând deschide toate detaliile vizitei.</p>

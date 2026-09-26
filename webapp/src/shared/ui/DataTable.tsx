@@ -18,6 +18,8 @@ export interface DataTableProps<Row> {
   pageSize?: number;
   emptyState?: ReactNode;
   onRowClick?: (row: Row) => void;
+  /** Clasă opțională per rând (ex. evidențierea rândului care corespunde zilei alese în alt panou). */
+  rowClassName?: (row: Row) => string | undefined;
   selectable?: boolean;
   selectedRowKeys?: ReadonlySet<string>;
   onSelectedRowKeysChange?: (keys: ReadonlySet<string>) => void;
@@ -40,6 +42,7 @@ export function DataTable<Row>({
   pageSize = 10,
   emptyState,
   onRowClick,
+  rowClassName,
   selectable = false,
   selectedRowKeys,
   onSelectedRowKeysChange,
@@ -143,7 +146,7 @@ export function DataTable<Row>({
             return (
               <tr
                 key={key}
-                className={onRowClick ? styles.clickableRow : undefined}
+                className={[onRowClick ? styles.clickableRow : '', rowClassName?.(row) ?? ''].filter(Boolean).join(' ') || undefined}
                 data-selected={selected || undefined}
                 tabIndex={onRowClick ? 0 : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
