@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="Vizite.dc.html">Vizite</a><a href="De notificat.dc.html">De notificat</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Formulare.dc.html">Formulare și stări</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Vizite</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#2a">2a</a>: calendarul și ziua selectată stau alăturate; statutul vizitei se schimbă dintr-un singur control, fără cinci butoane pe rând. Dedesubt, tabelul cu toate vizitele, cu căutare și filtre după statut și perioadă.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="2a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">2a</span><span style="font-size:16px;font-weight:700">Vizite</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="vizite" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Înscrieri</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Vizite</h2></div>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">+ Programează vizită</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <span style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:16px;background:#fdf3d2;font-size:14px;font-weight:700"><b style="font-family:'Baloo 2',sans-serif;font-size:22px;color:#7a5d00">1</b>programate</span>
+              <span style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:16px;background:#e7f4ec;font-size:14px;font-weight:700"><b style="font-family:'Baloo 2',sans-serif;font-size:22px;color:#2e6b4c">0</b>efectuate</span>
+              <span style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:16px;background:#fcead3;font-size:14px;font-weight:700"><b style="font-family:'Baloo 2',sans-serif;font-size:22px;color:#a34f00">0</b>înscriși</span>
+              <span style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:16px;background:#fce9ef;font-size:14px;font-weight:700"><b style="font-family:'Baloo 2',sans-serif;font-size:22px;color:#b0284f">0</b>renunțat</span>
+              <span style="align-self:center;font-size:13px;color:#9aa3a9">ultimele 12 luni</span>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start">
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;flex:1">Septembrie 2026</span><span style="padding:6px 14px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:13px">Azi</span><span style="width:32px;height:32px;border-radius:50%;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">‹</span><span style="width:32px;height:32px;border-radius:50%;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">›</span></div>
+                <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;color:#9aa3a9;text-align:center"><span>Lun</span><span>Mar</span><span>Mie</span><span>Joi</span><span>Vin</span><span>Sâm</span><span>Dum</span></div>
+                <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px">
+                  <sc-for list="{{ cal }}" as="d" hint-placeholder-count="35">
+                    <div style="height:72px;border-radius:12px;padding:6px 8px;background:{{ d.bg }};border:2px solid {{ d.bd }};display:flex;flex-direction:column;gap:4px;opacity:{{ d.op }}"><span style="font-size:13px;font-weight:800;color:{{ d.fg }}">{{ d.n }}</span><sc-if value="{{ d.ev }}"><span style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f9d257;color:#3a4750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.ev }}</span></sc-if></div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                  <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00">Joi, 17 septembrie</span>
+                  <div style="display:flex;align-items:center;gap:12px"><span style="width:52px;padding:8px 0;border-radius:14px;background:#fdf3d2;text-align:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">10:00</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:800;font-size:16px">Ana · 10 luni</span><span style="font-size:13px;color:#6b7780">Părinte: Rusu Elena · 069 555 120</span></div></div>
+                  <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px"><span style="color:#6b7780">Grupă dorită</span><span style="font-weight:700">—</span><span style="color:#6b7780">Notă</span><span style="font-weight:700">Vine cu ambii părinți</span></div>
+                  <span style="font-size:13px;font-weight:800">Cum a decurs vizita?</span>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;font-weight:800">
+                    <span style="padding:10px;border-radius:12px;background:#e7f4ec;color:#2e6b4c;text-align:center">Efectuată</span>
+                    <span style="padding:10px;border-radius:12px;background:#fcead3;color:#a34f00;text-align:center">S-a înscris</span>
+                    <span style="padding:10px;border-radius:12px;background:#f4f1ea;color:#5b666e;text-align:center">Neprezentată</span>
+                    <span style="padding:10px;border-radius:12px;background:#fce9ef;color:#b0284f;text-align:center">A renunțat</span>
+                  </div>
+                  <div style="display:flex;gap:14px;font-size:13px;font-weight:800;padding-top:4px;border-top:1px solid #f3eee5"><span style="padding-top:10px;color:#a34f00">Editează</span><span style="padding-top:10px;color:#6b7780">Reprogramează</span><span style="padding-top:10px;margin-left:auto;color:#9aa3a9">Arhivează</span></div>
+                </div>
+                <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:16px 20px;display:flex;flex-direction:column;gap:6px"><span style="font-weight:800;font-size:14px">Următoarele vizite</span><span style="font-size:13px;color:#6b7780">Nicio altă vizită programată luna aceasta.</span></div>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;display:flex;flex-direction:column;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #ede7dc">
+                <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;padding:0 6px 0 4px">Toate vizitele</span>
+                <div style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕<span>Caută după copil, părinte sau telefon</span></div>
+                <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Toate · 9</span><span style="padding:7px 14px;color:#6b7780">Programate · 1</span><span style="padding:7px 14px;color:#6b7780">Arhivate</span></div>
+                <span style="padding:9px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:13px;font-weight:700">Perioadă: 12 luni ▾</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #ede7dc;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Statut</span><span style="padding:6px 14px;border-radius:999px;background:#3a4750;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Toate</span><span style="padding:6px 14px;border-radius:999px;background:#fdf3d2;color:#7a5d00;font-size:13px;font-weight:800;cursor:pointer">Programată</span><span style="padding:6px 14px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;font-size:13px;font-weight:800;cursor:pointer">Efectuată</span><span style="padding:6px 14px;border-radius:999px;background:#fcead3;color:#a34f00;font-size:13px;font-weight:800;cursor:pointer">S-a înscris</span><span style="padding:6px 14px;border-radius:999px;background:#f4f1ea;color:#5b666e;font-size:13px;font-weight:800;cursor:pointer">Neprezentată</span><span style="padding:6px 14px;border-radius:999px;background:#fce9ef;color:#b0284f;font-size:13px;font-weight:800;cursor:pointer">A renunțat</span><span style="margin-left:auto;font-size:14px;font-weight:800">9 vizite</span></div>
+              <div style="display:grid;grid-template-columns:1.1fr 2fr 2fr 1fr 1.3fr 1.2fr 48px;align-items:center;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc">
+                <span>Data ↓</span><span>Copil · vârstă</span><span>Părinte · telefon</span><span>Grupă dorită</span><span>Notă</span><span>Statut</span><span></span>
+              </div>
+              <sc-for list="{{ visits }}" as="v" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:1.1fr 2fr 2fr 1fr 1.3fr 1.2fr 48px;align-items:center;padding:12px 20px;border-bottom:1px solid #f3eee5;background:{{ v.rowBg }};cursor:pointer">
+                  <div style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:14px">{{ v.date }}</span><span style="font-size:12px;color:#9aa3a9">{{ v.time }}</span></div>
+                  <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14px">{{ v.child }}</span><span style="font-size:12px;color:#9aa3a9">{{ v.age }}</span></div>
+                  <div style="display:flex;flex-direction:column"><span style="font-size:14px">{{ v.parent }}</span><span style="font-size:12px;color:#6b7780">{{ v.phone }}</span></div>
+                  <span style="font-size:14px;color:#6b7780">{{ v.group }}</span>
+                  <span style="font-size:13px;color:#6b7780;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px">{{ v.note }}</span>
+                  <span style="justify-self:start;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ v.sBg }};color:{{ v.sFg }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ v.sFg }}"></span>{{ v.status }}</span>
+                  <span style="justify-self:end;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">⋯</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;font-size:13px;color:#6b7780"><span>Afișez 1–9 din 9</span><span>Click pe rând deschide vizita în calendar</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const cal = [];
+    for (let i = 0; i < 35; i++) {
+      const n = i === 0 ? 31 : (i <= 30 ? i : i - 30);
+      const out = i === 0 || i > 30;
+      const today = n === 23 && !out, sel = n === 17 && !out;
+      cal.push({ n, ev: sel ? '10:00 Ana' : '', op: out ? 0.4 : 1, bg: sel ? '#fdf3d2' : (today ? '#fff' : '#faf7f1'), bd: today ? '#ef8a1d' : (sel ? '#f9d257' : 'transparent'), fg: today ? '#a34f00' : '#3a4750' });
+    }
+    const ST = { 'Programată': ['#fdf3d2', '#7a5d00'], 'Efectuată': ['#e7f4ec', '#2e6b4c'], 'S-a înscris': ['#fcead3', '#a34f00'], 'Neprezentată': ['#f4f1ea', '#5b666e'], 'A renunțat': ['#fce9ef', '#b0284f'] };
+    const visits = [
+      ['17 sep 2026', '10:00', 'Ana', '10 luni', 'Rusu Elena', '069 555 120', '—', 'Vine cu ambii părinți', 'Programată'],
+      ['28 aug 2026', '11:30', 'Luca', '2 ani', 'Ciobanu Irina', '078 214 330', 'Soare', 'Întreabă de program prelungit', 'S-a înscris'],
+      ['21 aug 2026', '09:30', 'Eva', '3 ani', 'Moraru Dan', '069 812 004', 'Mars', '', 'Efectuată'],
+      ['14 aug 2026', '10:00', 'David', '1 an', 'Popa Cristina', '060 447 219', '—', 'Alergie la lactoză', 'Neprezentată'],
+      ['30 iul 2026', '16:00', 'Sofia', '4 ani', 'Lungu Victor', '079 330 118', 'Mars', 'Mută din alt oraș', 'S-a înscris'],
+      ['22 iul 2026', '10:30', 'Matei', '2 ani', 'Rotaru Ana', '068 901 552', 'Soare', '', 'A renunțat'],
+      ['09 iul 2026', '11:00', 'Mia', '3 ani', 'Cebotari Olga', '069 223 671', 'Mars', 'Frate în grupa Soare', 'Efectuată'],
+      ['18 iun 2026', '09:00', 'Alex', '5 ani', 'Munteanu Radu', '078 665 030', '—', '', 'A renunțat'],
+      ['04 iun 2026', '15:30', 'Daria', '2 ani', 'Țurcanu Maria', '060 118 947', 'Soare', 'Preferă grupa de dimineață', 'S-a înscris']
+    ].map(([date, time, child, age, parent, phone, group, note, status], i) => ({ date, time, child, age, parent, phone, group, note: note || '—', status, sBg: ST[status][0], sFg: ST[status][1], rowBg: i === 0 ? '#fffaf0' : '#fff' }));
+    return { cal, visits };
+  }
+}
+</script>
+</body>
+</html>

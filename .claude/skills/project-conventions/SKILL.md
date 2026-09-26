@@ -25,6 +25,8 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 
 **Excepție (din 2026-09-23, vezi Decision log): `webapp/`.** Stratul de interfață web e în redesign pe React+Vite+TypeScript, pe branch `redesign/react-vite` — vezi `docs/superpowers/specs/2026-09-23-ui-redesign-react-migration-design.md`. Doar `webapp/` poate folosi React, Vite, TypeScript real, TanStack Query, Vitest, React Testing Library, react-router-dom ca dependințe. Restul stack-ului de mai sus (backend, `server/`, `domain/`, teste backend) rămâne neschimbat.
 
+Convențiile vizuale pentru orice UI din `webapp/` sunt în `DESIGN.md` din acest folder (culoare, suprafețe, tipografie, interacțiuni) — vezi și `docs/design/`.
+
 ### Stadiul migrării
 
 - Planul din `docs/arhitectura/README.md` (§6, pașii 0–12) e aplicat integral. Codul nou intră direct în structura țintă.

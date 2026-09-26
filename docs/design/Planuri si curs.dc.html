@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Administrare.dc.html">Administrare</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Achitari.dc.html">Achitări</a><a href="Situatia.dc.html">Situația plăților</a><a href="Copii.dc.html">Copii</a><a href="Tiparire.dc.html">Tipărire</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Planuri în EUR, plată în lei</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Taxa lunară e fixă, în EUR, și vine din planul copilului. Datoria și restul se țin tot în EUR. Părintele plătește în lei, iar suma se transformă la cursul BNM din ziua plății, rotunjit la ban. Din acest motiv, lei încasați pentru aceeași taxă diferă de la o lună la alta. Avansurile rămân în lei până se repartizează. Pe Dashboard totalurile sunt în lei. Prețurile din exemple sunt fictive și se setează în <a href="#7a">7a</a>.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:14px"><a href="#7a">7a Planuri și curs</a><a href="#7g">7g Taxe și grupe</a><a href="#7b">7b Achitare nouă</a><a href="#7c">7c Situația plăților</a><a href="#7d">7d Fișa copilului</a><a href="#7e">7e Confirmare de plată</a><a href="#7f">7f Dashboard</a></div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+    <div id="7a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7a</span><span style="font-size:16px;font-weight:700">Backup și setări → Planuri și curs</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="backup" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Backup și setări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><span style="padding:7px 14px;color:#6b7780">Backup</span><span style="padding:7px 14px;color:#6b7780;white-space:nowrap">Import și export</span><span style="padding:7px 14px;color:#6b7780">Grădinița</span><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;white-space:nowrap">Planuri și curs</span></div>
+            <span style="font-size:13px;color:#9aa3a9">Startica v2.0.0</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Planuri</h3><span style="font-size:13px;color:#6b7780;text-align:right">Prețul nou se aplică de la luna următoare. Lunile deja facturate nu se schimbă.</span></div>
+              <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:8px minmax(0,1fr) 170px 150px;gap:18px;align-items:center;background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:18px 22px 18px 18px">
+                  <span style="align-self:stretch;border-radius:99px;background:{{ p.bar }}"></span>
+                  <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">{{ p.name }}</span><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }}">{{ p.hours }}</span></div>
+                    <span style="font-size:13px;color:#6b7780;text-wrap:pretty">{{ p.desc }}</span>
+                    <span style="font-size:12px;color:#9aa3a9;font-weight:700">{{ p.kids }}</span>
+                  </div>
+                  <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:800;color:#6b7780;text-transform:uppercase;letter-spacing:.06em">Preț lunar<span style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:18px;font-family:'Baloo 2',sans-serif;font-weight:800;color:#3a4750;text-transform:none;letter-spacing:0">{{ p.eur }}<span style="font-size:14px;color:#9aa3a9">€</span></span></label>
+                  <div style="display:flex;flex-direction:column;gap:2px;text-align:right"><span style="font-size:12px;color:#9aa3a9;font-weight:700">la cursul de azi</span><span style="font-weight:800;font-size:15px">≈ {{ p.mdl }} lei</span></div>
+                </div>
+              </sc-for>
+              <div style="display:flex;justify-content:flex-end;gap:10px"><span style="padding:9px 16px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Renunță</span><span style="padding:9px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">Salvează planurile</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="position:relative;overflow:hidden;border-radius:22px;background:{{ rateBg }};padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+                <span style="position:absolute;right:-30px;top:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.45)"></span>
+                <div style="display:flex;align-items:center;justify-content:space-between;position:relative"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:{{ rateInk }}">Curs EUR · 26.09.2026</span><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;color:{{ rateInk }}">{{ rateSrc }}</span></div>
+                <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:36px;line-height:1;position:relative">1 € = {{ rateNow }} lei</span>
+                <span style="font-size:13px;color:#5b666e;position:relative">{{ rateNote }}</span>
+                <span onClick="{{ rateAction }}" style="align-self:flex-start;font-size:13px;font-weight:800;color:{{ rateInk }};cursor:pointer;position:relative">{{ rateActionLbl }}</span>
+              </div>
+              <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#fff;border:1.5px solid #ef8a1d;border-radius:18px;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+                  <span style="font-weight:800;font-size:14px">Curs corectat pentru 26.09.2026</span>
+                  <div style="display:grid;grid-template-columns:110px 1fr;gap:10px">
+                    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Curs<span style="padding:10px 12px;border-radius:12px;border:1.5px solid #ef8a1d;font-size:15px;color:#3a4750;font-weight:700">19,65</span></label>
+                    <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Motiv<span style="padding:10px 12px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#3a4750;font-weight:600">Cursul băncii, plată la ghișeu</span></label>
+                  </div>
+                  <span style="font-size:12px;color:#6b7780">Se aplică doar achitărilor din 26.09. Corectarea intră în Istoric.</span>
+                  <div style="display:flex;justify-content:flex-end;gap:8px"><span onClick="{{ cancelEdit }}" style="padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:13px;cursor:pointer">Anulează</span><span onClick="{{ saveEdit }}" style="padding:8px 16px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:13px;cursor:pointer">Salvează cursul</span></div>
+                </div>
+              </sc-if>
+              <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;margin-bottom:4px">Ultimele zile</span>
+                <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid #f3eee5"><span style="flex:1;color:#6b7780">{{ h.d }}</span><span style="font-weight:800">{{ h.r }}</span><span style="width:78px;text-align:right;font-size:11px;font-weight:800;color:{{ h.fg }}">{{ h.src }}</span></div>
+                </sc-for>
+                <span style="font-size:12px;color:#9aa3a9;margin-top:4px">Cursul se ia automat de la BNM în fiecare zi lucrătoare. În weekend și de sărbători se folosește ultimul curs publicat.</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+    <div id="7g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7g</span><span style="font-size:16px;font-weight:700">Taxe și grupe: plan + taxă lunară în EUR</span></div>
+      <p style="margin:0;font-size:14px;color:#6b7780;max-width:1100px;line-height:1.5;text-wrap:pretty">Coloana „Taxă” devine „Plan” + „Taxă lunară €”. Taxa se completează din plan și poate fi modificată pentru o reducere; atunci apare „reducere” și prețul planului tăiat. Coloana „≈ lei azi” e doar informativă și nu se salvează. Bara de selecție aplică un plan tuturor copiilor bifați.</p>
+      <div style="width:1192px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="display:flex;align-items:center;gap:14px;margin:14px 16px 0;padding:12px 18px;border-radius:16px;background:#3a4750;color:#fff;font-size:13px">
+          <span style="font-weight:800">2 selectați</span><span style="width:1px;height:16px;background:rgba(255,255,255,.25)"></span><span style="font-weight:700">Aplică: Grupă ▾</span><span style="font-weight:700">Plan ▾</span><span style="font-weight:700">Scadență</span><span style="margin-left:auto;padding:6px 14px;border-radius:999px;background:#ef8a1d;font-weight:800">Aplică la 2</span>
+        </div>
+        <div style="display:grid;grid-template-columns:44px 2fr 1.1fr 1.4fr 1.3fr 1fr 0.9fr 110px;align-items:center;padding:14px 20px 10px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc">
+          <span></span><span>Copil</span><span>Grupă</span><span>Plan</span><span>Taxă lunară €</span><span>≈ lei azi</span><span>Scadență</span><span></span>
+        </div>
+        <sc-for list="{{ fees }}" as="f" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:44px 2fr 1.1fr 1.4fr 1.3fr 1fr 0.9fr 110px;align-items:center;padding:10px 20px;border-bottom:1px solid #f3eee5;background:{{ f.rowBg }}">
+            <span style="width:16px;height:16px;border-radius:5px;border:1.5px solid {{ f.cbBd }};background:{{ f.cbBg }};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ f.cb }}</span>
+            <div style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:14px">{{ f.name }}</span><span style="font-size:12px;color:#9aa3a9">{{ f.meta }}</span></div>
+            <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ f.gBg }};color:{{ f.gFg }}">{{ f.group }}</span>
+            <span style="margin-right:12px;padding:8px 12px;border-radius:12px;border:{{ f.planBd }};font-size:14px;font-weight:700;color:{{ f.planFg }};display:flex;justify-content:space-between">{{ f.plan }}<span style="color:#9aa3a9">▾</span></span>
+            <div style="margin-right:12px;display:flex;flex-direction:column;gap:2px"><span style="padding:8px 12px;border-radius:12px;border:{{ f.feeBd }};font-size:14px;font-weight:800;display:flex;justify-content:space-between;color:{{ f.feeFg }}">{{ f.fee }}<span style="color:#9aa3a9;font-weight:700">€</span></span><sc-if value="{{ f.disc }}"><span style="font-size:11px;font-weight:800;color:#2e6b4c">reducere · <s style="color:#9aa3a9">{{ f.planPrice }} €</s></span></sc-if></div>
+            <span style="font-size:14px;color:#6b7780">{{ f.mdl }}</span>
+            <span style="margin-right:12px;padding:8px 12px;border-radius:12px;border:{{ f.dueBd }};font-size:14px;font-weight:700;color:{{ f.dueFg }}">{{ f.due }}</span>
+            <span style="justify-self:end;padding:7px 14px;border-radius:999px;font-weight:800;font-size:13px;background:{{ f.btnBg }};color:{{ f.btnFg }};border:{{ f.btnBd }}">Salvează</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+    <div id="7b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7b</span><span style="font-size:16px;font-weight:700">Achitare nouă: suma în lei, conversie la cursul zilei</span></div>
+      <div style="width:560px;background:#fff;border-radius:24px;box-shadow:-20px 0 60px rgba(58,71,80,.2);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:center;padding:22px 26px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">Achitare nouă</span><span style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">×</span></div>
+        <div style="padding:22px 26px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:#fcead3">
+            <span style="width:40px;height:40px;border-radius:50%;background:#fff;color:#a34f00;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">LI</span>
+            <div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">Lucinschi Ilinca</span><span style="font-size:12px;color:#5b666e">Program mediu · 350,00 € / lună · datorează <b>350,00 €</b> (sep)</span></div>
+            <span style="font-size:13px;font-weight:800;color:#a34f00">Schimbă</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13px;font-weight:700;color:#6b7780">Suma primită</span>
+            <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-radius:16px;border:1.5px solid #ef8a1d"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;line-height:1.1">3.000,00</span><span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:22px;color:#9aa3a9">lei</span><span style="margin-left:auto;font-size:15px;font-weight:800;color:#2e6b4c">= 152,91 €</span></div>
+            <div style="display:flex;gap:8px;font-size:13px;font-weight:800"><span style="padding:6px 12px;border-radius:999px;background:#f4f1ea">1 lună · 6.867,00 lei</span><span style="padding:6px 12px;border-radius:999px;background:#f4f1ea">2 luni · 13.734,00 lei</span><span style="padding:6px 12px;border-radius:999px;background:#f4f1ea">Tot restul</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Data plății<span style="padding:10px 12px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#3a4750;font-weight:700">26.09.2026</span></label>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Curs EUR<span style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#3a4750;font-weight:700">19,62<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">BNM 26.09</span></span></label>
+          </div>
+          <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800;align-self:flex-start"><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12)">Cash</span><span style="padding:7px 14px;color:#6b7780">Card</span><span style="padding:7px 14px;color:#6b7780">Transfer</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13px;font-weight:700;color:#6b7780">Se repartizează automat</span>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px"><span style="flex:1;font-weight:700">Septembrie 2026</span><span style="color:#6b7780">152,91 din 350,00 €</span><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fdf3d2;color:#7a5d00">Parțial</span></div>
+            <span style="font-size:13px;color:#6b7780">Rămâne de plată pentru septembrie: <b style="color:#3a4750">197,09 €</b> (≈ 3.866,91 lei la cursul de azi)</span>
+          </div>
+        </div>
+        <div style="margin-top:auto;padding:16px 26px 22px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px"><span style="font-size:12px;color:#9aa3a9;flex:1">Suma în lei se salvează exact. EUR se calculează la cursul din data plății.</span><span style="padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span><span style="padding:11px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează · 3.000,00 lei</span></div>
+      </div>
+    </div>
+
+    <div id="7d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7d</span><span style="font-size:16px;font-weight:700">Fișa copilului: mini-carduri și istoric plăți</span></div>
+      <div style="width:720px;display:flex;flex-direction:column;gap:14px;padding:24px;border-radius:24px;background:#fffaf0;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+          <div style="padding:16px 18px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Rest de plată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">197,09 €</span><span style="font-size:12px;color:#5b666e">≈ 3.866,91 lei azi</span></div>
+          <div style="padding:16px 18px;border-radius:20px;background:#fdf3d2;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00">Plan</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Program mediu</span><span style="font-size:12px;color:#5b666e">350,00 € / lună · 8:00–17:00</span></div>
+          <div style="padding:16px 18px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Avans în lei</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">0,00 lei</span><span style="font-size:12px;color:#5b666e">nerepartizat</span></div>
+        </div>
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:20px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1.2fr 0.9fr 1.1fr 0.8fr 1fr 1fr;padding:10px 18px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Lună</span><span>Dată</span><span>Plătit</span><span>Curs</span><span>Echivalent</span><span>Statut</span></div>
+          <sc-for list="{{ hist }}" as="h" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:1.2fr 0.9fr 1.1fr 0.8fr 1fr 1fr;align-items:center;padding:10px 18px;border-bottom:1px solid #f3eee5;font-size:14px"><span style="font-weight:800">{{ h.m }}</span><span style="color:#6b7780">{{ h.d }}</span><span style="font-weight:700">{{ h.lei }}</span><span style="color:#6b7780">{{ h.r }}</span><span style="font-weight:800">{{ h.eur }}</span><span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }}">{{ h.s }}</span></div>
+          </sc-for>
+        </div>
+        <span style="font-size:13px;color:#6b7780">Pentru aceeași taxă de 350 € s-au încasat sume diferite în lei, după cursul din ziua plății.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+    <div id="7c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7c</span><span style="font-size:16px;font-weight:700">Situația plăților (Lună): taxe și rest în EUR</span></div>
+      <div style="width:1192px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+          <div style="padding:18px 22px;border-radius:20px;background:#fcead3;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">De încasat · sep</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">32.450 €</span><span style="font-size:12px;color:#5b666e">≈ 636.669 lei azi</span></div>
+          <div style="padding:18px 22px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Încasat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">24.180 €</span><span style="font-size:12px;color:#5b666e">473.720 lei primiți</span></div>
+          <div style="padding:18px 22px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Rest</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">8.270 €</span><span style="font-size:12px;color:#5b666e">≈ 162.257 lei azi</span></div>
+          <div style="padding:18px 22px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Curs azi</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">19,62</span><span style="font-size:12px;color:#5b666e">BNM · 26.09.2026</span></div>
+        </div>
+        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.3fr 1fr 130px;padding:12px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Copil</span><span>Plan</span><span>Taxă</span><span>Achitat</span><span>Rest</span><span>Statut</span><span></span></div>
+          <sc-for list="{{ status }}" as="r" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.3fr 1fr 130px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5;font-size:14px">
+              <span style="font-weight:800">{{ r.name }}</span>
+              <span style="color:#6b7780">{{ r.plan }}</span>
+              <span>{{ r.fee }}</span>
+              <div style="display:flex;flex-direction:column"><span style="font-weight:700">{{ r.paid }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.paidLei }}</span></div>
+              <div style="display:flex;flex-direction:column"><span style="font-weight:800;color:{{ r.restFg }}">{{ r.rest }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.restLei }}</span></div>
+              <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.s }}</span>
+              <span style="justify-self:end;font-size:13px;font-weight:800;color:#a34f00">{{ r.cta }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <span style="font-size:13px;color:#6b7780">Sub „Achitat” apar lei efectiv primiți. Sub „Rest” apare echivalentul la cursul de azi, care se schimbă zilnic. SMS-ul către părinte trimite restul în lei la cursul zilei trimiterii, cu mențiunea „la cursul BNM de azi”.</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+    <div id="7e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7e</span><span style="font-size:16px;font-weight:700">Confirmare de plată: blocul cu sume</span></div>
+      <div style="width:559px;background:#fff;border-radius:6px;box-shadow:0 30px 80px rgba(58,71,80,.14);padding:28px 32px;display:flex;flex-direction:column;gap:12px;font-size:12px">
+        <div style="display:grid;grid-template-columns:1fr auto;row-gap:6px;column-gap:18px">
+          <span style="color:#6b7780">Suma achitată</span><span style="font-weight:800">3.000,00 lei</span>
+          <span style="color:#6b7780">Curs EUR (BNM, 26.09.2026)</span><span style="font-weight:700">19,62</span>
+          <span style="color:#6b7780">Echivalent</span><span style="font-weight:800">152,91 €</span>
+        </div>
+        <div style="border-top:1px solid #ede7dc;padding-top:10px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Se repartizează pe</span>
+          <div style="display:flex;justify-content:space-between"><span>Septembrie 2026 · Program mediu (350,00 €)</span><span style="font-weight:800">152,91 €</span></div>
+        </div>
+        <div style="padding:10px 12px;border-radius:8px;background:#fdf3d2;display:flex;justify-content:space-between"><span>Rest septembrie</span><span style="font-weight:800">197,09 €</span></div>
+        <span style="font-size:10px;color:#9aa3a9">Restul se achită în lei la cursul BNM din ziua plății.</span>
+      </div>
+    </div>
+
+    <div id="7f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">7f</span><span style="font-size:16px;font-weight:700">Dashboard: totaluri în lei + cursul zilei</span></div>
+      <div style="width:620px;display:flex;flex-direction:column;gap:14px;padding:24px;border-radius:24px;background:#fffaf0;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end"><span style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:13px;font-weight:800"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>1 € = 19,62 lei</span><span style="padding:7px 14px;border-radius:999px;background:#fdf3d2;border:1px solid #f6e3a6;font-family:'Baloo 2',sans-serif;font-weight:700">‹ Septembrie 2026 ›</span></div>
+        <div style="position:relative;overflow:hidden;padding:22px 24px;border-radius:22px;background:#fcead3;display:flex;flex-direction:column;gap:8px">
+          <span style="position:absolute;right:-30px;bottom:-40px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.5)"></span>
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00;position:relative">Încasări</span>
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:36px;line-height:1;position:relative">473.720 lei</span>
+          <span style="font-size:12px;color:#5b666e;position:relative">lei primiți efectiv în luna aleasă</span>
+        </div>
+        <span style="font-size:13px;color:#6b7780">Pastila cu cursul stă în antet, lângă selectorul de lună, și duce la <a href="#7a">7a</a>. Dacă BNM nu a răspuns, pastila e galbenă: „Curs din 25.09”.</span>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { editing: false, over: false };
+  renderVals() {
+    const rate = 19.62;
+    const f2 = n => n.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const plans = [
+      ['Program scurt', '8:00 – 13:00', 'Mic dejun, gustare, prânz. Activități educaționale de dimineață și plimbare zilnică.', 250, '#f9d257', '#fdf3d2', '#7a5d00', '31 copii'],
+      ['Program mediu', '8:00 – 17:00', 'Toate mesele, somn de zi, activități și timp de joacă, cu ridicare după-amiaza.', 350, '#ef8a1d', '#fcead3', '#a34f00', '52 copii'],
+      ['Program lung', '8:00 – 19:00', 'Programul mediu plus activități și cină, pentru părinții cu program prelungit.', 420, '#a8d8be', '#e7f4ec', '#2e6b4c', '16 copii']
+    ].map(([name, hours, desc, eur, bar, bg, fg, kids]) => ({ name, hours, desc, eur: f2(eur), mdl: f2(eur * rate), bar, bg, fg, kids }));
+    const over = this.state.over;
+    const history = [['Vi, 26.09', '19,62', 'BNM'], ['Jo, 25.09', '19,58', 'BNM'], ['Mi, 24.09', '19,55', 'BNM'], ['Ma, 23.09', '19,60', 'corectat'], ['Lu, 22.09', '19,57', 'BNM']]
+      .map(([d, r, src]) => ({ d, r, src, fg: src === 'BNM' ? '#2e6b4c' : '#a34f00' }));
+    if (over) { history[0] = { d: 'Vi, 26.09', r: '19,65', src: 'corectat', fg: '#a34f00' }; }
+    const G = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'], 'Fără grupă': ['#f4f1ea', '#6b7780'] };
+    const fees = [
+      ['Cerba Alexander', 'Contract #3 · 4 ani', 'Mars', 'Program mediu', 350, 350, '26', 0, 0],
+      ['Lucinschi Ilinca', 'Contract #12 · 2 ani', 'Soare', 'Program mediu', 350, 350, '5', 1, 1],
+      ['Muradu Letizia', 'Contract #18 · 4 ani', 'Fără grupă', '', 0, 0, '', 1, 0],
+      ['Botica Maxim', 'Contract #21 · 4 ani', 'Mars', 'Program lung', 420, 420, '10', 0, 0],
+      ['Balan Ilinca', 'Contract #24 · 3 ani', 'Soare', 'Program scurt', 250, 225, '15', 0, 0]
+    ].map(([name, meta, group, plan, pp, fee, due, sel, dirty]) => {
+      const miss = !plan;
+      return { name, meta, group, gBg: G[group][0], gFg: G[group][1],
+        plan: plan || 'Alege planul', planFg: miss ? '#9aa3a9' : '#3a4750', planBd: miss ? '1.5px solid #f3a6be' : '1px solid #c9c4ba',
+        fee: miss ? '—' : f2(fee), feeFg: miss ? '#9aa3a9' : '#3a4750', feeBd: miss ? '1.5px solid #f3a6be' : (fee !== pp ? '1.5px solid #3f9a6b' : '1px solid #c9c4ba'),
+        disc: !miss && fee !== pp, planPrice: f2(pp), mdl: miss ? '—' : f2(fee * rate),
+        due: due ? 'ziua ' + due : 'Scadență', dueFg: due ? '#3a4750' : '#9aa3a9', dueBd: due ? '1px solid #c9c4ba' : '1.5px solid #f3a6be',
+        rowBg: sel ? '#fffaf0' : '#fff', cbBd: sel ? '#ef8a1d' : '#c9c4ba', cbBg: sel ? '#ef8a1d' : '#fff', cb: sel ? '✓' : '',
+        btnBg: dirty ? '#ef8a1d' : '#fff', btnFg: dirty ? '#fff' : '#3a4750', btnBd: dirty ? '1.5px solid #ef8a1d' : '1.5px solid #ede7dc' };
+    });
+    const hist = [
+      ['Septembrie 2026', '26.09.2026', '3.000,00 lei', '19,62', '152,91 €', 'Parțial', '#fdf3d2', '#7a5d00'],
+      ['August 2026', '04.08.2026', '6.790,00 lei', '19,40', '350,00 €', 'Achitat', '#e7f4ec', '#2e6b4c'],
+      ['Iulie 2026', '03.07.2026', '6.923,50 lei', '19,78', '350,00 €', 'Achitat', '#e7f4ec', '#2e6b4c']
+    ].map(([m, d, lei, r, eur, s, bg, fg]) => ({ m, d, lei, r, eur, s, bg, fg }));
+    const ST = { Achitat: ['#e7f4ec', '#2e6b4c'], Parțial: ['#fdf3d2', '#7a5d00'], Neachitat: ['#fce9ef', '#b0284f'] };
+    const status = [
+      ['Cerba Alexander', 'Program mediu', 350, 350, '6.846,00 lei', 'Achitat'],
+      ['Lucinschi Ilinca', 'Program mediu', 350, 152.91, '3.000,00 lei', 'Parțial'],
+      ['Muradu Letizia', 'Program lung', 420, 0, '', 'Neachitat'],
+      ['Botica Maxim', 'Program lung', 420, 200, '3.912,00 lei', 'Parțial'],
+      ['Balan Ilinca', 'Program scurt', 225, 225, '4.398,75 lei', 'Achitat']
+    ].map(([name, plan, fee, paid, paidLei, s]) => {
+      const rest = Math.round((fee - paid) * 100) / 100;
+      return { name, plan, fee: f2(fee) + ' €', paid: f2(paid) + ' €', paidLei: paidLei || '—', rest: f2(rest) + ' €',
+        restLei: rest > 0 ? '≈ ' + f2(rest * rate) + ' lei azi' : '', restFg: rest > 0 ? '#b0284f' : '#3a4750',
+        s, bg: ST[s][0], fg: ST[s][1], cta: rest > 0 ? 'Notifică' : 'Vezi fișa' };
+    });
+    return {
+      plans, history, fees, hist, status,
+      editing: this.state.editing,
+      rateNow: over ? '19,65' : '19,62',
+      rateSrc: over ? 'Corectat manual' : 'BNM · automat',
+      rateNote: over ? 'Corectat de la 19,62 (BNM). Motiv: cursul băncii, plată la ghișeu.' : 'Actualizat azi la 09:05. Se folosește la toate achitările cu data de azi.',
+      rateBg: over ? '#fdf3d2' : '#e7f4ec', rateInk: over ? '#7a5d00' : '#2e6b4c',
+      rateActionLbl: over ? 'Revino la cursul BNM' : 'Corectează cursul de azi',
+      rateAction: () => over ? this.setState({ over: false }) : this.setState({ editing: true }),
+      cancelEdit: () => this.setState({ editing: false }),
+      saveEdit: () => this.setState({ editing: false, over: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

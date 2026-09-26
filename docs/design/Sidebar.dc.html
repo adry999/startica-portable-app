@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link></helmet>
+<sc-if value="{{ isA }}" hint-placeholder-val="{{ true }}">
+<aside style="width:248px;height:100%;background:#fff;border-right:1px solid #ede7dc;display:flex;flex-direction:column;padding:26px 16px 18px;gap:22px;font-family:Nunito,sans-serif;color:#3a4750;box-sizing:border-box">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 8px">
+    <img src="web/assets/startica-logo.svg" alt="Startica" style="height:38px"></img>
+    <span style="font-size:11px;color:#9aa3a9;font-weight:700">v2.0.0</span>
+  </div>
+  <sc-for list="{{ groupsA }}" as="g" hint-placeholder-count="4">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <sc-if value="{{ g.label }}"><div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3a9;padding:0 12px 6px">{{ g.label }}</div></sc-if>
+      <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:14px;cursor:pointer">
+          <span style="width:8px;height:8px;border-radius:3px;background:{{ it.dot }}"></span>
+          <span style="flex:1">{{ it.label }}</span>
+          <sc-if value="{{ it.count }}"><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#fce9ef;color:#b0284f">{{ it.count }}</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-for>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:#fffaf0;border:1px solid #ede7dc">
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>Salvat · 12:06</div>
+    <div style="font-size:12px;color:#7a5d00;line-height:1.4">Copie externă neconfigurată · <span style="font-weight:800;text-decoration:underline">Configurează</span></div>
+  </div>
+</aside>
+</sc-if>
+<sc-if value="{{ isB }}" hint-placeholder-val="{{ false }}">
+<aside style="width:240px;height:100%;background:#3a4750;display:flex;flex-direction:column;padding:26px 14px 18px;gap:20px;font-family:Nunito,sans-serif;color:#e9e4da;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:10px;padding:0 8px">
+    <img src="web/assets/startica-icon.svg" alt="" style="width:34px;height:34px"></img>
+    <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:#fffaf0;line-height:1">startica</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-size:13px;color:#b9c1c6">
+    <span style="flex:1">Caută oriunde…</span><span style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:rgba(255,255,255,.1)">Ctrl K</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <sc-for list="{{ mainB }}" as="it" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:14px;cursor:pointer"><span style="flex:1">{{ it.label }}</span><sc-if value="{{ it.count }}"><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#e9527c;color:#fff">{{ it.count }}</span></sc-if></div>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8e999f;padding:0 12px 6px">Bani</div>
+    <sc-for list="{{ baniB }}" as="it" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:14px;cursor:pointer"><span style="flex:1">{{ it.label }}</span><sc-if value="{{ it.count }}"><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#e9527c;color:#fff">{{ it.count }}</span></sc-if></div>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;padding:14px 12px 10px;border-radius:18px;background:#fdf3d2;color:#3a4750">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px 6px">
+      <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px">De rezolvat</span>
+      <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:#a34f00">451</span>
+    </div>
+    <sc-for list="{{ todoB }}" as="it" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:{{ it.bg }};font-weight:{{ it.weight }};font-size:13px;cursor:pointer"><span style="flex:1">{{ it.label }}</span><span style="font-weight:800;color:#a34f00">{{ it.count }}</span></div>
+    </sc-for>
+  </div>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:2px">
+    <sc-for list="{{ adminB }}" as="it" hint-placeholder-count="3">
+      <div style="padding:6px 12px;border-radius:10px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:13px;cursor:pointer">{{ it.label }}</div>
+    </sc-for>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px 0;margin-top:8px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#b9c1c6"><span style="width:8px;height:8px;border-radius:50%;background:#a8d8be"></span>Salvat 12:06 · <span style="color:#f9d257;font-weight:700">backup extern lipsă</span></div>
+  </div>
+</aside>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:900},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a'|'b'&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const v = this.props.variant ?? 'a';
+    const act = this.props.active ?? 'dashboard';
+    const mkA = (items, dot) => items.map(([k, l, c]) => {
+      const on = k === act;
+      return { label: l, count: c ? String(c) : '', bg: on ? '#fcead3' : 'transparent', color: on ? '#a34f00' : '#3a4750', weight: on ? 800 : 600, dot: on ? '#ef8a1d' : dot };
+    });
+    const mkB = (items) => items.map(([k, l, c]) => {
+      const on = k === act;
+      return { label: l, count: c ? String(c) : '', bg: on ? '#ef8a1d' : 'transparent', color: on ? '#fff' : '#e9e4da', weight: on ? 800 : 600 };
+    });
+    return {
+      isA: v === 'a',
+      isB: v === 'b',
+      groupsA: [
+        { label: '', items: mkA([['dashboard', 'Dashboard'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['vizite', 'Vizite', 0]], '#f9d257') },
+        { label: 'Contabilitate', items: mkA([['achitari', 'Achitări'], ['cheltuieli', 'Cheltuieli'], ['situatia', 'Situația plăților'], ['notificat', 'De notificat', 1]], '#a8d8be') },
+        { label: 'De rezolvat', items: mkA([['taxe', 'Taxe și grupe', 103], ['verificat', 'De verificat', 284], ['asociere', 'Asociere achitări', 64]], '#f3a6be') },
+        { label: 'Administrare', items: mkA([['istoric', 'Istoric'], ['notificari', 'Notificări'], ['backup', 'Backup și setări']], '#c9c4ba') }
+      ],
+      mainB: mkB([['dashboard', 'Acasă'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['vizite', 'Vizite']]),
+      baniB: mkB([['achitari', 'Achitări'], ['cheltuieli', 'Cheltuieli'], ['situatia', 'Situația plăților'], ['notificat', 'De notificat', 1]]),
+      todoB: [['taxe', 'Taxe și grupe', 103], ['verificat', 'De verificat', 284], ['asociere', 'Asociere achitări', 64]].map(([k, l, c]) => ({ label: l, count: c, bg: k === act ? '#fff' : 'transparent', weight: k === act ? 800 : 600 })),
+      adminB: mkB([['istoric', 'Istoric'], ['notificari', 'Notificări'], ['backup', 'Backup și setări']])
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Administrare.dc.html">Administrare</a><a href="Achitari.dc.html">Achitări</a><a href="Situatia.dc.html">Situația plăților</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Grădinița și documente tipărite</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#6a">6a</a>: datele grădiniței, într-o filă proprie în Backup și setări. Tot de aici se iau antetul confirmării de plată (<a href="#6b">6b</a>) și al raportului tipărit (<a href="#6c">6c</a>). Datele din exemple (IDNO, IBAN, adresă) sunt fictive.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="6a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">6a</span><span style="font-size:16px;font-weight:700">Setări grădiniță</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="backup" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Backup și setări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><span style="padding:7px 14px;color:#6b7780;white-space:nowrap">Backup</span><span style="padding:7px 14px;color:#6b7780;white-space:nowrap">Import și export</span><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;white-space:nowrap">Grădinița</span></div>
+          </header>
+          <div style="padding:28px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">1 · Identitate</span>
+                <div style="display:flex;align-items:center;gap:18px">
+                  <div style="width:96px;height:96px;border-radius:20px;border:1.5px dashed #e0d5c2;background:#fffaf0;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="web/assets/startica-icon.svg" alt="" style="width:56px;height:56px;object-fit:contain"></img></div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-weight:800;font-size:14px">Logo pe documente</span><span style="font-size:13px;color:#6b7780">SVG sau PNG, pe fundal transparent. Apare pe confirmări și rapoarte.</span><div style="display:flex;gap:10px"><span style="padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:13px;white-space:nowrap">Schimbă</span><span style="padding:8px 4px;font-weight:800;font-size:13px;color:#6b7780;white-space:nowrap">Folosește logo-ul Startica</span></div></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+                  <sc-for list="{{ idFields }}" as="f" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">{{ f.l }}</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;background:#fff;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.v }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">2 · Contact și plăți</span>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+                  <sc-for list="{{ payFields }}" as="f" hint-placeholder-count="6">
+                    <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">{{ f.l }}</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;background:#fff;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.v }}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:16px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">3 · Confirmări de plată</span>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Următorul număr</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700">0148</span></div>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Semnătură</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Administrator: Ciobanu Maria</span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Mențiune în subsol</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:600;line-height:1.45">Document intern de confirmare a plății. Nu ține locul bonului fiscal.</span></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;position:sticky;top:0">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Cum apare pe documente</span>
+              <div style="background:#fff;border-radius:18px;border:1px solid #ede7dc;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 24px rgba(58,71,80,.08)">
+                <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:14px;border-bottom:2px solid #ef8a1d">
+                  <img src="web/assets/startica-logo.svg" alt="Startica" style="height:30px;width:auto"></img>
+                  <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:10px;color:#6b7780;text-align:right"><span style="font-weight:800;color:#3a4750">Startica SRL</span><span>IDNO 1000600000000</span><span>str. Exemplu 12, Chișinău</span><span>+373 60 000 000</span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="height:8px;width:60%;border-radius:4px;background:#f1ece2"></span><span style="height:8px;width:85%;border-radius:4px;background:#f1ece2"></span><span style="height:8px;width:40%;border-radius:4px;background:#f1ece2"></span></div>
+                <span style="font-size:10px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:10px">Document intern de confirmare a plății. Nu ține locul bonului fiscal.</span>
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end"><span style="padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px;white-space:nowrap">Renunță</span><span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px;white-space:nowrap;box-shadow:0 8px 18px rgba(239,138,29,.32)">Salvează datele</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="6b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">6b</span><span style="font-size:16px;font-weight:700">Confirmare de plată · A5</span></div>
+      <div style="width:559px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);padding:40px 44px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:16px;border-bottom:2px solid #ef8a1d">
+          <img src="web/assets/startica-logo.svg" alt="Startica" style="height:34px;width:auto"></img>
+          <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:10px;color:#6b7780;text-align:right;line-height:1.35"><span style="font-weight:800;color:#3a4750;font-size:11px">Startica SRL</span><span>IDNO 1000600000000</span><span>str. Exemplu 12, Chișinău</span><span>+373 60 000 000 · startica.md</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a34f00">Confirmare de plată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">Nr. 0147</span></div>
+          <span style="font-size:12px;color:#6b7780">24 septembrie 2026</span>
+        </div>
+        <div style="display:grid;grid-template-columns:110px 1fr;gap:8px 16px;font-size:12px">
+          <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria · contract nr. 12</span>
+          <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+          <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+        </div>
+        <div style="display:flex;flex-direction:column;border-top:1px solid #3a4750">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:8px 0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;border-bottom:1px solid #ede7dc"><span>Se repartizează pe</span><span style="text-align:right">Sumă</span></div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă septembrie 2026 · achitată integral</span><span style="text-align:right;font-weight:700">9.993,00 lei</span></div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă octombrie 2026 · parțial</span><span style="text-align:right;font-weight:700">5.007,00 lei</span></div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;align-items:baseline;padding:12px 0"><span style="font-weight:800;font-size:13px">Total achitat</span><span style="text-align:right;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;white-space:nowrap">15.000,00 lei</span></div>
+        </div>
+        <span style="font-size:11px;color:#6b7780">Suma în litere: cincisprezece mii lei 00 bani</span>
+        <div style="padding:12px 14px;border-radius:10px;background:#fdf3d2;font-size:11px;line-height:1.45;display:flex;justify-content:space-between;gap:12px"><span><span style="font-weight:800">Rest de achitat pentru octombrie:</span> 4.986,00 lei</span><span style="white-space:nowrap">scadent pe 6 oct.</span></div>
+        <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px;font-size:10px;color:#6b7780">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="height:34px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria, administrator</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="height:34px;border-bottom:1px solid #3a4750"></span><span>Plătitor</span></div>
+        </div>
+        <span style="font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:10px">Document intern de confirmare a plății. Nu ține locul bonului fiscal. · Generat din Startica v2.0.0</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#6b7780;max-width:559px;text-wrap:pretty">Din Achitări: meniul ⋯ → „Confirmare de plată” și din fișa copilului, la istoricul plăților. Se tipărește sau se salvează ca PDF.</div>
+    </div>
+
+    <div id="6c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">6c</span><span style="font-size:16px;font-weight:700">Situația plăților tipărită · A4 orizontal</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);padding:36px 44px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:flex-end;gap:16px;padding-bottom:14px;border-bottom:2px solid #ef8a1d">
+          <img src="web/assets/startica-logo.svg" alt="Startica" style="height:32px;width:auto"></img>
+          <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;border-left:1px solid #ede7dc"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Situația plăților · Septembrie 2026</span><span style="font-size:11px;color:#6b7780">Situație la 25 septembrie 2026 · filtru: Restanțieri și parțial · toate grupele</span></div>
+          <span style="margin-left:auto;font-size:10px;color:#6b7780;text-align:right">Startica SRL<br></br>IDNO 1000600000000</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #ede7dc;border-radius:10px">
+          <sc-for list="{{ sums }}" as="s" hint-placeholder-count="4">
+            <div style="padding:10px 14px;border-left:{{ s.bl }};display:flex;flex-direction:column;gap:2px"><span style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">{{ s.l }}</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;line-height:1.1;white-space:nowrap;color:{{ s.c }}">{{ s.v }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <div style="display:grid;grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.4fr) 110px 70px 100px 100px 100px 90px;gap:10px;padding:8px 0;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#6b7780;border-top:1px solid #3a4750;border-bottom:1px solid #3a4750"><span>Nr.</span><span>Copil</span><span>Părinte</span><span>Telefon</span><span>Scad.</span><span style="text-align:right">Taxă</span><span style="text-align:right">Achitat</span><span style="text-align:right">Rest</span><span>Statut</span></div>
+          <sc-for list="{{ prows }}" as="r" hint-placeholder-count="12">
+            <div style="display:grid;grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.4fr) 110px 70px 100px 100px 100px 90px;gap:10px;align-items:center;padding:7px 0;font-size:11px;border-bottom:1px solid #ede7dc;background:{{ r.bg }}">
+              <span style="color:#9aa3a9">{{ r.n }}</span>
+              <span style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+              <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.parent }}</span>
+              <span style="white-space:nowrap">{{ r.phone }}</span>
+              <span>{{ r.due }}</span>
+              <span style="text-align:right;white-space:nowrap">{{ r.fee }}</span>
+              <span style="text-align:right;white-space:nowrap">{{ r.paid }}</span>
+              <span style="text-align:right;white-space:nowrap;font-weight:800">{{ r.rest }}</span>
+              <span style="font-weight:700;white-space:nowrap">{{ r.status }}</span>
+            </div>
+          </sc-for>
+          <div style="display:grid;grid-template-columns:28px minmax(0,1.6fr) minmax(0,1.4fr) 110px 70px 100px 100px 100px 90px;gap:10px;padding:9px 0;font-size:11px;font-weight:800;border-bottom:1px solid #3a4750"><span></span><span>Total · 20 copii</span><span></span><span></span><span></span><span style="text-align:right;white-space:nowrap">226.310</span><span style="text-align:right;white-space:nowrap">86.860</span><span style="text-align:right;white-space:nowrap">139.450</span><span></span></div>
+        </div>
+        <div style="margin-top:auto;display:flex;justify-content:space-between;font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:8px"><span>Sume în lei. Taxă integrală pentru luna începută; plățile cu dată viitoare nu intră în soldul de azi.</span><span style="white-space:nowrap">Pagina 1 din 2 · tipărit 25.09.2026, 16:10</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:#6b7780;max-width:1123px;text-wrap:pretty"><span>„Tipărește” din 1m deschide mai întâi o fereastră mică: <span style="font-weight:800;color:#3a4750">Ce tipăresc?</span> (filtrul curent / toți copiii) · <span style="font-weight:800;color:#3a4750">Coloane</span> (cu sau fără telefon) · <span style="font-weight:800;color:#3a4750">Orientare</span> (orizontal implicit). Alb-negru lizibil: statutul e scris, nu doar colorat; restanțele au fundal gri deschis.</span></div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const idFields = [['Denumire', 'Startica SRL'], ['Nume afișat', 'Grădinița Startica'], ['IDNO', '1000600000000'], ['Administrator', 'Ciobanu Maria']].map(([l, v]) => ({ l, v }));
+    const payFields = [['Adresă', 'str. Exemplu 12, Chișinău'], ['Telefon', '+373 60 000 000'], ['Email', 'contact@startica.md'], ['Site', 'startica.md'], ['IBAN', 'MD00 AG00 0000 0000 0000 0000'], ['Banca', 'Exemplu Bank']].map(([l, v]) => ({ l, v }));
+    const sums = [['De încasat', '226.310 lei', '#3a4750'], ['Încasat', '86.860 lei', '#3a4750'], ['Rest', '139.450 lei', '#3a4750'], ['Copii în listă', '14 restanțe · 6 parțial', '#3a4750']].map(([l, v, c], i) => ({ l, v, c, bl: i ? '1px solid #ede7dc' : 'none' }));
+    const f = n => n.toLocaleString('de-DE');
+    const raw = [
+      ['Conea Timur', 'Conea Andrei', '069 214 507', 20, 9600, 0], ['Bagnyuk Timur', 'Bagnyuk Iulia', '068 000 112', 21, 12981, 0], ['Hudic Amedeia', 'Hudic Nicolae', '079 330 118', 14, 13033, 0],
+      ['Rusu Ana', 'Rusu Victor', '—', 9, 9600, 0], ['Muradu Letizia', 'Muradu Irina', '060 118 420', 5, 12981, 0], ['Cujba Ovidiu', 'Cujba Tatiana', '069 402 771', 12, 9600, 0],
+      ['Avram Maria', 'Avram Valentin', '078 551 203', 6, 9993, 5000], ['Coceva Alisa', 'Coceva Elena', '069 870 015', 15, 13058, 8000], ['Lungu Matei', 'Lungu Diana', '068 230 944', 10, 12981, 6000],
+      ['Ursu Sofia', 'Ursu Andrei', '079 115 660', 18, 9600, 4800], ['Popa David', 'Popa Cristina', '060 742 318', 22, 12981, 10000], ['Bivol Eva', 'Bivol Ion', '069 305 882', 7, 9600, 3000]
+    ];
+    const prows = raw.map(([name, parent, phone, due, fee, paid], i) => ({
+      n: i + 1, name, parent, phone, due: 'ziua ' + due, fee: f(fee), paid: f(paid), rest: f(fee - paid),
+      status: paid ? 'Parțial' : 'Neachitat', bg: paid ? '#fff' : '#f6f4f0'
+    }));
+    return { idFields, payFields, sums, prows };
+  }
+}
+</script>
+</body>
+</html>

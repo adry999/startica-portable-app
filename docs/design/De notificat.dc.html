@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="Vizite.dc.html">Vizite</a><a href="De notificat.dc.html">De notificat</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Formulare.dc.html">Formulare și stări</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">De notificat</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#2b">2b</a>: coada de notificări de plată, cu mesajul previzualizat înainte de trimitere. Face parte din Contabilitate, alături de Situația plăților.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="2b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">2b</span><span style="font-size:16px;font-weight:700">De notificat</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="notificat" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Contabilitate</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">De notificat</h2></div>
+            <span style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#e7f4ec;font-size:13px;font-weight:800;color:#2e6b4c"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>Telegram conectat</span>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">Trimite toate · 4</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start">
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+              <div style="display:flex;gap:2px;margin:14px 16px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start;width:max-content"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">De trimis · 4</span><span style="padding:7px 14px;color:#6b7780">Trimise · 38</span><span style="padding:7px 14px;color:#6b7780">Eșuate · 0</span></div>
+              <sc-for list="{{ queue }}" as="q" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-top:1px solid #f3eee5;background:{{ q.bg }};box-shadow:{{ q.sh }}">
+                  <span style="width:40px;height:40px;border-radius:50%;background:{{ q.avBg }};color:{{ q.avFg }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">{{ q.ini }}</span>
+                  <div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14px">{{ q.parent }}</span><span style="font-size:12px;color:#6b7780">pentru {{ q.child }} · {{ q.reason }}</span></div>
+                  <span style="font-weight:800;font-size:14px;color:{{ q.fg }}">{{ q.sum }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:22px 24px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Mesaj către Conea Andrei</span><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fce9ef;color:#b0284f">Restanță</span></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:800"><span style="padding:4px 10px;border-radius:999px;background:#3a4750;color:#fff">Șablon: Restanță</span><span style="padding:4px 10px;border-radius:999px;background:#f4f1ea;color:#6b7780">Amintire scadență</span><span style="padding:4px 10px;border-radius:999px;background:#f4f1ea;color:#6b7780">Confirmare plată</span></div>
+              <div style="padding:16px 18px;border-radius:18px 18px 18px 6px;background:#e7f4ec;font-size:15px;line-height:1.55">Bună ziua! Vă reamintim că taxa pentru <b>Conea Timur</b> pentru luna <b>septembrie 2026</b>, în valoare de <b>9.600 lei</b>, avea scadența pe 20 septembrie. Vă mulțumim! — Grădinița Startica</div>
+              <span style="font-size:12px;color:#9aa3a9">Textul se poate edita înainte de trimitere · câmpurile îngroșate se completează automat</span>
+              <div style="display:flex;gap:10px;align-items:center;padding-top:6px;border-top:1px solid #f3eee5"><span style="padding-top:10px;font-size:13px;font-weight:800;color:#6b7780">Nu trimite</span><span style="margin-left:auto;margin-top:10px;padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Editează textul</span><span style="margin-top:10px;padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Trimite</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const av = [['#fce9ef', '#b0284f'], ['#fdf3d2', '#7a5d00'], ['#fcead3', '#a34f00'], ['#e7f4ec', '#2e6b4c']];
+    const queue = [
+      ['CA', 'Conea Andrei', 'Conea Timur', 'restanță sep', '9.600 lei', '#b0284f'],
+      ['BI', 'Bagnyuk Iulia', 'Bagnyuk Timur', 'restanță sep', '12.981 lei', '#b0284f'],
+      ['AV', 'Avram Valentin', 'Avram Maria', 'plată parțială', 'rest 4.993 lei', '#7a5d00'],
+      ['CP', 'Cerba Pavel', 'Cerba Alexander', 'scadență în 3 zile', '9.600 lei', '#6b7780']
+    ].map(([ini, parent, child, reason, sum, fg], i) => ({ ini, parent, child, reason, sum, fg, avBg: av[i][0], avFg: av[i][1], bg: i === 0 ? '#fffaf0' : '#fff', sh: i === 0 ? 'inset 4px 0 0 #ef8a1d' : 'none' }));
+    return { queue };
+  }
+}
+</script>
+</body>
+</html>

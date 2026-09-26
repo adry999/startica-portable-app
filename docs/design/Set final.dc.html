@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#fffaf0;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<div style="max-width:1180px;margin:0 auto;padding:56px 32px 96px;display:flex;flex-direction:column;gap:28px">
+  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <img src="web/assets/startica-logo.svg" alt="Startica" style="height:52px"></img>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:280px"><h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1">Set final · stadiu</h1><span style="font-size:15px;color:#6b7780;text-wrap:pretty">Totul pe module, în ordinea din meniul lateral. Pentru fiecare ecran: unde e designul, ce specificație are pentru Claude Code și dacă există deja în cod (master-v2).</span></div>
+    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 26.09.2026, 13:30</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+    <div style="padding:16px 20px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Ecrane desenate</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{ nAll }}</span></div>
+    <div style="padding:16px 20px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">În cod, de aliniat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{ nAlign }}</span></div>
+    <div style="padding:16px 20px;border-radius:20px;background:#fdf3d2;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00">Parțial în cod</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{ nPartial }}</span></div>
+    <div style="padding:16px 20px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Lipsesc din cod</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{ nMissing }}</span></div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;background:#fff;border:1px solid #ede7dc;border-radius:18px">
+    <span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Arată</span>
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+      <span onClick="{{ f.pick }}" style="padding:6px 14px;border-radius:999px;background:{{ f.bg }};color:{{ f.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ f.label }}</span>
+    </sc-for>
+    <span style="margin-left:auto;font-size:13px;color:#6b7780">Specificațiile sunt în <b>screens/</b> din pachet</span>
+  </div>
+
+  <sc-for list="{{ modules }}" as="m" hint-placeholder-count="5">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:{{ m.marker }}"></span><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7780">{{ m.label }}</span></div>
+      <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1.3fr 2.2fr 0.8fr 1fr 1.9fr;gap:14px;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Ecran</span><span>Design</span><span>Spec</span><span>În cod</span><span>Ce lipsește</span></div>
+        <sc-for list="{{ m.items }}" as="s" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:1.3fr 2.2fr 0.8fr 1fr 1.9fr;gap:14px;align-items:center;padding:12px 20px;border-bottom:1px solid #f3eee5">
+            <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:15px">{{ s.name }}</span><span style="font-size:12px;color:#9aa3a9">{{ s.sub }}</span></div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ s.links }}" as="l">
+                <a href="{{ l.href }}" style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:10px;background:#fffaf0;border:1px solid #ede7dc;font-size:12px;color:#3a4750"><b style="font-family:'Baloo 2',sans-serif;font-size:13px;color:#a34f00">{{ l.id }}</b>{{ l.label }}</a>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;font-weight:800;color:#5b666e">{{ s.spec }}</span>
+            <span style="justify-self:start;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ s.cBg }};color:{{ s.cFg }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ s.cFg }}"></span>{{ s.code }}</span>
+            <span style="font-size:13px;color:#6b7780;text-wrap:pretty">{{ s.todo }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { f: 'all' };
+  renderVals() {
+    const L = (id, label, href) => ({ id, label, href });
+    const C = { ok: ['În cod · de aliniat', '#e7f4ec', '#2e6b4c'], partial: ['Parțial', '#fdf3d2', '#7a5d00'], missing: ['Lipsește', '#fce9ef', '#b0284f'] };
+    const it = (name, sub, links, spec, code, todo) => ({ name, sub, links, spec, code: C[code][0], cBg: C[code][1], cFg: C[code][2], key: code, todo });
+    const all = [
+      { label: 'Comune (toate ecranele)', marker: '#9aa3a9', items: [
+        it('Meniu lateral', 'versiunea v2.0.0', [L('a', 'Sidebar', 'Sidebar.dc.html')], '00', 'ok', 'Logo 38 px + versiunea pe același rând'),
+        it('Antet compact, bara de filtre, culori grupe', 'Topbar, FilterPills, groupTone', [L('1c', 'exemplu în Copii', 'Copii.dc.html#1c')], '00', 'missing', 'FilterPills, groupTone, useTopbarTitle nu există încă'),
+        it('Formulare și stări', 'panouri laterale, confirmări, liste goale', [L('3a–3c', 'formulare', 'Formulare.dc.html#3a'), L('3d–3f', 'stări', 'Formulare.dc.html#3d')], '13', 'partial', 'RowMenu și ConfirmDeleteDialog comune; acum meniul ⋯ e copiat în fiecare pagină'),
+        it('Ecrane mai mici', 'doar 900–1279 px', [L('5a', 'Dashboard', 'Responsive.dc.html#5a'), L('5b', 'meniu deschis', 'Responsive.dc.html#5b')], 'README', 'missing', 'Sidebar overlay cu ☰')
+      ] },
+      { label: 'Principal', marker: '#f9d257', items: [
+        it('Dashboard', '', [L('1a', 'ecran', 'Dashboard.dc.html#1a'), L('7f', 'pastila curs', 'Planuri si curs.dc.html#7f')], '08 · 16', 'ok', 'Link „Vezi calendarul →”, pastila cu cursul'),
+        it('Copii', 'listă', [L('1c', 'listă', 'Copii.dc.html#1c')], '02', 'ok', 'FilterPills, butonul Zile de naștere, fără Import CSV'),
+        it('Fișa copilului', '', [L('1e', 'fișa', 'Copii.dc.html#1e'), L('7d', 'sume în €', 'Planuri si curs.dc.html#7d')], '09 · 16', 'ok', 'Rest în €, plan, plătitori reținuți'),
+        it('Zile de naștere', 'pagină în Copii', [L('2a', 'calendar', 'Copii.dc.html#2a')], '01', 'missing', 'Pagina, ruta și buildBirthdayMonth'),
+        it('Grupe', 'Carduri / Tablă', [L('1g', 'carduri', 'Grupe.dc.html#1g'), L('1h', 'tablă', 'Grupe.dc.html#1h')], '03', 'ok', 'Comutatorul în antet, toolbarul tablei'),
+        it('Vizite', '', [L('2a', 'calendar + tabel', 'Vizite.dc.html#2a')], '04', 'ok', 'Tabelul „Toate vizitele”, fără Activează notificările')
+      ] },
+      { label: 'Contabilitate', marker: '#a8d8be', items: [
+        it('Planuri în EUR și curs BNM', 'regula de calcul', [L('7a–7g', 'toate', 'Planuri si curs.dc.html')], '16', 'missing', 'Planuri, fx_rates, sume în € + lei'),
+        it('Achitări', 'Tabel / Pe luni', [L('1i', 'tabel', 'Achitari.dc.html#1i'), L('1j', 'pe luni', 'Achitari.dc.html#1j')], '05', 'ok', 'Coloana Plătitor, carduri pe metode, Tipărește chitanța'),
+        it('Achitare nouă', 'panou lateral', [L('3b', 'formular', 'Formulare.dc.html#3b'), L('7b', 'lei → €', 'Planuri si curs.dc.html#7b')], '13 · 16', 'partial', 'Suma în lei, cursul zilei, repartizare în €'),
+        it('Cheltuieli', 'Tabel / Pe zile', [L('1k', 'tabel', 'Cheltuieli.dc.html#1k'), L('1l', 'pe zile', 'Cheltuieli.dc.html#1l'), L('3c', 'formular', 'Formulare.dc.html#3c')], '06', 'ok', 'FilterPills, antet compact în Pe zile'),
+        it('Situația plăților', 'Lună / An școlar', [L('1m', 'lună', 'Situatia.dc.html#1m'), L('1n', 'an școlar', 'Situatia.dc.html#1n'), L('7c', 'sume în €', 'Planuri si curs.dc.html#7c')], '07 · 16', 'partial', 'Cardurile, harta anului, sume în €'),
+        it('Notificare SMS', 'din Situația plăților', [L('2a', 'un părinte', 'Situatia.dc.html#2a'), L('2c', 'personalizat', 'Situatia.dc.html#2c'), L('2b', 'toți', 'Situatia.dc.html#2b')], '07 · 14', 'missing', 'SmsConfirmDialog, /api/sms/send, sms.md'),
+        it('De notificat', '', [L('2b', 'coadă', 'De notificat.dc.html#2b')], '10', 'ok', 'Rând activ, previzualizare')
+      ] },
+      { label: 'De rezolvat', marker: '#f3a6be', items: [
+        it('Taxe și grupe', '', [L('2c', 'tabel', 'De rezolvat.dc.html#2c'), L('7g', 'plan + taxă €', 'Planuri si curs.dc.html#7g')], '11 · 16', 'partial', 'Coloanele Plan și Taxă lunară €'),
+        it('De verificat', '', [L('2d', 'pe rând', 'De rezolvat.dc.html#2d')], '11', 'ok', 'Tasta S, progres'),
+        it('Asociere achitări', '', [L('2e', 'sugestii', 'De rezolvat.dc.html#2e')], '11', 'partial', '„Ține minte plătitorul” (payer_aliases)')
+      ] },
+      { label: 'Administrare', marker: '#c9c4ba', items: [
+        it('Istoric', '', [L('2f', 'pe zile', 'Administrare.dc.html#2f')], '12', 'ok', 'Diferențe vechi → nou'),
+        it('Notificări', 'file: Canale · Mesaje SMS · Șabloane', [L('2g', 'canale', 'Administrare.dc.html#2g'), L('4a', 'mesaje SMS', 'Sms.dc.html#4a'), L('4b', 'șabloane', 'Sms.dc.html#4b')], '12 · 14', 'partial', 'Filele Mesaje SMS și Șabloane'),
+        it('Backup și setări', 'file: Backup · Import și export · Grădinița · Planuri și curs', [L('2h', 'backup + import', 'Administrare.dc.html#2h'), L('6a', 'grădinița', 'Tiparire.dc.html#6a'), L('7a', 'planuri și curs', 'Planuri si curs.dc.html#7a')], '12 · 16', 'partial', 'Filele Grădinița și Planuri și curs; Import CSV mutat aici')
+      ] },
+      { label: 'Documente tipărite', marker: '#ef8a1d', items: [
+        it('Confirmare de plată', 'A5', [L('6b', 'document', 'Tiparire.dc.html#6b'), L('7e', 'sume lei + €', 'Planuri si curs.dc.html#7e')], '15 · 16', 'missing', 'Ruta /achitari/:id/confirmare, numerotare'),
+        it('Situația tipărită', 'A4 orizontal', [L('6c', 'raport', 'Tiparire.dc.html#6c')], '15', 'missing', 'StatusPrint.tsx + @media print')
+      ] }
+    ];
+    const f = this.state.f;
+    const flat = all.flatMap(m => m.items);
+    const modules = all.map(m => ({ ...m, items: m.items.filter(s => f === 'all' || s.key === f) })).filter(m => m.items.length);
+    const opts = [['all', 'Toate', '#f4f1ea', '#3a4750'], ['missing', 'Lipsesc', '#fce9ef', '#b0284f'], ['partial', 'Parțial', '#fdf3d2', '#7a5d00'], ['ok', 'De aliniat', '#e7f4ec', '#2e6b4c']];
+    return {
+      modules,
+      nAll: flat.length, nAlign: flat.filter(s => s.key === 'ok').length, nPartial: flat.filter(s => s.key === 'partial').length, nMissing: flat.filter(s => s.key === 'missing').length,
+      filters: opts.map(([k, label, bg, fg]) => ({ label, bg: k === f ? '#3a4750' : bg, fg: k === f ? '#fff' : fg, pick: () => this.setState({ f: k }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

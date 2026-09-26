@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="Vizite.dc.html">Vizite</a><a href="De notificat.dc.html">De notificat</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Formulare.dc.html">Formulare și stări</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Achitări</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Același antet în ambele moduri, cu comutatorul „Tabel | Pe luni”. <a href="#1i">1i</a>: cardurile pe metode arată mereu defalcarea reală, iar metoda filtrată e doar evidențiată. Coloana Plătitor vine din „Ține minte plătitorul”. „Neasociată →” duce la De rezolvat, singurul loc unde se asociază achitările. „⋯” include „Tipărește chitanța”. <a href="#1j">1j</a>: aceeași listă grupată pe luni, cu panou de detaliu.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="1i" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">1i</span><span style="font-size:16px;font-weight:700">Mod Tabel</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="achitari" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Contabilitate</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Achitări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#1i" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Tabel</a><a href="#1j" style="padding:7px 14px;color:#6b7780;text-decoration:none">Pe luni</a></div><span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Exportă</span>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">+ Achitare nouă</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:14px">
+              <div style="position:relative;overflow:hidden;padding:18px 22px;border-radius:20px;background:#fcead3;display:flex;flex-direction:column;gap:4px"><span style="position:absolute;right:-24px;bottom:-34px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.45)"></span><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">Total filtrat · 11 achitări</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:32px;line-height:1.1">125.833,00 lei</span></div>
+              <div style="padding:18px 22px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Cash · 9</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">86.400,00 lei</span></div>
+              <div style="padding:18px 22px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Card · 4</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">41.200,00 lei</span></div>
+              <div style="padding:16px 20px;border-radius:20px;background:#e7f4ec;border:2px solid #2e6b4c;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Transfer · 11 · filtru activ</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">125.833,00 lei</span></div>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #ede7dc;flex-wrap:wrap">
+                <div style="flex:1;min-width:240px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕<span>Caută copil, plătitor sau sumă</span></div>
+                <span style="padding:9px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:13px;font-weight:700">Perioadă: oricând ▾</span>
+                <span style="padding:9px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:13px;font-weight:700">Nearhivate ▾</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #ede7dc;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Metodă</span><span style="padding:6px 14px;border-radius:999px;background:#f4f1ea;color:#3a4750;font-size:13px;font-weight:800;cursor:pointer">Toate</span><span style="padding:6px 14px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;font-size:13px;font-weight:800;cursor:pointer">Cash</span><span style="padding:6px 14px;border-radius:999px;background:#fdf3d2;color:#7a5d00;font-size:13px;font-weight:800;cursor:pointer">Card</span><span style="padding:6px 14px;border-radius:999px;background:#3a4750;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Transfer</span><span style="width:1px;height:22px;background:#ede7dc;margin:0 8px"></span><span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Grupa</span><span style="padding:6px 14px;border-radius:999px;background:#3a4750;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Toate</span><span style="padding:6px 14px;border-radius:999px;background:#fcead3;color:#a34f00;font-size:13px;font-weight:800;cursor:pointer">Mars</span><span style="padding:6px 14px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;font-size:13px;font-weight:800;cursor:pointer">Soare</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #ede7dc;font-size:12px">
+                <span style="color:#6b7780;font-weight:700">Filtre active:</span><span style="font-weight:800;padding:4px 10px;border-radius:999px;background:#fcead3;color:#a34f00">Metodă: Transfer ×</span><span style="font-weight:800;padding:4px 10px;border-radius:999px;background:#f4f1ea;color:#6b7780">Nearhivate ×</span><span style="margin-left:auto;font-weight:800;color:#a34f00">Resetează</span>
+              </div>
+              <div style="display:grid;grid-template-columns:44px 0.9fr 1.7fr 1.5fr 0.9fr 1fr 1.1fr 48px;align-items:center;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc">
+                <span style="width:16px;height:16px;border-radius:5px;border:1.5px solid #c9c4ba"></span><span>Data ↓</span><span>Copil</span><span>Plătitor</span><span>Metodă</span><span>Luni acoperite</span><span style="text-align:right;padding-right:16px">Total</span><span></span>
+              </div>
+              <sc-for list="{{ pays }}" as="p" hint-placeholder-count="11">
+                <div style="position:relative;display:grid;grid-template-columns:44px 0.9fr 1.7fr 1.5fr 0.9fr 1fr 1.1fr 48px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5;background:{{ p.rowBg }}">
+                  <span style="width:16px;height:16px;border-radius:5px;border:1.5px solid {{ p.cbBorder }};background:{{ p.cbBg }};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ p.cbMark }}</span>
+                  <span style="font-size:14px;color:#6b7780">{{ p.date }}</span>
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                    <span style="font-weight:800;font-size:14px">{{ p.child }}</span>
+                    <sc-if value="{{ p.un }}"><a href="De rezolvat.dc.html" style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fce9ef;color:#b0284f;text-decoration:none">Neasociată →</a></sc-if>
+                  </div>
+                  <span style="font-size:14px;color:#5b666e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:10px">{{ p.payer }}</span>
+                  <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Transfer</span>
+                  <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fdf3d2;color:#7a5d00">{{ p.luna }}</span>
+                  <span style="font-weight:800;font-size:15px;text-align:right;padding-right:16px">{{ p.sum }}</span>
+                  <span style="justify-self:end;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780;background:{{ p.dotsBg }}">⋯</span>
+                  <sc-if value="{{ p.menu }}"><div style="position:absolute;right:20px;top:46px;z-index:2;width:220px;background:#fff;border-radius:14px;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16);padding:6px;display:flex;flex-direction:column;font-size:14px;font-weight:700"><span style="padding:9px 12px;border-radius:10px">Editează</span><a href="Tiparire.dc.html#6b" style="padding:9px 12px;border-radius:10px;background:#fffaf0;color:#3a4750;text-decoration:none">Tipărește chitanța</a><span style="padding:9px 12px;border-radius:10px">Schimbă copilul</span><span style="padding:9px 12px;border-radius:10px;color:#b0284f">Arhivează</span></div></sc-if>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:14px;margin:14px 16px;padding:12px 18px;border-radius:16px;background:#3a4750;color:#fff;font-size:13px;box-shadow:0 12px 28px rgba(58,71,80,.25)">
+                <span style="font-weight:800">2 selectate · 22.974,00 lei</span><span style="width:1px;height:16px;background:rgba(255,255,255,.25)"></span><a href="De rezolvat.dc.html" style="font-weight:700;color:#fff;text-decoration:none">Asociază în De rezolvat →</a><span style="font-weight:700">Exportă</span><span style="font-weight:700;color:#f3a6be">Arhivează</span><span style="margin-left:auto;color:#b9c1c6">×</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="1j" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">1j</span><span style="font-size:16px;font-weight:700">Mod Pe luni — cu panou de detaliu</span></div>
+      <div style="width:1440px;height:1040px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="achitari" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Contabilitate</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Achitări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#1i" style="padding:7px 14px;color:#6b7780;text-decoration:none">Tabel</a><a href="#1j" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Pe luni</a></div><span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Exportă</span>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">+ Achitare nouă</span>
+          </header>
+          <div style="flex:1;min-height:0;padding:24px 32px 32px 40px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;gap:6px;font-size:14px;font-weight:800"><span style="padding:8px 16px;border-radius:999px;background:#3a4750;color:#fff">Toate · 11</span><span style="padding:8px 16px;border-radius:999px;background:#fce9ef;color:#b0284f">Neasociate · 5</span><span style="padding:8px 16px;border-radius:999px;background:#f4f1ea;color:#6b7780">Arhivate</span></div>
+            <div style="margin-left:auto;width:240px;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕ Caută</div>
+            <span style="padding:9px 14px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:13px;font-weight:800">Filtre · 1</span>
+          </div>
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+            <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:baseline;gap:10px;padding:0 6px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">{{ g.label }}</span><span style="font-size:13px;color:#6b7780">{{ g.count }}</span><span style="margin-left:auto;font-weight:800;font-size:14px">{{ g.total }}</span></div>
+                <div style="background:#fff;border-radius:18px;border:1px solid #ede7dc;overflow:hidden">
+                  <sc-for list="{{ g.items }}" as="p" hint-placeholder-count="3">
+                    <div style="display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid #f3eee5;background:{{ p.selBg }};box-shadow:{{ p.selSh }}">
+                      <div style="width:44px;display:flex;flex-direction:column;align-items:center;line-height:1.05"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">{{ p.day }}</span><span style="font-size:11px;font-weight:800;color:#9aa3a9;text-transform:uppercase">{{ p.mon }}</span></div>
+                      <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:800;font-size:14px">{{ p.child }}</span><sc-if value="{{ p.un }}"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fce9ef;color:#b0284f">Neasociată</span></sc-if></div>
+                      <span style="font-size:12px;color:#6b7780">{{ p.payer }} · Transfer · {{ p.luna }}</span>
+                      <span style="width:110px;text-align:right;font-weight:800;font-size:15px">{{ p.sum }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          </div>
+        </main>
+        <aside style="width:400px;flex-shrink:0;background:#fff;border-left:1px solid #ede7dc;display:flex;flex-direction:column">
+          <div style="padding:26px 26px 20px;display:flex;flex-direction:column;gap:12px;background:#fce9ef;position:relative;overflow:hidden">
+            <span style="position:absolute;right:-40px;top:-50px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.45)"></span>
+            <div style="display:flex;justify-content:space-between;align-items:center;position:relative"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Achitare · 01.09.2026</span><span style="font-weight:800;color:#6b7780">×</span></div>
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:38px;line-height:1;position:relative">9.600,00 lei</span>
+            <span style="font-size:14px;color:#5b666e;position:relative">Transfer de la <b>Luca</b> · fără copil asociat</span>
+          </div>
+          <div style="padding:22px 26px;display:flex;flex-direction:column;gap:18px;flex:1">
+            <div style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:16px;background:#fffaf0;border:1px solid #ede7dc">
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#6b7780;font-weight:700">Plătitor</span><span style="font-weight:800">Luca</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:#6b7780;font-weight:700">Copil</span><span style="font-weight:800;color:#b0284f">neasociat</span></div>
+              <a href="De rezolvat.dc.html" style="align-self:flex-start;font-size:13px;font-weight:800;color:#a34f00">Asociază în De rezolvat →</a>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-weight:800;font-size:14px">Luni acoperite</span>
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px"><span style="flex:1;font-weight:700">Septembrie 2026</span><span style="font-weight:800">9.600,00 lei</span></div>
+              <span style="font-size:13px;font-weight:800;color:#a34f00">+ Împarte pe mai multe luni</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Data<span style="padding:10px 12px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#3a4750;font-weight:600">01.09.2026</span></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Metodă<span style="padding:10px 12px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#3a4750;font-weight:600">Transfer ▾</span></label>
+            </div>
+          </div>
+          <div style="padding:16px 26px 22px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;font-weight:800;color:#b0284f">Arhivează</span>
+            <a href="Tiparire.dc.html#6b" style="margin-left:auto;padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px;color:#3a4750;text-decoration:none">Tipărește chitanța</a>
+            <span style="padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      ['01.09.2026', 'Luca', 1, '9.600,00', 'Sep 2026', 'Luca'],
+      ['25.08.2026', 'Bivol Rares Gabriel', 0, '13.033,00', 'Aug 2026', 'Bivol Ana'],
+      ['21.08.2026', 'Muradu Letizia', 0, '9.993,00', 'Aug 2026', 'Muradu Ion'],
+      ['17.08.2026', 'Brinza Iustina', 0, '12.981,00', 'Aug 2026', 'Brinza Elena'],
+      ['17.08.2026', 'Sofia', 1, '12.981,00', 'Aug 2026', 'Sofia'],
+      ['29.07.2026', 'Luca', 1, '10.000,00', 'Iul 2026', 'Luca'],
+      ['17.07.2026', 'Bivol Rares Gabriel', 0, '10.053,00', 'Iul 2026', 'Bivol Ana'],
+      ['17.07.2026', 'Brinza Iustina', 0, '13.058,00', 'Iul 2026', 'Brinza Elena'],
+      ['26.06.2026', 'Alex', 1, '13.085,00', 'Iun 2026', 'Alex'],
+      ['16.06.2026', 'Brinza Iustina', 0, '13.049,00', 'Iun 2026', 'Brinza Andrei'],
+      ['10.06.2026', 'Luca', 1, '8.000,00', 'Iun 2026', 'Luca']
+    ];
+    const sel = [0, 4];
+    const mon = { '09': 'sep', '08': 'aug', '07': 'iul', '06': 'iun' };
+    const pays = raw.map(([date, name, un, sum, luna, payer], i) => {
+      const on = sel.includes(i);
+      return { date, name, payer, child: un ? '—' : name, menu: i === 1, dotsBg: i === 1 ? '#f4f1ea' : 'transparent', un: !!un, sum: sum + ' lei', luna, day: date.slice(0, 2), mon: mon[date.slice(3, 5)],
+        rowBg: on ? '#fffaf0' : '#fff', cbBorder: on ? '#ef8a1d' : '#c9c4ba', cbBg: on ? '#ef8a1d' : '#fff', cbMark: on ? '✓' : '',
+        selBg: i === 0 ? '#fffaf0' : '#fff', selSh: i === 0 ? 'inset 4px 0 0 #ef8a1d' : 'none' };
+    });
+    const groups = [
+      { label: 'Septembrie 2026', count: '1 achitare', total: '9.600,00 lei', items: pays.slice(0, 1) },
+      { label: 'August 2026', count: '4 achitări', total: '48.988,00 lei', items: pays.slice(1, 5) },
+      { label: 'Iulie 2026', count: '3 achitări', total: '33.111,00 lei', items: pays.slice(5, 8) },
+      { label: 'Iunie 2026', count: '3 achitări', total: '34.134,00 lei', items: pays.slice(8) }
+    ];
+    return { pays, groups };
+  }
+}
+</script>
+</body>
+</html>

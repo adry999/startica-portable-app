@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 0;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:0;line-height:1.05">Notificare prin SMS</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Ambele se folosesc. <a href="#2a">2a</a>: „Notifică” de pe un rând din <a href="#1m">1m</a>, pentru un singur părinte. <a href="#2b">2b</a>: „Notifică toți”, același șablon trimis tuturor restanțierilor, cu previzualizare pentru fiecare. <a href="#2c">2c</a>: fila „Personalizat”, pentru un mesaj scris liber, cu variabile opționale și opțiunea de a-l salva ca șablon. Funcționează la fel și în 2b. După trimitere: toast „SMS trimis” și rândul primește eticheta „Notificat azi”.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="2a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">2a</span><span style="font-size:16px;font-weight:700">Notifică un părinte</span></div>
+      <div style="width:760px;height:760px;border-radius:24px;background:rgba(58,71,80,.42);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="width:560px;background:#fffaf0;border-radius:24px;box-shadow:0 24px 60px rgba(58,71,80,.28);display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:24px 28px 18px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#ef8a1d">Confirmă mesajul</span><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;margin:0;line-height:1.1">Trimite SMS</h3></div>
+            <span style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">×</span>
+          </div>
+          <div style="padding:0 28px 22px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #ede7dc">
+              <span style="width:42px;height:42px;border-radius:50%;background:#fcead3;color:#a34f00;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">CA</span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:800;font-size:15px">Conea Andrei</span><span style="font-size:13px;color:#6b7780">+373 69 214 507 · părintele lui Conea Timur</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:#b0284f">9.600 lei</span><span style="font-size:12px;color:#6b7780">scadent pe 20</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Șablon</span>
+              <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1);color:#3a4750">Reamintire restanță</span><span style="padding:7px 14px;color:#6b7780">Plată parțială</span><span style="padding:7px 14px;color:#6b7780">Personalizat</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Mesaj</span>
+              <textarea style="box-sizing:border-box;width:100%;height:132px;resize:none;padding:14px 16px;border-radius:16px;border:1.5px solid #ef8a1d;background:#fff;font-family:Nunito,sans-serif;font-size:15px;line-height:1.5;color:#3a4750;outline:none">Buna ziua, Andrei! Va reamintim ca taxa Startica pentru Timur, luna septembrie 2026, de 9.600 lei, avea scadenta pe 20. Va multumim! Startica</textarea>
+              <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:#6b7780"><span style="display:flex;align-items:center;gap:6px;font-weight:700"><span style="width:30px;height:18px;border-radius:99px;background:#ef8a1d;display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box"><span style="width:14px;height:14px;border-radius:50%;background:#fff"></span></span>Fără diacritice</span><span style="margin-left:auto">142 caractere · 1 SMS</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#f4f1ea;font-size:13px;color:#6b7780"><span style="font-weight:800;color:#3a4750">Ultima notificare:</span>12 septembrie, SMS</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 28px;border-top:1px solid #ede7dc;background:#fff">
+            <span style="font-size:13px;color:#6b7780">Cost estimat: 1 SMS</span>
+            <span style="margin-left:auto;padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span>
+            <span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Trimite SMS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="2c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">2c</span><span style="font-size:16px;font-weight:700">Mesaj personalizat</span></div>
+      <div style="width:760px;height:760px;border-radius:24px;background:rgba(58,71,80,.42);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="width:560px;background:#fffaf0;border-radius:24px;box-shadow:0 24px 60px rgba(58,71,80,.28);display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:24px 28px 18px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#ef8a1d">Confirmă mesajul</span><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;margin:0;line-height:1.1">Trimite SMS</h3></div>
+            <span style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">×</span>
+          </div>
+          <div style="padding:0 28px 22px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #ede7dc">
+              <span style="width:42px;height:42px;border-radius:50%;background:#fcead3;color:#a34f00;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">CA</span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:800;font-size:15px">Conea Andrei</span><span style="font-size:13px;color:#6b7780">+373 69 214 507 · părintele lui Conea Timur</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:#b0284f">9.600 lei</span><span style="font-size:12px;color:#6b7780">scadent pe 20</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Șablon</span>
+              <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start"><span style="padding:7px 14px;color:#6b7780">Reamintire restanță</span><span style="padding:7px 14px;color:#6b7780">Plată parțială</span><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1);color:#3a4750">Personalizat</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Mesaj</span>
+              <textarea placeholder="Scrie mesajul pentru părinte…" style="box-sizing:border-box;width:100%;height:132px;resize:none;padding:14px 16px;border-radius:16px;border:1.5px solid #ef8a1d;background:#fff;font-family:Nunito,sans-serif;font-size:15px;line-height:1.5;color:#3a4750;outline:none">Buna ziua! Am inteles ca plata se va face saptamana viitoare, va asteptam pana pe 30 septembrie. Multumim! Startica</textarea>
+              <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:#6b7780"><span style="display:flex;align-items:center;gap:6px;font-weight:700"><span style="width:30px;height:18px;border-radius:99px;background:#ef8a1d;display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box"><span style="width:14px;height:14px;border-radius:50%;background:#fff"></span></span>Fără diacritice</span><span style="font-weight:700;color:#a34f00">+ părinte</span><span style="font-weight:700;color:#a34f00">+ copil</span><span style="font-weight:700;color:#a34f00">+ rest</span><span style="margin-left:auto">114 caractere · 1 SMS</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;box-sizing:border-box;border:1.5px solid #d9d2c5;background:#fff"></span>Salvează ca șablon nou</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 28px;border-top:1px solid #ede7dc;background:#fff">
+            <span style="font-size:13px;color:#6b7780">Cost estimat: 1 SMS</span>
+            <span style="margin-left:auto;padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span>
+            <span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Trimite SMS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="2b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">2b</span><span style="font-size:16px;font-weight:700">Notifică toți restanțierii</span></div>
+      <div style="width:1000px;height:760px;border-radius:24px;background:rgba(58,71,80,.42);display:flex;align-items:center;justify-content:center;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="width:860px;background:#fffaf0;border-radius:24px;box-shadow:0 24px 60px rgba(58,71,80,.28);display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:24px 28px 18px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#ef8a1d">Confirmă mesajele</span><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;margin:0;line-height:1.1">SMS către 13 părinți</h3></div>
+            <span style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">×</span>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;padding:0 28px 22px">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1);color:#3a4750">Reamintire restanță</span><span style="padding:7px 14px;color:#6b7780">Plată parțială</span><span style="padding:7px 14px;color:#6b7780">Personalizat</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Șablon</span>
+                <div style="padding:14px 16px;border-radius:16px;border:1.5px solid #ef8a1d;background:#fff;font-size:15px;line-height:1.6">Bună ziua, <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">părinte</span>! Vă reamintim că taxa Startica pentru <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">copil</span>, luna septembrie 2026, de <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">rest</span>, avea scadența pe <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">zi</span>. Vă mulțumim! Startica</div>
+                <div style="display:flex;gap:6px;font-size:12px;font-weight:700;color:#6b7780"><span>Inserează:</span><span style="color:#a34f00">+ părinte</span><span style="color:#a34f00">+ copil</span><span style="color:#a34f00">+ rest</span><span style="color:#a34f00">+ zi</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Previzualizare</span><span style="width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">‹</span><span style="font-size:13px;font-weight:700">3 din 13</span><span style="width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">›</span></div>
+                <div style="padding:14px 16px;border-radius:16px 16px 16px 4px;background:#e7f4ec;font-size:14px;line-height:1.5">Bună ziua, Nicolae! Vă reamintim că taxa Startica pentru Amedeia, luna septembrie 2026, de 13.033 lei, avea scadența pe 14. Vă mulțumim! Startica</div>
+                <span style="font-size:12px;color:#6b7780">Hudic Nicolae · +373 79 330 118 · 1 SMS</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;border-radius:16px;background:#fff;border:1px solid #ede7dc;overflow:hidden">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #ede7dc;font-size:13px;font-weight:800"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>Destinatari<span style="margin-left:auto;color:#6b7780;font-weight:700">13 / 14</span></div>
+              <sc-for list="{{ smsList }}" as="p" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f3eee5;background:{{ p.bg }}">
+                  <span style="width:18px;height:18px;border-radius:5px;box-sizing:border-box;border:{{ p.boxBorder }};background:{{ p.boxBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">{{ p.mark }}</span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-weight:800;font-size:13px;color:{{ p.fg }}">{{ p.name }}</span><span style="font-size:11px;color:{{ p.subFg }}">{{ p.sub }}</span></div>
+                  <span style="font-size:13px;font-weight:800;color:#b0284f">{{ p.rest }}</span>
+                </div>
+              </sc-for>
+              <span style="padding:10px 14px;font-size:12px;font-weight:700;color:#a34f00">+ încă 8 părinți</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:16px 28px;border-top:1px solid #ede7dc;background:#fff">
+            <span style="font-size:13px;color:#6b7780">13 mesaje · 13 SMS · 1 exclus (fără telefon)</span>
+            <span style="margin-left:auto;padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span>
+            <span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Trimite 13 SMS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="Vizite.dc.html">Vizite</a><a href="De notificat.dc.html">De notificat</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Formulare.dc.html">Formulare și stări</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Situația plăților</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#1m">1m</a>: situația lunii selectate, cu restanțierii grupați primii. <a href="#1n">1n</a>: hartă pe tot anul școlar — fiecare copil pe un rând, fiecare lună o căsuță colorată.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="1m" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">1m</span><span style="font-size:16px;font-weight:700">Mod Lună</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="situatia" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Rapoarte</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Situația plăților</h2></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:#fdf3d2;border:1px solid #f6e3a6"><span style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff">‹</span><span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;padding:0 10px">Septembrie 2026</span><span style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff">›</span></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#1m" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Lună</a><a href="#1n" style="padding:7px 14px;color:#6b7780;text-decoration:none">An școlar</a></div><span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Tipărește</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+              <div style="padding:18px 22px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">De încasat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">950.400 lei</span><span style="font-size:12px;color:#6b7780">99 copii activi</span></div>
+              <div style="padding:18px 22px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Încasat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">236.886 lei</span><div style="height:6px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:25%;height:100%;background:#3f9a6b"></span></div></div>
+              <div style="padding:18px 22px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Restanțe</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">14 copii</span><span style="font-size:12px;color:#b0284f;font-weight:700">scadența a trecut · 128.450 lei</span></div>
+              <div style="padding:18px 22px;border-radius:20px;background:#fdf3d2;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00">Fără taxă setată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">103</span><span style="font-size:12px;color:#7a5d00;font-weight:800">Completează →</span></div>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #ede7dc">
+                <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700"><span style="padding:7px 14px;color:#6b7780">Toți · 99</span><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1);color:#b0284f">Restanțieri · 14</span><span style="padding:7px 14px;color:#6b7780">Parțial · 6</span><span style="padding:7px 14px;color:#6b7780">Achitat · 21</span><span style="padding:7px 14px;color:#6b7780">Urmează · 58</span></div>
+                <div style="flex:1;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕<span>Caută copil</span></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid #ede7dc;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Grupa</span><span style="padding:6px 14px;border-radius:999px;background:#3a4750;color:#fff;font-size:13px;font-weight:800;cursor:pointer">Toate</span><span style="padding:6px 14px;border-radius:999px;background:#fcead3;color:#a34f00;font-size:13px;font-weight:800;cursor:pointer">Mars</span><span style="padding:6px 14px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;font-size:13px;font-weight:800;cursor:pointer">Soare</span><span style="padding:6px 14px;border-radius:999px;background:#f4f1ea;color:#6b7780;font-size:13px;font-weight:800;cursor:pointer">Fără grupă</span></div>
+              <div style="display:grid;grid-template-columns:2fr 0.9fr 1fr 1fr 1fr 1.2fr 150px;align-items:center;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Copil</span><span>Scadență</span><span style="text-align:right;padding-right:16px">Taxă</span><span style="text-align:right;padding-right:16px">Achitat</span><span style="text-align:right;padding-right:16px">Rest</span><span>Statut</span><span></span></div>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+                <div style="display:grid;grid-template-columns:2fr 0.9fr 1fr 1fr 1fr 1.2fr 150px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5">
+                  <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:36px;height:36px;border-radius:50%;background:{{ r.avBg }};color:{{ r.avFg }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0">{{ r.ini }}</span><div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14px">{{ r.name }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.parent }}</span></div></div>
+                  <span style="font-size:14px;color:#6b7780">ziua {{ r.due }}</span>
+                  <span style="font-size:14px;text-align:right;padding-right:16px">{{ r.fee }}</span>
+                  <span style="font-size:14px;text-align:right;padding-right:16px;color:#6b7780">{{ r.paid }}</span>
+                  <span style="font-size:15px;font-weight:800;text-align:right;padding-right:16px;color:{{ r.restFg }}">{{ r.rest }}</span>
+                  <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ r.sBg }};color:{{ r.sFg }}">{{ r.status }}</span>
+                  <span style="justify-self:end;padding:7px 14px;border-radius:999px;border:1.5px solid #ede7dc;font-size:12px;font-weight:800">{{ r.cta }}</span>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:14px;margin:14px 16px;padding:12px 18px;border-radius:16px;background:#fdf3d2;font-size:13px"><span style="font-weight:800">14 restanțieri</span><span style="color:#6b7780">Trimite o notificare tuturor părinților cu restanță</span><span style="margin-left:auto;padding:8px 16px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800">Notifică toți</span></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="1n" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">1n</span><span style="font-size:16px;font-weight:700">Mod An școlar — hartă</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="situatia" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Contabilitate</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Situația plăților</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#1m" style="padding:7px 14px;color:#6b7780;text-decoration:none">Lună</a><a href="#1n" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">An școlar</a></div>
+            <span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anul școlar 2025–2026 ▾</span>
+          </header>
+          <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+            <div style="position:relative;overflow:hidden;padding:18px 22px;border-radius:22px;background:#fce9ef;display:flex;align-items:center;gap:16px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:44px;line-height:1;color:#b0284f">14</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">copii cu restanță</span><span style="font-size:13px;color:#5b666e">128.450 lei nerecuperați</span></div><span style="padding:8px 14px;border-radius:999px;background:#fff;font-weight:800;font-size:13px;color:#b0284f">Notifică</span></div>
+            <div style="padding:18px 22px;border-radius:22px;background:#e7f4ec;display:flex;align-items:center;gap:16px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:44px;line-height:1;color:#2e6b4c">87%</span><div style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">rată de încasare</span><span style="font-size:13px;color:#5b666e">pe anul școlar, până azi</span></div></div>
+            <div style="padding:18px 22px;border-radius:22px;background:#fdf3d2;display:flex;align-items:center;gap:16px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:44px;line-height:1;color:#7a5d00">6</span><div style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:15px">plăți parțiale</span><span style="font-size:13px;color:#5b666e">luna aceasta</span></div></div>
+          </div>
+          <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;padding:18px 20px 12px;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:center;gap:16px;padding:0 4px 14px;font-size:12px;font-weight:800;color:#6b7780">
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#a8d8be"></span>Achitat</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#f9d257"></span>Parțial</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#e9527c"></span>Neachitat</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#f1ece2"></span>Urmează</span>
+              <div style="margin-left:auto;width:220px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#fffaf0;border:1px solid #ede7dc;font-size:13px;color:#9aa3a9;font-weight:600">⌕ Caută copil</div>
+            </div>
+            <div style="display:grid;grid-template-columns:230px repeat(12,minmax(0,1fr)) 130px;gap:6px;align-items:center;padding:0 4px 8px;font-size:11px;font-weight:800;text-transform:uppercase;color:#9aa3a9;letter-spacing:.05em">
+              <span>Copil</span>
+              <sc-for list="{{ monthLabels }}" as="m" hint-placeholder-count="12"><span style="text-align:center;color:{{ m.c }}">{{ m.l }}</span></sc-for>
+              <span style="text-align:right">Sold</span>
+            </div>
+            <sc-for list="{{ heat }}" as="r" hint-placeholder-count="10">
+              <div style="display:grid;grid-template-columns:230px repeat(12,minmax(0,1fr)) 130px;gap:6px;align-items:center;padding:5px 4px;border-top:1px solid #f3eee5">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:30px;height:30px;border-radius:50%;background:{{ r.avBg }};color:{{ r.avFg }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0">{{ r.ini }}</span><span style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span></div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="12"><span style="height:30px;border-radius:8px;background:{{ c.bg }};outline:{{ c.ol }};outline-offset:2px"></span></sc-for>
+                <span style="text-align:right;font-weight:800;font-size:14px;color:{{ r.soldFg }}">{{ r.sold }}</span>
+              </div>
+            </sc-for>
+          </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const av = [['#fcead3', '#a34f00'], ['#e7f4ec', '#2e6b4c'], ['#fdf3d2', '#7a5d00'], ['#fce9ef', '#b0284f']];
+    const S = { 'Neachitat': ['#fce9ef', '#b0284f', 'Notifică'], 'Parțial': ['#fdf3d2', '#7a5d00', 'Notifică'], 'Achitat': ['#e7f4ec', '#2e6b4c', 'Vezi fișa'], 'Urmează': ['#f4f1ea', '#6b7780', 'Vezi fișa'] };
+    const raw = [
+      ['Conea Timur', 'Conea Andrei', 20, 9600, 0, 'Neachitat'],
+      ['Bagnyuk Timur', 'Bagnyuk Iulia', 21, 12981, 0, 'Neachitat'],
+      ['Hudic Amedeia', 'Hudic Nicolae', 14, 13033, 0, 'Neachitat'],
+      ['Avram Maria', 'Avram Valentin', 6, 9993, 5000, 'Parțial'],
+      ['Coceva Alisa', 'Coceva Elena', 15, 13058, 8000, 'Parțial'],
+      ['Balan Ilinca', 'Balan Lilia', 29, 9600, 9600, 'Achitat'],
+      ['Balanuta Vera', 'Balanuta Dumitru', 9, 12981, 12981, 'Achitat'],
+      ['Cerba Alexander', 'Cerba Pavel', 26, 9600, 0, 'Urmează']
+    ];
+    const fmt = n => n.toLocaleString('de-DE') + ' lei';
+    const rows = raw.map(([name, parent, due, fee, paid, status], i) => ({
+      name, parent, due, fee: fmt(fee), paid: fmt(paid), rest: fmt(fee - paid), status,
+      ini: name.split(' ').map(s => s[0]).join(''), avBg: av[i % 4][0], avFg: av[i % 4][1],
+      restFg: status === 'Neachitat' || status === 'Parțial' ? '#b0284f' : '#9aa3a9', sBg: S[status][0], sFg: S[status][1], cta: S[status][2]
+    }));
+    const ml = ['Oct', 'Nov', 'Dec', 'Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep'];
+    const monthLabels = ml.map((l, i) => ({ l, c: i === 11 ? '#a34f00' : '#9aa3a9' }));
+    const col = { a: '#a8d8be', p: '#f9d257', n: '#e9527c', u: '#f1ece2', x: '#faf7f1' };
+    const pat = [
+      ['Conea Timur', 'aaaaaaaaaann', '19.200 lei'],
+      ['Bagnyuk Timur', 'xxxxxxxxaapn', '17.981 lei'],
+      ['Hudic Amedeia', 'aaaaaaaaaaan', '13.033 lei'],
+      ['Avram Maria', 'aaaaaaaaaaap', '4.993 lei'],
+      ['Coceva Alisa', 'aaaaapaaaaap', '7.058 lei'],
+      ['Balan Ilinca', 'aaaaaaaaaaaa', '0 lei'],
+      ['Balanuta Vera', 'aaaaaaaaaaaa', '0 lei'],
+      ['Cerba Alexander', 'aaaaaaaaaaau', '0 lei'],
+      ['Cujba Ovidiu', 'aaaaaaaaaaau', '0 lei'],
+      ['Muradu Letizia', 'xxxxxxxxxaau', '0 lei']
+    ];
+    const heat = pat.map(([name, p, sold], i) => ({
+      name, sold, ini: name.split(' ').map(s => s[0]).join(''), avBg: av[i % 4][0], avFg: av[i % 4][1],
+      soldFg: sold === '0 lei' ? '#9aa3a9' : '#b0284f',
+      cells: p.split('').map((c, j) => ({ bg: col[c], ol: j === 11 ? '2px solid #fcead3' : 'none' }))
+    }));
+    const smsRaw = [['Conea Andrei', 'pentru Conea Timur', '9.600', 1], ['Bagnyuk Iulia', 'pentru Bagnyuk Timur', '12.981', 1], ['Hudic Nicolae', 'pentru Hudic Amedeia', '13.033', 1], ['Avram Valentin', 'pentru Avram Maria', '4.993', 1], ['Coceva Elena', 'pentru Coceva Alisa', '5.058', 1], ['Rusu Victor', 'Fără număr de telefon', '9.600', 0]];
+    const smsList = smsRaw.map(([name, sub, rest, on]) => ({ name, sub, rest: rest + ' lei', mark: on ? '✓' : '', boxBg: on ? '#ef8a1d' : '#fff', boxBorder: on ? 'none' : '1.5px solid #d9d2c5', fg: on ? '#3a4750' : '#9aa3a9', subFg: on ? '#9aa3a9' : '#b0284f', bg: on ? '#fff' : '#faf7f1' }));
+    return { rows, heat, monthLabels, smsList };
+  }
+}
+</script>
+</body>
+</html>

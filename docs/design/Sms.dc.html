@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Situatia.dc.html">Situația plăților · SMS</a><a href="Administrare.dc.html">Administrare</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">SMS — istoric și șabloane</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Ambele stau în Administrare → Notificări, ca file noi lângă „Canale” (<a href="Administrare.dc.html#2g">2g</a>). <a href="#4a">4a</a>: toate mesajele trimise din <a href="Situatia.dc.html#2a">2a</a>/<a href="Situatia.dc.html#2b">2b</a>, cu starea de livrare și retrimitere. <a href="#4b">4b</a>: șabloanele folosite în modal și setările furnizorului.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="4a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">4a</span><span style="font-size:16px;font-weight:700">Mesaje SMS trimise</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="notificari" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Notificări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><span style="padding:7px 14px;color:#6b7780">Canale</span><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Mesaje SMS</span><span style="padding:7px 14px;color:#6b7780">Șabloane</span></div>
+          </header>
+          <div style="padding:28px 40px 40px;display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;align-items:baseline;gap:28px;flex-wrap:wrap">
+              <span style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">48</span><span style="font-size:13px;color:#6b7780">mesaje trimise</span></span>
+              <span style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:#b0284f">2</span><span style="font-size:13px;color:#6b7780">eșuate</span></span>
+              <span style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">61</span><span style="font-size:13px;color:#6b7780">SMS consumate în septembrie</span></span>
+              <span style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:#6b7780"><span>Limită lunară</span><span style="width:140px;height:8px;border-radius:99px;background:#f1ece2;overflow:hidden"><span style="display:block;width:12%;height:100%;background:#ef8a1d"></span></span><span style="font-weight:800;color:#3a4750">61 / 500</span></span>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start">
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column">
+                <div style="display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-bottom:1px solid #ede7dc">
+                  <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1);color:#3a4750;white-space:nowrap">Toate · 48</span><span style="padding:7px 14px;color:#6b7780;white-space:nowrap">Livrate · 45</span><span style="padding:7px 14px;color:#6b7780;white-space:nowrap">În curs · 1</span><span style="padding:7px 14px;color:#b0284f;white-space:nowrap">Eșuate · 2</span></div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9;white-space:nowrap;overflow:hidden">⌕<span style="overflow:hidden;text-overflow:ellipsis">Caută părinte, copil, telefon</span></div>
+                    <span style="flex-shrink:0;padding:9px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:13px;font-weight:700;white-space:nowrap">30 de zile ▾</span>
+                    <span style="flex-shrink:0;padding:9px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:13px;font-weight:700;white-space:nowrap">Șablon ▾</span>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:92px minmax(0,1.2fr) minmax(0,1.6fr) 150px 96px;align-items:center;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Trimis</span><span>Destinatar</span><span>Mesaj</span><span>Șablon</span><span>Stare</span></div>
+                <sc-for list="{{ log }}" as="m" hint-placeholder-count="9">
+                  <div style="display:grid;grid-template-columns:92px minmax(0,1.2fr) minmax(0,1.6fr) 150px 96px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5;background:{{ m.bg }};box-shadow:{{ m.sh }}">
+                    <div style="display:flex;flex-direction:column"><span style="font-weight:800;font-size:14px">{{ m.day }}</span><span style="font-size:12px;color:#9aa3a9">{{ m.time }}</span></div>
+                    <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14px">{{ m.parent }}</span><span style="font-size:12px;color:#9aa3a9">{{ m.child }}</span></div>
+                    <span style="font-size:13px;color:#6b7780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:16px">{{ m.text }}</span>
+                    <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#f4f1ea;color:#6b7780;white-space:nowrap">{{ m.tpl }}</span>
+                    <span style="justify-self:start;white-space:nowrap;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ m.sBg }};color:{{ m.sFg }}"><span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>{{ m.status }}</span>
+                  </div>
+                </sc-for>
+                <div style="display:flex;align-items:center;padding:12px 20px;font-size:13px;color:#6b7780"><span>Afișez 1–9 din 48</span><span style="margin-left:auto;display:flex;gap:4px;font-weight:700"><span style="min-width:28px;height:28px;border-radius:8px;background:#fcead3;color:#a34f00;display:flex;align-items:center;justify-content:center">1</span><span style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center">2</span><span style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center">3</span><span style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center">›</span></span></div>
+              </div>
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column">
+                <div style="padding:20px 22px;background:#fce9ef;display:flex;flex-direction:column;gap:6px">
+                  <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Nelivrat</span>
+                  <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Bagnyuk Iulia</span>
+                  <span style="font-size:13px;color:#5b666e">+373 68 000 112 · pentru Bagnyuk Timur</span>
+                </div>
+                <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+                  <div style="padding:14px 16px;border-radius:16px 16px 16px 4px;background:#f4f1ea;font-size:14px;line-height:1.5">Buna ziua, Iulia! Va reamintim ca taxa Startica pentru Timur, luna septembrie 2026, de 12.981 lei, avea scadenta pe 21. Va multumim! Startica</div>
+                  <div style="display:flex;flex-direction:column;gap:0;font-size:13px">
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3eee5"><span style="color:#6b7780">Trimis</span><span style="font-weight:700">24 sept., 10:42</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3eee5"><span style="color:#6b7780">Șablon</span><span style="font-weight:700">Reamintire restanță</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3eee5"><span style="color:#6b7780">Lungime</span><span style="font-weight:700">148 caractere · 1 SMS</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:#6b7780">Trimis de</span><span style="font-weight:700">Situația plăților · Notifică toți</span></div>
+                  </div>
+                  <div style="padding:12px 14px;border-radius:14px;background:#fce9ef;font-size:13px;line-height:1.45;color:#b0284f"><span style="font-weight:800">Răspuns furnizor:</span> număr inexistent în rețea. Verifică telefonul în fișa copilului.</div>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <span style="padding:10px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px;box-shadow:0 8px 18px rgba(239,138,29,.32)">Retrimite</span>
+                    <span style="padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Corectează telefonul</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="4b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">4b</span><span style="font-size:16px;font-weight:700">Șabloane și furnizor SMS</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="notificari" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Notificări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><span style="padding:7px 14px;color:#6b7780">Canale</span><span style="padding:7px 14px;color:#6b7780">Mesaje SMS</span><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Șabloane</span></div>
+            <span style="padding:8px 16px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px;box-shadow:0 4px 10px rgba(239,138,29,.28)">+ Șablon nou</span>
+          </header>
+          <div style="padding:28px 40px 40px;display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;display:flex;flex-direction:column">
+                <span style="padding:14px 18px;border-bottom:1px solid #ede7dc;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Șabloane · 4</span>
+                <sc-for list="{{ tpls }}" as="t" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:4px;padding:14px 18px;border-bottom:1px solid #f3eee5;background:{{ t.bg }};box-shadow:{{ t.sh }}">
+                    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-weight:800;font-size:14px">{{ t.name }}</span><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:{{ t.tagBg }};color:{{ t.tagFg }}">{{ t.tag }}</span></div>
+                    <span style="font-size:12px;color:#9aa3a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.body }}</span>
+                    <span style="font-size:12px;color:#6b7780">{{ t.used }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Furnizor SMS</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c"><span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span>Conectat</span></div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Serviciu</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700;display:flex">sms.md<span style="margin-left:auto;color:#9aa3a9">▾</span></span></div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Expeditor</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700">Startica</span></div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Cheie API</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;color:#6b7780;display:flex">•••• •••• •••• 4f2a<span style="margin-left:auto;font-weight:800;color:#a34f00">Schimbă</span></span></div>
+                <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Limită lunară</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700;display:flex">500<span style="margin-left:auto;color:#9aa3a9;font-weight:600">SMS / lună</span></span></div>
+                <span style="align-self:flex-start;padding:9px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:13px">Trimite SMS de test</span>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;display:flex;flex-direction:column">
+              <div style="padding:22px 26px 0;display:flex;align-items:center;gap:12px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">Editează șablonul</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Reamintire restanță</span></div><span style="font-size:13px;font-weight:800;color:#b0284f">Șterge șablonul</span></div>
+              <div style="padding:20px 26px 24px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px">
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:800;color:#6b7780">Nume</span><span style="padding:10px 14px;border-radius:12px;border:1px solid #ede7dc;font-size:14px;font-weight:700">Reamintire restanță</span></div>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span style="font-size:12px;font-weight:800;color:#6b7780">Text</span>
+                    <div style="padding:14px 16px;border-radius:16px;border:1.5px solid #ef8a1d;background:#fff;font-size:15px;line-height:1.7;min-height:120px">Bună ziua, <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">părinte</span>! Vă reamintim că taxa Startica pentru <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">copil</span>, luna <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">luna</span>, de <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">rest</span>, avea scadența pe <span style="padding:1px 6px;border-radius:6px;background:#fcead3;color:#a34f00;font-weight:800">zi</span>. Vă mulțumim! Startica</div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;flex-wrap:wrap"><span style="color:#6b7780">Inserează:</span><sc-for list="{{ vars }}" as="v" hint-placeholder-count="6"><span style="padding:4px 10px;border-radius:999px;background:#fcead3;color:#a34f00;font-weight:800">+ {{ v }}</span></sc-for></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:12px;padding-top:4px">
+                    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:36px;height:22px;border-radius:99px;background:#ef8a1d;display:flex;justify-content:flex-end;padding:3px;box-sizing:border-box"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span><div style="display:flex;flex-direction:column"><span>Fără diacritice la trimitere</span><span style="font-size:12px;font-weight:600;color:#6b7780">Încap 160 de caractere într-un SMS, față de 70 cu diacritice</span></div></div>
+                    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:36px;height:22px;border-radius:99px;background:#ef8a1d;display:flex;justify-content:flex-end;padding:3px;box-sizing:border-box"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span><div style="display:flex;flex-direction:column"><span>Implicit pentru „Notifică”</span><span style="font-size:12px;font-weight:600;color:#6b7780">Se preselectează la restanțe în Situația plăților</span></div></div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Previzualizare</span>
+                  <div style="padding:18px;border-radius:22px;background:#f4f1ea;display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:12px;font-weight:800;color:#6b7780;text-align:center">Startica</span>
+                    <div style="padding:12px 14px;border-radius:16px 16px 16px 4px;background:#fff;font-size:14px;line-height:1.5">Buna ziua, Andrei! Va reamintim ca taxa Startica pentru Timur, luna septembrie 2026, de 9.600 lei, avea scadenta pe 20. Va multumim! Startica</div>
+                  </div>
+                  <span style="font-size:12px;color:#6b7780">Exemplu: Conea Andrei · 142 caractere · 1 SMS</span>
+                  <span style="font-size:12px;color:#7a5d00;padding:10px 12px;border-radius:12px;background:#fdf3d2;line-height:1.45">Numele lungi pot trece mesajul la 2 SMS. Contorul din modal arată lungimea reală pentru fiecare părinte.</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:16px 26px;border-top:1px solid #ede7dc">
+                <span style="font-size:13px;color:#6b7780">Folosit de 31 de ori · ultima dată ieri</span>
+                <span style="margin-left:auto;padding:10px 18px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Renunță</span>
+                <span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Salvează șablonul</span>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const S = { Livrat: ['#e7f4ec', '#2e6b4c'], 'În curs': ['#fdf3d2', '#7a5d00'], Eșuat: ['#fce9ef', '#b0284f'] };
+    const raw = [
+      ['24 sept.', '10:42', 'Conea Andrei', 'pentru Conea Timur', 'Buna ziua, Andrei! Va reamintim ca taxa Startica pentru Timur…', 'Restanță', 'Livrat'],
+      ['24 sept.', '10:42', 'Bagnyuk Iulia', 'pentru Bagnyuk Timur', 'Buna ziua, Iulia! Va reamintim ca taxa Startica pentru Timur…', 'Restanță', 'Eșuat', 1],
+      ['24 sept.', '10:41', 'Hudic Nicolae', 'pentru Hudic Amedeia', 'Buna ziua, Nicolae! Va reamintim ca taxa Startica pentru Amedeia…', 'Restanță', 'Livrat'],
+      ['24 sept.', '10:41', 'Avram Valentin', 'pentru Avram Maria', 'Buna ziua, Valentin! Am primit 5.000 lei, rest de achitat 4.993 lei…', 'Plată parțială', 'În curs'],
+      ['23 sept.', '16:05', 'Coceva Elena', 'pentru Coceva Alisa', 'Buna ziua! Am inteles ca plata se va face saptamana viitoare…', 'Personalizat', 'Livrat'],
+      ['20 sept.', '09:12', 'Balan Lilia', 'pentru Balan Ilinca', 'Buna ziua, Lilia! Va reamintim ca taxa Startica pentru Ilinca…', 'Restanță', 'Livrat'],
+      ['18 sept.', '12:30', 'Rusu Victor', 'pentru Rusu Ana', 'Buna ziua, Victor! Va reamintim ca taxa Startica pentru Ana…', 'Restanță', 'Eșuat'],
+      ['12 sept.', '09:00', 'Conea Andrei', 'pentru Conea Timur', 'Buna ziua, Andrei! Va reamintim ca taxa Startica pentru Timur…', 'Restanță', 'Livrat'],
+      ['12 sept.', '09:00', 'Cerba Pavel', 'pentru Cerba Alexander', 'Buna ziua, Pavel! Va reamintim ca taxa Startica pentru Alexander…', 'Restanță', 'Livrat']
+    ];
+    const log = raw.map(([day, time, parent, child, text, tpl, status, sel]) => ({
+      day, time, parent, child, text, tpl, status, sBg: S[status][0], sFg: S[status][1],
+      bg: sel ? '#fffaf0' : '#fff', sh: sel ? 'inset 4px 0 0 #ef8a1d' : 'none'
+    }));
+    const tpls = [
+      ['Reamintire restanță', 'Bună ziua, {părinte}! Vă reamintim că taxa Startica pentru {copil}…', 'Folosit de 31 de ori', 'Implicit', 1],
+      ['Plată parțială', 'Bună ziua, {părinte}! Am primit {achitat}, rest de achitat {rest}…', 'Folosit de 9 ori', ''],
+      ['Confirmare plată', 'Bună ziua, {părinte}! Am primit plata de {achitat} pentru {copil}…', 'Folosit de 4 ori', ''],
+      ['Amânare acceptată', 'Bună ziua! Am înțeles că plata se va face săptămâna viitoare…', 'Salvat din Personalizat', 'Nou']
+    ].map(([name, body, used, tag, sel]) => ({
+      name, body, used, tag, tagBg: tag === 'Implicit' ? '#e7f4ec' : tag ? '#fcead3' : 'transparent', tagFg: tag === 'Implicit' ? '#2e6b4c' : '#a34f00',
+      bg: sel ? '#fffaf0' : '#fff', sh: sel ? 'inset 4px 0 0 #ef8a1d' : 'none'
+    }));
+    return { log, tpls, vars: ['părinte', 'copil', 'luna', 'rest', 'achitat', 'zi'] };
+  }
+}
+</script>
+</body>
+</html>
