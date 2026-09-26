@@ -53,7 +53,9 @@ describe('SearchSelect', () => {
 
   it('arată emptyLabel când nu există rezultate', async () => {
     const onChange = vi.fn();
-    render(<SearchSelect options={OPTIONS} value="" onChange={onChange} emptyLabel="Fără rezultate" ariaLabel="Copii" />);
+    render(
+      <SearchSelect options={OPTIONS} value="" onChange={onChange} emptyLabel="Fără rezultate" ariaLabel="Copii" />,
+    );
 
     await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
     await userEvent.type(screen.getByLabelText('Caută în Copii'), 'zzz');

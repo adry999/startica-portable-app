@@ -217,7 +217,10 @@ describe('useAssign', () => {
 
     const p3 = result.current.rows.find(row => row.paymentId === 'p3');
     expect(
-      p3?.options.filter(option => option.group === 'Nume potrivit în sursă').map(option => option.id).sort(),
+      p3?.options
+        .filter(option => option.group === 'Nume potrivit în sursă')
+        .map(option => option.id)
+        .sort(),
     ).toEqual(['c2', 'c3']);
 
     act(() => {

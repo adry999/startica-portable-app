@@ -23,14 +23,7 @@ function noShowVisit(overrides: Partial<Visit> = {}): Visit {
 
 describe('VisitFormDrawer', () => {
   it('statutul corectabil exclude Înscris, dar include Programată — chiar și pentru o vizită deja Neprezentată', () => {
-    render(
-      <VisitFormDrawer
-        target={noShowVisit()}
-        groups={[]}
-        onSubmit={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
+    render(<VisitFormDrawer target={noShowVisit()} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
 
     const select = screen.getByLabelText('Statut') as HTMLSelectElement;
     const optionLabels = [...select.options].map(option => option.textContent);
@@ -39,14 +32,7 @@ describe('VisitFormDrawer', () => {
 
   it('reprogramarea (schimbarea datei) resetează Statutul afișat la Programată, nu re-aplică tăcut vechiul statut', async () => {
     const onSubmit = vi.fn();
-    render(
-      <VisitFormDrawer
-        target={noShowVisit()}
-        groups={[]}
-        onSubmit={onSubmit}
-        onClose={vi.fn()}
-      />,
-    );
+    render(<VisitFormDrawer target={noShowVisit()} groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
     const user = userEvent.setup();
 
     const dateInput = screen.getByLabelText('Data vizitei');

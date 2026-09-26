@@ -122,12 +122,7 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
           </label>
           <label className={styles.field}>
             Telefon părinte 1
-            <input
-              required
-              type="tel"
-              value={values.phone}
-              onChange={event => setField('phone', event.target.value)}
-            />
+            <input required type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
           </label>
           <label className={styles.field}>
             Părinte 2 (opțional)

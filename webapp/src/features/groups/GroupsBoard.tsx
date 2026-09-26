@@ -343,4 +343,3 @@ function CollapsedColumn({
     </button>
   );
 }
-

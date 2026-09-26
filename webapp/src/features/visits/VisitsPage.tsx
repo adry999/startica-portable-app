@@ -511,9 +511,10 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             onChange={data.setStatusFilter}
             options={[
               { value: '', label: 'Toate statuturile' },
-              ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(
-                status => ({ value: status, label: STATUS_LABEL[status] }),
-              ),
+              ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(status => ({
+                value: status,
+                label: STATUS_LABEL[status],
+              })),
             ]}
           />
           <SearchSelect

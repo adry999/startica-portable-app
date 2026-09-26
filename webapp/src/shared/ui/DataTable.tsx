@@ -146,7 +146,10 @@ export function DataTable<Row>({
             return (
               <tr
                 key={key}
-                className={[onRowClick ? styles.clickableRow : '', rowClassName?.(row) ?? ''].filter(Boolean).join(' ') || undefined}
+                className={
+                  [onRowClick ? styles.clickableRow : '', rowClassName?.(row) ?? ''].filter(Boolean).join(' ') ||
+                  undefined
+                }
                 data-selected={selected || undefined}
                 tabIndex={onRowClick ? 0 : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}

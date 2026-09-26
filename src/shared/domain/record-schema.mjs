@@ -160,7 +160,11 @@ export function normalizeRecord(type, input) {
   if (record.archived !== undefined) requireThat(typeof record.archived === 'boolean', 'Arhivare invalidă.');
   // Sentinela „neafirmat” e '' sau null (vezi bulk-selection.mjs, record-editor-dialog.mjs);
   // doar o valoare adevărată trebuie să fie o dată ISO validă.
-  if (record.archivedAt) requireThat(typeof record.archivedAt === 'string' && !Number.isNaN(Date.parse(record.archivedAt)), 'Data arhivării este invalidă.');
+  if (record.archivedAt)
+    requireThat(
+      typeof record.archivedAt === 'string' && !Number.isNaN(Date.parse(record.archivedAt)),
+      'Data arhivării este invalidă.',
+    );
   if (record.reviewed !== undefined) requireThat(typeof record.reviewed === 'boolean', 'Verificare invalidă.');
   // Obiect liber (kind/recordId/recordDigest/provisionalAmount/autoMatched — vezi
   // financial-history-import.mjs și review-center.mjs), nu text.

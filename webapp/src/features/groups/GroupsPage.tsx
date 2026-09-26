@@ -251,7 +251,11 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
           className={styles.deleteButton}
           onClick={onDelete}
           disabled={group.blocksDelete}
-          title={group.blocksDelete ? 'Mută mai întâi copiii din grupă (inclusiv cei arhivați) pentru a o putea șterge.' : undefined}
+          title={
+            group.blocksDelete
+              ? 'Mută mai întâi copiii din grupă (inclusiv cei arhivați) pentru a o putea șterge.'
+              : undefined
+          }
         >
           Șterge grupa {group.name}
         </button>

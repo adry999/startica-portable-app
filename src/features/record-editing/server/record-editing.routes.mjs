@@ -25,8 +25,12 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
       // Statutul Înscris se obține doar prin /api/visits-enrol (creează și fișa copilului
       // în același pas) — altfel /api/record ar putea lega o vizită de un copil arbitrar,
       // fără nicio fișă creată cu adevărat pentru ea.
-      if (request.type === 'visits' && record.status === 'Înscris' && existing?.status !== 'Înscris')
-        fail('Statutul „Înscris” se setează doar prin înscrierea copilului, nu prin editare directă.');
+      if (request.type === 'visits') {
+        const visit = /** @type {import('#shared/contracts/record-types.mjs').Visit} */ (record);
+        const previousVisit = /** @type {import('#shared/contracts/record-types.mjs').Visit | undefined} */ (existing);
+        if (visit.status === 'Înscris' && previousVisit?.status !== 'Înscris')
+          fail('Statutul „Înscris” se setează doar prin înscrierea copilului, nu prin editare directă.');
+      }
       assertRecordReferencesExist(request.type, record, recordRepository.exists);
       assertUniqueName(request.type, record, recordRepository.readSnapshot());
       recordRepository.save(request.type, record);

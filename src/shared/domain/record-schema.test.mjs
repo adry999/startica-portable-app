@@ -351,10 +351,7 @@ test('archivedAt acceptă sentinela goală, dar refuză un text care nu e o dat�
 });
 
 test('payments.childId refuză un format care nu e de tip ID', () => {
-  assert.throws(
-    () => normalizeRecord('payments', { ...payment(), childId: 'nu e un id valid!' }),
-    /ID copil invalid/,
-  );
+  assert.throws(() => normalizeRecord('payments', { ...payment(), childId: 'nu e un id valid!' }), /ID copil invalid/);
   assert.throws(() => normalizeRecord('payments', { ...payment(), childId: 'x'.repeat(101) }), /ID copil invalid/);
   assert.equal(normalizeRecord('payments', { ...payment(), childId: 'c1' }).childId, 'c1');
   assert.equal(normalizeRecord('payments', { ...payment(), childId: '' }).childId, '');

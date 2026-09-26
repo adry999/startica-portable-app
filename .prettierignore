@@ -1,18 +1,11 @@
-# Bibliotecă externă minificată (SheetJS 0.20.3). Nu se reformatează.
-web/vendor/xlsx.full.min.js
-
 # Date reale și profil de browser.
 Startica_Date/
 Startica_Backup/
 Jurnale/
 
-# HTML: formatarea automată poate introduce noduri de spațiu între elemente
-# inline. De făcut separat, verificat cu `npm run test:browser`.
-web/index.html
-
 # Documentație și resurse grafice: în afara scopului acestui pas.
 *.md
-web/assets/
+docs/design/
 
 # webapp/: build generat, nu se reformatează.
 webapp/dist/
