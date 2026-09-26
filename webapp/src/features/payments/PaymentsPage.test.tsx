@@ -80,6 +80,7 @@ describe('PaymentsPage', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           const updated = {
@@ -366,6 +367,7 @@ describe('PaymentsPage', () => {
         if (path === '/api/state')
           return jsonResponse({ state: stateWithRevolut, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
