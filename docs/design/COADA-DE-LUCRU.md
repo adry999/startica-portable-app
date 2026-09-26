@@ -4,6 +4,8 @@ Consolidează `docs/superpowers/specs/2026-09-26-code-audit.md` (audit fable) + 
 
 **Faza 6 (mai multe grădinițe) NU se începe — exclus explicit.**
 
+**Stare 2026-09-26, sfârșit de sesiune:** punctele 1–6 și 9 DONE, comise și pushate pe `master-v2` (`6fbd652`, `2323101`, `9e788ca`, `b434d67`, `05e6367`..`01ce3a4`). Punctul 7 sărit (vezi `INTREBARI.md`). Punctul 8 parțial: backend (domeniu+server) cherry-pick-uit și verde; UI-ul din `webapp/` NU e făcut — vezi nota din §8.
+
 ## 1. Faza 1a — șterge feature-urile backend complet moarte
 `src/features/{audit-log,backup,dashboard,data-transfer,expenses,groups,record-editing,telegram-notify}/`: șterge `index.web.mjs` + `web/` întreg (nimic din ele e servit sau importat de `webapp/`, verificat). Actualizează `README.md` din fiecare feature (scoate referința la `web/*.controller.mjs`/`*.view.mjs`).
 
@@ -31,7 +33,9 @@ Consolidează `docs/superpowers/specs/2026-09-26-code-audit.md` (audit fable) + 
 `status/StatusPage.tsx`/`useStatus.ts`: adaugă `groupId`/`groupName` pe `StatusRowView` (join cu `records.children`/`records.groups`), `FilterPills` Grupa (Toate + grupe cu `groupTone` + Fără grupă) peste tabelul existent. **Fără** cele 4 carduri / modul „An școlar” / SMS — ecran nou aproape integral, notat separat, vezi `INTREBARI.md`.
 
 ## 8. Faza 4 — monedă EUR/BNM (după 1–3)
-Cherry-pick commit-urile de domeniu/server din `.worktrees/feat-multi-currency-fees` (branch pornit din `master`, nu din `master-v2` — rezolvă conflictele). UI nou în `webapp/` după `docs/design/screens/16-planuri-eur.md`. Vezi Faza 4 din roadmap pentru lista exactă de fișiere.
+**Backend DONE (2026-09-26).** Cherry-pick-uite 13 commit-uri de domeniu/server/format din `.worktrees/feat-multi-currency-fees` (branch pornit din `master`, nu din `master-v2` — conflicte reale rezolvate în `record-schema.mjs` și `payment-allocations.test.mjs`). `create-application.mjs`/`main.mjs` deja aveau rutele de curs cablate din commit-urile cherry-pick-uite. Două fixup-uri necesare la consumatori neschimbați de branch-ul de monedă: `payment-name-matching.mjs` (indexul de plăți nu mai adună, ci grupează pe monedă+dată) și `useNotify.ts`/`useStatus.ts`/`StatusPage.tsx` din webapp (`obligation.paid` poate fi `null` acum). Tot verde: backend 518/520 (2 sărite cunoscute), webapp 358/358.
+
+**UI-ul din `webapp/` NU e făcut — sesiune separată.** Rămâne de construit de la zero, după `docs/design/screens/16-planuri-eur.md`: selector de monedă în `PaymentFormDrawer` (`payments`), `ChildFormDrawer` (`children`), `FeeSetupPage`; afișare în moneda copilului în `status`/`notify`/fișa copilului; conversie pe `dashboard`; ecran nou „Curs valutar” (setări manuale + refresh BNM — rutele server (`GET/POST /api/exchange-rates`, vezi `exchange-rates.routes.mjs`) sunt deja live, doar UI-ul lipsește). Worktree-ul vechi (`.worktrees/feat-multi-currency-fees`) are ca referință commit-urile UI de pe stratul vanilla (`7e4ca98`, `e498fac`, `704309e`, `bf75ac1`, `f97cf33`, `983d492`, `a4456e2`, `dbf3f97`, `c193f51`, `8a08a5a`) — utile ca ghid de logică, dar scrise pe `web/*.mjs` (șters în Faza 1), deci rescrise, nu portate. Nu șterge worktree-ul până nu se termină și UI-ul.
 
 ## 9. Faza 5 — SMS (sms.md) — scrie spec înainte de cod
 Scrie `docs/superpowers/specs/<data>-sms-notify-design.md` (provider `sms.md`/docs.sms.md, auth, format telefon, șablon după `src/features/telegram-notify/`). Nu scrie cod de feature înainte ca spec-ul să fie citit/aprobat — pune întrebarea în `INTREBARI.md` dacă e nevoie de o decizie a utilizatorului (cost/credit, retry).
