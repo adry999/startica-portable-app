@@ -66,15 +66,10 @@ export function StatusPage({ month }: StatusPageProps) {
         </button>
       </div>
 
-      <p className={styles.notice}>
-        Taxă integrală pentru luna începută; suspendările și modificările de taxă se aplică din luna aleasă. Lunile fără
-        perioadă sau taxă confirmată rămân „De verificat”. Plățile cu dată viitoare nu intră în soldul de azi.
-      </p>
-
       <FilterPills
         groups={[
           {
-            label: 'Grupă',
+            label: 'Grupa',
             value: statusData.groupFilter,
             onChange: statusData.setGroupFilter,
             options: [
@@ -92,6 +87,10 @@ export function StatusPage({ month }: StatusPageProps) {
 
       <Card className={styles.tableCard}>
         <DataTable columns={columns} rows={statusData.rows} rowKey={row => row.id} emptyState={<p>Nu sunt copii.</p>} />
+        <p className={styles.tableFootnote}>
+          Taxă integrală pentru luna începută; suspendările și modificările de taxă se aplică din luna aleasă. Lunile
+          fără perioadă sau taxă confirmată rămân „De verificat”. Plățile cu dată viitoare nu intră în soldul de azi.
+        </p>
       </Card>
     </>
   );
