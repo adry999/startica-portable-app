@@ -33,6 +33,15 @@ function sumEntriesInCurrency(entries, targetCurrency, rates) {
   }
   return sumCents / 100;
 }
+// Intrarea de taxă aplicabilă la o lună dată — ultima cu from <= month, sau
+// null dacă nu există niciuna. Exportată separat de obligation() pentru că
+// webapp are nevoie doar de monedă/sumă (fără calcul de obligație) când
+// decide dacă arată formularul de achitare cu conversie EUR (punctul 8).
+/** @returns {{ from: string, amount: number, currency?: import('#shared/contracts/record-types.mjs').Currency } | null} */
+export function feeEntryFor(child, month) {
+  const fees = [...(child.feeHistory || [])].sort((a, b) => a.from.localeCompare(b.from));
+  return fees.filter(f => f.from <= month).at(-1) ?? null;
+}
 // `index` este opțional: dacă lipsește, se calculează pe loc, ca apelurile
 // izolate (un singur copil, o singură lună) să rămână simple.
 /** @param {Map<string, Map<string, {amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string}[]>> | null} [index] */
@@ -44,9 +53,7 @@ export function obligation(child, month, payments, asOf = today(), index = null,
     .filter(r => r.from <= month);
   const status = history.at(-1)?.status || (!child.statusHistory?.length && child.status === 'Activ' ? 'Activ' : null);
   const inactive = (start && month < start) || (end && month > end) || status === 'Suspendat' || status === 'Retras';
-  const fees = [...(child.feeHistory || [])].sort((a, b) => a.from.localeCompare(b.from));
-  // O taxă curentă fără dată de aplicare nu se aplică niciodată lunilor trecute.
-  const feeEntry = fees.filter(f => f.from <= month).at(-1) ?? null;
+  const feeEntry = feeEntryFor(child, month);
   const fee = feeEntry?.amount ?? null;
   const feeCurrency = feeEntry?.currency ?? 'MDL';
   const paidEntries = index
