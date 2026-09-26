@@ -175,6 +175,7 @@ export function normalizeRecord(type, input) {
     'source',
     'healthNotes',
     'postVisitNotes',
+    'educator',
   ])
     if (record[field] !== undefined) text(record[field], field);
   if (type === 'children') {

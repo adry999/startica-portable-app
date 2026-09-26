@@ -3,7 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
 import { GroupsPage } from './GroupsPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Grupă nouă" ajunge acolo, nu în pagină. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -28,7 +34,10 @@ const fixtureState = {
 function renderPage() {
   return render(
     <ToastProvider>
-      <GroupsPage />
+      <TopbarActionsProvider>
+        <TopbarActionsSlot />
+        <GroupsPage />
+      </TopbarActionsProvider>
     </ToastProvider>,
   );
 }
@@ -84,7 +93,7 @@ describe('GroupsPage', () => {
     expect(screen.queryByText(/^Copii în grupă · 2/)).not.toBeInTheDocument();
   });
 
-  it('creează o grupă nouă din formularul inline', async () => {
+  it('creează o grupă nouă din panoul de antet', async () => {
     await loadedSession();
     renderPage();
 
@@ -103,9 +112,9 @@ describe('GroupsPage', () => {
     });
 
     await userEvent.click(screen.getByRole('button', { name: '+ Grupă nouă' }));
-    await userEvent.type(screen.getByLabelText('Nume grupă nouă'), 'Pinguini');
-    await userEvent.type(screen.getByLabelText('Capacitate grupă nouă'), '6');
-    await userEvent.click(screen.getByRole('button', { name: 'Creează' }));
+    await userEvent.type(screen.getByLabelText('Nume grupă'), 'Pinguini');
+    await userEvent.type(screen.getByLabelText('Capacitate'), '6');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
 
     expect(await screen.findByText('Grupă creată.')).toBeInTheDocument();
   });

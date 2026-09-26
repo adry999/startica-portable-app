@@ -25,17 +25,6 @@
   font-size: 14px;
 }
 
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-10) var(--space-16);
-  font-weight: 700;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
 .btnGhost {
   border: 1.5px solid var(--border);
   background: none;
@@ -45,23 +34,6 @@
   font-weight: 800;
   font-size: 13px;
   white-space: nowrap;
-}
-
-.newGroupInline {
-  display: flex;
-  gap: var(--space-8);
-  padding: var(--space-12);
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-}
-
-.newGroupInline input {
-  flex: 1;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-size: 14px;
 }
 
 .columns {
@@ -74,16 +46,41 @@
   overflow-y: auto;
 }
 
+.columnsBusy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .column {
   position: relative;
-  flex: 0 0 280px;
+  flex: 1 1 calc((100% - 3 * var(--space-16)) / 4);
+  min-width: 220px;
   height: 560px;
+  max-height: 100%;
   border-radius: 22px;
   padding: var(--space-16);
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
   overflow-y: auto;
+}
+
+@media (max-width: 1200px) {
+  .column {
+    flex-basis: calc((100% - 2 * var(--space-16)) / 3);
+  }
+}
+
+@media (max-width: 900px) {
+  .column {
+    flex-basis: calc((100% - 1 * var(--space-16)) / 2);
+  }
+}
+
+@media (max-width: 600px) {
+  .column {
+    flex-basis: 100%;
+  }
 }
 
 .columnDragOver {
@@ -141,6 +138,24 @@
   justify-content: center;
 }
 
+.columnMoveBtn {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: none;
+  border-radius: 6px;
+  background: var(--white);
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.columnMoveBtn:disabled {
+  opacity: 0.4;
+}
+
 .columnBar {
   height: 6px;
   border-radius: var(--radius-pill);
@@ -152,6 +167,16 @@
   display: block;
   height: 100%;
   background: var(--orange);
+}
+
+.overCapacityBadge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--pink-ink);
+  background: var(--white);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-8);
 }
 
 .columnEducator {
@@ -222,8 +247,9 @@
 }
 
 .collapsedColumn {
-  flex: 0 0 140px;
+  flex: 0 0 72px;
   height: 560px;
+  max-height: 100%;
   border: none;
   border-radius: 22px;
   padding: var(--space-14) 0;

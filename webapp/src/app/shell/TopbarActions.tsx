@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
-/** Contexte separate: setter-ul e stabil (nu schimbă referință), valoarea variază — un ecran
- * care doar apelează useTopbarActions nu trebuie să re-randeze la fiecare schimbare de valoare. */
+/** Contexte separate: setter-ul e stabil (nu schimbă referință) — un ecran care doar apelează
+ * useTopbarActions nu re-randează pe altcineva ce citește doar SetterContext. */
 const SetterContext = createContext<((node: ReactNode) => void) | null>(null);
 const ValueContext = createContext<ReactNode>(null);
 
@@ -20,14 +20,11 @@ export function useTopbarActionsSlot(): ReactNode {
 }
 
 /** Un ecran apelează cu butoanele proprii de antet (ex. „+ Adaugă copil") — se golește la demontare.
- * Nu subscrie apelantul la valoarea curentă (doar Topbar o citește), deci nu re-randează ecranul. */
+ * Reia la fiecare schimbare a nodului (ex. un toggle cu stare vie afișat lângă buton), nu doar la montare. */
 export function useTopbarActions(node: ReactNode) {
   const setActions = useContext(SetterContext);
-  const nodeRef = useRef(node);
-  nodeRef.current = node;
   useEffect(() => {
-    setActions?.(nodeRef.current);
+    setActions?.(node);
     return () => setActions?.(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setActions, node]);
 }

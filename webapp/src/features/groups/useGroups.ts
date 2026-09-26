@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { formatAge } from '#shared/format/date-format.mjs';
 import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -24,6 +24,7 @@ export interface GroupCardView {
   avatarInitials: string[];
   extraMemberCount: number;
   members: GroupMemberView[];
+  blocksDelete: boolean;
 }
 
 export interface UnassignedChild {
@@ -38,15 +39,44 @@ export interface GroupsData {
   groups: GroupCardView[];
   unassignedChildren: UnassignedChild[];
   openGroupId: string | null;
+  busy: boolean;
   toggleGroup: (id: string) => void;
   createGroup: (name: string, capacityRaw: string) => Promise<void>;
   updateGroup: (id: string, name: string, capacityRaw: string, educator: string) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
   assignChild: (groupId: string, childId: string) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
+  reorderGroups: (draggedId: string, targetId: string) => void;
 }
 
-function initials(name: string): string {
+const GROUP_ORDER_KEY = 'groups.order';
+
+function readGroupOrder(): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) ?? '[]');
+    return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeGroupOrder(order: string[]) {
+  try {
+    localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(order));
+  } catch {
+    // Stocare indisponibilă — ordinea rămâne doar în memorie pentru sesiunea curentă.
+  }
+}
+
+function orderGroups(groups: Group[], order: string[]): Group[] {
+  const byId = new Map(groups.map(group => [group.id, group]));
+  const ordered = order.map(id => byId.get(id)).filter((group): group is Group => group !== undefined);
+  const known = new Set(ordered.map(group => group.id));
+  const rest = groups.filter(group => !known.has(group.id)).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  return [...ordered, ...rest];
+}
+
+export function initials(name: string): string {
   return name
     .split(' ')
     .filter(Boolean)
@@ -60,7 +90,7 @@ function parseCapacity(capacityRaw: string): number | null {
   return trimmed ? Number(trimmed) : null;
 }
 
-function buildGroupCard(group: Group, activeChildren: Child[]): GroupCardView {
+function buildGroupCard(group: Group, activeChildren: Child[], allChildren: Child[]): GroupCardView {
   const members = activeChildren
     .filter(child => child.groupId === group.id)
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'));
@@ -78,6 +108,7 @@ function buildGroupCard(group: Group, activeChildren: Child[]): GroupCardView {
       : birthDates[0] === birthDates.at(-1)
         ? formatAge(birthDates[0])
         : `${formatAge(birthDates.at(-1) as string)} – ${formatAge(birthDates[0])}`;
+  const blocksDelete = allChildren.some(child => child.groupId === group.id);
 
   return {
     id: group.id,
@@ -92,20 +123,31 @@ function buildGroupCard(group: Group, activeChildren: Child[]): GroupCardView {
     avatarInitials: members.slice(0, 5).map(child => initials(child.name)),
     extraMemberCount: Math.max(0, memberCount - 5),
     members: members.map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) })),
+    blocksDelete,
   };
 }
 
-/**
- * Echivalentul useDashboard pentru ecranul Grupe: date derivate din sesiune +
- * mutațiile de orchestrare (create/update/delete/assign/remove), la fel cum
- * groups.controller.mjs le orchestra în vanilla. openGroupId trăiește aici,
- * nu în fiecare card, ca un singur editor să fie deschis o dată.
- */
+/** openGroupId trăiește aici, nu în fiecare card, ca un singur editor să fie deschis o dată. */
 export function useGroups(): GroupsData {
   const session = useAppSession();
-  const { state, ready, loading, saveError } = session.state;
+  const { state, ready, loading, saveError, busy: mutationInFlight, pending } = session.state;
   const records = state as RecordsSnapshot;
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
+  const [groupOrder, setGroupOrder] = useState<string[]>(readGroupOrder);
+  const busy = mutationInFlight || Boolean(pending);
+
+  function reorderGroups(draggedId: string, targetId: string) {
+    if (draggedId === targetId) return;
+    const currentOrder = orderGroups(records.groups, groupOrder).map(group => group.id);
+    const fromIndex = currentOrder.indexOf(draggedId);
+    const toIndex = currentOrder.indexOf(targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const nextOrder = [...currentOrder];
+    nextOrder.splice(fromIndex, 1);
+    nextOrder.splice(toIndex, 0, draggedId);
+    setGroupOrder(nextOrder);
+    writeGroupOrder(nextOrder);
+  }
 
   function toggleGroup(id: string) {
     setOpenGroupId(current => (current === id ? null : id));
@@ -124,7 +166,8 @@ export function useGroups(): GroupsData {
   async function updateGroup(id: string, name: string, capacityRaw: string, educator: string) {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Numele grupei nu poate fi gol.');
-    const group = records.groups.find(g => g.id === id);
+    const group = records.groups.find(candidate => candidate.id === id);
+    if (!group) throw new Error('Grupa nu mai există.');
     await session.mutate('/api/record', {
       type: 'groups',
       mode: 'update',
@@ -138,14 +181,29 @@ export function useGroups(): GroupsData {
   }
 
   async function assignChild(groupId: string, childId: string) {
-    const child = records.children.find(c => c.id === childId);
+    const child = records.children.find(candidate => candidate.id === childId);
+    if (!child) throw new Error('Copilul nu mai există.');
     await session.mutate('/api/record', { type: 'children', mode: 'update', record: { ...child, groupId } });
   }
 
   async function removeChild(childId: string) {
-    const child = records.children.find(c => c.id === childId);
+    const child = records.children.find(candidate => candidate.id === childId);
+    if (!child) throw new Error('Copilul nu mai există.');
     await session.mutate('/api/record', { type: 'children', mode: 'update', record: { ...child, groupId: null } });
   }
+
+  const { groups, unassignedChildren } = useMemo(() => {
+    if (!ready) return { groups: [] as GroupCardView[], unassignedChildren: [] as UnassignedChild[] };
+    const activeChildren = records.children.filter(child => !child.archived);
+    const groups = orderGroups(records.groups, groupOrder).map(group =>
+      buildGroupCard(group, activeChildren, records.children),
+    );
+    const unassignedChildren = activeChildren
+      .filter(child => !child.groupId)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+      .map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) }));
+    return { groups, unassignedChildren };
+  }, [ready, records.children, records.groups, groupOrder]);
 
   if (!ready) {
     return {
@@ -154,23 +212,16 @@ export function useGroups(): GroupsData {
       groups: [],
       unassignedChildren: [],
       openGroupId,
+      busy,
       toggleGroup,
       createGroup,
       updateGroup,
       deleteGroup,
       assignChild,
       removeChild,
+      reorderGroups,
     };
   }
-
-  const activeChildren = records.children.filter(child => !child.archived);
-  const groups = [...records.groups]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(group => buildGroupCard(group, activeChildren));
-  const unassignedChildren = activeChildren
-    .filter(child => !child.groupId)
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) }));
 
   return {
     status: 'ready',
@@ -178,11 +229,13 @@ export function useGroups(): GroupsData {
     groups,
     unassignedChildren,
     openGroupId,
+    busy,
     toggleGroup,
     createGroup,
     updateGroup,
     deleteGroup,
     assignChild,
     removeChild,
+    reorderGroups,
   };
 }

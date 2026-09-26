@@ -2,47 +2,10 @@
   color: var(--subtle);
 }
 
-.viewToggleRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: var(--space-16);
-}
-
-.cardsHeaderRow {
+.headerActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-12);
-  margin-bottom: var(--space-16);
-}
-
-.newGroupInline {
-  display: flex;
-  gap: var(--space-8);
-  padding: var(--space-12);
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-16);
-}
-
-.newGroupInline input {
-  flex: 1;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-size: 14px;
-}
-
-.btnGhost {
-  border: 1.5px solid var(--border);
-  background: none;
-  color: var(--slate);
-  border-radius: var(--radius-pill);
-  padding: 6px var(--space-12);
-  font-weight: 800;
-  font-size: 13px;
-  white-space: nowrap;
 }
 
 .editorSlot {
@@ -144,7 +107,7 @@
   margin-left: var(--space-4);
 }
 
-.primaryButton {
+.btnPrimary {
   border: none;
   border-radius: var(--radius-pill);
   background: var(--orange);
@@ -155,7 +118,7 @@
   box-shadow: var(--shadow-button-primary);
 }
 
-.primaryButton:disabled {
+.btnPrimary:disabled {
   opacity: 0.5;
   box-shadow: none;
 }

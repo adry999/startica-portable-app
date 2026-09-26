@@ -36,6 +36,7 @@ async function loadedSession() {
 
 describe('useGroups', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string) => {
@@ -50,6 +51,7 @@ describe('useGroups', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
   });
 
   it('e loading înainte ca sesiunea să fie gata', () => {
@@ -171,5 +173,36 @@ describe('useGroups', () => {
 
     await act(() => result.current.deleteGroup('g1'));
     expect(result.current.openGroupId).toBeNull();
+  });
+
+  it('reorderGroups mută grupa trasă pe poziția țintei și persistă ordinea', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useGroups());
+
+    act(() => result.current.reorderGroups('g2', 'g1'));
+
+    expect(result.current.groups.map(g => g.name)).toEqual(['Ursuleți', 'Fluturași', 'Steluțe']);
+    expect(JSON.parse(localStorage.getItem('groups.order') ?? 'null')).toEqual(['g2', 'g1', 'g3']);
+  });
+
+  it('ignoră id-urile șterse/inexistente salvate în localStorage și păstrează ordinea alfabetică pentru cele nesortate', async () => {
+    localStorage.setItem('groups.order', JSON.stringify(['g2', 'gX-deleted', 'g1']));
+    await loadedSession();
+    const { result } = renderHook(() => useGroups());
+
+    expect(result.current.groups.map(g => g.name)).toEqual(['Ursuleți', 'Fluturași', 'Steluțe']);
+  });
+
+  it('reorderGroups nu face nimic când id-urile sunt identice sau țin de o coloană inexistentă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useGroups());
+
+    act(() => result.current.reorderGroups('g1', 'g1'));
+    expect(result.current.groups.map(g => g.name)).toEqual(['Fluturași', 'Steluțe', 'Ursuleți']);
+    expect(localStorage.getItem('groups.order')).toBeNull();
+
+    act(() => result.current.reorderGroups('g1', 'none'));
+    expect(result.current.groups.map(g => g.name)).toEqual(['Fluturași', 'Steluțe', 'Ursuleți']);
+    expect(localStorage.getItem('groups.order')).toBeNull();
   });
 });

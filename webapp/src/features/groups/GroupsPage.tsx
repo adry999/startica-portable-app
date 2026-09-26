@@ -1,8 +1,10 @@
 import { Fragment, useState, type FormEvent } from 'react';
 import { Card, SearchSelect, SegmentedControl, useToast, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
+import { GroupFormDrawer } from './GroupFormDrawer';
 import styles from './GroupsPage.module.css';
 
 const TILE_TONES: CardTone[] = ['orange', 'mint', 'yellow'];
@@ -20,7 +22,16 @@ export function GroupsPage() {
   const data = useGroups();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
-  const [newGroupOpen, setNewGroupOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+
+  useTopbarActions(
+    <div className={styles.headerActions}>
+      <SegmentedControl ariaLabel="Vizualizare Grupe" options={VIEW_OPTIONS} value={viewMode} onChange={setViewMode} />
+      <button type="button" className={styles.btnPrimary} onClick={() => setFormOpen(true)}>
+        + Grupă nouă
+      </button>
+    </div>,
+  );
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
@@ -28,105 +39,77 @@ export function GroupsPage() {
 
   const openGroup = data.groups.find(group => group.id === data.openGroupId) ?? null;
 
-  if (viewMode === 'board') {
-    return (
-      <>
-        <div className={styles.viewToggleRow}>
-          <SegmentedControl
-            ariaLabel="Vizualizare Grupe"
-            options={VIEW_OPTIONS}
-            value={viewMode}
-            onChange={setViewMode}
-          />
-        </div>
-        <GroupsBoard data={data} />
-      </>
-    );
+  async function submitNewGroup(name: string, capacityRaw: string) {
+    try {
+      await data.createGroup(name, capacityRaw);
+      toast.show({ message: 'Grupă creată.' });
+      setFormOpen(false);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   return (
     <>
-      <div className={styles.cardsHeaderRow}>
-        <button type="button" className={styles.primaryButton} onClick={() => setNewGroupOpen(open => !open)}>
-          + Grupă nouă
-        </button>
-        <SegmentedControl
-          ariaLabel="Vizualizare Grupe"
-          options={VIEW_OPTIONS}
-          value={viewMode}
-          onChange={setViewMode}
-        />
-      </div>
+      <GroupFormDrawer open={formOpen} onSubmit={submitNewGroup} onClose={() => setFormOpen(false)} />
 
-      {newGroupOpen && (
-        <NewGroupInline
-          onCreate={async (name, capacityRaw) => {
-            try {
-              await data.createGroup(name, capacityRaw);
-              toast.show({ message: 'Grupă creată.' });
-              setNewGroupOpen(false);
-            } catch (error) {
-              toast.show({ message: (error as Error).message });
-            }
-          }}
-          onCancel={() => setNewGroupOpen(false)}
-        />
+      {viewMode === 'board' ? (
+        <GroupsBoard data={data} />
+      ) : (
+        <div className={styles.grid}>
+          {data.groups.map((group, index) => (
+            <Fragment key={group.id}>
+              <GroupTile
+                group={group}
+                tone={tileTone(index, group.overCapacity)}
+                isOpen={group.id === data.openGroupId}
+                onToggle={() => data.toggleGroup(group.id)}
+              />
+              {openGroup && openGroup.id === group.id && (
+                <div className={styles.editorSlot}>
+                  <GroupEditor
+                    group={openGroup}
+                    unassignedChildren={data.unassignedChildren}
+                    onSave={async (name, capacityRaw, educator) => {
+                      try {
+                        await data.updateGroup(openGroup.id, name, capacityRaw, educator);
+                        toast.show({ message: 'Grupă actualizată.' });
+                      } catch (error) {
+                        toast.show({ message: (error as Error).message });
+                      }
+                    }}
+                    onDelete={async () => {
+                      if (!window.confirm(`Ștergi grupa „${openGroup.name}”?`)) return;
+                      try {
+                        await data.deleteGroup(openGroup.id);
+                        toast.show({ message: 'Grupă ștearsă.' });
+                      } catch (error) {
+                        toast.show({ message: (error as Error).message });
+                      }
+                    }}
+                    onAssign={async childId => {
+                      try {
+                        await data.assignChild(openGroup.id, childId);
+                        toast.show({ message: 'Copil atribuit grupei.' });
+                      } catch (error) {
+                        toast.show({ message: (error as Error).message });
+                      }
+                    }}
+                    onRemove={async childId => {
+                      try {
+                        await data.removeChild(childId);
+                        toast.show({ message: 'Copil scos din grupă.' });
+                      } catch (error) {
+                        toast.show({ message: (error as Error).message });
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </Fragment>
+          ))}
+        </div>
       )}
-
-      <div className={styles.grid}>
-        {data.groups.map((group, index) => (
-          <Fragment key={group.id}>
-            <GroupTile
-              group={group}
-              tone={tileTone(index, group.overCapacity)}
-              isOpen={group.id === data.openGroupId}
-              onToggle={() => data.toggleGroup(group.id)}
-            />
-            {openGroup && openGroup.id === group.id && (
-              <div className={styles.editorSlot}>
-                <GroupEditor
-                  group={openGroup}
-                  unassignedChildren={data.unassignedChildren}
-                  onSave={async (name, capacityRaw, educator) => {
-                    try {
-                      await data.updateGroup(openGroup.id, name, capacityRaw, educator);
-                      toast.show({ message: 'Grupă actualizată.' });
-                    } catch (error) {
-                      toast.show({ message: (error as Error).message });
-                    }
-                  }}
-                  onDelete={async () => {
-                    if (!window.confirm(`Ștergi grupa „${openGroup.name}”? Copiii rămân, doar grupa este ștearsă.`))
-                      return;
-                    try {
-                      await data.deleteGroup(openGroup.id);
-                      toast.show({ message: 'Grupă ștearsă.' });
-                    } catch (error) {
-                      toast.show({ message: (error as Error).message });
-                    }
-                  }}
-                  onAssign={async childId => {
-                    try {
-                      await data.assignChild(openGroup.id, childId);
-                      toast.show({ message: 'Copil atribuit grupei.' });
-                    } catch (error) {
-                      toast.show({ message: (error as Error).message });
-                    }
-                  }}
-                  onRemove={async childId => {
-                    try {
-                      await data.removeChild(childId);
-                      toast.show({ message: 'Copil scos din grupă.' });
-                    } catch (error) {
-                      toast.show({ message: (error as Error).message });
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </Fragment>
-        ))}
-      </div>
     </>
   );
 }
@@ -163,49 +146,6 @@ function GroupTile({ group, tone, isOpen, onToggle }: GroupTileProps) {
         </div>
       )}
     </Card>
-  );
-}
-
-function NewGroupInline({
-  onCreate,
-  onCancel,
-}: {
-  onCreate: (name: string, capacityRaw: string) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [name, setName] = useState('');
-  const [capacityRaw, setCapacityRaw] = useState('');
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    await onCreate(name, capacityRaw);
-  }
-
-  return (
-    <form className={styles.newGroupInline} onSubmit={handleSubmit}>
-      <input
-        value={name}
-        onChange={event => setName(event.target.value)}
-        placeholder="Nume grupă"
-        aria-label="Nume grupă nouă"
-        autoFocus
-      />
-      <input
-        value={capacityRaw}
-        onChange={event => setCapacityRaw(event.target.value)}
-        type="number"
-        min={1}
-        max={1000}
-        placeholder="Locuri"
-        aria-label="Capacitate grupă nouă"
-      />
-      <button type="submit" className={styles.primaryButton}>
-        Creează
-      </button>
-      <button type="button" className={styles.btnGhost} onClick={onCancel}>
-        Anulează
-      </button>
-    </form>
   );
 }
 
@@ -257,7 +197,7 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
             aria-label="Capacitate"
           />
         </label>
-        <button type="submit" className={styles.primaryButton}>
+        <button type="submit" className={styles.btnPrimary}>
           Salvează
         </button>
       </form>
@@ -300,13 +240,19 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
           ariaLabel="Copil fără grupă"
           disabled={unassignedChildren.length === 0}
         />
-        <button type="button" className={styles.primaryButton} disabled={!selectedChildId} onClick={handleAssign}>
+        <button type="button" className={styles.btnPrimary} disabled={!selectedChildId} onClick={handleAssign}>
           + Adaugă
         </button>
       </div>
 
       <div className={styles.deleteRow}>
-        <button type="button" className={styles.deleteButton} onClick={onDelete}>
+        <button
+          type="button"
+          className={styles.deleteButton}
+          onClick={onDelete}
+          disabled={group.blocksDelete}
+          title={group.blocksDelete ? 'Mută mai întâi copiii din grupă (inclusiv cei arhivați) pentru a o putea șterge.' : undefined}
+        >
           Șterge grupa {group.name}
         </button>
       </div>
