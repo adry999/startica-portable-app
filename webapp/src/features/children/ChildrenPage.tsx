@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge, Card, DataTable, SearchSelect, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
@@ -65,6 +66,7 @@ function ChildrenListView({
   const data = useChildren(month);
   const session = useAppSession();
   const toast = useToast();
+  const navigate = useNavigate();
 
   const [query, setQuery] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
@@ -76,6 +78,9 @@ function ChildrenListView({
 
   useTopbarActions(
     <div className={styles.headerActions}>
+      <button type="button" className={styles.btnGhost} onClick={() => navigate('/copii/zile-de-nastere')}>
+        Zile de naștere
+      </button>
       <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
         + Adaugă copil
       </button>
@@ -570,7 +575,11 @@ function ChildProfileView({
             <p className={styles.sectionTitle}>Părinți</p>
             <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
             {(child.parent2 || child.phone2) && (
-              <ParentRow name={child.parent2 || ''} phone={child.phone2 || ''} onAddPhone={() => setEditDrawerOpen(true)} />
+              <ParentRow
+                name={child.parent2 || ''}
+                phone={child.phone2 || ''}
+                onAddPhone={() => setEditDrawerOpen(true)}
+              />
             )}
           </Card>
 

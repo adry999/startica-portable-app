@@ -32,11 +32,10 @@ function isBirthdayOn(birthDate, date) {
 // din naștere, nu după an, ca ziua să apară în orice an calendaristic o arăți.
 /**
  * @param {string} todayStr
- * @param {string} [monthKey] format YYYY-MM, implicit luna lui `todayStr` — ca un consumator să poată naviga alte luni.
  * @returns {BirthdayCalendarDay[][]}
  */
-export function buildBirthdayCalendar(children, todayStr = today(), monthKey = todayStr.slice(0, 7)) {
-  const weeks = buildMonthGrid(monthKey, todayStr);
+export function buildBirthdayCalendar(children, todayStr = today()) {
+  const weeks = buildMonthGrid(todayStr.slice(0, 7), todayStr);
 
   const monthDay = d => `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const byMonthDay = new Map();

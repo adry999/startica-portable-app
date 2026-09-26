@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -97,12 +98,14 @@ function ChildrenHarness() {
 
 function renderPage() {
   return render(
-    <ToastProvider>
-      <TopbarActionsProvider>
-        <TopbarActionsSlot />
-        <ChildrenHarness />
-      </TopbarActionsProvider>
-    </ToastProvider>,
+    <MemoryRouter initialEntries={['/']}>
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <ChildrenHarness />
+        </TopbarActionsProvider>
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 

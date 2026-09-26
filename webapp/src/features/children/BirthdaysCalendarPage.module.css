@@ -160,12 +160,20 @@
 }
 
 .calendarChip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
   font-size: 10px;
   font-weight: 700;
   border-radius: var(--radius-xs);
   padding: 1px var(--space-4);
-  background: var(--yellow-soft);
-  color: var(--slate);
+  box-sizing: border-box;
+}
+
+.calendarChip b {
+  font-weight: 800;
 }
 
 .monthListCard {
@@ -193,9 +201,12 @@
   display: flex;
   align-items: center;
   gap: var(--space-10);
-  background: var(--yellow-soft);
-  border-radius: var(--radius-md-lg);
   padding: var(--space-8) var(--space-10);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.monthListRow:last-child {
+  border-bottom: none;
 }
 
 .monthListRow > div {
@@ -210,15 +221,33 @@
 
 .monthListDay {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--white);
+  border-radius: var(--radius-md);
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 13px;
+}
+
+.toneOrange {
+  background: var(--orange-soft);
   color: var(--orange-ink);
+}
+
+.toneMint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.toneYellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.tonePink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
 }

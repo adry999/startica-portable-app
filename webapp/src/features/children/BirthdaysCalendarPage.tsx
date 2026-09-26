@@ -1,9 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@shared/ui';
-import { useBirthdaysCalendar } from './useBirthdaysCalendar';
+import { useBirthdaysCalendar, type GroupTone } from './useBirthdaysCalendar';
 import styles from './BirthdaysCalendarPage.module.css';
 
 const WEEKDAY_LABELS = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
+
+const TONE_CLASS: Record<GroupTone, string> = {
+  orange: styles.toneOrange,
+  mint: styles.toneMint,
+  yellow: styles.toneYellow,
+  pink: styles.tonePink,
+};
 
 function monthLabel(monthKey: string): string {
   const [year, month] = monthKey.split('-');
@@ -14,13 +21,24 @@ function monthLabel(monthKey: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+/** „Prenume N." — format compact pentru chip-urile din grilă (numele complet apare în lista „Toată luna"). */
+function compactName(name: string): string {
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length < 2) return name;
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0)}.`;
+}
+
+function ageLabel(turningAge: number): string {
+  return `${turningAge} ${turningAge === 1 ? 'an' : 'ani'}`;
+}
+
 export interface BirthdaysCalendarPageProps {
   /** Presetează luna afișată — venit din ?luna= (link „Vezi calendarul" de pe Dashboard). */
   initialMonth?: string;
 }
 
 /** Pagina „Zile de naștere" (2a din Dashboard.dc.html) — rută imbricată sub Copii (/copii/zile-de-nastere),
- * deschisă din cardul compact al Dashboard-ului, dar aparține modulului Copii, nu Dashboard-ului. */
+ * deschisă din cardul compact al Dashboard-ului sau din butonul de pe Copii, dar aparține modulului Copii. */
 export function BirthdaysCalendarPage({ initialMonth }: BirthdaysCalendarPageProps) {
   const data = useBirthdaysCalendar(initialMonth);
   const navigate = useNavigate();
@@ -109,9 +127,10 @@ export function BirthdaysCalendarPage({ initialMonth }: BirthdaysCalendarPagePro
                 ].join(' ')}
               >
                 <strong>{day.day}</strong>
-                {day.names.map(entry => (
-                  <span key={entry.name} className={styles.calendarChip}>
-                    {entry.name} · {entry.turningAge} {entry.turningAge === 1 ? 'an' : 'ani'}
+                {day.entries.map(entry => (
+                  <span key={entry.childId} className={`${styles.calendarChip} ${TONE_CLASS[entry.tone]}`}>
+                    <span>{compactName(entry.name)}</span>
+                    <b>{entry.turningAge}</b>
                   </span>
                 ))}
               </div>
@@ -124,12 +143,12 @@ export function BirthdaysCalendarPage({ initialMonth }: BirthdaysCalendarPagePro
           {data.monthList.length === 0 && <p className={styles.notice}>Nicio zi de naștere în luna aceasta.</p>}
           <div className={styles.monthList}>
             {data.monthList.map(entry => (
-              <div key={`${entry.date}-${entry.name}`} className={styles.monthListRow}>
-                <span className={styles.monthListDay}>{entry.day}</span>
+              <div key={entry.childId} className={styles.monthListRow}>
+                <span className={`${styles.monthListDay} ${TONE_CLASS[entry.tone]}`}>{entry.day}</span>
                 <div>
                   <strong>{entry.name}</strong>
                   <small>
-                    împlinește {entry.turningAge} {entry.turningAge === 1 ? 'an' : 'ani'}
+                    Împlinește {ageLabel(entry.turningAge)} · {entry.groupName}
                   </small>
                 </div>
               </div>

@@ -11,6 +11,7 @@ function jsonResponse(body: unknown) {
 
 // Ziua de naștere trebuie să cadă în luna curentă (implicit, fără initialMonth) — un an fix
 // ar deveni flaky pe măsură ce trece timpul, ca la useVisits/useDashboard.
+const THIS_YEAR = new Date().getFullYear();
 const THIS_MONTH = (() => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -85,6 +86,9 @@ describe('BirthdaysCalendarPage', () => {
     expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
     expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
     expect(screen.getByText('2 zile de naștere')).toBeInTheDocument();
+    // Rândul din „Toată luna" arată și grupa, nu doar vârsta.
+    expect(screen.getByText(`Împlinește ${THIS_YEAR - 2019} ani · Mars`)).toBeInTheDocument();
+    expect(screen.getByText(`Împlinește ${THIS_YEAR - 2020} ani · Soare`)).toBeInTheDocument();
   });
 
   it('filtrează lista la grupa selectată', async () => {

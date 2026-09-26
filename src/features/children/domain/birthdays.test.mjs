@@ -34,15 +34,6 @@ test('buildBirthdayCalendar marchează ziua curentă și copiii cu ziua de nașt
   assert.deepEqual(c1Cell.names, [{ name: 'c1', turningAge: 2026 - 2019 }]);
 });
 
-test('buildBirthdayCalendar arată o altă lună decât cea curentă, când primește monthKey', () => {
-  const children = [child('c1', '2019-10-20')];
-  const weeks = buildBirthdayCalendar(children, '2026-09-10', '2026-10');
-  assert.equal(weeks[0][0].date, '2026-09-28'); // octombrie 2026 începe joi, umplutura vine din septembrie
-  const c1Cell = cellFor(weeks, '2026-10-20');
-  assert.deepEqual(c1Cell.names, [{ name: 'c1', turningAge: 2026 - 2019 }]);
-  assert.equal(flatten(weeks).some(cell => cell.isToday), false); // azi (10 sept.) nu e în grila lunii octombrie
-});
-
 test('buildBirthdayCalendar marchează săptămâna curentă, chiar dacă traversează granița de lună', () => {
   // 2026-09-10 e joi; săptămâna e 2026-09-07 (luni) .. 2026-09-13 (duminică).
   const weeks = buildBirthdayCalendar([], '2026-09-10');
