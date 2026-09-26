@@ -128,6 +128,13 @@
   font-size: 20px;
 }
 
+.liveClock {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -375,20 +382,34 @@
 
 .upcomingRow {
   display: flex;
-  align-items: center;
-  gap: var(--space-10);
+  flex-direction: column;
+  gap: 2px;
   border: none;
+  border-bottom: 1px solid var(--row-divider);
   background: none;
-  padding: var(--space-4) 0;
-  font-size: 13px;
-  font-weight: 700;
+  padding: var(--space-8) 0;
   text-align: left;
 }
 
-.upcomingDate {
-  flex: none;
-  color: var(--muted);
+.upcomingRow:last-child {
+  border-bottom: none;
+}
+
+.upcomingWhen {
+  font-family: var(--font-heading);
   font-weight: 800;
+  font-size: 13px;
+  color: var(--orange-ink);
+}
+
+.upcomingName {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.upcomingMeta {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .tableCard {
@@ -398,13 +419,12 @@
 
 .tableTitle {
   margin: 0;
-  padding: var(--space-16) var(--space-20) 0;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 16px;
+  font-size: 18px;
 }
 
-.toolbar {
+.tableHeadRow {
   display: flex;
   align-items: center;
   gap: var(--space-12);
@@ -412,34 +432,43 @@
   flex-wrap: wrap;
 }
 
-.search {
+.searchWrap {
+  position: relative;
   flex: 1;
   min-width: 180px;
-  background: var(--cream);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
-}
-
-.select {
-  background: var(--white);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--slate);
-}
-
-.checkboxField {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-12);
+  color: var(--subtle);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--cream);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-12) var(--space-8) 30px;
+  font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
+}
+
+.filterSelect {
+  flex: none;
+  width: 170px;
+}
+
+.tableHint {
+  margin: 0;
+  padding: var(--space-8) var(--space-20) var(--space-16);
+  font-size: 12px;
+  color: var(--subtle);
 }
 
 .rowActions {

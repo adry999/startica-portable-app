@@ -134,6 +134,8 @@ describe('VisitsPage', () => {
 
     await user.type(screen.getByLabelText('Nume copil'), 'Radu Ionescu');
     await user.type(screen.getByLabelText('Părinte 1'), 'Vasile Ionescu');
+    await user.type(screen.getByLabelText('Telefon părinte 1'), '0722000002');
+    await user.type(screen.getByLabelText('Observații'), 'Vine cu bunica.');
     await user.click(screen.getByRole('button', { name: 'Salvează' }));
 
     expect(await screen.findByText('Vizită adăugată.')).toBeInTheDocument();
@@ -150,8 +152,8 @@ describe('VisitsPage', () => {
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
     await user.click(within(row).getByRole('button', { name: 'Efectuată' }));
 
-    // După ce sesiunea preia statul actualizat de la server, singurul buton rapid rămas e „Renunțat".
-    expect(await within(row).findByRole('button', { name: 'Renunțat' })).toBeInTheDocument();
+    // După ce sesiunea preia statul actualizat de la server, singurul buton rapid rămas e „A renunțat".
+    expect(await within(row).findByRole('button', { name: 'A renunțat' })).toBeInTheDocument();
     expect(within(row).queryByRole('button', { name: 'Neprezentată' })).not.toBeInTheDocument();
   });
 
@@ -184,14 +186,15 @@ describe('VisitsPage', () => {
     expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
   });
 
-  it('bifarea „Arhivate" și „Toate lunile" nu aruncă erori', async () => {
+  it('selectarea „Arhivate" și „Toate lunile" nu aruncă erori', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     renderPage();
     const user = userEvent.setup();
-    await user.click(screen.getByLabelText('Arhivate'));
-    await user.click(screen.getByLabelText('Toate lunile'));
+    await user.click(screen.getByRole('radio', { name: /Arhivate/ }));
+    await user.click(screen.getByRole('button', { name: 'Filtru perioadă' }));
+    await user.click(screen.getByText('Toate lunile'));
 
     const table = screen.getByRole('table');
     expect(within(table).getByText('Andrei Popescu')).toBeInTheDocument();

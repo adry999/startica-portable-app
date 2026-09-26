@@ -1,5 +1,14 @@
-import { useState } from 'react';
-import { Badge, Card, DataTable, SearchSelect, useToast, type BadgeTone, type DataTableColumn } from '@shared/ui';
+import { useEffect, useState } from 'react';
+import {
+  Badge,
+  Card,
+  DataTable,
+  SearchSelect,
+  SegmentedControl,
+  useToast,
+  type BadgeTone,
+  type DataTableColumn,
+} from '@shared/ui';
 import { formatAge, formatDate } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
@@ -16,6 +25,16 @@ const STATUS_TONE: Record<VisitStatus, BadgeTone> = {
   Neprezentată: 'neutral',
   Înscris: 'orange',
   Renunțat: 'pink',
+};
+
+// Eticheta afișată diferă de valoarea din model pentru Înscris/Renunțat (vezi Vizite.dc.html) —
+// modelul rămâne enum-ul de statut, textul afișat urmează formularea din design.
+const STATUS_LABEL: Record<VisitStatus, string> = {
+  Programată: 'Programată',
+  Efectuată: 'Efectuată',
+  Neprezentată: 'Neprezentată',
+  Înscris: 'S-a înscris',
+  Renunțat: 'A renunțat',
 };
 
 // Clasele CSS rămân ASCII — cheile cu diacritice ale statutului nu sunt nume valide de export CSS Modules.
@@ -53,6 +72,25 @@ function dayLabel(dateStr: string): string {
     month: 'long',
   });
   return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+/** Ceas viu — zi + oră curentă, afișat lângă calendar. */
+function LiveClock() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dateLabel = now.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const timeLabel = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return (
+    <span className={styles.liveClock}>
+      {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} · {timeLabel}
+    </span>
+  );
 }
 
 /** Ecranul „Vizite" (2a din Operatiuni.dc.html): calendar + panou de detalii pentru ziua selectată, plus lista completă filtrabilă. */
@@ -135,6 +173,23 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     ? (data.weeks.flat().find(day => day.date === data.selectedDate)?.visits ?? [])
     : [];
 
+  const quickFilter: 'all' | 'scheduled' | 'archived' = data.showArchived
+    ? 'archived'
+    : data.statusFilter === 'Programată'
+      ? 'scheduled'
+      : 'all';
+
+  function setQuickFilter(next: 'all' | 'scheduled' | 'archived') {
+    data.setShowArchived(next === 'archived');
+    data.setStatusFilter(next === 'scheduled' ? 'Programată' : '');
+  }
+
+  const quickFilterCounts = {
+    all: data.records.visits.filter(v => !v.archived).length,
+    scheduled: data.records.visits.filter(v => !v.archived && v.status === 'Programată').length,
+    archived: data.records.visits.filter(v => v.archived).length,
+  };
+
   const upcoming = data.records.visits
     .filter(visit => !visit.archived && visit.status === 'Programată')
     .filter(visit => visit.date.slice(0, 7) === data.month)
@@ -169,12 +224,17 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     {
       key: 'status',
       header: 'Statut',
-      render: row => <Badge tone={STATUS_TONE[row.status]}>{row.status}</Badge>,
+      render: row => <Badge tone={STATUS_TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>,
     },
     {
       key: 'group',
       header: 'Grupa dorită',
       render: row => (row.desiredGroupId ? groupNameOf(row.desiredGroupId, data.groups) : '—'),
+    },
+    {
+      key: 'note',
+      header: 'Notă',
+      render: row => <span className={styles.dim}>{row.notes || '—'}</span>,
     },
     {
       key: 'actions',
@@ -189,7 +249,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               className={styles.linkButton}
               onClick={() => void applyQuickStatus(row, status)}
             >
-              {status}
+              {STATUS_LABEL[status]}
             </button>
           ))}
           {row.status === 'Efectuată' && (
@@ -263,6 +323,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               ›
             </button>
           </div>
+
+          <LiveClock />
 
           <div className={styles.calendarGrid}>
             {WEEKDAY_LABELS.map(label => (
@@ -354,7 +416,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                         className={`${styles.quickStatus} ${styles[STATUS_PILL_CLASS[status]]}`}
                         onClick={() => void applyQuickStatus(visit, status)}
                       >
-                        {status}
+                        {STATUS_LABEL[status]}
                       </button>
                     ))}
                     {visit.status === 'Efectuată' && (
@@ -393,8 +455,22 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                   className={styles.upcomingRow}
                   onClick={() => data.setSelectedDate(visit.date)}
                 >
-                  <span className={styles.upcomingDate}>{formatDate(visit.date)}</span>
-                  <span>{visit.name}</span>
+                  <span className={styles.upcomingWhen}>
+                    {formatDate(visit.date)} · {visit.time}
+                  </span>
+                  <span className={styles.upcomingName}>
+                    {visit.name}
+                    {visit.birthDate && ` · ${formatAge(visit.birthDate)}`}
+                  </span>
+                  <span className={styles.upcomingMeta}>
+                    Părinte: {visit.parent}
+                    {visit.phone && ` · ${visit.phone}`}
+                  </span>
+                  {visit.desiredGroupId && (
+                    <span className={styles.upcomingMeta}>
+                      Grupă dorită: {groupNameOf(visit.desiredGroupId, data.groups)}
+                    </span>
+                  )}
                 </button>
               ))
             )}
@@ -403,15 +479,30 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       </div>
 
       <Card className={styles.tableCard}>
-        <p className={styles.tableTitle}>Toate vizitele</p>
-        <div className={styles.toolbar}>
-          <input
-            className={styles.search}
-            type="search"
-            placeholder="Caută copil sau părinte…"
-            value={data.search}
-            onChange={event => data.setSearch(event.target.value)}
-            aria-label="Caută vizită"
+        <div className={styles.tableHeadRow}>
+          <p className={styles.tableTitle}>Toate vizitele</p>
+          <span className={styles.searchWrap}>
+            <span className={styles.searchIcon} aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              className={styles.search}
+              type="search"
+              placeholder="Caută copil, părinte sau telefon…"
+              value={data.search}
+              onChange={event => data.setSearch(event.target.value)}
+              aria-label="Caută vizită"
+            />
+          </span>
+          <SegmentedControl
+            ariaLabel="Filtru rapid"
+            value={quickFilter}
+            onChange={setQuickFilter}
+            options={[
+              { value: 'all', label: `Toate · ${quickFilterCounts.all}` },
+              { value: 'scheduled', label: `Programate · ${quickFilterCounts.scheduled}` },
+              { value: 'archived', label: `Arhivate · ${quickFilterCounts.archived}` },
+            ]}
           />
           <SearchSelect
             className={styles.filterSelect}
@@ -421,26 +512,20 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             options={[
               { value: '', label: 'Toate statuturile' },
               ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(
-                status => ({ value: status, label: status }),
+                status => ({ value: status, label: STATUS_LABEL[status] }),
               ),
             ]}
           />
-          <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={data.allMonths}
-              onChange={event => data.setAllMonths(event.target.checked)}
-            />
-            Toate lunile
-          </label>
-          <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={data.showArchived}
-              onChange={event => data.setShowArchived(event.target.checked)}
-            />
-            Arhivate
-          </label>
+          <SearchSelect
+            className={styles.filterSelect}
+            ariaLabel="Filtru perioadă"
+            value={data.allMonths ? 'all' : 'month'}
+            onChange={value => data.setAllMonths(value === 'all')}
+            options={[
+              { value: 'month', label: 'Luna curentă' },
+              { value: 'all', label: 'Toate lunile' },
+            ]}
+          />
           {data.selectedDate && (
             <button type="button" className={styles.btnGhost} onClick={() => data.setSelectedDate(null)}>
               {formatDate(data.selectedDate)} ×
@@ -453,15 +538,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           columns={columns}
           rows={data.rows}
           rowKey={row => row.id}
+          onRowClick={row => data.setSelectedDate(row.date)}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
         />
+        <p className={styles.tableHint}>Click pe rând deschide vizita în calendar.</p>
       </Card>
 
       <VisitFormDrawer
-        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        key={formTarget === 'new' ? `new-${data.selectedDate ?? ''}` : formTarget === null ? 'closed' : formTarget.id}
         target={formTarget}
         groups={data.groups}
         allowedNextStatuses={data.allowedNextStatuses}
+        defaultDate={data.selectedDate ?? undefined}
         onSubmit={submitVisitForm}
         onClose={() => setFormTarget(null)}
       />
