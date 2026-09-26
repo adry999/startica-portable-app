@@ -1,22 +1,27 @@
 # Întrebări / decizii blocate
 
-Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. Fiecare e scoping-ul minim ales pentru a nu bloca restul cozii — rezolvarea completă rămâne aici pentru o sesiune viitoare.
+Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
 
-## Achitări — „Tipărește chitanța” (punctul 5)
-Spec `docs/design/screens/05-achitari.md` cere un buton „Tipărește chitanța” în `RowMenu`, cu rută `/achitari/:id/confirmare`. Ecranul de tipărire (`docs/design/screens/15-tiparire.md`) nu e construit încă în `webapp/`. **Decis 2026-09-26: se sare peste acum**, restul punctului 5 se face fără el. De reluat când se face ecranul 15.
+## ✅ Achitări — „Tipărește chitanța” (punctul 5) — confirmat amânat
+Rămâne amânat, se reia împreună cu ecranul 16b (`screens/15-tiparire.md`). Nimic de schimbat acum.
 
-## Cheltuieli — filtrul Metodă (punctul 6)
-`Expense` (`src/shared/contracts/record-types.d.mts`) nu are câmp `method` — spec-ul 06 cere `FilterPills` Metodă (Cash/Card/Transfer), dar nu există pe ce să filtreze. **Decis 2026-09-26: se sare peste acum**, doar Categorie. Adăugarea câmpului `method` la `Expense` (schemă + formular + normalizare) e un pas separat, cu cheltuielile vechi rămânând fără metodă (implicit „Toate”/necunoscut).
+## ✅ Cheltuieli — filtrul Metodă (punctul 6b) — rezolvat, de implementat
+Se adaugă `method?: 'cash' | 'card' | 'transfer'` pe `Expense` (schemă + normalizare + select în formularul 15c, implicit Cash la cheltuieli noi). Cheltuielile vechi rămân fără metodă: apar doar la „Toate”, coloana Metodă arată „—”. Fără pastilă „Nespecificat”. Vezi punctul 6b din coadă.
 
-## Monedă — două specificații incompatibile pentru Faza 4 UI (punctul 8, blocant)
-Backend-ul deja cherry-pick-uit (`docs/superpowers/specs/2026-09-23-multi-currency-fees-design.md`, deja pe `master-v2`) implementează **monedă dublă simplă**: fiecare `feeHistory`/`Payment` are `currency: 'MDL'|'EUR'`, taxa copilului rămâne așa cum e introdusă (lei SAU euro), conversia se face doar la agregate cross-copil, cu curs BNM per zi.
+## ✅ Monedă — modelul ales (punctul 8) — rezolvat, de implementat
+Nu se ia niciuna din cele două variante descrise inițial mai jos întocmai. Modelul ales (b, redus, peste backend-ul existent):
+- `feeHistory.currency: 'MDL'|'EUR'` rămâne cum e în cod — fără migrare automată a copiilor vechi.
+- `Payment` capătă `fxRate` + `amountEur` (pe lângă `amount` lei + `currency`). La salvare, dacă taxa copilului e EUR: `fxRate` = cursul BNM din ziua plății, `amountEur = round2(amount / fxRate)`, ambele îngheațate.
+- Obligația copilului cu taxă EUR se calculează în EUR din `amountEur`. Agregatele pe mai mulți copii rămân cum sunt deja (conversie la curs).
+- Avansul rămâne în lei.
+- Planurile = presetări simple în Setări (nume + preț EUR), fără `plan_id` obligatoriu, fără `plan_price_history` în v1.
+- `16-planuri-eur.md` actualizat (vezi commit-ul care însoțește acest fișier) — `plan_id`/`monthly_fee_eur`/`amount_mdl` înlocuite cu `feeHistory.currency` + `Payment.fxRate`/`amountEur`.
 
-`docs/design/screens/16-planuri-eur.md` (specul ecranului, citit acum, la începutul Faza 4 UI) descrie **un model complet diferit**: 3 planuri fixe cu preț în EUR (`plans`, `plan_price_history`), taxa copilului e **întotdeauna** EUR (`plan_id`, `monthly_fee_eur` — înlocuiește taxa în lei, nu coexistă cu ea), achitarea se introduce în lei și se convertește la EUR prin `amount_mdl`/`fx_rate`/`amount_eur` pe fiecare plată, avansul rămâne în lei. Tabele noi (`plans`, `plan_price_history`, `fx_rates` cu altă formă), migrare a taxelor existente.
+_(istoric — descrierea inițială a conflictului, păstrată pentru context)_
+Backend-ul deja cherry-pick-uit implementează monedă dublă simplă (`currency: 'MDL'|'EUR'` liber pe fiecare taxă/plată). `16-planuri-eur.md` descria inițial un model diferit (planuri fixe EUR, `plan_id`, `amount_mdl`/`fx_rate`/`amount_eur`). Rezolvat prin modelul (b) de mai sus — nu s-a ales niciuna din variantele „totul sau nimic” inițiale.
 
-Cele două nu sunt compatibile — al doilea presupune o remodelare a datelor copilului (planuri fixe în loc de taxă liberă) pe care backend-ul deja cherry-pick-uit nu o are. **Nu construiesc UI pe niciuna dintre ele fără o decizie clară**: (a) rămânem la modelul simplu deja în cod (monedă liberă per taxă/plată) și `16-planuri-eur.md` se rescrie/arhivează ca fiind depășit, sau (b) se construiește modelul din `16-planuri-eur.md` (planuri fixe + conversie automată la achitare) și backend-ul cherry-pick-uit se înlocuiește/extinde substanțial. Sărit peste Faza 4 UI pentru sesiunea asta — continui cu alte puncte (§10+, curățenie mecanică) care nu depind de asta.
+## ✅ Situația plăților — comentariul din `useStatus.ts` (punctul 7) — rezolvat, de implementat
+Comentariul „fără filtre — situația unei luni trebuie să rămână completă” e depășit. Designul 7a are intenționat pastilele Grupa. Intenția se păstrează altfel: filtrul restrânge **doar tabelul**, cardurile de sus rămân mereu pe toată luna (ca la Achitări). Comentariul se rescrie în acest sens.
 
-## Situația plăților — filtrul de grupă contrazice un comentariu de design existent (punctul 7)
-`useStatus.ts:29-33` are exact comentariul: „aici nu există filtru — situația unei luni trebuie să rămână completă” (spre deosebire de Achitări/Cheltuieli). Adăugarea `FilterPills` Grupa ar contrazice o decizie de design deja documentată în cod, nu doar un gol de UI. **Sar peste punctul 7 complet pentru sesiunea asta** — nu pornesc niciun agent pe el — până se clarifică cu utilizatorul dacă acel comentariu mai e valabil sau se schimbă intenționat.
-
-## Situația plăților — ecran nou aproape integral (punctul 7)
-`StatusPage.tsx` de azi e un stub doar-citire, fără moduri Lună/An școlar, fără cele 4 carduri, fără filtru grupă, fără harta pe luni, fără SMS. Spec `07-situatia.md` descrie un ecran nou, comparabil ca mărime cu Vizite sau Achitări. **Decis 2026-09-26: se face doar `FilterPills` Grupa peste tabelul existent** (punctul 7 din coadă) — restul spec-ului (4 carduri, mod An școlar, hartă, SMS, CTA Notifică) rămâne un ecran separat, de planificat ca task propriu (posibil cu `superpowers:brainstorming`/`writing-plans` înainte de cod, la fel ca restul ecranelor mari din acest proiect).
+## ✅ Situația plăților — ecranul complet (punctul 10) — rezolvat, plan înainte de cod
+Ecran separat, plan scris înainte de cod (`docs/superpowers/plans/`). Ordinea: (1) pastilele Grupa — punctul 7, (2) cele 4 carduri + modul An școlar + harta — punctul 10, (3) SMS — după P1 din spec-ul SMS.
