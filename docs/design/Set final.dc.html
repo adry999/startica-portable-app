@@ -12,7 +12,7 @@
   <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
     <img src="web/assets/startica-logo.svg" alt="Startica" style="height:52px"></img>
     <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:280px"><h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1">Set final · stadiu</h1><span style="font-size:15px;color:#6b7780;text-wrap:pretty">Totul pe module, în ordinea din meniul lateral. Pentru fiecare ecran: unde e designul, ce specificație are pentru Claude Code și dacă există deja în cod (master-v2).</span></div>
-    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 26.09.2026, 13:30</span>
+    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 26.09.2026, 15:34 (sync)</span>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
@@ -63,17 +63,17 @@ class Component extends DCLogic {
     const all = [
       { label: 'Comune (toate ecranele)', marker: '#9aa3a9', items: [
         it('Meniu lateral', 'versiunea v2.0.0', [L('a', 'Sidebar', 'Sidebar.dc.html')], '00', 'ok', 'Logo 38 px + versiunea pe același rând'),
-        it('Antet compact, bara de filtre, culori grupe', 'Topbar, FilterPills, groupTone', [L('1c', 'exemplu în Copii', 'Copii.dc.html#1c')], '00', 'missing', 'FilterPills, groupTone, useTopbarTitle nu există încă'),
+        it('Antet compact, bara de filtre, culori grupe', 'Topbar, FilterPills, groupTone', [L('1c', 'exemplu în Copii', 'Copii.dc.html#1c')], '00', 'partial', 'Făcut: FilterPills, groupTone, useTopbarTitle, MonthStepper. Lipsește: folosite doar în Zile de naștere; antetul compact de verificat'),
         it('Formulare și stări', 'panouri laterale, confirmări, liste goale', [L('3a–3c', 'formulare', 'Formulare.dc.html#3a'), L('3d–3f', 'stări', 'Formulare.dc.html#3d')], '13', 'partial', 'RowMenu și ConfirmDeleteDialog comune; acum meniul ⋯ e copiat în fiecare pagină'),
         it('Ecrane mai mici', 'doar 900–1279 px', [L('5a', 'Dashboard', 'Responsive.dc.html#5a'), L('5b', 'meniu deschis', 'Responsive.dc.html#5b')], 'README', 'missing', 'Sidebar overlay cu ☰')
       ] },
       { label: 'Principal', marker: '#f9d257', items: [
-        it('Dashboard', '', [L('1a', 'ecran', 'Dashboard.dc.html#1a'), L('7f', 'pastila curs', 'Planuri si curs.dc.html#7f')], '08 · 16', 'ok', 'Link „Vezi calendarul →”, pastila cu cursul'),
-        it('Copii', 'listă', [L('1c', 'listă', 'Copii.dc.html#1c')], '02', 'ok', 'FilterPills, butonul Zile de naștere, fără Import CSV'),
+        it('Dashboard', '', [L('1a', 'ecran', 'Dashboard.dc.html#1a'), L('7f', 'pastila curs', 'Planuri si curs.dc.html#7f')], '08 · 16', 'ok', 'Făcut: „Vezi calendarul →”. Lipsește: pastila cu cursul'),
+        it('Copii', 'listă', [L('1c', 'listă', 'Copii.dc.html#1c')], '02', 'partial', 'Făcut: Import CSV scos, buton Zile de naștere. Lipsește: FilterPills Grupă + Plată'),
         it('Fișa copilului', '', [L('1e', 'fișa', 'Copii.dc.html#1e'), L('7d', 'sume în €', 'Planuri si curs.dc.html#7d')], '09 · 16', 'ok', 'Rest în €, plan, plătitori reținuți'),
-        it('Zile de naștere', 'pagină în Copii', [L('2a', 'calendar', 'Copii.dc.html#2a')], '01', 'missing', 'Pagina, ruta și buildBirthdayMonth'),
-        it('Grupe', 'Carduri / Tablă', [L('1g', 'carduri', 'Grupe.dc.html#1g'), L('1h', 'tablă', 'Grupe.dc.html#1h')], '03', 'ok', 'Comutatorul în antet, toolbarul tablei'),
-        it('Vizite', '', [L('2a', 'calendar + tabel', 'Vizite.dc.html#2a')], '04', 'ok', 'Tabelul „Toate vizitele”, fără Activează notificările')
+        it('Zile de naștere', 'pagină în Copii', [L('2a', 'calendar', 'Copii.dc.html#2a')], '01', 'ok', 'Făcut după spec: pastile, antet, max 2 + „+N copii”, zile trecute, weekend, click → fișa. De verificat vizual'),
+        it('Grupe', 'Carduri / Tablă', [L('1g', 'carduri', 'Grupe.dc.html#1g'), L('1h', 'tablă', 'Grupe.dc.html#1h')], '03', 'ok', 'Făcut: comutator Carduri/Tablă, Restrânge/Deschide tot. De verificat vizual'),
+        it('Vizite', '', [L('2a', 'calendar + tabel', 'Vizite.dc.html#2a')], '04', 'partial', 'Făcut: tabelul „Toate vizitele”. Lipsește: FilterPills pe statut (acum dropdown), meniul ⋯ în loc de 5 linkuri pe rând')
       ] },
       { label: 'Contabilitate', marker: '#a8d8be', items: [
         it('Planuri în EUR și curs BNM', 'regula de calcul', [L('7a–7g', 'toate', 'Planuri si curs.dc.html')], '16', 'missing', 'Planuri, fx_rates, sume în € + lei'),
