@@ -44,4 +44,6 @@ Scrie `docs/superpowers/specs/<data>-sms-notify-design.md` (provider `sms.md`/do
 **R10 DONE (2026-09-26):** `ChildProfileView`/`ExpenseFormDrawer` extrase în fișiere proprii.
 **R6 DONE (2026-09-26):** `ConfirmDeleteDialog` (`shared/ui`, „Scrie ȘTERGE”) în loc de `window.confirm` la cele 6 ștergeri definitive; toast „Anulează” adăugat la arhivarea din Achitări. Găsit în timpul lucrului, nerezolvat (notat, nu blocant): `VisitsPage.tsx`'s `toggleArchived` nu arată niciun toast la succes (nici cu, nici fără undo) — de adăugat separat dacă se dorește.
 
-Rămân: R7 (comentarii/nume — `const data = useX()` → nume specifice, `item`/`r`/`parts` interzise), R9 (rute per feature, scoate `App.tsx` din fișierele fierbinți — arhitectural, nu doar mecanic, vezi nota din sesiune), Button/SearchInput unificate în `shared/ui`.
+**R7 DONE (2026-09-27):** `const data = useX()` → `<feature>Data` în 15 ecrane; `any` scos din `useChildren.ts`; 24 fișiere curățate de comentarii care descriau stratul vanilla deja șters; comentariul fals din `static-assets.mjs` reparat. Nu atins: `item`/`r` ca nume de parametru în lambda-uri scurte (`.map(item => ...)`) — sarcină de valoare mică, cost mare (10+ fișiere), lăsată deliberat neatinsă.
+
+Rămân: R9 (rute per feature, scoate `App.tsx` din fișierele fierbinți — arhitectural, nu doar mecanic, vezi nota din sesiune), Button/SearchInput unificate în `shared/ui`.
