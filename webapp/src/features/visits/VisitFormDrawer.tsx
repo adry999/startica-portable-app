@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Drawer } from '@shared/ui';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
-import { defaultVisitFormValues, type VisitFormValues } from './visit-form';
+import { defaultVisitFormValues, STATUS_LABEL, type VisitFormValues } from './visit-form';
 import type { Group, Visit } from '@contracts/record-types.mjs';
 import styles from './VisitFormDrawer.module.css';
 
@@ -32,6 +32,20 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
     setValues(previous => ({ ...previous, [key]: value }));
   }
 
+  // Reprogramarea (dată/oră diferite de ale vizitei salvate) resetează statutul la
+  // Programată în backend (rescheduleVisit), necondiționat — dacă lăsam Statut pe vechea
+  // valoare presetată, salvarea o re-aplica tăcut peste reprogramare, fără ca cineva să
+  // aleagă asta. Reflectăm reset-ul direct în formular, ca ce se vede să fie ce se salvează.
+  function setDateOrTime<K extends 'date' | 'time'>(key: K, value: string) {
+    setValues(previous => {
+      const next = { ...previous, [key]: value };
+      if (editing && editing.status !== 'Înscris') {
+        next.status = next.date !== editing.date || next.time !== editing.time ? 'Programată' : editing.status;
+      }
+      return next;
+    });
+  }
+
   const statusChoices = editing ? (editing.status === 'Înscris' ? ['Înscris' as const] : CORRECTABLE_STATUSES) : [];
 
   function handleSubmit(event: FormEvent) {
@@ -56,11 +70,21 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
           <legend>Vizita</legend>
           <label className={styles.field}>
             Data vizitei
-            <input required type="date" value={values.date} onChange={event => setField('date', event.target.value)} />
+            <input
+              required
+              type="date"
+              value={values.date}
+              onChange={event => setDateOrTime('date', event.target.value)}
+            />
           </label>
           <label className={styles.field}>
             Ora vizitei
-            <input required type="time" value={values.time} onChange={event => setField('time', event.target.value)} />
+            <input
+              required
+              type="time"
+              value={values.time}
+              onChange={event => setDateOrTime('time', event.target.value)}
+            />
           </label>
           {editing && (
             <label className={styles.field}>
@@ -68,7 +92,7 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
               <select value={values.status} onChange={event => setField('status', event.target.value)}>
                 {statusChoices.map(status => (
                   <option key={status} value={status}>
-                    {status}
+                    {STATUS_LABEL[status]}
                   </option>
                 ))}
               </select>

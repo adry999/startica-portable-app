@@ -20,6 +20,8 @@ const emptyImport = overrides => ({
   ...overrides,
 });
 
+// Statut implicit Efectuată: fișierul testează mai ales /api/visits-enrol, care acum
+// cere explicit vizita Efectuată — testele care vor alt statut îl suprascriu punctual.
 const visit = (overrides = {}) => ({
   id: 'VIZ-1',
   name: 'Popescu Ana',
@@ -27,7 +29,7 @@ const visit = (overrides = {}) => ({
   phone: '0722000000',
   date: '2026-09-20',
   time: '10:00',
-  status: 'Programată',
+  status: 'Efectuată',
   statusChangedAt: '2026-09-10T08:00:00.000Z',
   healthNotes: 'Alergie la nuci',
   desiredGroupId: null,
@@ -112,6 +114,24 @@ test('refuză înscrierea unei vizite deja înscrise (409)', async t => {
 
   assert.equal(result.status, 409);
   assert.match(result.body.error, /deja înscris/);
+});
+
+test('refuză înscrierea unei vizite care nu e Efectuată (400)', async t => {
+  const { post } = await startApplication(t);
+  const imported = await post(
+    '/api/import',
+    importRequest(emptyImport({ visits: [visit({ status: 'Programată' })] }), 0),
+  );
+
+  const result = await post('/api/visits-enrol', {
+    visitId: 'VIZ-1',
+    child: newChild(),
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /trebuie marcată Efectuată/);
 });
 
 test('refuză o grupă inexistentă pentru copilul nou (400)', async t => {

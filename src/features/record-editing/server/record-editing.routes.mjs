@@ -22,6 +22,11 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
       if (!['create', 'update'].includes(request.mode)) fail('Mod de salvare invalid.');
       if (request.mode === 'create' && existing) fail('ID deja folosit.', 409);
       if (request.mode === 'update' && !existing) fail('Înregistrarea nu mai există.', 409);
+      // Statutul Înscris se obține doar prin /api/visits-enrol (creează și fișa copilului
+      // în același pas) — altfel /api/record ar putea lega o vizită de un copil arbitrar,
+      // fără nicio fișă creată cu adevărat pentru ea.
+      if (request.type === 'visits' && record.status === 'Înscris' && existing?.status !== 'Înscris')
+        fail('Statutul „Înscris” se setează doar prin înscrierea copilului, nu prin editare directă.');
       assertRecordReferencesExist(request.type, record, recordRepository.exists);
       assertUniqueName(request.type, record, recordRepository.readSnapshot());
       recordRepository.save(request.type, record);

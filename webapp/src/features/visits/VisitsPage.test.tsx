@@ -58,6 +58,21 @@ const fixtureState = {
       childId: '',
       archived: false,
     },
+    {
+      id: 'VIZ-3',
+      name: 'Vlad Rusu',
+      parent: 'Elena Rusu',
+      phone: '',
+      date: TODAY,
+      time: '09:00',
+      status: 'Renunțat',
+      statusChangedAt: `${TODAY}T10:00:00.000Z`,
+      history: [],
+      desiredGroupId: null,
+      childId: '',
+      archived: true,
+      archivedAt: `${TODAY}T10:00:00.000Z`,
+    },
   ],
 };
 
@@ -186,17 +201,17 @@ describe('VisitsPage', () => {
     expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
   });
 
-  it('selectarea „Arhivate" și „Toate lunile" nu aruncă erori', async () => {
+  it('„Arhivate" arată doar vizitele arhivate, nu și pe cele active', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     renderPage();
     const user = userEvent.setup();
     await user.click(screen.getByRole('radio', { name: /Arhivate/ }));
-    await user.click(screen.getByRole('button', { name: 'Filtru perioadă' }));
-    await user.click(screen.getByText('Toate lunile'));
 
     const table = screen.getByRole('table');
-    expect(within(table).getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(within(table).getByText('Vlad Rusu')).toBeInTheDocument();
+    expect(within(table).queryByText('Andrei Popescu')).not.toBeInTheDocument();
+    expect(within(table).queryByText('Maria Ionescu')).not.toBeInTheDocument();
   });
 });

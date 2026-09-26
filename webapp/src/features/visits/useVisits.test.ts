@@ -138,12 +138,12 @@ describe('useVisits', () => {
     expect(result.current.rows.map(r => r.id)).toEqual(['VIZ-1', 'VIZ-2']);
   });
 
-  it('„Toate lunile" include și vizitele arhivate din alte luni când „Arhivate" e bifat', async () => {
+  it('„Arhivate" arată doar vizitele arhivate, nu și pe cele active', async () => {
     await loadedSession();
     const { result } = renderHook(() => useVisits());
     act(() => result.current.setAllMonths(true));
     act(() => result.current.setShowArchived(true));
-    expect(result.current.rows.map(r => r.id)).toEqual(['VIZ-3', 'VIZ-1', 'VIZ-2']);
+    expect(result.current.rows.map(r => r.id)).toEqual(['VIZ-3']);
   });
 
   it('filtrul de statut restrânge lista', async () => {
@@ -160,6 +160,17 @@ describe('useVisits', () => {
     expect(result.current.rows).toHaveLength(2);
     act(() => result.current.setSelectedDate(EMPTY_DATE));
     expect(result.current.rows).toHaveLength(0);
+  });
+
+  it('selectarea unei zile din altă lună schimbă și luna calendarului afișat', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useVisits());
+    expect(result.current.month).toBe(CURRENT_MONTH);
+
+    act(() => result.current.setSelectedDate(OTHER_MONTH_DATE));
+
+    expect(result.current.selectedDate).toBe(OTHER_MONTH_DATE);
+    expect(result.current.month).toBe(OTHER_MONTH_DATE.slice(0, 7));
   });
 
   it('goToNextMonth/goToPreviousMonth/goToToday schimbă luna calendarului și resetează ziua selectată', async () => {

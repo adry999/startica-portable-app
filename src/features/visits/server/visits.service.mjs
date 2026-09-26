@@ -24,6 +24,9 @@ export function createVisitsService({ recordRepository, auditTrail, runRevisionT
       if (!visit) fail('Vizita nu mai există.', 409);
       if (visit.status === 'Înscris') fail('Copilul a fost deja înscris din această vizită.', 409);
       if (visit.archived) fail('Reactivează vizita înainte de înscriere.');
+      // Regulă confirmată explicit: nu se înscrie un copil a cărui vizită nu a avut loc încă
+      // (fără ocolire de la Programată/Neprezentată/Renunțat, doar de la Efectuată).
+      if (visit.status !== 'Efectuată') fail('Vizita trebuie marcată Efectuată înainte de a înscrie copilul.');
 
       const record = normalizeRecord('children', child);
       if (recordRepository.exists('children', record.id)) fail('ID deja folosit.', 409);

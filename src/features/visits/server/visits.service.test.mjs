@@ -17,7 +17,10 @@ function createHarness(initialRecords = createVisitsRecords()) {
 const enrolRequest = (visitId, child) => ({ visitId, child, revision: 0, requestId: 'inscriere-0001' });
 
 test('înscrie copilul: creează fișa, mută notele medicale și marchează vizita Înscris', () => {
-  const { service, recordRepository, auditTrail } = createHarness();
+  const { service, recordRepository, auditTrail } = createHarness({
+    ...createVisitsRecords(),
+    visits: [scheduledVisit({ status: 'Efectuată' })],
+  });
 
   const result = service.enrolChild(
     { visitId: 'VIZ-1', child: newChildInput() },
@@ -74,8 +77,18 @@ test('refuză înscrierea unei vizite arhivate', () => {
   });
 });
 
+test('refuză înscrierea unei vizite care nu e Efectuată', () => {
+  const { service } = createHarness({ ...createVisitsRecords(), visits: [scheduledVisit({ status: 'Programată' })] });
+
+  assert.throws(() => service.enrolChild({ visitId: 'VIZ-1', child: newChildInput() }, enrolRequest('VIZ-1')), {
+    status: 400,
+    message: /trebuie marcată Efectuată/,
+  });
+});
+
 test('refuză un id de copil deja folosit', () => {
   const records = createVisitsRecords();
+  records.visits = [scheduledVisit({ status: 'Efectuată' })];
   records.children.push({ ...newChildInput(), id: 'CH-NOU' });
   const { service } = createHarness(records);
 
@@ -86,7 +99,10 @@ test('refuză un id de copil deja folosit', () => {
 });
 
 test('refuză o grupă inexistentă pentru copilul nou', () => {
-  const { service } = createHarness();
+  const { service } = createHarness({
+    ...createVisitsRecords(),
+    visits: [scheduledVisit({ status: 'Efectuată' })],
+  });
 
   assert.throws(
     () =>

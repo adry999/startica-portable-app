@@ -57,6 +57,40 @@ test('Nu se șterge grupa folosită de un copil arhivat; exportul și restaurare
   );
 });
 
+test('Ștergerea grupei golește desiredGroupId pe vizitele care o aveau ca preferință, nu blochează ștergerea', async t => {
+  const app = await startApplication(t);
+  const visit = {
+    id: 'VIZ-1',
+    name: 'Popescu Ana',
+    parent: 'Popescu Ion',
+    phone: '0722000000',
+    date: '2026-09-20',
+    time: '10:00',
+    status: 'Programată',
+    statusChangedAt: '2026-09-10T08:00:00.000Z',
+    desiredGroupId: group.id,
+  };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [], groups: [group], categories: [], visits: [visit] }, 0),
+  );
+  assert.equal(imported.status, 200, imported.body.error);
+
+  const deleted = await app.post('/api/group-delete', {
+    id: group.id,
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(deleted.status, 200, deleted.body.error);
+  assert.deepEqual(deleted.body.state.groups, []);
+  assert.equal(deleted.body.state.visits[0].desiredGroupId, null, 'Referința spre grupa ștearsă e golită, nu orfană.');
+  assert.deepEqual(
+    validateState(deleted.body.state),
+    deleted.body.state,
+    'Starea rezultată se poate exporta/importa fără referințe moarte.',
+  );
+});
+
 test('Se poate șterge o grupă fără copii atribuiți', async t => {
   const app = await startApplication(t);
   const imported = await app.post(

@@ -15,7 +15,7 @@ import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { useVisits } from './useVisits';
 import { VisitFormDrawer } from './VisitFormDrawer';
 import { EnrollDrawer } from './EnrollDrawer';
-import type { VisitFormValues } from './visit-form';
+import { STATUS_LABEL, type VisitFormValues } from './visit-form';
 import type { Visit, VisitStatus } from '@contracts/record-types.mjs';
 import styles from './VisitsPage.module.css';
 
@@ -25,16 +25,6 @@ const STATUS_TONE: Record<VisitStatus, BadgeTone> = {
   Neprezentată: 'neutral',
   Înscris: 'orange',
   Renunțat: 'pink',
-};
-
-// Eticheta afișată diferă de valoarea din model pentru Înscris/Renunțat (vezi Vizite.dc.html) —
-// modelul rămâne enum-ul de statut, textul afișat urmează formularea din design.
-const STATUS_LABEL: Record<VisitStatus, string> = {
-  Programată: 'Programată',
-  Efectuată: 'Efectuată',
-  Neprezentată: 'Neprezentată',
-  Înscris: 'S-a înscris',
-  Renunțat: 'A renunțat',
 };
 
 // Clasele CSS rămân ASCII — cheile cu diacritice ale statutului nu sunt nume valide de export CSS Modules.

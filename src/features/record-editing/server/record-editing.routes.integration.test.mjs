@@ -84,6 +84,69 @@ test('actualizează o înregistrare existentă', async t => {
   assert.equal(updated.body.state.children[0].name, 'Ana Maria');
 });
 
+test('refuză setarea statutului Înscris pe o vizită direct prin /api/record (doar /api/visits-enrol poate)', async t => {
+  const app = await startApplication(t);
+  const visit = {
+    id: 'VIZ-1',
+    name: 'Popescu Ana',
+    parent: 'Popescu Ion',
+    phone: '0722000000',
+    date: '2026-09-20',
+    time: '10:00',
+    status: 'Efectuată',
+    statusChangedAt: '2026-09-10T08:00:00.000Z',
+    desiredGroupId: null,
+    childId: '',
+  };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [visit] }, 0),
+  );
+  assert.equal(imported.status, 200, imported.body.error);
+
+  const result = await app.post('/api/record', {
+    type: 'visits',
+    mode: 'update',
+    record: { ...visit, status: 'Înscris', childId: 'ID-CINEVA' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /doar prin înscrierea copilului/);
+});
+
+test('permite corectarea manuală a statutului unei vizite (Efectuată → Programată) prin /api/record', async t => {
+  const app = await startApplication(t);
+  const visit = {
+    id: 'VIZ-1',
+    name: 'Popescu Ana',
+    parent: 'Popescu Ion',
+    phone: '0722000000',
+    date: '2026-09-20',
+    time: '10:00',
+    status: 'Efectuată',
+    statusChangedAt: '2026-09-10T08:00:00.000Z',
+    desiredGroupId: null,
+    childId: '',
+  };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [visit] }, 0),
+  );
+
+  const result = await app.post('/api/record', {
+    type: 'visits',
+    mode: 'update',
+    record: { ...visit, status: 'Programată' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 200, result.body.error);
+  assert.equal(result.body.state.visits[0].status, 'Programată');
+});
+
 test('refuză o plată asociată unui copil inexistent', async t => {
   const app = await startApplication(t);
   const state0 = await app.get('/api/state');

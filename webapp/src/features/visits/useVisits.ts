@@ -63,7 +63,15 @@ export function useVisits(initialDate?: string): VisitsData {
   const records = state as RecordsSnapshot;
 
   const [month, setMonth] = useState(() => (initialDate ?? todayValue).slice(0, 7));
-  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate ?? null);
+  const [selectedDate, setSelectedDateRaw] = useState<string | null>(initialDate ?? null);
+
+  // Selectarea unei zile trebuie să țină și `month` sincron, altfel un click pe un rând
+  // din altă lună (sau pe o zi de umplutură din grila calendarului) selectează o dată pe
+  // care calendarul afișat n-o poate arăta ca selectată, iar panoul de detalii pare gol.
+  function selectDate(date: string | null) {
+    setSelectedDateRaw(date);
+    if (date) setMonth(date.slice(0, 7));
+  }
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [allMonths, setAllMonths] = useState(false);
@@ -71,17 +79,17 @@ export function useVisits(initialDate?: string): VisitsData {
 
   function goToPreviousMonth() {
     setMonth(previous => shiftMonth(previous, -1));
-    setSelectedDate(null);
+    setSelectedDateRaw(null);
   }
 
   function goToNextMonth() {
     setMonth(previous => shiftMonth(previous, 1));
-    setSelectedDate(null);
+    setSelectedDateRaw(null);
   }
 
   function goToToday() {
     setMonth(todayValue.slice(0, 7));
-    setSelectedDate(null);
+    setSelectedDateRaw(null);
   }
 
   async function createVisit(values: VisitFormValues) {
@@ -148,7 +156,7 @@ export function useVisits(initialDate?: string): VisitsData {
       goToToday,
       weeks: [],
       selectedDate,
-      setSelectedDate,
+      setSelectedDate: selectDate,
       search,
       setSearch,
       statusFilter,
@@ -187,7 +195,7 @@ export function useVisits(initialDate?: string): VisitsData {
 
   const normalizedSearch = normalizeSearchText(search);
   const rows = records.visits
-    .filter(visit => (showArchived ? true : !visit.archived))
+    .filter(visit => visit.archived === showArchived)
     .filter(visit => !statusFilter || visit.status === statusFilter)
     .filter(visit => allMonths || visit.date.slice(0, 7) === month)
     .filter(visit => !selectedDate || visit.date === selectedDate)
@@ -206,7 +214,7 @@ export function useVisits(initialDate?: string): VisitsData {
     goToToday,
     weeks,
     selectedDate,
-    setSelectedDate,
+    setSelectedDate: selectDate,
     search,
     setSearch,
     statusFilter,

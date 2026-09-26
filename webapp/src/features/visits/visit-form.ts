@@ -2,6 +2,16 @@ import { normalizeRecord } from '@domain/record-schema.mjs';
 import { rescheduleVisit } from '#features/visits/domain/visit-status.mjs';
 import type { Visit, VisitStatus } from '@contracts/record-types.mjs';
 
+// Eticheta afișată diferă de valoarea din model pentru Înscris/Renunțat (vezi Vizite.dc.html) —
+// modelul rămâne enum-ul de statut, textul afișat urmează formularea din design.
+export const STATUS_LABEL: Record<VisitStatus, string> = {
+  Programată: 'Programată',
+  Efectuată: 'Efectuată',
+  Neprezentată: 'Neprezentată',
+  Înscris: 'S-a înscris',
+  Renunțat: 'A renunțat',
+};
+
 export interface VisitFormValues {
   name: string;
   birthDate: string;

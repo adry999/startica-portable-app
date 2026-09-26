@@ -36,6 +36,15 @@ export function createGroupsRoutes({ recordRepository, auditTrail, runRevisionTr
             before: group,
             after: null,
           });
+          // desiredGroupId e o preferință, nu o apartenență reală (spre diferență de
+          // children.groupId, blocat mai sus) — o golim în loc să blocăm ștergerea grupei,
+          // altfel referința rămâne moartă: mutații ulterioare pe vizită pică
+          // (assertRecordReferencesExist), iar orice backup luat după ștergere devine
+          // nerestaurabil (validateState respinge grupa inexistentă la import/restore).
+          const visits = recordRepository.readSnapshot().visits.filter(visit => visit.desiredGroupId === body.id);
+          for (const visit of visits) {
+            recordRepository.save('visits', { ...visit, desiredGroupId: null });
+          }
         }),
     },
   ];
