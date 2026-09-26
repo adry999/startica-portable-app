@@ -51,6 +51,18 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: '+ Programează vizită' })).toBeInTheDocument();
   });
 
+  it('/copii/zile-de-nastere e ecranul Zile de naștere, nu fișa unui copil cu acest id', () => {
+    render(
+      <MemoryRouter initialEntries={['/copii/zile-de-nastere']}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('heading', { name: 'Zile de naștere' })).toBeInTheDocument();
+    expect(screen.queryByText('Fișa nu a putut fi găsită.')).not.toBeInTheDocument();
+  });
+
   it('o cale necunoscută revine la Dashboard', () => {
     render(
       <MemoryRouter initialEntries={['/ceva-inexistent']}>

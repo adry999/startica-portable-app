@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Card, DataTable, SearchSelect, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
+import {
+  Badge,
+  Card,
+  DataTable,
+  SearchSelect,
+  SegmentedControl,
+  groupTone,
+  useToast,
+  type DataTableColumn,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { downloadCsv } from '@shared/csv-export';
@@ -27,7 +36,6 @@ export interface ChildrenPageProps {
 }
 
 const AVATAR_TONES = ['toneOrange', 'toneMint', 'toneYellow', 'tonePink'] as const;
-const GROUP_BADGE_TONES = ['orange', 'mint', 'yellow', 'pink'] as const;
 
 function hashIndex(value: string, length: number): number {
   let hash = 0;
@@ -274,9 +282,7 @@ function ChildrenListView({
       sortValue: row => row.groupName,
       render: row =>
         row.groupName ? (
-          <Badge tone={GROUP_BADGE_TONES[hashIndex(row.groupId || '', GROUP_BADGE_TONES.length)]}>
-            {row.groupName}
-          </Badge>
+          <Badge tone={groupTone(row.groupId, data.groups)}>{row.groupName}</Badge>
         ) : (
           <Badge tone="neutral">Nealocată</Badge>
         ),

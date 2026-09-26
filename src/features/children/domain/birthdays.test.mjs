@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildBirthdayCalendar, listUpcomingBirthdays } from './birthdays.mjs';
+import { buildBirthdayCalendar, buildBirthdayMonth, listUpcomingBirthdays } from './birthdays.mjs';
 
 const child = (id, birthDate, extra = {}) => ({ id, name: id, birthDate, ...extra });
 
@@ -101,4 +101,59 @@ test('listUpcomingBirthdays arată copilul născut pe 02-29 pe 02-28 în ani non
   assert.equal(rows[0].child.id, 'febborn');
   assert.equal(rows[0].daysUntil, 3);
   assert.equal(listUpcomingBirthdays(children, 5, '2024-02-25')[0].daysUntil, 4);
+});
+
+test('buildBirthdayMonth calculează vârsta din anul celulei și numele compact din "Nume Prenume"', () => {
+  const children = [{ id: 'c1', name: 'Cujba Ovidiu', birthDate: '2023-09-11', groupId: 'g1', archived: false }];
+  const { weeks, list } = buildBirthdayMonth(children, '2026-09', '2026-09-05');
+  const cell = cellFor(weeks, '2026-09-11');
+  assert.deepEqual(cell.entries, [
+    { childId: 'c1', name: 'Cujba Ovidiu', firstName: 'Ovidiu', lastInitial: 'C.', turningAge: 3, groupId: 'g1' },
+  ]);
+  assert.equal(list.length, 1);
+  assert.equal(list[0].day, 11);
+  assert.equal(list[0].date, '2026-09-11');
+});
+
+test('buildBirthdayMonth arată 29 februarie pe 28 în ani nebisecți, pe 29 în ani bisecți', () => {
+  const children = [child('febborn', '2020-02-29')];
+  assert.deepEqual(
+    cellFor(buildBirthdayMonth(children, '2027-02', '2027-02-01').weeks, '2027-02-28').entries.map(e => e.childId),
+    ['febborn'],
+  );
+  assert.deepEqual(
+    cellFor(buildBirthdayMonth(children, '2028-02', '2028-02-01').weeks, '2028-02-29').entries.map(e => e.childId),
+    ['febborn'],
+  );
+});
+
+test('buildBirthdayMonth omite copiii arhivați sau fără dată de naștere', () => {
+  const children = [
+    child('arhivat', '2026-09-11', { archived: true }),
+    { id: 'fara-data', name: 'Fără Dată', archived: false },
+  ];
+  const { list } = buildBirthdayMonth(children, '2026-09', '2026-09-05');
+  assert.deepEqual(list, []);
+});
+
+test('buildBirthdayMonth nu pune intrări pe celulele din lunile vecine', () => {
+  // Septembrie 2026 începe marți — 31 august e umplutură dintr-o altă lună.
+  const children = [child('lunaTrecuta', '2020-08-31')];
+  const { weeks } = buildBirthdayMonth(children, '2026-09', '2026-09-05');
+  const paddingCell = cellFor(weeks, '2026-08-31');
+  assert.equal(paddingCell.inMonth, false);
+  assert.deepEqual(paddingCell.entries, []);
+});
+
+test('buildBirthdayMonth sortează lista după zi, apoi după nume', () => {
+  const children = [
+    { id: 'b', name: 'Z Ultimul', birthDate: '2020-09-20', groupId: null, archived: false },
+    { id: 'a', name: 'A Primul', birthDate: '2020-09-20', groupId: null, archived: false },
+    { id: 'c', name: 'Devreme', birthDate: '2020-09-05', groupId: null, archived: false },
+  ];
+  const { list } = buildBirthdayMonth(children, '2026-09', '2026-09-01');
+  assert.deepEqual(
+    list.map(e => e.childId),
+    ['c', 'a', 'b'],
+  );
 });

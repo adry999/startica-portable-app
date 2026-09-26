@@ -9,12 +9,12 @@
 }
 
 .btnGhost {
-  border: 1px solid var(--input-border);
-  background: none;
+  border: 1.5px solid var(--border);
+  background: #fff;
   border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
+  padding: 8px 16px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--slate);
 }
 

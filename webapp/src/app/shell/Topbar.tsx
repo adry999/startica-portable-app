@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MonthPicker } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
-import { useTopbarActionsSlot } from './TopbarActions';
+import { useTopbarActionsSlot, useTopbarTitleSlot } from './TopbarActions';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
 import { pathForSearchResult } from './routes';
@@ -17,7 +17,8 @@ export interface TopbarProps {
 
 /** Antetul paginii — eyebrow+titlu la stânga, acțiuni la dreapta (căutare globală doar pe Dashboard + selector lună). */
 export function Topbar({ view, month, onMonthChange }: TopbarProps) {
-  const { eyebrow, title } = VIEW_TITLES[view];
+  const titleOverride = useTopbarTitleSlot();
+  const { eyebrow, title } = titleOverride ?? VIEW_TITLES[view];
   const pageActions = useTopbarActionsSlot();
   const session = useAppSession();
   const navigate = useNavigate();

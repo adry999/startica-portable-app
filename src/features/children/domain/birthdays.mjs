@@ -8,7 +8,7 @@ const isLeapYear = year => new Date(year, 1, 29).getDate() === 29;
  * @param {Date} birthDate
  * @param {Date} date
  */
-function isBirthdayOn(birthDate, date) {
+export function isBirthdayOn(birthDate, date) {
   if (date.getMonth() !== birthDate.getMonth()) return false;
   if (date.getDate() === birthDate.getDate()) return true;
   return (
@@ -56,6 +56,63 @@ export function buildBirthdayCalendar(children, todayStr = today()) {
       return { ...cell, names: matches.map(m => ({ name: m.name, turningAge: d.getFullYear() - m.birthYear })) };
     }),
   );
+}
+
+/**
+ * @typedef {{
+ *   childId: string,
+ *   name: string,
+ *   firstName: string,
+ *   lastInitial: string,
+ *   turningAge: number,
+ *   groupId: string | null,
+ * }} BirthdayEntry
+ */
+
+// Grila unei luni alese (nu neapărat cea curentă), cu zilele de naștere pe fiecare celulă
+// din lună (celulele de umplutură din lunile vecine rămân fără intrări) și o listă plată,
+// sortată, pentru panoul lateral. Nu înlocuiește buildBirthdayCalendar — aceea rămâne pentru
+// Dashboard, care arată mereu luna curentă și nu are nevoie de grupă.
+/**
+ * @param {string} monthKey format YYYY-MM
+ * @param {string} todayStr format YYYY-MM-DD
+ */
+export function buildBirthdayMonth(children, monthKey, todayStr = today()) {
+  const active = children.filter(child => !child.archived && child.birthDate);
+
+  /** @param {typeof active[number]} child */
+  function entryFor(child, cellYear) {
+    const nameParts = child.name.trim().split(/\s+/);
+    return {
+      childId: child.id,
+      name: child.name,
+      firstName: nameParts[nameParts.length - 1],
+      lastInitial: `${nameParts[0]?.charAt(0) ?? ''}.`,
+      turningAge: cellYear - new Date(child.birthDate + 'T12:00:00').getFullYear(),
+      groupId: child.groupId ?? null,
+    };
+  }
+
+  const weeks = buildMonthGrid(monthKey, todayStr).map(week =>
+    week.map(cell => {
+      const cellDate = new Date(cell.date + 'T12:00:00');
+      const entries = cell.inMonth
+        ? active
+            .filter(child => isBirthdayOn(new Date(child.birthDate + 'T12:00:00'), cellDate))
+            .map(child => entryFor(child, cellDate.getFullYear()))
+        : [];
+      const dow = cellDate.getDay();
+      return { ...cell, entries, isPast: cell.date < todayStr, isWeekend: dow === 0 || dow === 6 };
+    }),
+  );
+
+  const list = weeks
+    .flat()
+    .filter(cell => cell.inMonth)
+    .flatMap(cell => cell.entries.map(entry => ({ ...entry, date: cell.date, day: cell.day })))
+    .sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'ro'));
+
+  return { weeks, list };
 }
 
 // Copiii cu ziua de naștere în următoarele `days` zile (0 = azi), ca de
