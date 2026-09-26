@@ -40,5 +40,8 @@ Consolidează `docs/superpowers/specs/2026-09-26-code-audit.md` (audit fable) + 
 ## 9. Faza 5 — SMS (sms.md) — scrie spec înainte de cod
 Scrie `docs/superpowers/specs/<data>-sms-notify-design.md` (provider `sms.md`/docs.sms.md, auth, format telefon, șablon după `src/features/telegram-notify/`). Nu scrie cod de feature înainte ca spec-ul să fie citit/aprobat — pune întrebarea în `INTREBARI.md` dacă e nevoie de o decizie a utilizatorului (cost/credit, retry).
 
-## 10+ — curățenie mecanică rămasă (opțional, după 1–7)
-R6 (`window.confirm` → drawer „Scrie ȘTERGE”), R7 (comentarii/nume — `const data = useX()` → nume specifice, `item`/`r`/`parts` interzise), R9 (rute per feature, scoate `App.tsx` din fișierele fierbinți), R10 (împarte `ChildrenPage.tsx`/`ExpensesPage.tsx`), Button/SearchInput unificate în `shared/ui`.
+## 10+ — curățenie mecanică rămasă
+**R10 DONE (2026-09-26):** `ChildProfileView`/`ExpenseFormDrawer` extrase în fișiere proprii.
+**R6 DONE (2026-09-26):** `ConfirmDeleteDialog` (`shared/ui`, „Scrie ȘTERGE”) în loc de `window.confirm` la cele 6 ștergeri definitive; toast „Anulează” adăugat la arhivarea din Achitări. Găsit în timpul lucrului, nerezolvat (notat, nu blocant): `VisitsPage.tsx`'s `toggleArchived` nu arată niciun toast la succes (nici cu, nici fără undo) — de adăugat separat dacă se dorește.
+
+Rămân: R7 (comentarii/nume — `const data = useX()` → nume specifice, `item`/`r`/`parts` interzise), R9 (rute per feature, scoate `App.tsx` din fișierele fierbinți — arhitectural, nu doar mecanic, vezi nota din sesiune), Button/SearchInput unificate în `shared/ui`.
