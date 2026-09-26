@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
 import { AppShell } from './shell/AppShell';
 import { today } from '@domain/calendar-month.mjs';
@@ -63,7 +63,10 @@ export function App() {
 
   useEffect(() => writeLastView(view), [view]);
 
-  const onNavigate = (nextView: ViewKey) => navigate(VIEW_PATHS[nextView]);
+  const onNavigate = (nextView: ViewKey, params?: Record<string, string>) => {
+    const path = VIEW_PATHS[nextView];
+    navigate(params ? `${path}?${new URLSearchParams(params).toString()}` : path);
+  };
 
   // Contoarele din sidebar reutilizează exact numerele deja afișate pe Dashboard
   // (attentionItems) și pe Taxe și grupe (missingCount) — nicio logică nouă.
@@ -119,9 +122,11 @@ function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view
 function PaymentsRoute() {
   const { paymentId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   return (
     <PaymentsPage
       formTargetId={paymentId ?? null}
+      initialChildId={searchParams.get('copil') ?? undefined}
       onOpenCreate={() => navigate('/achitari/nou')}
       onOpenEdit={id => navigate(`/achitari/${id}`)}
       onCloseForm={() => navigate('/achitari')}

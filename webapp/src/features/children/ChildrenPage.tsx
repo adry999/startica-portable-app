@@ -25,7 +25,7 @@ import styles from './ChildrenPage.module.css';
 
 export interface ChildrenPageProps {
   month: string;
-  onNavigate: (view: ViewKey) => void;
+  onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
   /** Sursa fișei deschise — controlată din URL (/copii/:childId) de ruta din App.tsx. */
   childId: string | null;
   onOpenChild: (id: string) => void;
@@ -66,7 +66,7 @@ function ChildrenListView({
   onOpenChild,
 }: {
   month: string;
-  onNavigate: (view: ViewKey) => void;
+  onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
   onOpenChild: (id: string) => void;
 }) {
   const data = useChildren(month);
@@ -474,7 +474,7 @@ function ChildProfileView({
   childId: string;
   month: string;
   onBack: () => void;
-  onNavigate: (view: ViewKey) => void;
+  onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
 }) {
   const data = useChildProfile(childId, month);
   const session = useAppSession();
@@ -607,7 +607,11 @@ function ChildProfileView({
           <Card className={styles.profileSection}>
             <div className={styles.sectionHead}>
               <p className={styles.sectionTitle}>Istoric plăți</p>
-              <button type="button" className={styles.sectionLink} onClick={() => onNavigate('payments')}>
+              <button
+                type="button"
+                className={styles.sectionLink}
+                onClick={() => onNavigate('payments', { copil: child.id })}
+              >
                 Toate achitările →
               </button>
             </div>

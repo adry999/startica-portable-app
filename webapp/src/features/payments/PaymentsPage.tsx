@@ -33,10 +33,19 @@ export interface PaymentsPageProps {
   onCloseForm: () => void;
   /** Click pe un rând cu copil asociat — deschide fișa copilului (/copii/:id). */
   onOpenChild: (id: string) => void;
+  /** Presetează filtrul „Copil" — venit din ?copil= (link „Toate achitările" din fișa copilului). */
+  initialChildId?: string;
 }
 
-export function PaymentsPage({ formTargetId, onOpenCreate, onOpenEdit, onCloseForm, onOpenChild }: PaymentsPageProps) {
-  const data = usePayments();
+export function PaymentsPage({
+  formTargetId,
+  onOpenCreate,
+  onOpenEdit,
+  onCloseForm,
+  onOpenChild,
+  initialChildId,
+}: PaymentsPageProps) {
+  const data = usePayments(initialChildId);
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
 

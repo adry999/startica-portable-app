@@ -117,13 +117,13 @@ function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
  * de citiri directe din DOM. Filtrele trăiesc aici, nu în pagină, ca
  * PaymentsPage să rămână randare pură — la fel ca openGroupId în useGroups.
  */
-export function usePayments(): PaymentsData {
+export function usePayments(initialChildId = ''): PaymentsData {
   const session = useAppSession();
   const { state, ready, loading, saveError } = session.state;
   const records = state as RecordsSnapshot;
 
   const [search, setSearch] = useState('');
-  const [childId, setChildId] = useState('');
+  const [childId, setChildId] = useState(initialChildId);
   const [method, setMethod] = useState('');
   const [monthFrom, setMonthFrom] = useState('');
   const [monthTo, setMonthTo] = useState('');
