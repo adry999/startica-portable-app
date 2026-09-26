@@ -28,3 +28,10 @@ Te oprești doar dacă:
 
 12. **Faza 6, două filiale:** scrie întâi planul tehnic după `17-filiale.md` (date separate pe filială, selector în Sidebar). 
 13. **Faza 16b, sincronizare:** după 12, scrie spec-ul tehnic și planul după `18-sincronizare.md` (server de reconciliere, local-first, conflicte), apoi implementează.
+
+## Stadiu — coada fină din RASPUNSURI.md „Coada, continuare”
+
+- **8 (EUR/BNM UI):** DONE 2026-09-27 — fila Curs valutar (12a), selector în `PaymentFormDrawer` (12b), monedă în Taxe și grupe (12g) + Copil nou (3a), € pe fișa copilului (12d), pastilă curs pe Dashboard (12f). Commit-uri `fc25d06`, `5f94422`. Rămân **12c** (Situația plăților €, în punctul 10) și **12e** (Confirmarea de plată €, în punctul 15) — se fac odată cu ecranele lor, nu separat.
+- **9b (SMS P1):** plan scris (`docs/superpowers/plans/2026-09-27-sms-notify-p1.md`), cod neînceput — următorul punct.
+- **10 (Situația plăților completă):** plan scris (`docs/superpowers/plans/2026-09-27-situatia-platilor-complet.md`), cod neînceput.
+- **11–15:** neîncepute.
