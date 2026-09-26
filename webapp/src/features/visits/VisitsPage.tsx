@@ -3,11 +3,14 @@ import {
   Badge,
   Card,
   DataTable,
+  FilterPills,
+  RowMenu,
   SearchSelect,
   SegmentedControl,
   useToast,
   type BadgeTone,
   type DataTableColumn,
+  type PillTone,
 } from '@shared/ui';
 import { formatAge, formatDate } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
@@ -241,38 +244,20 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       header: '',
       align: 'end',
       render: row => (
-        <div className={styles.rowActions} onClick={event => event.stopPropagation()}>
-          {data.allowedNextStatuses(row.status).map(status => (
-            <button
-              key={status}
-              type="button"
-              className={styles.linkButton}
-              onClick={() => void applyQuickStatus(row, status)}
-            >
-              {STATUS_LABEL[status]}
-            </button>
-          ))}
-          {row.status === 'Efectuată' && (
-            <button type="button" className={styles.linkButtonPrimary} onClick={() => setEnrollTarget(row)}>
-              Înscrie copilul
-            </button>
-          )}
-          <button type="button" className={styles.linkButton} onClick={() => setFormTarget(row)}>
-            Editează
-          </button>
-          <button type="button" className={styles.linkButton} onClick={() => void toggleArchived(row)}>
-            {row.archived ? 'Dezarhivează' : 'Arhivează'}
-          </button>
-          <button
-            type="button"
-            className={styles.linkButton}
-            disabled={!row.archived}
-            title={row.archived ? undefined : 'Arhivează întâi vizita'}
-            onClick={() => void deleteForever(row)}
-          >
-            Șterge
-          </button>
-        </div>
+        <RowMenu
+          items={[
+            { label: 'Editează', onClick: () => setFormTarget(row) },
+            { label: 'Reprogramează', onClick: () => setFormTarget(row) },
+            { label: row.archived ? 'Dezarhivează' : 'Arhivează', onClick: () => void toggleArchived(row) },
+            {
+              label: 'Șterge',
+              danger: true,
+              disabled: !row.archived,
+              title: row.archived ? undefined : 'Arhivează întâi vizita',
+              onClick: () => void deleteForever(row),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -506,19 +491,6 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           />
           <SearchSelect
             className={styles.filterSelect}
-            ariaLabel="Filtru statut"
-            value={data.statusFilter}
-            onChange={data.setStatusFilter}
-            options={[
-              { value: '', label: 'Toate statuturile' },
-              ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(status => ({
-                value: status,
-                label: STATUS_LABEL[status],
-              })),
-            ]}
-          />
-          <SearchSelect
-            className={styles.filterSelect}
             ariaLabel="Filtru perioadă"
             value={data.allMonths ? 'all' : 'month'}
             onChange={value => data.setAllMonths(value === 'all')}
@@ -533,6 +505,23 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             </button>
           )}
         </div>
+
+        <FilterPills
+          groups={[
+            {
+              label: 'Statut',
+              value: data.statusFilter,
+              onChange: data.setStatusFilter,
+              options: [
+                { value: '', label: 'Toate', tone: 'neutral' },
+                ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(
+                  status => ({ value: status, label: STATUS_LABEL[status], tone: STATUS_TONE[status] as PillTone }),
+                ),
+              ],
+            },
+          ]}
+          trailing={`${data.rows.length} vizite`}
+        />
 
         <DataTable
           bare

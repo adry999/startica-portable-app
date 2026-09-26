@@ -4,11 +4,15 @@ import {
   Badge,
   Card,
   DataTable,
+  FilterPills,
+  RowMenu,
   SearchSelect,
   SegmentedControl,
+  SelectionBar,
   groupTone,
   useToast,
   type DataTableColumn,
+  type PillTone,
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
@@ -35,13 +39,13 @@ export interface ChildrenPageProps {
   onCloseChild: () => void;
 }
 
-const AVATAR_TONES = ['toneOrange', 'toneMint', 'toneYellow', 'tonePink'] as const;
-
-function hashIndex(value: string, length: number): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  return hash % length;
-}
+const AVATAR_TONE_CLASS: Record<PillTone, string> = {
+  orange: 'toneOrange',
+  mint: 'toneMint',
+  yellow: 'toneYellow',
+  pink: 'tonePink',
+  neutral: 'toneOrange',
+};
 
 function initials(name: string): string {
   return name
@@ -255,7 +259,7 @@ function ChildrenListView({
       sortValue: row => row.name,
       render: row => (
         <div className={styles.childCell}>
-          <span className={`${styles.avatar} ${styles[AVATAR_TONES[hashIndex(row.id, AVATAR_TONES.length)]]}`}>
+          <span className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, data.groups)]]}`}>
             {initials(row.name)}
           </span>
           <div>
@@ -307,26 +311,19 @@ function ChildrenListView({
       header: '',
       align: 'end',
       render: row => (
-        <details className={styles.rowMenu} onClick={event => event.stopPropagation()}>
-          <summary aria-label="Mai multe acțiuni">⋯</summary>
-          <div className={styles.rowMenuPanel}>
-            <button type="button" onClick={() => setFormTarget(row.child)}>
-              Editează
-            </button>
-            <button type="button" onClick={() => toggleArchived(row)}>
-              {row.archived ? 'Reactivează' : 'Arhivează'}
-            </button>
-            <button
-              type="button"
-              className={styles.rowMenuDanger}
-              disabled={!row.archived}
-              title={row.archived ? undefined : 'Arhivează întâi fișa'}
-              onClick={() => void deleteChildForever(row)}
-            >
-              Șterge definitiv
-            </button>
-          </div>
-        </details>
+        <RowMenu
+          items={[
+            { label: 'Editează', onClick: () => setFormTarget(row.child) },
+            { label: row.archived ? 'Reactivează' : 'Arhivează', onClick: () => toggleArchived(row) },
+            {
+              label: 'Șterge definitiv',
+              danger: true,
+              disabled: !row.archived,
+              title: row.archived ? undefined : 'Arhivează întâi fișa',
+              onClick: () => void deleteChildForever(row),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -383,35 +380,41 @@ function ChildrenListView({
               { value: 'all', label: `Toți · ${data.activeTotal + data.archivedTotal}` },
             ]}
           />
-          <SearchSelect
-            className={styles.filterSelect}
-            ariaLabel="Filtru grupă"
-            value={groupFilter}
-            onChange={setGroupFilter}
-            options={[
-              { value: 'all', label: 'Toate grupele' },
-              { value: 'none', label: 'Fără grupă' },
-              ...data.groups.map(group => ({ value: group.id, label: group.name })),
-            ]}
-          />
-          <SearchSelect
-            className={styles.filterSelect}
-            ariaLabel="Filtru plată"
-            value={paymentFilter}
-            onChange={setPaymentFilter}
-            options={[
-              { value: 'all', label: 'Toate plățile' },
-              { value: 'Achitat', label: 'Achitat' },
-              { value: 'Parțial', label: 'Parțial' },
-              { value: 'Neachitat', label: 'Neachitat' },
-              { value: 'Scadent', label: 'Scadent' },
-            ]}
-          />
         </div>
 
+        <FilterPills
+          groups={[
+            {
+              label: 'Grupă',
+              value: groupFilter,
+              onChange: setGroupFilter,
+              options: [
+                { value: 'all', label: 'Toate', tone: 'neutral' },
+                ...data.groups.map(group => ({
+                  value: group.id,
+                  label: group.name,
+                  tone: groupTone(group.id, data.groups),
+                })),
+                { value: 'none', label: 'Fără grupă', tone: 'neutral' },
+              ],
+            },
+            {
+              label: 'Plată',
+              value: paymentFilter,
+              onChange: setPaymentFilter,
+              options: [
+                { value: 'all', label: 'Toate', tone: 'neutral' },
+                { value: 'Achitat', label: 'Achitat', tone: 'mint' },
+                { value: 'Parțial', label: 'Parțial', tone: 'yellow' },
+                { value: 'Neachitat', label: 'Neachitat', tone: 'pink' },
+                { value: 'Scadent', label: 'Scadent', tone: 'neutral' },
+              ],
+            },
+          ]}
+        />
+
         {selectedRowKeys.size > 0 && (
-          <div className={styles.selectionBar}>
-            <span>{selectedRowKeys.size} selectați</span>
+          <SelectionBar label={<>{selectedRowKeys.size} selectați</>} onCancel={() => setSelectedRowKeys(new Set())}>
             <span className={styles.selectionDivider}>|</span>
             <SearchSelect
               className={styles.filterSelect}
@@ -439,10 +442,7 @@ function ChildrenListView({
                 Arhivează
               </button>
             )}
-            <button type="button" className={styles.selectionCancel} onClick={() => setSelectedRowKeys(new Set())}>
-              Anulează ×
-            </button>
-          </div>
+          </SelectionBar>
         )}
 
         <DataTable

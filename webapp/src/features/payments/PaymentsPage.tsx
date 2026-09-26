@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Badge, Card, DataTable, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
+import {
+  Badge,
+  Card,
+  DataTable,
+  SegmentedControl,
+  SelectionBar,
+  useToast,
+  type BadgeTone,
+  type CardTone,
+} from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
@@ -262,14 +271,17 @@ function TableView({
   return (
     <>
       {selectedRows.length > 0 && (
-        <div className={styles.selectionBar}>
-          <span>
-            {selectedRows.length} selectate · {formatMoney(selectedTotal)}
-          </span>
+        <SelectionBar
+          label={
+            <>
+              {selectedRows.length} selectate · {formatMoney(selectedTotal)}
+            </>
+          }
+        >
           <button type="button" className={styles.primaryButton} onClick={archiveSelected}>
             Arhivează selectate
           </button>
-        </div>
+        </SelectionBar>
       )}
       <DataTable<PaymentRowView>
         rows={data.rows}

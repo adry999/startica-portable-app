@@ -1,5 +1,15 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
+import {
+  Badge,
+  Card,
+  DataTable,
+  Drawer,
+  RowMenu,
+  SegmentedControl,
+  SelectionBar,
+  useToast,
+  type DataTableColumn,
+} from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
 import { total } from '@domain/money.mjs';
@@ -194,26 +204,22 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       header: '',
       align: 'end',
       render: expense => (
-        <details className={styles.rowMenu} onClick={event => event.stopPropagation()}>
-          <summary aria-label="Mai multe acțiuni">⋯</summary>
-          <div className={styles.rowMenuPanel}>
-            <button type="button" onClick={() => setFormTarget(expense)}>
-              Editează
-            </button>
-            <button type="button" onClick={() => void toggleArchived(expense)}>
-              {expense.archived ? 'Reactivează' : 'Arhivează'}
-            </button>
-            <button
-              type="button"
-              className={styles.rowMenuDanger}
-              disabled={!expense.archived}
-              title={expense.archived ? undefined : 'Arhivează întâi cheltuiala'}
-              onClick={() => void deleteExpenseForever(expense)}
-            >
-              Șterge definitiv
-            </button>
-          </div>
-        </details>
+        <RowMenu
+          items={[
+            { label: 'Editează', onClick: () => setFormTarget(expense) },
+            {
+              label: expense.archived ? 'Reactivează' : 'Arhivează',
+              onClick: () => void toggleArchived(expense),
+            },
+            {
+              label: 'Șterge definitiv',
+              danger: true,
+              disabled: !expense.archived,
+              title: expense.archived ? undefined : 'Arhivează întâi cheltuiala',
+              onClick: () => void deleteExpenseForever(expense),
+            },
+          ]}
+        />
       ),
     },
   ];
@@ -384,17 +390,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         </p>
 
         {selectedRowKeys.size > 0 && (
-          <div className={styles.selectionBar}>
-            <span>
-              {selectedRowKeys.size} selectate · {formatMoney(selectedTotal)}
-            </span>
+          <SelectionBar
+            label={
+              <>
+                {selectedRowKeys.size} selectate · {formatMoney(selectedTotal)}
+              </>
+            }
+            onCancel={() => setSelectedRowKeys(new Set())}
+          >
             <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
               {archiveFilter === 'archived' ? 'Dezarhivează selectate' : 'Arhivează selectate'}
             </button>
-            <button type="button" className={styles.selectionCancel} onClick={() => setSelectedRowKeys(new Set())}>
-              Anulează ×
-            </button>
-          </div>
+          </SelectionBar>
         )}
 
         {viewMode === 'table' ? (

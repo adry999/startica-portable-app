@@ -474,35 +474,3 @@
 .selectedDayRow {
   background: var(--cream);
 }
-
-.rowActions {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: var(--space-10);
-}
-
-.linkButton {
-  border: none;
-  background: none;
-  color: var(--orange-ink);
-  font-weight: 800;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.linkButton:disabled {
-  color: var(--subtle);
-  cursor: not-allowed;
-}
-
-.linkButtonPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: 2px var(--space-10);
-  font-weight: 800;
-  font-size: 12px;
-  white-space: nowrap;
-}

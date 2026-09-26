@@ -1,9 +1,15 @@
 import { useMemo, useState, type DragEvent } from 'react';
-import { useToast } from '@shared/ui';
+import { groupTone, useToast, type PillTone } from '@shared/ui';
 import { initials, type GroupsData } from './useGroups';
 import styles from './GroupsBoard.module.css';
 
-const COLUMN_TONES = ['columnOrange', 'columnMint', 'columnYellow', 'columnPink'] as const;
+const TONE_COLUMN_CLASS: Record<PillTone, string> = {
+  orange: styles.columnOrange,
+  mint: styles.columnMint,
+  yellow: styles.columnYellow,
+  pink: styles.columnPink,
+  neutral: styles.columnOrange, // nu ar trebui să apară — orice grupă reală are id, doar coloana „Fără grupă" e neutră și e tratată separat mai sus
+};
 const GROUP_DRAG_TYPE = 'application/x-group-id';
 
 interface BoardCard {
@@ -40,10 +46,10 @@ export function GroupsBoard({ data: groupsData }: { data: GroupsData }) {
       overCapacity: false,
       cards: groupsData.unassignedChildren.map(child => ({ id: child.id, name: child.name, ageLabel: child.ageLabel })),
     };
-    const rest = groupsData.groups.map((group, index) => ({
+    const rest = groupsData.groups.map(group => ({
       key: group.id,
       name: group.name,
-      toneClass: group.overCapacity ? styles.columnPink : styles[COLUMN_TONES[index % COLUMN_TONES.length]],
+      toneClass: group.overCapacity ? styles.columnPink : TONE_COLUMN_CLASS[groupTone(group.id, groupsData.groups)],
       capacityLabel: group.occupancyLabel,
       occupancyPercent: group.occupancyPercent,
       educatorLabel: group.educator || '+ Setează educator',

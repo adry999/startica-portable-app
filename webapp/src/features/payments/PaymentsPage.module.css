@@ -83,18 +83,6 @@
   min-width: 140px;
 }
 
-.selectionBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--slate);
-  color: var(--white);
-  border-radius: var(--radius-md-lg);
-  padding: var(--space-10) var(--space-16);
-  margin-bottom: var(--space-12);
-  box-shadow: var(--shadow-floating-bar);
-}
-
 .badgeStack {
   display: inline-flex;
   flex-wrap: wrap;

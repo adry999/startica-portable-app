@@ -1,5 +1,5 @@
 import { Fragment, useState, type FormEvent } from 'react';
-import { Card, SearchSelect, SegmentedControl, useToast, type CardTone } from '@shared/ui';
+import { Card, groupTone, SearchSelect, SegmentedControl, useToast, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
@@ -7,15 +7,16 @@ import { GroupsBoard } from './GroupsBoard';
 import { GroupFormDrawer } from './GroupFormDrawer';
 import styles from './GroupsPage.module.css';
 
-const TILE_TONES: CardTone[] = ['orange', 'mint', 'yellow'];
 type ViewMode = 'cards' | 'board';
 const VIEW_OPTIONS = [
   { value: 'cards' as const, label: 'Carduri' },
   { value: 'board' as const, label: 'Tablă' },
 ];
 
-function tileTone(index: number, overCapacity: boolean): CardTone {
-  return overCapacity ? 'pink' : TILE_TONES[index % TILE_TONES.length];
+function tileTone(group: GroupCardView, groups: GroupCardView[]): CardTone {
+  if (group.overCapacity) return 'pink';
+  const tone = groupTone(group.id, groups);
+  return tone === 'neutral' ? 'orange' : tone;
 }
 
 export function GroupsPage() {
@@ -57,11 +58,11 @@ export function GroupsPage() {
         <GroupsBoard data={data} />
       ) : (
         <div className={styles.grid}>
-          {data.groups.map((group, index) => (
+          {data.groups.map(group => (
             <Fragment key={group.id}>
               <GroupTile
                 group={group}
-                tone={tileTone(index, group.overCapacity)}
+                tone={tileTone(group, data.groups)}
                 isOpen={group.id === data.openGroupId}
                 onToggle={() => data.toggleGroup(group.id)}
               />

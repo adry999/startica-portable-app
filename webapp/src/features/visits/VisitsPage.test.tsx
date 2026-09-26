@@ -160,31 +160,38 @@ describe('VisitsPage', () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
-    renderPage();
+    const { container } = renderPage();
     const user = userEvent.setup();
 
-    const table = screen.getByRole('table');
-    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
-    await user.click(within(row).getByRole('button', { name: 'Efectuată' }));
+    // Butoanele rapide de statut trăiesc doar în panoul zilei din calendar, nu mai apar pe rândul tabelului.
+    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    await user.click(todayCell);
+
+    // Maria Ionescu e deja Efectuată, deci scopăm căutarea la cardul lui Andrei ca să nu ne ciocnim de al ei.
+    const andreiCard = Array.from(container.querySelectorAll('[class*="detailName"]'))
+      .find(el => el.textContent?.includes('Andrei Popescu'))
+      ?.closest('[class*="detailCard"]') as HTMLElement;
+    await user.click(within(andreiCard).getByRole('button', { name: 'Efectuată' }));
 
     // După ce sesiunea preia statul actualizat de la server, singurul buton rapid rămas e „A renunțat".
-    expect(await within(row).findByRole('button', { name: 'A renunțat' })).toBeInTheDocument();
-    expect(within(row).queryByRole('button', { name: 'Neprezentată' })).not.toBeInTheDocument();
+    expect(await within(andreiCard).findByRole('button', { name: 'A renunțat' })).toBeInTheDocument();
+    expect(within(andreiCard).queryByRole('button', { name: 'Neprezentată' })).not.toBeInTheDocument();
   });
 
-  it('„Înscrie copilul" apare doar pentru o vizită Efectuată și deschide formularul de înscriere', async () => {
+  it('„S-a înscris" apare doar pentru o vizită Efectuată și deschide formularul de înscriere', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
-    renderPage();
+    const { container } = renderPage();
     const user = userEvent.setup();
 
-    const table = screen.getByRole('table');
-    const doneRow = within(table).getByText('Maria Ionescu').closest('tr')!;
-    const scheduledRow = within(table).getByText('Andrei Popescu').closest('tr')!;
-    expect(within(scheduledRow).queryByRole('button', { name: 'Înscrie copilul' })).not.toBeInTheDocument();
+    // Toate cele 3 vizite fixture cad în aceeași zi — selectarea zilei arată panourile de detalii ale tuturor.
+    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    await user.click(todayCell);
 
-    await user.click(within(doneRow).getByRole('button', { name: 'Înscrie copilul' }));
+    expect(screen.getAllByRole('button', { name: 'S-a înscris' })).toHaveLength(1);
+
+    await user.click(screen.getByRole('button', { name: 'S-a înscris' }));
     expect(screen.getByRole('dialog', { name: 'Înscrie copilul: Maria Ionescu' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Înscrie' }));

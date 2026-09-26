@@ -9,3 +9,5 @@ export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from '.
 export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone } from './FilterPills';
 export { groupTone } from './group-tone';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
+export { RowMenu, type RowMenuItem, type RowMenuProps } from './RowMenu';
+export { SelectionBar, type SelectionBarProps } from './SelectionBar';
