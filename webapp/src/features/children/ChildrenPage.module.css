@@ -130,14 +130,21 @@
   font-size: 13px;
 }
 
+.filterSelect {
+  flex: none;
+  width: 180px;
+}
+
 .select {
+  appearance: none;
   background: var(--white);
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-8) 28px var(--space-8) var(--space-12);
   font-family: var(--font-body);
   font-size: 13px;
   color: var(--slate);
+  cursor: pointer;
 }
 
 .selectionBar {

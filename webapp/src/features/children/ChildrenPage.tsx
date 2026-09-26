@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Badge, Card, DataTable, Drawer, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
+import {
+  Badge,
+  Card,
+  DataTable,
+  Drawer,
+  SearchSelect,
+  SegmentedControl,
+  useToast,
+  type DataTableColumn,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { downloadCsv } from '@shared/csv-export';
@@ -9,7 +18,6 @@ import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { useChildren, type ChildRow } from './useChildren';
 import { useChildProfile } from './useChildProfile';
 import { ChildFormDrawer } from './ChildFormDrawer';
-import { ChildrenCsvDialog } from './ChildrenCsvDialog';
 import { buildChildRecord, type ChildFormValues } from './child-form';
 import type { Child, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '../../app/shell/nav-items';
@@ -71,14 +79,10 @@ function ChildrenListView({
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
-  const [csvDialogOpen, setCsvDialogOpen] = useState(false);
   const [moveGroupId, setMoveGroupId] = useState('');
 
   useTopbarActions(
     <div className={styles.headerActions}>
-      <button type="button" className={styles.btnGhost} onClick={() => setCsvDialogOpen(true)}>
-        Import CSV
-      </button>
       <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
         + Adaugă copil
       </button>
@@ -129,6 +133,27 @@ function ChildrenListView({
             ),
           );
         },
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function unarchiveSelected() {
+    const ids = [...selectedRowKeys];
+    const targets = data.rows.filter(row => ids.includes(row.id) && row.archived);
+    if (targets.length === 0) return;
+    try {
+      for (const row of targets) {
+        await session.mutate('/api/record', {
+          type: 'children',
+          mode: 'update',
+          record: { ...row.child, archived: false, archivedAt: null },
+        });
+      }
+      setSelectedRowKeys(new Set());
+      toast.show({
+        message: `${targets.length} ${targets.length === 1 ? 'copil dezarhivat' : 'copii dezarhivați'}`,
       });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -344,68 +369,72 @@ function ChildrenListView({
           <SegmentedControl
             ariaLabel="Filtru arhivare"
             value={archiveFilter}
-            onChange={setArchiveFilter}
+            onChange={value => {
+              setArchiveFilter(value);
+              setSelectedRowKeys(new Set());
+            }}
             options={[
               { value: 'active', label: `Activi · ${data.activeTotal}` },
               { value: 'archived', label: `Arhivați · ${data.archivedTotal}` },
               { value: 'all', label: `Toți · ${data.activeTotal + data.archivedTotal}` },
             ]}
           />
-          <select
-            className={styles.select}
+          <SearchSelect
+            className={styles.filterSelect}
+            ariaLabel="Filtru grupă"
             value={groupFilter}
-            onChange={event => setGroupFilter(event.target.value)}
-            aria-label="Filtru grupă"
-          >
-            <option value="all">Grupă ▾</option>
-            <option value="none">Fără grupă</option>
-            {data.groups.map(group => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
-          <select
-            className={styles.select}
+            onChange={setGroupFilter}
+            options={[
+              { value: 'all', label: 'Toate grupele' },
+              { value: 'none', label: 'Fără grupă' },
+              ...data.groups.map(group => ({ value: group.id, label: group.name })),
+            ]}
+          />
+          <SearchSelect
+            className={styles.filterSelect}
+            ariaLabel="Filtru plată"
             value={paymentFilter}
-            onChange={event => setPaymentFilter(event.target.value)}
-            aria-label="Filtru plată"
-          >
-            <option value="all">Plată ▾</option>
-            <option value="Achitat">Achitat</option>
-            <option value="Parțial">Parțial</option>
-            <option value="Neachitat">Neachitat</option>
-            <option value="Scadent">Scadent</option>
-          </select>
+            onChange={setPaymentFilter}
+            options={[
+              { value: 'all', label: 'Toate plățile' },
+              { value: 'Achitat', label: 'Achitat' },
+              { value: 'Parțial', label: 'Parțial' },
+              { value: 'Neachitat', label: 'Neachitat' },
+              { value: 'Scadent', label: 'Scadent' },
+            ]}
+          />
         </div>
 
         {selectedRowKeys.size > 0 && (
           <div className={styles.selectionBar}>
             <span>{selectedRowKeys.size} selectați</span>
             <span className={styles.selectionDivider}>|</span>
-            <select
-              className={styles.select}
+            <SearchSelect
+              className={styles.filterSelect}
+              ariaLabel="Mută în grupa"
+              placeholder="Mută în grupă…"
               value={moveGroupId}
-              onChange={event => setMoveGroupId(event.target.value)}
-              aria-label="Mută în grupa"
-            >
-              <option value="">Mută în grupă…</option>
-              <option value="__none__">Fără grupă</option>
-              {data.groups.map(group => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
+              onChange={setMoveGroupId}
+              options={[
+                { value: '__none__', label: 'Fără grupă' },
+                ...data.groups.map(group => ({ value: group.id, label: group.name })),
+              ]}
+            />
             <button type="button" disabled={!moveGroupId} onClick={() => void moveSelectedToGroup(moveGroupId)}>
               Mută
             </button>
             <button type="button" onClick={exportSelected}>
               Exportă
             </button>
-            <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
-              Arhivează
-            </button>
+            {archiveFilter === 'archived' ? (
+              <button type="button" className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
+                Dezarhivează
+              </button>
+            ) : (
+              <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
+                Arhivează
+              </button>
+            )}
             <button type="button" className={styles.selectionCancel} onClick={() => setSelectedRowKeys(new Set())}>
               Anulează ×
             </button>
@@ -432,7 +461,6 @@ function ChildrenListView({
         onSubmit={submitChildForm}
         onClose={() => setFormTarget(null)}
       />
-      <ChildrenCsvDialog open={csvDialogOpen} onClose={() => setCsvDialogOpen(false)} />
     </>
   );
 }
