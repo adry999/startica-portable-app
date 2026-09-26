@@ -9,6 +9,7 @@ import {
   SegmentedControl,
   SelectionBar,
   useToast,
+  type BadgeTone,
   type DataTableColumn,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -30,6 +31,10 @@ export interface ExpensesPageProps {
 type ViewMode = 'table' | 'daily';
 type ArchiveFilter = 'active' | 'archived' | 'all';
 
+// Aceleași tonuri ca la achitări (PaymentsPage.METHOD_TONE), doar cu valori lowercase.
+const METHOD_TONE: Record<string, BadgeTone> = { cash: 'orange', card: 'yellow', transfer: 'mint' };
+const METHOD_LABEL: Record<string, string> = { cash: 'Cash', card: 'Card', transfer: 'Transfer' };
+
 export function ExpensesPage({ month }: ExpensesPageProps) {
   const expensesData = useExpenses(month);
   const toast = useToast();
@@ -39,6 +44,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [monthFrom, setMonthFrom] = useState('');
   const [monthTo, setMonthTo] = useState('');
   const [category, setCategory] = useState('');
+  const [method, setMethod] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -57,9 +63,10 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         (!monthFrom || expense.date.slice(0, 7) >= monthFrom) &&
         (!monthTo || expense.date.slice(0, 7) <= monthTo) &&
         (!category || expense.category === category) &&
+        (!method || expense.method === method) &&
         matchesRecordListSearch('expenses', expense, expensesData.records, normalizedSearch),
     );
-  }, [expensesData.expenses, expensesData.records, search, monthFrom, monthTo, category, archiveFilter]);
+  }, [expensesData.expenses, expensesData.records, search, monthFrom, monthTo, category, method, archiveFilter]);
 
   function exportFiltered() {
     downloadCsv(
@@ -194,6 +201,13 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       header: 'Categorie',
       sortValue: expense => expense.category,
       render: expense => <Badge tone={categoryStyleFor(expense.category).tone}>{expense.category}</Badge>,
+    },
+    {
+      key: 'method',
+      header: 'Metodă',
+      sortValue: expense => expense.method ?? '',
+      render: expense =>
+        expense.method ? <Badge tone={METHOD_TONE[expense.method]}>{METHOD_LABEL[expense.method]}</Badge> : '—',
     },
     {
       key: 'amount',
@@ -387,6 +401,17 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
                   label: name,
                   tone: categoryStyleFor(name).tone,
                 })),
+              ],
+            },
+            {
+              label: 'Metodă',
+              value: method,
+              onChange: setMethod,
+              options: [
+                { value: '', label: 'Toate', tone: 'neutral' },
+                { value: 'cash', label: 'Cash', tone: METHOD_TONE.cash },
+                { value: 'card', label: 'Card', tone: METHOD_TONE.card },
+                { value: 'transfer', label: 'Transfer', tone: METHOD_TONE.transfer },
               ],
             },
           ]}

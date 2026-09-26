@@ -437,6 +437,19 @@ test('normalizeRecord(payments) păstrează currency EUR când e trimisă explic
   assert.equal(record.currency, 'EUR');
 });
 
+test('normalizeRecord(expenses) acceptă o metodă validă, dar respinge una necunoscută', () => {
+  const base = { id: 'EXP-1', date: '2026-09-01', amount: 100 };
+  assert.equal(normalizeRecord('expenses', { ...base, method: 'cash' }).method, 'cash');
+  assert.equal(normalizeRecord('expenses', { ...base, method: 'card' }).method, 'card');
+  assert.equal(normalizeRecord('expenses', { ...base, method: 'transfer' }).method, 'transfer');
+  assert.throws(() => normalizeRecord('expenses', { ...base, method: 'bitcoin' }), /Metodă necunoscută/);
+});
+
+test('normalizeRecord(expenses) fără metodă rămâne fără metodă, nu se defaultează la cash', () => {
+  const normalized = normalizeRecord('expenses', { id: 'EXP-1', date: '2026-09-01', amount: 100 });
+  assert.equal('method' in normalized, false);
+});
+
 test('normalizeRecord(payments) respinge o monedă necunoscută', () => {
   assert.throws(
     () =>

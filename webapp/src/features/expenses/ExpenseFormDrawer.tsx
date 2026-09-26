@@ -20,12 +20,13 @@ export function ExpenseFormDrawer({
   const [date, setDate] = useState(editing?.date || today());
   const [amount, setAmount] = useState(editing?.amount !== undefined ? String(editing.amount) : '');
   const [category, setCategory] = useState(editing?.category || 'Altele');
+  const [method, setMethod] = useState(editing?.method || (editing ? '' : 'cash'));
   const [description, setDescription] = useState(editing?.description || '');
   const [notes, setNotes] = useState(editing?.notes || '');
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    onSubmit({ date, amount, category, description, notes });
+    onSubmit({ date, amount, category, method, description, notes });
   }
 
   return (
@@ -38,7 +39,7 @@ export function ExpenseFormDrawer({
         <button
           type="button"
           className={styles.btnPrimary}
-          onClick={() => onSubmit({ date, amount, category, description, notes })}
+          onClick={() => onSubmit({ date, amount, category, method, description, notes })}
         >
           Salvează
         </button>
@@ -74,6 +75,15 @@ export function ExpenseFormDrawer({
               <option key={name} value={name} />
             ))}
           </datalist>
+        </label>
+        <label className={styles.editorField}>
+          Metodă
+          <select value={method} onChange={event => setMethod(event.target.value)}>
+            {editing && !method ? <option value="">Nespecificată</option> : null}
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="transfer">Transfer</option>
+          </select>
         </label>
         <label className={styles.editorField}>
           Descriere

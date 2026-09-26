@@ -76,6 +76,7 @@ export interface Expense {
   id: string;
   date: DateKey;
   category: string;
+  method?: 'cash' | 'card' | 'transfer';
   description: string;
   amount: number;
   notes?: string;

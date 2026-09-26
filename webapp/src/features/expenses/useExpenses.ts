@@ -11,6 +11,7 @@ export interface ExpenseFormInput {
   date: string;
   amount: string;
   category: string;
+  method: string;
   description: string;
   notes: string;
 }
@@ -149,6 +150,7 @@ export function useExpenses(month: string): ExpensesData {
       date: input.date,
       amount: Number(input.amount),
       category: canonicalCategoryName(input.category, records),
+      method: input.method || undefined,
       description: input.description.trim(),
       notes: input.notes,
     }) as Expense;

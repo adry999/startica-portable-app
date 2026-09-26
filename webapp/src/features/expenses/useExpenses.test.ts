@@ -260,6 +260,7 @@ describe('useExpenses', () => {
         date: '2026-09-20',
         amount: '120',
         category: 'chirie',
+        method: '',
         description: 'Reparație robinet',
         notes: '',
       }),
@@ -285,6 +286,7 @@ describe('useExpenses', () => {
         date: expense.date,
         amount: '500',
         category: expense.category,
+        method: '',
         description: expense.description,
         notes: '',
       }),
@@ -296,7 +298,14 @@ describe('useExpenses', () => {
     const { result } = renderHook(() => useExpenses('2026-09'));
 
     await expect(
-      result.current.createExpense({ date: '2026-09-20', amount: '0', category: 'Altele', description: '', notes: '' }),
+      result.current.createExpense({
+        date: '2026-09-20',
+        amount: '0',
+        category: 'Altele',
+        method: '',
+        description: '',
+        notes: '',
+      }),
     ).rejects.toThrow();
   });
 

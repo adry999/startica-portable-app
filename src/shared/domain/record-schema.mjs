@@ -118,6 +118,7 @@ const FIELDS = {
     'id',
     'date',
     'category',
+    'method',
     'description',
     'amount',
     'notes',
@@ -359,6 +360,10 @@ export function normalizeRecord(type, input) {
     } else {
       record.category ||= 'Altele';
       record.description ??= '';
+      // Fără implicit: cheltuielile vechi, fără metodă, trebuie să rămână așa
+      // la re-salvare — implicitul 'cash' e doar în formularul de creare (UI).
+      if (record.method !== undefined)
+        requireThat(['cash', 'card', 'transfer'].includes(record.method), 'Metodă necunoscută.');
     }
   }
   return record;
