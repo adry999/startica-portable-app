@@ -1,5 +1,5 @@
 import { normalizeRecord } from '@domain/record-schema.mjs';
-import { rescheduleVisit, applyVisitStatus } from '#features/visits/domain/visit-status.mjs';
+import { rescheduleVisit } from '#features/visits/domain/visit-status.mjs';
 import type { Visit, VisitStatus } from '@contracts/record-types.mjs';
 
 export interface VisitFormValues {
@@ -81,8 +81,19 @@ export function buildVisitRecord(previous: Visit | null, id: string, values: Vis
       ? rescheduleVisit(result, { date: values.date, time: values.time }, now)
       : { ...result, date: values.date, time: values.time };
 
+  // Corectare manuală: formularul de editare permite orice statut din setul „corectabil"
+  // (vezi CORRECTABLE_STATUSES în VisitFormDrawer) — nu doar tranziția înainte impusă de
+  // allowedNextStatuses (folosită pe butoanele rapide „Cum a decurs vizita?"). Nu se
+  // validează aici, dar se păstrează istoricul, la fel ca applyVisitStatus.
   const nextStatus = (values.status || result.status) as VisitStatus;
-  if (nextStatus !== result.status) result = applyVisitStatus(result, nextStatus, now);
+  if (nextStatus !== result.status) {
+    result = {
+      ...result,
+      status: nextStatus,
+      statusChangedAt: now,
+      history: [...result.history, { at: now, status: nextStatus, date: result.date, time: result.time }],
+    };
+  }
 
   return normalizeRecord('visits', result) as Visit;
 }

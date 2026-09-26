@@ -538,17 +538,19 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           columns={columns}
           rows={data.rows}
           rowKey={row => row.id}
-          onRowClick={row => data.setSelectedDate(row.date)}
+          onRowClick={row => {
+            data.setSelectedDate(row.date);
+            setFormTarget(row);
+          }}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
         />
-        <p className={styles.tableHint}>Click pe rând deschide vizita în calendar.</p>
+        <p className={styles.tableHint}>Click pe rând deschide toate detaliile vizitei.</p>
       </Card>
 
       <VisitFormDrawer
         key={formTarget === 'new' ? `new-${data.selectedDate ?? ''}` : formTarget === null ? 'closed' : formTarget.id}
         target={formTarget}
         groups={data.groups}
-        allowedNextStatuses={data.allowedNextStatuses}
         defaultDate={data.selectedDate ?? undefined}
         onSubmit={submitVisitForm}
         onClose={() => setFormTarget(null)}

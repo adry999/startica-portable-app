@@ -9,22 +9,20 @@ import styles from './VisitFormDrawer.module.css';
 export interface VisitFormDrawerProps {
   target: Visit | 'new' | null;
   groups: Group[];
-  allowedNextStatuses: (status: Visit['status']) => Visit['status'][];
   /** Data preselectată la creare (ex. ziua aleasă în calendar) — ignorată la editare, unde data vizitei existente rămâne sursa. */
   defaultDate?: string;
   onSubmit: (values: VisitFormValues) => void;
   onClose: () => void;
 }
 
+// Corectare manuală a unei greșeli de introducere — orice statut din acest set poate fi
+// ales liber la editare, spre diferență de allowedNextStatuses (tranziția înainte impusă
+// pe butoanele rapide „Cum a decurs vizita?"). „Înscris" nu e aici: are drept sursă unică
+// fluxul de înscriere (creează fișa copilului), nu poate fi setat direct dintr-un dropdown.
+const CORRECTABLE_STATUSES: Visit['status'][] = ['Programată', 'Efectuată', 'Neprezentată', 'Renunțat'];
+
 /** Echivalentul visit-editor-fields.mjs's `markup()`/`read()`, ca formular React controlat. */
-export function VisitFormDrawer({
-  target,
-  groups,
-  allowedNextStatuses,
-  defaultDate,
-  onSubmit,
-  onClose,
-}: VisitFormDrawerProps) {
+export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose }: VisitFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<VisitFormValues>(() =>
     defaultVisitFormValues(editing, defaultDate || todayFn()),
@@ -34,7 +32,7 @@ export function VisitFormDrawer({
     setValues(previous => ({ ...previous, [key]: value }));
   }
 
-  const statusChoices = editing ? [editing.status, ...allowedNextStatuses(editing.status)] : [];
+  const statusChoices = editing ? (editing.status === 'Înscris' ? ['Înscris' as const] : CORRECTABLE_STATUSES) : [];
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
