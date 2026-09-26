@@ -195,7 +195,7 @@ export function useVisits(initialDate?: string): VisitsData {
 
   const normalizedSearch = normalizeSearchText(search);
   const rows = records.visits
-    .filter(visit => visit.archived === showArchived)
+    .filter(visit => Boolean(visit.archived) === showArchived)
     .filter(visit => !statusFilter || visit.status === statusFilter)
     .filter(visit => allMonths || visit.date.slice(0, 7) === month)
     .filter(visit => !selectedDate || visit.date === selectedDate)

@@ -146,6 +146,33 @@ describe('useVisits', () => {
     expect(result.current.rows.map(r => r.id)).toEqual(['VIZ-3']);
   });
 
+  it('o vizită fără câmpul „archived" deloc (nu doar false) contează ca activă, nu ca arhivată', async () => {
+    // Regresie: `visit.archived === showArchived` (strict) exclude vizitele unde
+    // archived e `undefined` — normalizeRecord nu-l forțează la `false` (record-schema.mjs
+    // doar validează tipul CÂND e prezent). Orice vizită creată fără să fi trecut vreodată
+    // prin arhivare/dezarhivare are `archived: undefined` în stare reală, nu `false`.
+    const noArchivedFieldState = {
+      ...fixtureState,
+      visits: [{ ...fixtureState.visits[0], id: 'VIZ-FARA-ARHIVARE', archived: undefined }],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: noArchivedFieldState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    const { result } = renderHook(() => useVisits());
+
+    expect(result.current.rows.map(r => r.id)).toEqual(['VIZ-FARA-ARHIVARE']);
+    act(() => result.current.setShowArchived(true));
+    expect(result.current.rows).toHaveLength(0);
+  });
+
   it('filtrul de statut restrânge lista', async () => {
     await loadedSession();
     const { result } = renderHook(() => useVisits());
