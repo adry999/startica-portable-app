@@ -8,16 +8,256 @@
 <body>
 <x-dc>
 <helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
-<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
-  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
-    <div style="display:flex;gap:16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Administrare.dc.html">Administrare</a><a href="Achitari.dc.html">Achitări</a><a href="Situatia.dc.html">Situația plăților</a></div>
-    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Grădinița și documente tipărite</h1>
-    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#6a">6a</a>: datele grădiniței, într-o filă proprie în Backup și setări. Tot de aici se iau antetul confirmării de plată (<a href="#6b">6b</a>) și al raportului tipărit (<a href="#6c">6c</a>). Datele din exemple (IDNO, IBAN, adresă) sunt fictive.</p>
+<section style="padding:64px 72px 32px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1123px">
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1.05">Confirmare de plată · A4 orizontal, în două părți</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">O foaie A4 tăiată pe linia punctată. Partea din stânga rămâne la grădiniță, unde bonul fiscal sau chitanța bancară se prinde în colțul din stânga sus. Partea din dreapta o primește părintele, ca dovadă de plată. Ambele au același număr. <a href="#16d">16d</a> împarte foaia în jumătăți, <a href="#16e">16e</a> în 1/3 pentru grădiniță și 2/3 pentru părinte.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
-    <div id="6a" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">6a</span><span style="font-size:16px;font-weight:700">Setări grădiniță</span></div>
+    <div id="16d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16d</span><span style="font-size:16px;font-weight:700">Jumătate / jumătate · două A5</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);display:grid;grid-template-columns:1fr 1px 1fr">
+        <div style="padding:34px 38px;display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:2px solid #3a4750">
+            <img src="web/assets/startica-logo.svg" alt="Startica" style="height:26px;width:auto"></img>
+            <span style="margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3a4750;padding:3px 8px;border:1px solid #3a4750;border-radius:4px">Exemplar grădiniță</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Nr. 0147</span><span style="margin-left:auto;font-size:12px;color:#6b7780">24.09.2026, 10:42</span></div>
+          <div style="display:grid;grid-template-columns:96px 1fr;gap:6px 14px;font-size:12px">
+            <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria · contract nr. 12</span>
+            <span style="color:#6b7780">Grupa</span><span style="font-weight:700">Mijlocie</span>
+            <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+            <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+            <span style="color:#6b7780">Repartizare</span><span style="font-weight:700">sept. 9.993,00 · oct. 5.007,00</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:10px 0;border-top:1px solid #3a4750;border-bottom:1px solid #3a4750"><span style="font-weight:800;font-size:13px">Total achitat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;white-space:nowrap">15.000,00 lei</span></div>
+          <div style="flex:1;min-height:0"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:10px;color:#6b7780">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="height:28px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="height:28px;border-bottom:1px solid #3a4750"></span><span>Plătitor</span></div>
+          </div>
+        </div>
+        <div style="position:relative;border-left:1.5px dashed #9aa3a9;z-index:1"><span style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);background:#fff;padding:0 8px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9aa3a9;white-space:nowrap">Tăiați aici</span><span style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:128px;height:128px;border-radius:50%;border:1.5px dashed #9aa3a9;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.1em;color:#9aa3a9">L.Ș.</span></div>
+        <div style="padding:34px 38px;display:flex;flex-direction:column;gap:16px;min-width:0">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding-bottom:12px;border-bottom:2px solid #ef8a1d">
+            <img src="web/assets/startica-logo.svg" alt="Startica" style="height:30px;width:auto"></img>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px;font-size:9px;color:#6b7780;text-align:right;line-height:1.35"><span style="font-weight:800;color:#3a4750;font-size:10px">Startica SRL</span><span>IDNO 1000600000000</span><span>str. Exemplu 12, Chișinău</span><span>+373 60 000 000</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a34f00">Confirmare de plată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Nr. 0147</span></div>
+            <span style="font-size:12px;color:#6b7780">24 septembrie 2026</span>
+          </div>
+          <div style="display:grid;grid-template-columns:96px 1fr;gap:6px 14px;font-size:12px">
+            <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria</span>
+            <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+            <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+          </div>
+          <div style="display:flex;flex-direction:column;border-top:1px solid #3a4750">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă septembrie 2026 · integral</span><span style="text-align:right;font-weight:700">9.993,00 lei</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă octombrie 2026 · parțial</span><span style="text-align:right;font-weight:700">5.007,00 lei</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:baseline;padding:12px 0"><span style="font-weight:800;font-size:13px">Total achitat</span><span style="text-align:right;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;white-space:nowrap">15.000,00 lei</span></div>
+          </div>
+          <span style="font-size:11px;color:#6b7780">Suma în litere: cincisprezece mii lei 00 bani</span>
+          <div style="padding:10px 12px;border-radius:8px;background:#f6f4f0;font-size:11px;line-height:1.45;display:flex;justify-content:space-between;gap:12px"><span><span style="font-weight:800">Rest pentru octombrie:</span> 4.986,00 lei</span><span style="white-space:nowrap">scadent pe 6 oct.</span></div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;font-size:10px;color:#6b7780;width:55%;align-self:flex-end"><span style="height:28px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria, administrator</span></div>
+          <span style="font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:8px">Document intern de confirmare a plății. Nu ține locul bonului fiscal.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="16e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16e</span><span style="font-size:16px;font-weight:700">1/3 grădiniță · 2/3 părinte</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);display:grid;grid-template-columns:374px 1px minmax(0,1fr)">
+        <div style="padding:30px 28px;display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div style="display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:2px solid #3a4750">
+            <span style="align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3a4750;padding:3px 8px;border:1px solid #3a4750;border-radius:4px">Exemplar grădiniță</span>
+            <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Nr. 0147</span><span style="margin-left:auto;font-size:11px;color:#6b7780">24.09.2026, 10:42</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:78px 1fr;gap:5px 10px;font-size:11px">
+            <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria · nr. 12</span>
+            <span style="color:#6b7780">Grupa</span><span style="font-weight:700">Mijlocie</span>
+            <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+            <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+            <span style="color:#6b7780">Sept.</span><span style="font-weight:700">9.993,00 lei</span>
+            <span style="color:#6b7780">Oct.</span><span style="font-weight:700">5.007,00 lei</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 0;border-top:1px solid #3a4750;border-bottom:1px solid #3a4750"><span style="font-weight:800;font-size:12px">Total</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;white-space:nowrap">15.000,00 lei</span></div>
+          <div style="flex:1;min-height:0"></div>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:10px;color:#6b7780">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Plătitor</span></div>
+          </div>
+        </div>
+        <div style="position:relative;border-left:1.5px dashed #9aa3a9;z-index:1"><span style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);background:#fff;padding:0 8px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9aa3a9;white-space:nowrap">Tăiați aici</span><span style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:128px;height:128px;border-radius:50%;border:1.5px dashed #9aa3a9;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.1em;color:#9aa3a9">L.Ș.</span></div>
+        <div style="padding:34px 44px;display:flex;flex-direction:column;gap:20px;min-width:0">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:14px;border-bottom:2px solid #ef8a1d">
+            <img src="web/assets/startica-logo.svg" alt="Startica" style="height:34px;width:auto"></img>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-size:10px;color:#6b7780;text-align:right;line-height:1.35"><span style="font-weight:800;color:#3a4750;font-size:11px">Startica SRL</span><span>IDNO 1000600000000</span><span>str. Exemplu 12, Chișinău</span><span>+373 60 000 000 · startica.md</span></div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a34f00">Confirmare de plată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">Nr. 0147</span></div>
+            <span style="font-size:12px;color:#6b7780">24 septembrie 2026</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:12px">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="color:#6b7780;font-size:11px">Copil</span><span style="font-weight:800">Avram Maria · contract nr. 12</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="color:#6b7780;font-size:11px">Plătitor</span><span style="font-weight:700">Avram Valentin</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="color:#6b7780;font-size:11px">Metodă</span><span style="font-weight:700">Cash</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;border-top:1px solid #3a4750">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:8px 0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;border-bottom:1px solid #ede7dc"><span>Se repartizează pe</span><span style="text-align:right">Sumă</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă septembrie 2026 · achitată integral</span><span style="text-align:right;font-weight:700">9.993,00 lei</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 160px;padding:10px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Taxă octombrie 2026 · parțial</span><span style="text-align:right;font-weight:700">5.007,00 lei</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 180px;align-items:baseline;padding:12px 0"><span style="font-weight:800;font-size:13px">Total achitat</span><span style="text-align:right;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;white-space:nowrap">15.000,00 lei</span></div>
+          </div>
+          <span style="font-size:11px;color:#6b7780">Suma în litere: cincisprezece mii lei 00 bani</span>
+          <div style="padding:12px 14px;border-radius:10px;background:#f6f4f0;font-size:11px;line-height:1.45;display:flex;justify-content:space-between;gap:12px"><span><span style="font-weight:800">Rest de achitat pentru octombrie:</span> 4.986,00 lei</span><span style="white-space:nowrap">scadent pe 6 oct.</span></div>
+          <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px;font-size:10px;color:#6b7780">
+            <div></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="height:30px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria, administrator</span></div>
+          </div>
+          <span style="font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:8px">Document intern de confirmare a plății. Nu ține locul bonului fiscal. · Generat din Startica v2.0.0</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="16f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16f</span><span style="font-size:16px;font-weight:700">1/3 + 2/3 · partea părintelui aranjată pe blocuri</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);display:grid;grid-template-columns:374px 1px minmax(0,1fr)">
+        <div style="padding:30px 28px;display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div style="display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:2px solid #3a4750">
+            <span style="align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3a4750;padding:3px 8px;border:1px solid #3a4750;border-radius:4px">Exemplar grădiniță</span>
+            <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Nr. 0147</span><span style="margin-left:auto;font-size:11px;color:#6b7780">24.09.2026, 10:42</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:78px 1fr;gap:5px 10px;font-size:11px">
+            <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria · nr. 12</span>
+            <span style="color:#6b7780">Grupa</span><span style="font-weight:700">Mijlocie</span>
+            <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+            <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+            <span style="color:#6b7780">Sept.</span><span style="font-weight:700">9.993,00 lei</span>
+            <span style="color:#6b7780">Oct.</span><span style="font-weight:700">5.007,00 lei</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 0;border-top:1px solid #3a4750;border-bottom:1px solid #3a4750"><span style="font-weight:800;font-size:12px">Total</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;white-space:nowrap">15.000,00 lei</span></div>
+          <div style="flex:1;min-height:0"></div>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:10px;color:#6b7780">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Plătitor</span></div>
+          </div>
+        </div>
+        <div style="position:relative;border-left:1.5px dashed #9aa3a9;z-index:1"><span style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);background:#fff;padding:0 8px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9aa3a9;white-space:nowrap">Tăiați aici</span><span style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:128px;height:128px;border-radius:50%;border:1.5px dashed #9aa3a9;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.1em;color:#9aa3a9">L.Ș.</span></div>
+        <div style="padding:34px 44px 28px 52px;display:flex;flex-direction:column;gap:18px;min-width:0">
+          <div style="display:flex;align-items:center;gap:14px">
+            <img src="web/assets/startica-logo.svg" alt="Startica" style="height:36px;width:auto"></img>
+            <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:0"><span style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a34f00">Confirmare de plată</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.15">Nr. 0147 · 24.09.2026</span></div>
+          </div>
+          <div style="border-radius:18px;background:#fcead3;border:1.5px solid #f6d9b5;padding:22px 26px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;align-items:end">
+            <span style="grid-column:1 / -1;font-size:13px;color:#6b7780">Am primit de la <span style="font-weight:800;color:#3a4750">Avram Valentin</span> pentru <span style="font-weight:800;color:#3a4750">Avram Maria</span></span>
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:46px;line-height:1;white-space:nowrap">15.000,00 lei</span><span style="font-size:11px;color:#6b7780">cincisprezece mii lei 00 bani</span></div>
+            <div style="display:grid;grid-template-columns:auto auto;gap:3px 12px;font-size:11px;padding-bottom:4px"><span style="color:#6b7780">Metodă</span><span style="font-weight:800">Cash</span><span style="color:#6b7780">Grupa</span><span style="font-weight:800">Mijlocie</span><span style="color:#6b7780">Contract</span><span style="font-weight:800">nr. 12</span></div>
+          </div>
+          <span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7780;margin-bottom:-6px">Pe ce s-au repartizat banii</span>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+            <div style="border-radius:14px;border:1.5px solid #bfe3cf;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:800;font-size:13px">Septembrie 2026</span><span style="margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;white-space:nowrap">Achitat integral</span></div>
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">9.993,00 lei</span>
+              <span style="height:6px;border-radius:3px;background:#3f9a6b"></span>
+              <span style="font-size:11px;color:#6b7780">din taxa de 9.993,00 lei</span>
+            </div>
+            <div style="border-radius:14px;border:1.5px solid #f0d77a;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-weight:800;font-size:13px">Octombrie 2026</span><span style="margin-left:auto;font-size:10px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fdf3d2;color:#7a5d00;white-space:nowrap">Parțial</span></div>
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">5.007,00 lei</span>
+              <span style="height:6px;border-radius:3px;background:#f1ece2;display:flex"><span style="width:50%;border-radius:3px;background:#e0b400"></span></span>
+              <span style="font-size:11px;color:#6b7780">din taxa de 9.993,00 lei</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:#f6f4f0;font-size:12px"><span style="font-weight:800">Rămas de achitat pentru octombrie</span><span style="margin-left:auto;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;white-space:nowrap">4.986,00 lei</span><span style="color:#6b7780;white-space:nowrap">până pe 6 oct.</span></div>
+          <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:end">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;color:#a34f00;line-height:1.2;padding-left:80px">Vă mulțumim!</span>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:10px;color:#6b7780"><span style="height:30px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria, administrator</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;gap:16px;font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:8px"><span>Startica SRL · IDNO 1000600000000 · str. Exemplu 12, Chișinău · +373 60 000 000</span><span style="white-space:nowrap">Nu ține locul bonului fiscal.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="16g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16g</span><span style="font-size:16px;font-weight:700">1/3 + 2/3 · antet colorat și anul școlar pe luni</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);display:grid;grid-template-columns:374px 1px minmax(0,1fr)">
+        <div style="padding:30px 28px;display:flex;flex-direction:column;gap:14px;min-width:0">
+          <div style="display:flex;flex-direction:column;gap:8px;padding-bottom:10px;border-bottom:2px solid #3a4750">
+            <span style="align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3a4750;padding:3px 8px;border:1px solid #3a4750;border-radius:4px">Exemplar grădiniță</span>
+            <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Nr. 0147</span><span style="margin-left:auto;font-size:11px;color:#6b7780">24.09.2026, 10:42</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:78px 1fr;gap:5px 10px;font-size:11px">
+            <span style="color:#6b7780">Copil</span><span style="font-weight:800">Avram Maria · nr. 12</span>
+            <span style="color:#6b7780">Grupa</span><span style="font-weight:700">Mijlocie</span>
+            <span style="color:#6b7780">Plătitor</span><span style="font-weight:700">Avram Valentin</span>
+            <span style="color:#6b7780">Metodă</span><span style="font-weight:700">Cash</span>
+            <span style="color:#6b7780">Sept.</span><span style="font-weight:700">9.993,00 lei</span>
+            <span style="color:#6b7780">Oct.</span><span style="font-weight:700">5.007,00 lei</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 0;border-top:1px solid #3a4750;border-bottom:1px solid #3a4750"><span style="font-weight:800;font-size:12px">Total</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;white-space:nowrap">15.000,00 lei</span></div>
+          <div style="flex:1;min-height:0"></div>
+          <div style="display:flex;flex-direction:column;gap:14px;font-size:10px;color:#6b7780">
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px"><span style="height:22px;border-bottom:1px solid #3a4750"></span><span>Plătitor</span></div>
+          </div>
+        </div>
+        <div style="position:relative;border-left:1.5px dashed #9aa3a9;z-index:1"><span style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) rotate(-90deg);background:#fff;padding:0 8px;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9aa3a9;white-space:nowrap">Tăiați aici</span><span style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);width:128px;height:128px;border-radius:50%;border:1.5px dashed #9aa3a9;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.1em;color:#9aa3a9">L.Ș.</span></div>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <div style="position:relative;overflow:hidden;background:#f9d257;padding:26px 44px 22px 52px;display:flex;align-items:center;gap:18px">
+            <span style="position:absolute;right:-40px;top:-60px;width:190px;height:190px;border-radius:50%;background:#ef8a1d;opacity:.9"></span>
+            <span style="position:absolute;right:120px;top:-26px;width:64px;height:64px;border-radius:50%;background:#f3a6be"></span>
+            <span style="position:absolute;right:170px;bottom:-22px;width:44px;height:44px;border-radius:50%;background:#a8d8be"></span>
+            <span style="position:absolute;right:92px;bottom:14px;width:14px;height:14px;border-radius:50%;background:#fff"></span>
+            <span style="position:absolute;right:236px;top:16px;width:10px;height:10px;border-radius:50%;background:#3f9a6b"></span>
+            <span style="position:absolute;right:28px;bottom:-30px;width:70px;height:70px;border-radius:22px;background:#fcead3;transform:rotate(18deg)"></span>
+            <div style="position:relative;width:64px;height:64px;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="web/assets/startica-icon.svg" alt="" style="width:42px;height:42px;object-fit:contain"></img></div>
+            <div style="position:relative;display:flex;flex-direction:column;gap:0;min-width:0"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">Mulțumim pentru plată!</span><span style="font-size:12px;font-weight:700;color:#5c4a00">Grădinița Startica · confirmare nr. 0147 din 24 septembrie 2026</span></div>
+          </div>
+          <div style="flex:1;padding:24px 44px 26px 52px;display:flex;flex-direction:column;gap:20px;min-height:0">
+            <div style="display:flex;align-items:center;gap:16px">
+              <span style="width:56px;height:56px;border-radius:50%;background:#a8d8be;color:#2e6b4c;border:3px solid #fff;box-shadow:0 0 0 2px #a8d8be;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;flex-shrink:0">AM</span>
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Avram Maria</span><span style="font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;white-space:nowrap">Grupa Mijlocie</span></div><span style="font-size:12px;color:#6b7780">Contract nr. 12 · plătit de Avram Valentin, cash</span></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end"><span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7780">Achitat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:34px;line-height:1;white-space:nowrap">15.000,00 lei</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7780">Anul 2026</span><span style="margin-left:auto;font-size:11px;color:#6b7780">după această plată</span></div>
+              <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px">
+                <sc-for list="{{ yearMonths }}" as="m" hint-placeholder-count="9">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 7px;border-radius:10px;background:{{ m.bg }};border:1.5px solid {{ m.bd }}"><span style="font-size:11px;font-weight:800;color:{{ m.fg }}">{{ m.l }}</span><span style="font-size:9px;font-weight:700;color:{{ m.fg }};white-space:nowrap">{{ m.s }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;border-top:1px solid #3a4750">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 120px;gap:12px;padding:7px 0;font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;border-bottom:1px solid #ede7dc"><span>Luna</span><span style="text-align:right">Din această plată</span><span style="text-align:right">Rămas</span></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 120px;gap:12px;padding:9px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Septembrie 2026</span><span style="text-align:right;font-weight:700">9.993,00 lei</span><span style="text-align:right;color:#2e6b4c;font-weight:800">0,00 lei</span></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 120px;gap:12px;padding:9px 0;font-size:12px;border-bottom:1px solid #ede7dc"><span>Octombrie 2026</span><span style="text-align:right;font-weight:700">5.007,00 lei</span><span style="text-align:right;font-weight:800">4.986,00 lei</span></div>
+              <span style="padding-top:8px;font-size:11px;color:#6b7780">Suma în litere: cincisprezece mii lei 00 bani. Restul pentru octombrie, până pe 6 oct.</span>
+            </div>
+            <div style="margin-top:auto;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:28px;align-items:end">
+              <div style="display:flex;flex-direction:column;gap:2px;font-size:10px;color:#6b7780;line-height:1.45;padding-left:80px"><span style="font-weight:800;color:#3a4750">Pentru plata prin transfer</span><span>IBAN MD00 AG00 0000 0000 0000 0000 · Exemplu Bank</span><span>Beneficiar: Startica SRL · IDNO 1000600000000</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:10px;color:#6b7780"><span style="height:30px;border-bottom:1px solid #3a4750"></span><span>Primit: Ciobanu Maria, administrator</span></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:16px;font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:8px;margin-top:-6px"><span>str. Exemplu 12, Chișinău · +373 60 000 000 · startica.md</span><span style="white-space:nowrap">Nu ține locul bonului fiscal.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div style="font-size:13px;color:#6b7780;max-width:1123px;text-wrap:pretty">Se alege o singură dată, în Setări → Grădinița → Confirmări de plată: <span style="font-weight:800;color:#3a4750">Format</span> = A5 (<a href="#16b">16b</a>) · A4 jumătăți (<a href="#16d">16d</a>) · A4 1/3 + 2/3 (<a href="#16e">16e</a>). Bonul sau chitanța bancară se prinde în colțul din stânga sus al exemplarului grădiniței. Ștampila (L.Ș.) se pune peste linia de tăiere, ca să rămână pe ambele părți. Exemplarul grădiniței e tipărit fără culoare, ca să se vadă bine și pe imprimanta alb-negru.</div>
+</section>
+<section style="padding:32px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Grădinița și documente tipărite</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#16a">16a</a>: datele grădiniței, într-o filă proprie în Backup și setări. Tot de aici se iau antetul confirmării de plată (<a href="#16b">16b</a>) și al raportului tipărit (<a href="#16c">16c</a>). Datele din exemple (IDNO, IBAN, adresă) sunt fictive.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="16a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16a</span><span style="font-size:16px;font-weight:700">Setări grădiniță</span></div>
       <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
         <dc-import name="Sidebar" variant="a" active="backup" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
@@ -73,8 +313,8 @@
       </div>
     </div>
 
-    <div id="6b" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">6b</span><span style="font-size:16px;font-weight:700">Confirmare de plată · A5</span></div>
+    <div id="16b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">16b</span><span style="font-size:16px;font-weight:700">Confirmare de plată · A5</span></div>
       <div style="width:559px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);padding:40px 44px;display:flex;flex-direction:column;gap:22px">
         <div style="display:flex;align-items:flex-start;gap:12px;padding-bottom:16px;border-bottom:2px solid #ef8a1d">
           <img src="web/assets/startica-logo.svg" alt="Startica" style="height:34px;width:auto"></img>
@@ -103,11 +343,11 @@
         </div>
         <span style="font-size:9px;color:#9aa3a9;border-top:1px solid #ede7dc;padding-top:10px">Document intern de confirmare a plății. Nu ține locul bonului fiscal. · Generat din Startica v2.0.0</span>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#6b7780;max-width:559px;text-wrap:pretty">Din Achitări: meniul ⋯ → „Confirmare de plată” și din fișa copilului, la istoricul plăților. Se tipărește sau se salvează ca PDF.</div>
+      <div style="display:flex;gap:10px;align-items:center;font-size:13px;color:#6b7780;max-width:559px;text-wrap:pretty">Din Achitări: meniul ⋯ → „Tipărește confirmarea” și din fișa copilului, la istoricul plăților. Se tipărește sau se salvează ca PDF.</div>
     </div>
 
-    <div id="6c" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">6c</span><span style="font-size:16px;font-weight:700">Situația plăților tipărită · A4 orizontal</span></div>
+    <div id="16c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">16c</span><span style="font-size:16px;font-weight:700">Situația plăților tipărită · A4 orizontal</span></div>
       <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);padding:36px 44px;display:flex;flex-direction:column;gap:18px">
         <div style="display:flex;align-items:flex-end;gap:16px;padding-bottom:14px;border-bottom:2px solid #ef8a1d">
           <img src="web/assets/startica-logo.svg" alt="Startica" style="height:32px;width:auto"></img>
@@ -161,7 +401,10 @@ class Component extends DCLogic {
       n: i + 1, name, parent, phone, due: 'ziua ' + due, fee: f(fee), paid: f(paid), rest: f(fee - paid),
       status: paid ? 'Parțial' : 'Neachitat', bg: paid ? '#fff' : '#f6f4f0'
     }));
-    return { idFields, payFields, sums, prows };
+    const MS = { paid: ['✓', '#e7f4ec', '#a8d8be', '#2e6b4c'], part: ['Parțial', '#fdf3d2', '#f0d77a', '#7a5d00'], next: ['—', '#fff', '#ede7dc', '#9aa3a9'] };
+    const yearMonths = [['Ian', 'paid'], ['Feb', 'paid'], ['Mar', 'paid'], ['Apr', 'paid'], ['Mai', 'paid'], ['Iun', 'paid'], ['Iul', 'paid'], ['Aug', 'paid'], ['Sep', 'paid'], ['Oct', 'part'], ['Noi', 'next'], ['Dec', 'next']]
+      .map(([l, k]) => ({ l, s: MS[k][0], bg: MS[k][1], bd: MS[k][2], fg: MS[k][3] }));
+    return { idFields, payFields, sums, prows, yearMonths };
   }
 }
 </script>

@@ -4,7 +4,7 @@ Citit de pe `master-v2` după punctele 1–6 și 9. Se pune în `docs/design/`, 
 
 ## INTREBARI.md
 
-**Achitări — Tipărește chitanța.** Corect amânat. Se reia împreună cu ecranul 16b (`screens/15-tiparire.md`).
+**Achitări — Tipărește confirmarea.** Corect amânat. Se reia împreună cu ecranul 16b (`screens/15-tiparire.md`).
 
 **Cheltuieli — filtrul Metodă.** Se adaugă câmpul `method?: 'cash' | 'card' | 'transfer'` pe `Expense` (schemă + normalizare + select în formularul 15c, implicit Cash la cheltuieli noi). Cheltuielile vechi rămân fără metodă: apar doar la „Toate”, iar în tabel coloana Metodă arată „—”. Nu se adaugă o pastilă „Nespecificat”.
 
@@ -51,4 +51,9 @@ Spec-ul e aprobat, cu răspunsurile de mai jos.
 10. Situația plăților, ecranul complet (carduri, An școlar, hartă). Plan înainte de cod.
 11. Curățenia 10+ din coadă (R6 „Scrie ȘTERGE”, R7, R9, R10, Button/SearchInput comune).
 
-Filialele și sincronizarea (Faza 6) rămân excluse până la un mesaj explicit.
+12. Încărcare (`screens/21-incarcare.md`): StartupScreen, Skeleton, bara de sus, ecranul după 15 s.
+13. Prezența (`screens/19-prezenta.md`): tabel attendance, pagina, secțiunea din fișă. Plan înainte de cod.
+14. Raport contabil (`screens/20-raport-contabil.md`): după punctul 8, fiindcă folosește `Payment.fxRate`/`amountEur`.
+15. Confirmarea de plată (`screens/15-tiparire.md`): A5 și A4 în două părți; partea părintelui după 16g (decis).
+
+Prima pornire (`22`) nu se face decât la cerere. Filialele și sincronizarea (Faza 6) rămân excluse până la un mesaj explicit.

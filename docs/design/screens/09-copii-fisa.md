@@ -1,6 +1,6 @@
 # 09 — Copii → fișa copilului
 
-**Referință:** `Copii.dc.html#1e`. **Depinde de:** `00-comun.md` A, C.
+**Referință:** `Copii.dc.html#2b`. **Depinde de:** `00-comun.md` A, C.
 
 ## 1. Fișiere
 Se modifică: `children/ChildrenPage.tsx` (ramura cu `childId`) sau, recomandat, un fișier nou `children/ChildProfilePage.tsx` + `.module.css`, randat când `childId` e setat. `useChildProfile.ts` rămâne.
@@ -29,7 +29,7 @@ Titlul din antet rămâne „Copii” (`VIEW_TITLES`). În conținut, primul râ
     </div>
     <div className={s.right}>
       <div className={s.mini}>Sold (mint) · Taxă lunară (yellow) · Contract (alb)</div>  {/* grid 3 col */}
-      <Card>Istoric plăți: lună · dată · metodă · sumă · badge; ⋯ → Tipărește chitanța</Card>
+      <Card>Istoric plăți: lună · dată · metodă · sumă · badge; ⋯ → Tipărește confirmarea</Card>
       <Card>Documente: grid 3, icon PDF colorat, „+ Încarcă”</Card>
     </div>
   </div>

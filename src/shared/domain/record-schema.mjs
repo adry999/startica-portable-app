@@ -105,6 +105,7 @@ const FIELDS = {
     'amount',
     'currency',
     'fxRate',
+    'fxRateSource',
     'amountEur',
     'allocations',
     'type',
@@ -345,6 +346,8 @@ export function normalizeRecord(type, input) {
       requireThat(CURRENCIES.includes(record.currency), 'Monedă necunoscută.');
       if (record.fxRate !== undefined)
         requireThat(Number.isFinite(record.fxRate) && record.fxRate > 0, 'Curs invalid.');
+      if (record.fxRateSource !== undefined)
+        requireThat(['bnm', 'manual'].includes(record.fxRateSource), 'Proveniența cursului este invalidă.');
       if (record.amountEur !== undefined)
         requireThat(Number.isFinite(record.amountEur) && record.amountEur > 0, 'Sumă în euro invalidă.');
       record.method ||= 'Cash';

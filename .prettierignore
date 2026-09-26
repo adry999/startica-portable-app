@@ -9,3 +9,6 @@ docs/design/
 
 # webapp/: build generat, nu se reformatează.
 webapp/dist/
+
+# Resturi de dezarhivare la rădăcină (nesincronizate cu docs/design/ încă) — vezi INTREBARI.md.
+Startica V2/

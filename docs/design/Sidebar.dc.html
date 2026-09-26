@@ -10,25 +10,30 @@
 <helmet><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link></helmet>
 <sc-if value="{{ isA }}" hint-placeholder-val="{{ true }}">
 <aside style="width:248px;height:100%;background:#fff;border-right:1px solid #ede7dc;display:flex;flex-direction:column;padding:26px 16px 18px;gap:22px;font-family:Nunito,sans-serif;color:#3a4750;box-sizing:border-box">
-  <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 8px">
-    <img src="web/assets/startica-logo.svg" alt="Startica" style="height:38px"></img>
-    <span style="font-size:11px;color:#9aa3a9;font-weight:700">v2.0.0</span>
+  <div style="display:flex;align-items:center;justify-content:center;padding:2px 8px 4px">
+    <img src="web/assets/startica-logo.svg" alt="Startica" style="height:46px"></img>
+  </div>
+  <div onClick="{{ switcherClick }}" style="display:flex;align-items:center;gap:10px;margin-top:-6px;padding:8px 12px 8px 8px;border-radius:14px;border:1.5px solid {{ brBd }};background:{{ brSoft }};cursor:pointer">
+    <span style="width:30px;height:30px;border-radius:9px;background:{{ brBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px">{{ brInitial }}</span>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3a9">Filiala</span><span style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ brName }}</span></div>
+    <span style="font-size:12px;color:#6b7780">{{ brCaret }}</span>
   </div>
   <sc-for list="{{ groupsA }}" as="g" hint-placeholder-count="4">
     <div style="display:flex;flex-direction:column;gap:2px">
       <sc-if value="{{ g.label }}"><div style="font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3a9;padding:0 12px 6px">{{ g.label }}</div></sc-if>
       <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
-        <div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:14px;cursor:pointer">
+        <a href="{{ it.href }}" style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.color }};font-weight:{{ it.weight }};font-size:14px;cursor:pointer;text-decoration:none">
           <span style="width:8px;height:8px;border-radius:3px;background:{{ it.dot }}"></span>
           <span style="flex:1">{{ it.label }}</span>
           <sc-if value="{{ it.count }}"><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#fce9ef;color:#b0284f">{{ it.count }}</span></sc-if>
-        </div>
+          <sc-if value="{{ it.ver }}"><span style="font-size:11px;font-weight:700;color:#9aa3a9">{{ it.ver }}</span></sc-if>
+        </a>
       </sc-for>
     </div>
   </sc-for>
   <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:#fffaf0;border:1px solid #ede7dc">
-    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>Salvat · 12:06</div>
-    <div style="font-size:12px;color:#7a5d00;line-height:1.4">Copie externă neconfigurată · <span style="font-weight:800;text-decoration:underline">Configurează</span></div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>Sincronizat · 12:06</div>
+    <div style="font-size:12px;color:#6b7780;line-height:1.4">Toate calculatoarele au aceleași date</div>
   </div>
 </aside>
 </sc-if>
@@ -70,25 +75,31 @@
 </aside>
 </sc-if>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:900},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a'|'b'&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:900},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a'|'b'&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;branch&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;buiucani&quot;,&quot;botanica&quot;],&quot;default&quot;:&quot;buiucani&quot;,&quot;tsType&quot;:&quot;'buiucani'|'botanica'&quot;},&quot;switcherOpen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;onSwitcher&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
 class Component extends DCLogic {
   renderVals() {
     const v = this.props.variant ?? 'a';
     const act = this.props.active ?? 'dashboard';
     const mkA = (items, dot) => items.map(([k, l, c]) => {
       const on = k === act;
-      return { label: l, count: c ? String(c) : '', bg: on ? '#fcead3' : 'transparent', color: on ? '#a34f00' : '#3a4750', weight: on ? 800 : 600, dot: on ? '#ef8a1d' : dot };
+      const H = { dashboard: 'Dashboard.dc.html', copii: 'Copii.dc.html', grupe: 'Grupe.dc.html', prezenta: 'Prezenta.dc.html', bazin: 'Bazin.dc.html', vizite: 'Vizite.dc.html', achitari: 'Achitari.dc.html', cheltuieli: 'Cheltuieli.dc.html', situatia: 'Situatia.dc.html', notificat: 'De notificat.dc.html', raport: 'Raport contabil.dc.html', taxe: 'De rezolvat.dc.html#9a', verificat: 'De rezolvat.dc.html#9b', asociere: 'De rezolvat.dc.html#9c', istoric: 'Administrare.dc.html#10a', notificari: 'Administrare.dc.html#10b', backup: 'Administrare.dc.html#10c' };
+      return { href: H[k] || '#', label: l, count: c ? String(c) : '', ver: k === 'backup' ? 'v2.0.0' : '', bg: on ? '#fcead3' : 'transparent', color: on ? '#a34f00' : '#3a4750', weight: on ? 800 : 600, dot: on ? '#ef8a1d' : dot };
     });
     const mkB = (items) => items.map(([k, l, c]) => {
       const on = k === act;
       return { label: l, count: c ? String(c) : '', bg: on ? '#ef8a1d' : 'transparent', color: on ? '#fff' : '#e9e4da', weight: on ? 800 : 600 };
     });
+    const BR = { buiucani: ['Filiala Buiucani', 'Bu', '#ef8a1d', '#fffaf0', '#f6d9b5'], botanica: ['Filiala Botanica', 'Bo', '#3f9a6b', '#f3faf6', '#bfe3cf'] };
+    const br = BR[this.props.branch ?? 'buiucani'] || BR.buiucani;
     return {
+      brName: br[0], brInitial: br[1], brBg: br[2], brSoft: br[3], brBd: br[4],
+      brCaret: this.props.switcherOpen ? '▴' : '▾',
+      switcherClick: this.props.onSwitcher,
       isA: v === 'a',
       isB: v === 'b',
       groupsA: [
-        { label: '', items: mkA([['dashboard', 'Dashboard'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['vizite', 'Vizite', 0]], '#f9d257') },
-        { label: 'Contabilitate', items: mkA([['achitari', 'Achitări'], ['cheltuieli', 'Cheltuieli'], ['situatia', 'Situația plăților'], ['notificat', 'De notificat', 1]], '#a8d8be') },
+        { label: '', items: mkA([['dashboard', 'Dashboard'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['prezenta', 'Prezența'], ['bazin', 'Bazin'], ['vizite', 'Vizite', 0]], '#f9d257') },
+        { label: 'Contabilitate', items: mkA([['achitari', 'Achitări'], ['cheltuieli', 'Cheltuieli'], ['situatia', 'Situația plăților'], ['notificat', 'De notificat', 1], ['raport', 'Raport contabil']], '#a8d8be') },
         { label: 'De rezolvat', items: mkA([['taxe', 'Taxe și grupe', 103], ['verificat', 'De verificat', 284], ['asociere', 'Asociere achitări', 64]], '#f3a6be') },
         { label: 'Administrare', items: mkA([['istoric', 'Istoric'], ['notificari', 'Notificări'], ['backup', 'Backup și setări']], '#c9c4ba') }
       ],

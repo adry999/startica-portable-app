@@ -1,6 +1,6 @@
 # 10 — De notificat
 
-**Referință:** `De notificat.dc.html#2b`. **Depinde de:** `00-comun.md` A. Face parte din Contabilitate și **nu are legătură cu Vizite**.
+**Referință:** `De notificat.dc.html#8a`. **Depinde de:** `00-comun.md` A. Face parte din Contabilitate și **nu are legătură cu Vizite**.
 
 ## 1. Fișiere
 Se modifică: `notify/NotifyPage.tsx`, `.module.css`, `.test.tsx`. `useNotify.ts` rămâne.

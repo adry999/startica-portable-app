@@ -1,6 +1,6 @@
 # 03 — Grupe (Carduri / Tablă)
 
-**Referință:** `Grupe.dc.html#1g` (Carduri) și `#1h` (Tablă). **Depinde de:** `00-comun.md` A, C, D.
+**Referință:** `Grupe.dc.html#3a` (Carduri) și `#3b` (Tablă). **Depinde de:** `00-comun.md` A, C, D.
 
 ## 1. Fișiere
 Se modifică: `groups/GroupsPage.tsx`, `GroupsPage.module.css`, `GroupsPage.test.tsx`.
@@ -13,7 +13,7 @@ Grupe  ORGANIZARE          „7 copii în grupe · 92 fără grupă”  [Carduri
 `*` Butonul „+ Grupă nouă” apare **doar** în modul Tablă. În Carduri, grupa nouă se creează din cardul dashed din grilă.
 Comutatorul folosește `SegmentedControl`, persistat cu `usePersistedState('view.groups', 'cards')`.
 
-## 3. Mod Carduri (1g)
+## 3. Mod Carduri (3a)
 ```tsx
 <div className={s.content}>                          {/* padding:28px 40px 44px; gap:20px */}
   <div className={s.cards}>                           {/* grid repeat(3,minmax(0,1fr)); gap 16 */}
@@ -27,7 +27,7 @@ Comutatorul folosește `SegmentedControl`, persistat cu `usePersistedState('view
 - **Conținutul cardului:** nume (Baloo 24) + ocupare „7/10” (Baloo 28 ink, „/10” 18px) → bară de 8px pe fond alb → educator + interval de vârstă (13px) + pastila „▾ Deschide / ▴ Restrânge” → stivă de avatare de 32px (`margin-right:-8px`, maximum 5, plus „+N”).
 - Un singur editor e deschis la un moment dat (`openGroupId`).
 
-## 4. Mod Tablă (1h)
+## 4. Mod Tablă (3b)
 ```tsx
 <>
   <div className={s.toolbar}>                         {/* padding:12px 40px; border-bottom; gap 8 */}

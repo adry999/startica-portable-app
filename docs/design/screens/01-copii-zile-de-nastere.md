@@ -1,6 +1,6 @@
 # 01 — Copii → Zile de naștere
 
-**Referință:** `Copii.dc.html#2a`. **Depinde de:** `00-comun.md` A (useTopbarTitle), B (FilterPills), C (groupTone).
+**Referință:** `Copii.dc.html#2c`. **Depinde de:** `00-comun.md` A (useTopbarTitle), B (FilterPills), C (groupTone).
 
 ## 1. Rută și fișiere
 | Acțiune | Fișier |
@@ -24,7 +24,7 @@
 `viewForPathname` întoarce deja `children`, deci sidebarul arată „Copii” activ fără altă modificare. Verifică și că niciun copil nu poate avea id-ul `zile-de-nastere` (id-urile sunt generate, deci e în regulă).
 
 ## 2. Intrări în pagină
-- **Copii (1c):** în `useTopbarActions` din `ChildrenPage`, înainte de „+ Adaugă copil”, adaugă un buton secundar „Zile de naștere” care face `navigate('/copii/zile-de-nastere')`.
+- **Copii (2a):** în `useTopbarActions` din `ChildrenPage`, înainte de „+ Adaugă copil”, adaugă un buton secundar „Zile de naștere” care face `navigate('/copii/zile-de-nastere')`.
 - **Dashboard (1a):** în cardul Zile de naștere, în capul coloanei „Toată luna …”, adaugă un link text „Vezi calendarul →” (13px/800, `var(--orange-ink)`) spre `/copii/zile-de-nastere?luna=<YYYY-MM al Dashboard-ului>`.
 
 ## 3. Date

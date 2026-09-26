@@ -1,6 +1,6 @@
 # 02 — Copii → listă
 
-**Referință:** `Copii.dc.html#1c`. **Depinde de:** `00-comun.md` A, B, C, E.
+**Referință:** `Copii.dc.html#2a`. **Depinde de:** `00-comun.md` A, B, C, E.
 
 ## 1. Fișiere
 Se modifică: `webapp/src/features/children/ChildrenPage.tsx`, `ChildrenPage.module.css`, `ChildrenPage.test.tsx`. Hook-ul `useChildren.ts` rămâne neschimbat, cu excepția filtrelor din secțiunea 3.
@@ -39,7 +39,7 @@ Se modifică: `webapp/src/features/children/ChildrenPage.tsx`, `ChildrenPage.mod
 - **⋯:** `RowMenu` cu Editează · Arhivează/Reactivează · separator · Șterge definitiv (roșu). Click pe ⋯ nu deschide fișa (`stopPropagation`).
 
 ## 4. Stări
-Fără rezultate → 3e „Fără rezultate”, cu filtrele active listate și butonul „Șterge filtrele”. Orice schimbare de filtru resetează paginarea la pagina 1.
+Fără rezultate → 15e „Fără rezultate”, cu filtrele active listate și butonul „Șterge filtrele”. Orice schimbare de filtru resetează paginarea la pagina 1.
 
 ## 5. Criterii de acceptare
 - [ ] Fără dropdown-urile „Grupă ▾” și „Plată ▾”; în locul lor, `FilterPills` cu 2 grupuri separate de linia verticală

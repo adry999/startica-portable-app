@@ -26,21 +26,30 @@ Bifează fiecare criteriu de acceptare din spec și raportează-le pe cele nebif
 | # | Ecran | Referință | Spec |
 |---|---|---|---|
 | 00 | Componente comune (antet compact, bara de filtre, comutator) | toate | `00-comun.md` |
-| 01 | Copii → Zile de naștere | Copii.dc.html#2a | `01-copii-zile-de-nastere.md` |
-| 02 | Copii → listă | Copii.dc.html#1c | `02-copii-lista.md` |
-| 03 | Grupe (Carduri / Tablă) | Grupe.dc.html#1g, #1h | `03-grupe.md` |
-| 04 | Vizite | Vizite.dc.html#2a | `04-vizite.md` |
-| 05 | Achitări (Tabel / Pe luni) | Achitari.dc.html#1i, #1j | `05-achitari.md` |
-| 06 | Cheltuieli (Tabel / Pe zile) | Cheltuieli.dc.html#1k, #1l | `06-cheltuieli.md` |
-| 07 | Situația plăților (Lună / An școlar) | Situatia.dc.html#1m, #1n | `07-situatia.md` |
+| 01 | Copii → Zile de naștere | Copii.dc.html#2c | `01-copii-zile-de-nastere.md` |
+| 02 | Copii → listă | Copii.dc.html#2a | `02-copii-lista.md` |
+| 03 | Grupe (Carduri / Tablă) | Grupe.dc.html#3a, #3b | `03-grupe.md` |
+| 04 | Vizite | Vizite.dc.html#4a | `04-vizite.md` |
+| 05 | Achitări (Tabel / Pe luni) | Achitari.dc.html#5a, #5b | `05-achitari.md` |
+| 06 | Cheltuieli (Tabel / Pe zile) | Cheltuieli.dc.html#6a, #6b | `06-cheltuieli.md` |
+| 07 | Situația plăților (Lună / An școlar) | Situatia.dc.html#7a, #7b | `07-situatia.md` |
 | 08 | Dashboard | Dashboard.dc.html#1a | `08-dashboard.md` |
-| 09 | Copii → fișa copilului | Copii.dc.html#1e | `09-copii-fisa.md` |
-| 10 | De notificat | De notificat.dc.html#2b | `10-de-notificat.md` |
-| 11 | De rezolvat (Taxe, De verificat, Asociere) | De rezolvat.dc.html#2c, #2d, #2e | `11-de-rezolvat.md` |
-| 12 | Administrare (Istoric, Notificări, Backup, Grădinița) | Administrare.dc.html#2f–#2h, Tiparire.dc.html#6a | `12-administrare.md` |
-| 13 | Formulare și stări | Formulare.dc.html#3a–#3f | `13-formulare.md` |
-| 14 | SMS (mesaje, șabloane) | Sms.dc.html#4a, #4b | `14-sms.md` |
-| 15 | Tipărire (A5, A4) | Tiparire.dc.html#6b, #6c | `15-tiparire.md` |
-| 16 | Planuri în EUR, plată în lei (curs BNM) | Planuri si curs.dc.html#7a–#7g | `16-planuri-eur.md` |
+| 09 | Copii → fișa copilului | Copii.dc.html#2b | `09-copii-fisa.md` |
+| 10 | De notificat | De notificat.dc.html#8a | `10-de-notificat.md` |
+| 11 | De rezolvat (Taxe, De verificat, Asociere) | De rezolvat.dc.html#9a, #9b, #9c | `11-de-rezolvat.md` |
+| 12 | Administrare (Istoric, Notificări, Backup, Grădinița) | Administrare.dc.html#10a–10c, Tiparire.dc.html#16a | `12-administrare.md` |
+| 13 | Formulare și stări | Formulare.dc.html#15a–15f | `13-formulare.md` |
+| 14 | SMS (mesaje, șabloane) | Sms.dc.html#11a, #11b | `14-sms.md` |
+| 15 | Tipărire (A5, A4) | Tiparire.dc.html#16b, #16c | `15-tiparire.md` |
+| 16 | Planuri în EUR, plată în lei (curs BNM) | Planuri si curs.dc.html#12a–12g | `16-planuri-eur.md` |
+| 17 | Două filiale (selector în meniu) | Filiale.dc.html#13a–13c | `17-filiale.md` |
+| 18 | Sincronizare între calculatoare | Sincronizare.dc.html#14a–14c | `18-sincronizare.md` |
 
 Pentru ca Claude Code să găsească singur spec-urile, copiază `CLAUDE-md-snippet.md` în `CLAUDE.md` din repo.
+
+## Adăugate 27.09.2026
+- `19-prezenta.md` — Prezența (18a, 18b)
+- `20-raport-contabil.md` — Raport pentru contabil (19a, 19b)
+- `21-incarcare.md` — Încărcare (21a–21c)
+- `22-prima-pornire.md` — Prima pornire (20a–20c), opțional
+- `15-tiparire.md` — secțiune nouă 16d–16g, confirmarea pe A4 în două părți

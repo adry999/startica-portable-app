@@ -63,6 +63,8 @@ export interface Payment {
   currency?: Currency;
   /** Curs BNM (MDL per 1 EUR) din ziua plății, doar când taxa copilului la acea dată era EUR — îngheață la salvare. */
   fxRate?: number;
+  /** Proveniența lui fxRate — 'manual' se marchează portocaliu în raport/confirmare. Doar când fxRate există. */
+  fxRateSource?: 'bnm' | 'manual';
   /** amount (lei) convertit la fxRate, rotunjit la ban — doar când fxRate există. */
   amountEur?: number;
   allocations: PaymentAllocation[];

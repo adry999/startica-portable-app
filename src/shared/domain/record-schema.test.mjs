@@ -472,6 +472,42 @@ test('normalizeRecord(payments) fără fxRate/amountEur rămâne fără ele, nu 
   assert.equal('amountEur' in record, false);
 });
 
+test('normalizeRecord(payments) acceptă fxRateSource bnm sau manual', () => {
+  const bnm = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 19.74,
+    fxRateSource: 'bnm',
+  });
+  assert.equal(bnm.fxRateSource, 'bnm');
+  const manual = normalizeRecord('payments', {
+    id: 'P-2',
+    date: '2026-09-15',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 19.8,
+    fxRateSource: 'manual',
+  });
+  assert.equal(manual.fxRateSource, 'manual');
+});
+
+test('normalizeRecord(payments) respinge un fxRateSource necunoscut', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('payments', {
+        id: 'P-1',
+        date: '2026-09-15',
+        amount: 3000,
+        method: 'Cash',
+        fxRate: 19.74,
+        fxRateSource: 'ghicit',
+      }),
+    /Proveniența cursului este invalidă/,
+  );
+});
+
 test('normalizeRecord(expenses) acceptă o metodă validă, dar respinge una necunoscută', () => {
   const base = { id: 'EXP-1', date: '2026-09-01', amount: 100 };
   assert.equal(normalizeRecord('expenses', { ...base, method: 'cash' }).method, 'cash');

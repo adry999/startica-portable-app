@@ -34,7 +34,7 @@ Actualizează testele ecranului. Rulează typecheck + test.
 
 ## Pasul 3 — Situația plăților + SMS
 ```
-Construiește StatusPage după Situatia.dc.html #1m și #1n (secțiunea 12 din CORECTII).
+Construiește StatusPage după Situatia.dc.html #7a și #7b (secțiunea 12 din CORECTII).
 Apoi SmsConfirmDialog.tsx după #2a, #2b, #2c, cu contorul de caractere GSM-7/UCS-2 și testele lui.
 Backend: endpoint POST /api/sms/send și tabelele sms_log, sms_templates, cum scrie în README
 la „Notificare SMS”. Furnizorul se implementează în spatele unei interfețe SmsProvider
@@ -44,18 +44,18 @@ webhook pentru raportul de livrare; cheia API din setările locale, niciodată �
 
 ## Pasul 4 — Mesaje SMS și șabloane
 ```
-Adaugă filele „Mesaje SMS” și „Șabloane” în NotificationsPage după Sms.dc.html #4a și #4b.
+Adaugă filele „Mesaje SMS” și „Șabloane” în NotificationsPage după Sms.dc.html #11a și #11b.
 ```
 
 ## Pasul 5 — laptop mic
 ```
-Aplică secțiunea „Ecrane mai mici” din README, doar pragul 900–1279 px (Responsive.dc.html #5a, #5b):
-sidebar overlay cu buton ☰, grile KPI pe 2 coloane. Nu face varianta de tabletă (5c).
+Aplică secțiunea „Ecrane mai mici” din README, doar pragul 900–1279 px (Responsive.dc.html #17a, #17b):
+sidebar overlay cu buton ☰, grile KPI pe 2 coloane. Nu face varianta de tabletă (17c).
 ```
 
 ## Pasul 6 — Ține minte plătitorul
 ```
-Implementează „Ține minte plătitorul” din Asociere (2e), cum scrie în README la „Decizii funcții noi”.
+Implementează „Ține minte plătitorul” din Asociere (9c), cum scrie în README la „Decizii funcții noi”.
 Ascunde din UI funcțiile care nu intră acum (buget, Anulează în Istoric, confirmare părinte,
 atașare bon, rezumat săptămânal).
 ```
@@ -63,7 +63,7 @@ atașare bon, rezumat săptămânal).
 ## Pasul 7 — Grădinița și tipărire
 ```
 Construiește fila „Grădinița” din Backup și setări, confirmarea de plată A5 și
-situația tipărită A4 după Tiparire.dc.html #6a, #6b, #6c (secțiunile din README).
+situația tipărită A4 după Tiparire.dc.html #16a, #16b, #16c (secțiunile din README).
 ```
 
 ## Pasul 8 — Zile de naștere

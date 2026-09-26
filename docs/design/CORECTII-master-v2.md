@@ -91,7 +91,7 @@ Cardurile albe din rândul 2 (Evoluția încasărilor, Necesită atenție, Zile 
 **Meniu ⋯ (`.rowMenu`)** — duplicat în Copii și Cheltuieli; mută-l în `shared/ui/RowMenu.tsx` și folosește-l și în Achitări, Vizite.
 - Separator `1px var(--row-divider)` înainte de „Șterge definitiv”; panou `border-radius:14px; box-shadow:0 12px 28px rgba(58,71,80,.18); border:1px solid var(--border)`.
 
-**Confirmare ștergere** — `window.confirm` (Achitări, Copii) → dialog 3d „Scrie ȘTERGE” (`shared/ui/ConfirmDeleteDialog.tsx`, nou).
+**Confirmare ștergere** — `window.confirm` (Achitări, Copii) → dialog 15d „Scrie ȘTERGE” (`shared/ui/ConfirmDeleteDialog.tsx`, nou).
 
 ## 8. Copii (`features/children/ChildrenPage.module.css`)
 - `.statValue*`: cifra rămâne `var(--slate)`; culoarea ink doar pe link-ul „Verifică →” (aceeași regulă ca la Dashboard).
@@ -115,23 +115,23 @@ Cardurile albe din rândul 2 (Evoluția încasărilor, Necesită atenție, Zile 
 - Lipsește rândul „Filtre active” cu chip-uri ștergibile + „Resetează” (există la Cheltuieli — `.chip`, refolosește).
 - Rândul are 3 link-uri Arhivează/Editează/Șterge → **meniu ⋯**. Sub copil, la neasociate: link „Asociază →” (lipsește).
 - `.selectionBar`: e sus, lipit de tabel → **flotant jos** (`position:sticky; bottom:24px; margin:0 auto; width:fit-content; border-radius:16px`), cu „Asociază cu un copil · Exportă · Arhivează”.
-- **Pe luni (1j)** e acum un tabel simplu per lună. De făcut: tab-uri Toate / Neasociate / Arhivate; rând cu ziua mare (Baloo 20) + copil + badge-uri; click → panou detaliu dreapta 400 px (nu drawer-ul de editare).
+- **Pe luni (5b)** e acum un tabel simplu per lună. De făcut: tab-uri Toate / Neasociate / Arhivate; rând cu ziua mare (Baloo 20) + copil + badge-uri; click → panou detaliu dreapta 400 px (nu drawer-ul de editare).
 
 ## 11. Cheltuieli (`features/expenses/ExpensesPage.module.css`)
 - `.kpiLabel` / `.kpiValue`: ca la Achitări (uppercase 12/800; valoare slate 36 px).
 - `.categoryDot`: pătrat 8×8 radius 2 (acum cerc), ca în legenda de la Dashboard.
 - `.tableCard`: border, fără umbră.
-- **Pe zile (1l)**: lipsește blocul „Adaugă rapid” (mint, radius 20) și coloana de buget (buget — de confirmat). `.dayHead`: data Baloo 18 + total zi dreapta; `.dayRow`: fundal alb, `border-radius:14px; border:1px solid var(--row-divider)`.
+- **Pe zile (6b)**: lipsește blocul „Adaugă rapid” (mint, radius 20) și coloana de buget (buget — de confirmat). `.dayHead`: data Baloo 18 + total zi dreapta; `.dayRow`: fundal alb, `border-radius:14px; border:1px solid var(--row-divider)`.
 
 ## 12. Situația plăților (`features/status/`) — cel mai departe de design
-Acum: un tabel simplu (Contract, Copil, Taxă, Achitat, Rest, Credit, Scadență, Situație), fără filtre. De construit după 1m / 1n:
+Acum: un tabel simplu (Contract, Copil, Taxă, Achitat, Rest, Credit, Scadență, Situație), fără filtre. De construit după 7a / 7b:
 - Antet: comutator `pill` „Lună | An școlar” + „Tipărește”. Textul explicativ lung → tooltip „ⓘ Cum se calculează” lângă titlu.
 - 4 carduri sumar (De încasat alb · Încasat mint cu bară · Restanțe pink · Fără taxă setată yellow + „Completează →” spre Taxe și grupe).
 - Capul tabelului: tabs Toți / Restanțieri / Parțial / Achitat / Urmează (cu contoare), căutare, „Grupă ▾”.
 - Coloane: Copil (avatar + nume + părinte) · Scadență („ziua 20”) · Taxă · Achitat · Rest (`--pink-ink` dacă > 0) · Statut (badge) · CTA („Notifică” la neachitat/parțial → `SmsConfirmDialog`, „Vezi fișa” la rest). Coloana Credit → în fișa copilului.
 - Banner jos `var(--yellow-soft)`: „N restanțieri · Notifică toți”.
-- **An școlar (1n)**: hartă 12 luni (componentă nouă `PaymentHeatmap.tsx`), 3 carduri sus. Date din `useStatus` pe fiecare lună a anului școlar.
-- SMS: `Situatia.dc.html#2a/#2b/#2c`; istoric și șabloane: `Sms.dc.html#4a/#4b`.
+- **An școlar (7b)**: hartă 12 luni (componentă nouă `PaymentHeatmap.tsx`), 3 carduri sus. Date din `useStatus` pe fiecare lună a anului școlar.
+- SMS: `Situatia.dc.html#7c/#2b/#2c`; istoric și șabloane: `Sms.dc.html#11a/#11b`.
 
 ## 13. Vizite (`features/visits/VisitsPage.module.css`)
 - `.statsRow` 4 carduri → pastile inline (număr Baloo 22 + etichetă 13 px, `gap:24px`), fără fundal de card.

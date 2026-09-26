@@ -1,6 +1,6 @@
 # 04 — Vizite
 
-**Referință:** `Vizite.dc.html#2a`. **Depinde de:** `00-comun.md` A, B, E.
+**Referință:** `Vizite.dc.html#4a`. **Depinde de:** `00-comun.md` A, B, E.
 
 ## 1. Fișiere
 Se modifică: `visits/VisitsPage.tsx`, `VisitsPage.module.css`, `VisitsPage.test.tsx`. `VisitFormDrawer`, `EnrollDrawer` și `useVisits` rămân.
