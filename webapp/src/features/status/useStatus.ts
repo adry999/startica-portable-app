@@ -12,7 +12,7 @@ export interface StatusRowView {
   name: string;
   archived: boolean;
   expected: number | null;
-  paid: number;
+  paid: number | null;
   rest: number | null;
   credit: number | null;
   due: string;

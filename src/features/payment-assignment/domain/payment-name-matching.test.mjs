@@ -41,7 +41,7 @@ test('Sugestiile de asociere separă potrivirea pe nume de simpla coincidență 
   );
 
   // O lună deja achitată scade scorul față de una neachitată.
-  const paidIndex = new Map([['A', new Map([['2025-09', 1200000]])]]);
+  const paidIndex = new Map([['A', new Map([['2025-09', [{ amount: 12000, currency: 'MDL', date: '2025-09-05' }]]])]]);
   const afterPaid = suggestChildren(payment('Mark'), children, paidIndex);
   assert.equal(afterPaid[0].id, 'A', 'Numele rămâne decisiv.');
   assert.ok(!afterPaid[0].reasons.some(r => r.includes('neachitată')));

@@ -69,7 +69,7 @@ describe('buildChildRecord', () => {
   it('la creare, seedează istoricul de taxă și de statut din valorile completate', () => {
     const record = buildChildRecord(null, 'ID-1', baseValues);
     expect(record.id).toBe('ID-1');
-    expect(record.feeHistory).toEqual([{ from: '2026-01', amount: 1500 }]);
+    expect(record.feeHistory).toEqual([{ from: '2026-01', amount: 1500, currency: 'MDL' }]);
     expect(record.statusHistory).toEqual([{ from: '2026-01', status: 'Activ' }]);
     expect(record.groupId).toBeNull();
   });
@@ -89,15 +89,15 @@ describe('buildChildRecord', () => {
       feeFrom: '2026-09',
     });
     expect(record.feeHistory).toEqual([
-      { from: '2026-01', amount: 1500 },
-      { from: '2026-09', amount: 1800 },
+      { from: '2026-01', amount: 1500, currency: 'MDL' },
+      { from: '2026-09', amount: 1800, currency: 'MDL' },
     ]);
   });
 
   it('taxa neschimbată la editare nu adaugă o intrare nouă', () => {
     const previous = buildChildRecord(null, 'ID-1', baseValues);
     const record = buildChildRecord(previous, 'ID-1', { ...reopenedValues(previous), feeFrom: '2026-09' });
-    expect(record.feeHistory).toEqual([{ from: '2026-01', amount: 1500 }]);
+    expect(record.feeHistory).toEqual([{ from: '2026-01', amount: 1500, currency: 'MDL' }]);
   });
 
   it('statutul schimbat adaugă o intrare de istoric la luna aleasă', () => {

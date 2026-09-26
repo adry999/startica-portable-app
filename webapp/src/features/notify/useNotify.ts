@@ -25,7 +25,7 @@ export interface NotifyRowView {
   termLabel: string;
   late: boolean;
   expected: number | null;
-  paid: number;
+  paid: number | null;
   rest: number | null;
   label: string;
   hasUnassignedHint: boolean;

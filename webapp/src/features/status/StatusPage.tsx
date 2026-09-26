@@ -35,7 +35,7 @@ export function StatusPage({ month }: StatusPageProps) {
       key: 'paid',
       header: 'Achitat',
       align: 'end',
-      sortValue: row => row.paid,
+      sortValue: row => row.paid ?? -1,
       render: row => formatMoney(row.paid),
     },
     {
