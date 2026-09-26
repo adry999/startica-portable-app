@@ -140,6 +140,12 @@
   gap: 20px;
 }
 
+/* Card-ul de bază setează overflow: hidden pentru colțurile rotunjite + cercul decorativ (vezi
+   Card.module.css); revenuePanel n-are cerc, dar tăia tooltip-ul barelor care iese peste margine. */
+.revenuePanel {
+  overflow: visible !important;
+}
+
 .attentionPanel {
   padding: 24px 22px;
   gap: 14px;
