@@ -29,18 +29,29 @@ Consolidează `docs/superpowers/specs/2026-09-26-code-audit.md` (audit fable) + 
 ## 6. Cheltuieli — FilterPills Categorie
 `expenses/ExpensesPage.tsx`: `FilterPills` Categorie (Toate + cele 5 din `categoryStyleFor`) în loc de `<select>`; antetul modului „Pe zile” la fel de compact ca „Tabel” (nu H2 mare, dacă există o diferență — verifică). **Fără** filtrul Metodă — vezi `INTREBARI.md` (`Expense` nu are câmp `method`).
 
-## 7. Situația plăților — FilterPills Grupa pe tabelul curent
-`status/StatusPage.tsx`/`useStatus.ts`: adaugă `groupId`/`groupName` pe `StatusRowView` (join cu `records.children`/`records.groups`), `FilterPills` Grupa (Toate + grupe cu `groupTone` + Fără grupă) peste tabelul existent. **Fără** cele 4 carduri / modul „An școlar” / SMS — ecran nou aproape integral, notat separat, vezi `INTREBARI.md`.
+## 7. Situația plăților — FilterPills Grupa pe tabelul curent — DONE (2026-09-27)
+`status/StatusPage.tsx`/`useStatus.ts`: `groupId`/`groupName` pe `StatusRowView`, `FilterPills` Grupa peste tabel, filtrul restrânge doar tabelul (comentariul vechi „fără filtre" era depășit, rescris). Cele 4 carduri / modul „An școlar” / SMS — planificate acum ca punctul 10 (plan scris, cod neînceput).
+
+## 6b. Cheltuieli — câmpul `method` + FilterPills Metodă — DONE (2026-09-27)
+`Expense.method?: 'cash'|'card'|'transfer'`, fără implicit la nivel de schemă (cheltuielile vechi rămân fără metodă la re-salvare), implicit Cash doar în formularul de creare. FilterPills + coloană Metodă.
 
 ## 8. Faza 4 — monedă EUR/BNM (după 1–3)
 **Backend DONE (2026-09-26).** Cherry-pick-uite 13 commit-uri de domeniu/server/format din `.worktrees/feat-multi-currency-fees` (branch pornit din `master`, nu din `master-v2` — conflicte reale rezolvate în `record-schema.mjs` și `payment-allocations.test.mjs`). `create-application.mjs`/`main.mjs` deja aveau rutele de curs cablate din commit-urile cherry-pick-uite. Două fixup-uri necesare la consumatori neschimbați de branch-ul de monedă: `payment-name-matching.mjs` (indexul de plăți nu mai adună, ci grupează pe monedă+dată) și `useNotify.ts`/`useStatus.ts`/`StatusPage.tsx` din webapp (`obligation.paid` poate fi `null` acum). Tot verde: backend 518/520 (2 sărite cunoscute), webapp 358/358.
 
 **2026-09-27, model final ales** (`docs/design/RASPUNSURI.md`): `feeHistory.currency` rămâne (fără migrare), `Payment.fxRate`/`amountEur` noi (validare, fără calcul la nivel de schemă — calculul se face în webapp). `GET/POST /api/exchange-rates` întorc `{rates, sources}` (mint=BNM/galben=manual); `GET/POST /api/plan-presets` (listă simplă, fără tabel SQL). **Ecranul „Curs valutar" (12a) DONE, verificat live** — fila nouă în Backup și setări, curs azi + corectare + „Revino la BNM" + ultimele 5 zile + presetări de plan.
 
-Rămas de construit, în ordinea din spec: selector de monedă în `PaymentFormDrawer` (`payments`, 12b — calculează `fxRate`/`amountEur` la salvare când taxa copilului e EUR), `ChildFormDrawer`/`FeeSetupPage` (selector monedă pe taxă, 7g), afișare în € în fișa copilului/Situația/confirmarea de plată (7c-7e), pastila de curs pe Dashboard (7f), variabila SMS `rest_eur`. Worktree-ul vechi (`.worktrees/feat-multi-currency-fees`) are ca referință commit-urile UI de pe stratul vanilla — utile ca ghid de logică, dar scrise pe `web/*.mjs` (șters în Faza 1), deci rescrise, nu portate. Nu șterge worktree-ul până nu se termină tot UI-ul.
+**Selectorul din `PaymentFormDrawer` (12b) DONE, verificat** — când taxa copilului e EUR: „= X €" live, câmp Curs EUR (BNM/manual per-plată), repartizare în €, submit blocat fără curs. Copiii MDL neschimbați (verificat).
 
-## 9. Faza 5 — SMS (sms.md) — scrie spec înainte de cod
-Scrie `docs/superpowers/specs/<data>-sms-notify-design.md` (provider `sms.md`/docs.sms.md, auth, format telefon, șablon după `src/features/telegram-notify/`). Nu scrie cod de feature înainte ca spec-ul să fie citit/aprobat — pune întrebarea în `INTREBARI.md` dacă e nevoie de o decizie a utilizatorului (cost/credit, retry).
+Rămas de construit, în ordinea din spec: `ChildFormDrawer`/`FeeSetupPage` (selector monedă pe taxă, 7g), afișare în € în fișa copilului/Situația/confirmarea de plată (7c-7e), pastila de curs pe Dashboard (7f), variabila SMS `rest_eur`. Worktree-ul vechi (`.worktrees/feat-multi-currency-fees`) are ca referință commit-urile UI de pe stratul vanilla — utile ca ghid de logică, dar scrise pe `web/*.mjs` (șters în Faza 1), deci rescrise, nu portate. Nu șterge worktree-ul până nu se termină tot UI-ul.
+
+## 9. Faza 5 — SMS (sms.md) — spec DONE
+`docs/superpowers/specs/2026-09-26-sms-notify-design.md`, aprobat (`RASPUNSURI.md`).
+
+## 9b. SMS P1 — plan DONE (2026-09-27)
+`docs/superpowers/plans/2026-09-27-sms-notify-p1.md`, 21 taskuri/6 faze. Cod neînceput — următorul pas e execuția planului (task cu task, TDD, per `superpowers:subagent-driven-development`).
+
+## 10. Situația plăților, ecranul complet — plan DONE (2026-09-27)
+`docs/superpowers/plans/2026-09-27-situatia-platilor-complet.md`, 10 taskuri/5 faze (Lună: 4 carduri + toolbar + coloane spec; An școlar: 3 carduri + hartă 12 luni). SMS (Notifică/Notifică toți) rămâne P2, butoane dezactivate — găsit un gol real de arhitectură: `status/` nu poate importa `@features/sms` direct (`architecture.test.ts`), notat în handoff. Cod neînceput.
 
 ## 10+ — curățenie mecanică rămasă
 **R10 DONE (2026-09-26):** `ChildProfileView`/`ExpenseFormDrawer` extrase în fișiere proprii.
