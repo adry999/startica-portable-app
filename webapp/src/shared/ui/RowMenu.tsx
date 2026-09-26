@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import styles from './RowMenu.module.css';
 
 export interface RowMenuItem {
@@ -15,8 +16,10 @@ export interface RowMenuProps {
 
 /** Meniul ⋯ de pe rândul unui tabel — un singur loc, în loc de câte o copie per ecran. */
 export function RowMenu({ items, ariaLabel = 'Mai multe acțiuni' }: RowMenuProps) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
   return (
-    <details className={styles.rowMenu} onClick={event => event.stopPropagation()}>
+    <details ref={detailsRef} className={styles.rowMenu} onClick={event => event.stopPropagation()}>
       <summary aria-label={ariaLabel}>⋯</summary>
       <div className={styles.rowMenuPanel}>
         {items.map(item => (
@@ -26,7 +29,10 @@ export function RowMenu({ items, ariaLabel = 'Mai multe acțiuni' }: RowMenuProp
             className={item.danger ? styles.rowMenuDanger : undefined}
             disabled={item.disabled}
             title={item.title}
-            onClick={item.onClick}
+            onClick={() => {
+              if (detailsRef.current) detailsRef.current.open = false;
+              item.onClick();
+            }}
           >
             {item.label}
           </button>
