@@ -43,6 +43,12 @@ const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
 const formatCompactMoney = (value: number) =>
   new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 }).format(value);
 
+function fullMonthLabel(month: string): string {
+  const [year, monthIndex] = month.split('-');
+  const name = MONTH_NAMES[Number(monthIndex) - 1] ?? monthIndex;
+  return `${name} ${year}`;
+}
+
 export interface DashboardPageProps {
   month: string;
   onNavigate: (view: ViewKey) => void;
@@ -56,6 +62,7 @@ const CHART_MODE_OPTIONS = [
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const data = useDashboard(month);
   const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
+  const [activeBar, setActiveBar] = useState<string | null>(null);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
@@ -130,16 +137,45 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
             />
           </div>
           <div className={styles.bars}>
-            {revenueView.map((bar, index) => (
-              <div key={bar.month} className={styles.barColumn}>
-                <div
-                  className={
-                    index === currentMonthIndex ? styles.barCurrent : bar.value === 0 ? styles.barEmpty : styles.barPast
-                  }
-                  style={{ height: bar.value === 0 ? 6 : Math.max(6, (bar.value / maxRevenue) * 100) }}
-                />
-              </div>
-            ))}
+            {revenueView.map((bar, index) => {
+              const isActive = activeBar === bar.month;
+              const methodEntries = Object.entries(bar.byMethod ?? {}).filter(([, value]) => value > 0);
+              return (
+                <div key={bar.month} className={styles.barColumn}>
+                  {isActive && (
+                    <div className={styles.barTooltip} role="tooltip">
+                      <strong>{fullMonthLabel(bar.month)}</strong>
+                      <span>{formatMoney(bar.value)}</span>
+                      {methodEntries.length > 0 && (
+                        <ul className={styles.barTooltipMethods}>
+                          {methodEntries.map(([method, value]) => (
+                            <li key={method}>
+                              {METHOD_LABELS[method] ?? method}: {formatCompactMoney(value)}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className={`${styles.barButton} ${
+                      index === currentMonthIndex
+                        ? styles.barCurrent
+                        : bar.value === 0
+                          ? styles.barEmpty
+                          : styles.barPast
+                    } ${isActive ? styles.barActive : ''}`}
+                    style={{ height: bar.value === 0 ? 6 : Math.max(6, (bar.value / maxRevenue) * 100) }}
+                    onMouseEnter={() => setActiveBar(bar.month)}
+                    onMouseLeave={() => setActiveBar(current => (current === bar.month ? null : current))}
+                    onFocus={() => setActiveBar(bar.month)}
+                    onBlur={() => setActiveBar(current => (current === bar.month ? null : current))}
+                    aria-label={`${fullMonthLabel(bar.month)}: ${formatMoney(bar.value)}`}
+                  />
+                </div>
+              );
+            })}
           </div>
           <div className={styles.barLabels}>
             {revenueView.map((bar, index) => (

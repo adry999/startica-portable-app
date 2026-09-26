@@ -27,6 +27,7 @@ export interface AttentionItem {
 export interface RevenueBar {
   month: string;
   value: number;
+  byMethod?: Record<string, number>;
 }
 
 export type DashboardStatus = 'loading' | 'ready' | 'failed';
@@ -101,7 +102,7 @@ export function useDashboard(month: string): DashboardData {
     d.setMonth(d.getMonth() - i);
     const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const monthCash = summarizeCashForMonth(records, m);
-    revenueHistory.push({ month: m, value: monthCash.income });
+    revenueHistory.push({ month: m, value: monthCash.income, byMethod: monthCash.byMethod });
     expenseHistory.push({ month: m, value: monthCash.expense });
   }
 

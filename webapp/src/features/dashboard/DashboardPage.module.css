@@ -193,6 +193,7 @@
 }
 
 .barColumn {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -201,12 +202,22 @@
   height: 100%;
 }
 
+.barButton {
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
 .barCurrent,
 .barPast,
 .barEmpty {
   width: 100%;
   max-width: 34px;
   border-radius: 10px 10px 4px 4px;
+  transition:
+    height 0.25s ease,
+    filter 0.15s ease,
+    transform 0.15s ease;
 }
 
 .barCurrent {
@@ -219,6 +230,49 @@
 
 .barEmpty {
   background: #f1ece2;
+}
+
+.barActive {
+  filter: brightness(1.08);
+  transform: scaleX(1.12);
+}
+
+.barButton:focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: 2px;
+}
+
+.barTooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--slate);
+  color: var(--white);
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.barTooltip strong {
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.barTooltipMethods {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  opacity: 0.85;
 }
 
 .barLabels {
