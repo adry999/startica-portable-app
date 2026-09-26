@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PaymentFormDrawer } from './PaymentFormDrawer';
 import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
+
+// Curs cunoscut doar la o dată veche, ca eurToMdlRate să-l propună (cel mai
+// recent cunoscut înaintea datei) indiferent de data „de azi” din test.
+const KNOWN_RATE_DATE = '2020-01-01';
+const KNOWN_RATE = 19.5;
 
 const records = {
   children: [
@@ -16,6 +21,12 @@ const records = {
       feeHistory: [{ from: '2026-01', amount: 1500 }],
     },
     { id: 'c2', name: 'Maria Ionescu', archived: false, feeHistory: [] },
+    {
+      id: 'c3',
+      name: 'Elena Rusu',
+      archived: false,
+      feeHistory: [{ from: '2026-01', amount: 100, currency: 'EUR' }],
+    },
   ],
   payments: [],
   expenses: [],
@@ -32,6 +43,25 @@ function renderDrawer() {
 }
 
 describe('PaymentFormDrawer', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/exchange-rates')
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ rates: { [KNOWN_RATE_DATE]: KNOWN_RATE }, sources: {} }),
+          };
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('suma totală se calculează automat din metodele completate', async () => {
     renderDrawer();
     const user = userEvent.setup();
@@ -182,5 +212,73 @@ describe('PaymentFormDrawer', () => {
 
     expect(amountInputs()).toHaveLength(1);
     expect(amountInputs()[0].value).toBe('222');
+  });
+
+  it('copil cu taxă MDL: fără câmp de curs EUR, iar fxRate/amountEur rămân absente la trimitere', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await user.selectOptions(screen.getByLabelText('Copil'), 'c1');
+    await user.type(screen.getByLabelText('Cash'), '500');
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    expect(screen.queryByLabelText('Curs EUR')).toBeNull();
+    const submitted = onSubmit.mock.calls[0][0];
+    expect('fxRate' in submitted).toBe(false);
+    expect('amountEur' in submitted).toBe(false);
+  });
+
+  it('copil cu taxă EUR: arată conversia în €, câmpul Curs EUR, și trimite fxRate/amountEur', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
+    await user.type(screen.getByLabelText('Cash'), '1000');
+
+    expect(screen.getByText('= 51,28 €')).toBeInTheDocument();
+    expect(screen.getByLabelText('Curs EUR')).toHaveAttribute('placeholder', String(KNOWN_RATE));
+
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.fxRate).toBe(KNOWN_RATE);
+    expect(submitted.amountEur).toBeCloseTo(51.28, 2);
+  });
+
+  it('un curs manual introdus în Curs EUR schimbă fxRate-ul (și amountEur-ul) trimis', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
+    await user.type(screen.getByLabelText('Cash'), '1000');
+    await user.type(screen.getByLabelText('Curs EUR'), '20');
+
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.fxRate).toBe(20);
+    expect(submitted.amountEur).toBeCloseTo(50, 2);
+  });
+
+  it('fără curs cunoscut și fără curs manual, trimiterea unei plăți pe copil cu taxă EUR este blocată', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/exchange-rates')
+          return { ok: true, status: 200, json: async () => ({ rates: {}, sources: {} }) };
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
+    await user.type(screen.getByLabelText('Cash'), '1000');
+
+    expect(screen.getByText('Niciun curs cunoscut pentru această dată — completează manual')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Salvează' })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

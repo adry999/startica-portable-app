@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Drawer } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { firstUnpaidMonth } from '@domain/tuition-obligation.mjs';
+import { formatDate } from '#shared/format/date-format.mjs';
+import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
+import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { defaultPaymentFormValues, tenderMethodsFor, totalOfTenders, type PaymentFormValues } from './payment-form';
 import type { Child, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './PaymentFormDrawer.module.css';
@@ -23,6 +26,8 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
     defaultPaymentFormValues(editing, todayFn(), defaultChildId, records),
   );
   const [submitting, setSubmitting] = useState(false);
+  // Curs manual pentru ACEASTĂ plată (copil cu taxă EUR) — nu e o corectare de setări.
+  const [manualRate, setManualRate] = useState('');
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual.
@@ -34,18 +39,36 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const methods = tenderMethodsFor(editing);
   const totalAmount = totalOfTenders(values.tenders);
 
+  const selectedChild = records.children.find((c: Child) => c.id === values.childId);
+  const feeEntry = selectedChild ? feeEntryFor(selectedChild, values.date.slice(0, 7)) : null;
+  const isEurChild = feeEntry?.currency === 'EUR';
+
+  const { rates } = useExchangeRates();
+  const bnmRate = eurToMdlRate(rates, values.date);
+  const effectiveRate = manualRate ? Number(manualRate) : bnmRate;
+  const eurEquivalent = effectiveRate ? convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate) : null;
+
+  // O dată nouă re-propune cursul BNM al zilei — o corectare manuală anterioară nu trebuie ținută peste schimbarea datei.
   useEffect(() => {
+    setManualRate('');
+  }, [values.date]);
+
+  useEffect(() => {
+    if (isEurChild && !effectiveRate) return;
     setValues(previous => {
       if (previous.allocations.length !== 1) return previous;
       const row = previous.allocations[0];
       if (row.amount !== syncedAmountRef.current && row.amount !== '') return previous;
-      const next = totalAmount ? totalAmount.toFixed(2) : '';
+      // Copilul cu taxă EUR își scade obligația în €, deci rândul de repartizare urmărește
+      // echivalentul în € al sumei primite în lei, nu suma în lei ca la un copil MDL.
+      const target = isEurChild ? eurEquivalent : totalAmount;
+      const next = target ? target.toFixed(2) : '';
       syncedAmountRef.current = next;
       if (row.amount === next) return previous;
       return { ...previous, allocations: [{ ...row, amount: next }] };
     });
-    // Doar totalul declanșează resincronizarea — restul stării trăiește în closure-ul updater-ului.
-  }, [totalAmount]);
+    // Doar aceste valori declanșează resincronizarea — restul stării trăiește în closure-ul updater-ului.
+  }, [totalAmount, isEurChild, effectiveRate, eurEquivalent]);
 
   function setTender(method: string, amount: string) {
     setValues(previous => ({ ...previous, tenders: { ...previous.tenders, [method]: amount } }));
@@ -93,15 +116,25 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
 
   async function handleSubmit() {
     if (submitting) return;
+    if (isEurChild && !effectiveRate) return;
     setSubmitting(true);
     try {
-      await onSubmit(values);
+      const finalValues = isEurChild
+        ? {
+            ...values,
+            fxRate: effectiveRate,
+            amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
+          }
+        : values;
+      await onSubmit(finalValues);
     } finally {
       setSubmitting(false);
     }
   }
 
   const allocated = values.allocations.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const balanceCurrency = isEurChild ? 'EUR' : 'MDL';
+  const balanceTotal = isEurChild ? (eurEquivalent ?? 0) : totalAmount;
   const childOptions = [...records.children].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
 
   return (
@@ -111,7 +144,12 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
       width={560}
       onClose={onClose}
       footer={
-        <button type="submit" form="payment-form-drawer" className={styles.btnPrimary} disabled={submitting}>
+        <button
+          type="submit"
+          form="payment-form-drawer"
+          className={styles.btnPrimary}
+          disabled={submitting || (isEurChild && !effectiveRate)}
+        >
           Salvează
         </button>
       }
@@ -150,6 +188,29 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
             Total achitare (calculat automat)
             <input type="number" readOnly step="0.01" value={totalAmount.toFixed(2)} />
           </label>
+          {isEurChild && (
+            <>
+              <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
+              <label className={styles.field}>
+                Curs EUR
+                <input
+                  type="number"
+                  step="0.0001"
+                  min={0}
+                  placeholder={bnmRate !== undefined ? String(bnmRate) : ''}
+                  value={manualRate}
+                  onChange={event => setManualRate(event.target.value)}
+                />
+              </label>
+              <p className={styles.notice}>
+                {manualRate
+                  ? 'Curs manual (pentru această plată)'
+                  : bnmRate !== undefined
+                    ? `BNM ${formatDate(values.date)}`
+                    : 'Niciun curs cunoscut pentru această dată — completează manual'}
+              </p>
+            </>
+          )}
           <p className={styles.notice}>
             Completează una sau mai multe metode. Totalul se calculează automat; repartizarea pe luni folosește acest
             total o singură dată.
@@ -216,7 +277,8 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
             + Lună
           </button>
           <p className={styles.balance}>
-            Repartizat: {formatMoney(allocated)} · Nerepartizat: {formatMoney(totalAmount - allocated)}
+            Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
+            {formatMoney(balanceTotal - allocated, balanceCurrency)}
           </p>
         </fieldset>
 

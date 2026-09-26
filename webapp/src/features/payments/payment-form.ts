@@ -21,6 +21,10 @@ export interface PaymentFormValues {
   reviewed: boolean;
   allocations: AllocationRowValues[];
   notes: string;
+  /** Curs BNM (sau corectat manual) folosit la conversie — doar când taxa copilului e EUR. */
+  fxRate?: number;
+  /** `amount` (lei) convertit la fxRate, rotunjit la ban — doar când fxRate există. */
+  amountEur?: number;
 }
 
 export function tenderMethodsFor(payment: Payment | null): string[] {
@@ -86,6 +90,8 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
     sourceName: values.sourceName,
     reviewed: values.reviewed,
     allocations,
+    fxRate: values.fxRate,
+    amountEur: values.amountEur,
   }) as Payment;
 }
 
