@@ -87,7 +87,7 @@ export function App() {
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
         <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
         <Route path="/grupe" element={<GroupsPage />} />
-        <Route path="/vizite" element={<VisitsPage />} />
+        <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/achitari" element={<PaymentsRoute />} />
         <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
         <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
@@ -117,6 +117,11 @@ function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view
       onCloseChild={() => navigate('/copii')}
     />
   );
+}
+
+function VisitsRoute() {
+  const [searchParams] = useSearchParams();
+  return <VisitsPage initialDate={searchParams.get('zi') ?? undefined} />;
 }
 
 function PaymentsRoute() {

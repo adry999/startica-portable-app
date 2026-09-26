@@ -19,6 +19,8 @@ export interface AttentionItem {
   detail: string;
   action: string;
   view: string;
+  /** Parametri opționali de trecut lui onNavigate (ex. ziua de deschis în calendarul de Vizite). */
+  params?: Record<string, string>;
   tone: AttentionTone;
   /** „Taxe și grupe" rămâne vizibil chiar la 0 de notificat, dacă mai sunt fișe fără taxă. */
   forceShow: boolean;
@@ -164,6 +166,7 @@ export function useDashboard(month: string): DashboardData {
           : 'Nicio vizită azi sau mâine.',
       action: 'Vezi calendarul',
       view: 'visits',
+      params: { zi: todayStr },
       tone: 'visits',
       forceShow: false,
     },

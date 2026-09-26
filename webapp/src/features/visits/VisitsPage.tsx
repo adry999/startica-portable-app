@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, DataTable, useToast, type BadgeTone, type DataTableColumn } from '@shared/ui';
+import { Badge, Card, DataTable, SearchSelect, useToast, type BadgeTone, type DataTableColumn } from '@shared/ui';
 import { formatAge, formatDate } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
@@ -56,8 +56,13 @@ function dayLabel(dateStr: string): string {
 }
 
 /** Ecranul „Vizite" (2a din Operatiuni.dc.html): calendar + panou de detalii pentru ziua selectată, plus lista completă filtrabilă. */
-export function VisitsPage() {
-  const data = useVisits();
+export interface VisitsPageProps {
+  /** Presetează ziua selectată — venit din ?zi= (link „Vezi calendarul" de pe Dashboard). */
+  initialDate?: string;
+}
+
+export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
+  const data = useVisits(initialDate);
   const toast = useToast();
   const [formTarget, setFormTarget] = useState<Visit | 'new' | null>(null);
   const [enrollTarget, setEnrollTarget] = useState<Visit | null>(null);
@@ -282,7 +287,10 @@ export function VisitsPage() {
                   <small className={styles.dim}>{day.visits.length} vizite</small>
                 ) : (
                   day.visits.map(visit => (
-                    <span key={visit.id} className={`${styles.calendarChip} ${styles[STATUS_CHIP_CLASS[visit.status]]}`}>
+                    <span
+                      key={visit.id}
+                      className={`${styles.calendarChip} ${styles[STATUS_CHIP_CLASS[visit.status]]}`}
+                    >
                       {visit.time} {visit.name}
                     </span>
                   ))
@@ -405,19 +413,18 @@ export function VisitsPage() {
             onChange={event => data.setSearch(event.target.value)}
             aria-label="Caută vizită"
           />
-          <select
-            className={styles.select}
+          <SearchSelect
+            className={styles.filterSelect}
+            ariaLabel="Filtru statut"
             value={data.statusFilter}
-            onChange={event => data.setStatusFilter(event.target.value)}
-            aria-label="Filtru statut"
-          >
-            <option value="">Toate statuturile</option>
-            {(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(status => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+            onChange={data.setStatusFilter}
+            options={[
+              { value: '', label: 'Toate statuturile' },
+              ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(
+                status => ({ value: status, label: status }),
+              ),
+            ]}
+          />
           <label className={styles.checkboxField}>
             <input
               type="checkbox"

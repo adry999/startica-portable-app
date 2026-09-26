@@ -51,7 +51,7 @@ function fullMonthLabel(month: string): string {
 
 export interface DashboardPageProps {
   month: string;
-  onNavigate: (view: ViewKey) => void;
+  onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
 }
 
 const CHART_MODE_OPTIONS = [
@@ -264,7 +264,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   );
 }
 
-function AttentionRow({ item, onNavigate }: { item: AttentionItem; onNavigate: (view: ViewKey) => void }) {
+function AttentionRow({
+  item,
+  onNavigate,
+}: {
+  item: AttentionItem;
+  onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
+}) {
   const clear = item.count === 0 && !item.forceShow;
   return (
     <article className={`${styles.attentionRow} ${clear ? styles.attentionRowClear : ATTENTION_TONE_CLASS[item.tone]}`}>
@@ -273,7 +279,11 @@ function AttentionRow({ item, onNavigate }: { item: AttentionItem; onNavigate: (
         <strong>{item.title}</strong>
         <small>{clear ? 'Nicio acțiune necesară pe această listă.' : item.detail}</small>
       </div>
-      <button type="button" className={styles.attentionAction} onClick={() => onNavigate(item.view as ViewKey)}>
+      <button
+        type="button"
+        className={styles.attentionAction}
+        onClick={() => onNavigate(item.view as ViewKey, item.params)}
+      >
         {clear ? 'Vezi lista' : item.action} →
       </button>
     </article>

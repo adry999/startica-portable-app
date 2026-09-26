@@ -56,14 +56,14 @@ function shiftMonth(monthKey: string, delta: number): string {
 }
 
 /** Echivalentul visits.controller.mjs pentru React: calendar + pâlnie + listă filtrată, plus mutațiile de orchestrare. */
-export function useVisits(): VisitsData {
+export function useVisits(initialDate?: string): VisitsData {
   const session = useAppSession();
   const todayValue = todayFn();
   const { state, ready, loading, saveError } = session.state;
   const records = state as RecordsSnapshot;
 
-  const [month, setMonth] = useState(() => todayValue.slice(0, 7));
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [month, setMonth] = useState(() => (initialDate ?? todayValue).slice(0, 7));
+  const [selectedDate, setSelectedDate] = useState<string | null>(initialDate ?? null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [allMonths, setAllMonths] = useState(false);
