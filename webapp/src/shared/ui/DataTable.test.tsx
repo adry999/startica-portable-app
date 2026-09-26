@@ -116,4 +116,35 @@ describe('DataTable', () => {
     render(<DataTable columns={columns} rows={[]} rowKey={c => c.id} emptyState={<p>Niciun copil găsit</p>} />);
     expect(screen.getByText('Niciun copil găsit')).toBeInTheDocument();
   });
+
+  it('rândul e focusabil de la tastatură când există onRowClick', () => {
+    const onRowClick = vi.fn();
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} onRowClick={onRowClick} />);
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows[0]).toHaveAttribute('tabIndex', '0');
+  });
+
+  it('apelează onRowClick la Enter pe rândul focusat', async () => {
+    const onRowClick = vi.fn();
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} onRowClick={onRowClick} />);
+    const rows = screen.getAllByRole('row').slice(1);
+    rows[0].focus();
+    await userEvent.keyboard('{Enter}');
+    expect(onRowClick).toHaveBeenCalledWith(children[0]);
+  });
+
+  it('apelează onRowClick la Space pe rândul focusat', async () => {
+    const onRowClick = vi.fn();
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} onRowClick={onRowClick} />);
+    const rows = screen.getAllByRole('row').slice(1);
+    rows[0].focus();
+    await userEvent.keyboard(' ');
+    expect(onRowClick).toHaveBeenCalledWith(children[0]);
+  });
+
+  it('rândul nu e focusabil de la tastatură fără onRowClick', () => {
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} />);
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows[0]).not.toHaveAttribute('tabIndex');
+  });
 });

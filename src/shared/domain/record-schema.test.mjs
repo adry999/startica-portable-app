@@ -317,6 +317,49 @@ test('validateState acceptă o vizită cu childId și desiredGroupId existente',
   );
 });
 
+test('payments.reviewed acceptă doar boolean', () => {
+  assert.throws(() => normalizeRecord('payments', { ...payment(), reviewed: 'yes' }), /Verificare invalidă/);
+  assert.equal(normalizeRecord('payments', { ...payment(), reviewed: true }).reviewed, true);
+});
+
+test('payments.importSource acceptă doar un obiect', () => {
+  assert.throws(() => normalizeRecord('payments', { ...payment(), importSource: 42 }), /Sursă import invalidă/);
+  assert.throws(() => normalizeRecord('payments', { ...payment(), importSource: 'text' }), /Sursă import invalidă/);
+  assert.throws(() => normalizeRecord('payments', { ...payment(), importSource: ['a'] }), /Sursă import invalidă/);
+  assert.deepEqual(
+    normalizeRecord('payments', { ...payment(), importSource: { kind: 'v5-financial', recordId: 'X' } }).importSource,
+    { kind: 'v5-financial', recordId: 'X' },
+  );
+});
+
+test('payments.sourceChildId acceptă doar text', () => {
+  assert.throws(() => normalizeRecord('payments', { ...payment(), sourceChildId: 42 }), /sourceChildId/);
+  assert.equal(normalizeRecord('payments', { ...payment(), sourceChildId: 'ID-9' }).sourceChildId, 'ID-9');
+});
+
+test('archivedAt acceptă sentinela goală, dar refuză un text care nu e o dată', () => {
+  assert.throws(
+    () => normalizeRecord('payments', { ...payment(), archivedAt: 'not-a-date' }),
+    /Data arhivării este invalidă/,
+  );
+  assert.equal(
+    normalizeRecord('payments', { ...payment(), archivedAt: '2026-01-15T10:00:00.000Z' }).archivedAt,
+    '2026-01-15T10:00:00.000Z',
+  );
+  assert.equal(normalizeRecord('payments', { ...payment(), archivedAt: '' }).archivedAt, '');
+  assert.equal(normalizeRecord('payments', { ...payment(), archivedAt: null }).archivedAt, null);
+});
+
+test('payments.childId refuză un format care nu e de tip ID', () => {
+  assert.throws(
+    () => normalizeRecord('payments', { ...payment(), childId: 'nu e un id valid!' }),
+    /ID copil invalid/,
+  );
+  assert.throws(() => normalizeRecord('payments', { ...payment(), childId: 'x'.repeat(101) }), /ID copil invalid/);
+  assert.equal(normalizeRecord('payments', { ...payment(), childId: 'c1' }).childId, 'c1');
+  assert.equal(normalizeRecord('payments', { ...payment(), childId: '' }).childId, '');
+});
+
 test('children.healthNotes trece prin normalizare ca orice câmp text opțional', () => {
   const withHealthNotes = normalizeRecord('children', { ...child(), healthNotes: 'Alergie la nuci' });
   assert.equal(withHealthNotes.healthNotes, 'Alergie la nuci');

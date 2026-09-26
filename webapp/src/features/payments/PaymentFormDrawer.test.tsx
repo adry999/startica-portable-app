@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { PaymentFormDrawer } from './PaymentFormDrawer';
-import type { RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 const records = {
   children: [
@@ -25,7 +25,7 @@ const records = {
 } as unknown as RecordsSnapshot;
 
 function renderDrawer() {
-  const onSubmit = vi.fn();
+  const onSubmit = vi.fn().mockResolvedValue(undefined);
   const onClose = vi.fn();
   render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={onClose} />);
   return { onSubmit, onClose };
@@ -103,5 +103,84 @@ describe('PaymentFormDrawer', () => {
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ childId: 'c2', tenders: expect.objectContaining({ Cash: '500' }) }),
     );
+  });
+
+  it('la editare, o repartizare parțială (avans) nu este suprascrisă automat la deschidere', () => {
+    const payment = {
+      id: 'p1',
+      childId: 'c1',
+      date: '2026-09-10',
+      tenders: [{ method: 'Cash', amount: 1000 }],
+      allocations: [{ month: '2026-09', amount: 600 }],
+      sourceName: '',
+      reviewed: false,
+      notes: '',
+    } as unknown as Payment;
+
+    render(
+      <PaymentFormDrawer
+        target={payment}
+        records={records}
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const allocationAmount = document.querySelector('input[type="number"][min="0.01"]') as HTMLInputElement;
+    expect(allocationAmount.value).toBe('600');
+  });
+
+  it('apelează onSubmit o singură dată la dublu-click rapid pe Salvează', async () => {
+    let resolveSubmit!: () => void;
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<void>(resolve => {
+          resolveSubmit = resolve;
+        }),
+    );
+    render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText('Cash'), '500');
+    const saveButton = screen.getByRole('button', { name: 'Salvează' });
+
+    await user.click(saveButton);
+    await user.click(saveButton);
+    resolveSubmit();
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('defaultChildId la o plată nouă propune luna cea mai veche neachitată a copilului', () => {
+    render(
+      <PaymentFormDrawer
+        target="new"
+        records={records}
+        defaultChildId="c1"
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onClose={vi.fn()}
+      />,
+    );
+
+    const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
+    expect(monthInput.value).toBe('2026-01');
+  });
+
+  it('eliminarea unui rând de repartizare păstrează valorile celui rămas', async () => {
+    renderDrawer();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: '+ Lună' }));
+    const amountInputs = () =>
+      Array.from(document.querySelectorAll('input[type="number"][min="0.01"]')) as HTMLInputElement[];
+
+    await user.type(amountInputs()[0], '111');
+    await user.type(amountInputs()[1], '222');
+
+    const removeButtons = screen.getAllByRole('button', { name: 'Elimină repartizarea' });
+    await user.click(removeButtons[0]);
+
+    expect(amountInputs()).toHaveLength(1);
+    expect(amountInputs()[0].value).toBe('222');
   });
 });

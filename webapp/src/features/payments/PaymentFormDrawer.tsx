@@ -12,7 +12,7 @@ export interface PaymentFormDrawerProps {
   records: RecordsSnapshot;
   /** Copil presetat la creare (ex. „+ Plată" din fișa copilului) — rămâne editabil în formular. */
   defaultChildId?: string;
-  onSubmit: (values: PaymentFormValues) => void;
+  onSubmit: (values: PaymentFormValues) => Promise<void>;
   onClose: () => void;
 }
 
@@ -20,13 +20,16 @@ export interface PaymentFormDrawerProps {
 export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubmit, onClose }: PaymentFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<PaymentFormValues>(() =>
-    defaultPaymentFormValues(editing, todayFn(), defaultChildId),
+    defaultPaymentFormValues(editing, todayFn(), defaultChildId, records),
   );
+  const [submitting, setSubmitting] = useState(false);
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual — aceeași regulă ca în legacy.
   const syncedMonthRef = useRef(values.date.slice(0, 7));
-  const syncedAmountRef = useRef(values.allocations.length === 1 ? values.allocations[0].amount : '');
+  // La editare, pornim „nesincronizat”: rândul unic poate fi o alocare parțială
+  // (avans), nu suma totală — nu trebuie rescris la montare.
+  const syncedAmountRef = useRef(editing ? '' : values.allocations.length === 1 ? values.allocations[0].amount : '');
 
   const methods = tenderMethodsFor(editing);
   const totalAmount = totalOfTenders(values.tenders);
@@ -78,11 +81,24 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   }
 
   function addAllocationRow() {
-    setValues(previous => ({ ...previous, allocations: [...previous.allocations, { month: '', amount: '' }] }));
+    setValues(previous => ({
+      ...previous,
+      allocations: [...previous.allocations, { id: crypto.randomUUID(), month: '', amount: '' }],
+    }));
   }
 
   function removeAllocationRow(index: number) {
     setValues(previous => ({ ...previous, allocations: previous.allocations.filter((_, i) => i !== index) }));
+  }
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(values);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const allocated = values.allocations.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
@@ -95,12 +111,19 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
       width={560}
       onClose={onClose}
       footer={
-        <button type="button" className={styles.btnPrimary} onClick={() => onSubmit(values)}>
+        <button type="submit" form="payment-form-drawer" className={styles.btnPrimary} disabled={submitting}>
           Salvează
         </button>
       }
     >
-      <div className={styles.form}>
+      <form
+        id="payment-form-drawer"
+        className={styles.form}
+        onSubmit={event => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <fieldset className={styles.section}>
           <legend>Copil și dată</legend>
           <label className={styles.field}>
@@ -157,7 +180,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           <p className={styles.notice}>Suma rămasă nerepartizată este evidențiată ca avans.</p>
           <div className={styles.allocationRows}>
             {values.allocations.map((row, index) => (
-              <div key={index} className={styles.allocationRow}>
+              <div key={row.id} className={styles.allocationRow}>
                 <label className={styles.allocationField}>
                   Luna
                   <input
@@ -220,7 +243,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
             onChange={event => setValues(p => ({ ...p, notes: event.target.value }))}
           />
         </label>
-      </div>
+      </form>
     </Drawer>
   );
 }

@@ -162,6 +162,87 @@ describe('usePayments', () => {
     expect(result.current.rows.map(row => row.id)).toEqual(['p3']);
   });
 
+  it('monthFrom păstrează doar achitările active din luna respectivă sau mai târziu', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    act(() => result.current.setMonthFrom('2026-08'));
+    expect(result.current.rows.map(row => row.id).sort()).toEqual(['p1', 'p2', 'p4']);
+  });
+
+  it('monthTo păstrează doar achitările active din luna respectivă sau mai devreme', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    act(() => result.current.setMonthTo('2026-08'));
+    expect(result.current.rows.map(row => row.id).sort()).toEqual(['p2', 'p3']);
+  });
+
+  it('monthFrom și monthTo combinate îngustează la o singură lună', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    act(() => {
+      result.current.setMonthFrom('2026-08');
+      result.current.setMonthTo('2026-08');
+    });
+    expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
+  });
+
+  it('search găsește achitarea neasociată după sourceName', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    act(() => result.current.setSearch('Import CSV'));
+    expect(result.current.rows.map(row => row.id)).toEqual(['p4']);
+  });
+
+  it('search fără potrivire golește lista de rânduri', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    act(() => result.current.setSearch('inexistent-xyz'));
+    expect(result.current.rows).toEqual([]);
+  });
+
+  it('initialChildId precompletează filtrul de copil de la montare', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments('c2'));
+
+    expect(result.current.childId).toBe('c2');
+    expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
+  });
+
+  it('summary.other include achitările cu o metodă în afara Cash/Card/Transfer', async () => {
+    const extraPayment = {
+      id: 'p6',
+      date: '2026-09-15',
+      childId: 'c1',
+      amount: 250,
+      method: 'Revolut',
+      tenders: [{ method: 'Revolut', amount: 250 }],
+      allocations: [{ month: '2026-09', amount: 250 }],
+      archived: false,
+    };
+    const stateWithAltele = { ...fixtureState, payments: [...fixtureState.payments, extraPayment] };
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/state')
+        return jsonResponse({ state: stateWithAltele, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+      if (path === '/api/health') return jsonResponse({});
+      throw new Error(`neașteptat: ${path}`);
+    });
+
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    expect(result.current.summary.other).toBe(250);
+    expect(result.current.summary.cash).toBe(1800);
+    expect(result.current.summary.card).toBe(500);
+    expect(result.current.summary.transfer).toBe(1000);
+  });
+
   it('archivePayment trimite mutația de arhivare cu archivedAt setat', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
@@ -192,6 +273,20 @@ describe('usePayments', () => {
     });
 
     await act(() => result.current.unarchivePayment('p5'));
+  });
+
+  it('archivePayment pe un id inexistent aruncă eroare în loc să trimită o mutație invalidă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    await expect(result.current.archivePayment('nope')).rejects.toThrow('Achitarea nu mai există.');
+  });
+
+  it('unarchivePayment pe un id inexistent aruncă eroare în loc să trimită o mutație invalidă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    await expect(result.current.unarchivePayment('nope')).rejects.toThrow('Achitarea nu mai există.');
   });
 
   it('archiveMany trimite câte o mutație pentru fiecare id, secvențial', async () => {

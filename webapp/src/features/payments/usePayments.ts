@@ -61,6 +61,7 @@ export interface PaymentsSummary {
   cash: number;
   card: number;
   transfer: number;
+  other: number;
 }
 
 export interface PaymentsData {
@@ -90,7 +91,7 @@ export interface PaymentsData {
   deletePayment: (id: string) => Promise<void>;
 }
 
-const EMPTY_SUMMARY: PaymentsSummary = { count: 0, total: 0, cash: 0, card: 0, transfer: 0 };
+const EMPTY_SUMMARY: PaymentsSummary = { count: 0, total: 0, cash: 0, card: 0, transfer: 0, other: 0 };
 
 function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
   return {
@@ -131,6 +132,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
 
   async function archivePayment(id: string) {
     const payment = records.payments.find(p => p.id === id);
+    if (!payment) throw new Error('Achitarea nu mai există.');
     await session.mutate('/api/record', {
       type: 'payments',
       mode: 'update',
@@ -140,6 +142,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
 
   async function unarchivePayment(id: string) {
     const payment = records.payments.find(p => p.id === id);
+    if (!payment) throw new Error('Achitarea nu mai există.');
     await session.mutate('/api/record', {
       type: 'payments',
       mode: 'update',
@@ -171,6 +174,27 @@ export function usePayments(initialChildId = ''): PaymentsData {
     await session.mutate('/api/record-delete', { type: 'payments', id });
   }
 
+  const actions = {
+    search,
+    setSearch,
+    childId,
+    setChildId,
+    method,
+    setMethod,
+    monthFrom,
+    setMonthFrom,
+    monthTo,
+    setMonthTo,
+    archiveFilter,
+    setArchiveFilter,
+    archivePayment,
+    unarchivePayment,
+    archiveMany,
+    createPayment,
+    updatePayment,
+    deletePayment,
+  };
+
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
@@ -179,24 +203,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
       rows: [],
       childOptions: [],
       summary: EMPTY_SUMMARY,
-      search,
-      setSearch,
-      childId,
-      setChildId,
-      method,
-      setMethod,
-      monthFrom,
-      setMonthFrom,
-      monthTo,
-      setMonthTo,
-      archiveFilter,
-      setArchiveFilter,
-      archivePayment,
-      unarchivePayment,
-      archiveMany,
-      createPayment,
-      updatePayment,
-      deletePayment,
+      ...actions,
     };
   }
 
@@ -229,24 +236,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
       cash: byMethod.Cash,
       card: byMethod.Card,
       transfer: byMethod.Transfer,
+      other: byMethod.Altele,
     },
-    search,
-    setSearch,
-    childId,
-    setChildId,
-    method,
-    setMethod,
-    monthFrom,
-    setMonthFrom,
-    monthTo,
-    setMonthTo,
-    archiveFilter,
-    setArchiveFilter,
-    archivePayment,
-    unarchivePayment,
-    archiveMany,
-    createPayment,
-    updatePayment,
-    deletePayment,
+    ...actions,
   };
 }

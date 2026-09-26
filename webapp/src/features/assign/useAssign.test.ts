@@ -8,11 +8,13 @@ function jsonResponse(body: unknown) {
 }
 
 // Fixtură: p1 are „Andrei” în sourceName, potrivire unică de nume cu c1;
-// p2 nu are niciun indiciu de nume, deci n-are sugestii cu nameMatch.
+// p2 nu are niciun indiciu de nume, deci n-are sugestii cu nameMatch;
+// p3 are „Maria” în sourceName, care se potrivește ambiguu cu c2 și c3.
 const fixtureState = {
   children: [
     { id: 'c1', name: 'Andrei Popescu', groupId: null, archived: false, feeHistory: [] },
     { id: 'c2', name: 'Maria Ionescu', groupId: null, archived: false, feeHistory: [] },
+    { id: 'c3', name: 'Maria Dinescu', groupId: null, archived: false, feeHistory: [] },
   ],
   payments: [
     {
@@ -34,6 +36,17 @@ const fixtureState = {
       amount: 300,
       method: 'Card',
       tenders: [{ method: 'Card', amount: 300 }],
+      allocations: [],
+      archived: false,
+    },
+    {
+      id: 'p3',
+      date: '2026-09-01',
+      childId: '',
+      sourceName: 'Maria',
+      amount: 500,
+      method: 'Cash',
+      tenders: [{ method: 'Cash', amount: 500 }],
       allocations: [],
       archived: false,
     },
@@ -73,12 +86,12 @@ describe('useAssign', () => {
     expect(result.current.status).toBe('loading');
   });
 
-  it('arată ambele achitări neasociate, cu riscul calculat', async () => {
+  it('arată toate achitările neasociate, cu riscul calculat', async () => {
     await loadedSession();
     const { result } = renderHook(() => useAssign('2026-09'));
 
-    expect(result.current.rows.map(row => row.paymentId)).toEqual(['p1', 'p2']);
-    expect(result.current.risk.unassigned).toBe(2);
+    expect(result.current.rows.map(row => row.paymentId)).toEqual(['p1', 'p2', 'p3']);
+    expect(result.current.risk.unassigned).toBe(3);
   });
 
   it('p1 primește o sugestie cu nume potrivit spre c1', async () => {
@@ -140,5 +153,77 @@ describe('useAssign', () => {
     const { result } = renderHook(() => useAssign('2026-09'));
 
     await expect(result.current.save()).rejects.toThrow('Nu ai ales niciun copil.');
+  });
+
+  it('un save eșuat păstrează selecțiile utilizatorului', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useAssign('2026-09'));
+
+    act(() => result.current.selectChild('p1', 'c1'));
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string) => {
+      expect(path).toBe('/api/payments-assign');
+      return { ok: false, status: 500, json: async () => ({ error: 'eroare server' }) };
+    });
+
+    await act(async () => {
+      await expect(result.current.save()).rejects.toThrow();
+    });
+
+    expect(result.current.selectedCount).toBe(1);
+    expect(result.current.rows.find(row => row.paymentId === 'p1')?.selectedChildId).toBe('c1');
+  });
+
+  it('un al doilea save() pornit înainte ca primul să se termine este respins, fără o a doua cerere', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useAssign('2026-09'));
+
+    act(() => result.current.selectChild('p1', 'c1'));
+
+    let resolveFetch!: (value: { ok: boolean; status: number; json: () => Promise<unknown> }) => void;
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    let firstOutcome!: Promise<{ saved: number }>;
+    let secondError: Error | undefined;
+    await act(async () => {
+      firstOutcome = result.current.save();
+      try {
+        await result.current.save();
+      } catch (error) {
+        secondError = error as Error;
+      }
+    });
+
+    expect(secondError?.message).toBe('O salvare este deja în curs.');
+    const assignCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
+      ([path]) => path === '/api/payments-assign',
+    );
+    expect(assignCalls).toHaveLength(1);
+
+    resolveFetch(jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' }));
+    await act(async () => {
+      await firstOutcome;
+    });
+  });
+
+  it('un nume ambiguu (potrivire la mai mulți copii) nu se completează automat', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useAssign('2026-09'));
+
+    const p3 = result.current.rows.find(row => row.paymentId === 'p3');
+    expect(
+      p3?.options.filter(option => option.group === 'Nume potrivit în sursă').map(option => option.id).sort(),
+    ).toEqual(['c2', 'c3']);
+
+    act(() => {
+      result.current.fillSuggested();
+    });
+
+    expect(result.current.rows.find(row => row.paymentId === 'p3')?.selectedChildId).toBe('');
   });
 });

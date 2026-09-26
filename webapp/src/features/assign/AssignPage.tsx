@@ -1,5 +1,6 @@
 import { Card, useToast } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { useAssign, type AssignRowView } from './useAssign';
 import styles from './AssignPage.module.css';
 
@@ -44,7 +45,7 @@ export function AssignPage({ month }: AssignPageProps) {
           <small>nu se scad din datoria nimănui</small>
         </Card>
         <Card tone="yellow" className={styles.riskCard}>
-          <p className={styles.riskLabel}>Din care pe luna {month}</p>
+          <p className={styles.riskLabel}>Din care pe luna {formatMonthLabel(month)}</p>
           <strong className={styles.riskValue}>{data.risk.coveringMonth}</strong>
           <small>{formatMoney(data.risk.amountCoveringMonth)}</small>
         </Card>

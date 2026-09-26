@@ -13,14 +13,7 @@ Modul **dependent**: are nevoie de istoric, de regula obligației lunare, de tra
 | `createPaymentAssignmentService({ recordRepository, auditTrail, runRevisionTransaction })` | `assignPaymentsToChildren(request)` |
 | `createPaymentAssignmentRoutes({ paymentAssignmentService })` | `POST /api/payments-assign`, cu corpul neschimbat: `{ assignments: [{ id, childId }], revision, requestId }` |
 
-### `index.web.mjs`
-
-| Export | Rol |
-| --- | --- |
-| `createPaymentAssignmentApi({ submitMutation })` | `submitAssignments(assignments)` |
-| `createPaymentAssignmentController(dependencies)` | `activate`, `deactivate`, `refresh`, `selectChild`, `selectUnambiguousNameMatches`, `clearSelections`, `saveSelections`, `dispose` |
-| `createPaymentAssignmentView({ elements, readChildren, readSelectedMonth, onSelectChild })` | întoarce `renderAssignmentScreen(state)`; reconstruiește tabelul doar când se schimbă coada |
-| `findUnassignedPaymentHintsByChild(records)` | pentru portul din `billing` („posibilă plată neasociată”); îl leagă `app/` |
+Ecranul „Asociere achitări” e randat de React, în `webapp/src/features/assign/` (`AssignPage.tsx`, `useAssign.ts`) — consumă direct `POST /api/payments-assign` și funcțiile din `domain/` (`listUnassignedPayments`, `measureAssignmentRisk`, `findUnassignedPaymentHintsByChild`), fără un strat `web/` propriu; vechiul `index.web.mjs`/`web/*` (controller, view, api DOM) a fost șters odată cu restul UI-ului vanilla, înlocuit de cutover-ul React din 24.09.2026.
 
 ## Cum rămâne decuplat
 
@@ -31,16 +24,8 @@ Modul **dependent**: are nevoie de istoric, de regula obligației lunare, de tra
 | Revizie, idempotență, backup înainte | port `RunRevisionTransaction` din `core` | acces direct la SQLite |
 | Datele curente și luna selectată | selectori injectați: `readRecords`, `readSelectedMonth` | citire din `session` global |
 | Anunț după salvare | eveniment `payments.assigned` | apel direct în `billing` sau `dashboard` |
-| Reîmprospătare | ascultă `records.reloaded` și `selected-month.changed` | `render()` global |
-| Indiciu în „De notificat” | `app/` leagă `findUnassignedPaymentHintsByChild` în portul lui `billing` | `billing` importă `payment-assignment` |
-
-## Evenimente
-
-| Direcție | Eveniment | Payload |
-| --- | --- | --- |
-| publică | `payments.assigned` | `{ paymentIds, childIds }` |
-| consumă | `records.reloaded` | `{ revision }` |
-| consumă | `selected-month.changed` | `{ month }` |
+| Reîmprospătare | React re-randează la orice schimbare de `records`/`month` din sesiune | listener global |
+| Indiciu în „De notificat” | `webapp/src/features/notify/useNotify.ts` importă direct `findUnassignedPaymentHintsByChild` | port separat prin `app/` |
 
 ## Structură
 
@@ -49,7 +34,6 @@ payment-assignment/
 ├── README.md
 ├── payment-assignment.types.d.mts
 ├── index.server.mjs
-├── index.web.mjs
 ├── domain/
 │   ├── payment-name-matching.mjs            # suggestChildren
 │   ├── unassigned-payment-queue.mjs         # listUnassignedPayments
@@ -60,16 +44,11 @@ payment-assignment/
 │   ├── payment-assignment.service.mjs       # ★ validare și scriere în tranzacție
 │   ├── payment-assignment.service.test.mjs
 │   └── payment-assignment.routes.mjs
-├── web/
-│   ├── payment-assignment.api.mjs
-│   ├── payment-assignment.controller.mjs    # ★ coadă, selecții, salvare, evenimente
-│   ├── payment-assignment.controller.test.mjs
-│   └── payment-assignment.view.mjs          # ★ rânduri, child picker, carduri de risc
 └── test-support/
     └── assignment-fixtures.mjs
 ```
 
-`src/app/web/compose-screens.mjs` compune controller-ul și view-ul, iar `src/app/server/create-application.mjs` creează service-ul cu `recordRepository`, `auditTrail` (din `audit-log`) și `runRevisionTransaction`. `src/app/web/main.mjs` leagă `findUnassignedPaymentHintsByChild` pentru „De notificat” din `billing`.
+`src/app/server/create-application.mjs` creează service-ul cu `recordRepository`, `auditTrail` (din `audit-log`) și `runRevisionTransaction`, și înregistrează rutele. Ecranul React (`webapp/src/features/assign/`) le consumă prin `POST /api/payments-assign` și import direct din `domain/`.
 
 ## Garanții
 

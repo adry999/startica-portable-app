@@ -9,7 +9,7 @@ import styles from './ChildFormDrawer.module.css';
 export interface ChildFormDrawerProps {
   target: Child | 'new' | null;
   groups: Group[];
-  onSubmit: (values: ChildFormValues) => void;
+  onSubmit: (values: ChildFormValues) => Promise<void>;
   onClose: () => void;
 }
 
@@ -17,9 +17,20 @@ export interface ChildFormDrawerProps {
 export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<ChildFormValues>(() => defaultChildFormValues(editing, todayFn()));
+  const [submitting, setSubmitting] = useState(false);
 
   function setField<K extends keyof ChildFormValues>(key: K, value: ChildFormValues[K]) {
     setValues(previous => ({ ...previous, [key]: value }));
+  }
+
+  async function handleSubmit() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(values);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -29,12 +40,19 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
       width={620}
       onClose={onClose}
       footer={
-        <button type="button" className={styles.btnPrimary} onClick={() => onSubmit(values)}>
+        <button type="submit" form="child-form-drawer" className={styles.btnPrimary} disabled={submitting}>
           Salvează
         </button>
       }
     >
-      <div className={styles.form}>
+      <form
+        id="child-form-drawer"
+        className={styles.form}
+        onSubmit={event => {
+          event.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <fieldset className={styles.section}>
           <legend>Date copil</legend>
           <label className={styles.field}>
@@ -194,7 +212,7 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
           Observații
           <textarea rows={3} value={values.notes} onChange={event => setField('notes', event.target.value)} />
         </label>
-      </div>
+      </form>
     </Drawer>
   );
 }

@@ -4,6 +4,7 @@ import { today as todayFn } from '@domain/calendar-month.mjs';
 // (doar view-creatoarele sunt publice azi) — import direct de domain, backendul nu se atinge
 // pentru o simplă lipsă din API-ul public. Restul vine deja prin index.web.mjs, ca-n convenție.
 import { summarizeCashForMonth, sumUnallocatedAdvance } from '#features/dashboard/domain/cash-summary.mjs';
+import { filterUnassignedPayments } from '#features/payment-assignment/domain/unassigned-payment-risk.mjs';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { buildReviewCenter } from '#features/review-center/index.web.mjs';
 import { countVisitsForDays } from '#features/visits/index.web.mjs';
@@ -92,9 +93,7 @@ export function useDashboard(month: string): DashboardData {
   const review = buildReviewCenter(records);
   const missingFeeCount = activeEvaluations.filter(({ child }) => hasMissingFee(child)).length;
   const toNotify = activeEvaluations.filter(r => r.obligation.notify).length;
-  const unassigned = records.payments.filter(
-    (p: { archived: boolean; childId: string | null }) => !p.archived && !p.childId,
-  ).length;
+  const unassigned = filterUnassignedPayments(records.payments).length;
   const visitsSummary = countVisitsForDays(records.visits, todayStr, 1);
 
   const revenueHistory: RevenueBar[] = [];

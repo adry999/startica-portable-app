@@ -20,7 +20,7 @@ type ViewMode = 'table' | 'months';
 
 const VIEW_MODE_OPTIONS = [
   { value: 'table' as ViewMode, label: 'Tabel' },
-  { value: 'months' as ViewMode, label: 'Pe luni' },
+  { value: 'months' as ViewMode, label: 'Pe luna încasării' },
 ];
 
 const METHOD_TONE: Record<string, BadgeTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
@@ -101,7 +101,7 @@ export function PaymentsPage({
       <Filters data={data} />
 
       {viewMode === 'table' ? (
-        <TableView data={data} toast={toast} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
+        <TableView data={data} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
       ) : (
         <MonthsView rows={data.rows} onEdit={onOpenEdit} />
       )}
@@ -138,6 +138,12 @@ function SummaryCards({ summary }: { summary: PaymentsData['summary'] }) {
         <p className={styles.summaryLabel}>Transfer</p>
         <strong className={styles.summaryValue}>{formatMoney(summary.transfer)}</strong>
       </Card>
+      {summary.other > 0 && (
+        <Card tone="dashed" className={styles.summaryCard}>
+          <p className={styles.summaryLabel}>Altele</p>
+          <strong className={styles.summaryValue}>{formatMoney(summary.other)}</strong>
+        </Card>
+      )}
     </div>
   );
 }
@@ -205,15 +211,14 @@ function Filters({ data }: { data: PaymentsData }) {
 
 function TableView({
   data,
-  toast,
   onEdit,
   onOpenChild,
 }: {
   data: PaymentsData;
-  toast: ReturnType<typeof useToast>;
   onEdit: (id: string) => void;
   onOpenChild: (id: string) => void;
 }) {
+  const toast = useToast();
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
 
   const selectedRows = data.rows.filter(row => selectedRowKeys.has(row.id));
@@ -304,7 +309,7 @@ function TableView({
               <span className={styles.badgeStack}>
                 {row.tenders.map(tender => (
                   <Badge key={tender.method} tone={METHOD_TONE[tender.method] ?? 'neutral'}>
-                    {tender.method}
+                    {tender.method} {formatMoney(tender.amount)}
                   </Badge>
                 ))}
               </span>

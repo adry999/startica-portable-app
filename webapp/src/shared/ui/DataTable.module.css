@@ -60,6 +60,11 @@
   background: #faf7ef;
 }
 
+.clickableRow:focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: -2px;
+}
+
 tr[data-selected] {
   background: var(--cream);
   box-shadow: inset 4px 0 0 var(--orange);

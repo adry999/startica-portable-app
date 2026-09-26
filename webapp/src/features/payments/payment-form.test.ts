@@ -12,7 +12,7 @@ describe('defaultPaymentFormValues', () => {
   it('pentru o plată nouă, seedează un singur rând de alocare la luna datei', () => {
     const values = defaultPaymentFormValues(null, '2026-09-24');
     expect(values.date).toBe('2026-09-24');
-    expect(values.allocations).toEqual([{ month: '2026-09', amount: '' }]);
+    expect(values.allocations).toMatchObject([{ month: '2026-09', amount: '' }]);
     expect(values.tenders).toEqual({ Cash: '', Card: '', Transfer: '' });
   });
 
@@ -29,7 +29,24 @@ describe('defaultPaymentFormValues', () => {
     } as unknown as Payment;
     const values = defaultPaymentFormValues(payment, '2026-09-24');
     expect(values.tenders.Cash).toBe('500');
-    expect(values.allocations).toEqual([{ month: '2026-08', amount: '500' }]);
+    expect(values.allocations).toMatchObject([{ month: '2026-08', amount: '500' }]);
+  });
+
+  it('cu defaultChildId și records, propune luna cea mai veche neachitată a copilului', () => {
+    const records = {
+      children: [
+        {
+          id: 'c1',
+          attendanceDate: '2026-01-10',
+          statusHistory: [{ from: '2026-01', status: 'Activ' }],
+          feeHistory: [{ from: '2026-01', amount: 1500 }],
+        },
+      ],
+      payments: [],
+    } as unknown as RecordsSnapshot;
+
+    const values = defaultPaymentFormValues(null, '2026-09-24', 'c1', records);
+    expect(values.allocations[0].month).toBe('2026-01');
   });
 });
 

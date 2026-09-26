@@ -4,11 +4,15 @@ import { obligation } from '#shared/domain/tuition-obligation.mjs';
 
 /** @typedef {import('../payment-assignment.types.mjs').AssignmentRisk} AssignmentRisk */
 
+export function filterUnassignedPayments(payments) {
+  return payments.filter(p => !p.archived && !p.childId);
+}
+
 // Câți copii ar putea fi raportați greșit ca restanțieri din cauza plăților
 // nelegate. Un „de notificat” nu poate fi crezut cât timp cifra asta e mare.
 /** @returns {AssignmentRisk} */
 export function measureAssignmentRisk(records, month, asOf) {
-  const unassigned = records.payments.filter(p => !p.archived && !p.childId);
+  const unassigned = filterUnassignedPayments(records.payments);
   const covering = unassigned.filter(p => allocations(p).some(a => a.month === month));
   // Rulează la fiecare randare a aplicației — indexul evită O(copii×plăți).
   const index = paymentIndex(records.payments, asOf);

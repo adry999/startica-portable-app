@@ -1,11 +1,14 @@
 import { normalizeRecord } from '@domain/record-schema.mjs';
 import { cents } from '@domain/money.mjs';
 import { paymentTenders } from '@domain/payment-allocations.mjs';
+import { firstUnpaidMonth } from '@domain/tuition-obligation.mjs';
 import type { Payment, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export const DEFAULT_TENDER_METHODS = ['Cash', 'Card', 'Transfer'];
 
 export interface AllocationRowValues {
+  /** Identitate stabilă pentru cheia React a rândului — nu ține de poziție, ca eliminarea unui rând să nu re-monteze restul. */
+  id?: string;
   month: string;
   amount: string;
 }
@@ -25,16 +28,28 @@ export function tenderMethodsFor(payment: Payment | null): string[] {
   return [...new Set([...DEFAULT_TENDER_METHODS, ...existing])];
 }
 
-export function defaultPaymentFormValues(payment: Payment | null, today: string, defaultChildId = ''): PaymentFormValues {
+export function defaultPaymentFormValues(
+  payment: Payment | null,
+  today: string,
+  defaultChildId = '',
+  records?: RecordsSnapshot,
+): PaymentFormValues {
   const tenders: Record<string, string> = {};
   for (const method of tenderMethodsFor(payment)) tenders[method] = '';
   if (payment) for (const tender of paymentTenders(payment)) tenders[tender.method] = String(tender.amount);
 
   const date = payment?.date || today;
+  const child = !payment && defaultChildId && records ? records.children.find(c => c.id === defaultChildId) : null;
+  const suggestedMonth = child && firstUnpaidMonth(child, records!.payments);
+  const defaultMonth = suggestedMonth || date.slice(0, 7);
   const allocations: AllocationRowValues[] =
     payment && payment.allocations?.length
-      ? payment.allocations.map(allocation => ({ month: allocation.month, amount: String(allocation.amount) }))
-      : [{ month: date.slice(0, 7), amount: '' }];
+      ? payment.allocations.map(allocation => ({
+          id: crypto.randomUUID(),
+          month: allocation.month,
+          amount: String(allocation.amount),
+        }))
+      : [{ id: crypto.randomUUID(), month: defaultMonth, amount: '' }];
 
   return {
     childId: payment?.childId || defaultChildId,

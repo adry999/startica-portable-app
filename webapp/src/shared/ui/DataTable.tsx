@@ -145,7 +145,18 @@ export function DataTable<Row>({
                 key={key}
                 className={onRowClick ? styles.clickableRow : undefined}
                 data-selected={selected || undefined}
+                tabIndex={onRowClick ? 0 : undefined}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
+                onKeyDown={
+                  onRowClick
+                    ? event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          onRowClick(row);
+                        }
+                      }
+                    : undefined
+                }
               >
                 {selectable && (
                   <td className={styles.checkboxCell} onClick={event => event.stopPropagation()}>

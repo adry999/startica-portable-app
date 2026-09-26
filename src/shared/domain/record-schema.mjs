@@ -158,12 +158,25 @@ export function normalizeRecord(type, input) {
   for (const key of Object.keys(record)) if (!FIELDS[type].has(key)) delete record[key];
   requireThat(typeof record.id === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(record.id), 'ID invalid.');
   if (record.archived !== undefined) requireThat(typeof record.archived === 'boolean', 'Arhivare invalidă.');
+  // Sentinela „neafirmat” e '' sau null (vezi bulk-selection.mjs, record-editor-dialog.mjs);
+  // doar o valoare adevărată trebuie să fie o dată ISO validă.
+  if (record.archivedAt) requireThat(typeof record.archivedAt === 'string' && !Number.isNaN(Date.parse(record.archivedAt)), 'Data arhivării este invalidă.');
+  if (record.reviewed !== undefined) requireThat(typeof record.reviewed === 'boolean', 'Verificare invalidă.');
+  // Obiect liber (kind/recordId/recordDigest/provisionalAmount/autoMatched — vezi
+  // financial-history-import.mjs și review-center.mjs), nu text.
+  if (record.importSource !== undefined)
+    requireThat(
+      record.importSource !== null && typeof record.importSource === 'object' && !Array.isArray(record.importSource),
+      'Sursă import invalidă.',
+    );
   for (const field of [
     'notes',
     'verification',
     'original',
     'sourceName',
     'childName',
+    'sourceChildId',
+    'type',
     'description',
     'parent',
     'phone',
@@ -315,6 +328,7 @@ export function normalizeRecord(type, input) {
     if (type === 'payments') {
       record.childId ??= '';
       text(record.childId, 'ID copil');
+      if (record.childId) requireThat(/^[A-Za-z0-9_-]{1,100}$/.test(record.childId), 'ID copil invalid.');
       record.method ||= 'Cash';
       record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');

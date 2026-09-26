@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { formatMoney } from '#shared/format/money-format.mjs';
 import { PaymentsPage } from './PaymentsPage';
 
 function jsonResponse(body: unknown) {
@@ -173,11 +174,11 @@ describe('PaymentsPage', () => {
     expect(await screen.findByText('Achitare arhivată.')).toBeInTheDocument();
   });
 
-  it('comută pe vizualizarea "Pe luni" și arată gruparea cu subtotal', async () => {
+  it('comută pe vizualizarea "Pe luna încasării" și arată gruparea cu subtotal', async () => {
     await loadedSession();
     renderPage();
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Pe luni' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
 
     expect(screen.getAllByText(/^2026 Sep/).length).toBeGreaterThan(0);
   });
@@ -223,5 +224,153 @@ describe('PaymentsPage', () => {
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
     expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
+  });
+
+  it('la o achitare nouă duplicat, confirmarea utilizatorului o creează totuși', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
+    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+
+    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
+    const dateInput = within(dialog).getByLabelText('Data încasării');
+    await user.clear(dateInput);
+    await user.type(dateInput, '2026-09-10');
+    await user.type(within(dialog).getByLabelText('Cash'), '1500');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
+  });
+
+  it('la o achitare nouă duplicat, refuzul utilizatorului nu creează nimic', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
+    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+
+    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
+    const dateInput = within(dialog).getByLabelText('Data încasării');
+    await user.clear(dateInput);
+    await user.type(dateInput, '2026-09-10');
+    await user.type(within(dialog).getByLabelText('Cash'), '1500');
+    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(screen.queryByText('Achitare adăugată.')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Adaugă: achitare' })).toBeInTheDocument();
+    expect((fetch as ReturnType<typeof vi.fn>).mock.calls.filter(([path]) => path === '/api/record')).toHaveLength(0);
+  });
+
+  it('o mutație respinsă la editare arată eroarea ca toast', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByRole('button', { name: 'Editează' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Editează: achitare' });
+    const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
+    await user.clear(cashInput);
+    await user.type(cashInput, '1600');
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => ({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: 'Suma nu poate fi negativă.' }),
+    }));
+
+    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Suma nu poate fi negativă.')).toBeInTheDocument();
+    expect(screen.queryByText('Achitare actualizată.')).not.toBeInTheDocument();
+  });
+
+  it('selectează două rânduri, arhivează selecția și golește selecția', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'Selectează rândul' });
+    await user.click(checkboxes[0]);
+    await user.click(checkboxes[1]);
+
+    expect(screen.getByText(`2 selectate · ${formatMoney(1800)}`)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Arhivează selectate' }));
+
+    expect(await screen.findByText('2 achitări arhivate.')).toBeInTheDocument();
+    expect(screen.queryByText(/selectate ·/)).not.toBeInTheDocument();
+  });
+
+  it('șterge definitiv o achitare arhivată după confirmare', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const activeTable = screen.getByRole('table');
+    const activeRow = within(activeTable).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(activeRow).getByRole('button', { name: 'Arhivează' }));
+    expect(await screen.findByText('Achitare arhivată.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Arhivate' }));
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record-delete');
+      const body = JSON.parse(options.body as string);
+      expect(body.id).toBe('p1');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    await user.click(within(row).getByRole('button', { name: 'Șterge' }));
+
+    expect(await screen.findByText('Achitare ștearsă definitiv.')).toBeInTheDocument();
+  });
+
+  it('arată un card „Altele" pentru o metodă în afara Cash/Card/Transfer', async () => {
+    const stateWithRevolut = {
+      ...fixtureState,
+      payments: [
+        ...fixtureState.payments,
+        {
+          id: 'p5',
+          date: '2026-09-15',
+          childId: 'c2',
+          amount: 200,
+          method: 'Revolut',
+          tenders: [{ method: 'Revolut', amount: 200 }],
+          allocations: [],
+          archived: false,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: stateWithRevolut, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderPage();
+
+    const altelesCard = screen.getByText('Altele').closest('div') as HTMLElement;
+    expect(within(altelesCard).getByText(formatMoney(200))).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { listUnassignedPayments } from '#features/payment-assignment/domain/unassigned-payment-queue.mjs';
 import { measureAssignmentRisk } from '#features/payment-assignment/domain/unassigned-payment-risk.mjs';
@@ -71,6 +71,8 @@ function childOptionsFor(suggestions: ChildSuggestion[], children: Child[]): Chi
   ];
 }
 
+type AssignBaseRow = Omit<AssignRowView, 'selectedChildId'>;
+
 /**
  * Echivalentul payment-assignment.controller.mjs: selecțiile per achitare
  * trăiesc aici (Map → obiect indexat pe id-ul achitării), în loc de DOM.
@@ -84,13 +86,62 @@ export function useAssign(month: string): AssignData {
 
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+
+  const { risk, queue, queueIds, baseRows } = useMemo(() => {
+    if (!ready) {
+      return {
+        risk: EMPTY_RISK,
+        queue: [] as ReturnType<typeof listUnassignedPayments>,
+        queueIds: new Set<string>(),
+        baseRows: [] as AssignBaseRow[],
+      };
+    }
+    const records = state as RecordsSnapshot;
+    const risk = measureAssignmentRisk(records, month, todayStr);
+    const queue = listUnassignedPayments(records, ASSIGNMENT_QUEUE_LIMIT);
+    const queueIds = new Set(queue.map(entry => entry.payment.id));
+    const baseRows: AssignBaseRow[] = queue.map(({ payment, suggestions }) => {
+      const monthLines = allocations(payment).map(
+        (allocation: PaymentAllocation) => `${allocation.month}: ${formatMoney(allocation.amount)}`,
+      );
+      return {
+        paymentId: payment.id,
+        dateLabel: formatDate(payment.date),
+        amountLabel: formatMoney(payment.amount),
+        amount: payment.amount,
+        method: payment.method || '',
+        monthLines,
+        source: payment.sourceName || payment.childName || '',
+        options: childOptionsFor(suggestions, records.children),
+      };
+    });
+    return { risk, queue, queueIds, baseRows };
+  }, [ready, state, month, todayStr]);
+
+  // Selecțiile rămân în stare cât timp achitarea e în coadă; dacă un proces
+  // concurent o asociază sau o arhivează, ies odată cu ea (nu se pierd la re-render).
+  useEffect(() => {
+    setSelections(prev => {
+      const staleIds = Object.keys(prev).filter(id => !queueIds.has(id));
+      if (!staleIds.length) return prev;
+      const next = { ...prev };
+      for (const id of staleIds) delete next[id];
+      return next;
+    });
+  }, [queueIds]);
+
+  const rows: AssignRowView[] = baseRows.map(row => ({
+    ...row,
+    selectedChildId: selections[row.paymentId] ?? '',
+  }));
 
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
       failureMessage: saveError,
-      risk: EMPTY_RISK,
-      rows: [],
+      risk,
+      rows,
       summary: '',
       selectedCount: 0,
       selectChild: () => {},
@@ -100,28 +151,6 @@ export function useAssign(month: string): AssignData {
       saving: false,
     };
   }
-
-  const records = state as RecordsSnapshot;
-  const risk = measureAssignmentRisk(records, month, todayStr);
-  const queue = listUnassignedPayments(records, ASSIGNMENT_QUEUE_LIMIT);
-  const queueIds = new Set(queue.map(entry => entry.payment.id));
-
-  const rows: AssignRowView[] = queue.map(({ payment, suggestions }) => {
-    const monthLines = allocations(payment).map(
-      (allocation: PaymentAllocation) => `${allocation.month}: ${formatMoney(allocation.amount)}`,
-    );
-    return {
-      paymentId: payment.id,
-      dateLabel: formatDate(payment.date),
-      amountLabel: formatMoney(payment.amount),
-      amount: payment.amount,
-      method: payment.method || '',
-      monthLines,
-      source: payment.sourceName || payment.childName || '',
-      selectedChildId: selections[payment.id] ?? '',
-      options: childOptionsFor(suggestions, records.children),
-    };
-  });
 
   const summary = !risk.unassigned
     ? 'Toate achitările au un copil asociat.'
@@ -168,10 +197,12 @@ export function useAssign(month: string): AssignData {
   }
 
   async function save(): Promise<{ saved: number }> {
+    if (savingRef.current) throw new Error('O salvare este deja în curs.');
     const assignments = Object.entries(selections)
       .filter(([id]) => queueIds.has(id))
       .map(([id, childId]) => ({ id, childId }));
     if (!assignments.length) throw new Error('Nu ai ales niciun copil.');
+    savingRef.current = true;
     setSaving(true);
     try {
       await session.mutate('/api/payments-assign', { assignments });
@@ -182,6 +213,7 @@ export function useAssign(month: string): AssignData {
       });
       return { saved: assignments.length };
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
