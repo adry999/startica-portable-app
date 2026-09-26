@@ -1,7 +1,8 @@
-import { evaluateChildrenForMonth, reminderMessage } from '#features/billing/index.web.mjs';
+import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { findUnassignedPaymentHintsByChild } from '#features/payment-assignment/domain/unassigned-payment-hints.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { cents } from '#shared/domain/money.mjs';
+import { DEFAULT_SMS_TEMPLATE_BODY, renderSmsTemplate, smsVariablesFor } from '@domain/sms-template.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { useAppSession } from '@shared/api/session';
@@ -123,7 +124,10 @@ export function useNotify(month: string): NotifyData {
     rest: obligation.rest,
     label: obligation.label,
     hasUnassignedHint: hints.has(child.id),
-    message: reminderMessage({ child, obligation, month }),
+    message: renderSmsTemplate(
+      DEFAULT_SMS_TEMPLATE_BODY,
+      smsVariablesFor({ child, parentName: child.parent, obligation, month }),
+    ),
   }));
 
   const late = notified.filter(e => e.obligation.daysToDue < 0).length;

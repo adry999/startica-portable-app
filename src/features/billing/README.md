@@ -25,6 +25,7 @@ Modul **independent**: nu importă alt feature. Achitările, grupele și indicii
 | Obligația lunară, indexul de încasări | `#shared/domain/tuition-obligation.mjs`, `#shared/domain/payment-allocations.mjs` | recalcul propriu al regulilor de facturare |
 | Numărul de contract, numele grupei | `#shared/domain/record-labels.mjs` | acces direct la alt feature |
 | Contactele părinților | `#shared/format/parent-contacts-format.mjs` | `import … from '#features/children/…'` |
+| Mesajul de reamintire | `#shared/domain/sms-template.mjs` (folosit și de sms-notify) | șablon propriu în billing |
 | Semnalul de achitare neasociată | parametrul `unassignedPaymentHintsByChild` (calculat de apelant cu `payment-assignment`) | `import … from '#features/payment-assignment/…'` |
 | Contorul din navigație | `renderNotifyCount` injectat | `setNavCount` apelat direct de aici |
 | Ziua curentă, instantaneul de date | selectori injectați: `readToday`, `readRecords` | citire din `session` global |
