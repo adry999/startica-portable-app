@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openDatabase, openDatabaseReadOnly } from './sqlite-connection.mjs';
+import { applySchema } from './schema.mjs';
 
 function createTemporaryHome(t) {
   const home = mkdtempSync(join(tmpdir(), 'startica-sqlite-connection-'));
@@ -53,4 +54,24 @@ test('openDatabaseReadOnly refuză o scriere, ca procesul separat să nu poată 
     readOnlyDb.close();
     writableDb.close();
   }
+});
+
+test('schema creează sms_log și sms_templates cu indexurile lor, idempotent', t => {
+  const { db } = openDatabase(createTemporaryHome(t));
+  applySchema(db);
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'sms_%' ORDER BY name")
+    .all();
+  assert.deepEqual(
+    tables.map(row => row.name),
+    ['sms_log', 'sms_templates'],
+  );
+  const indexes = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='sms_log' ORDER BY name")
+    .all();
+  assert.deepEqual(
+    indexes.map(row => row.name),
+    ['sms_log_child_created', 'sms_log_status'],
+  );
+  db.close();
 });
