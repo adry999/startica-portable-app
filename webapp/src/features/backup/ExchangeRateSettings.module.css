@@ -1,0 +1,58 @@
+.todayRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.subtitle {
+  margin: var(--space-16) 0 var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.lastFiveList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.lastFiveRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  font-size: 13px;
+}
+
+.presetsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.presetRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.presetRow input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font: inherit;
+  font-size: 13px;
+}
+
+.presetRow input:first-child {
+  flex: 1;
+}
+
+.presetRow input[type='number'] {
+  width: 100px;
+}

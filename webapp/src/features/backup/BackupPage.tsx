@@ -1,18 +1,23 @@
 import type { FormEvent } from 'react';
-import { Badge, Card, Drawer, useToast, type BadgeTone } from '@shared/ui';
+import { Badge, Card, Drawer, SegmentedControl, useToast, type BadgeTone } from '@shared/ui';
+import { usePersistedState } from '@shared/state/usePersistedState';
 import { useBackup, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
 import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
+import { ExchangeRateSettings } from './ExchangeRateSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
+
+type ViewMode = 'backup' | 'rates';
 
 export function BackupPage() {
   const backupData = useBackup();
   const restore = useRestore(backupData.health?.externalDir ?? '');
   const excel = useExcelTransfer();
   const toast = useToast();
+  const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.backup', 'backup');
 
   async function exportExcel() {
     try {
@@ -69,77 +74,95 @@ export function BackupPage() {
 
   return (
     <>
-      <Card className={styles.panel}>
-        <h3 className={styles.panelTitle}>Copii de siguranță</h3>
-        <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>
-        <div className={styles.details}>
-          {backupData.detailLines.map(line => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
+      <div className={styles.tabsRow}>
+        <SegmentedControl
+          ariaLabel="Filă Backup și setări"
+          value={viewMode}
+          onChange={setViewMode}
+          options={[
+            { value: 'backup', label: 'Backup' },
+            { value: 'rates', label: 'Curs valutar' },
+          ]}
+        />
+      </div>
 
-        <form className={styles.form} onSubmit={event => void saveSettings(event)}>
-          <label className={styles.field}>
-            Folder Google Drive sau altă destinație externă
-            <input
-              value={backupData.externalDirInput}
-              onChange={event => backupData.setExternalDirInput(event.target.value)}
-              placeholder="G:\My Drive\Startica_Backup"
-            />
-          </label>
-          <p className={styles.hint}>
-            Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google Drive.
-            Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile.
-          </p>
-          {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
-          <button type="submit" className={styles.btnPrimary} disabled={backupData.settingsBusy}>
-            Salvează și testează copia
-          </button>
-        </form>
+      {viewMode === 'rates' ? (
+        <ExchangeRateSettings />
+      ) : (
+        <>
+          <Card className={styles.panel}>
+            <h3 className={styles.panelTitle}>Copii de siguranță</h3>
+            <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>
+            <div className={styles.details}>
+              {backupData.detailLines.map(line => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
 
-        <div className={styles.toolbar}>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            disabled={backupData.backupBusy}
-            onClick={() => void backupNow()}
-          >
-            Backup acum
-          </button>
-          <button type="button" className={styles.btnGhost} onClick={restore.openDialog}>
-            Restaurare
-          </button>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            disabled={backupData.diagnosticBusy}
-            onClick={() => void downloadDiagnostic()}
-          >
-            Raport de diagnostic
-          </button>
-        </div>
-      </Card>
+            <form className={styles.form} onSubmit={event => void saveSettings(event)}>
+              <label className={styles.field}>
+                Folder Google Drive sau altă destinație externă
+                <input
+                  value={backupData.externalDirInput}
+                  onChange={event => backupData.setExternalDirInput(event.target.value)}
+                  placeholder="G:\My Drive\Startica_Backup"
+                />
+              </label>
+              <p className={styles.hint}>
+                Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google Drive.
+                Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile.
+              </p>
+              {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
+              <button type="submit" className={styles.btnPrimary} disabled={backupData.settingsBusy}>
+                Salvează și testează copia
+              </button>
+            </form>
 
-      <Card className={styles.panel}>
-        <h3 className={styles.panelTitle}>Excel</h3>
-        <p className={styles.notice}>
-          Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet păstrează
-          câmpurile și poate fi reimportat.
-        </p>
-        <div className={styles.toolbar}>
-          <button type="button" className={styles.btnGhost} onClick={excel.importDialog.openDialog}>
-            Import Excel
-          </button>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            disabled={excel.exporting}
-            onClick={() => void exportExcel()}
-          >
-            Export Excel complet
-          </button>
-        </div>
-      </Card>
+            <div className={styles.toolbar}>
+              <button
+                type="button"
+                className={styles.btnGhost}
+                disabled={backupData.backupBusy}
+                onClick={() => void backupNow()}
+              >
+                Backup acum
+              </button>
+              <button type="button" className={styles.btnGhost} onClick={restore.openDialog}>
+                Restaurare
+              </button>
+              <button
+                type="button"
+                className={styles.btnGhost}
+                disabled={backupData.diagnosticBusy}
+                onClick={() => void downloadDiagnostic()}
+              >
+                Raport de diagnostic
+              </button>
+            </div>
+          </Card>
+
+          <Card className={styles.panel}>
+            <h3 className={styles.panelTitle}>Excel</h3>
+            <p className={styles.notice}>
+              Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet păstrează
+              câmpurile și poate fi reimportat.
+            </p>
+            <div className={styles.toolbar}>
+              <button type="button" className={styles.btnGhost} onClick={excel.importDialog.openDialog}>
+                Import Excel
+              </button>
+              <button
+                type="button"
+                className={styles.btnGhost}
+                disabled={excel.exporting}
+                onClick={() => void exportExcel()}
+              >
+                Export Excel complet
+              </button>
+            </div>
+          </Card>
+        </>
+      )}
 
       <ExcelImportDialog data={excel.importDialog} onClose={excel.importDialog.closeDialog} />
 

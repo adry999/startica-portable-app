@@ -12,6 +12,10 @@
   margin-bottom: var(--space-16);
 }
 
+.tabsRow {
+  margin-bottom: var(--space-16);
+}
+
 .panelTitle {
   margin: 0 0 var(--space-12);
   font-family: var(--font-heading);
