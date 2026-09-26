@@ -464,9 +464,24 @@
   gap: var(--space-16);
 }
 
+.birthdaysMonthHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
 .birthdaysMonthHead strong {
   font-size: 15px;
   font-weight: 800;
+}
+
+.birthdaysCalendarLink {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 13px;
 }
 
 .birthdaysCalendar {

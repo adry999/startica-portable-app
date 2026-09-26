@@ -1,8 +1,17 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { DashboardPage } from './DashboardPage';
+
+function renderDashboard(props: Parameters<typeof DashboardPage>[0]) {
+  return render(
+    <MemoryRouter initialEntries={['/']}>
+      <DashboardPage {...props} />
+    </MemoryRouter>,
+  );
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -56,7 +65,7 @@ describe('DashboardPage', () => {
   });
 
   it('arată un mesaj de încărcare înainte ca sesiunea să fie gata', () => {
-    render(<DashboardPage month="2026-09" onNavigate={() => {}} />);
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
     expect(screen.getByText('Se încarcă datele…')).toBeInTheDocument();
   });
 
@@ -64,7 +73,7 @@ describe('DashboardPage', () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
-    render(<DashboardPage month="2026-09" onNavigate={() => {}} />);
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
     expect(screen.getByText('Încasări', { selector: 'p' })).toBeInTheDocument();
     // Venit, diferență (egale, fără cheltuieli în fixtură) și legenda pe metodă arată aceeași sumă.
     expect(screen.getAllByText(/1\.500,00 lei/).length).toBeGreaterThanOrEqual(2);
@@ -75,7 +84,7 @@ describe('DashboardPage', () => {
     await act(() => session.result.current.load());
     const onNavigate = vi.fn();
 
-    render(<DashboardPage month="2026-09" onNavigate={onNavigate} />);
+    renderDashboard({ month: '2026-09', onNavigate });
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă cheltuială' }));
     expect(onNavigate).toHaveBeenCalledWith('expenses');
   });

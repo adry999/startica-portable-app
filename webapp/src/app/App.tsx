@@ -6,7 +6,7 @@ import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { VIEW_PATHS, viewForPathname } from './shell/routes';
 import { DashboardPage, useDashboard } from '@features/dashboard';
-import { ChildrenPage } from '@features/children';
+import { ChildrenPage, BirthdaysCalendarPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { VisitsPage } from '@features/visits';
 import { PaymentsPage } from '@features/payments';
@@ -85,6 +85,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
+        <Route path="/copii/zile-de-nastere" element={<BirthdaysRoute />} />
         <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
         <Route path="/grupe" element={<GroupsPage />} />
         <Route path="/vizite" element={<VisitsRoute />} />
@@ -117,6 +118,11 @@ function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view
       onCloseChild={() => navigate('/copii')}
     />
   );
+}
+
+function BirthdaysRoute() {
+  const [searchParams] = useSearchParams();
+  return <BirthdaysCalendarPage initialMonth={searchParams.get('luna') ?? undefined} />;
 }
 
 function VisitsRoute() {

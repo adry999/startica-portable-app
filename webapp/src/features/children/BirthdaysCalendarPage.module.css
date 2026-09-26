@@ -1,0 +1,224 @@
+.notice {
+  color: var(--subtle);
+}
+
+.breadcrumb {
+  margin: 0 0 var(--space-16);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.breadcrumb button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--orange-ink);
+  font-weight: 700;
+}
+
+.pageHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-16);
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.pageCount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--subtle);
+}
+
+.groupFilters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-16);
+}
+
+.groupFiltersLabel {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+  margin-right: var(--space-4);
+}
+
+.chip,
+.chipActive {
+  border: 1px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-14);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.chipActive {
+  background: var(--orange-soft);
+  border-color: var(--orange);
+  color: var(--orange-ink);
+}
+
+.layoutGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.calendarCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+}
+
+.calendarToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.calendarMonth {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 20px;
+}
+
+.btnGhost {
+  border: 1px solid var(--input-border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.arrowButton {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-8);
+}
+
+.calendarHeadCell {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+  text-align: center;
+}
+
+.calendarCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 72px;
+  border: 1px solid var(--row-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.calendarCell strong {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.calendarCellOutside {
+  background: var(--neutral-soft);
+  opacity: 0.6;
+}
+
+.calendarCellToday {
+  border-color: var(--orange);
+}
+
+.calendarChip {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: var(--radius-xs);
+  padding: 1px var(--space-4);
+  background: var(--yellow-soft);
+  color: var(--slate);
+}
+
+.monthListCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.monthListTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.monthList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.monthListRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  background: var(--yellow-soft);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-8) var(--space-10);
+}
+
+.monthListRow > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.monthListRow small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.monthListDay {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--white);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--orange-ink);
+}

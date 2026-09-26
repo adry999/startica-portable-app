@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, SegmentedControl } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -61,6 +62,7 @@ const CHART_MODE_OPTIONS = [
 
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const data = useDashboard(month);
+  const navigate = useNavigate();
   const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
   const [activeBar, setActiveBar] = useState<string | null>(null);
 
@@ -242,6 +244,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
           <div className={styles.birthdaysMonth}>
             <div className={styles.birthdaysMonthHead}>
               <strong>Toată luna {MONTH_NAMES[Number(month.slice(5, 7)) - 1]}</strong>
+              <button
+                type="button"
+                className={styles.birthdaysCalendarLink}
+                onClick={() => navigate(`/copii/zile-de-nastere?luna=${month}`)}
+              >
+                Vezi calendarul →
+              </button>
             </div>
             <div className={styles.birthdaysCalendar}>
               {data.birthdayWeeks
