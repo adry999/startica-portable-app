@@ -11,12 +11,15 @@ import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs'
 export type FeeSetupStatus = 'loading' | 'ready' | 'failed';
 export type FeeSetupFilter = 'missing' | 'all';
 
+export type FeeCurrency = 'MDL' | 'EUR';
+
 export interface FeeSetupRowView {
   id: string;
   contract: string;
   name: string;
   attendanceLabel: string;
   fee: string;
+  currency: FeeCurrency;
   groupId: string;
   from: string;
   status: string;
@@ -26,6 +29,7 @@ export interface FeeSetupRowView {
 
 interface RowEdit {
   fee?: string;
+  currency?: FeeCurrency;
   groupId?: string;
   status?: string;
   from?: string;
@@ -49,11 +53,14 @@ export interface FeeSetupData {
   setFilter: (value: FeeSetupFilter) => void;
   bulkAmount: string;
   setBulkAmount: (value: string) => void;
+  bulkCurrency: FeeCurrency | '';
+  setBulkCurrency: (value: FeeCurrency | '') => void;
   bulkGroupId: string;
   setBulkGroupId: (value: string) => void;
   bulkStatus: string;
   setBulkStatus: (value: string) => void;
   setFee: (id: string, value: string) => void;
+  setCurrency: (id: string, value: FeeCurrency) => void;
   setGroupId: (id: string, value: string) => void;
   setStatus: (id: string, value: string) => void;
   setFrom: (id: string, value: string) => void;
@@ -66,6 +73,10 @@ export interface FeeSetupData {
 function currentFeeOf(child: Child): string {
   const amount = child.feeHistory?.at(-1)?.amount ?? child.fee;
   return amount === null || amount === undefined ? '' : String(amount);
+}
+
+function currentCurrencyOf(child: Child): FeeCurrency {
+  return child.feeHistory?.at(-1)?.currency ?? 'MDL';
 }
 
 /**
@@ -81,16 +92,18 @@ export function useFeeSetup(): FeeSetupData {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FeeSetupFilter>('missing');
   const [bulkAmount, setBulkAmount] = useState('');
+  const [bulkCurrency, setBulkCurrency] = useState<FeeCurrency | ''>('');
   const [bulkGroupId, setBulkGroupId] = useState('');
   const [bulkStatus, setBulkStatus] = useState('');
   const [edits, setEdits] = useState<Record<string, RowEdit>>({});
   const [saving, setSaving] = useState(false);
 
-  function setField(id: string, field: keyof RowEdit, value: string) {
+  function setField<K extends keyof RowEdit>(id: string, field: K, value: RowEdit[K]) {
     setEdits(prev => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
   }
 
   const setFee = (id: string, value: string) => setField(id, 'fee', value);
+  const setCurrency = (id: string, value: FeeCurrency) => setField(id, 'currency', value);
   const setGroupId = (id: string, value: string) => setField(id, 'groupId', value);
   const setStatus = (id: string, value: string) => setField(id, 'status', value);
   const setFrom = (id: string, value: string) => setField(id, 'from', value);
@@ -109,11 +122,14 @@ export function useFeeSetup(): FeeSetupData {
       setFilter,
       bulkAmount,
       setBulkAmount,
+      bulkCurrency,
+      setBulkCurrency,
       bulkGroupId,
       setBulkGroupId,
       bulkStatus,
       setBulkStatus,
       setFee,
+      setCurrency,
       setGroupId,
       setStatus,
       setFrom,
@@ -149,6 +165,7 @@ export function useFeeSetup(): FeeSetupData {
       name: child.name,
       attendanceLabel: child.attendanceDate ?? '',
       fee: edit?.fee ?? currentFeeOf(child),
+      currency: edit?.currency ?? currentCurrencyOf(child),
       groupId: edit?.groupId ?? (child.groupId || ''),
       from: edit?.from ?? defaultSetupMonth(child, todayStr),
       status: edit?.status ?? currentStatus,
@@ -164,21 +181,23 @@ export function useFeeSetup(): FeeSetupData {
     const feeInitial = currentFeeOf(child);
     const feeValue = (edit.fee ?? feeInitial).trim();
     const feeChanged = feeValue !== '' && feeValue !== feeInitial;
+    const currencyChanged = edit.currency !== undefined && edit.currency !== currentCurrencyOf(child);
     const groupChanged = edit.groupId !== undefined && edit.groupId !== (child.groupId || '');
     const statusChanged = edit.status !== undefined && edit.status !== (child.status || 'Activ');
-    return feeChanged || groupChanged || statusChanged;
+    return feeChanged || currencyChanged || groupChanged || statusChanged;
   }
 
   const hasPendingEdits = Object.keys(edits).some(isRowChanged);
 
   function applyBulkToVisible() {
-    if (!bulkAmount.trim() && !bulkGroupId && !bulkStatus) return;
+    if (!bulkAmount.trim() && !bulkCurrency && !bulkGroupId && !bulkStatus) return;
     setEdits(prev => {
       const next = { ...prev };
       for (const child of visibleChildren) {
         next[child.id] = {
           ...next[child.id],
           ...(bulkAmount.trim() ? { fee: bulkAmount.trim() } : {}),
+          ...(bulkCurrency ? { currency: bulkCurrency } : {}),
           ...(bulkGroupId ? { groupId: bulkGroupId } : {}),
           ...(bulkStatus ? { status: bulkStatus } : {}),
         };
@@ -188,7 +207,14 @@ export function useFeeSetup(): FeeSetupData {
   }
 
   async function save(): Promise<{ updatedCount: number }> {
-    const updates: { id: string; from: string; fee?: number; groupId?: string | null; status?: string }[] = [];
+    const updates: {
+      id: string;
+      from: string;
+      fee?: number;
+      currency?: FeeCurrency;
+      groupId?: string | null;
+      status?: string;
+    }[] = [];
     for (const child of records.children) {
       if (!isRowChanged(child.id)) continue;
       const edit = edits[child.id] as RowEdit;
@@ -197,6 +223,7 @@ export function useFeeSetup(): FeeSetupData {
       const feeInitial = currentFeeOf(child);
       const feeValue = (edit.fee ?? feeInitial).trim();
       if (feeValue !== '' && feeValue !== feeInitial) update.fee = Number(feeValue);
+      if (edit.currency !== undefined && edit.currency !== currentCurrencyOf(child)) update.currency = edit.currency;
       if (edit.groupId !== undefined && edit.groupId !== (child.groupId || '')) update.groupId = edit.groupId || null;
       if (edit.status !== undefined && edit.status !== (child.status || 'Activ')) update.status = edit.status;
       updates.push(update);
@@ -225,11 +252,14 @@ export function useFeeSetup(): FeeSetupData {
     setFilter,
     bulkAmount,
     setBulkAmount,
+    bulkCurrency,
+    setBulkCurrency,
     bulkGroupId,
     setBulkGroupId,
     bulkStatus,
     setBulkStatus,
     setFee,
+    setCurrency,
     setGroupId,
     setStatus,
     setFrom,

@@ -59,6 +59,7 @@ describe('buildChildRecord', () => {
     withdrawalDate: '',
     statusFrom: '2026-01',
     fee: '1500',
+    currency: 'MDL' as const,
     feeFrom: '2026-01',
     dueDay: '10',
     feeHistoryText: '',

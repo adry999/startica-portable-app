@@ -1,6 +1,20 @@
 import { Card, DataTable, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
-import { useFeeSetup, type FeeSetupData, type FeeSetupFilter, type FeeSetupRowView } from './useFeeSetup';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
+import { formatMoney } from '#shared/format/money-format.mjs';
+import {
+  useFeeSetup,
+  type FeeCurrency,
+  type FeeSetupData,
+  type FeeSetupFilter,
+  type FeeSetupRowView,
+} from './useFeeSetup';
 import styles from './FeeSetupPage.module.css';
+
+const CURRENCY_OPTIONS: { value: FeeCurrency; label: string }[] = [
+  { value: 'MDL', label: 'MDL' },
+  { value: 'EUR', label: 'EUR' },
+];
 
 const FILTER_OPTIONS: { value: FeeSetupFilter; label: string }[] = [
   { value: 'missing', label: 'Doar fără taxă' },
@@ -10,6 +24,8 @@ const FILTER_OPTIONS: { value: FeeSetupFilter; label: string }[] = [
 export function FeeSetupPage() {
   const feeSetupData = useFeeSetup();
   const toast = useToast();
+  const { rates } = useExchangeRates();
+  const todaysRate = latestKnownRate(rates);
 
   if (feeSetupData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (feeSetupData.status === 'failed')
@@ -52,19 +68,47 @@ export function FeeSetupPage() {
       ),
     },
     {
+      key: 'currency',
+      header: 'Monedă',
+      render: row => (
+        <select
+          value={row.currency}
+          onChange={event => feeSetupData.setCurrency(row.id, event.target.value as FeeCurrency)}
+          aria-label={`Monedă pentru ${row.name}`}
+        >
+          {CURRENCY_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
       key: 'fee',
       header: 'Taxă lunară',
-      render: row => (
-        <input
-          type="number"
-          min={0}
-          step="0.01"
-          placeholder="taxă"
-          value={row.fee}
-          onChange={event => feeSetupData.setFee(row.id, event.target.value)}
-          aria-label={`Taxă lunară pentru ${row.name}`}
-        />
-      ),
+      render: row => {
+        const amount = Number(row.fee);
+        const showLeiEquivalent = row.currency === 'EUR' && row.fee !== '' && !Number.isNaN(amount) && todaysRate;
+        return (
+          <div className={styles.feeCell}>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="taxă"
+              value={row.fee}
+              onChange={event => feeSetupData.setFee(row.id, event.target.value)}
+              aria-label={`Taxă lunară pentru ${row.name}`}
+            />
+            {showLeiEquivalent && (
+              <span className={styles.feeEquivalent}>
+                ≈ {formatMoney(convertAmount(amount, 'EUR', 'MDL', todaysRate as number))} azi
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'from',
@@ -157,7 +201,7 @@ function BulkRow({ data }: { data: FeeSetupData }) {
   const toast = useToast();
 
   function applyAll() {
-    if (!data.bulkAmount.trim() && !data.bulkGroupId && !data.bulkStatus) {
+    if (!data.bulkAmount.trim() && !data.bulkCurrency && !data.bulkGroupId && !data.bulkStatus) {
       toast.show({ message: 'Completează o taxă, o grupă sau un statut de aplicat.' });
       return;
     }
@@ -177,6 +221,20 @@ function BulkRow({ data }: { data: FeeSetupData }) {
           value={data.bulkAmount}
           onChange={event => data.setBulkAmount(event.target.value)}
         />
+      </label>
+      <label className={styles.bulkField}>
+        Monedă pentru toți
+        <select
+          value={data.bulkCurrency}
+          onChange={event => data.setBulkCurrency(event.target.value as FeeCurrency | '')}
+        >
+          <option value="">Lasă neschimbată</option>
+          {CURRENCY_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </label>
       <label className={styles.bulkField}>
         Grupă pentru toți

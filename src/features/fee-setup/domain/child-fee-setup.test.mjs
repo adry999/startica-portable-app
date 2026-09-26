@@ -70,6 +70,24 @@ test('câmpurile netrimise rămân neschimbate', () => {
   assert.deepEqual(untouched.statusHistory, [{ from: '2025-02', status: 'Activ' }]);
 });
 
+test('moneda se poate schimba pe aceeași lună fără să șteargă taxa scrisă în același apel', () => {
+  const updated = applyChildFeeSetup(baseChild(), { from: '2025-02', fee: 250, currency: 'EUR' });
+  assert.deepEqual(updated.feeHistory, [{ from: '2025-02', amount: 250, currency: 'EUR' }]);
+});
+
+test('moneda setată separat, pe o lună cu taxă deja scrisă, nu șterge suma', () => {
+  const withFee = applyChildFeeSetup(baseChild(), { from: '2025-02', fee: 2000 });
+  const withCurrency = applyChildFeeSetup(withFee, { from: '2025-02', currency: 'EUR' });
+  assert.deepEqual(withCurrency.feeHistory, [{ from: '2025-02', amount: 2000, currency: 'EUR' }]);
+});
+
+test('respinge moneda invalidă', () => {
+  assert.throws(
+    () => applyChildFeeSetup(baseChild(), { from: '2025-02', currency: /** @type {any} */ ('USD') }),
+    /monedă invalidă/,
+  );
+});
+
 test('hasMissingFee este adevărat doar când istoricul taxei este gol', () => {
   assert.equal(hasMissingFee(baseChild()), true);
   assert.equal(hasMissingFee(baseChild({ feeHistory: [{ from: '2025-02', amount: 2000 }] })), false);

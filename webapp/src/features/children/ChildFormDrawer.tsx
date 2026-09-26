@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Drawer } from '@shared/ui';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
-import { CHILD_STATUSES, defaultChildFormValues, type ChildFormValues } from './child-form';
+import { usePlanPresets } from '@shared/api/usePlanPresets';
+import { CHILD_STATUSES, defaultChildFormValues, type ChildFeeCurrency, type ChildFormValues } from './child-form';
 import type { Child, Group } from '@contracts/record-types.mjs';
 import styles from './ChildFormDrawer.module.css';
 
@@ -17,6 +18,7 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<ChildFormValues>(() => defaultChildFormValues(editing, todayFn()));
   const [submitting, setSubmitting] = useState(false);
+  const { presets } = usePlanPresets();
 
   function setField<K extends keyof ChildFormValues>(key: K, value: ChildFormValues[K]) {
     setValues(previous => ({ ...previous, [key]: value }));
@@ -156,6 +158,35 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
               onChange={event => setField('statusFrom', event.target.value)}
             />
           </label>
+          <label className={styles.field}>
+            Monedă
+            <select
+              value={values.currency}
+              onChange={event => setField('currency', event.target.value as ChildFeeCurrency)}
+            >
+              <option value="MDL">MDL</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </label>
+          {values.currency === 'EUR' && presets.length > 0 && (
+            <label className={styles.field}>
+              Presetare de plan (scurtătură pentru sumă)
+              <select
+                value=""
+                onChange={event => {
+                  const preset = presets.find(item => item.id === event.target.value);
+                  if (preset) setField('fee', String(preset.priceEur));
+                }}
+              >
+                <option value="">Alege o presetare…</option>
+                {presets.map(preset => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name} — {preset.priceEur} €
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <label className={styles.field}>
             Taxa lunară (gol = necunoscută)
             <input

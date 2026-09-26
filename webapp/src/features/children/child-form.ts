@@ -4,6 +4,8 @@ import type { Child } from '@contracts/record-types.mjs';
 
 export { CHILD_STATUSES };
 
+export type ChildFeeCurrency = 'MDL' | 'EUR';
+
 export interface ChildFormValues {
   name: string;
   birthDate: string;
@@ -19,6 +21,7 @@ export interface ChildFormValues {
   withdrawalDate: string;
   statusFrom: string;
   fee: string;
+  currency: ChildFeeCurrency;
   feeFrom: string;
   dueDay: string;
   feeHistoryText: string;
@@ -29,6 +32,7 @@ export interface ChildFormValues {
 interface FeeHistoryEntry {
   from: string;
   amount: number;
+  currency: ChildFeeCurrency;
 }
 
 interface StatusHistoryEntry {
@@ -60,6 +64,7 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
     withdrawalDate: child?.withdrawalDate ?? '',
     statusFrom: month,
     fee: child?.fee != null ? String(child.fee) : '',
+    currency: child?.feeHistory?.at(-1)?.currency ?? 'MDL',
     feeFrom: month,
     dueDay: String(child?.dueDay || 10),
     feeHistoryText: (child?.feeHistory ?? []).map(entry => `${entry.from} = ${entry.amount}`).join('\n'),
@@ -93,6 +98,7 @@ export function buildChildRecord(previous: Child | null, id: string, values: Chi
   const feeHistory: FeeHistoryEntry[] = parseHistoryLines(values.feeHistoryText).map(({ from, value }) => ({
     from,
     amount: Number(value),
+    currency: values.currency,
   }));
   let statusHistory: StatusHistoryEntry[] = parseHistoryLines(values.statusHistoryText).map(({ from, value }) => ({
     from,
@@ -120,9 +126,18 @@ export function buildChildRecord(previous: Child | null, id: string, values: Chi
     feeHistory,
   };
 
+  const previousCurrency = previous?.feeHistory?.at(-1)?.currency ?? 'MDL';
   let nextFeeHistory = feeHistory;
-  if (fee !== null && values.feeFrom && (!nextFeeHistory.length || fee !== (previous?.fee ?? null)))
-    nextFeeHistory = upsertHistory(nextFeeHistory, values.feeFrom, { from: values.feeFrom, amount: fee });
+  if (
+    fee !== null &&
+    values.feeFrom &&
+    (!nextFeeHistory.length || fee !== (previous?.fee ?? null) || values.currency !== previousCurrency)
+  )
+    nextFeeHistory = upsertHistory(nextFeeHistory, values.feeFrom, {
+      from: values.feeFrom,
+      amount: fee,
+      currency: values.currency,
+    });
   record.feeHistory = nextFeeHistory;
 
   if (!statusHistory.length && (previous?.status || record.status) === 'Activ' && record.attendanceDate)
