@@ -277,14 +277,14 @@ function AttentionRow({
       <span className={styles.attentionCount}>{item.count}</span>
       <div className={styles.attentionText}>
         <strong>{item.title}</strong>
-        <small>{clear ? 'Nicio acțiune necesară pe această listă.' : item.detail}</small>
+        <small>{item.detail}</small>
       </div>
       <button
         type="button"
         className={styles.attentionAction}
         onClick={() => onNavigate(item.view as ViewKey, item.params)}
       >
-        {clear ? 'Vezi lista' : item.action} →
+        {item.action} →
       </button>
     </article>
   );
