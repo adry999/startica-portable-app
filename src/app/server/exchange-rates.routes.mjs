@@ -1,6 +1,11 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
-import { parseExchangeRates, clampExchangeRates } from '#shared/domain/exchange-rates.mjs';
+import {
+  parseExchangeRates,
+  clampExchangeRates,
+  parseExchangeRateSources,
+  clampExchangeRateSources,
+} from '#shared/domain/exchange-rates.mjs';
 import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
@@ -11,9 +16,11 @@ const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fetchImpl }) {
   const readRates = () => parseExchangeRates(readSetting('exchangeRates'));
   const saveRates = rates => writeSetting('exchangeRates', JSON.stringify(rates));
+  const readSources = () => parseExchangeRateSources(readSetting('exchangeRateSources'));
+  const saveSources = sources => writeSetting('exchangeRateSources', JSON.stringify(sources));
 
   return [
-    { method: 'GET', path: '/api/exchange-rates', handle: () => readRates() },
+    { method: 'GET', path: '/api/exchange-rates', handle: () => ({ rates: readRates(), sources: readSources() }) },
     {
       method: 'POST',
       path: '/api/exchange-rates',
@@ -25,7 +32,9 @@ export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fe
         if (!Number.isFinite(rate) || rate <= 0) fail('Curs invalid. Folosește un număr pozitiv.');
         const after = clampExchangeRates({ ...readRates(), [date]: rate });
         saveRates(after);
-        return after;
+        const afterSources = clampExchangeRateSources({ ...readSources(), [date]: 'manual' });
+        saveSources(afterSources);
+        return { rates: after, sources: afterSources };
       },
     },
     {
@@ -37,7 +46,9 @@ export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fe
         if ('error' in result) return { ok: false, error: result.error };
         const after = clampExchangeRates({ ...readRates(), [date]: result.rate });
         saveRates(after);
-        return { ok: true, rates: after };
+        const afterSources = clampExchangeRateSources({ ...readSources(), [date]: 'bnm' });
+        saveSources(afterSources);
+        return { ok: true, rates: after, sources: afterSources };
       },
     },
   ];

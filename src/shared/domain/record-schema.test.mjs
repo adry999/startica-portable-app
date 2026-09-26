@@ -437,6 +437,41 @@ test('normalizeRecord(payments) păstrează currency EUR când e trimisă explic
   assert.equal(record.currency, 'EUR');
 });
 
+test('normalizeRecord(payments) acceptă fxRate/amountEur valide', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 19.62,
+    amountEur: 152.91,
+  });
+  assert.equal(record.fxRate, 19.62);
+  assert.equal(record.amountEur, 152.91);
+});
+
+test('normalizeRecord(payments) respinge un fxRate invalid', () => {
+  assert.throws(
+    () => normalizeRecord('payments', { id: 'P-1', date: '2026-09-15', amount: 3000, method: 'Cash', fxRate: 0 }),
+    /Curs invalid/,
+  );
+  assert.throws(
+    () => normalizeRecord('payments', { id: 'P-1', date: '2026-09-15', amount: 3000, method: 'Cash', fxRate: -5 }),
+    /Curs invalid/,
+  );
+});
+
+test('normalizeRecord(payments) fără fxRate/amountEur rămâne fără ele, nu se defaultează', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 500,
+    method: 'Cash',
+  });
+  assert.equal('fxRate' in record, false);
+  assert.equal('amountEur' in record, false);
+});
+
 test('normalizeRecord(expenses) acceptă o metodă validă, dar respinge una necunoscută', () => {
   const base = { id: 'EXP-1', date: '2026-09-01', amount: 100 };
   assert.equal(normalizeRecord('expenses', { ...base, method: 'cash' }).method, 'cash');

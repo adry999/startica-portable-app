@@ -42,6 +42,43 @@ export function parseExchangeRates(json) {
   }
 }
 
+/** @typedef {Record<string, 'bnm' | 'manual'>} ExchangeRateSources */
+const SOURCES = ['bnm', 'manual'];
+
+/**
+ * Completează și validează harta de provenență a cursurilor, la fel de tolerant
+ * ca clampExchangeRates: o cheie/valoare stricată în settings lipsește din
+ * rezultat, fără să arunce — provenența e doar metadată de afișare (mint/galben
+ * în 7a), nu intră în calculul financiar. O zi cu curs dar fără provenență
+ * înregistrată (date scrise înainte de acest câmp, sau scrise de fetch-ul de
+ * la pornire) rămâne absentă din hartă — provenență necunoscută, nu presupunem 'bnm'.
+ * @param {unknown} overrides
+ * @returns {ExchangeRateSources}
+ */
+export function clampExchangeRateSources(overrides) {
+  if (!overrides || typeof overrides !== 'object' || Array.isArray(overrides)) return {};
+  /** @type {ExchangeRateSources} */
+  const result = {};
+  for (const [key, value] of Object.entries(overrides)) {
+    if (!DATE_KEY.test(key) || !SOURCES.includes(value)) continue;
+    result[key] = value;
+  }
+  return result;
+}
+
+/**
+ * @param {string | undefined | null} json
+ * @returns {ExchangeRateSources}
+ */
+export function parseExchangeRateSources(json) {
+  if (!json) return {};
+  try {
+    return clampExchangeRateSources(JSON.parse(json));
+  } catch {
+    return {};
+  }
+}
+
 /**
  * Cursul zilei exacte, sau al celei mai recente zile anterioare cunoscute —
  * niciodată al unei zile ulterioare (ar însemna să folosești un curs din

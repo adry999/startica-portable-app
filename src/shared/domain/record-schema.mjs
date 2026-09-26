@@ -104,6 +104,8 @@ const FIELDS = {
     'tenders',
     'amount',
     'currency',
+    'fxRate',
+    'amountEur',
     'allocations',
     'type',
     'notes',
@@ -341,6 +343,10 @@ export function normalizeRecord(type, input) {
       if (record.childId) requireThat(/^[A-Za-z0-9_-]{1,100}$/.test(record.childId), 'ID copil invalid.');
       record.currency ??= 'MDL';
       requireThat(CURRENCIES.includes(record.currency), 'Monedă necunoscută.');
+      if (record.fxRate !== undefined)
+        requireThat(Number.isFinite(record.fxRate) && record.fxRate > 0, 'Curs invalid.');
+      if (record.amountEur !== undefined)
+        requireThat(Number.isFinite(record.amountEur) && record.amountEur > 0, 'Sumă în euro invalidă.');
       record.method ||= 'Cash';
       record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');

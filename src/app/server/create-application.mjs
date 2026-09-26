@@ -28,7 +28,13 @@ import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
 import { createNotificationSettingsRoutes } from './notification-settings.routes.mjs';
-import { parseExchangeRates, clampExchangeRates } from '#shared/domain/exchange-rates.mjs';
+import { createPlanPresetsRoutes } from './plan-presets.routes.mjs';
+import {
+  parseExchangeRates,
+  clampExchangeRates,
+  parseExchangeRateSources,
+  clampExchangeRateSources,
+} from '#shared/domain/exchange-rates.mjs';
 import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 
@@ -163,6 +169,7 @@ export function createApplication(options = {}) {
       writeSetting: settings.setSetting,
       fetch: options.fetch ?? globalThis.fetch,
     }),
+    ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
   ];
 
   const { dispatchRequest } = createRouteDispatcher({
@@ -189,6 +196,11 @@ export function createApplication(options = {}) {
       return;
     }
     settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates({ ...current, [date]: result.rate })));
+    const currentSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
+    settings.setSetting(
+      'exchangeRateSources',
+      JSON.stringify(clampExchangeRateSources({ ...currentSources, [date]: 'bnm' })),
+    );
   }
 
   return {

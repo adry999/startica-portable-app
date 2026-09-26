@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {
   clampExchangeRates,
   parseExchangeRates,
+  clampExchangeRateSources,
+  parseExchangeRateSources,
   eurToMdlRate,
   latestKnownRate,
   convertAmount,
@@ -94,4 +96,18 @@ test('parseBnmEurRate întoarce null pe text care nu e XML valid', () => {
 
 test('bnmDateParam transformă YYYY-MM-DD în DD.MM.YYYY, cerut de BNM', () => {
   assert.equal(bnmDateParam('2026-09-23'), '23.09.2026');
+});
+
+test('clampExchangeRateSources elimină chei/valori stricate fără să arunce', () => {
+  assert.deepEqual(clampExchangeRateSources({ '2026-09-23': 'manual', 'nu-e-dată': 'bnm', '2026-09-24': 'altceva' }), {
+    '2026-09-23': 'manual',
+  });
+  assert.deepEqual(clampExchangeRateSources(null), {});
+  assert.deepEqual(clampExchangeRateSources('text'), {});
+});
+
+test('parseExchangeRateSources citește JSON valid și cade pe {} la JSON stricat', () => {
+  assert.deepEqual(parseExchangeRateSources('{"2026-09-23":"bnm"}'), { '2026-09-23': 'bnm' });
+  assert.deepEqual(parseExchangeRateSources('nu-i json'), {});
+  assert.deepEqual(parseExchangeRateSources(undefined), {});
 });
