@@ -39,7 +39,7 @@ describe('ExchangeRateSettings', () => {
     renderComponent();
 
     const todayRow = await screen.findByTestId('today-rate');
-    expect(within(todayRow).getByText(/1 € = 19,62 lei/)).toBeInTheDocument();
+    expect(within(todayRow).getByText(/1 € = 19,6200 lei/)).toBeInTheDocument();
     expect(within(todayRow).queryByText('Revino la cursul BNM')).not.toBeInTheDocument();
   });
 
@@ -64,7 +64,7 @@ describe('ExchangeRateSettings', () => {
 
     expect(await screen.findByText('Cursul BNM a fost actualizat.')).toBeInTheDocument();
     const todayRow = screen.getByTestId('today-rate');
-    expect(within(todayRow).getByText(/1 € = 19,70 lei/)).toBeInTheDocument();
+    expect(within(todayRow).getByText(/1 € = 19,7000 lei/)).toBeInTheDocument();
   });
 
   it('corectarea cursului de azi trimite cererea și arată tonul galben cu butonul de revenire', async () => {
@@ -92,7 +92,7 @@ describe('ExchangeRateSettings', () => {
 
     expect(await screen.findByText('Cursul de azi a fost corectat.')).toBeInTheDocument();
     const todayRow = screen.getByTestId('today-rate');
-    expect(within(todayRow).getByText(/1 € = 20,10 lei/)).toBeInTheDocument();
+    expect(within(todayRow).getByText(/1 € = 20,1000 lei/)).toBeInTheDocument();
     expect(within(todayRow).getByText('Revino la cursul BNM')).toBeInTheDocument();
   });
 

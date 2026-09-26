@@ -190,7 +190,7 @@ describe('PaymentsPage', () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
-    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+    const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
     await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c2');
     await user.type(within(dialog).getByLabelText('Cash'), '600');
@@ -208,7 +208,7 @@ describe('PaymentsPage', () => {
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
-    const dialog = screen.getByRole('dialog', { name: 'Editează: achitare' });
+    const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
     const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
     expect(cashInput.value).toBe('1500');
     await user.clear(cashInput);
@@ -234,7 +234,7 @@ describe('PaymentsPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
-    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+    const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
     await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
     const dateInput = within(dialog).getByLabelText('Data încasării');
@@ -254,7 +254,7 @@ describe('PaymentsPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
-    const dialog = screen.getByRole('dialog', { name: 'Adaugă: achitare' });
+    const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
     await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
     const dateInput = within(dialog).getByLabelText('Data încasării');
@@ -265,7 +265,7 @@ describe('PaymentsPage', () => {
 
     expect(window.confirm).toHaveBeenCalled();
     expect(screen.queryByText('Achitare adăugată.')).not.toBeInTheDocument();
-    expect(screen.getByRole('dialog', { name: 'Adaugă: achitare' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Achitare nouă' })).toBeInTheDocument();
     expect((fetch as ReturnType<typeof vi.fn>).mock.calls.filter(([path]) => path === '/api/record')).toHaveLength(0);
   });
 
@@ -278,7 +278,7 @@ describe('PaymentsPage', () => {
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
-    const dialog = screen.getByRole('dialog', { name: 'Editează: achitare' });
+    const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
     const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
     await user.clear(cashInput);
     await user.type(cashInput, '1600');

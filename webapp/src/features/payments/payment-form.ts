@@ -23,6 +23,8 @@ export interface PaymentFormValues {
   notes: string;
   /** Curs BNM (sau corectat manual) folosit la conversie — doar când taxa copilului e EUR. */
   fxRate?: number;
+  /** Proveniența lui fxRate — doar când fxRate există. */
+  fxRateSource?: 'bnm' | 'manual';
   /** `amount` (lei) convertit la fxRate, rotunjit la ban — doar când fxRate există. */
   amountEur?: number;
 }
@@ -91,6 +93,7 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
     reviewed: values.reviewed,
     allocations,
     fxRate: values.fxRate,
+    fxRateSource: values.fxRateSource,
     amountEur: values.amountEur,
   }) as Payment;
 }

@@ -225,6 +225,7 @@ describe('PaymentFormDrawer', () => {
     expect(screen.queryByLabelText('Curs EUR')).toBeNull();
     const submitted = onSubmit.mock.calls[0][0];
     expect('fxRate' in submitted).toBe(false);
+    expect('fxRateSource' in submitted).toBe(false);
     expect('amountEur' in submitted).toBe(false);
   });
 
@@ -242,6 +243,7 @@ describe('PaymentFormDrawer', () => {
 
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.fxRate).toBe(KNOWN_RATE);
+    expect(submitted.fxRateSource).toBe('bnm');
     expect(submitted.amountEur).toBeCloseTo(51.28, 2);
   });
 
@@ -257,6 +259,7 @@ describe('PaymentFormDrawer', () => {
 
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.fxRate).toBe(20);
+    expect(submitted.fxRateSource).toBe('manual');
     expect(submitted.amountEur).toBeCloseTo(50, 2);
   });
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Drawer } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
+import { formatRate } from '#shared/format/rate-format.mjs';
 import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -123,6 +124,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
         ? {
             ...values,
             fxRate: effectiveRate,
+            fxRateSource: (manualRate ? 'manual' : 'bnm') as 'bnm' | 'manual',
             amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
           }
         : values;
@@ -140,7 +142,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   return (
     <Drawer
       open={target !== null}
-      title={editing ? 'Editează: achitare' : 'Adaugă: achitare'}
+      title={editing ? 'Editează achitarea' : 'Achitare nouă'}
       width={560}
       onClose={onClose}
       footer={
@@ -204,9 +206,9 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
               </label>
               <p className={styles.notice}>
                 {manualRate
-                  ? 'Curs manual (pentru această plată)'
+                  ? 'Curs manual pentru această plată'
                   : bnmRate !== undefined
-                    ? `BNM ${formatDate(values.date)}`
+                    ? `BNM ${formatDate(values.date)} · ${formatRate(bnmRate)}`
                     : 'Niciun curs cunoscut pentru această dată — completează manual'}
               </p>
             </>
