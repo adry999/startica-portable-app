@@ -8,10 +8,51 @@
   margin-bottom: var(--space-16);
 }
 
+.cardsHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+}
+
+.newGroupInline {
+  display: flex;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-16);
+}
+
+.newGroupInline input {
+  flex: 1;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-size: 14px;
+}
+
+.btnGhost {
+  border: 1.5px solid var(--border);
+  background: none;
+  color: var(--slate);
+  border-radius: var(--radius-pill);
+  padding: 6px var(--space-12);
+  font-weight: 800;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.editorSlot {
+  grid-column: 1 / -1;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-16);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-12);
 }
 
 .tileOpen {
@@ -30,7 +71,7 @@
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .tilePill {
@@ -47,12 +88,12 @@
   display: block;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 28px;
+  font-size: 20px;
   margin: var(--space-4) 0;
 }
 
 .occupancyBar {
-  height: 8px;
+  height: 6px;
   border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.6);
   overflow: hidden;
@@ -76,22 +117,22 @@
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 11px;
-  margin-right: -8px;
+  font-size: 10px;
+  margin-right: -7px;
   border: 1.5px solid rgba(255, 255, 255, 0.8);
 }
 
 .avatarExtra {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--neutral-soft);
   color: var(--muted);
@@ -99,27 +140,8 @@
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 9px;
   margin-left: var(--space-4);
-}
-
-.newTile {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
-}
-
-.newTileForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.newTileForm input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-10);
-  font: inherit;
 }
 
 .primaryButton {
@@ -224,14 +246,6 @@
 .addRow {
   display: flex;
   gap: var(--space-10);
-}
-
-.addRow select {
-  flex: 1;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-10);
-  font: inherit;
 }
 
 .deleteRow {

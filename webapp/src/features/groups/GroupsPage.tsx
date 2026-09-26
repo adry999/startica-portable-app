@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Card, SegmentedControl, useToast, type CardTone } from '@shared/ui';
+import { Fragment, useState, type FormEvent } from 'react';
+import { Card, SearchSelect, SegmentedControl, useToast, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
@@ -20,6 +20,7 @@ export function GroupsPage() {
   const data = useGroups();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
@@ -45,7 +46,10 @@ export function GroupsPage() {
 
   return (
     <>
-      <div className={styles.viewToggleRow}>
+      <div className={styles.cardsHeaderRow}>
+        <button type="button" className={styles.primaryButton} onClick={() => setNewGroupOpen(open => !open)}>
+          + Grupă nouă
+        </button>
         <SegmentedControl
           ariaLabel="Vizualizare Grupe"
           options={VIEW_OPTIONS}
@@ -53,68 +57,76 @@ export function GroupsPage() {
           onChange={setViewMode}
         />
       </div>
-      <div className={styles.grid}>
-        {data.groups.map((group, index) => (
-          <GroupTile
-            key={group.id}
-            group={group}
-            tone={tileTone(index, group.overCapacity)}
-            isOpen={group.id === data.openGroupId}
-            onToggle={() => data.toggleGroup(group.id)}
-          />
-        ))}
-        <NewGroupTile
+
+      {newGroupOpen && (
+        <NewGroupInline
           onCreate={async (name, capacityRaw) => {
             try {
               await data.createGroup(name, capacityRaw);
               toast.show({ message: 'Grupă creată.' });
+              setNewGroupOpen(false);
             } catch (error) {
               toast.show({ message: (error as Error).message });
             }
           }}
-        />
-      </div>
-
-      {openGroup && (
-        <GroupEditor
-          key={openGroup.id}
-          group={openGroup}
-          unassignedChildren={data.unassignedChildren}
-          onSave={async (name, capacityRaw, educator) => {
-            try {
-              await data.updateGroup(openGroup.id, name, capacityRaw, educator);
-              toast.show({ message: 'Grupă actualizată.' });
-            } catch (error) {
-              toast.show({ message: (error as Error).message });
-            }
-          }}
-          onDelete={async () => {
-            if (!window.confirm(`Ștergi grupa „${openGroup.name}”? Copiii rămân, doar grupa este ștearsă.`)) return;
-            try {
-              await data.deleteGroup(openGroup.id);
-              toast.show({ message: 'Grupă ștearsă.' });
-            } catch (error) {
-              toast.show({ message: (error as Error).message });
-            }
-          }}
-          onAssign={async childId => {
-            try {
-              await data.assignChild(openGroup.id, childId);
-              toast.show({ message: 'Copil atribuit grupei.' });
-            } catch (error) {
-              toast.show({ message: (error as Error).message });
-            }
-          }}
-          onRemove={async childId => {
-            try {
-              await data.removeChild(childId);
-              toast.show({ message: 'Copil scos din grupă.' });
-            } catch (error) {
-              toast.show({ message: (error as Error).message });
-            }
-          }}
+          onCancel={() => setNewGroupOpen(false)}
         />
       )}
+
+      <div className={styles.grid}>
+        {data.groups.map((group, index) => (
+          <Fragment key={group.id}>
+            <GroupTile
+              group={group}
+              tone={tileTone(index, group.overCapacity)}
+              isOpen={group.id === data.openGroupId}
+              onToggle={() => data.toggleGroup(group.id)}
+            />
+            {openGroup && openGroup.id === group.id && (
+              <div className={styles.editorSlot}>
+                <GroupEditor
+                  group={openGroup}
+                  unassignedChildren={data.unassignedChildren}
+                  onSave={async (name, capacityRaw, educator) => {
+                    try {
+                      await data.updateGroup(openGroup.id, name, capacityRaw, educator);
+                      toast.show({ message: 'Grupă actualizată.' });
+                    } catch (error) {
+                      toast.show({ message: (error as Error).message });
+                    }
+                  }}
+                  onDelete={async () => {
+                    if (!window.confirm(`Ștergi grupa „${openGroup.name}”? Copiii rămân, doar grupa este ștearsă.`))
+                      return;
+                    try {
+                      await data.deleteGroup(openGroup.id);
+                      toast.show({ message: 'Grupă ștearsă.' });
+                    } catch (error) {
+                      toast.show({ message: (error as Error).message });
+                    }
+                  }}
+                  onAssign={async childId => {
+                    try {
+                      await data.assignChild(openGroup.id, childId);
+                      toast.show({ message: 'Copil atribuit grupei.' });
+                    } catch (error) {
+                      toast.show({ message: (error as Error).message });
+                    }
+                  }}
+                  onRemove={async childId => {
+                    try {
+                      await data.removeChild(childId);
+                      toast.show({ message: 'Copil scos din grupă.' });
+                    } catch (error) {
+                      toast.show({ message: (error as Error).message });
+                    }
+                  }}
+                />
+              </div>
+            )}
+          </Fragment>
+        ))}
+      </div>
     </>
   );
 }
@@ -154,41 +166,46 @@ function GroupTile({ group, tone, isOpen, onToggle }: GroupTileProps) {
   );
 }
 
-function NewGroupTile({ onCreate }: { onCreate: (name: string, capacityRaw: string) => Promise<void> }) {
+function NewGroupInline({
+  onCreate,
+  onCancel,
+}: {
+  onCreate: (name: string, capacityRaw: string) => Promise<void>;
+  onCancel: () => void;
+}) {
   const [name, setName] = useState('');
   const [capacityRaw, setCapacityRaw] = useState('');
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await onCreate(name, capacityRaw);
-    setName('');
-    setCapacityRaw('');
   }
 
   return (
-    <Card tone="dashed" className={styles.newTile}>
-      <p className={styles.tileName}>+ Grupă nouă</p>
-      <form className={styles.newTileForm} onSubmit={handleSubmit}>
-        <input
-          value={name}
-          onChange={event => setName(event.target.value)}
-          placeholder="Nume grupă"
-          aria-label="Nume grupă nouă"
-        />
-        <input
-          value={capacityRaw}
-          onChange={event => setCapacityRaw(event.target.value)}
-          type="number"
-          min={1}
-          max={1000}
-          placeholder="Locuri"
-          aria-label="Capacitate grupă nouă"
-        />
-        <button type="submit" className={styles.primaryButton}>
-          Creează
-        </button>
-      </form>
-    </Card>
+    <form className={styles.newGroupInline} onSubmit={handleSubmit}>
+      <input
+        value={name}
+        onChange={event => setName(event.target.value)}
+        placeholder="Nume grupă"
+        aria-label="Nume grupă nouă"
+        autoFocus
+      />
+      <input
+        value={capacityRaw}
+        onChange={event => setCapacityRaw(event.target.value)}
+        type="number"
+        min={1}
+        max={1000}
+        placeholder="Locuri"
+        aria-label="Capacitate grupă nouă"
+      />
+      <button type="submit" className={styles.primaryButton}>
+        Creează
+      </button>
+      <button type="button" className={styles.btnGhost} onClick={onCancel}>
+        Anulează
+      </button>
+    </form>
   );
 }
 
@@ -274,19 +291,15 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
       )}
 
       <div className={styles.addRow}>
-        <select
+        <SearchSelect
+          options={unassignedChildren.map(child => ({ value: child.id, label: child.name }))}
           value={selectedChildId}
-          onChange={event => setSelectedChildId(event.target.value)}
-          aria-label="Copil fără grupă"
+          onChange={setSelectedChildId}
+          placeholder={unassignedChildren.length ? 'Alege un copil…' : 'Niciun copil fără grupă'}
+          emptyLabel="Niciun copil găsit"
+          ariaLabel="Copil fără grupă"
           disabled={unassignedChildren.length === 0}
-        >
-          <option value="">{unassignedChildren.length ? 'Alege un copil…' : 'Niciun copil fără grupă'}</option>
-          {unassignedChildren.map(child => (
-            <option key={child.id} value={child.id}>
-              {child.name}
-            </option>
-          ))}
-        </select>
+        />
         <button type="button" className={styles.primaryButton} disabled={!selectedChildId} onClick={handleAssign}>
           + Adaugă
         </button>

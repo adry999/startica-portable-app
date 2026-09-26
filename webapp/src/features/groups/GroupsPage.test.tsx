@@ -84,7 +84,7 @@ describe('GroupsPage', () => {
     expect(screen.queryByText(/^Copii în grupă · 2/)).not.toBeInTheDocument();
   });
 
-  it('creează o grupă nouă din formularul dashed', async () => {
+  it('creează o grupă nouă din formularul inline', async () => {
     await loadedSession();
     renderPage();
 
@@ -102,6 +102,7 @@ describe('GroupsPage', () => {
       });
     });
 
+    await userEvent.click(screen.getByRole('button', { name: '+ Grupă nouă' }));
     await userEvent.type(screen.getByLabelText('Nume grupă nouă'), 'Pinguini');
     await userEvent.type(screen.getByLabelText('Capacitate grupă nouă'), '6');
     await userEvent.click(screen.getByRole('button', { name: 'Creează' }));
@@ -122,7 +123,8 @@ describe('GroupsPage', () => {
       return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
     });
 
-    await userEvent.selectOptions(screen.getByLabelText('Copil fără grupă'), 'c4');
+    await userEvent.click(screen.getByRole('button', { name: 'Copil fără grupă' }));
+    await userEvent.click(screen.getByText('Vlad Marin'));
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();

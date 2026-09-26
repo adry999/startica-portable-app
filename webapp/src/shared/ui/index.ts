@@ -5,3 +5,4 @@ export { Drawer, type DrawerProps } from './Drawer';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
 export { MonthPicker, type MonthPickerProps } from './MonthPicker';
+export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from './SearchSelect';
