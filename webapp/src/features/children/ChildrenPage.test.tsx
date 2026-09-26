@@ -239,7 +239,6 @@ describe('ChildrenPage', () => {
   it('șterge definitiv un copil arhivat, după confirmare', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderPage();
     const user = userEvent.setup();
@@ -248,6 +247,10 @@ describe('ChildrenPage', () => {
     const row = screen.getByText('Ionuț Marin').closest('tr')!;
     await user.click(within(row).getByLabelText('Mai multe acțiuni'));
     await user.click(within(row).getByRole('button', { name: 'Șterge definitiv' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergere definitivă' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Fișă ștearsă definitiv.')).toBeInTheDocument();
   });

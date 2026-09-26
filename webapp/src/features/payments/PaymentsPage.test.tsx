@@ -325,7 +325,6 @@ describe('PaymentsPage', () => {
 
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
       expect(path).toBe('/api/record-delete');
@@ -335,6 +334,10 @@ describe('PaymentsPage', () => {
     });
 
     await user.click(within(row).getByRole('button', { name: 'Șterge' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergere definitivă' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Achitare ștearsă definitiv.')).toBeInTheDocument();
   });

@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import {
   Badge,
   Card,
+  ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   RowMenu,
@@ -44,6 +45,9 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<
+    { kind: 'category'; id: string; name: string } | { kind: 'expense'; expense: Expense } | null
+  >(null);
 
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
@@ -90,8 +94,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
-  async function handleDeleteCategory(id: string, name: string) {
-    if (!window.confirm(`Ștergi categoria „${name}”? Cheltuielile care o folosesc deja nu se modifică.`)) return;
+  async function deleteCategoryConfirmed(id: string) {
     try {
       await data.deleteCategory(id);
       toast.show({ message: 'Categorie ștearsă.' });
@@ -137,8 +140,6 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   }
 
   async function deleteExpenseForever(expense: Expense) {
-    if (!window.confirm(`Ștergi definitiv cheltuiala ${expense.id}? Nu poate fi anulată, spre deosebire de arhivare.`))
-      return;
     try {
       await data.deleteExpense(expense.id);
       toast.show({ message: 'Cheltuială ștearsă definitiv.' });
@@ -216,7 +217,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
               danger: true,
               disabled: !expense.archived,
               title: expense.archived ? undefined : 'Arhivează întâi cheltuiala',
-              onClick: () => void deleteExpenseForever(expense),
+              onClick: () => setDeleteTarget({ kind: 'expense', expense }),
             },
           ]}
         />
@@ -314,7 +315,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
                       type="button"
                       aria-label={`Șterge ${cat.name}`}
                       title="Șterge categoria"
-                      onClick={() => void handleDeleteCategory(cat.id, cat.name)}
+                      onClick={() => setDeleteTarget({ kind: 'category', id: cat.id, name: cat.name })}
                     >
                       ×
                     </button>
@@ -430,6 +431,24 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         categoryNames={data.categoryNames}
         onSubmit={submitExpenseForm}
         onClose={() => setFormTarget(null)}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title={deleteTarget?.kind === 'category' ? 'Ștergere categorie' : 'Ștergere definitivă'}
+        description={
+          deleteTarget?.kind === 'category'
+            ? `Ștergi categoria „${deleteTarget.name}”? Cheltuielile care o folosesc deja nu se modifică.`
+            : deleteTarget?.kind === 'expense'
+              ? `Ștergi definitiv cheltuiala ${deleteTarget.expense.id}? Nu poate fi anulată, spre deosebire de arhivare.`
+              : ''
+        }
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget?.kind === 'category') void deleteCategoryConfirmed(deleteTarget.id);
+          else if (deleteTarget?.kind === 'expense') void deleteExpenseForever(deleteTarget.expense);
+          setDeleteTarget(null);
+        }}
       />
     </>
   );

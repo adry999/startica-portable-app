@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Badge,
   Card,
+  ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   SegmentedControl,
@@ -244,15 +245,24 @@ function TableView({
 }) {
   const toast = useToast();
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<PaymentRowView | null>(null);
 
   const selectedRows = data.rows.filter(row => selectedRowKeys.has(row.id));
   const selectedTotal = selectedRows.reduce((sum, row) => sum + row.total, 0);
 
   async function archiveSelected() {
+    const targets = selectedRows;
+    if (targets.length === 0) return;
     try {
-      await data.archiveMany(selectedRows.map(row => row.id));
-      toast.show({ message: `${selectedRows.length} achitări arhivate.` });
+      await data.archiveMany(targets.map(row => row.id));
       setSelectedRowKeys(new Set());
+      toast.show({
+        message: `${targets.length} achitări arhivate.`,
+        actionLabel: 'Anulează',
+        onAction: () => {
+          void Promise.all(targets.map(row => data.unarchivePayment(row.id)));
+        },
+      });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -265,7 +275,13 @@ function TableView({
         toast.show({ message: 'Achitare dezarhivată.' });
       } else {
         await data.archivePayment(row.id);
-        toast.show({ message: 'Achitare arhivată.' });
+        toast.show({
+          message: 'Achitare arhivată.',
+          actionLabel: 'Anulează',
+          onAction: () => {
+            void data.unarchivePayment(row.id);
+          },
+        });
       }
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -273,8 +289,6 @@ function TableView({
   }
 
   async function deleteForever(row: PaymentRowView) {
-    if (!window.confirm(`Ștergi definitiv achitarea ${row.id}? Nu poate fi anulată, spre deosebire de arhivare.`))
-      return;
     try {
       await data.deletePayment(row.id);
       toast.show({ message: 'Achitare ștearsă definitiv.' });
@@ -388,7 +402,7 @@ function TableView({
                   className={styles.linkButton}
                   disabled={!row.archived}
                   title={row.archived ? undefined : 'Arhivează întâi achitarea'}
-                  onClick={() => void deleteForever(row)}
+                  onClick={() => setDeleteTarget(row)}
                 >
                   Șterge
                 </button>
@@ -396,6 +410,21 @@ function TableView({
             ),
           },
         ]}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title="Ștergere definitivă"
+        description={
+          deleteTarget
+            ? `Ștergi definitiv achitarea ${deleteTarget.id}? Nu poate fi anulată, spre deosebire de arhivare.`
+            : ''
+        }
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) void deleteForever(deleteTarget);
+          setDeleteTarget(null);
+        }}
       />
     </>
   );

@@ -180,10 +180,14 @@ describe('ExpensesPage', () => {
   it('șterge o categorie după confirmare', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderPage();
-    await userEvent.click(screen.getByRole('button', { name: 'Șterge Chirie' }));
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Șterge Chirie' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergere categorie' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Categorie ștearsă.')).toBeInTheDocument();
   });
@@ -227,7 +231,6 @@ describe('ExpensesPage', () => {
   it('ștergerea definitivă rămâne dezactivată pentru o cheltuială activă și funcționează pentru una arhivată', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderPage();
     const user = userEvent.setup();
@@ -240,6 +243,10 @@ describe('ExpensesPage', () => {
     const archivedRow = screen.getByText('Chirie sediu').closest('tr')!;
     await user.click(within(archivedRow).getByLabelText('Mai multe acțiuni'));
     await user.click(within(archivedRow).getByRole('button', { name: 'Șterge definitiv' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergere definitivă' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Cheltuială ștearsă definitiv.')).toBeInTheDocument();
   });

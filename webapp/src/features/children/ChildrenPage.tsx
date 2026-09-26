@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Card,
+  ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   RowMenu,
@@ -82,6 +83,7 @@ function ChildrenListView({
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [moveGroupId, setMoveGroupId] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<ChildRow | null>(null);
 
   useTopbarActions(
     <div className={styles.headerActions}>
@@ -234,7 +236,6 @@ function ChildrenListView({
   }
 
   async function deleteChildForever(row: ChildRow) {
-    if (!window.confirm(`Ștergi definitiv fișa ${row.name}? Nu poate fi anulată, spre deosebire de arhivare.`)) return;
     try {
       await session.mutate('/api/record-delete', { type: 'children', id: row.id });
       toast.show({ message: 'Fișă ștearsă definitiv.' });
@@ -315,7 +316,7 @@ function ChildrenListView({
               danger: true,
               disabled: !row.archived,
               title: row.archived ? undefined : 'Arhivează întâi fișa',
-              onClick: () => void deleteChildForever(row),
+              onClick: () => setDeleteTarget(row),
             },
           ]}
         />
@@ -459,6 +460,21 @@ function ChildrenListView({
         groups={data.groups}
         onSubmit={submitChildForm}
         onClose={() => setFormTarget(null)}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title="Ștergere definitivă"
+        description={
+          deleteTarget
+            ? `Ștergi definitiv fișa ${deleteTarget.name}? Nu poate fi anulată, spre deosebire de arhivare.`
+            : ''
+        }
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) void deleteChildForever(deleteTarget);
+          setDeleteTarget(null);
+        }}
       />
     </>
   );

@@ -1,5 +1,14 @@
 import { Fragment, useState, type FormEvent } from 'react';
-import { Card, groupTone, SearchSelect, SegmentedControl, useToast, useTopbarActions, type CardTone } from '@shared/ui';
+import {
+  Card,
+  ConfirmDeleteDialog,
+  groupTone,
+  SearchSelect,
+  SegmentedControl,
+  useToast,
+  useTopbarActions,
+  type CardTone,
+} from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
@@ -23,6 +32,7 @@ export function GroupsPage() {
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
   const [formOpen, setFormOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<GroupCardView | null>(null);
 
   useTopbarActions(
     <div className={styles.headerActions}>
@@ -44,6 +54,15 @@ export function GroupsPage() {
       await data.createGroup(name, capacityRaw);
       toast.show({ message: 'Grupă creată.' });
       setFormOpen(false);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteGroupConfirmed(group: GroupCardView) {
+    try {
+      await data.deleteGroup(group.id);
+      toast.show({ message: 'Grupă ștearsă.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -78,15 +97,7 @@ export function GroupsPage() {
                         toast.show({ message: (error as Error).message });
                       }
                     }}
-                    onDelete={async () => {
-                      if (!window.confirm(`Ștergi grupa „${openGroup.name}”?`)) return;
-                      try {
-                        await data.deleteGroup(openGroup.id);
-                        toast.show({ message: 'Grupă ștearsă.' });
-                      } catch (error) {
-                        toast.show({ message: (error as Error).message });
-                      }
-                    }}
+                    onDelete={() => setDeleteTarget(openGroup)}
                     onAssign={async childId => {
                       try {
                         await data.assignChild(openGroup.id, childId);
@@ -110,6 +121,17 @@ export function GroupsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title="Ștergere grupă"
+        description={deleteTarget ? `Ștergi grupa „${deleteTarget.name}”?` : ''}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) void deleteGroupConfirmed(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </>
   );
 }
@@ -153,7 +175,7 @@ interface GroupEditorProps {
   group: GroupCardView;
   unassignedChildren: UnassignedChild[];
   onSave: (name: string, capacityRaw: string, educator: string) => Promise<void>;
-  onDelete: () => Promise<void>;
+  onDelete: () => void;
   onAssign: (childId: string) => Promise<void>;
   onRemove: (childId: string) => Promise<void>;
 }

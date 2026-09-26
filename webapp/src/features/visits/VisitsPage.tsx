@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Badge,
   Card,
+  ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   RowMenu,
@@ -97,6 +98,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   const toast = useToast();
   const [formTarget, setFormTarget] = useState<Visit | 'new' | null>(null);
   const [enrollTarget, setEnrollTarget] = useState<Visit | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Visit | null>(null);
 
   useTopbarActions(
     <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
@@ -141,8 +143,6 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   }
 
   async function deleteForever(visit: Visit) {
-    if (!window.confirm(`Ștergi definitiv vizita lui ${visit.name}? Nu poate fi anulată, spre deosebire de arhivare.`))
-      return;
     try {
       await data.deleteForever(visit.id);
       toast.show({ message: 'Vizită ștearsă definitiv.' });
@@ -254,7 +254,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               danger: true,
               disabled: !row.archived,
               title: row.archived ? undefined : 'Arhivează întâi vizita',
-              onClick: () => void deleteForever(row),
+              onClick: () => setDeleteTarget(row),
             },
           ]}
         />
@@ -552,6 +552,21 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         groups={data.groups}
         onSubmit={submitEnroll}
         onClose={() => setEnrollTarget(null)}
+      />
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        title="Ștergere definitivă"
+        description={
+          deleteTarget
+            ? `Ștergi definitiv vizita lui ${deleteTarget.name}? Nu poate fi anulată, spre deosebire de arhivare.`
+            : ''
+        }
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) void deleteForever(deleteTarget);
+          setDeleteTarget(null);
+        }}
       />
     </>
   );
