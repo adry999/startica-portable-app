@@ -16,7 +16,7 @@ export interface PaymentFormDrawerProps {
   onClose: () => void;
 }
 
-/** Echivalentul payment-editor-fields.mjs's `markup()`/`bind()`: tenders dinamice, alocări pe lună + 3 sincronizări automate. */
+/** Tenders dinamice, alocări pe lună + 3 sincronizări automate. */
 export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubmit, onClose }: PaymentFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<PaymentFormValues>(() =>
@@ -25,7 +25,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const [submitting, setSubmitting] = useState(false);
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
-  // unic de alocare nu a fost încă atins manual — aceeași regulă ca în legacy.
+  // unic de alocare nu a fost încă atins manual.
   const syncedMonthRef = useRef(values.date.slice(0, 7));
   // La editare, pornim „nesincronizat”: rândul unic poate fi o alocare parțială
   // (avans), nu suma totală — nu trebuie rescris la montare.

@@ -84,9 +84,9 @@ function upsertHistory<T extends { from: string }>(rows: T[], from: string, entr
 }
 
 /**
- * Echivalentul child-editor-fields.mjs's `read()`: taxa/statutul schimbate
- * adaugă o intrare de istoric din luna aleasă, ca lunile trecute să păstreze
- * valoarea de atunci. `id` e folosit doar la creare (previous absent).
+ * Taxa/statutul schimbate adaugă o intrare de istoric din luna aleasă, ca
+ * lunile trecute să păstreze valoarea de atunci. `id` e folosit doar la
+ * creare (previous absent).
  */
 export function buildChildRecord(previous: Child | null, id: string, values: ChildFormValues): Child {
   const fee = values.fee === '' ? null : Number(values.fee);

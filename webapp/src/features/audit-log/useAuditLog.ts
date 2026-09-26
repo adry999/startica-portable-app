@@ -44,9 +44,8 @@ function toRow(entry: AuditEntry): AuditRowView {
 }
 
 /**
- * Echivalentul audit-log.controller.mjs: încărcare pe pagini (`/api/audit`),
- * cu `beforeEntryId` pentru continuare. Fără sesiunea de records — istoricul
- * vine direct din API, nu din `useAppSession()`.
+ * Încărcare pe pagini (`/api/audit`), cu `beforeEntryId` pentru continuare.
+ * Fără sesiunea de records — istoricul vine direct din API, nu din `useAppSession()`.
  */
 export function useAuditLog(): AuditLogData {
   const [rows, setRows] = useState<AuditRowView[]>([]);

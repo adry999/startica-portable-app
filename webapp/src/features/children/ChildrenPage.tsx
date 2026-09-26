@@ -71,7 +71,7 @@ function ChildrenListView({
   onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
   onOpenChild: (id: string) => void;
 }) {
-  const data = useChildren(month);
+  const childrenData = useChildren(month);
   const session = useAppSession();
   const toast = useToast();
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ function ChildrenListView({
 
   const filteredRows = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase('ro-RO');
-    return data.rows.filter(row => {
+    return childrenData.rows.filter(row => {
       if (archiveFilter === 'active' && row.archived) return false;
       if (archiveFilter === 'archived' && !row.archived) return false;
       if (groupFilter === 'none' && row.groupId) return false;
@@ -110,11 +110,11 @@ function ChildrenListView({
       }
       return true;
     });
-  }, [data.rows, archiveFilter, groupFilter, paymentFilter, query]);
+  }, [childrenData.rows, archiveFilter, groupFilter, paymentFilter, query]);
 
   async function archiveSelected() {
     const ids = [...selectedRowKeys];
-    const targets = data.rows.filter(row => ids.includes(row.id) && !row.archived);
+    const targets = childrenData.rows.filter(row => ids.includes(row.id) && !row.archived);
     if (targets.length === 0) return;
     const archivedAt = new Date().toISOString();
     try {
@@ -148,7 +148,7 @@ function ChildrenListView({
 
   async function unarchiveSelected() {
     const ids = [...selectedRowKeys];
-    const targets = data.rows.filter(row => ids.includes(row.id) && row.archived);
+    const targets = childrenData.rows.filter(row => ids.includes(row.id) && row.archived);
     if (targets.length === 0) return;
     try {
       for (const row of targets) {
@@ -169,7 +169,7 @@ function ChildrenListView({
 
   async function moveSelectedToGroup(groupId: string) {
     const ids = [...selectedRowKeys];
-    const targets = data.rows.filter(row => ids.includes(row.id));
+    const targets = childrenData.rows.filter(row => ids.includes(row.id));
     if (targets.length === 0) return;
     const nextGroupId = groupId === '__none__' ? null : groupId;
     try {
@@ -190,7 +190,7 @@ function ChildrenListView({
 
   function exportSelected() {
     const ids = [...selectedRowKeys];
-    const targets = data.rows.filter(row => ids.includes(row.id));
+    const targets = childrenData.rows.filter(row => ids.includes(row.id));
     if (targets.length === 0) return;
     downloadCsv(
       `copii-${month}.csv`,
@@ -244,9 +244,9 @@ function ChildrenListView({
     }
   }
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (childrenData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (childrenData.status === 'failed')
+    return <p className={styles.notice}>{childrenData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const columns: DataTableColumn<ChildRow>[] = [
     {
@@ -255,7 +255,9 @@ function ChildrenListView({
       sortValue: row => row.name,
       render: row => (
         <div className={styles.childCell}>
-          <span className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, data.groups)]]}`}>
+          <span
+            className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, childrenData.groups)]]}`}
+          >
             {initials(row.name)}
           </span>
           <div>
@@ -282,7 +284,7 @@ function ChildrenListView({
       sortValue: row => row.groupName,
       render: row =>
         row.groupName ? (
-          <Badge tone={groupTone(row.groupId, data.groups)}>{row.groupName}</Badge>
+          <Badge tone={groupTone(row.groupId, childrenData.groups)}>{row.groupName}</Badge>
         ) : (
           <Badge tone="neutral">Nealocată</Badge>
         ),
@@ -328,21 +330,21 @@ function ChildrenListView({
     <>
       <div className={styles.statsRow}>
         <Card tone="orange" className={styles.statCard}>
-          <strong className={styles.statValueOrange}>{data.summary.activeCount}</strong>
+          <strong className={styles.statValueOrange}>{childrenData.summary.activeCount}</strong>
           <div>
             <span>Copii activi</span>
             <small>statut curent din fișă</small>
           </div>
         </Card>
         <Card tone="mint" className={styles.statCard}>
-          <strong className={styles.statValueMint}>{data.summary.occupiedGroupsCount}</strong>
+          <strong className={styles.statValueMint}>{childrenData.summary.occupiedGroupsCount}</strong>
           <div>
             <span>Grupe ocupate</span>
-            <small>din {data.groups.length} grupe</small>
+            <small>din {childrenData.groups.length} grupe</small>
           </div>
         </Card>
         <Card tone="yellow" className={styles.statCard}>
-          <strong className={styles.statValueYellow}>{data.summary.incompleteCount}</strong>
+          <strong className={styles.statValueYellow}>{childrenData.summary.incompleteCount}</strong>
           <div className={styles.statMain}>
             <span>Fișe de verificat</span>
             <small>în centrul de verificare</small>
@@ -371,9 +373,9 @@ function ChildrenListView({
               setSelectedRowKeys(new Set());
             }}
             options={[
-              { value: 'active', label: `Activi · ${data.activeTotal}` },
-              { value: 'archived', label: `Arhivați · ${data.archivedTotal}` },
-              { value: 'all', label: `Toți · ${data.activeTotal + data.archivedTotal}` },
+              { value: 'active', label: `Activi · ${childrenData.activeTotal}` },
+              { value: 'archived', label: `Arhivați · ${childrenData.archivedTotal}` },
+              { value: 'all', label: `Toți · ${childrenData.activeTotal + childrenData.archivedTotal}` },
             ]}
           />
         </div>
@@ -386,10 +388,10 @@ function ChildrenListView({
               onChange: setGroupFilter,
               options: [
                 { value: 'all', label: 'Toate', tone: 'neutral' },
-                ...data.groups.map(group => ({
+                ...childrenData.groups.map(group => ({
                   value: group.id,
                   label: group.name,
-                  tone: groupTone(group.id, data.groups),
+                  tone: groupTone(group.id, childrenData.groups),
                 })),
                 { value: 'none', label: 'Fără grupă', tone: 'neutral' },
               ],
@@ -420,7 +422,7 @@ function ChildrenListView({
               onChange={setMoveGroupId}
               options={[
                 { value: '__none__', label: 'Fără grupă' },
-                ...data.groups.map(group => ({ value: group.id, label: group.name })),
+                ...childrenData.groups.map(group => ({ value: group.id, label: group.name })),
               ]}
             />
             <button type="button" disabled={!moveGroupId} onClick={() => void moveSelectedToGroup(moveGroupId)}>
@@ -457,7 +459,7 @@ function ChildrenListView({
       <ChildFormDrawer
         key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
         target={formTarget}
-        groups={data.groups}
+        groups={childrenData.groups}
         onSubmit={submitChildForm}
         onClose={() => setFormTarget(null)}
       />

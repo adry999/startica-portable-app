@@ -27,9 +27,9 @@ export interface StatusData {
 }
 
 /**
- * Echivalentul payment-status.view.mjs: obligația fiecărui copil pe luna
- * aleasă, inclusiv arhivați (spre deosebire de Achitări/Cheltuieli, aici nu
- * există filtru — situația unei luni trebuie să rămână completă).
+ * Obligația fiecărui copil pe luna aleasă, inclusiv arhivați (spre deosebire
+ * de Achitări/Cheltuieli, aici nu există filtru — situația unei luni trebuie
+ * să rămână completă).
  */
 export function useStatus(month: string): StatusData {
   const session = useAppSession();

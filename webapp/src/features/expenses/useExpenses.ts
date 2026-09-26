@@ -94,11 +94,10 @@ function buildCategorySummary(monthExpenses: Expense[]): CategorySummaryItem[] {
 }
 
 /**
- * Echivalentul expenses-list.controller.mjs + expense-categories.controller.mjs
- * pentru React: date derivate din sesiune (lista brută, categoriile, totalul
- * și repartizarea pe categorii pentru luna curentă din topbar) + mutațiile de
- * orchestrare. Filtrarea tabelului/vizualizarea „Pe zile” rămân în ExpensesPage,
- * ca stare de UI locală — la fel ca ChildrenListView.
+ * Date derivate din sesiune (lista brută, categoriile, totalul și
+ * repartizarea pe categorii pentru luna curentă din topbar) + mutațiile de
+ * orchestrare. Filtrarea tabelului/vizualizarea „Pe zile” rămân în
+ * ExpensesPage, ca stare de UI locală — la fel ca ChildrenListView.
  */
 export function useExpenses(month: string): ExpensesData {
   const session = useAppSession();

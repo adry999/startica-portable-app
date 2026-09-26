@@ -56,9 +56,6 @@ export interface DashboardData {
 /**
  * Toată logica e domeniu pur, reutilizat neschimbat din backend (cash-summary,
  * billing, review-center, visits, children — vezi comentariile de import).
- * evaluateChildrenForMonth + buildReviewCenter le vor folosi și „De notificat"/
- * „De verificat" (subagenți, pasul 5) — quando ajung acolo, se extrag de aici
- * într-un hook comun în loc să se recalculeze.
  */
 export function useDashboard(month: string): DashboardData {
   const session = useAppSession();

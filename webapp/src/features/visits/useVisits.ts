@@ -55,7 +55,6 @@ function shiftMonth(monthKey: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-/** Echivalentul visits.controller.mjs pentru React: calendar + pâlnie + listă filtrată, plus mutațiile de orchestrare. */
 export function useVisits(initialDate?: string): VisitsData {
   const session = useAppSession();
   const todayValue = todayFn();

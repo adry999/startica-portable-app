@@ -105,9 +105,8 @@ function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
 }
 
 /**
- * Echivalentul payments-list.controller.mjs: filtrare (căutare, copil, metodă,
- * interval de luni, arhivare) + sumar pe metodă, aici ca stare de hook în loc
- * de citiri directe din DOM. Filtrele trăiesc aici, nu în pagină, ca
+ * Filtrare (căutare, copil, metodă, interval de luni, arhivare) + sumar pe
+ * metodă, aici ca stare de hook. Filtrele trăiesc aici, nu în pagină, ca
  * PaymentsPage să rămână randare pură — la fel ca openGroupId în useGroups.
  */
 export function usePayments(initialChildId = ''): PaymentsData {

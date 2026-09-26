@@ -21,7 +21,6 @@ export interface VisitFormDrawerProps {
 // fluxul de înscriere (creează fișa copilului), nu poate fi setat direct dintr-un dropdown.
 const CORRECTABLE_STATUSES: Visit['status'][] = ['Programată', 'Efectuată', 'Neprezentată', 'Renunțat'];
 
-/** Echivalentul visit-editor-fields.mjs's `markup()`/`read()`, ca formular React controlat. */
 export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose }: VisitFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<VisitFormValues>(() =>

@@ -10,11 +10,11 @@ export interface StatusPageProps {
 
 /** Echivalentul ecranului „Situația plăților” — doar citire, fără filtre (vezi useStatus). */
 export function StatusPage({ month }: StatusPageProps) {
-  const data = useStatus(month);
+  const statusData = useStatus(month);
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (statusData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (statusData.status === 'failed')
+    return <p className={styles.notice}>{statusData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const columns: DataTableColumn<StatusRowView>[] = [
     { key: 'contract', header: 'Contract', sortValue: row => row.contract, render: row => row.contract },
@@ -60,7 +60,7 @@ export function StatusPage({ month }: StatusPageProps) {
     <>
       <div className={styles.headerActions}>
         <p className={styles.period}>
-          Luna {month} · situație la {formatDate(data.asOf)}
+          Luna {month} · situație la {formatDate(statusData.asOf)}
         </p>
         <button type="button" className={styles.btnGhost} onClick={() => window.print()}>
           Tipărește raportul
@@ -73,7 +73,7 @@ export function StatusPage({ month }: StatusPageProps) {
       </p>
 
       <Card className={styles.tableCard}>
-        <DataTable columns={columns} rows={data.rows} rowKey={row => row.id} emptyState={<p>Nu sunt copii.</p>} />
+        <DataTable columns={columns} rows={statusData.rows} rowKey={row => row.id} emptyState={<p>Nu sunt copii.</p>} />
       </Card>
     </>
   );

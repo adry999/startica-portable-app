@@ -69,9 +69,8 @@ function currentFeeOf(child: Child): string {
 }
 
 /**
- * Echivalentul fee-setup.controller.mjs: completarea în masă rămâne aici, ca
- * stare de hook (Map de editări per copil) în loc de citiri/scrieri directe
- * din DOM — sortarea/filtrarea din pagină nu mai poate pierde o completare
+ * Completarea în masă rămâne aici, ca stare de hook (Map de editări per
+ * copil) — sortarea/filtrarea din pagină nu mai poate pierde o completare
  * neatinsă, pentru că valoarea trăiește în React, nu în input.value.
  */
 export function useFeeSetup(): FeeSetupData {

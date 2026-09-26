@@ -9,7 +9,7 @@ import { DOMAIN_EVENT_NAMES } from '@contracts/domain-events.mjs';
  * (src/core/web/app-session-store.mjs): revizie pentru concurență optimistă,
  * requestId pentru reluare idempotentă după cădere de rețea, reîmprospătare
  * token la 403. Reimplementarea acestei logici într-un hook React ar fi
- * riscat regresii pe ceva deja corect — vezi spec-ul de migrare.
+ * riscat regresii pe ceva deja corect.
  *
  * Bannerul „Date salvate." dispare în redesign — starea de salvare trăiește
  * doar în cardul din sidebar (state.saveError/connectionError/busy/pending),

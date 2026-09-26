@@ -61,17 +61,17 @@ const CHART_MODE_OPTIONS = [
 ];
 
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
-  const data = useDashboard(month);
+  const dashboardData = useDashboard(month);
   const navigate = useNavigate();
   const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
   const [activeBar, setActiveBar] = useState<string | null>(null);
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (dashboardData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (dashboardData.status === 'failed')
+    return <p className={styles.notice}>{dashboardData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const currentMonthIndex = data.revenueHistory.length - 1;
-  const revenueView = chartMode === 'expense' ? data.expenseHistory : data.revenueHistory;
+  const currentMonthIndex = dashboardData.revenueHistory.length - 1;
+  const revenueView = chartMode === 'expense' ? dashboardData.expenseHistory : dashboardData.revenueHistory;
   const maxRevenue = Math.max(1, ...revenueView.map(r => r.value));
 
   return (
@@ -79,20 +79,20 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
       <div className={styles.kpiRow}>
         <Card tone="orange" decorative="lg" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelIncome}`}>Încasări</p>
-          <strong className={styles.kpiValue}>{formatMoney(data.income)}</strong>
+          <strong className={styles.kpiValue}>{formatMoney(dashboardData.income)}</strong>
           <div className={styles.methodBar}>
-            {Object.entries(data.byMethod)
+            {Object.entries(dashboardData.byMethod)
               .filter(([method, value]) => METHOD_BAR_CLASS[method] && value > 0)
               .map(([method, value]) => (
                 <span
                   key={method}
                   className={METHOD_BAR_CLASS[method]}
-                  style={{ width: `${(value / Math.max(1, data.income)) * 100}%` }}
+                  style={{ width: `${(value / Math.max(1, dashboardData.income)) * 100}%` }}
                 />
               ))}
           </div>
           <div className={styles.methodLegend}>
-            {Object.entries(data.byMethod)
+            {Object.entries(dashboardData.byMethod)
               .filter(([method, value]) => METHOD_LABELS[method] && value > 0)
               .map(([method, value]) => (
                 <span key={method} className={styles.legendItem}>
@@ -105,7 +105,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
         <Card tone="mint" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelExpense}`}>Cheltuieli</p>
-          <strong className={styles.kpiValue}>{formatMoney(data.expense)}</strong>
+          <strong className={styles.kpiValue}>{formatMoney(dashboardData.expense)}</strong>
           <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses')}>
             + Adaugă cheltuială
           </button>
@@ -113,13 +113,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
         <Card tone="yellow" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelNet}`}>Diferență</p>
-          <strong className={styles.kpiValue}>{formatMoney(data.net)}</strong>
+          <strong className={styles.kpiValue}>{formatMoney(dashboardData.net)}</strong>
           <small className={styles.netHint}>încasări − cheltuieli</small>
         </Card>
 
         <Card tone="dashed" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelAdvance}`}>Avansuri nerepartizate</p>
-          <strong className={styles.kpiValue}>{formatMoney(data.advance)}</strong>
+          <strong className={styles.kpiValue}>{formatMoney(dashboardData.advance)}</strong>
           <span className={styles.pillNeutral}>Toate lunile, până azi</span>
         </Card>
       </div>
@@ -193,18 +193,18 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
             <p className={styles.panelEyebrow}>Necesită atenție</p>
             <p className={styles.panelTitle}>Rezolvă pentru date corecte</p>
           </div>
-          {data.allClear ? (
+          {dashboardData.allClear ? (
             <div className={styles.attentionEmpty}>
               <strong>Nicio acțiune în listele urmărite.</strong>
               <span>
-                {data.hasAnyRecords
+                {dashboardData.hasAnyRecords
                   ? 'Nu există notificări, înregistrări de verificat sau achitări neasociate.'
                   : 'Nu sunt copii sau achitări înregistrate încă.'}
               </span>
             </div>
           ) : (
             <div className={styles.attentionList}>
-              {data.attentionItems.map(item => (
+              {dashboardData.attentionItems.map(item => (
                 <AttentionRow key={item.title} item={item} onNavigate={onNavigate} />
               ))}
             </div>
@@ -219,10 +219,10 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               <p className={styles.panelEyebrowMint}>Zile de naștere</p>
               <p className={styles.panelTitle}>În următoarele 5 zile</p>
             </div>
-            {data.upcomingBirthdays.length === 0 && (
+            {dashboardData.upcomingBirthdays.length === 0 && (
               <p className={styles.notice}>Nicio zi de naștere în următoarele 5 zile.</p>
             )}
-            {data.upcomingBirthdays.map(
+            {dashboardData.upcomingBirthdays.map(
               (row: { child: { id: string; name: string }; daysUntil: number; turningAge: number }, index: number) => (
                 <div key={row.child.id} className={styles.birthdayRow}>
                   <span className={`${styles.avatar} ${AVATAR_TONE_CLASS[index % AVATAR_TONE_CLASS.length]}`}>
@@ -253,7 +253,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               </button>
             </div>
             <div className={styles.birthdaysCalendar}>
-              {data.birthdayWeeks
+              {dashboardData.birthdayWeeks
                 .flat()
                 .filter((cell: { inMonth: boolean; names: unknown[] }) => cell.inMonth && cell.names.length > 0)
                 .map(cell => {

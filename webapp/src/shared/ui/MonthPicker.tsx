@@ -20,7 +20,7 @@ const MONTH_NAMES = [
 const ARROW_OFFSETS: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 3, ArrowUp: -3 };
 
 export interface MonthPickerProps {
-  /** YYYY-MM. Lipsă/gol pică pe luna curentă, la fel ca readSelectedMonth() din vanilla. */
+  /** YYYY-MM. Lipsă/gol pică pe luna curentă. */
   value: string;
   onChange: (value: string) => void;
 }

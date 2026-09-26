@@ -17,16 +17,16 @@ export interface ReviewPageProps {
 }
 
 export function ReviewPage({ onNavigate }: ReviewPageProps) {
-  const data = useReview();
+  const reviewData = useReview();
   const toast = useToast();
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (reviewData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (reviewData.status === 'failed')
+    return <p className={styles.notice}>{reviewData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   async function confirm(paymentId: string) {
     try {
-      await data.confirmReview(paymentId);
+      await reviewData.confirmReview(paymentId);
       toast.show({ message: 'Potrivirea automată a fost marcată ca verificată.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -42,19 +42,19 @@ export function ReviewPage({ onNavigate }: ReviewPageProps) {
       <div className={styles.progressRow}>
         <Card className={styles.progressCard}>
           <p className={styles.progressLabel}>Probleme afișate</p>
-          <strong className={styles.progressValue}>{data.rows.length}</strong>
-          <small>din {data.totalItems} fișe / achitări cu observații</small>
+          <strong className={styles.progressValue}>{reviewData.rows.length}</strong>
+          <small>din {reviewData.totalItems} fișe / achitări cu observații</small>
         </Card>
         <Card className={styles.progressCard}>
           <p className={styles.progressLabel}>Verificări import confirmate</p>
           <strong className={styles.progressValue}>
-            {data.progress.confirmed} / {data.progress.total}
+            {reviewData.progress.confirmed} / {reviewData.progress.total}
           </strong>
           <small>confirmarea păstrează asocierea și suma existente</small>
         </Card>
         <Card className={styles.progressCard}>
           <p className={styles.progressLabel}>Verificări import rămase</p>
-          <strong className={styles.progressValue}>{data.progress.pending}</strong>
+          <strong className={styles.progressValue}>{reviewData.progress.pending}</strong>
           <small>achitările fără copil, dublurile și sumele provizorii necesită corectare</small>
         </Card>
       </div>
@@ -62,8 +62,8 @@ export function ReviewPage({ onNavigate }: ReviewPageProps) {
       <div className={styles.toolbar}>
         <label className={styles.filterField}>
           Arată
-          <select value={data.filter} onChange={event => data.setFilter(event.target.value)}>
-            {data.filterOptions.map(([value, label]) => (
+          <select value={reviewData.filter} onChange={event => reviewData.setFilter(event.target.value)}>
+            {reviewData.filterOptions.map(([value, label]) => (
               <option key={value} value={value}>
                 {label}
               </option>
@@ -74,25 +74,25 @@ export function ReviewPage({ onNavigate }: ReviewPageProps) {
           className={styles.search}
           type="search"
           placeholder="Nume, contract, sursă sau observație"
-          value={data.search}
-          onChange={event => data.setSearch(event.target.value)}
+          value={reviewData.search}
+          onChange={event => reviewData.setSearch(event.target.value)}
           aria-label="Caută"
         />
-        <button type="button" className={styles.btnGhost} onClick={data.resetFilters}>
+        <button type="button" className={styles.btnGhost} onClick={reviewData.resetFilters}>
           Resetează filtrele
         </button>
       </div>
 
       <Card className={styles.listCard}>
-        {data.rows.length === 0 ? (
+        {reviewData.rows.length === 0 ? (
           <p className={styles.empty}>Nu există înregistrări pentru filtrul ales.</p>
         ) : (
-          data.rows.map(row => (
+          reviewData.rows.map(row => (
             <ReviewRow
               key={`${row.type} ${row.id}`}
               row={row}
               onConfirm={confirm}
-              labels={data.labels}
+              labels={reviewData.labels}
               onNavigate={onNavigate}
             />
           ))

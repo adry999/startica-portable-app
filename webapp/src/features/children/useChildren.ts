@@ -72,8 +72,7 @@ const EMPTY_SUMMARY: ChildrenSummary = { activeCount: 0, occupiedGroupsCount: 0,
 
 /**
  * Statisticile și logica de obligație sunt refolosite neschimbate din backend
- * (children-summary.view.mjs, billing/month-evaluation.mjs, review-center) —
- * vezi comentariile de import.
+ * (billing/month-evaluation.mjs, review-center) — vezi comentariile de import.
  */
 export function useChildren(month: string): ChildrenData {
   const session = useAppSession();
@@ -100,7 +99,7 @@ export function useChildren(month: string): ChildrenData {
   const activeCount = nonArchived.filter((child: Child) => child.status === 'Activ').length;
   const occupiedGroupsCount = new Set(nonArchived.map((child: Child) => child.groupId).filter(Boolean)).size;
   const incompleteCount = new Set(
-    review.items.filter((item: any) => item.type === 'children' && !item.record.archived).map((item: any) => item.id),
+    review.items.filter(issue => issue.type === 'children' && !issue.record.archived).map(issue => issue.id),
   ).size;
 
   const rows: ChildRow[] = records.children.map((child: Child) => {

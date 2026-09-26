@@ -80,7 +80,6 @@ function detailLinesOf(health: BackupHealthView): string[] {
   return lines;
 }
 
-/** Echivalentul panoului „Copii de siguranță” din backup.controller.mjs + backup-health.view.mjs. */
 export function useBackup(): BackupData {
   const session = useAppSession();
   const { health, ready } = session.state;
@@ -95,7 +94,7 @@ export function useBackup(): BackupData {
   const typedHealth = health as BackupHealthView;
   const hasHealth = ready && typedHealth?.database !== undefined;
 
-  // Câmpul nu se suprascrie cât timp operatorul scrie în el (isExternalDirLocked din legacy).
+  // Câmpul nu se suprascrie cât timp operatorul scrie în el.
   useEffect(() => {
     if (hasHealth && !dirDirty) setExternalDirInputRaw(typedHealth.externalDir || '');
   }, [hasHealth, typedHealth?.externalDir, dirDirty]);

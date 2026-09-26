@@ -22,12 +22,8 @@ function formatSavedAt(iso: string): string {
 }
 
 /**
- * Portul cascadei din src/app/web/save-indicator.mjs (ordinea contează: ultima
- * condiție care se potrivește câștigă, o eroare acoperă mereu un „se salvează").
- * Redesign-ul cere 4 stări vizuale peste aceleași 3 data-state din vanilla
- * (saved/pending/error) — 'pending' se desparte aici în 'saving' (busy) și
- * 'unsaved' (pending, dar nu activ). editorDirty/settingsDirty/settingsError nu
- * sunt portate încă — vin cu panourile laterale și ecranul Backup (pasul 5).
+ * Ordinea condițiilor contează: ultima care se potrivește câștigă, o eroare
+ * acoperă mereu o stare de „se salvează”.
  */
 export function deriveSaveStatus(state: SessionStateForSaveStatus): SaveStatusResult {
   let status: SaveStatus = 'saved';

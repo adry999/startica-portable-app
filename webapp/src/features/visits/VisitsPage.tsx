@@ -94,7 +94,7 @@ export interface VisitsPageProps {
 }
 
 export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
-  const data = useVisits(initialDate);
+  const visitsData = useVisits(initialDate);
   const toast = useToast();
   const [formTarget, setFormTarget] = useState<Visit | 'new' | null>(null);
   const [enrollTarget, setEnrollTarget] = useState<Visit | null>(null);
@@ -106,18 +106,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     </button>,
   );
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (visitsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (visitsData.status === 'failed')
+    return <p className={styles.notice}>{visitsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   async function submitVisitForm(values: VisitFormValues) {
     try {
       const previous = formTarget && formTarget !== 'new' ? formTarget : null;
       if (previous) {
-        await data.updateVisit(previous, values);
+        await visitsData.updateVisit(previous, values);
         toast.show({ message: 'Vizită actualizată.' });
       } else {
-        await data.createVisit(values);
+        await visitsData.createVisit(values);
         toast.show({ message: 'Vizită adăugată.' });
       }
       setFormTarget(null);
@@ -128,7 +128,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
 
   async function applyQuickStatus(visit: Visit, status: VisitStatus) {
     try {
-      await data.applyQuickStatus(visit, status);
+      await visitsData.applyQuickStatus(visit, status);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -136,7 +136,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
 
   async function toggleArchived(visit: Visit) {
     try {
-      await data.setArchived(visit, !visit.archived);
+      await visitsData.setArchived(visit, !visit.archived);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -144,7 +144,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
 
   async function deleteForever(visit: Visit) {
     try {
-      await data.deleteForever(visit.id);
+      await visitsData.deleteForever(visit.id);
       toast.show({ message: 'Vizită ștearsă definitiv.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -154,7 +154,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   async function submitEnroll(overrides: { fee: string; groupId: string; attendanceDate: string }) {
     if (!enrollTarget) return;
     try {
-      await data.enrollChild(enrollTarget, overrides);
+      await visitsData.enrollChild(enrollTarget, overrides);
       setEnrollTarget(null);
       toast.show({ message: 'Copil înscris. Vizita a fost marcată „Înscris”.' });
     } catch (error) {
@@ -162,31 +162,31 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     }
   }
 
-  const selectedDayVisits = data.selectedDate
-    ? (data.weeks.flat().find(day => day.date === data.selectedDate)?.visits ?? [])
+  const selectedDayVisits = visitsData.selectedDate
+    ? (visitsData.weeks.flat().find(day => day.date === visitsData.selectedDate)?.visits ?? [])
     : [];
 
-  const quickFilter: 'all' | 'scheduled' | 'archived' = data.showArchived
+  const quickFilter: 'all' | 'scheduled' | 'archived' = visitsData.showArchived
     ? 'archived'
-    : data.statusFilter === 'Programată'
+    : visitsData.statusFilter === 'Programată'
       ? 'scheduled'
       : 'all';
 
   function setQuickFilter(next: 'all' | 'scheduled' | 'archived') {
-    data.setShowArchived(next === 'archived');
-    data.setStatusFilter(next === 'scheduled' ? 'Programată' : '');
+    visitsData.setShowArchived(next === 'archived');
+    visitsData.setStatusFilter(next === 'scheduled' ? 'Programată' : '');
   }
 
   const quickFilterCounts = {
-    all: data.records.visits.filter(v => !v.archived).length,
-    scheduled: data.records.visits.filter(v => !v.archived && v.status === 'Programată').length,
-    archived: data.records.visits.filter(v => v.archived).length,
+    all: visitsData.records.visits.filter(v => !v.archived).length,
+    scheduled: visitsData.records.visits.filter(v => !v.archived && v.status === 'Programată').length,
+    archived: visitsData.records.visits.filter(v => v.archived).length,
   };
 
-  const upcoming = data.records.visits
+  const upcoming = visitsData.records.visits
     .filter(visit => !visit.archived && visit.status === 'Programată')
-    .filter(visit => visit.date.slice(0, 7) === data.month)
-    .filter(visit => visit.date !== data.selectedDate)
+    .filter(visit => visit.date.slice(0, 7) === visitsData.month)
+    .filter(visit => visit.date !== visitsData.selectedDate)
     .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
     .slice(0, 5);
 
@@ -232,7 +232,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     {
       key: 'group',
       header: 'Grupa dorită',
-      render: row => (row.desiredGroupId ? groupNameOf(row.desiredGroupId, data.groups) : '—'),
+      render: row => (row.desiredGroupId ? groupNameOf(row.desiredGroupId, visitsData.groups) : '—'),
     },
     {
       key: 'note',
@@ -266,19 +266,19 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     <>
       <div className={styles.funnelRow}>
         <span className={`${styles.funnelPill} ${styles.funnelYellow}`}>
-          <b>{data.funnel.scheduled}</b>
+          <b>{visitsData.funnel.scheduled}</b>
           <span>programate</span>
         </span>
         <span className={`${styles.funnelPill} ${styles.funnelMint}`}>
-          <b>{data.funnel.done}</b>
+          <b>{visitsData.funnel.done}</b>
           <span>efectuate</span>
         </span>
         <span className={`${styles.funnelPill} ${styles.funnelOrange}`}>
-          <b>{data.funnel.enrolled}</b>
+          <b>{visitsData.funnel.enrolled}</b>
           <span>înscriși</span>
         </span>
         <span className={`${styles.funnelPill} ${styles.funnelPink}`}>
-          <b>{data.funnel.withdrew}</b>
+          <b>{visitsData.funnel.withdrew}</b>
           <span>renunțat</span>
         </span>
         <span className={styles.funnelCaption}>ultimele 12 luni</span>
@@ -287,14 +287,14 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       <div className={styles.layoutGrid}>
         <Card className={styles.calendarCard}>
           <div className={styles.calendarToolbar}>
-            <strong className={styles.calendarMonth}>{monthLabel(data.month)}</strong>
-            <button type="button" className={styles.btnGhost} onClick={data.goToToday}>
+            <strong className={styles.calendarMonth}>{monthLabel(visitsData.month)}</strong>
+            <button type="button" className={styles.btnGhost} onClick={visitsData.goToToday}>
               Azi
             </button>
             <button
               type="button"
               className={styles.arrowButton}
-              onClick={data.goToPreviousMonth}
+              onClick={visitsData.goToPreviousMonth}
               aria-label="Luna anterioară"
             >
               ‹
@@ -302,7 +302,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             <button
               type="button"
               className={styles.arrowButton}
-              onClick={data.goToNextMonth}
+              onClick={visitsData.goToNextMonth}
               aria-label="Luna următoare"
             >
               ›
@@ -317,7 +317,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                 {label}
               </div>
             ))}
-            {data.weeks.flat().map(day => (
+            {visitsData.weeks.flat().map(day => (
               <button
                 key={day.date}
                 type="button"
@@ -325,9 +325,9 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                   styles.calendarCell,
                   day.inMonth ? '' : styles.calendarCellOutside,
                   day.isToday ? styles.calendarCellToday : '',
-                  data.selectedDate === day.date ? styles.calendarCellSelected : '',
+                  visitsData.selectedDate === day.date ? styles.calendarCellSelected : '',
                 ].join(' ')}
-                onClick={() => data.setSelectedDate(data.selectedDate === day.date ? null : day.date)}
+                onClick={() => visitsData.setSelectedDate(visitsData.selectedDate === day.date ? null : day.date)}
               >
                 <strong>{day.day}</strong>
                 {day.visits.length > 3 ? (
@@ -348,13 +348,13 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         </Card>
 
         <div className={styles.detailColumn}>
-          {!data.selectedDate && (
+          {!visitsData.selectedDate && (
             <Card className={styles.detailEmpty}>
               <p>Alege o zi din calendar pentru a vedea detaliile vizitelor.</p>
             </Card>
           )}
 
-          {data.selectedDate && selectedDayVisits.length === 0 && (
+          {visitsData.selectedDate && selectedDayVisits.length === 0 && (
             <Card className={styles.detailEmpty}>
               <p>Nicio vizită programată în această zi.</p>
               <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
@@ -381,7 +381,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               </div>
               <div className={styles.detailMeta}>
                 <span>Grupă dorită</span>
-                <span>{visit.desiredGroupId ? groupNameOf(visit.desiredGroupId, data.groups) : '—'}</span>
+                <span>{visit.desiredGroupId ? groupNameOf(visit.desiredGroupId, visitsData.groups) : '—'}</span>
                 {visit.notes && (
                   <>
                     <span>Notă</span>
@@ -390,11 +390,11 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                 )}
               </div>
 
-              {(data.allowedNextStatuses(visit.status).length > 0 || visit.status === 'Efectuată') && (
+              {(visitsData.allowedNextStatuses(visit.status).length > 0 || visit.status === 'Efectuată') && (
                 <>
                   <span className={styles.detailSectionLabel}>Cum a decurs vizita?</span>
                   <div className={styles.quickStatusGrid}>
-                    {data.allowedNextStatuses(visit.status).map(status => (
+                    {visitsData.allowedNextStatuses(visit.status).map(status => (
                       <button
                         key={status}
                         type="button"
@@ -438,7 +438,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                   key={visit.id}
                   type="button"
                   className={styles.upcomingRow}
-                  onClick={() => data.setSelectedDate(visit.date)}
+                  onClick={() => visitsData.setSelectedDate(visit.date)}
                 >
                   <span className={styles.upcomingWhen}>
                     {formatDate(visit.date)} · {visit.time}
@@ -453,7 +453,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                   </span>
                   {visit.desiredGroupId && (
                     <span className={styles.upcomingMeta}>
-                      Grupă dorită: {groupNameOf(visit.desiredGroupId, data.groups)}
+                      Grupă dorită: {groupNameOf(visit.desiredGroupId, visitsData.groups)}
                     </span>
                   )}
                 </button>
@@ -474,8 +474,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               className={styles.search}
               type="search"
               placeholder="Caută copil, părinte sau telefon…"
-              value={data.search}
-              onChange={event => data.setSearch(event.target.value)}
+              value={visitsData.search}
+              onChange={event => visitsData.setSearch(event.target.value)}
               aria-label="Caută vizită"
             />
           </span>
@@ -492,16 +492,16 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           <SearchSelect
             className={styles.filterSelect}
             ariaLabel="Filtru perioadă"
-            value={data.allMonths ? 'all' : 'month'}
-            onChange={value => data.setAllMonths(value === 'all')}
+            value={visitsData.allMonths ? 'all' : 'month'}
+            onChange={value => visitsData.setAllMonths(value === 'all')}
             options={[
               { value: 'month', label: 'Luna curentă' },
               { value: 'all', label: 'Toate lunile' },
             ]}
           />
-          {data.selectedDate && (
-            <button type="button" className={styles.btnGhost} onClick={() => data.setSelectedDate(null)}>
-              {formatDate(data.selectedDate)} ×
+          {visitsData.selectedDate && (
+            <button type="button" className={styles.btnGhost} onClick={() => visitsData.setSelectedDate(null)}>
+              {formatDate(visitsData.selectedDate)} ×
             </button>
           )}
         </div>
@@ -510,8 +510,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           groups={[
             {
               label: 'Statut',
-              value: data.statusFilter,
-              onChange: data.setStatusFilter,
+              value: visitsData.statusFilter,
+              onChange: visitsData.setStatusFilter,
               options: [
                 { value: '', label: 'Toate', tone: 'neutral' },
                 ...(['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'] as VisitStatus[]).map(
@@ -520,36 +520,38 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               ],
             },
           ]}
-          trailing={`${data.rows.length} vizite`}
+          trailing={`${visitsData.rows.length} vizite`}
         />
 
         <DataTable
           bare
           columns={columns}
-          rows={data.rows}
+          rows={visitsData.rows}
           rowKey={row => row.id}
           onRowClick={row => {
-            data.setSelectedDate(row.date);
+            visitsData.setSelectedDate(row.date);
             setFormTarget(row);
           }}
-          rowClassName={row => (row.date === data.selectedDate ? styles.selectedDayRow : undefined)}
+          rowClassName={row => (row.date === visitsData.selectedDate ? styles.selectedDayRow : undefined)}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
         />
         <p className={styles.tableHint}>Click pe rând deschide toate detaliile vizitei.</p>
       </Card>
 
       <VisitFormDrawer
-        key={formTarget === 'new' ? `new-${data.selectedDate ?? ''}` : formTarget === null ? 'closed' : formTarget.id}
+        key={
+          formTarget === 'new' ? `new-${visitsData.selectedDate ?? ''}` : formTarget === null ? 'closed' : formTarget.id
+        }
         target={formTarget}
-        groups={data.groups}
-        defaultDate={data.selectedDate ?? undefined}
+        groups={visitsData.groups}
+        defaultDate={visitsData.selectedDate ?? undefined}
         onSubmit={submitVisitForm}
         onClose={() => setFormTarget(null)}
       />
       <EnrollDrawer
         key={enrollTarget === null ? 'closed' : enrollTarget.id}
         visit={enrollTarget}
-        groups={data.groups}
+        groups={visitsData.groups}
         onSubmit={submitEnroll}
         onClose={() => setEnrollTarget(null)}
       />

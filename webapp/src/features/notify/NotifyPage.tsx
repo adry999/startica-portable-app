@@ -10,27 +10,27 @@ export interface NotifyPageProps {
 }
 
 export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
-  const data = useNotify(month);
+  const notifyData = useNotify(month);
   const toast = useToast();
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (notifyData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (notifyData.status === 'failed')
+    return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   async function copyAll() {
-    const { notice } = await data.copyAllMessages();
+    const { notice } = await notifyData.copyAllMessages();
     toast.show({ message: notice });
   }
 
   async function copyOne(message: string) {
-    const { notice } = await data.copyMessage(message);
+    const { notice } = await notifyData.copyMessage(message);
     toast.show({ message: notice });
   }
 
   return (
     <>
       <div className={styles.headerActions}>
-        <p className={styles.period}>{data.periodLabel}</p>
+        <p className={styles.period}>{notifyData.periodLabel}</p>
         <div className={styles.toolbar}>
           <button type="button" className={styles.btnGhost} onClick={() => void copyAll()}>
             Copiază toate mesajele
@@ -50,22 +50,22 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
       <div className={styles.statsRow}>
         <Card tone="pink" className={styles.statCard}>
           <p className={styles.statLabel}>Cu întârziere</p>
-          <strong className={styles.statValue}>{data.stats.late}</strong>
+          <strong className={styles.statValue}>{notifyData.stats.late}</strong>
           <small>scadența a trecut</small>
         </Card>
         <Card tone="yellow" className={styles.statCard}>
           <p className={styles.statLabel}>Nescadente încă</p>
-          <strong className={styles.statValue}>{data.stats.soon}</strong>
+          <strong className={styles.statValue}>{notifyData.stats.soon}</strong>
           <small>de plată, dar scadența n-a trecut</small>
         </Card>
         <Card tone="orange" className={styles.statCard}>
           <p className={styles.statLabel}>Sumă de încasat</p>
-          <strong className={styles.statValue}>{formatMoney(data.stats.owed)}</strong>
+          <strong className={styles.statValue}>{formatMoney(notifyData.stats.owed)}</strong>
           <small>total pe lista de mai jos</small>
         </Card>
         <Card tone="mint" className={styles.statCard}>
           <p className={styles.statLabel}>Nu pot fi evaluați</p>
-          <strong className={styles.statValue}>{data.stats.unknown}</strong>
+          <strong className={styles.statValue}>{notifyData.stats.unknown}</strong>
           <small>fără taxă sau perioadă confirmată</small>
         </Card>
       </div>
@@ -88,14 +88,14 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
             </tr>
           </thead>
           <tbody>
-            {data.rows.length === 0 ? (
+            {notifyData.rows.length === 0 ? (
               <tr>
                 <td colSpan={11} className={styles.empty}>
-                  {data.emptyMessage}
+                  {notifyData.emptyMessage}
                 </td>
               </tr>
             ) : (
-              data.rows.map(row => <NotifyRow key={row.id} row={row} onNavigate={onNavigate} onCopy={copyOne} />)
+              notifyData.rows.map(row => <NotifyRow key={row.id} row={row} onNavigate={onNavigate} onCopy={copyOne} />)
             )}
           </tbody>
         </table>

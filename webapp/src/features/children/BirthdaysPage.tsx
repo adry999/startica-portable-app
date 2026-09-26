@@ -30,15 +30,15 @@ function isValidMonth(value: string | null): value is string {
 export function BirthdaysPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialMonth = isValidMonth(searchParams.get('luna')) ? searchParams.get('luna')! : todayFn().slice(0, 7);
-  const data = useBirthdays(initialMonth);
+  const birthdaysData = useBirthdays(initialMonth);
 
   useTopbarTitle({ title: 'Zile de naștere', eyebrow: 'Evidență · Copii' });
   useTopbarActions(
     <div className={styles.headerActions}>
-      <button type="button" className={styles.btnSecondary} onClick={data.goToday}>
+      <button type="button" className={styles.btnSecondary} onClick={birthdaysData.goToday}>
         Azi
       </button>
-      <MonthStepper value={data.month} onPrev={data.prevMonth} onNext={data.nextMonth} />
+      <MonthStepper value={birthdaysData.month} onPrev={birthdaysData.prevMonth} onNext={birthdaysData.nextMonth} />
     </div>,
   );
 
@@ -46,26 +46,26 @@ export function BirthdaysPage() {
     setSearchParams(
       params => {
         const next = new URLSearchParams(params);
-        next.set('luna', data.month);
+        next.set('luna', birthdaysData.month);
         return next;
       },
       { replace: true },
     );
-  }, [data.month, setSearchParams]);
+  }, [birthdaysData.month, setSearchParams]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.target instanceof HTMLElement && /^(input|textarea|select)$/i.test(event.target.tagName)) return;
-      if (event.key === 'ArrowLeft') data.prevMonth();
-      if (event.key === 'ArrowRight') data.nextMonth();
+      if (event.key === 'ArrowLeft') birthdaysData.prevMonth();
+      if (event.key === 'ArrowRight') birthdaysData.nextMonth();
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.prevMonth, data.nextMonth]);
+  }, [birthdaysData.prevMonth, birthdaysData.nextMonth]);
 
-  const toneFor = (groupId: string | null) => groupOf(groupId, data.groups)?.tone ?? 'neutral';
-  const groupNameFor = (groupId: string | null) => groupOf(groupId, data.groups)?.name ?? 'Fără grupă';
+  const toneFor = (groupId: string | null) => groupOf(groupId, birthdaysData.groups)?.tone ?? 'neutral';
+  const groupNameFor = (groupId: string | null) => groupOf(groupId, birthdaysData.groups)?.name ?? 'Fără grupă';
 
   return (
     <div className={styles.page}>
@@ -73,27 +73,27 @@ export function BirthdaysPage() {
         groups={[
           {
             label: 'Grupa',
-            value: data.group,
-            onChange: data.setGroup,
+            value: birthdaysData.group,
+            onChange: birthdaysData.setGroup,
             options: [
               { value: 'all', label: 'Toate', tone: 'neutral' },
-              ...data.groups.map(g => ({ value: g.id, label: g.name, tone: g.tone })),
+              ...birthdaysData.groups.map(g => ({ value: g.id, label: g.name, tone: g.tone })),
             ],
           },
         ]}
-        trailing={pluralRo(data.count, 'zi de naștere', 'zile de naștere')}
+        trailing={pluralRo(birthdaysData.count, 'zi de naștere', 'zile de naștere')}
       />
       <div className={styles.body}>
-        <section className={styles.calendar} aria-label={`Calendar ${monthLabel(data.month)}`}>
+        <section className={styles.calendar} aria-label={`Calendar ${monthLabel(birthdaysData.month)}`}>
           <div className={styles.weekdays}>
             {WEEKDAY_LABELS.map(label => (
               <span key={label}>{label}</span>
             ))}
           </div>
           <div className={styles.grid}>
-            {data.status === 'loading' && <p className={styles.notice}>Se încarcă…</p>}
-            {data.status !== 'loading' &&
-              data.weeks.flat().map(cell => (
+            {birthdaysData.status === 'loading' && <p className={styles.notice}>Se încarcă…</p>}
+            {birthdaysData.status !== 'loading' &&
+              birthdaysData.weeks.flat().map(cell => (
                 <div
                   key={cell.date}
                   className={cx(
@@ -125,15 +125,15 @@ export function BirthdaysPage() {
 
         <aside className={styles.side}>
           <h2 className={styles.sideTitle}>Toată luna</h2>
-          {data.status === 'loading' && <p className={styles.empty}>Se încarcă…</p>}
-          {data.status !== 'loading' && data.list.length === 0 && (
+          {birthdaysData.status === 'loading' && <p className={styles.empty}>Se încarcă…</p>}
+          {birthdaysData.status !== 'loading' && birthdaysData.list.length === 0 && (
             <p className={styles.empty}>
-              {data.group === 'all'
+              {birthdaysData.group === 'all'
                 ? 'Nicio zi de naștere în luna aceasta.'
                 : 'Nicio zi de naștere pentru filtrul ales.'}
             </p>
           )}
-          {data.list.map(entry => (
+          {birthdaysData.list.map(entry => (
             <Link
               key={entry.childId}
               to={`/copii/${entry.childId}`}

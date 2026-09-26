@@ -26,9 +26,8 @@ const mimeFor = path =>
                 ? 'application/json; charset=utf-8'
                 : 'text/html; charset=utf-8';
 
-// SPA fără router propriu: un singur punct de intrare (index.html), randat
-// diferit după starea din React, nu după cale. Orice cerere care nu e clar
-// un fișier din build (fără extensie în ultimul segment) primește index.html.
+// Căile reale (react-router-dom, ex. /copii/:id) trebuie să rezolve tot la
+// index.html — routerul le randează pe client, nu serverul.
 const hasFileExtension = path => /\.[a-z0-9]+$/i.test(path.split('/').at(-1) ?? '');
 
 /**

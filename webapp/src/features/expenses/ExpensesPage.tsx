@@ -31,7 +31,7 @@ type ViewMode = 'table' | 'daily';
 type ArchiveFilter = 'active' | 'archived' | 'all';
 
 export function ExpensesPage({ month }: ExpensesPageProps) {
-  const data = useExpenses(month);
+  const expensesData = useExpenses(month);
   const toast = useToast();
 
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.expenses', 'table');
@@ -51,15 +51,15 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
-    return data.expenses.filter(
+    return expensesData.expenses.filter(
       expense =>
         (archiveFilter === 'all' || (archiveFilter === 'archived' ? expense.archived : !expense.archived)) &&
         (!monthFrom || expense.date.slice(0, 7) >= monthFrom) &&
         (!monthTo || expense.date.slice(0, 7) <= monthTo) &&
         (!category || expense.category === category) &&
-        matchesRecordListSearch('expenses', expense, data.records, normalizedSearch),
+        matchesRecordListSearch('expenses', expense, expensesData.records, normalizedSearch),
     );
-  }, [data.expenses, data.records, search, monthFrom, monthTo, category, archiveFilter]);
+  }, [expensesData.expenses, expensesData.records, search, monthFrom, monthTo, category, archiveFilter]);
 
   function exportFiltered() {
     downloadCsv(
@@ -86,7 +86,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   async function handleCreateCategory(event: FormEvent) {
     event.preventDefault();
     try {
-      await data.createCategory(newCategoryName);
+      await expensesData.createCategory(newCategoryName);
       setNewCategoryName('');
       toast.show({ message: 'Categorie adăugată.' });
     } catch (error) {
@@ -96,7 +96,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   async function deleteCategoryConfirmed(id: string) {
     try {
-      await data.deleteCategory(id);
+      await expensesData.deleteCategory(id);
       toast.show({ message: 'Categorie ștearsă.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -113,7 +113,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     const id = editingCategoryId;
     setEditingCategoryId(null);
     try {
-      await data.renameCategory(id, editingCategoryName);
+      await expensesData.renameCategory(id, editingCategoryName);
       toast.show({ message: 'Categorie redenumită.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -122,7 +122,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   async function toggleArchived(expense: Expense) {
     try {
-      await data.setExpenseArchived(expense, !expense.archived);
+      await expensesData.setExpenseArchived(expense, !expense.archived);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -130,8 +130,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   async function submitExpenseForm(input: ExpenseFormInput) {
     try {
-      if (formTarget && formTarget !== 'new') await data.updateExpense(formTarget, input);
-      else await data.createExpense(input);
+      if (formTarget && formTarget !== 'new') await expensesData.updateExpense(formTarget, input);
+      else await expensesData.createExpense(input);
       setFormTarget(null);
       toast.show({ message: formTarget !== 'new' && formTarget ? 'Cheltuială actualizată.' : 'Cheltuială adăugată.' });
     } catch (error) {
@@ -141,7 +141,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   async function deleteExpenseForever(expense: Expense) {
     try {
-      await data.deleteExpense(expense.id);
+      await expensesData.deleteExpense(expense.id);
       toast.show({ message: 'Cheltuială ștearsă definitiv.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -151,10 +151,12 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   async function archiveSelected() {
     const targetArchived = archiveFilter !== 'archived';
     const ids = [...selectedRowKeys];
-    const targets = data.expenses.filter(expense => ids.includes(expense.id) && expense.archived !== targetArchived);
+    const targets = expensesData.expenses.filter(
+      expense => ids.includes(expense.id) && expense.archived !== targetArchived,
+    );
     if (targets.length === 0) return;
     try {
-      for (const expense of targets) await data.setExpenseArchived(expense, targetArchived);
+      for (const expense of targets) await expensesData.setExpenseArchived(expense, targetArchived);
       setSelectedRowKeys(new Set());
       const single = targets.length === 1;
       const noun = single ? 'cheltuială' : 'cheltuieli';
@@ -163,7 +165,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         message: `${targets.length} ${noun} ${verb}`,
         actionLabel: 'Anulează',
         onAction: () => {
-          void Promise.all(targets.map(expense => data.setExpenseArchived(expense, !targetArchived)));
+          void Promise.all(targets.map(expense => expensesData.setExpenseArchived(expense, !targetArchived)));
         },
       });
     } catch (error) {
@@ -171,12 +173,12 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (expensesData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (expensesData.status === 'failed')
+    return <p className={styles.notice}>{expensesData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const activeTotal = data.expenses.filter(expense => !expense.archived).length;
-  const archivedTotal = data.expenses.filter(expense => expense.archived).length;
+  const activeTotal = expensesData.expenses.filter(expense => !expense.archived).length;
+  const archivedTotal = expensesData.expenses.filter(expense => expense.archived).length;
   const selectedTotal = total(filteredExpenses.filter(expense => selectedRowKeys.has(expense.id)));
 
   const columns: DataTableColumn<Expense>[] = [
@@ -248,20 +250,20 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <div className={styles.kpiRow}>
         <Card tone="mint" decorative className={styles.kpiCard}>
           <p className={styles.kpiLabel}>Total lună</p>
-          <strong className={styles.kpiValue}>{formatMoney(data.monthTotal)}</strong>
+          <strong className={styles.kpiValue}>{formatMoney(expensesData.monthTotal)}</strong>
         </Card>
 
         <Card className={styles.categoryCard}>
           <p className={styles.kpiLabel}>Pe categorii, luna curentă</p>
           <div className={styles.categoryBar}>
-            {data.categorySummary
+            {expensesData.categorySummary
               .filter(item => item.amount > 0)
               .map(item => (
                 <span key={item.label} style={{ width: `${item.percent}%`, background: item.color }} />
               ))}
           </div>
           <div className={styles.categoryLegend}>
-            {data.categorySummary.map(item => (
+            {expensesData.categorySummary.map(item => (
               <div key={item.label} className={styles.categoryLegendItem}>
                 <span className={styles.categoryDot} style={{ background: item.color }} />
                 <span>{item.label}</span>
@@ -275,12 +277,12 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <Card className={styles.tableCard}>
         <div className={styles.chipsRow}>
           <div className={styles.chips}>
-            {data.categories.length === 0 ? (
+            {expensesData.categories.length === 0 ? (
               <span className={styles.notice}>
                 Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.
               </span>
             ) : (
-              data.categories.map(cat =>
+              expensesData.categories.map(cat =>
                 editingCategoryId === cat.id ? (
                   <span key={cat.id} className={styles.chip}>
                     <input
@@ -380,7 +382,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
               onChange: setCategory,
               options: [
                 { value: '', label: 'Toate', tone: 'neutral' },
-                ...data.categoryNames.map(name => ({
+                ...expensesData.categoryNames.map(name => ({
                   value: name,
                   label: name,
                   tone: categoryStyleFor(name).tone,
@@ -428,7 +430,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <ExpenseFormDrawer
         key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
         target={formTarget}
-        categoryNames={data.categoryNames}
+        categoryNames={expensesData.categoryNames}
         onSubmit={submitExpenseForm}
         onClose={() => setFormTarget(null)}
       />

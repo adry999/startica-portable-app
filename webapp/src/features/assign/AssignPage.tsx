@@ -9,21 +9,21 @@ export interface AssignPageProps {
 }
 
 export function AssignPage({ month }: AssignPageProps) {
-  const data = useAssign(month);
+  const assignData = useAssign(month);
   const toast = useToast();
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (assignData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (assignData.status === 'failed')
+    return <p className={styles.notice}>{assignData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   function fillSuggested() {
-    const count = data.fillSuggested();
+    const count = assignData.fillSuggested();
     toast.show({ message: count ? `${count} rânduri completate.` : 'Nicio potrivire unică de nume găsită.' });
   }
 
   async function save() {
     try {
-      const { saved } = await data.save();
+      const { saved } = await assignData.save();
       toast.show({ message: `${saved} achitări asociate.` });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -41,17 +41,17 @@ export function AssignPage({ month }: AssignPageProps) {
       <div className={styles.riskRow}>
         <Card tone="pink" decorative className={styles.riskCard}>
           <p className={styles.riskLabel}>Achitări fără copil</p>
-          <strong className={styles.riskValue}>{data.risk.unassigned}</strong>
+          <strong className={styles.riskValue}>{assignData.risk.unassigned}</strong>
           <small>nu se scad din datoria nimănui</small>
         </Card>
         <Card tone="yellow" className={styles.riskCard}>
           <p className={styles.riskLabel}>Din care pe luna {formatMonthLabel(month)}</p>
-          <strong className={styles.riskValue}>{data.risk.coveringMonth}</strong>
-          <small>{formatMoney(data.risk.amountCoveringMonth)}</small>
+          <strong className={styles.riskValue}>{assignData.risk.coveringMonth}</strong>
+          <small>{formatMoney(assignData.risk.amountCoveringMonth)}</small>
         </Card>
         <Card tone="orange" className={styles.riskCard}>
           <p className={styles.riskLabel}>Copii pe lista de notificat</p>
-          <strong className={styles.riskValue}>{data.risk.notified}</strong>
+          <strong className={styles.riskValue}>{assignData.risk.notified}</strong>
           <small>unii pot să fi achitat deja</small>
         </Card>
       </div>
@@ -60,12 +60,12 @@ export function AssignPage({ month }: AssignPageProps) {
         <button type="button" className={styles.btnGhost} onClick={fillSuggested}>
           Completează cu prima sugestie
         </button>
-        <button type="button" className={styles.btnGhost} onClick={data.clearSelections}>
+        <button type="button" className={styles.btnGhost} onClick={assignData.clearSelections}>
           Golește selecțiile
         </button>
       </div>
 
-      <p className={styles.summary}>{data.summary}</p>
+      <p className={styles.summary}>{assignData.summary}</p>
 
       <Card className={styles.tableCard}>
         <table className={styles.table}>
@@ -80,22 +80,24 @@ export function AssignPage({ month }: AssignPageProps) {
             </tr>
           </thead>
           <tbody>
-            {data.rows.length === 0 ? (
+            {assignData.rows.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.empty}>
                   Nu există achitări neasociate.
                 </td>
               </tr>
             ) : (
-              data.rows.map(row => <AssignRow key={row.paymentId} row={row} onSelectChild={data.selectChild} />)
+              assignData.rows.map(row => (
+                <AssignRow key={row.paymentId} row={row} onSelectChild={assignData.selectChild} />
+              ))
             )}
           </tbody>
         </table>
       </Card>
 
       <div className={styles.saveRow}>
-        <button type="button" className={styles.btnPrimary} disabled={data.saving} onClick={() => void save()}>
-          Salvează asocierile ({data.selectedCount})
+        <button type="button" className={styles.btnPrimary} disabled={assignData.saving} onClick={() => void save()}>
+          Salvează asocierile ({assignData.selectedCount})
         </button>
       </div>
     </>

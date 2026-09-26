@@ -6,7 +6,7 @@ export interface SaveStatusCardProps {
   label: string;
   detail: string;
   onRetry: () => void;
-  /** Avertizare separată (ex. copie externă neconfigurată) — cablată când ecranul Backup e portat (pasul 5). */
+  /** Avertizare separată (ex. copie externă neconfigurată), afișată sub starea salvată. */
   warning?: { message: string; actionLabel: string; onAction: () => void };
 }
 
@@ -15,7 +15,6 @@ const RETRY_LABEL: Partial<Record<SaveStatus, string>> = {
   error: 'Încearcă din nou',
 };
 
-/** Cardul din josul sidebar-ului — mapare pe save-indicator[data-state] existent, vezi save-status.ts. */
 export function SaveStatusCard({ status, label, detail, onRetry, warning }: SaveStatusCardProps) {
   const retryLabel = RETRY_LABEL[status];
 

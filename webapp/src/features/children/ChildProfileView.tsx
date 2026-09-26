@@ -24,16 +24,16 @@ export function ChildProfileView({
   onBack: () => void;
   onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
 }) {
-  const data = useChildProfile(childId, month);
+  const profileData = useChildProfile(childId, month);
   const session = useAppSession();
   const toast = useToast();
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
-  if (data.status === 'not-found' || !data.child) {
+  if (profileData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (profileData.status === 'failed')
+    return <p className={styles.notice}>{profileData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (profileData.status === 'not-found' || !profileData.child) {
     return (
       <>
         <button type="button" className={styles.backLink} onClick={onBack}>
@@ -44,7 +44,7 @@ export function ChildProfileView({
     );
   }
 
-  const { child, obligation: childObligation } = data;
+  const { child, obligation: childObligation } = profileData;
 
   async function changeGroup(groupId: string) {
     try {
@@ -83,10 +83,10 @@ export function ChildProfileView({
         <div className={styles.profileHeadInfo}>
           <h2 className={styles.profileName}>{child.name}</h2>
           <p className={styles.profileMeta}>
-            {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {data.age} · Contract{' '}
-            {data.contractLabel}
+            {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {profileData.age} · Contract{' '}
+            {profileData.contractLabel}
             <span className={styles.profileBadgeMint}>{child.status}</span>
-            <span className={styles.profileBadgeOrange}>{data.groupName}</span>
+            <span className={styles.profileBadgeOrange}>{profileData.groupName}</span>
           </p>
         </div>
         <div className={styles.profileActions}>
@@ -120,7 +120,7 @@ export function ChildProfileView({
           <Card className={styles.profileSection}>
             <p className={styles.sectionTitle}>Grupă și educator</p>
             <div className={styles.groupRow}>
-              <span className={styles.groupSquare}>{data.groupName.charAt(0).toUpperCase() || '—'}</span>
+              <span className={styles.groupSquare}>{profileData.groupName.charAt(0).toUpperCase() || '—'}</span>
               <select
                 className={styles.select}
                 value={child.groupId ?? ''}
@@ -128,7 +128,7 @@ export function ChildProfileView({
                 aria-label="Schimbă grupa"
               >
                 <option value="">Nealocată</option>
-                {data.groups.map(group => (
+                {profileData.groups.map(group => (
                   <option key={group.id} value={group.id}>
                     {group.name}
                   </option>
@@ -157,7 +157,7 @@ export function ChildProfileView({
             </Card>
             <Card className={styles.miniCard}>
               <span>Contract</span>
-              <strong>{data.contractLabel}</strong>
+              <strong>{profileData.contractLabel}</strong>
               <small>{child.contractDate ? formatDate(child.contractDate) : '—'}</small>
             </Card>
           </div>
@@ -173,7 +173,7 @@ export function ChildProfileView({
                 Toate achitările →
               </button>
             </div>
-            <PaymentHistoryTable payments={data.payments} />
+            <PaymentHistoryTable payments={profileData.payments} />
           </Card>
         </div>
       </div>
@@ -181,7 +181,7 @@ export function ChildProfileView({
       <ChildFormDrawer
         key={editDrawerOpen ? child.id : 'closed'}
         target={editDrawerOpen ? child : null}
-        groups={data.groups}
+        groups={profileData.groups}
         onSubmit={submitChildEdit}
         onClose={() => setEditDrawerOpen(false)}
       />

@@ -28,7 +28,7 @@ function tileTone(group: GroupCardView, groups: GroupCardView[]): CardTone {
 }
 
 export function GroupsPage() {
-  const data = useGroups();
+  const groupsData = useGroups();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
   const [formOpen, setFormOpen] = useState(false);
@@ -43,15 +43,15 @@ export function GroupsPage() {
     </div>,
   );
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (groupsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (groupsData.status === 'failed')
+    return <p className={styles.notice}>{groupsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const openGroup = data.groups.find(group => group.id === data.openGroupId) ?? null;
+  const openGroup = groupsData.groups.find(group => group.id === groupsData.openGroupId) ?? null;
 
   async function submitNewGroup(name: string, capacityRaw: string) {
     try {
-      await data.createGroup(name, capacityRaw);
+      await groupsData.createGroup(name, capacityRaw);
       toast.show({ message: 'Grupă creată.' });
       setFormOpen(false);
     } catch (error) {
@@ -61,7 +61,7 @@ export function GroupsPage() {
 
   async function deleteGroupConfirmed(group: GroupCardView) {
     try {
-      await data.deleteGroup(group.id);
+      await groupsData.deleteGroup(group.id);
       toast.show({ message: 'Grupă ștearsă.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -73,25 +73,25 @@ export function GroupsPage() {
       <GroupFormDrawer open={formOpen} onSubmit={submitNewGroup} onClose={() => setFormOpen(false)} />
 
       {viewMode === 'board' ? (
-        <GroupsBoard data={data} />
+        <GroupsBoard data={groupsData} />
       ) : (
         <div className={styles.grid}>
-          {data.groups.map(group => (
+          {groupsData.groups.map(group => (
             <Fragment key={group.id}>
               <GroupTile
                 group={group}
-                tone={tileTone(group, data.groups)}
-                isOpen={group.id === data.openGroupId}
-                onToggle={() => data.toggleGroup(group.id)}
+                tone={tileTone(group, groupsData.groups)}
+                isOpen={group.id === groupsData.openGroupId}
+                onToggle={() => groupsData.toggleGroup(group.id)}
               />
               {openGroup && openGroup.id === group.id && (
                 <div className={styles.editorSlot}>
                   <GroupEditor
                     group={openGroup}
-                    unassignedChildren={data.unassignedChildren}
+                    unassignedChildren={groupsData.unassignedChildren}
                     onSave={async (name, capacityRaw, educator) => {
                       try {
-                        await data.updateGroup(openGroup.id, name, capacityRaw, educator);
+                        await groupsData.updateGroup(openGroup.id, name, capacityRaw, educator);
                         toast.show({ message: 'Grupă actualizată.' });
                       } catch (error) {
                         toast.show({ message: (error as Error).message });
@@ -100,7 +100,7 @@ export function GroupsPage() {
                     onDelete={() => setDeleteTarget(openGroup)}
                     onAssign={async childId => {
                       try {
-                        await data.assignChild(openGroup.id, childId);
+                        await groupsData.assignChild(openGroup.id, childId);
                         toast.show({ message: 'Copil atribuit grupei.' });
                       } catch (error) {
                         toast.show({ message: (error as Error).message });
@@ -108,7 +108,7 @@ export function GroupsPage() {
                     }}
                     onRemove={async childId => {
                       try {
-                        await data.removeChild(childId);
+                        await groupsData.removeChild(childId);
                         toast.show({ message: 'Copil scos din grupă.' });
                       } catch (error) {
                         toast.show({ message: (error as Error).message });

@@ -15,7 +15,7 @@ export interface NotificationPreferencesData {
   save: () => Promise<void>;
 }
 
-/** Echivalentul notification-preferences.controller.mjs: un singur obiect, salvat dintr-o bucată. */
+/** Preferințele sunt un singur obiect, salvat dintr-o bucată. */
 export function useNotificationPreferences(): NotificationPreferencesData {
   const [status, setStatus] = useState<PreferencesScreenStatus>('loading');
   const [failureMessage, setFailureMessage] = useState('');

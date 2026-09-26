@@ -9,8 +9,8 @@ import styles from './BackupPage.module.css';
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
 export function BackupPage() {
-  const data = useBackup();
-  const restore = useRestore(data.health?.externalDir ?? '');
+  const backupData = useBackup();
+  const restore = useRestore(backupData.health?.externalDir ?? '');
   const excel = useExcelTransfer();
   const toast = useToast();
 
@@ -25,9 +25,9 @@ export function BackupPage() {
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
     try {
-      await data.saveSettings();
+      await backupData.saveSettings();
       toast.show({
-        message: data.health?.externalDir
+        message: backupData.health?.externalDir
           ? 'Copia în folderul extern a fost verificată. Confirmă separat sincronizarea în Google Drive.'
           : 'Backup local configurat.',
       });
@@ -38,7 +38,7 @@ export function BackupPage() {
 
   async function backupNow() {
     try {
-      await data.backupNow();
+      await backupData.backupNow();
       toast.show({ message: 'Backup local verificat creat.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -47,7 +47,7 @@ export function BackupPage() {
 
   async function downloadDiagnostic() {
     try {
-      await data.downloadDiagnostic();
+      await backupData.downloadDiagnostic();
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -65,15 +65,15 @@ export function BackupPage() {
     }
   }
 
-  if (!data.ready) return <p className={styles.notice}>Se încarcă starea backup-ului…</p>;
+  if (!backupData.ready) return <p className={styles.notice}>Se încarcă starea backup-ului…</p>;
 
   return (
     <>
       <Card className={styles.panel}>
         <h3 className={styles.panelTitle}>Copii de siguranță</h3>
-        <Badge tone={STATUS_TONE[data.statusTone]}>{data.statusLabel}</Badge>
+        <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>
         <div className={styles.details}>
-          {data.detailLines.map(line => (
+          {backupData.detailLines.map(line => (
             <p key={line}>{line}</p>
           ))}
         </div>
@@ -82,8 +82,8 @@ export function BackupPage() {
           <label className={styles.field}>
             Folder Google Drive sau altă destinație externă
             <input
-              value={data.externalDirInput}
-              onChange={event => data.setExternalDirInput(event.target.value)}
+              value={backupData.externalDirInput}
+              onChange={event => backupData.setExternalDirInput(event.target.value)}
               placeholder="G:\My Drive\Startica_Backup"
             />
           </label>
@@ -91,14 +91,19 @@ export function BackupPage() {
             Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google Drive.
             Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile.
           </p>
-          {data.settingsError && <p className={styles.error}>{data.settingsError}</p>}
-          <button type="submit" className={styles.btnPrimary} disabled={data.settingsBusy}>
+          {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
+          <button type="submit" className={styles.btnPrimary} disabled={backupData.settingsBusy}>
             Salvează și testează copia
           </button>
         </form>
 
         <div className={styles.toolbar}>
-          <button type="button" className={styles.btnGhost} disabled={data.backupBusy} onClick={() => void backupNow()}>
+          <button
+            type="button"
+            className={styles.btnGhost}
+            disabled={backupData.backupBusy}
+            onClick={() => void backupNow()}
+          >
             Backup acum
           </button>
           <button type="button" className={styles.btnGhost} onClick={restore.openDialog}>
@@ -107,7 +112,7 @@ export function BackupPage() {
           <button
             type="button"
             className={styles.btnGhost}
-            disabled={data.diagnosticBusy}
+            disabled={backupData.diagnosticBusy}
             onClick={() => void downloadDiagnostic()}
           >
             Raport de diagnostic

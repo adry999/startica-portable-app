@@ -29,15 +29,14 @@ export interface ExcelTransferData {
   exportAll: () => Promise<void>;
 }
 
-// Lazy: modulul (~950KB) nu trebuie să încarce la pornirea aplicației —
-// echivalentul xlsx-loader.mjs, cu import dinamic în loc de script global.
+// Lazy: modulul (~950KB) nu trebuie să încarce la pornirea aplicației.
 let xlsxModule: Promise<typeof import('xlsx')> | null = null;
 function loadXlsx() {
   if (!xlsxModule) xlsxModule = import('xlsx').catch(error => ((xlsxModule = null), Promise.reject(error)));
   return xlsxModule;
 }
 
-/** Echivalentul excel-transfer.controller.mjs: parsare client-side, revalidare server, apoi commit cu fraza „IMPORT”. */
+/** Parsare client-side, revalidare server, apoi commit cu fraza „IMPORT”. */
 export function useExcelTransfer(): ExcelTransferData {
   const session = useAppSession();
 

@@ -67,7 +67,6 @@ function previewOf(response: {
   };
 }
 
-/** Echivalentul dialogului de restaurare din backup.controller.mjs, aici ca Drawer (nu <dialog>). */
 export function useRestore(defaultExternalDir: string): RestoreData {
   const session = useAppSession();
 

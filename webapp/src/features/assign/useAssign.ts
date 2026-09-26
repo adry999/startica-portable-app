@@ -74,10 +74,8 @@ function childOptionsFor(suggestions: ChildSuggestion[], children: Child[]): Chi
 type AssignBaseRow = Omit<AssignRowView, 'selectedChildId'>;
 
 /**
- * Echivalentul payment-assignment.controller.mjs: selecțiile per achitare
- * trăiesc aici (Map → obiect indexat pe id-ul achitării), în loc de DOM.
- * Combobox-ul căutabil din legacy (child-picker.mjs) devine un <select>
- * grupat — webapp nu are încă o componentă de combobox în shared/ui.
+ * Combobox-ul căutabil devine un <select> grupat — webapp nu are încă o
+ * componentă de combobox în shared/ui.
  */
 export function useAssign(month: string): AssignData {
   const session = useAppSession();

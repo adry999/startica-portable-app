@@ -28,7 +28,7 @@ export interface TelegramStatusData {
   disconnect: () => Promise<void>;
 }
 
-/** Echivalentul telegram-settings.controller.mjs: status + acțiuni (conectare/probă/deconectare), fiecare cu refresh după succes. */
+/** Status + acțiuni (conectare/probă/deconectare), fiecare cu refresh după succes. */
 export function useTelegramStatus(): TelegramStatusData {
   const [status, setStatus] = useState<TelegramScreenStatus>('loading');
   const [failureMessage, setFailureMessage] = useState('');

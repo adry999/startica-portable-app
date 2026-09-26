@@ -12,12 +12,12 @@ export interface AppShellProps {
   onNavigate: (view: ViewKey) => void;
   month: string;
   onMonthChange: (month: string) => void;
-  /** Contoarele din sidebar (taxe, verificat, asociere, notificat, vizite) — vin din ecranele reale, pasul 5. */
+  /** Contoarele din sidebar (taxe, verificat, asociere, notificat, vizite) — vin din ecranele reale. */
   counts?: Partial<Record<ViewKey, number>>;
   children: ReactNode;
 }
 
-/** Compune Sidebar + Topbar + zona de conținut. Citește sesiunea o dată, aici — ecranele (pasul 5) o citesc separat. */
+/** Compune Sidebar + Topbar + zona de conținut. Citește sesiunea o dată, aici — ecranele o citesc separat. */
 export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, children }: AppShellProps) {
   const session = useAppSession();
   const saveStatus = deriveSaveStatus(session.state);

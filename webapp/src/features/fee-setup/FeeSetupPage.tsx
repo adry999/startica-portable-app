@@ -8,16 +8,16 @@ const FILTER_OPTIONS: { value: FeeSetupFilter; label: string }[] = [
 ];
 
 export function FeeSetupPage() {
-  const data = useFeeSetup();
+  const feeSetupData = useFeeSetup();
   const toast = useToast();
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (feeSetupData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (feeSetupData.status === 'failed')
+    return <p className={styles.notice}>{feeSetupData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   async function handleSave() {
     try {
-      const { updatedCount } = await data.save();
+      const { updatedCount } = await feeSetupData.save();
       toast.show({ message: `${updatedCount} fișe completate. Verifică lista „De notificat”.` });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -39,11 +39,11 @@ export function FeeSetupPage() {
       render: row => (
         <select
           value={row.groupId}
-          onChange={event => data.setGroupId(row.id, event.target.value)}
+          onChange={event => feeSetupData.setGroupId(row.id, event.target.value)}
           aria-label={`Grupă pentru ${row.name}`}
         >
           <option value="">Fără grupă</option>
-          {data.groupOptions.map(group => (
+          {feeSetupData.groupOptions.map(group => (
             <option key={group.id} value={group.id}>
               {group.name}
             </option>
@@ -61,7 +61,7 @@ export function FeeSetupPage() {
           step="0.01"
           placeholder="taxă"
           value={row.fee}
-          onChange={event => data.setFee(row.id, event.target.value)}
+          onChange={event => feeSetupData.setFee(row.id, event.target.value)}
           aria-label={`Taxă lunară pentru ${row.name}`}
         />
       ),
@@ -73,7 +73,7 @@ export function FeeSetupPage() {
         <input
           type="month"
           value={row.from}
-          onChange={event => data.setFrom(row.id, event.target.value)}
+          onChange={event => feeSetupData.setFrom(row.id, event.target.value)}
           aria-label={`Din luna pentru ${row.name}`}
         />
       ),
@@ -84,7 +84,7 @@ export function FeeSetupPage() {
       render: row => (
         <select
           value={row.status}
-          onChange={event => data.setStatus(row.id, event.target.value)}
+          onChange={event => feeSetupData.setStatus(row.id, event.target.value)}
           aria-label={`Statut pentru ${row.name}`}
         >
           {row.statusOptions.map(status => (
@@ -100,8 +100,8 @@ export function FeeSetupPage() {
   return (
     <>
       <p className={styles.info}>
-        {data.missingCount
-          ? `${data.missingCount} copii fără taxă completată: nu pot fi evaluați și nu apar pe lista de notificat.`
+        {feeSetupData.missingCount
+          ? `${feeSetupData.missingCount} copii fără taxă completată: nu pot fi evaluați și nu apar pe lista de notificat.`
           : 'Toți copiii nearhivați au taxa completată.'}
       </p>
 
@@ -117,31 +117,31 @@ export function FeeSetupPage() {
           className={styles.search}
           type="search"
           placeholder="Caută…"
-          value={data.search}
-          onChange={event => data.setSearch(event.target.value)}
+          value={feeSetupData.search}
+          onChange={event => feeSetupData.setSearch(event.target.value)}
           aria-label="Caută copil"
         />
         <SegmentedControl<FeeSetupFilter>
           ariaLabel="Arată"
-          value={data.filter}
-          onChange={data.setFilter}
+          value={feeSetupData.filter}
+          onChange={feeSetupData.setFilter}
           options={FILTER_OPTIONS}
         />
       </div>
 
-      <BulkRow data={data} />
+      <BulkRow data={feeSetupData} />
 
       <Card className={styles.tableCard}>
         <DataTable
           columns={columns}
-          rows={data.rows}
+          rows={feeSetupData.rows}
           rowKey={row => row.id}
-          pageSize={data.rows.length || 1}
+          pageSize={feeSetupData.rows.length || 1}
           emptyState={<p>Nimic de completat pentru filtrul ales.</p>}
         />
       </Card>
 
-      {data.hasPendingEdits && (
+      {feeSetupData.hasPendingEdits && (
         <div className={styles.saveBar}>
           <span>Ai completări nesalvate.</span>
           <button type="button" className={styles.btnPrimary} onClick={() => void handleSave()}>

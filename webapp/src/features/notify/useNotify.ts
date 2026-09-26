@@ -80,10 +80,9 @@ function contactLinesOf(child: Child): ContactLine[] {
 }
 
 /**
- * Echivalentul notify-list.view.mjs: copiii cu rest de plată, sortați implicit
- * după întârzierea cea mai veche. Doar copiii nearhivați (ca `activeEvaluations`
- * din compose-screens.mjs/useDashboard) — spre deosebire de Situația plăților,
- * care arată toată lista, inclusiv arhivați.
+ * Copiii cu rest de plată, sortați implicit după întârzierea cea mai veche.
+ * Doar copiii nearhivați — spre deosebire de Situația plăților, care arată
+ * toată lista, inclusiv arhivați.
  */
 export function useNotify(month: string): NotifyData {
   const session = useAppSession();

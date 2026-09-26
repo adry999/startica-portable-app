@@ -51,11 +51,11 @@ export function defaultVisitFormValues(visit: Visit | null, today: string): Visi
 }
 
 /**
- * Echivalentul visit-editor-fields.mjs's `read()`: reprogramarea (dată/oră
- * schimbată) se aplică întâi, ca o schimbare simultană de statut din formular
- * să se aplice peste ea, nu să fie ștearsă de ea. La creare, `previous` nu are
- * `date`/`time`, deci reprogramarea se declanșează oricum și scrie singura
- * intrare inițială din `history` — nu e nevoie de o ramură separată de creare.
+ * Reprogramarea (dată/oră schimbată) se aplică întâi, ca o schimbare
+ * simultană de statut din formular să se aplice peste ea, nu să fie ștearsă
+ * de ea. La creare, `previous` nu are `date`/`time`, deci reprogramarea se
+ * declanșează oricum și scrie singura intrare inițială din `history` — nu e
+ * nevoie de o ramură separată de creare.
  */
 export function buildVisitRecord(previous: Visit | null, id: string, values: VisitFormValues): Visit {
   const now = new Date().toISOString();

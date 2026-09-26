@@ -13,7 +13,6 @@ export interface ChildFormDrawerProps {
   onClose: () => void;
 }
 
-/** Echivalentul child-editor-fields.mjs's `markup()`/`bind()`, ca formular React controlat. */
 export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<ChildFormValues>(() => defaultChildFormValues(editing, todayFn()));

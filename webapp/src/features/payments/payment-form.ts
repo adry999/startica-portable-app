@@ -68,7 +68,7 @@ export function totalOfTenders(tenders: Record<string, string>): number {
   return sum / 100;
 }
 
-/** Echivalentul payment-editor-fields.mjs's `read()` (fără verificarea de duplicat — vezi `findDuplicatePayment`). */
+/** Fără verificarea de duplicat — vezi `findDuplicatePayment`. */
 export function buildPaymentRecord(previous: Payment | null, id: string, values: PaymentFormValues): Payment {
   const tenders = Object.entries(values.tenders)
     .map(([method, amount]) => ({ method, amount: Number(amount) }))

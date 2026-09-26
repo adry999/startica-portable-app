@@ -57,31 +57,31 @@ export function PaymentsPage({
   onOpenChild,
   initialChildId,
 }: PaymentsPageProps) {
-  const data = usePayments(initialChildId);
+  const paymentsData = usePayments(initialChildId);
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  if (paymentsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (paymentsData.status === 'failed')
+    return <p className={styles.notice}>{paymentsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const formTarget: Payment | 'new' | null =
     formTargetId === 'nou'
       ? 'new'
       : formTargetId
-        ? (data.records.payments.find(p => p.id === formTargetId) ?? null)
+        ? (paymentsData.records.payments.find(p => p.id === formTargetId) ?? null)
         : null;
 
   async function submitPaymentForm(values: PaymentFormValues) {
     try {
       const previous = formTarget && formTarget !== 'new' ? formTarget : null;
       if (previous) {
-        await data.updatePayment(previous, values);
+        await paymentsData.updatePayment(previous, values);
         onCloseForm();
         toast.show({ message: 'Achitare actualizată.' });
         return;
       }
-      const saved = await data.createPayment(values, () =>
+      const saved = await paymentsData.createPayment(values, () =>
         window.confirm(
           'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
         ),
@@ -109,15 +109,15 @@ export function PaymentsPage({
         </button>
       </div>
 
-      <SummaryCards summary={data.summary} method={data.method} />
-      <Filters data={data} />
+      <SummaryCards summary={paymentsData.summary} method={paymentsData.method} />
+      <Filters data={paymentsData} />
 
       <FilterPills
         groups={[
           {
             label: 'Metodă',
-            value: data.method,
-            onChange: data.setMethod,
+            value: paymentsData.method,
+            onChange: paymentsData.setMethod,
             options: [
               { value: '', label: 'Toate', tone: 'neutral' },
               { value: 'Cash', label: 'Cash', tone: METHOD_TONE.Cash as PillTone },
@@ -127,14 +127,14 @@ export function PaymentsPage({
           },
           {
             label: 'Grupă',
-            value: data.groupFilter,
-            onChange: data.setGroupFilter,
+            value: paymentsData.groupFilter,
+            onChange: paymentsData.setGroupFilter,
             options: [
               { value: 'all', label: 'Toate', tone: 'neutral' },
-              ...data.groups.map(group => ({
+              ...paymentsData.groups.map(group => ({
                 value: group.id,
                 label: group.name,
-                tone: groupTone(group.id, data.groups),
+                tone: groupTone(group.id, paymentsData.groups),
               })),
               { value: 'none', label: 'Fără grupă', tone: 'neutral' },
             ],
@@ -143,15 +143,15 @@ export function PaymentsPage({
       />
 
       {viewMode === 'table' ? (
-        <TableView data={data} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
+        <TableView data={paymentsData} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
       ) : (
-        <MonthsView rows={data.rows} onEdit={onOpenEdit} />
+        <MonthsView rows={paymentsData.rows} onEdit={onOpenEdit} />
       )}
 
       <PaymentFormDrawer
         key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
         target={formTarget}
-        records={data.records}
+        records={paymentsData.records}
         onSubmit={submitPaymentForm}
         onClose={onCloseForm}
       />
