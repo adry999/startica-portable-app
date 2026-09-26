@@ -92,7 +92,7 @@ export function obligation(child, month, payments, asOf = today(), index = null,
             : asOf >= noticeFrom
               ? 'Scadent în curând'
               : 'Nescadent';
-  return { expected, paid, rest, credit, due, label, notify, daysToDue };
+  return { expected, paid, rest, credit, due, label, notify, daysToDue, currency: feeCurrency };
 }
 // Prima lună cu obligație reală neachitată (nu „De verificat” sau „Fără
 // obligație”) — încasarea sosește adesea într-o lună pt. taxa lunii

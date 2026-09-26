@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Card, DataTable, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatRate } from '#shared/format/rate-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
+import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { useChildProfile } from './useChildProfile';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
@@ -26,6 +29,7 @@ export function ChildProfileView({
 }) {
   const profileData = useChildProfile(childId, month);
   const session = useAppSession();
+  const { rates } = useExchangeRates();
   const toast = useToast();
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
@@ -45,6 +49,8 @@ export function ChildProfileView({
   }
 
   const { child, obligation: childObligation } = profileData;
+  const isEurChild = childObligation?.currency === 'EUR';
+  const todaysRate = latestKnownRate(rates);
 
   async function changeGroup(groupId: string) {
     try {
@@ -149,11 +155,16 @@ export function ChildProfileView({
           <div className={styles.miniCards}>
             <Card tone="mint" className={styles.miniCard}>
               <span>Sold</span>
-              <strong>{formatMoney(childObligation?.rest ?? null)}</strong>
+              <strong>{formatMoney(childObligation?.rest ?? null, childObligation?.currency)}</strong>
+              {isEurChild && childObligation?.rest != null && todaysRate && (
+                <small>≈ {formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi</small>
+              )}
             </Card>
             <Card tone="yellow" className={styles.miniCard}>
               <span>Taxă lunară</span>
-              <strong>{formatMoney(child.fee)}</strong>
+              <strong>
+                {formatMoney(profileData.feeEntry?.amount ?? child.fee, profileData.feeEntry?.currency ?? 'MDL')}
+              </strong>
             </Card>
             <Card className={styles.miniCard}>
               <span>Contract</span>
@@ -173,7 +184,7 @@ export function ChildProfileView({
                 Toate achitările →
               </button>
             </div>
-            <PaymentHistoryTable payments={profileData.payments} />
+            <PaymentHistoryTable payments={profileData.payments} showEurColumns={isEurChild} />
           </Card>
         </div>
       </div>
@@ -204,7 +215,7 @@ function ParentRow({ name, phone, onAddPhone }: { name: string; phone: string; o
   );
 }
 
-function PaymentHistoryTable({ payments }: { payments: Payment[] }) {
+function PaymentHistoryTable({ payments, showEurColumns }: { payments: Payment[]; showEurColumns: boolean }) {
   if (payments.length === 0) return <p className={styles.notice}>Fără achitări.</p>;
 
   const columns: DataTableColumn<Payment>[] = [
@@ -220,11 +231,27 @@ function PaymentHistoryTable({ payments }: { payments: Payment[] }) {
     { key: 'method', header: 'Metodă', render: payment => payment.method },
     {
       key: 'amount',
-      header: 'Sumă',
+      header: 'Plătit lei',
       align: 'end',
       render: payment => formatMoney(payment.amount),
       sortValue: payment => payment.amount,
     },
+    ...(showEurColumns
+      ? [
+          {
+            key: 'fxRate',
+            header: 'Curs',
+            align: 'end' as const,
+            render: (payment: Payment) => formatRate(payment.fxRate),
+          },
+          {
+            key: 'amountEur',
+            header: 'Echivalent €',
+            align: 'end' as const,
+            render: (payment: Payment) => formatMoney(payment.amountEur ?? null, 'EUR'),
+          },
+        ]
+      : []),
     {
       key: 'status',
       header: '',

@@ -75,9 +75,25 @@ describe('Topbar', () => {
           if (path === '/api/state')
             return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
           if (path === '/api/health') return jsonResponse({});
+          if (path === '/api/exchange-rates')
+            return jsonResponse({ rates: { '2026-09-27': 19.62 }, sources: { '2026-09-27': 'bnm' } });
           throw new Error(`neașteptat: ${path}`);
         }),
       );
+    });
+
+    it('arată pastila de curs pe Dashboard și navighează la fila Curs valutar', async () => {
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      const user = userEvent.setup();
+      renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
+
+      const pill = await screen.findByRole('button', { name: /1 € = 19,6200 lei/ });
+      await user.click(pill);
+
+      expect(await screen.findByTestId('location')).toHaveTextContent('/backup-si-setari');
+      expect(localStorage.getItem('view.backup')).toBe('curs');
     });
 
     it('scrierea unui query arată rezultate live, iar click navighează la fișa copilului', async () => {

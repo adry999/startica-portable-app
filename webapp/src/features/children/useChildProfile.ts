@@ -1,5 +1,5 @@
 import { useAppSession } from '@shared/api/session';
-import { obligation } from '#shared/domain/tuition-obligation.mjs';
+import { obligation, feeEntryFor } from '#shared/domain/tuition-obligation.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import type { Child, Group, Payment } from '@contracts/record-types.mjs';
@@ -15,6 +15,7 @@ export interface ChildProfileData {
   contractLabel: string;
   age: string;
   obligation: ReturnType<typeof obligation> | null;
+  feeEntry: ReturnType<typeof feeEntryFor> | null;
   payments: Payment[];
 }
 
@@ -27,6 +28,7 @@ const NOT_FOUND: ChildProfileData = {
   contractLabel: '',
   age: '',
   obligation: null,
+  feeEntry: null,
   payments: [],
 };
 
@@ -58,6 +60,7 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     contractLabel: contractNumberOf(child),
     age: formatAge(child.birthDate),
     obligation: obligation(child, month, records.payments),
+    feeEntry: feeEntryFor(child, month),
     payments,
   };
 }

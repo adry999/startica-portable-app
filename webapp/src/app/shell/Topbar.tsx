@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MonthPicker, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { latestKnownRate } from '#shared/domain/exchange-rates.mjs';
+import { formatRate } from '#shared/format/rate-format.mjs';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
-import { pathForSearchResult } from './routes';
+import { pathForSearchResult, VIEW_PATHS } from './routes';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './Topbar.module.css';
 
@@ -21,6 +24,8 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   const pageActions = useTopbarActionsSlot();
   const session = useAppSession();
   const navigate = useNavigate();
+  const { rates } = useExchangeRates();
+  const todaysRate = latestKnownRate(rates);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +52,15 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
     setQuery('');
     setOpen(false);
     navigate(pathForSearchResult(result));
+  }
+
+  function goToCursValutar() {
+    try {
+      localStorage.setItem('view.backup', 'curs');
+    } catch {
+      // Fila implicită se deschide oricum din Backup și setări.
+    }
+    navigate(VIEW_PATHS.settings);
   }
 
   return (
@@ -118,6 +132,11 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
           </div>
         )}
         {pageActions}
+        {view === 'dashboard' && todaysRate != null && (
+          <button type="button" className={styles.ratePill} onClick={goToCursValutar}>
+            <span className={styles.ratePillDot} />1 € = {formatRate(todaysRate)} lei
+          </button>
+        )}
         {view === 'dashboard' && <MonthPicker value={month} onChange={onMonthChange} />}
       </div>
     </header>

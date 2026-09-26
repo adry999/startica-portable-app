@@ -146,6 +146,18 @@ test('obligation: taxă EUR, achitare EUR — fără conversie, scade direct', (
   assert.equal(result.expected, 500);
   assert.equal(result.paid, 300);
   assert.equal(result.rest, 200);
+  assert.equal(result.currency, 'EUR');
+});
+
+test('obligation: câmpul currency reflectă moneda taxei lunii, MDL implicit pentru fișele fără currency', () => {
+  const mdlChild = normalizeRecord('children', {
+    id: 'C-MDL',
+    name: 'Maria',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  assert.equal(obligation(mdlChild, '2026-09', [], '2026-09-30').currency, 'MDL');
 });
 
 test('obligation: taxă EUR, achitare MDL — convertește MDL în EUR cu cursul zilei achitării', () => {
