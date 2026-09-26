@@ -48,7 +48,7 @@ describe('App', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Vizite' }));
     expect(screen.getByRole('heading', { name: 'Vizite' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '+ Adaugă vizită' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Programează vizită' })).toBeInTheDocument();
   });
 
   it('o cale necunoscută revine la Dashboard', () => {

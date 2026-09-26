@@ -25,7 +25,7 @@ export function tenderMethodsFor(payment: Payment | null): string[] {
   return [...new Set([...DEFAULT_TENDER_METHODS, ...existing])];
 }
 
-export function defaultPaymentFormValues(payment: Payment | null, today: string): PaymentFormValues {
+export function defaultPaymentFormValues(payment: Payment | null, today: string, defaultChildId = ''): PaymentFormValues {
   const tenders: Record<string, string> = {};
   for (const method of tenderMethodsFor(payment)) tenders[method] = '';
   if (payment) for (const tender of paymentTenders(payment)) tenders[tender.method] = String(tender.amount);
@@ -37,7 +37,7 @@ export function defaultPaymentFormValues(payment: Payment | null, today: string)
       : [{ month: date.slice(0, 7), amount: '' }];
 
   return {
-    childId: payment?.childId || '',
+    childId: payment?.childId || defaultChildId,
     date,
     tenders,
     sourceName: payment?.sourceName || payment?.childName || '',

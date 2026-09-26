@@ -10,14 +10,18 @@ import styles from './PaymentFormDrawer.module.css';
 export interface PaymentFormDrawerProps {
   target: Payment | 'new' | null;
   records: RecordsSnapshot;
+  /** Copil presetat la creare (ex. „+ Plată" din fișa copilului) — rămâne editabil în formular. */
+  defaultChildId?: string;
   onSubmit: (values: PaymentFormValues) => void;
   onClose: () => void;
 }
 
 /** Echivalentul payment-editor-fields.mjs's `markup()`/`bind()`: tenders dinamice, alocări pe lună + 3 sincronizări automate. */
-export function PaymentFormDrawer({ target, records, onSubmit, onClose }: PaymentFormDrawerProps) {
+export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubmit, onClose }: PaymentFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
-  const [values, setValues] = useState<PaymentFormValues>(() => defaultPaymentFormValues(editing, todayFn()));
+  const [values, setValues] = useState<PaymentFormValues>(() =>
+    defaultPaymentFormValues(editing, todayFn(), defaultChildId),
+  );
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual — aceeași regulă ca în legacy.

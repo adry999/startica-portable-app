@@ -1,14 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  Badge,
-  Card,
-  DataTable,
-  Drawer,
-  SearchSelect,
-  SegmentedControl,
-  useToast,
-  type DataTableColumn,
-} from '@shared/ui';
+import { Badge, Card, DataTable, SearchSelect, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { downloadCsv } from '@shared/csv-export';
@@ -19,7 +10,9 @@ import { useChildren, type ChildRow } from './useChildren';
 import { useChildProfile } from './useChildProfile';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import type { Child, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import { PaymentFormDrawer } from '../payments/PaymentFormDrawer';
+import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from '../payments/payment-form';
+import type { Child, Payment, PaymentAllocation, RecordsSnapshot } from '@contracts/record-types.mjs';
 import type { ViewKey } from '../../app/shell/nav-items';
 import styles from './ChildrenPage.module.css';
 
@@ -497,6 +490,7 @@ function ChildProfileView({
   }
 
   const { child, obligation: childObligation } = data;
+  const records = session.state.state as RecordsSnapshot;
 
   async function changeGroup(groupId: string) {
     try {
@@ -516,6 +510,25 @@ function ChildProfileView({
       await session.mutate('/api/record', { type: 'children', mode: 'update', record });
       setEditDrawerOpen(false);
       toast.show({ message: 'Fișă actualizată.' });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function submitChildPayment(values: PaymentFormValues) {
+    try {
+      const record = buildPaymentRecord(null, `PAY-${crypto.randomUUID()}`, values);
+      const duplicate = findDuplicatePayment(records, record);
+      if (
+        duplicate &&
+        !window.confirm(
+          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
+        )
+      )
+        return;
+      await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+      setPaymentDrawerOpen(false);
+      toast.show({ message: 'Achitare adăugată.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -555,8 +568,10 @@ function ChildProfileView({
         <div className={styles.profileLeft}>
           <Card className={styles.profileSection}>
             <p className={styles.sectionTitle}>Părinți</p>
-            <ParentRow name={child.parent} phone={child.phone} />
-            {(child.parent2 || child.phone2) && <ParentRow name={child.parent2 || ''} phone={child.phone2 || ''} />}
+            <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
+            {(child.parent2 || child.phone2) && (
+              <ParentRow name={child.parent2 || ''} phone={child.phone2 || ''} onAddPhone={() => setEditDrawerOpen(true)} />
+            )}
           </Card>
 
           <Card className={styles.profileSection}>
@@ -627,18 +642,29 @@ function ChildProfileView({
         onSubmit={submitChildEdit}
         onClose={() => setEditDrawerOpen(false)}
       />
-      <Drawer open={paymentDrawerOpen} title="Plată nouă" onClose={() => setPaymentDrawerOpen(false)}>
-        <p>Formular complet — pasul următor din plan.</p>
-      </Drawer>
+      <PaymentFormDrawer
+        key={paymentDrawerOpen ? 'open' : 'closed'}
+        target={paymentDrawerOpen ? 'new' : null}
+        records={records}
+        defaultChildId={child.id}
+        onSubmit={submitChildPayment}
+        onClose={() => setPaymentDrawerOpen(false)}
+      />
     </>
   );
 }
 
-function ParentRow({ name, phone }: { name: string; phone: string }) {
+function ParentRow({ name, phone, onAddPhone }: { name: string; phone: string; onAddPhone: () => void }) {
   return (
     <div className={styles.parentContactRow}>
       <strong>{name || 'Necunoscut'}</strong>
-      {phone ? <span>{phone}</span> : <button type="button">+ adaugă telefon</button>}
+      {phone ? (
+        <span>{phone}</span>
+      ) : (
+        <button type="button" onClick={onAddPhone}>
+          + adaugă telefon
+        </button>
+      )}
     </div>
   );
 }
