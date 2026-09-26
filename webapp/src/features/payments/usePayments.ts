@@ -19,18 +19,6 @@ export const ARCHIVE_FILTER_OPTIONS: { value: ArchiveFilter; label: string }[] =
   { value: 'all', label: 'Toate' },
 ];
 
-export const METHOD_FILTER_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'Toate' },
-  { value: 'Cash', label: 'Cash' },
-  { value: 'Card', label: 'Card' },
-  { value: 'Transfer', label: 'Transfer' },
-];
-
-export interface ChildOption {
-  id: string;
-  name: string;
-}
-
 export interface PaymentTenderView {
   method: string;
   amount: number;
@@ -48,6 +36,7 @@ export interface PaymentRowView {
   dateLabel: string;
   childId: string;
   childLabel: string;
+  sourceName: string;
   unassigned: boolean;
   tenders: PaymentTenderView[];
   allocations: PaymentAllocationView[];
@@ -69,14 +58,16 @@ export interface PaymentsData {
   failureMessage: string;
   records: RecordsSnapshot;
   rows: PaymentRowView[];
-  childOptions: ChildOption[];
   summary: PaymentsSummary;
+  groups: { id: string; name: string }[];
   search: string;
   setSearch: (value: string) => void;
   childId: string;
   setChildId: (value: string) => void;
   method: string;
   setMethod: (value: string) => void;
+  groupFilter: string;
+  setGroupFilter: (value: string) => void;
   monthFrom: string;
   setMonthFrom: (value: string) => void;
   monthTo: string;
@@ -100,6 +91,7 @@ function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
     dateLabel: formatDate(payment.date),
     childId: payment.childId,
     childLabel: childNameOf(payment, records.children),
+    sourceName: payment.sourceName || '',
     unassigned: !payment.childId,
     tenders: paymentTenders(payment),
     allocations: allocations(payment).map((allocation: PaymentAllocation) => ({
@@ -126,6 +118,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const [search, setSearch] = useState('');
   const [childId, setChildId] = useState(initialChildId);
   const [method, setMethod] = useState('');
+  const [groupFilter, setGroupFilter] = useState('all');
   const [monthFrom, setMonthFrom] = useState('');
   const [monthTo, setMonthTo] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
@@ -181,6 +174,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
     setChildId,
     method,
     setMethod,
+    groupFilter,
+    setGroupFilter,
     monthFrom,
     setMonthFrom,
     monthTo,
@@ -201,35 +196,52 @@ export function usePayments(initialChildId = ''): PaymentsData {
       failureMessage: saveError,
       records,
       rows: [],
-      childOptions: [],
       summary: EMPTY_SUMMARY,
+      groups: [],
       ...actions,
     };
   }
 
+  function paymentGroupId(payment: Payment): string | null {
+    const child = payment.childId ? records.children.find(c => c.id === payment.childId) : undefined;
+    return child?.groupId ?? null;
+  }
+
+  function matchesGroupFilter(payment: Payment): boolean {
+    if (groupFilter === 'all') return true;
+    const paymentGroup = paymentGroupId(payment);
+    return groupFilter === 'none' ? !paymentGroup : paymentGroup === groupFilter;
+  }
+
   const normalizedSearch = normalizeSearchText(search);
-  const filteredPayments = records.payments.filter(
-    payment =>
+
+  function matchesFilters(payment: Payment, includeMethod: boolean): boolean {
+    return (
       (archiveFilter === 'all' || (archiveFilter === 'archived' ? payment.archived : !payment.archived)) &&
       (!monthFrom || payment.date.slice(0, 7) >= monthFrom) &&
       (!monthTo || payment.date.slice(0, 7) <= monthTo) &&
       (!childId || payment.childId === childId) &&
-      (!method || paymentTenders(payment).some((tender: PaymentTender) => tender.method === method)) &&
-      matchesRecordListSearch('payments', payment, records, normalizedSearch),
-  );
+      (!includeMethod ||
+        !method ||
+        paymentTenders(payment).some((tender: PaymentTender) => tender.method === method)) &&
+      matchesGroupFilter(payment) &&
+      matchesRecordListSearch('payments', payment, records, normalizedSearch)
+    );
+  }
+
+  const filteredPayments = records.payments.filter(payment => matchesFilters(payment, true));
+  const paymentsForSummary = records.payments.filter(payment => matchesFilters(payment, false));
 
   const rows = filteredPayments.map(payment => buildRow(payment, records));
-  const byMethod = summarizePaymentsByMethod(filteredPayments);
-  const childOptions = [...records.children]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(child => ({ id: child.id, name: child.name }));
+  const byMethod = summarizePaymentsByMethod(paymentsForSummary);
+  const groups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
 
   return {
     status: 'ready',
     failureMessage: '',
     records,
     rows,
-    childOptions,
+    groups,
     summary: {
       count: rows.length,
       total: total(filteredPayments),

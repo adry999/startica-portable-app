@@ -117,7 +117,7 @@ describe('PaymentsPage', () => {
 
     expect(screen.getByText('Total filtrat')).toBeInTheDocument();
     expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(0);
-    expect(screen.getByText('Import CSV')).toBeInTheDocument();
+    expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);
     expect(screen.getByText('Neasociată')).toBeInTheDocument();
   });
 
@@ -139,7 +139,7 @@ describe('PaymentsPage', () => {
     renderPage(onOpenChild);
 
     const table = screen.getByRole('table');
-    const row = within(table).getByText('Import CSV').closest('tr')!;
+    const row = within(table).getAllByText('Import CSV')[0].closest('tr')!;
     await userEvent.click(row);
 
     expect(onOpenChild).not.toHaveBeenCalled();

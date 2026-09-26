@@ -3,11 +3,14 @@ import {
   Badge,
   Card,
   DataTable,
+  FilterPills,
   SegmentedControl,
   SelectionBar,
+  groupTone,
   useToast,
   type BadgeTone,
   type CardTone,
+  type PillTone,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -15,7 +18,6 @@ import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import {
   usePayments,
   ARCHIVE_FILTER_OPTIONS,
-  METHOD_FILTER_OPTIONS,
   type ArchiveFilter,
   type PaymentRowView,
   type PaymentsData,
@@ -106,8 +108,38 @@ export function PaymentsPage({
         </button>
       </div>
 
-      <SummaryCards summary={data.summary} />
+      <SummaryCards summary={data.summary} method={data.method} />
       <Filters data={data} />
+
+      <FilterPills
+        groups={[
+          {
+            label: 'Metodă',
+            value: data.method,
+            onChange: data.setMethod,
+            options: [
+              { value: '', label: 'Toate', tone: 'neutral' },
+              { value: 'Cash', label: 'Cash', tone: METHOD_TONE.Cash as PillTone },
+              { value: 'Card', label: 'Card', tone: METHOD_TONE.Card as PillTone },
+              { value: 'Transfer', label: 'Transfer', tone: METHOD_TONE.Transfer as PillTone },
+            ],
+          },
+          {
+            label: 'Grupă',
+            value: data.groupFilter,
+            onChange: data.setGroupFilter,
+            options: [
+              { value: 'all', label: 'Toate', tone: 'neutral' },
+              ...data.groups.map(group => ({
+                value: group.id,
+                label: group.name,
+                tone: groupTone(group.id, data.groups),
+              })),
+              { value: 'none', label: 'Fără grupă', tone: 'neutral' },
+            ],
+          },
+        ]}
+      />
 
       {viewMode === 'table' ? (
         <TableView data={data} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
@@ -126,8 +158,9 @@ export function PaymentsPage({
   );
 }
 
-function SummaryCards({ summary }: { summary: PaymentsData['summary'] }) {
+function SummaryCards({ summary, method }: { summary: PaymentsData['summary']; method: string }) {
   const cardTone = (value: number, tone: CardTone): CardTone => (value > 0 ? tone : 'white');
+  const activeClass = (active: boolean) => (active ? ` ${styles.summaryCardActive}` : '');
   return (
     <div className={styles.summaryRow}>
       <Card tone="orange" decorative className={styles.summaryCard}>
@@ -135,15 +168,18 @@ function SummaryCards({ summary }: { summary: PaymentsData['summary'] }) {
         <strong className={styles.summaryValue}>{formatMoney(summary.total)}</strong>
         <small>{summary.count} achitări</small>
       </Card>
-      <Card tone={cardTone(summary.cash, 'mint')} className={styles.summaryCard}>
+      <Card tone={cardTone(summary.cash, 'mint')} className={styles.summaryCard + activeClass(method === 'Cash')}>
         <p className={styles.summaryLabel}>Cash</p>
         <strong className={styles.summaryValue}>{formatMoney(summary.cash)}</strong>
       </Card>
-      <Card tone={cardTone(summary.card, 'yellow')} className={styles.summaryCard}>
+      <Card tone={cardTone(summary.card, 'yellow')} className={styles.summaryCard + activeClass(method === 'Card')}>
         <p className={styles.summaryLabel}>Card</p>
         <strong className={styles.summaryValue}>{formatMoney(summary.card)}</strong>
       </Card>
-      <Card tone={cardTone(summary.transfer, 'pink')} className={styles.summaryCard}>
+      <Card
+        tone={cardTone(summary.transfer, 'pink')}
+        className={styles.summaryCard + activeClass(method === 'Transfer')}
+      >
         <p className={styles.summaryLabel}>Transfer</p>
         <strong className={styles.summaryValue}>{formatMoney(summary.transfer)}</strong>
       </Card>
@@ -167,27 +203,6 @@ function Filters({ data }: { data: PaymentsData }) {
           onChange={event => data.setSearch(event.target.value)}
           placeholder="Caută după nume, notițe…"
           aria-label="Căutare achitări"
-        />
-        <label className={styles.filterField}>
-          Copil
-          <select
-            value={data.childId}
-            onChange={event => data.setChildId(event.target.value)}
-            aria-label="Filtru copil"
-          >
-            <option value="">Toți</option>
-            {data.childOptions.map(child => (
-              <option key={child.id} value={child.id}>
-                {child.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <SegmentedControl
-          options={METHOD_FILTER_OPTIONS}
-          value={data.method}
-          onChange={data.setMethod}
-          ariaLabel="Filtru metodă"
         />
         <label className={styles.filterField}>
           De la
@@ -313,6 +328,12 @@ function TableView({
                 )}
               </>
             ),
+          },
+          {
+            key: 'sourceName',
+            header: 'Plătitor',
+            sortValue: row => row.sourceName,
+            render: row => row.sourceName || '—',
           },
           {
             key: 'method',

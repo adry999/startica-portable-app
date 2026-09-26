@@ -31,6 +31,10 @@
   min-height: 96px;
 }
 
+.summaryCardActive {
+  border: 2px solid var(--slate);
+}
+
 .summaryLabel {
   margin: 0 0 var(--space-8);
   font-size: 13px;
