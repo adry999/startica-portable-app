@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Badge, Card, useToast } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
-import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatRate } from '#shared/format/rate-format.mjs';
 import { useExchangeRates, type PlanPreset } from './useExchangeRates';
 import backupStyles from './BackupPage.module.css';
 import styles from './ExchangeRateSettings.module.css';
@@ -88,7 +88,7 @@ export function ExchangeRateSettings() {
           </div>
         ) : (
           <div className={styles.todayRow} data-testid="today-rate">
-            <Badge tone={data.todayTone === 'yellow' ? 'yellow' : 'mint'}>1 € = {formatMoney(data.todayRate)}</Badge>
+            <Badge tone={data.todayTone === 'yellow' ? 'yellow' : 'mint'}>1 € = {formatRate(data.todayRate)} lei</Badge>
             {data.todayTone === 'yellow' && (
               <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
                 Revino la cursul BNM
@@ -102,11 +102,11 @@ export function ExchangeRateSettings() {
             Corectează cursul de azi
             <input
               type="number"
-              step="0.01"
+              step="0.0001"
               min="0"
               value={correctionInput}
               onChange={event => setCorrectionInput(event.target.value)}
-              placeholder="ex. 19.62"
+              placeholder="ex. 19,7400"
             />
           </label>
           <button type="submit" className={backupStyles.btnPrimary} disabled={!correctionInput}>
@@ -122,7 +122,7 @@ export function ExchangeRateSettings() {
             {data.lastFiveDays.map(entry => (
               <li key={entry.date} className={styles.lastFiveRow}>
                 <span>{formatDate(entry.date)}</span>
-                <span>1 € = {formatMoney(entry.rate)}</span>
+                <span>1 € = {formatRate(entry.rate)} lei</span>
                 {entry.source && (
                   <Badge tone={entry.source === 'bnm' ? 'mint' : 'yellow'}>{SOURCE_LABEL[entry.source]}</Badge>
                 )}
