@@ -10,6 +10,7 @@ export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone
 export { groupTone } from './group-tone';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
 export { RowMenu, type RowMenuItem, type RowMenuProps } from './RowMenu';
+export { ConfirmDeleteDialog, type ConfirmDeleteDialogProps } from './ConfirmDeleteDialog';
 export { SelectionBar, type SelectionBarProps } from './SelectionBar';
 export {
   TopbarActionsProvider,
