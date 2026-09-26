@@ -4,7 +4,7 @@
 
 **Goal:** Let the operator send a paid SMS to a child's parent from „De notificat” (one row or the whole list), after a confirmation dialog that shows the exact text, segment count and estimated cost; configure the sms.md provider (token, sender, optional monthly limit, test SMS, balance) and edit the message template from „Notificări”. Every sent message is logged in SQLite before the network call so a paid SMS is never untracked.
 
-**Architecture:** A new independent feature `src/features/sms-notify/` mirrors `telegram-notify` (fetch-injected service, `Startica_Date\sms.json` config repository, hyphenated `/api/sms-<verb>` routes, `fake-sms-api.mjs` in `test-support/`). Two new SQLite tables, `sms_log` and `sms_templates`, are added to `SCHEMA` in `core/server/database/schema.mjs` (not `records`). Rules used by both the browser and the server — phone normalization, segment counting, diacritics stripping, template rendering — live in `#shared/domain` / `#shared/format`; `billing/domain/reminder-message.mjs` moves there as `sms-template.mjs`. In `webapp/`, the pieces that both „De notificat” (P1) and „Situația plăților” (P2) will use — hooks, the confirmation dialog, the status badge — live under `webapp/src/shared/sms/`, because `webapp/src/architecture.test.ts` forbids one webapp feature from importing another; the provider card and template editor, used only by „Notificări”, live in `webapp/src/features/notifications/`.
+**Architecture:** A new independent feature `src/features/sms-notify/` mirrors `telegram-notify` (fetch-injected service, `Startica_Date\sms.json` config repository, hyphenated `/api/sms-<verb>` routes, `fake-sms-api.mjs` in `test-support/`). Two new SQLite tables, `sms_log` and `sms_templates`, are added to `SCHEMA` in `core/server/database/schema.mjs` (not `records`). Rules used by both the browser and the server — phone normalization, segment counting, diacritics stripping, template rendering — live in `#shared/domain` / `#shared/format`; `billing/domain/reminder-message.mjs` moves there as `sms-template.mjs`. In `webapp/`, the pieces that both „De notificat” (P1) and „Situația plăților” (P2) will use are split per `docs/design/FEEDBACK.md`'s amendment (see Task 17): the data hooks and status badge live under `webapp/src/shared/sms/` (`webapp/src/architecture.test.ts` forbids one webapp feature from importing another, so this shared, non-`ui`, home is where fetch-backed cross-screen code goes), while the confirmation dialog itself is **stateless** and lives under `webapp/src/shared/ui/sms/`, exported from `@shared/ui` — it receives resolved recipients and an `onSend` callback, it does not call the hooks itself. The provider card and template editor, used only by „Notificări”, live in `webapp/src/features/notifications/`.
 
 **Tech Stack:** Node 22 vanilla ESM + `node:sqlite` + `node --test` on the server; React 19 + Vite + TypeScript + Vitest/RTL in `webapp/`. No new npm dependency. The real sms.md v3 API (`https://api.sms.md`, header `X-Api-Token`).
 
@@ -1352,46 +1352,60 @@ git commit -m "feat(webapp): shared SMS hooks, segment counter and status badge"
 
 ---
 
-### Task 17: `SmsConfirmDialog` (single + bulk) in `webapp/src/shared/sms/`
+### Task 17: `SmsConfirmDialog` (single + bulk) — stateless, in `webapp/src/shared/ui/sms/`
+
+> **Amendment (`docs/design/FEEDBACK.md`, 2026-09-27), supersedes the original Task 17 below on placement/statefulness:** "`SmsConfirmDialog` se mută în `shared/ui/sms/` ca o componentă fără stare, care primește destinatarii și un `onSend`. Logica de trimitere rămâne în `features/sms` și e injectată din `App.tsx`/rută. Așa `status/` și `notify/` o pot folosi fără import între feature-uri." Concretely: the dialog itself must NOT call `useSmsStatus`/`useSmsTemplates`/`useSmsLastNotified`/`useSmsSend` internally — it receives fully-resolved `recipients` (phone, name, prefilled text, per-recipient exclusion reason, etc.) and an `onSend(selectedRecipientIds)` callback as props, and stays purely presentational (same category as `ConfirmDeleteDialog`, exported from `@shared/ui`). The four hooks from Task 16, the balance/limit guard logic, and the actual `POST /api/sms-send` call are owned by the call site — a thin wrapper that `App.tsx` (or a route-level component) builds by combining Task 16's hooks and passes down as `recipients`/`onSend` to whichever screen (`notify` in P1, `status` in P2) opens the dialog. This keeps `notify`/`status` free of any direct import of SMS data-fetching logic, only the presentational dialog from `@shared/ui`.
 
 **Files:**
-- Create: `webapp/src/shared/sms/SmsConfirmDialog.tsx`, `SmsConfirmDialog.module.css`, `SmsConfirmDialog.test.tsx`
-- Modify: `webapp/src/shared/sms/index.ts`
+- Create: `webapp/src/shared/ui/sms/SmsConfirmDialog.tsx`, `SmsConfirmDialog.module.css`, `SmsConfirmDialog.test.tsx`
+- Modify: `webapp/src/shared/ui/index.ts` (export `SmsConfirmDialog` + its prop types, same as every other `shared/ui` component)
 
-**Interfaces:**
+**Interfaces (revised per the amendment above):**
 
 ```typescript
+export interface SmsRecipientView {
+  id: string;              // childId
+  name: string;
+  phone: string | null;    // null = no valid phone, dialog shows "Corectează telefonul"
+  text: string;             // pre-rendered message (finalizeSmsText already applied by the caller)
+  rest?: number;             // shown in --pink-ink, 'single' mode
+  excludeReason?: string;    // e.g. "notificat azi" — shown, unchecked by default, still selectable
+}
+
 export interface SmsConfirmDialogProps {
   open: boolean;
   mode: 'single' | 'bulk';
-  source: 'notify' | 'status-row' | 'status-bulk';
-  month: string;
-  rows: SmsRecipientRow[];            // one row in 'single', all notified rows in 'bulk'
+  recipients: SmsRecipientView[];       // one entry in 'single', all candidates in 'bulk'
+  unitCostLei: number;                  // for the "≈ X lei" estimate — caller resolves this (server-only balance/cost data)
+  balanceLei: number | null;            // null = unknown; caller shows the "Sold sms.md" warning line itself using this
+  monthlyLimitNote?: string;            // caller-computed, e.g. "Depășește limita lunară (480/500)" — dialog just renders it if present, disabling send
+  onSend: (selectedIds: string[]) => Promise<SmsSendResultView>;
+  onRetry?: (failedOrSkippedIds: string[]) => Promise<SmsSendResultView>;
   onClose: () => void;
   onSent: (result: SmsSendResultView) => void;   // caller refreshes badges / shows toast
 }
 ```
 
-Behaviour (spec §6–§8, README §SMS 2a/2b/2c, RASPUNSURI 4/5/7/9/11):
-- Reads `useSmsStatus`, `useSmsTemplates`, `useSmsLastNotified`, `useSmsSend`. Modal 560 px (single) / 860 px (bulk), overlay + `role="dialog"` + Esc like `ConfirmDeleteDialog`; background `var(--cream)` per README 2a (use the token, not `#fffaf0`).
-- **single**: recipient card (parent label, phone, child, rest in `--pink-ink`); tabs `Reamintire restanță` (the default template) · `Personalizat` (empty textarea, placeholder „Scrie mesajul pentru părinte…”); editable textarea prefilled with `planSmsBatch(...).messages[0].text` computed with `stripDiacritics: false` (so the operator sees the raw text) — the „Fără diacritice” switch (default = template's flag) is applied at send via `finalizeSmsText`; `SmsSegmentCounter` on the finalized text; „Ultima notificare: <formatDateTime(at)> · <templateName>” from `useSmsLastNotified`; recipient without a valid phone → the dialog shows „Fără telefon valid” and a link „Corectează telefonul” (`/copii/:id`, via `useNavigate`), send disabled. Button „Trimite SMS (≈ X lei)”, disabled while text is empty or `!status.configured`.
-- **bulk**: template = default (only one in P1) or `Personalizat`; `planSmsBatch` per recipient; list with checkboxes (a child `notifiedToday` is **unchecked by default**, re-checkable); excluded rows listed with reason; preview „k din N” with prev/next; button „Trimite N SMS (≈ X lei)” disabled when zero checked.
-- Guards from spec §7 that live here: balance line „Sold sms.md: X lei” (yellow warning when `balance < 20 × unitCost`), monthly-limit note when `monthlyLimit !== null` and `sentThisMonth + N > monthlyLimit` (button disabled with the reason).
-- Result state after `send`: „N trimise · M eșuate · K netrimise”, per-row errors, `stopped.message` in red, and „Reîncearcă” (resends only rows whose outcome was `failed`/`skipped`, same `source`) [RASPUNSURI 11]; „Închide” calls `onSent(result)` then `onClose()`.
+Behaviour (spec §6–§8, README §SMS 2a/2b/2c, RASPUNSURI 4/5/7/9/11), rewritten prop-driven per the amendment — the dialog renders what it's given and calls back on user action, it does not fetch or compute pricing/text itself:
+- Modal 560 px (single) / 860 px (bulk), overlay + `role="dialog"` + Esc like `ConfirmDeleteDialog`; background `var(--cream)` per README 2a (use the token, not `#fffaf0`).
+- **single** (`recipients.length === 1`): recipient card (name, phone, `rest` in `--pink-ink` if present); the message text shown is `recipients[0].text` **as given** — template tabs (`Reamintire restanță` / `Personalizat`) and the „Fără diacritice” switch are **not** rendered inside this dialog; they live in the caller's wrapper (the thin component built in Task 18/19 from `features/sms`), which re-renders the dialog with an updated `recipients[0].text` when the operator changes template/diacritics there — the dialog itself only ever displays one string per recipient, read-only, plus a live `SmsSegmentCounter` on it (keep colocated under `shared/ui/sms/` next to this dialog, presentational, prop-driven the same way). A recipient with `phone === null` shows „Fără telefon valid” + a „Corectează telefonul” link (`/copii/:id`) and cannot be part of what `onSend` is called with (the dialog enforces this itself, pure UI logic, no fetch). Button „Trimite SMS (≈ X lei)” using `unitCostLei`, disabled while `recipients[0].phone === null`.
+- **bulk** (`recipients.length > 1`): checkbox list, a recipient with `excludeReason` set is **unchecked by default** but stays checkable; preview „k din N” with prev/next over the checked set; button „Trimite N SMS (≈ X lei)” (`N × unitCostLei`) disabled when zero checked.
+- Guards, rendered straight from props, no computation: balance warning line when `balanceLei !== null && balanceLei < 20 * unitCostLei`; `monthlyLimitNote` shown verbatim with send disabled when present.
+- On „Trimite”, calls `onSend(selectedIds)`, awaits the `SmsSendResultView`, shows „N trimise · M eșuate · K netrimise” + per-row errors + `stopped.message` in red; „Reîncearcă” (shown only when `onRetry` is provided and the result has any `failed`/`skipped`) calls `onRetry(failedOrSkippedIds)` [RASPUNSURI 11]. „Închide” calls `onSent(result)` then `onClose()`.
 
-- [ ] **Step 1: Write the failing RTL tests** (spec §9 „webapp”): counter turns red on UCS-2; „Trimite” disabled on empty text and on zero checked; a child notified today is unchecked by default; partial result shows „2 trimise · 1 eșuate · 1 netrimise” and „Reîncearcă” POSTs only the 2 failed/skipped `childId`s; without a valid phone the dialog shows „Corectează telefonul”; POST body has `source`, `month`, `templateId` and each message's `phone` in E.164.
+- [ ] **Step 1: Write the failing RTL tests** (spec §9 „webapp”, adapted to the prop-driven interface — pass `recipients`/`onSend`/`onRetry` directly via test fixtures, no hook mocking needed here): counter turns red on UCS-2 text; „Trimite” disabled when the single recipient's `phone` is `null` and on zero checked in bulk; a recipient with `excludeReason` is unchecked by default; a resolved `onSend` result showing „2 trimise · 1 eșuate · 1 netrimise” renders correctly and „Reîncearcă” calls `onRetry` with exactly the failed/skipped ids; a `null` phone shows „Corectează telefonul” linking to `/copii/:id`.
 
 - [ ] **Step 2: Run to verify failure.**
 
-- [ ] **Step 3: Implement.** Keep all text math in `planSmsBatch` / `finalizeSmsText` (imported from `#features/sms-notify/index.web.mjs`); the component only holds UI state.
+- [ ] **Step 3: Implement.** The component holds only UI state (selection, preview index) — no `planSmsBatch`/`finalizeSmsText`/hook calls inside it; that logic lives in the caller (Task 18/19's wrapper), which is exactly what makes this safe to import from both `notify` and `status` without a cross-feature import.
 
 - [ ] **Step 4: Run to verify pass**; `npm run typecheck && npm test`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add webapp/src/shared/sms
-git commit -m "feat(webapp): SMS confirmation dialog (single and bulk)"
+git add webapp/src/shared/ui/sms webapp/src/shared/ui/index.ts
+git commit -m "feat(webapp): SMS confirmation dialog (single and bulk), stateless"
 ```
 
 ---
