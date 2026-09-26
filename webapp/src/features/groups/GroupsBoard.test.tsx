@@ -2,8 +2,7 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from '@testing-li
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
-import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { GroupsPage } from './GroupsPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — toggle-ul Carduri/Tablă și „+ Grupă nouă" ajung acolo. */

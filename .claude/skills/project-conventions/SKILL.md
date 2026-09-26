@@ -23,14 +23,14 @@ Fiecare modificare apropie codul de arhitectura țintă din `docs/arhitectura/RE
 - Zero dependențe runtime. SheetJS rămâne vendorizat. Ca devDependencies sunt permise doar `prettier` și `typescript` (numai pentru `tsc --noEmit`).
 - Fără framework, bundler sau transpilare: ce e în repo rulează exact așa la client.
 
-**Excepție (din 2026-09-23, vezi Decision log): `webapp/`.** Stratul de interfață web e în redesign pe React+Vite+TypeScript, pe branch `redesign/react-vite` — vezi `docs/superpowers/specs/2026-09-23-ui-redesign-react-migration-design.md`. Doar `webapp/` poate folosi React, Vite, TypeScript real, TanStack Query, Vitest, React Testing Library, react-router-dom ca dependințe. Restul stack-ului de mai sus (backend, `server/`, `domain/`, teste backend) rămâne neschimbat.
+**Excepție (din 2026-09-23, vezi Decision log): `webapp/`.** Stratul de interfață web e React+Vite+TypeScript, pe branch `master-v2` (al doilea branch principal, permanent, nu o ramură de feature) — vezi `docs/superpowers/specs/2026-09-23-ui-redesign-react-migration-design.md`. Doar `webapp/` poate folosi React, Vite, TypeScript real, TanStack Query, Vitest, React Testing Library, react-router-dom ca dependințe. Restul stack-ului de mai sus (backend, `server/`, `domain/`, teste backend) rămâne neschimbat.
 
 Convențiile vizuale pentru orice UI din `webapp/` sunt în `DESIGN.md` din acest folder (culoare, suprafețe, tipografie, interacțiuni) — vezi și `docs/design/`.
 
 ### Stadiul migrării
 
 - Planul din `docs/arhitectura/README.md` (§6, pașii 0–12) e aplicat integral. Codul nou intră direct în structura țintă.
-- Tot codul aplicației e în `src/`; stilurile sunt în `web/styles/`. Scripturile și testele importă feature-urile doar prin `index.server.mjs`/`index.web.mjs`, niciodată prin căile lor interne.
+- Tot codul aplicației e în `src/`. Scripturile și testele importă feature-urile doar prin `index.server.mjs`/`index.web.mjs`, niciodată prin căile lor interne. Stilurile pentru `webapp/` sunt CSS Modules per-componentă, sub `webapp/src/`.
 - `docs/arhitectura/referinta/` e codul de referință din care au pornit `audit-log` și `payment-assignment`; nu se modifică separat.
 
 ### Structură și granițe
@@ -55,9 +55,8 @@ Convențiile vizuale pentru orice UI din `webapp/` sunt în `DESIGN.md` din aces
 
 ### Importuri, tipuri, servire
 
-- Aliasuri: `#app/`, `#config/`, `#core/`, `#shared/`, `#features/`, `#test-support/`, definite în `package.json#imports` și în import map-ul din `web/index.html`. Importurile relative sunt permise doar în același feature, cu cel mult un `../`.
-- Import map-ul e un script inline acceptat prin hash-ul din CSP, calculat la pornire. Nu se adaugă alte scripturi inline.
-- Serverul servește module doar din lista albă: `app/web`, `core/web`, `shared`, `features/*/{domain,web}` și `index.web.mjs`. Nu servește niciodată `server/`, `*.test.mjs`, `test-support/` sau căi cu `..`.
+- Aliasuri: `#app/`, `#config/`, `#core/`, `#shared/`, `#features/`, `#test-support/`, definite în `package.json#imports`. Importurile relative sunt permise doar în același feature, cu cel mult un `../`.
+- Serverul servește `webapp/dist` (bundle-ul Vite), prin `resolveDistFile` din `src/core/server/http/static-assets.mjs`; nu mai există import map sau servire de module `.mjs` individuale către browser.
 - Tipurile se scriu în JSDoc și în fișiere `*.d.mts`, importate **cu extensia `.mjs`**, de exemplu `/** @typedef {import('../audit-log.types.mjs').AuditEntry} AuditEntry */`. Fără extensie, `tsc` (`nodenext`) nu rezolvă importul.
 - `fail()` e o declarație `function` cu `@returns {never}`, ca `tsc` să restrângă tipul după apel.
 - Validarea runtime rămâne în `#shared/domain/record-schema.mjs`, aceeași în browser și pe server. Tipurile nu o înlocuiesc.

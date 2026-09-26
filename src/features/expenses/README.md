@@ -12,15 +12,6 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | --- | --- |
 | `createExpenseCategoriesRoutes(dependencies)` | `POST /api/category-delete` |
 
-### `index.web.mjs`
-
-| Export | Rol |
-| --- | --- |
-| `createExpenseCategoriesController(dependencies)` | chips-urile de categorii și filtrul de categorie; `{ render }` |
-| `createExpensesListController(dependencies)` | lista „Cheltuieli”; `{ render }` |
-| `expenseEditorFields` | câmpurile cheltuielii în dialogul generic |
-| `listExpenseCategoryNames(records)` | sugestiile de categorie (implicite, salvate, folosite) |
-
 ## Dependențe
 
 | Import | De ce |
@@ -36,14 +27,11 @@ expenses/
 ├── README.md
 ├── expenses.types.d.mts
 ├── index.server.mjs
-├── index.web.mjs
 ├── domain/
 │   ├── expense-category-names.mjs      # DEFAULT_EXPENSE_CATEGORIES, listExpenseCategoryNames
 │   └── expense-category-names.test.mjs
-├── server/
-│   └── expense-categories.routes.mjs   # ★ ștergere, fără verificare de ocupare
-└── web/
-    └── expense-categories.controller.mjs   # ★ chips-urile de categorii, filtrul de categorie
+└── server/
+    └── expense-categories.routes.mjs   # ★ ștergere, fără verificare de ocupare
 ```
 
 ## Decizii

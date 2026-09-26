@@ -18,10 +18,6 @@ Modul **independent**: nu importă alt feature. Grupele și achitările vin din 
 | Export | Rol |
 | --- | --- |
 | `buildBirthdayCalendar(children, todayStr)`, `listUpcomingBirthdays(children, days, todayStr)` | calendarul lunar și zilele de naștere apropiate (Dashboard) |
-| `createChildrenListController({ elements, readRecords, submitMutation, showNotice })` | lista „Copii”: căutare, arhivare, sortare, arhivare în masă; întoarce `{ render }` |
-| `createChildProfileView({ elements: { body, dialog }, readRecords, readSelectedMonth })` | întoarce `{ openChildProfile }` |
-| `createChildrenCsvDialog({ elements, sessionState, requestJson, submitMutation, showNotice })` | butonul de import, alegerea fișierului, previzualizarea și confirmarea |
-| `childEditorFields` | câmpurile copilului pentru dialogul generic din `record-editing` (injectate de `src/app/web/compose-screens.mjs`) |
 
 ## Cum rămâne decuplat
 
@@ -43,17 +39,11 @@ children/
 ├── domain/
 │   ├── birthdays.mjs                             # buildBirthdayCalendar, listUpcomingBirthdays
 │   └── birthdays.test.mjs
-├── server/
-│   ├── children-csv-import.mjs                   # parseCsvRows, previewChildrenCsvImport
-│   ├── children-csv-import.test.mjs              # parsare + previzualizare
-│   ├── children.routes.mjs                       # ★ POST /api/children-csv-preview, /api/children-csv
-│   └── children.routes.integration.test.mjs
-└── web/
-    ├── children-list.controller.mjs              # ★ lista „Copii”
-    ├── child-profile.view.mjs                    # ★ fișa copilului (dialog)
-    ├── child-editor-fields.mjs                   # câmpurile copilului în editorul generic
-    ├── child-labels.mjs (+test)                  # statusBadgeClass
-    └── children-csv-dialog.mjs                   # ★ import CSV
+└── server/
+    ├── children-csv-import.mjs                   # parseCsvRows, previewChildrenCsvImport
+    ├── children-csv-import.test.mjs              # parsare + previzualizare
+    ├── children.routes.mjs                       # ★ POST /api/children-csv-preview, /api/children-csv
+    └── children.routes.integration.test.mjs
 ```
 
 Formatarea plăților pe metode (`formatPaymentTenders`) este în `#shared/format/payment-tenders-format.mjs`, pentru că o folosesc și fișa copilului, și lista de achitări.
@@ -72,5 +62,4 @@ node --test "src/features/children/**/*.test.mjs"
 ```
 
 - Domeniu: `buildBirthdayCalendar`, `listUpcomingBirthdays`.
-- Web: `child-labels.test.mjs` (clasa badge-ului de statut; contactele părinților au mutat în `#shared/format/parent-contacts-format.test.mjs`).
 - Server: parsarea și previzualizarea CSV (`children-csv-import.test.mjs`, inclusiv testul pe fișierul real, sărit dacă lipsește); integrare HTTP cu `startTestApplication` (`children.routes.integration.test.mjs`).

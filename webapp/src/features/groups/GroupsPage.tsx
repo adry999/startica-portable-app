@@ -1,7 +1,6 @@
 import { Fragment, useState, type FormEvent } from 'react';
-import { Card, groupTone, SearchSelect, SegmentedControl, useToast, type CardTone } from '@shared/ui';
+import { Card, groupTone, SearchSelect, SegmentedControl, useToast, useTopbarActions, type CardTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
-import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
 import { GroupFormDrawer } from './GroupFormDrawer';

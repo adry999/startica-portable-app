@@ -22,13 +22,6 @@ rutele/controller-ul de mai jos — composition root-ul îl leagă de `#features
 
 Intern, fără export public: `buildImportReport(input, findRecordIssues)` (raportul de previzualizare).
 
-### `index.web.mjs`
-
-| Export | Rol |
-| --- | --- |
-| `createExcelTransferController({ elements, sessionState, readRecords, requestJson, submitMutation, showNotice, loadXlsx, findRecordIssues })` | leagă butoanele de import/export Excel; întoarce `{}` |
-| `loadXLSX` | încarcă la cerere `vendor/xlsx.full.min.js` |
-
 ## Dependențe
 
 | Import | De ce |
@@ -41,16 +34,11 @@ Intern, fără export public: `buildImportReport(input, findRecordIssues)` (rapo
 | `#shared/ui/records-summary.mjs` | markup-ul comun de rezumat (folosit și la restaurarea unui backup) |
 | `#shared/contracts/record-types.mjs`, `#shared/contracts/persistence.mjs`, `#shared/contracts/audit-trail.mjs` | tipuri |
 | `node:crypto` (doar `server/financial-history-import.mjs`) | hash-ul care detectează o sursă V5 modificată între reimporturi |
-| `web/vendor/xlsx.full.min.js` (vendorizat, încărcat dinamic în browser) | citirea/scrierea fișierelor `.xlsx`; nu e o dependență de pachet, e servit ca fișier static |
 
 ## Consumatori
 
 Composition root-ul serverului creează rutele cu `recordRepository`, `auditTrail` și
 `runRevisionTransaction`/`replaceAllRecords` din `core`, plus `findRecordIssues` din `review-center`.
-Composition root-ul de web creează controller-ul cu elementele DOM ale ecranului de transferuri
-(`importButton`, `excelInput`, `importPreview`, `importDialog`, `importConfirm`, `commitImport`,
-`exportButton`), `sessionState`-ul comun, `loadXLSX` din `web/xlsx-loader.mjs` și `findRecordIssues`
-din `review-center`.
 
 ## Structură
 
@@ -67,9 +55,6 @@ data-transfer/
 │   ├── financial-history-import.test.mjs
 │   ├── data-transfer.routes.mjs
 │   └── data-transfer.routes.integration.test.mjs
-├── web/
-│   ├── xlsx-loader.mjs               # încarcă vendor/xlsx.full.min.js la cerere, cu reîncercare la eroare
-│   └── excel-transfer.controller.mjs # ★ import/export Excel complet
 └── test-support/
     └── financial-history-fixtures.mjs
 ```

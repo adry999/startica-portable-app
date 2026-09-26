@@ -1,6 +1,6 @@
 import { Badge, Card, useToast, type BadgeTone } from '@shared/ui';
 import { useReview, type ReviewRowView } from './useReview';
-import type { ViewKey } from '../../app/shell/nav-items';
+import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
 
 const CATEGORY_TONE: Record<string, BadgeTone> = {

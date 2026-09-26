@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { TopbarActionsProvider, useTopbarActionsSlot, useTopbarTitleSlot } from '../../app/shell/TopbarActions';
+import { TopbarActionsProvider, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { BirthdaysPage } from './BirthdaysPage';
 
 function jsonResponse(body: unknown) {

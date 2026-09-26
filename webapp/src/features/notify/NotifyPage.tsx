@@ -1,7 +1,7 @@
 import { Card, useToast } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { useNotify, type NotifyRowView } from './useNotify';
-import type { ViewKey } from '../../app/shell/nav-items';
+import type { ViewKey } from '@shared/view-key';
 import styles from './NotifyPage.module.css';
 
 export interface NotifyPageProps {

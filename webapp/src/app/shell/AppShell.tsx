@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { useAppSession } from '@shared/api/session';
+import { TopbarActionsProvider } from '@shared/ui';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { TopbarActionsProvider } from './TopbarActions';
 import { deriveSaveStatus } from './save-status';
 import type { ViewKey } from './nav-items';
 import styles from './AppShell.module.css';

@@ -18,11 +18,6 @@ Modul **dependent** de `children` (la înscriere, fișa copilului nou se salveaz
 
 | Export | Rol |
 | --- | --- |
-| `createVisitsController({ elements, readRecords, readNow, submitMutation, showNotice, openEditor, enrolChild, openProfile, renderVisitsCount })` | controller: filtru, lună, zi selectată, calendar, listă, pâlnie, butoane rapide de statut, pornirea înscrierii |
-| `createVisitRemindersController({ readRecords, readNow, notifications, rememberedKeys, eventBus, elements, goToVisits, readPreferences? })` | memento-uri Windows la fiecare minut și la reîncărcarea datelor; permisiunea din butonul ecranului „Vizite”; `readPreferences` (implicit toate pornite, 30 min) vine din ecranul „Notificări” |
-| `visitEditorFields` | secțiuni editor: copil, părinți, vizita, dorințe, date medicale, post-vizită |
-| `applyParsedVisitFields(formElement, parsed)` | scrie în formular câmpurile deja parsate din șablonul lipit din clipboard |
-| `createVisitsApi({ submitMutation })` | `enrolChild(visitId, child)` → `POST /api/visits-enrol` |
 | `countVisitsForDays(visits, todayStr, horizonDays?)` | folosit și de Dashboard (`summarizeUpcomingVisits`) |
 | `VISIT_PASTE_TEMPLATE` | textul gol al șablonului de copiat pentru operator |
 
@@ -48,8 +43,6 @@ Modul **dependent** de `children` (la înscriere, fișa copilului nou se salveaz
 ## Consumatori
 
 Server: `createApplication` din `create-application.mjs` (rute și serviciu); `main.mjs` apelează `expireHealthNotes` la pornire; `telegram-digest.mjs` folosește `countVisitsForDays` pentru rezumatul zilnic.
-
-Client: `app/web/compose-screens.mjs` leagă controller-ul, API-ul, editorul, memento-urile și rezumatul din Dashboard.
 
 ## Structură
 
@@ -77,20 +70,8 @@ visits/
 │   ├── visits.service.test.mjs
 │   ├── visits.routes.mjs            # POST /api/visits-enrol
 │   └── visits.routes.integration.test.mjs
-├── test-support/
-│   └── visit-record-fixtures.mjs    # scheduledVisit, newChildInput, createVisitsRecords
-└── web/
-    ├── visits.api.mjs               # enrolChild → POST /api/visits-enrol
-    ├── visits.controller.mjs        # ★ stare, filtre, deschidere editor, butoane rapide
-    ├── visits.controller.test.mjs
-    ├── visits-list.view.mjs         # randare listă cu recordActions
-    ├── visits-calendar.view.mjs     # randare calendar + cip-uri
-    ├── visit-detail.view.mjs        # panoul de detaliu la clic pe cip
-    ├── visit-labels.mjs             # clasele de badge/cip după statut
-    ├── visit-editor-fields.mjs      # ★ secțiuni editor (precompletat la înscriere)
-    ├── visit-editor-fields.test.mjs
-    ├── visit-reminders.controller.mjs # memento-uri și permisiuni notificări
-    └── visit-reminders.controller.test.mjs
+└── test-support/
+    └── visit-record-fixtures.mjs    # scheduledVisit, newChildInput, createVisitsRecords
 ```
 
 ## Decizii

@@ -4,8 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
-import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { ChildrenPage } from './ChildrenPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — butoanele „Import CSV"/„+ Adaugă copil" ajung acolo, nu în pagină. */

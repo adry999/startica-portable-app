@@ -1,18 +1,6 @@
-export type ViewKey =
-  | 'dashboard'
-  | 'children'
-  | 'groups'
-  | 'visits'
-  | 'payments'
-  | 'expenses'
-  | 'status'
-  | 'notify'
-  | 'fees'
-  | 'review'
-  | 'assign'
-  | 'audit'
-  | 'notifications'
-  | 'settings';
+import type { ViewKey } from '../../shared/view-key';
+
+export type { ViewKey } from '../../shared/view-key';
 
 export type NavMarkerColor = 'yellow' | 'mint' | 'pink' | 'grey';
 

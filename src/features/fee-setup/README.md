@@ -16,8 +16,7 @@ Modul **independent**: nu importă alt feature. Depinde de `groups` doar prin da
 
 | Export | Rol |
 | --- | --- |
-| `createFeeSetupController({ elements, readRecords, readToday, submitMutation, showNotice, renderMissingFeeCount })` | întoarce `{ render }`; leagă filtrul, completarea în masă și salvarea la crearea sa |
-| `hasMissingFee(child)` | taxa lipsă; consumat de `src/app/web/compose-screens.mjs` la calculul `missingFeeCount` pentru Dashboard |
+| `hasMissingFee(child)` | taxa lipsă; consumat la calculul `missingFeeCount` pentru Dashboard |
 
 ## Cum rămâne decuplat
 
@@ -39,12 +38,9 @@ fee-setup/
 ├── domain/
 │   ├── child-fee-setup.mjs                       # applyChildFeeSetup, hasMissingFee, defaultSetupMonth
 │   └── child-fee-setup.test.mjs
-├── server/
-│   ├── fee-setup.routes.mjs                      # ★ validare și scriere în tranzacție
-│   └── fee-setup.routes.integration.test.mjs     # din tests/fixes.test.mjs
-└── web/
-    ├── fee-setup.view.mjs                        # ★ rânduri, opțiuni de grupă
-    └── fee-setup.controller.mjs                  # ★ filtrare, completare în masă, salvare
+└── server/
+    ├── fee-setup.routes.mjs                      # ★ validare și scriere în tranzacție
+    └── fee-setup.routes.integration.test.mjs     # din tests/fixes.test.mjs
 ```
 
 ## Garanții

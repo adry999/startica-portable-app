@@ -18,7 +18,6 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | --- | --- |
 | `buildReviewCenter(records)` | grupează problemele pe înregistrare, cu progresul verificărilor de import |
 | `findRecordIssues(records)` | ca mai sus |
-| `createReviewCenterView({ elements, readRecords })` | întoarce `renderReviewCenter(center)` |
 
 ## Dependențe
 
@@ -38,13 +37,11 @@ review-center/
 ├── review-center.types.d.mts       # RecordIssue, ReviewItem, ReviewCenter, ReviewFilter
 ├── index.server.mjs
 ├── index.web.mjs
-├── domain/
-│   ├── record-issues.mjs           # findRecordIssues
-│   ├── record-issues.test.mjs
-│   ├── review-center.mjs           # buildReviewCenter, filterReviewItems, REVIEW_FILTERS
-│   └── review-center.test.mjs
-└── web/
-    └── review-center.view.mjs      # ★ randarea centrului de verificare
+└── domain/
+    ├── record-issues.mjs           # findRecordIssues
+    ├── record-issues.test.mjs
+    ├── review-center.mjs           # buildReviewCenter, filterReviewItems, REVIEW_FILTERS
+    └── review-center.test.mjs
 ```
 
 ## Decizii

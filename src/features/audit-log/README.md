@@ -13,14 +13,6 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | `createAuditLogRepository(database)` | `recordChange(change)` implementează portul `AuditTrail`; `readPage({ beforeEntryId })` întoarce `{ entries, nextBeforeEntryId }` |
 | `createAuditLogRoutes({ auditLogRepository })` | `GET /api/audit?beforeEntryId=<id>` |
 
-### `index.web.mjs`
-
-| Export | Rol |
-| --- | --- |
-| `createAuditLogApi({ requestJson })` | `fetchAuditPage(beforeEntryId)` |
-| `createAuditLogController({ fetchAuditPage, renderAuditLog })` | `openFirstPage()`, `loadNextPage()`, `getState()` |
-| `createAuditLogView({ listElement, loadMoreButton, failureElement })` | întoarce `renderAuditLog(state)` |
-
 ## Dependențe
 
 | Import | De ce |
@@ -42,19 +34,13 @@ audit-log/
 ├── README.md
 ├── audit-log.types.d.mts          # AuditEntry, AuditPage, AuditFieldChange
 ├── index.server.mjs
-├── index.web.mjs
 ├── domain/
 │   ├── audit-change-diff.mjs      # câmpurile schimbate între before și after (pur)
 │   └── audit-change-diff.test.mjs
-├── server/
-│   ├── audit-log.repository.mjs   # ★ acces la date
-│   ├── audit-log.repository.test.mjs
-│   └── audit-log.routes.mjs
-└── web/
-    ├── audit-log.api.mjs
-    ├── audit-log.controller.mjs   # ★ starea ecranului, paginare, curse de cereri
-    ├── audit-log.controller.test.mjs
-    └── audit-log.view.mjs
+└── server/
+    ├── audit-log.repository.mjs   # ★ acces la date
+    ├── audit-log.repository.test.mjs
+    └── audit-log.routes.mjs
 ```
 
 ## Decizii
@@ -71,5 +57,4 @@ node --test "src/features/audit-log/**/*.test.mjs"
 ```
 
 - Repository: SQLite `:memory:` cu schema reală.
-- Controller: `fetchAuditPage` fals, cu `Promise.withResolvers()` pentru cursele de cereri.
 - Diff: funcție pură.

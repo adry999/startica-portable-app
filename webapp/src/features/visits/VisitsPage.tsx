@@ -8,13 +8,13 @@ import {
   SearchSelect,
   SegmentedControl,
   useToast,
+  useTopbarActions,
   type BadgeTone,
   type DataTableColumn,
   type PillTone,
 } from '@shared/ui';
 import { formatAge, formatDate } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
-import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { useVisits } from './useVisits';
 import { VisitFormDrawer } from './VisitFormDrawer';
 import { EnrollDrawer } from './EnrollDrawer';

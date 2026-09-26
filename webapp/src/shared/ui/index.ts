@@ -11,3 +11,11 @@ export { groupTone } from './group-tone';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
 export { RowMenu, type RowMenuItem, type RowMenuProps } from './RowMenu';
 export { SelectionBar, type SelectionBarProps } from './SelectionBar';
+export {
+  TopbarActionsProvider,
+  useTopbarActionsSlot,
+  useTopbarActions,
+  useTopbarTitleSlot,
+  useTopbarTitle,
+  type TopbarTitleOverride,
+} from './TopbarActions';

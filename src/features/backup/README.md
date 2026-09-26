@@ -13,13 +13,6 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 | `createBackupService({ database, databaseFile, backupDirectory, dataDirectory, readSetting, writeSetting, autoBackupIntervalMs })` | `backup`, `safeBackup`, `autoBackup`, `health`, `listBackups`, `resolveBackupFile`, `listExternalBackups`, `resolveExternalBackupFile`, `cancelScheduledBackup` |
 | `createBackupRoutes({ backupService, readSetting, writeSetting, auditTrail, runRevisionTransaction, replaceAllRecords, dataDirectory, backupDirectory })` | `GET /api/health`, `GET /api/backups`, `GET /api/external-backups`, `GET /api/backup-preview`, `POST /api/backup`, `POST /api/restore`, `POST /api/settings` |
 
-### `index.web.mjs`
-
-| Export | Rol |
-| --- | --- |
-| `createBackupHealthView({ elements, isExternalDirLocked })` | întoarce `renderBackupHealth(health)` |
-| `createBackupController({ elements, sessionState, requestJson, submitMutation, acceptResult, showNotice, renderSaveStatus })` | leagă butoanele de backup, dialogul de restaurare și formularul de setări; întoarce `{}` (ascultătorii se atașează o singură dată, la creare) |
-
 ## Dependențe
 
 | Import | De ce |
@@ -37,7 +30,7 @@ Modul **independent**: nu depinde de alt feature, nu publică și nu consumă ev
 
 ## Consumatori
 
-Composition root-ul serverului creează serviciul cu conexiunea reală la bază, `backupDirectory` și `dataDirectory`, și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`) și `runRevisionTransaction`/`replaceAllRecords` din `core`. Composition root-ul de web creează view-ul și controller-ul cu elementele DOM ale ecranului „Stare” și `sessionState`-ul comun al aplicației.
+Composition root-ul serverului creează serviciul cu conexiunea reală la bază, `backupDirectory` și `dataDirectory`, și îl injectează în rute, alături de `auditTrail` (implementat de `audit-log`) și `runRevisionTransaction`/`replaceAllRecords` din `core`.
 
 ## Structură
 
@@ -46,20 +39,16 @@ backup/
 ├── README.md
 ├── backup.types.d.mts             # BackupHealth, BackupFileEntry, BackupService, dependențele rutelor și ale controller-ului
 ├── index.server.mjs
-├── index.web.mjs
 ├── domain/
 │   ├── backup-retention.mjs       # ★ ce se păstrează la curățare (pur)
 │   └── backup-retention.test.mjs
-├── server/
-│   ├── backup-snapshot.mjs        # citește și validează un fișier .db
-│   ├── backup.service.mjs         # ★ backup local, copie externă, retenție, sănătate
-│   ├── backup.service.test.mjs
-│   ├── external-backup-folder.mjs # validează folderul extern față de baza și backupurile locale
-│   ├── backup.routes.mjs
-│   └── backup.routes.integration.test.mjs
-└── web/
-    ├── backup-health.view.mjs     # randează starea backupului
-    └── backup.controller.mjs      # ★ backup manual, previzualizare și confirmare restaurare, formular de setări
+└── server/
+    ├── backup-snapshot.mjs        # citește și validează un fișier .db
+    ├── backup.service.mjs         # ★ backup local, copie externă, retenție, sănătate
+    ├── backup.service.test.mjs
+    ├── external-backup-folder.mjs # validează folderul extern față de baza și backupurile locale
+    ├── backup.routes.mjs
+    └── backup.routes.integration.test.mjs
 ```
 
 ## Decizii

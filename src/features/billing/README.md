@@ -17,8 +17,6 @@ Modul **independent**: nu importă alt feature. Achitările, grupele și indicii
 | Export | Rol |
 | --- | --- |
 | `evaluateChildrenForMonth(records, month, asOf)` | aceeași funcție, reexportată pentru ecranele web |
-| `createPaymentStatusView({ elements, readToday, requestRender })` | întoarce `renderPaymentStatus({ month, evaluations })` |
-| `createNotifyListView({ elements, readRecords, readToday, requestRender, renderNotifyCount })` | întoarce `renderNotifyList({ month, evaluations, unassignedPaymentHintsByChild })` |
 
 ## Cum rămâne decuplat
 
@@ -37,12 +35,9 @@ Modul **independent**: nu importă alt feature. Achitările, grupele și indicii
 billing/
 ├── README.md
 ├── index.web.mjs
-├── domain/
-│   ├── month-evaluation.mjs        # evaluateChildrenForMonth
-│   └── month-evaluation.test.mjs
-└── web/
-    ├── payment-status.view.mjs     # ★ „Situația plăților”
-    └── notify-list.view.mjs        # ★ „De notificat”
+└── domain/
+    ├── month-evaluation.mjs        # evaluateChildrenForMonth
+    └── month-evaluation.test.mjs
 ```
 
 ## Decizii

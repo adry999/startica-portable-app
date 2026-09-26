@@ -1,0 +1,15 @@
+export type ViewKey =
+  | 'dashboard'
+  | 'children'
+  | 'groups'
+  | 'visits'
+  | 'payments'
+  | 'expenses'
+  | 'status'
+  | 'notify'
+  | 'fees'
+  | 'review'
+  | 'assign'
+  | 'audit'
+  | 'notifications'
+  | 'settings';

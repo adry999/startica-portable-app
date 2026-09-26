@@ -11,11 +11,11 @@ import {
   SelectionBar,
   groupTone,
   useToast,
+  useTopbarActions,
   type DataTableColumn,
   type PillTone,
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
-import { useTopbarActions } from '../../app/shell/TopbarActions';
 import { downloadCsv } from '@shared/csv-export';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -24,10 +24,8 @@ import { useChildren, type ChildRow } from './useChildren';
 import { useChildProfile } from './useChildProfile';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import { PaymentFormDrawer } from '../payments/PaymentFormDrawer';
-import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from '../payments/payment-form';
-import type { Child, Payment, PaymentAllocation, RecordsSnapshot } from '@contracts/record-types.mjs';
-import type { ViewKey } from '../../app/shell/nav-items';
+import type { Child, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
 
 export interface ChildrenPageProps {
@@ -483,8 +481,8 @@ function ChildProfileView({
   const data = useChildProfile(childId, month);
   const session = useAppSession();
   const toast = useToast();
+  const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
 
   if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (data.status === 'failed')
@@ -501,7 +499,6 @@ function ChildProfileView({
   }
 
   const { child, obligation: childObligation } = data;
-  const records = session.state.state as RecordsSnapshot;
 
   async function changeGroup(groupId: string) {
     try {
@@ -521,25 +518,6 @@ function ChildProfileView({
       await session.mutate('/api/record', { type: 'children', mode: 'update', record });
       setEditDrawerOpen(false);
       toast.show({ message: 'Fișă actualizată.' });
-    } catch (error) {
-      toast.show({ message: (error as Error).message });
-    }
-  }
-
-  async function submitChildPayment(values: PaymentFormValues) {
-    try {
-      const record = buildPaymentRecord(null, `PAY-${crypto.randomUUID()}`, values);
-      const duplicate = findDuplicatePayment(records, record);
-      if (
-        duplicate &&
-        !window.confirm(
-          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
-        )
-      )
-        return;
-      await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
-      setPaymentDrawerOpen(false);
-      toast.show({ message: 'Achitare adăugată.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -569,7 +547,11 @@ function ChildProfileView({
           <button type="button" className={styles.btnWhite} onClick={() => setEditDrawerOpen(true)}>
             Editează fișa
           </button>
-          <button type="button" className={styles.btnPrimary} onClick={() => setPaymentDrawerOpen(true)}>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}
+          >
             + Plată
           </button>
         </div>
@@ -656,14 +638,6 @@ function ChildProfileView({
         groups={data.groups}
         onSubmit={submitChildEdit}
         onClose={() => setEditDrawerOpen(false)}
-      />
-      <PaymentFormDrawer
-        key={paymentDrawerOpen ? 'open' : 'closed'}
-        target={paymentDrawerOpen ? 'new' : null}
-        records={records}
-        defaultChildId={child.id}
-        onSubmit={submitChildPayment}
-        onClose={() => setPaymentDrawerOpen(false)}
       />
     </>
   );

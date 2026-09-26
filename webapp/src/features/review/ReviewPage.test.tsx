@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
 import { ReviewPage } from './ReviewPage';
-import type { ViewKey } from '../../app/shell/nav-items';
+import type { ViewKey } from '@shared/view-key';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };

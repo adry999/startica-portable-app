@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MonthPicker } from '@shared/ui';
+import { MonthPicker, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
-import { useTopbarActionsSlot, useTopbarTitleSlot } from './TopbarActions';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
 import { pathForSearchResult } from './routes';

@@ -4,7 +4,7 @@ import { Card, SegmentedControl } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
-import type { ViewKey } from '../../app/shell/nav-items';
+import type { ViewKey } from '@shared/view-key';
 import styles from './DashboardPage.module.css';
 
 const AVATAR_TONE_CLASS = [styles.avatarOrange, styles.avatarMint, styles.avatarPink];

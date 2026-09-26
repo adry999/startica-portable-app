@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FilterPills, MonthStepper } from '@shared/ui';
+import { FilterPills, MonthStepper, useTopbarActions, useTopbarTitle } from '@shared/ui';
 import { pluralRo } from '@shared/format/plural-ro';
 import { today as todayFn } from '@domain/calendar-month.mjs';
-import { useTopbarActions, useTopbarTitle } from '../../app/shell/TopbarActions';
 import { useBirthdays, type BirthdaysGroupOption } from './useBirthdays';
 import styles from './BirthdaysPage.module.css';
 

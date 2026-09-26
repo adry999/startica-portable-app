@@ -2,8 +2,7 @@ import { act, render, renderHook, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
-import { TopbarActionsProvider, useTopbarActionsSlot } from '../../app/shell/TopbarActions';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { VisitsPage } from './VisitsPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Programează vizită" ajunge acolo, nu în pagină. */
