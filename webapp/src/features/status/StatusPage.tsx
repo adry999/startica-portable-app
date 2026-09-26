@@ -1,4 +1,4 @@
-import { Card, DataTable, type DataTableColumn } from '@shared/ui';
+import { Card, DataTable, FilterPills, groupTone, type DataTableColumn } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { useStatus, type StatusRowView } from './useStatus';
@@ -8,7 +8,6 @@ export interface StatusPageProps {
   month: string;
 }
 
-/** Echivalentul ecranului „Situația plăților” — doar citire, fără filtre (vezi useStatus). */
 export function StatusPage({ month }: StatusPageProps) {
   const statusData = useStatus(month);
 
@@ -71,6 +70,25 @@ export function StatusPage({ month }: StatusPageProps) {
         Taxă integrală pentru luna începută; suspendările și modificările de taxă se aplică din luna aleasă. Lunile fără
         perioadă sau taxă confirmată rămân „De verificat”. Plățile cu dată viitoare nu intră în soldul de azi.
       </p>
+
+      <FilterPills
+        groups={[
+          {
+            label: 'Grupă',
+            value: statusData.groupFilter,
+            onChange: statusData.setGroupFilter,
+            options: [
+              { value: 'all', label: 'Toate', tone: 'neutral' },
+              ...statusData.groups.map(group => ({
+                value: group.id,
+                label: group.name,
+                tone: groupTone(group.id, statusData.groups),
+              })),
+              { value: 'none', label: 'Fără grupă', tone: 'neutral' },
+            ],
+          },
+        ]}
+      />
 
       <Card className={styles.tableCard}>
         <DataTable columns={columns} rows={statusData.rows} rowKey={row => row.id} emptyState={<p>Nu sunt copii.</p>} />
