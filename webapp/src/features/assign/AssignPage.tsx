@@ -1,4 +1,4 @@
-import { Card, useToast } from '@shared/ui';
+import { Button, Card, useToast } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { useAssign, type AssignRowView } from './useAssign';
@@ -57,12 +57,12 @@ export function AssignPage({ month }: AssignPageProps) {
       </div>
 
       <div className={styles.toolbar}>
-        <button type="button" className={styles.btnGhost} onClick={fillSuggested}>
+        <Button variant="ghost" onClick={fillSuggested}>
           Completează cu prima sugestie
-        </button>
-        <button type="button" className={styles.btnGhost} onClick={assignData.clearSelections}>
+        </Button>
+        <Button variant="ghost" onClick={assignData.clearSelections}>
           Golește selecțiile
-        </button>
+        </Button>
       </div>
 
       <p className={styles.summary}>{assignData.summary}</p>
@@ -96,9 +96,9 @@ export function AssignPage({ month }: AssignPageProps) {
       </Card>
 
       <div className={styles.saveRow}>
-        <button type="button" className={styles.btnPrimary} disabled={assignData.saving} onClick={() => void save()}>
+        <Button size="lg" disabled={assignData.saving} onClick={() => void save()}>
           Salvează asocierile ({assignData.selectedCount})
-        </button>
+        </Button>
       </div>
     </>
   );

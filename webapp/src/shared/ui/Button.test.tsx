@@ -31,4 +31,9 @@ describe('Button', () => {
     render(<Button type="submit">Confirmă</Button>);
     expect(screen.getByRole('button', { name: 'Confirmă' })).toHaveAttribute('type', 'submit');
   });
+
+  it('aplică dimensiunea lg pentru acțiunea principală a paginii', () => {
+    render(<Button size="lg">Salvează asocierile</Button>);
+    expect(screen.getByRole('button', { name: 'Salvează asocierile' }).className).toMatch(/lg/);
+  });
 });

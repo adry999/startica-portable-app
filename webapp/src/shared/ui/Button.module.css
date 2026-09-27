@@ -37,3 +37,7 @@
   font-size: 14px;
   color: var(--slate);
 }
+
+.lg {
+  padding: var(--space-10) var(--space-20);
+}

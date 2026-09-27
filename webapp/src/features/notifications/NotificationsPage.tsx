@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import { Card, SegmentedControl, useToast } from '@shared/ui';
+import { Button, Card, SegmentedControl, useToast } from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useTelegramStatus, type TelegramStatusView } from './useTelegramStatus';
@@ -87,25 +87,20 @@ function TelegramSection() {
             Pentru o singură persoană: deschide botul, apasă Start. Pentru mai multe persoane: adaugă botul într-un grup
             Telegram și scrie acolo „/start@NumeleBotului".
           </p>
-          <button type="submit" className={styles.btnPrimary} disabled={telegram.connecting}>
+          <Button type="submit" disabled={telegram.connecting}>
             Conectează
-          </button>
+          </Button>
         </form>
       )}
 
       {telegram.status === 'ready' && telegram.data && telegram.data.configured && (
         <div className={styles.toolbar}>
-          <button type="button" className={styles.btnGhost} disabled={telegram.testing} onClick={() => void sendTest()}>
+          <Button variant="ghost" disabled={telegram.testing} onClick={() => void sendTest()}>
             Mesaj de probă
-          </button>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            disabled={telegram.disconnecting}
-            onClick={() => void disconnect()}
-          >
+          </Button>
+          <Button variant="ghost" disabled={telegram.disconnecting} onClick={() => void disconnect()}>
             Deconectează
-          </button>
+          </Button>
         </div>
       )}
     </Card>
@@ -287,9 +282,9 @@ function PreferencesSection() {
       {prefs.dirty && (
         <div className={styles.saveBar}>
           <p>Ai modificări nesalvate.</p>
-          <button type="button" className={styles.btnPrimary} disabled={prefs.saving} onClick={() => void save()}>
+          <Button disabled={prefs.saving} onClick={() => void save()}>
             Salvează preferințele
-          </button>
+          </Button>
         </div>
       )}
     </Card>

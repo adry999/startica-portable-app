@@ -34,31 +34,6 @@
   margin-bottom: var(--space-12);
 }
 
-.btnGhost {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-10) var(--space-20);
-  font-weight: 800;
-  font-size: 13px;
-  box-shadow: var(--shadow-button-primary);
-}
-
-.btnPrimary:disabled {
-  opacity: 0.6;
-}
-
 .summary {
   margin: 0 0 var(--space-12);
   font-size: 13px;

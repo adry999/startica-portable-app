@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Badge,
+  Button,
   Card,
   DataTable,
   FilterPills,
@@ -79,9 +80,9 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           ))}
         </select>
       )}
-      <button type="button" className={styles.btnGhost} onClick={() => window.print()}>
+      <Button variant="ghost" onClick={() => window.print()}>
         Tipărește
-      </button>
+      </Button>
     </div>,
   );
 
@@ -260,9 +261,9 @@ function MonthView({
               {summary.overdueChildren} {summary.overdueChildren === 1 ? 'restanțier' : 'restanțieri'}
             </strong>
             <span>Trimite o notificare tuturor părinților cu restanță</span>
-            <button type="button" className={styles.btnPrimary} disabled title={SMS_TITLE}>
+            <Button disabled title={SMS_TITLE}>
               Notifică toți
-            </button>
+            </Button>
           </div>
         )}
       </Card>

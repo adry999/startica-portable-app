@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import { Badge, Card, Drawer, SegmentedControl, useToast, type BadgeTone } from '@shared/ui';
+import { Badge, Button, Card, Drawer, SegmentedControl, useToast, type BadgeTone } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useBackup, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
@@ -113,31 +113,21 @@ export function BackupPage() {
                 Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile.
               </p>
               {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
-              <button type="submit" className={styles.btnPrimary} disabled={backupData.settingsBusy}>
+              <Button type="submit" disabled={backupData.settingsBusy}>
                 Salvează și testează copia
-              </button>
+              </Button>
             </form>
 
             <div className={styles.toolbar}>
-              <button
-                type="button"
-                className={styles.btnGhost}
-                disabled={backupData.backupBusy}
-                onClick={() => void backupNow()}
-              >
+              <Button variant="ghost" disabled={backupData.backupBusy} onClick={() => void backupNow()}>
                 Backup acum
-              </button>
-              <button type="button" className={styles.btnGhost} onClick={restore.openDialog}>
+              </Button>
+              <Button variant="ghost" onClick={restore.openDialog}>
                 Restaurare
-              </button>
-              <button
-                type="button"
-                className={styles.btnGhost}
-                disabled={backupData.diagnosticBusy}
-                onClick={() => void downloadDiagnostic()}
-              >
+              </Button>
+              <Button variant="ghost" disabled={backupData.diagnosticBusy} onClick={() => void downloadDiagnostic()}>
                 Raport de diagnostic
-              </button>
+              </Button>
             </div>
           </Card>
 
@@ -148,17 +138,12 @@ export function BackupPage() {
               câmpurile și poate fi reimportat.
             </p>
             <div className={styles.toolbar}>
-              <button type="button" className={styles.btnGhost} onClick={excel.importDialog.openDialog}>
+              <Button variant="ghost" onClick={excel.importDialog.openDialog}>
                 Import Excel
-              </button>
-              <button
-                type="button"
-                className={styles.btnGhost}
-                disabled={excel.exporting}
-                onClick={() => void exportExcel()}
-              >
+              </Button>
+              <Button variant="ghost" disabled={excel.exporting} onClick={() => void exportExcel()}>
                 Export Excel complet
-              </button>
+              </Button>
             </div>
           </Card>
         </>
@@ -172,14 +157,9 @@ export function BackupPage() {
         width={520}
         onClose={restore.closeDialog}
         footer={
-          <button
-            type="button"
-            className={styles.btnPrimary}
-            disabled={!restore.canCommit || restore.committing}
-            onClick={() => void commitRestore()}
-          >
+          <Button disabled={!restore.canCommit || restore.committing} onClick={() => void commitRestore()}>
             Restaurează
-          </button>
+          </Button>
         }
       >
         <fieldset className={styles.sourceField}>
@@ -214,9 +194,9 @@ export function BackupPage() {
                 placeholder="ex. G:\My Drive\Startica-backup"
               />
             </label>
-            <button type="button" className={styles.btnGhost} onClick={() => void restore.loadExternalBackups()}>
+            <Button variant="ghost" onClick={() => void restore.loadExternalBackups()}>
               Caută copii
-            </button>
+            </Button>
             <p className={styles.notice}>
               Startica nu poate confirma sincronizarea: verifică în Google Drive că fișierul are bifa verde (descărcat).
             </p>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Badge,
+  Button,
   Card,
   ConfirmDeleteDialog,
   DataTable,
@@ -288,9 +289,9 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         <Card className={styles.calendarCard}>
           <div className={styles.calendarToolbar}>
             <strong className={styles.calendarMonth}>{monthLabel(visitsData.month)}</strong>
-            <button type="button" className={styles.btnGhost} onClick={visitsData.goToToday}>
+            <Button variant="ghost" onClick={visitsData.goToToday}>
               Azi
-            </button>
+            </Button>
             <button
               type="button"
               className={styles.arrowButton}
@@ -500,9 +501,9 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             ]}
           />
           {visitsData.selectedDate && (
-            <button type="button" className={styles.btnGhost} onClick={() => visitsData.setSelectedDate(null)}>
+            <Button variant="ghost" onClick={() => visitsData.setSelectedDate(null)}>
               {formatDate(visitsData.selectedDate)} ×
-            </button>
+            </Button>
           )}
         </div>
 
