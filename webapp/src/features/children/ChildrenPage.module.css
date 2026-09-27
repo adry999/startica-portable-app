@@ -300,6 +300,30 @@
   margin-bottom: var(--space-8);
 }
 
+.sectionMeta {
+  margin: 0 0 var(--space-8);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.attendanceDotRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.attendanceExcusedList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 13px;
+  color: var(--slate);
+}
+
 .parentContactRow {
   display: flex;
   align-items: center;

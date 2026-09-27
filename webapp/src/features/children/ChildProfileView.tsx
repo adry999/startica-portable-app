@@ -9,6 +9,7 @@ import { formatRate } from '#shared/format/rate-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { useChildProfile } from './useChildProfile';
+import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
 import { initials } from './childrenColumns';
@@ -180,6 +181,8 @@ export function ChildProfileView({
             </div>
             <PaymentHistoryTable payments={profileData.payments} showEurColumns={isEurChild} />
           </Card>
+
+          <ChildAttendanceSection childId={child.id} month={month} />
         </div>
       </div>
 
