@@ -8,6 +8,7 @@ Jurnale/
 # Registrul filialelor și folderele filialelor create din aplicație (Faza 6).
 filiale.json
 Filiale/
+Comun/
 
 # ─── Node ───────────────────────────────────────────────────────────────────
 node_modules/
