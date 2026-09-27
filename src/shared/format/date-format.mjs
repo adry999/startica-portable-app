@@ -22,6 +22,16 @@ export const formatLongDate = v =>
     year: 'numeric',
   });
 
+// Eticheta DayStepper-ului din Prezența (18a): „Joi, 24 septembrie”, fără an.
+export const formatDayLabel = v => {
+  const label = new Date(v + 'T12:00:00').toLocaleDateString('ro-RO', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
 // Sub 2 ani se arată în luni, ca diferența dintre copiii mici să rămână vizibilă.
 export const formatAge = v => {
   if (!v) return 'necunoscută';
