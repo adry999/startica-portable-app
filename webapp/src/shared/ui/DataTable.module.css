@@ -19,8 +19,15 @@
 .table th,
 .table td {
   text-align: left;
-  padding: var(--space-12) var(--space-16);
   border-bottom: 1px solid var(--row-divider);
+}
+
+.table th {
+  padding: 10px var(--space-20);
+}
+
+.table td {
+  padding: var(--space-12) var(--space-20);
 }
 
 .table thead th {
@@ -49,15 +56,16 @@
 }
 
 .checkboxCell {
-  width: 32px;
+  width: 44px;
+}
+
+/* Rândul se evidențiază la trecerea cursorului chiar și fără onRowClick (00-comun E .row:hover). */
+.table tbody tr:hover {
+  background: var(--sand-soft);
 }
 
 .clickableRow {
   cursor: pointer;
-}
-
-.clickableRow:hover {
-  background: #faf7ef;
 }
 
 .clickableRow:focus-visible {

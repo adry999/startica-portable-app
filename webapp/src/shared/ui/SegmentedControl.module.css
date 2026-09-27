@@ -1,8 +1,8 @@
 .track {
   display: inline-flex;
   gap: 2px;
-  padding: 4px;
-  background: #f1ece2;
+  padding: 3px;
+  background: var(--sand);
   border-radius: var(--radius-pill);
 }
 
@@ -13,12 +13,12 @@
   padding: var(--space-6) var(--space-14);
   font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--muted);
 }
 
 .active {
   background: var(--white);
   color: var(--slate);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-pill-active);
 }
