@@ -58,6 +58,7 @@ function stubFetch(posted: PostedBatch[]) {
         return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
       if (path === '/api/health') return jsonResponse({});
       if (path === `/api/attendance?date=${TODAY}`) return jsonResponse({ entries: [] });
+      if (path.startsWith('/api/attendance?month=')) return jsonResponse({ entries: [] });
       if (path === '/api/attendance' && init?.method === 'POST') {
         const body = JSON.parse(String(init.body ?? '{}')) as PostedBatch;
         posted.push(body);
@@ -212,5 +213,24 @@ describe('AttendancePage · Ziua', () => {
     await renderPage();
 
     expect(screen.getByRole('button', { name: 'Ziua următoare' })).toBeDisabled();
+  });
+
+  it('modul Luna arată grila grupei și un clic pe celulă schimbă starea acelei zile', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('radio', { name: 'Luna' }));
+
+    await screen.findByText('Ana Popescu');
+    expect(screen.queryByText('Arhivat Cineva')).not.toBeInTheDocument();
+
+    const firstCell = screen.getAllByRole('button', { name: /Ana Popescu: 2026-09/ })[0];
+    await user.click(firstCell);
+    await waitForDebounce();
+
+    expect(posted).toHaveLength(1);
+    expect(posted[0].changes[0]).toMatchObject({ childId: 'c1', status: 'present' });
   });
 });

@@ -72,6 +72,8 @@
   --input-border: #c9c4ba;
   --sand: #f1ece2;
   --sand-soft: #faf7f1;
+  /* Prezența · Luna (18b): fundalul weekend-urilor și sărbătorilor din grilă. */
+  --off-day: #f6f4f0;
 
   /* Tipografie. */
   --font-heading: 'Baloo 2', Arial, sans-serif;

@@ -1,0 +1,134 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.notice {
+  padding: var(--space-12) 0;
+  color: var(--muted);
+}
+
+.actions {
+  margin-left: auto;
+  display: inline-flex;
+  gap: var(--space-8);
+}
+
+.printTitle {
+  display: none;
+}
+
+.tableCard {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.grid {
+  display: grid;
+  align-items: center;
+}
+
+.headCell {
+  padding: var(--space-8);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.dayCell {
+  text-align: center;
+}
+
+.offHead {
+  color: var(--subtle);
+}
+
+.todayHead {
+  background: var(--orange);
+  color: #fff;
+  border-radius: 8px;
+}
+
+.nameCell {
+  padding: var(--space-8);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.offCell {
+  background: var(--off-day);
+}
+
+.cellButton {
+  border: 0;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+}
+
+.daysCell {
+  padding: var(--space-8);
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.footCell {
+  padding: var(--space-8);
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--slate);
+  background: var(--cream);
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  .filterBar {
+    display: none;
+  }
+
+  .printTitle {
+    display: block;
+    margin: 0 0 var(--space-8);
+    font-family: var(--font-heading);
+    font-size: 18px;
+  }
+
+  .cell,
+  .headCell,
+  .nameCell,
+  .daysCell,
+  .footCell {
+    font-size: 10px;
+  }
+
+  .nameCell,
+  .cell,
+  .daysCell {
+    break-inside: avoid;
+  }
+}

@@ -17,3 +17,18 @@
   flex-direction: column;
   gap: var(--space-20);
 }
+
+/* Tipărire (Situația plăților, Prezența · Luna): doar conținutul, fără meniu sau antet. */
+@media print {
+  .shell > aside {
+    display: none;
+  }
+
+  .workspace > header {
+    display: none;
+  }
+
+  .content {
+    padding: 0;
+  }
+}
