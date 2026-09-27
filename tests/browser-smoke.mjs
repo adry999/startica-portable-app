@@ -185,7 +185,7 @@ try {
   // Navigare reală prin URL pe ecranele din checklist-ul de livrare (GHID-LIVRARE.md):
   // Dashboard, Copii, Achitări, Cheltuieli, De verificat, Backup și setări.
   const screens = [
-    ['Dashboard', '/', 'Dashboard'],
+    ['Dashboard', '/', 'Rezumatul lunii'],
     ['Copii', '/copii', 'Copii'],
     ['Achitări', '/achitari', 'Achitări'],
     ['Cheltuieli', '/cheltuieli', 'Cheltuieli'],
