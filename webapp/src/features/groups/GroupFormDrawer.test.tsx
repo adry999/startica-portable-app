@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { GroupFormDrawer } from './GroupFormDrawer';
 
 describe('GroupFormDrawer', () => {
@@ -68,5 +69,20 @@ describe('GroupFormDrawer', () => {
 
     expect(screen.getByLabelText('Nume grupă')).toHaveValue('');
     expect(screen.getByLabelText('Capacitate')).toHaveValue(null);
+  });
+
+  it('formularul devine „nesalvat” după prima modificare și dispare la închidere (13b)', async () => {
+    const { rerender } = render(<GroupFormDrawer open onSubmit={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />);
+
+    expect(readDirtyForms()).toEqual([]);
+
+    await userEvent.type(screen.getByLabelText('Nume grupă'), 'Pinguini');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o grupă');
+    await expect(dirtyForm.save()).resolves.toBe(true);
+
+    rerender(<GroupFormDrawer open={false} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(readDirtyForms()).toEqual([]);
   });
 });

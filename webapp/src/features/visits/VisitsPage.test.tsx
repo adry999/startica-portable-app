@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { VisitsPage } from './VisitsPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Programează vizită" ajunge acolo, nu în pagină. */
@@ -195,6 +196,25 @@ describe('VisitsPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Înscrie' }));
     expect(await screen.findByText('Copil înscris. Vizita a fost marcată „Înscris”.')).toBeInTheDocument();
+  });
+
+  it('formularul de înscriere devine „nesalvat” după prima modificare (13b)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { container } = renderPage();
+    const user = userEvent.setup();
+
+    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    await user.click(todayCell);
+    await user.click(screen.getByRole('button', { name: 'S-a înscris' }));
+
+    expect(readDirtyForms()).toEqual([]);
+    await user.type(screen.getByLabelText('Taxa lunară (gol = necunoscută)'), '1500');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o vizită');
+    await expect(dirtyForm.save()).resolves.toBe(true);
   });
 
   it('ștergerea definitivă rămâne dezactivată pentru o vizită nearhivată', async () => {

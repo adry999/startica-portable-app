@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BnmRateLink, Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -26,6 +27,8 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const [values, setValues] = useState<PaymentFormValues>(() =>
     defaultPaymentFormValues(editing, todayFn(), defaultChildId, records),
   );
+  // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
+  const initialValuesRef = useRef(values);
   const [submitting, setSubmitting] = useState(false);
   // Curs manual pentru ACEASTĂ plată (copil cu taxă EUR) — nu e o corectare de setări.
   const [manualRate, setManualRate] = useState('');
@@ -115,9 +118,9 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
     setValues(previous => ({ ...previous, allocations: previous.allocations.filter((_, i) => i !== index) }));
   }
 
-  async function handleSubmit() {
-    if (submitting) return;
-    if (isEurChild && !effectiveRate) return;
+  async function handleSubmit(): Promise<boolean> {
+    if (submitting) return false;
+    if (isEurChild && !effectiveRate) return false;
     setSubmitting(true);
     try {
       const finalValues = isEurChild
@@ -129,10 +132,16 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           }
         : values;
       await onSubmit(finalValues);
+      return true;
     } finally {
       setSubmitting(false);
     }
   }
+
+  // Formular nesalvat (13b): drawer-ul rămâne montat între deschideri (key-ul din PaymentsPage
+  // schimbă instanța doar la editare), deci verificăm și `target !== null` — nu doar valorile.
+  const dirty = target !== null && JSON.stringify(values) !== JSON.stringify(initialValuesRef.current);
+  useDirtyForm(dirty ? { label: 'o achitare', save: handleSubmit } : null);
 
   const allocated = values.allocations.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
   const balanceCurrency = isEurChild ? 'EUR' : 'MDL';

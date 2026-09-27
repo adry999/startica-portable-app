@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { StartupScreen } from './StartupScreen';
 import { Topbar } from './Topbar';
 import { BranchSwitchOverlay } from './BranchSwitchOverlay';
+import { BranchSwitchDialog } from './BranchSwitchDialog';
 import { useBranchSwitch } from './useBranchSwitch';
 import { deriveSaveStatus } from './save-status';
 import { VIEW_PATHS } from './routes';
@@ -70,6 +71,16 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
           {branchSwitch.switching && <BranchSwitchOverlay toName={branchSwitch.switching.toName} />}
         </div>
       </div>
+      {branchSwitch.dialog && (
+        <BranchSwitchDialog
+          form={branchSwitch.dialog.form}
+          fromName={branchSwitch.dialog.fromName}
+          toName={branchSwitch.dialog.toName}
+          onStay={branchSwitch.stay}
+          onDiscard={branchSwitch.discardAndSwitch}
+          onSave={branchSwitch.saveAndSwitch}
+        />
+      )}
     </TopbarActionsProvider>
   );
 }

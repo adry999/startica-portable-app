@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { usePlanPresets } from '@shared/api/usePlanPresets';
@@ -17,6 +18,8 @@ export interface ChildFormDrawerProps {
 export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<ChildFormValues>(() => defaultChildFormValues(editing, todayFn()));
+  // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
+  const initialValuesRef = useRef(values);
   const [submitting, setSubmitting] = useState(false);
   const { presets } = usePlanPresets();
 
@@ -24,15 +27,19 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
     setValues(previous => ({ ...previous, [key]: value }));
   }
 
-  async function handleSubmit() {
-    if (submitting) return;
+  async function handleSubmit(): Promise<boolean> {
+    if (submitting) return false;
     setSubmitting(true);
     try {
       await onSubmit(values);
+      return true;
     } finally {
       setSubmitting(false);
     }
   }
+
+  const dirty = target !== null && JSON.stringify(values) !== JSON.stringify(initialValuesRef.current);
+  useDirtyForm(dirty ? { label: 'o fișă de copil', save: handleSubmit } : null);
 
   return (
     <Drawer

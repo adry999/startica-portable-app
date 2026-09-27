@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import styles from './GroupFormDrawer.module.css';
 
 export interface GroupFormDrawerProps {
@@ -20,15 +21,21 @@ export function GroupFormDrawer({ open, onSubmit, onClose }: GroupFormDrawerProp
     }
   }, [open]);
 
-  async function handleSubmit() {
-    if (submitting) return;
+  async function handleSubmit(): Promise<boolean> {
+    if (submitting) return false;
     setSubmitting(true);
     try {
       await onSubmit(name, capacityRaw);
+      return true;
     } finally {
       setSubmitting(false);
     }
   }
+
+  // Formularul e mereu „nou” (fără target de editare) — nesalvat înseamnă doar
+  // că un câmp are text cât timp drawer-ul e deschis (13b).
+  const dirty = open && (name !== '' || capacityRaw !== '');
+  useDirtyForm(dirty ? { label: 'o grupă', save: handleSubmit } : null);
 
   return (
     <Drawer

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ChildFormDrawer } from './ChildFormDrawer';
 
 describe('ChildFormDrawer', () => {
@@ -55,6 +56,21 @@ describe('ChildFormDrawer', () => {
     await userEvent.click(saveButton);
     resolveSubmit();
 
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('formularul devine „nesalvat” după prima modificare și save() întoarce true la salvare reușită', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+
+    expect(readDirtyForms()).toEqual([]);
+
+    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o fișă de copil');
+
+    await expect(dirtyForm.save()).resolves.toBe(true);
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 });

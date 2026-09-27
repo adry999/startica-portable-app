@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { PaymentFormDrawer } from './PaymentFormDrawer';
 import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -283,5 +284,25 @@ describe('PaymentFormDrawer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Salvează' }));
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('formularul devine „nesalvat” după prima modificare și save() întoarce true la salvare reușită', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    expect(readDirtyForms()).toEqual([]);
+
+    await user.type(screen.getByLabelText('Cash'), '500');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o achitare');
+
+    await expect(dirtyForm.save()).resolves.toBe(true);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('formularul nu e nesalvat cât timp drawer-ul e închis (target null)', () => {
+    render(<PaymentFormDrawer target={null} records={records} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(readDirtyForms()).toEqual([]);
   });
 });

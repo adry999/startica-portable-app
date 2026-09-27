@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { VisitFormDrawer } from './VisitFormDrawer';
 import type { Visit } from '@contracts/record-types.mjs';
 
@@ -57,5 +58,18 @@ describe('VisitFormDrawer', () => {
 
     const select = screen.getByLabelText('Statut') as HTMLSelectElement;
     expect([...select.options].map(option => option.textContent)).toEqual(['S-a înscris']);
+  });
+
+  it('formularul devine „nesalvat” după prima modificare și save() întoarce true (13b)', async () => {
+    render(<VisitFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    const user = userEvent.setup();
+
+    expect(readDirtyForms()).toEqual([]);
+
+    await user.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o vizită');
+    await expect(dirtyForm.save()).resolves.toBe(true);
   });
 });

@@ -4,6 +4,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { performBranchSwitch, readBranchSwitchNote, useBranchSwitch } from './useBranchSwitch';
 
 function jsonResponse(body: unknown) {
@@ -169,5 +170,89 @@ describe('useBranchSwitch', () => {
       pending.resolve({ ok: true, status: 200, json: async () => ({ branch: botanica }) } as Response);
       await Promise.resolve();
     });
+  });
+
+  it('cu formular nesalvat apare dialogul; „Rămân aici” nu schimbă, „Salvează și schimbă” salvează întâi', async () => {
+    await loadSession();
+    stubLocationReplace();
+    const save = vi.fn(async () => true);
+    const selectCalls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/branches/select') {
+          selectCalls.push(String(init?.body));
+          return jsonResponse({ branch: botanica });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    function useCombined() {
+      useDirtyForm({ label: 'o achitare', save });
+      return useBranchSwitch();
+    }
+
+    const { result } = renderHook(() => useCombined(), { wrapper: withRouter('/achitari') });
+
+    act(() => {
+      result.current.requestSwitch('b2');
+    });
+    expect(result.current.dialog?.form.label).toBe('o achitare');
+    expect(selectCalls).toHaveLength(0);
+
+    act(() => {
+      result.current.stay();
+    });
+    expect(result.current.dialog).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+    expect(selectCalls).toHaveLength(0);
+
+    act(() => {
+      result.current.requestSwitch('b2');
+    });
+    await act(async () => {
+      result.current.saveAndSwitch();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(selectCalls).toHaveLength(1);
+    expect(result.current.dialog).toBeNull();
+  });
+
+  it('„Renunț și schimb” comută fără să salveze', async () => {
+    await loadSession();
+    stubLocationReplace();
+    const save = vi.fn(async () => true);
+    const selectCalls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/branches/select') {
+          selectCalls.push(String(init?.body));
+          return jsonResponse({ branch: botanica });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    function useCombined() {
+      useDirtyForm({ label: 'o achitare', save });
+      return useBranchSwitch();
+    }
+
+    const { result } = renderHook(() => useCombined(), { wrapper: withRouter('/achitari') });
+
+    act(() => {
+      result.current.requestSwitch('b2');
+    });
+    await act(async () => {
+      result.current.discardAndSwitch();
+      await Promise.resolve();
+    });
+
+    expect(save).not.toHaveBeenCalled();
+    expect(selectCalls).toHaveLength(1);
   });
 });

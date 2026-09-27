@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Group, Visit } from '@contracts/record-types.mjs';
@@ -23,6 +24,19 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
   const [fee, setFee] = useState('');
   const [groupId, setGroupId] = useState(() => visit?.desiredGroupId ?? '');
   const [attendanceDate, setAttendanceDate] = useState(() => visit?.desiredStartDate || todayFn());
+  // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
+  const initialValuesRef = useRef({ fee, groupId, attendanceDate });
+
+  // onSubmit e sincron (fire-and-forget, vezi VisitsPage.submitEnroll) — folosită și pentru
+  // save() din dirty-forms (13b).
+  function submitForm(): Promise<boolean> {
+    onSubmit({ fee, groupId, attendanceDate });
+    return Promise.resolve(true);
+  }
+
+  const currentValues = { fee, groupId, attendanceDate };
+  const dirty = visit !== null && JSON.stringify(currentValues) !== JSON.stringify(initialValuesRef.current);
+  useDirtyForm(dirty ? { label: 'o vizită', save: submitForm } : null);
 
   return (
     <Drawer
@@ -30,7 +44,7 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
       title={visit ? `Înscrie copilul: ${visit.name}` : 'Înscrie copilul'}
       width={520}
       onClose={onClose}
-      footer={<Button onClick={() => onSubmit({ fee, groupId, attendanceDate })}>Înscrie</Button>}
+      footer={<Button onClick={() => void submitForm()}>Înscrie</Button>}
     >
       <div className={styles.form}>
         <fieldset className={styles.section}>

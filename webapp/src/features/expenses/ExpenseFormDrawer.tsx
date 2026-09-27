@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
 import type { ExpenseFormInput } from './useExpenses';
 import type { Expense } from '@contracts/record-types.mjs';
@@ -23,11 +24,24 @@ export function ExpenseFormDrawer({
   const [method, setMethod] = useState(editing?.method || (editing ? '' : 'cash'));
   const [description, setDescription] = useState(editing?.description || '');
   const [notes, setNotes] = useState(editing?.notes || '');
+  // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
+  const initialValuesRef = useRef({ date, amount, category, method, description, notes });
+
+  // onSubmit e sincron (fire-and-forget, vezi ExpensesPage.submitExpenseForm) — nu are ce să
+  // întoarcă „succes”; se folosește pentru save() din dirty-forms (13b) și pentru form/footer.
+  function submitForm(): Promise<boolean> {
+    onSubmit({ date, amount, category, method, description, notes });
+    return Promise.resolve(true);
+  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    onSubmit({ date, amount, category, method, description, notes });
+    void submitForm();
   }
+
+  const currentValues = { date, amount, category, method, description, notes };
+  const dirty = target !== null && JSON.stringify(currentValues) !== JSON.stringify(initialValuesRef.current);
+  useDirtyForm(dirty ? { label: 'o cheltuială', save: submitForm } : null);
 
   return (
     <Drawer
@@ -36,7 +50,7 @@ export function ExpenseFormDrawer({
       width={520}
       onClose={onClose}
       footer={
-        <Button onClick={() => onSubmit({ date, amount, category, method, description, notes })}>Salvează</Button>
+        <Button onClick={() => void submitForm()}>Salvează</Button>
       }
     >
       <form className={styles.editorForm} onSubmit={handleSubmit}>

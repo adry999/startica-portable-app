@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ExpensesPage } from './ExpensesPage';
 
 function jsonResponse(body: unknown) {
@@ -214,6 +215,23 @@ describe('ExpensesPage', () => {
 
     expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
     expect(screen.getByText('Detergenți')).toBeInTheDocument();
+  });
+
+  it('formularul de cheltuială devine „nesalvat” după prima modificare (13b)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    expect(readDirtyForms()).toEqual([]);
+
+    await user.type(screen.getByLabelText('Suma'), '250');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o cheltuială');
+    await expect(dirtyForm.save()).resolves.toBe(true);
   });
 
   it('editează o cheltuială existentă din meniul rândului', async () => {

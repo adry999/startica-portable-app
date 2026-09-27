@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Button, Drawer } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { defaultVisitFormValues, STATUS_LABEL, type VisitFormValues } from './visit-form';
@@ -26,6 +27,8 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
   const [values, setValues] = useState<VisitFormValues>(() =>
     defaultVisitFormValues(editing, defaultDate || todayFn()),
   );
+  // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
+  const initialValuesRef = useRef(values);
 
   function setField<K extends keyof VisitFormValues>(key: K, value: VisitFormValues[K]) {
     setValues(previous => ({ ...previous, [key]: value }));
@@ -47,10 +50,20 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
 
   const statusChoices = editing ? (editing.status === 'Înscris' ? ['Înscris' as const] : CORRECTABLE_STATUSES) : [];
 
+  // onSubmit e sincron (fire-and-forget, vezi VisitsPage.submitVisitForm) — folosită și pentru
+  // save() din dirty-forms (13b).
+  function submitForm(): Promise<boolean> {
+    onSubmit(values);
+    return Promise.resolve(true);
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    onSubmit(values);
+    void submitForm();
   }
+
+  const dirty = target !== null && JSON.stringify(values) !== JSON.stringify(initialValuesRef.current);
+  useDirtyForm(dirty ? { label: 'o vizită', save: submitForm } : null);
 
   return (
     <Drawer
