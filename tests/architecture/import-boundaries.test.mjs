@@ -83,6 +83,16 @@ test('citește specificatorii din import, export, import dinamic și tipuri JSDo
   ]);
 });
 
+test('ignoră „from” apărut ca text obișnuit lipit de un ghilimel, nu ca specificator de import', () => {
+  const sourceText = [
+    "leaves: new Set(['id', 'staffId', 'from', 'to', 'type']),",
+    "/** @param {Pick<Leave, 'from' | 'to'>} leave */",
+    "import { shiftDays } from '#shared/domain/calendar-month.mjs';",
+  ].join('\n');
+
+  assert.deepEqual(readImportSpecifiers(sourceText), ['#shared/domain/calendar-month.mjs']);
+});
+
 test('permite dependențele din arhitectura țintă', () => {
   assert.deepEqual(
     rulesFor([

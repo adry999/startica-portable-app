@@ -25,8 +25,11 @@ const SRC_AREAS = ['app', 'config', 'core', 'shared', 'features'];
 
 const PUBLIC_FEATURE_ENTRIES = new Set(['index.server.mjs', 'index.web.mjs']);
 
+// (?<!['"]) exclude „from” apărut ca text obișnuit lipit de un ghilimel (ex. array de nume de câmpuri
+// `'from', 'to'` sau JSDoc `Pick<Leave, 'from' | 'to'>`), unde ghilimeaua de după e cea care închide
+// cuvântul, nu una care deschide o cale de import.
 const IMPORT_SPECIFIER =
-  /\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)|^\s*import\s*['"]([^'"]+)['"]/gm;
+  /(?<!['"])\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)|^\s*import\s*['"]([^'"]+)['"]/gm;
 
 /**
  * Specificatorii din import/export static, import dinamic și tipurile JSDoc `import('…')`.
