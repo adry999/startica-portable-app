@@ -26,7 +26,7 @@ describe('App', () => {
     );
   });
 
-  it('pornește pe Dashboard, în interiorul shell-ului', () => {
+  it('pornește pe Dashboard, în interiorul shell-ului', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <ToastProvider>
@@ -34,8 +34,9 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
+    // Shell-ul (sidebar, antet) apare abia după ce sesiunea are snapshot-ul — vezi StartupScreen (21a).
+    expect(await screen.findByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Dashboard/ })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
   });
 
   it('navigarea din sidebar schimbă conținutul', async () => {
@@ -46,12 +47,12 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
-    await userEvent.click(screen.getByRole('button', { name: 'Vizite' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Vizite' }));
     expect(screen.getByRole('heading', { name: 'Vizite' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+ Programează vizită' })).toBeInTheDocument();
   });
 
-  it('/copii/zile-de-nastere e ecranul Zile de naștere, nu fișa unui copil cu acest id', () => {
+  it('/copii/zile-de-nastere e ecranul Zile de naștere, nu fișa unui copil cu acest id', async () => {
     render(
       <MemoryRouter initialEntries={['/copii/zile-de-nastere']}>
         <ToastProvider>
@@ -59,11 +60,11 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: 'Zile de naștere' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Zile de naștere' })).toBeInTheDocument();
     expect(screen.queryByText('Fișa nu a putut fi găsită.')).not.toBeInTheDocument();
   });
 
-  it('o cale necunoscută revine la Dashboard', () => {
+  it('o cale necunoscută revine la Dashboard', async () => {
     render(
       <MemoryRouter initialEntries={['/ceva-inexistent']}>
         <ToastProvider>
@@ -71,6 +72,6 @@ describe('App', () => {
         </ToastProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
   });
 });

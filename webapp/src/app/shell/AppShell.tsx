@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { TopbarActionsProvider } from '@shared/ui';
 import { Sidebar } from './Sidebar';
+import { StartupScreen } from './StartupScreen';
 import { Topbar } from './Topbar';
 import { deriveSaveStatus } from './save-status';
 import type { ViewKey } from './nav-items';
@@ -20,6 +21,9 @@ export interface AppShellProps {
 /** Compune Sidebar + Topbar + zona de conținut. Citește sesiunea o dată, aici — ecranele o citesc separat. */
 export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, children }: AppShellProps) {
   const session = useAppSession();
+  // Cât timp sesiunea nu are încă snapshot-ul (ready), nu are rost meniul sau antetul —
+  // ecranul de pornire (21a) ia locul întregului shell, nu doar al conținutului.
+  if (!session.state.ready) return <StartupScreen />;
   const saveStatus = deriveSaveStatus(session.state);
 
   return (
