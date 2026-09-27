@@ -44,6 +44,18 @@ const fixtureState = {
       feeHistory: [],
       archived: false,
     },
+    {
+      id: 'c4',
+      name: 'Elena Marin',
+      contractDate: '2026-01-15',
+      attendanceDate: '2026-01-15',
+      withdrawalDate: null,
+      status: 'Activ',
+      statusHistory: [],
+      feeHistory: [{ from: '2026-01', amount: 1000 }],
+      groupId: 'g1',
+      archived: false,
+    },
   ],
   payments: [
     {
@@ -55,9 +67,18 @@ const fixtureState = {
       allocations: [{ month: '2026-09', amount: 500 }],
       archived: false,
     },
+    {
+      id: 'p2',
+      date: '2026-09-02',
+      childId: 'c4',
+      amount: 1000,
+      tenders: [{ method: 'Card', amount: 1000 }],
+      allocations: [{ month: '2026-09', amount: 1000 }],
+      archived: false,
+    },
   ],
   expenses: [],
-  groups: [],
+  groups: [{ id: 'g1', name: 'Fluturași', capacity: null }],
   categories: [],
   visits: [],
 };
@@ -77,6 +98,7 @@ describe('useStatus', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -96,7 +118,7 @@ describe('useStatus', () => {
     const { result } = renderHook(() => useStatus('2026-09'));
 
     expect(result.current.status).toBe('ready');
-    expect(result.current.rows.map(row => row.id).sort()).toEqual(['c1', 'c2', 'c3']);
+    expect(result.current.rows.map(row => row.id).sort()).toEqual(['c1', 'c2', 'c3', 'c4']);
     expect(result.current.rows.find(row => row.id === 'c2')?.archived).toBe(true);
   });
 
@@ -128,5 +150,58 @@ describe('useStatus', () => {
     const row = result.current.rows.find(row => row.id === 'c3');
     expect(row?.expected).toBeNull();
     expect(row?.label).toBe('De verificat');
+  });
+
+  it('cardurile sunt pe toată luna și nu se schimbă cu filtrul de grupă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    expect(result.current.summary).toEqual({
+      expected: 2500,
+      paid: 1500,
+      paidShare: 0.6,
+      owingChildren: 2,
+      overdueChildren: 1,
+      overdue: 1000,
+    });
+    expect(result.current.missingFeeCount).toBe(1);
+
+    act(() => result.current.setGroupFilter('g1'));
+    expect(result.current.rows.map(row => row.id)).toEqual(['c4']);
+    expect(result.current.summary.expected).toBe(2500);
+  });
+
+  it('contoarele pe statut sunt pe toată luna, iar segmentul restrânge doar tabelul', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    expect(result.current.segmentCounts).toEqual({ all: 4, overdue: 1, partial: 0, paid: 1, upcoming: 0 });
+
+    act(() => result.current.setSegment('overdue'));
+    expect(result.current.rows.map(row => row.id)).toEqual(['c1']);
+    expect(result.current.segmentCounts.all).toBe(4);
+  });
+
+  it('căutarea restrânge tabelul după nume, fără să atingă cardurile', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    act(() => result.current.setSearch('elena'));
+    expect(result.current.rows.map(row => row.id)).toEqual(['c4']);
+    expect(result.current.summary.owingChildren).toBe(2);
+  });
+
+  it('rândurile vin cu restanțele primele, apoi după nume', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    expect(result.current.rows.map(row => row.label)).toEqual(['Restanță', 'Plătit', 'De verificat', 'Fără obligație']);
+  });
+
+  it('fiecare rând poartă moneda taxei copilului', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    expect(result.current.rows.every(row => row.currency === 'MDL')).toBe(true);
   });
 });

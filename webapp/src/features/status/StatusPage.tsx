@@ -16,7 +16,6 @@ export function StatusPage({ month }: StatusPageProps) {
     return <p className={styles.notice}>{statusData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const columns: DataTableColumn<StatusRowView>[] = [
-    { key: 'contract', header: 'Contract', sortValue: row => row.contract, render: row => row.contract },
     {
       key: 'name',
       header: 'Copil',
@@ -44,13 +43,6 @@ export function StatusPage({ month }: StatusPageProps) {
       sortValue: row => row.rest ?? -1,
       render: row => formatMoney(row.rest),
     },
-    {
-      key: 'credit',
-      header: 'Credit',
-      align: 'end',
-      sortValue: row => row.credit ?? -1,
-      render: row => formatMoney(row.credit),
-    },
     { key: 'due', header: 'Scadență', sortValue: row => row.due, render: row => formatDate(row.due) },
     { key: 'label', header: 'Situație', sortValue: row => row.label, render: row => row.label },
   ];
@@ -58,9 +50,6 @@ export function StatusPage({ month }: StatusPageProps) {
   return (
     <>
       <div className={styles.headerActions}>
-        <p className={styles.period}>
-          Luna {month} · situație la {formatDate(statusData.asOf)}
-        </p>
         <button type="button" className={styles.btnGhost} onClick={() => window.print()}>
           Tipărește raportul
         </button>
