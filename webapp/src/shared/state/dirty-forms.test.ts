@@ -5,9 +5,12 @@ import { readDirtyForms, useDirtyForm, type DirtyForm } from './dirty-forms';
 describe('dirty-forms', () => {
   it('un formular modificat se înregistrează și dispare la demontare', () => {
     const form: DirtyForm = { label: 'o achitare', save: vi.fn(async () => true) };
-    const { unmount, rerender } = renderHook<void, { current: DirtyForm | null }>(({ current }) => useDirtyForm(current), {
-      initialProps: { current: form },
-    });
+    const { unmount, rerender } = renderHook<void, { current: DirtyForm | null }>(
+      ({ current }) => useDirtyForm(current),
+      {
+        initialProps: { current: form },
+      },
+    );
 
     expect(readDirtyForms()).toEqual([{ label: 'o achitare', save: expect.any(Function) }]);
 
@@ -23,9 +26,12 @@ describe('dirty-forms', () => {
   it('save() apelează mereu ultima funcție de salvare, chiar dacă formularul nu s-a reînregistrat', async () => {
     const firstSave = vi.fn(async () => true);
     const secondSave = vi.fn(async () => true);
-    const { rerender } = renderHook(({ save }: { save: () => Promise<boolean> }) => useDirtyForm({ label: 'o cheltuială', save }), {
-      initialProps: { save: firstSave },
-    });
+    const { rerender } = renderHook(
+      ({ save }: { save: () => Promise<boolean> }) => useDirtyForm({ label: 'o cheltuială', save }),
+      {
+        initialProps: { save: firstSave },
+      },
+    );
 
     rerender({ save: secondSave });
 

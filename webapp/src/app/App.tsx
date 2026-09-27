@@ -66,7 +66,8 @@ export function App() {
       message: `Acum lucrezi în ${note.to}`,
       actionLabel: note.from ? `Înapoi la ${note.from}` : undefined,
       onAction: note.fromId
-        ? () => void performBranchSwitch({ id: note.fromId, name: note.from }, { id: '', name: note.to }, location.pathname)
+        ? () =>
+            void performBranchSwitch({ id: note.fromId, name: note.from }, { id: '', name: note.to }, location.pathname)
         : undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -33,7 +33,9 @@ export function BranchSwitchDialog({ form, fromName, toName, onStay, onDiscard, 
         <span className={styles.icon} aria-hidden="true">
           !
         </span>
-        <h2 className={styles.title}>Ai {form.label} nesalvată în {fromName}</h2>
+        <h2 className={styles.title}>
+          Ai {form.label} nesalvată în {fromName}
+        </h2>
         <p className={styles.description}>
           Dacă treci acum la {toName}, formularul se închide și datele introduse se pierd.
         </p>

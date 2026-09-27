@@ -49,9 +49,7 @@ export function ExpenseFormDrawer({
       title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
       width={520}
       onClose={onClose}
-      footer={
-        <Button onClick={() => void submitForm()}>Salvează</Button>
-      }
+      footer={<Button onClick={() => void submitForm()}>Salvează</Button>}
     >
       <form className={styles.editorForm} onSubmit={handleSubmit}>
         <label className={styles.editorField}>

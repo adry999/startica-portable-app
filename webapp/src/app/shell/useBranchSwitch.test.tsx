@@ -117,7 +117,10 @@ describe('performBranchSwitch (mecanica de comutare, criteriul 3)', () => {
 
   it('readBranchSwitchNote citește biletul o singură dată și îl șterge — pentru toast-ul „Înapoi la” de după reîncărcare', async () => {
     stubLocationReplace();
-    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({ branch: botanica })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse({ branch: botanica })),
+    );
     await performBranchSwitch(botanica, buiucani, '/');
 
     expect(readBranchSwitchNote()).toEqual({ from: 'Buiucani', fromId: 'b1', to: 'Botanica' });

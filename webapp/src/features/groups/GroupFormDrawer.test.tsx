@@ -72,7 +72,9 @@ describe('GroupFormDrawer', () => {
   });
 
   it('formularul devine „nesalvat” după prima modificare și dispare la închidere (13b)', async () => {
-    const { rerender } = render(<GroupFormDrawer open onSubmit={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />);
+    const { rerender } = render(
+      <GroupFormDrawer open onSubmit={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />,
+    );
 
     expect(readDirtyForms()).toEqual([]);
 
