@@ -140,11 +140,11 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
         )}
         {pageActions}
         {view === 'dashboard' && todaysRate != null && (
-          <span className={styles.ratePillGroup}>
-            <button type="button" className={styles.ratePill} onClick={goToCursValutar}>
+          <span className={styles.ratePill}>
+            <button type="button" className={styles.ratePillMain} onClick={goToCursValutar}>
               <span className={styles.ratePillDot} />1 € = {formatRate(todaysRate)} lei
             </button>
-            {todaysRateDate && <BnmRateLink date={todaysRateDate} />}
+            {todaysRateDate && <BnmRateLink date={todaysRateDate} className={styles.ratePillLink} />}
           </span>
         )}
         {view === 'dashboard' && <MonthPicker value={month} onChange={onMonthChange} />}

@@ -5,14 +5,15 @@ import styles from './BnmRateLink.module.css';
 export interface BnmRateLinkProps {
   /** Ziua cursului, YYYY-MM-DD. */
   date: string;
+  className?: string;
 }
 
 /** Iconiță lângă un curs afișat: deschide pagina oficială BNM a zilei, pentru verificare. */
-export function BnmRateLink({ date }: BnmRateLinkProps) {
+export function BnmRateLink({ date, className }: BnmRateLinkProps) {
   const label = `Verifică pe bnm.md cursul din ${formatDate(date)}`;
   return (
     <a
-      className={styles.link}
+      className={className ? `${styles.link} ${className}` : styles.link}
       href={bnmRatesPageUrl(date)}
       target="_blank"
       rel="noopener noreferrer"
