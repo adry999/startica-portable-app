@@ -8,6 +8,25 @@
   gap: var(--space-12);
 }
 
+.headerStat {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.newGroupCard {
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.newGroupLabel {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--slate);
+}
+
 .editorSlot {
   grid-column: 1 / -1;
 }

@@ -34,7 +34,9 @@ function renderPage(onOpenGroupStickers?: (groupId: string) => void) {
   return render(
     <ToastProvider>
       <TopbarActionsProvider>
-        <TopbarActionsSlot />
+        <div data-testid="topbar-slot">
+          <TopbarActionsSlot />
+        </div>
         <GroupsPage onOpenGroupStickers={onOpenGroupStickers} />
       </TopbarActionsProvider>
     </ToastProvider>,
@@ -48,6 +50,9 @@ async function loadedSession() {
 
 describe('GroupsPage', () => {
   beforeEach(() => {
+    // Testul „doar în modul Tablă” schimbă view-ul persistat — fără curățare, testele
+    // care rulează după el ar porni tot în Tablă (usePersistedState citește localStorage).
+    localStorage.clear();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string) => {
@@ -62,6 +67,7 @@ describe('GroupsPage', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
   });
 
   it('arată starea de încărcare înainte ca sesiunea să fie gata', () => {
@@ -86,6 +92,21 @@ describe('GroupsPage', () => {
     expect(screen.getByText('Ursuleți')).toBeInTheDocument();
     expect(screen.getByText('0/5')).toBeInTheDocument();
     expect(screen.getByText('+ Grupă nouă')).toBeInTheDocument();
+    expect(screen.getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
+  });
+
+  it('„+ Grupă nouă” stă în antet doar în modul Tablă, nu în Carduri', async () => {
+    await loadedSession();
+    renderPage();
+
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    expect(within(topbarSlot).queryByRole('button', { name: '+ Grupă nouă' })).not.toBeInTheDocument();
+    expect(within(topbarSlot).getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
+
+    await userEvent.click(within(topbarSlot).getByRole('radio', { name: 'Tablă' }));
+
+    expect(within(topbarSlot).getByRole('button', { name: '+ Grupă nouă' })).toBeInTheDocument();
+    expect(within(topbarSlot).getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
   });
 
   it('un singur editor e deschis o dată, la click pe card', async () => {
@@ -100,7 +121,7 @@ describe('GroupsPage', () => {
     expect(screen.queryByText(/^Copii în grupă · 2/)).not.toBeInTheDocument();
   });
 
-  it('creează o grupă nouă din panoul de antet', async () => {
+  it('creează o grupă nouă din cardul punctat', async () => {
     await loadedSession();
     renderPage();
 

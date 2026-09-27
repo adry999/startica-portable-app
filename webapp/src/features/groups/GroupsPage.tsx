@@ -42,10 +42,18 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GroupCardView | null>(null);
 
+  // Statistica din antet numără pe toate grupele, indiferent de modul ales (03-grupe.md #2).
+  const childrenInGroups = groupsData.groups.reduce((sum, group) => sum + group.memberCount, 0);
+  const unassignedCount = groupsData.unassignedChildren.length;
+
   useTopbarActions(
     <div className={styles.headerActions}>
+      <span className={styles.headerStat}>
+        {childrenInGroups} {childrenInGroups === 1 ? 'copil' : 'copii'} în grupe · {unassignedCount} fără grupă
+      </span>
       <SegmentedControl ariaLabel="Vizualizare Grupe" options={VIEW_OPTIONS} value={viewMode} onChange={setViewMode} />
-      <Button onClick={() => setFormOpen(true)}>+ Grupă nouă</Button>
+      {/* „+ Grupă nouă” apare doar în Tablă; în Carduri grupa nouă se creează din cardul punctat din grilă (03-grupe.md #2). */}
+      {viewMode === 'board' && <Button onClick={() => setFormOpen(true)}>+ Grupă nouă</Button>}
     </div>,
   );
 
@@ -126,6 +134,9 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               )}
             </Fragment>
           ))}
+          <Card tone="dashed" onClick={() => setFormOpen(true)} className={styles.newGroupCard}>
+            <span className={styles.newGroupLabel}>+ Grupă nouă</span>
+          </Card>
         </div>
       )}
 
