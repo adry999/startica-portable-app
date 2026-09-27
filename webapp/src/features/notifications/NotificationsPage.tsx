@@ -1,15 +1,32 @@
 import type { FormEvent } from 'react';
-import { Card, useToast } from '@shared/ui';
+import { Card, SegmentedControl, useToast } from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
+import { usePersistedState } from '@shared/state/usePersistedState';
 import { useTelegramStatus, type TelegramStatusView } from './useTelegramStatus';
 import { useNotificationPreferences } from './useNotificationPreferences';
+import { SmsTemplatesPanel } from './SmsTemplatesPanel';
 import styles from './NotificationsPage.module.css';
 
+type NotificationsTab = 'canale' | 'sabloane';
+
+const TAB_OPTIONS: { value: NotificationsTab; label: string }[] = [
+  { value: 'canale', label: 'Canale' },
+  { value: 'sabloane', label: 'Șabloane' },
+];
+
 export function NotificationsPage() {
+  const [tab, setTab] = usePersistedState<NotificationsTab>('notifications.tab', 'canale');
+
   return (
     <>
-      <TelegramSection />
-      <PreferencesSection />
+      <SegmentedControl options={TAB_OPTIONS} value={tab} onChange={setTab} ariaLabel="Filă Notificări" />
+      {tab === 'canale' && (
+        <>
+          <TelegramSection />
+          <PreferencesSection />
+        </>
+      )}
+      {tab === 'sabloane' && <SmsTemplatesPanel />}
     </>
   );
 }

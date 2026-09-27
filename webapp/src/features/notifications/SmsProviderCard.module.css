@@ -1,0 +1,53 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.service {
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.balance {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.limitBar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-soft);
+  overflow: hidden;
+}
+
+.limitBarFill {
+  height: 100%;
+  background: var(--mint);
+}
+
+.limitBarFill.warn {
+  background: var(--orange);
+}
+
+.limitBarFill.full {
+  background: var(--pink-ink);
+}
+
+.counterLine {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.testRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
