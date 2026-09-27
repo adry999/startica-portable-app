@@ -31,8 +31,8 @@ Dacă există un formular cu modificări, înainte de schimbare apare un dialog:
 - Filialele lucrează pe calculatoare diferite, dar oricare calculator trebuie să poată deschide oricare filială: vezi `18-sincronizare.md`.
 
 ## Criterii de acceptare
-- [ ] Selectorul apare pe toate ecranele, sub logo, în culoarea filialei curente
+- [x] Selectorul apare pe toate ecranele, sub logo, în culoarea filialei curente
 - [ ] Nicio dată a unei filiale nu apare în cealaltă (există test)
-- [ ] La schimbare rămâi pe același modul, cu filtrele resetate
-- [ ] Formularul nesalvat cere confirmare
-- [ ] Eyebrow-ul antetului arată filiala
+- [x] La schimbare rămâi pe același modul, cu filtrele resetate
+- [x] Formularul nesalvat cere confirmare
+- [x] Eyebrow-ul antetului arată filiala
