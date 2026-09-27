@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Badge, Button, Card, LoadingState, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  LoadingState,
+  SmsConfirmDialog,
+  useToast,
+  useTopbarActions,
+  type SmsRecipientView,
+} from '@shared/ui';
 import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
@@ -27,10 +36,6 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const smsSend = useSmsSend();
   const [dialog, setDialog] = useState<{ mode: 'single' | 'bulk'; recipients: SmsRecipientView[] } | null>(null);
 
-  if (notifyData.status === 'loading') return <LoadingState />;
-  if (notifyData.status === 'failed')
-    return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
-
   const todayStr = todayFn();
   const batchPlan = planSmsBatch({
     rows: notifyData.recipients,
@@ -52,6 +57,36 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
       excludeReason: lastNotified.notifiedToday(row.id, todayStr) ? 'notificat azi' : undefined,
     };
   }
+
+  async function copyAll() {
+    const { notice } = await notifyData.copyAllMessages();
+    toast.show({ message: notice });
+  }
+
+  // Butoanele antetului (05/10-de-notificat.md: acțiunile stau în antet, nu în corpul paginii).
+  useTopbarActions(
+    <div className={styles.headerActions}>
+      <button
+        type="button"
+        className={styles.btnPrimary}
+        disabled={!smsConfigured || batchPlan.messages.length === 0}
+        title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+        onClick={() => setDialog({ mode: 'bulk', recipients: notifyData.rows.map(recipientView) })}
+      >
+        Trimite tuturor · {batchPlan.messages.length}
+      </button>
+      <Button variant="ghost" onClick={() => void copyAll()}>
+        Copiază toate mesajele
+      </Button>
+      <Button variant="ghost" onClick={() => window.print()}>
+        Tipărește lista
+      </Button>
+    </div>,
+  );
+
+  if (notifyData.status === 'loading') return <LoadingState />;
+  if (notifyData.status === 'failed')
+    return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   async function sendSelected(selectedIds: string[]): Promise<SmsSendResultView> {
     const selected = new Set(selectedIds);
@@ -77,11 +112,6 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
     void lastNotified.refresh();
   }
 
-  async function copyAll() {
-    const { notice } = await notifyData.copyAllMessages();
-    toast.show({ message: notice });
-  }
-
   async function copyOne(message: string) {
     const { notice } = await notifyData.copyMessage(message);
     toast.show({ message: notice });
@@ -89,26 +119,7 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
 
   return (
     <>
-      <div className={styles.headerActions}>
-        <p className={styles.period}>{notifyData.periodLabel}</p>
-        <div className={styles.toolbar}>
-          <button
-            type="button"
-            className={styles.btnPrimary}
-            disabled={!smsConfigured || batchPlan.messages.length === 0}
-            title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
-            onClick={() => setDialog({ mode: 'bulk', recipients: notifyData.rows.map(recipientView) })}
-          >
-            Trimite tuturor · {batchPlan.messages.length}
-          </button>
-          <Button variant="ghost" onClick={() => void copyAll()}>
-            Copiază toate mesajele
-          </Button>
-          <Button variant="ghost" onClick={() => window.print()}>
-            Tipărește lista
-          </Button>
-        </div>
-      </div>
+      <p className={styles.period}>{notifyData.periodLabel}</p>
 
       <p className={styles.notice}>
         Copiii care au de achitat luna selectată, indiferent cât de aproape e scadența. Scadența este ziua din data

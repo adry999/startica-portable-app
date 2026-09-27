@@ -3,8 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { NotifyPage } from './NotifyPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — „Trimite tuturor” și restul butoanelor ajung acolo, nu în pagină. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -54,7 +59,10 @@ function renderPage() {
   return render(
     <MemoryRouter>
       <ToastProvider>
-        <NotifyPage month="2026-09" onNavigate={() => {}} />
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <NotifyPage month="2026-09" onNavigate={() => {}} />
+        </TopbarActionsProvider>
       </ToastProvider>
     </MemoryRouter>,
   );

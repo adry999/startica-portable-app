@@ -6,21 +6,13 @@
 .headerActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-12);
-  margin-bottom: var(--space-8);
-  flex-wrap: wrap;
 }
 
 .period {
-  margin: 0;
+  margin: 0 0 var(--space-16);
   font-size: 13px;
   color: var(--muted);
-}
-
-.toolbar {
-  display: flex;
-  gap: var(--space-12);
 }
 
 .btnPrimary {
