@@ -3,6 +3,7 @@ import {
   BnmRateLink,
   ConfirmDeleteDialog,
   Drawer,
+  EmptyState,
   LoadingState,
   Skeleton,
   SmsConfirmDialog,
@@ -142,6 +143,35 @@ export function FeedbackSection() {
             onRetry={async ids => createDemoSmsResult(ids)}
             onClose={() => setSmsBulkOpen(false)}
             onSent={() => {}}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="EmptyState"
+        importLine="import { EmptyState } from '@shared/ui';"
+        reference="13-formulare.md §15e (liste goale) · vizual în Formulare.dc.html#15e"
+      >
+        <DemoRow label="no-results">
+          <EmptyState
+            title="Niciun rezultat pentru „Popescu”"
+            activeFilters={['Arhivați', 'Grupa Mars']}
+            onClearFilters={() => {}}
+          />
+        </DemoRow>
+        <DemoRow label="resolved">
+          <EmptyState
+            variant="resolved"
+            title="Totul e rezolvat"
+            description="Nicio achitare fără copil asociat. Lista se completează singură la următorul import."
+          />
+        </DemoRow>
+        <DemoRow label="first-step">
+          <EmptyState
+            variant="first-step"
+            title="Nicio cheltuială în septembrie"
+            description="Adaugă prima cheltuială ca să vezi diferența pe Dashboard."
+            action={{ label: '+ Cheltuială nouă', onClick: () => {} }}
           />
         </DemoRow>
       </ComponentShowcase>

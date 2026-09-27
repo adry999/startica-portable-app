@@ -7,6 +7,7 @@ export { SegmentedControl, type SegmentedControlOption, type SegmentedControlPro
 export { Drawer, type DrawerProps } from './Drawer';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
+export { EmptyState, type EmptyStateAction, type EmptyStateProps, type EmptyStateVariant } from './EmptyState';
 export { MonthPicker, type MonthPickerProps } from './MonthPicker';
 export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from './SearchSelect';
 export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone } from './FilterPills';

@@ -1,0 +1,89 @@
+.noResults,
+.resolved,
+.firstStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-10);
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 40px 32px;
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+
+.noResults {
+  background: var(--white);
+  border: 1px solid var(--border);
+}
+
+.resolved {
+  background: var(--mint-soft);
+  gap: var(--space-8);
+  padding: 36px 32px;
+}
+
+.firstStep {
+  background: var(--white);
+  border: 2px dashed var(--dashed-border-empty);
+  gap: var(--space-8);
+  padding: 36px 32px;
+}
+
+.dots {
+  display: flex;
+  gap: var(--space-6);
+}
+
+.dotOrange,
+.dotYellow,
+.dotMint {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.dotOrange {
+  background: var(--orange);
+}
+
+.dotYellow {
+  background: var(--yellow);
+}
+
+.dotMint {
+  background: var(--mint);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--slate);
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.resolvedText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mint-ink);
+}
+
+.clearButton {
+  margin-top: var(--space-6);
+  border: 1.5px solid var(--border);
+  background: none;
+  border-radius: var(--radius-pill);
+  padding: 9px var(--space-18);
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--slate);
+}
