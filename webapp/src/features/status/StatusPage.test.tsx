@@ -1,4 +1,4 @@
-import { render, renderHook, act, screen } from '@testing-library/react';
+import { render, renderHook, act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -14,6 +14,8 @@ function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
+// Aceeași fixtură ca useStatus.test.ts: restanță (c1), retras fără obligație (c2),
+// fără taxă completată (c3), plătit integral și cu grupă (c4) — aceleași cifre pe carduri.
 const fixtureState = {
   children: [
     {
@@ -27,10 +29,63 @@ const fixtureState = {
       feeHistory: [{ from: '2026-01', amount: 1500 }],
       archived: false,
     },
+    {
+      id: 'c2',
+      name: 'Maria Ionescu',
+      contractDate: '2026-01-05',
+      attendanceDate: '2026-01-05',
+      withdrawalDate: '2026-08-31',
+      status: 'Retras',
+      statusHistory: [],
+      feeHistory: [{ from: '2026-01', amount: 1200 }],
+      archived: true,
+    },
+    {
+      id: 'c3',
+      name: 'Ion Radu',
+      contractDate: '2026-02-01',
+      attendanceDate: '2026-02-01',
+      withdrawalDate: null,
+      status: 'Activ',
+      statusHistory: [],
+      feeHistory: [],
+      archived: false,
+    },
+    {
+      id: 'c4',
+      name: 'Elena Marin',
+      contractDate: '2026-01-15',
+      attendanceDate: '2026-01-15',
+      withdrawalDate: null,
+      status: 'Activ',
+      statusHistory: [],
+      feeHistory: [{ from: '2026-01', amount: 1000 }],
+      groupId: 'g1',
+      archived: false,
+    },
   ],
-  payments: [],
+  payments: [
+    {
+      id: 'p1',
+      date: '2026-09-10',
+      childId: 'c1',
+      amount: 500,
+      tenders: [{ method: 'Cash', amount: 500 }],
+      allocations: [{ month: '2026-09', amount: 500 }],
+      archived: false,
+    },
+    {
+      id: 'p2',
+      date: '2026-09-02',
+      childId: 'c4',
+      amount: 1000,
+      tenders: [{ method: 'Card', amount: 1000 }],
+      allocations: [{ month: '2026-09', amount: 1000 }],
+      archived: false,
+    },
+  ],
   expenses: [],
-  groups: [],
+  groups: [{ id: 'g1', name: 'Fluturași', capacity: null }],
   categories: [],
   visits: [],
 };
@@ -117,5 +172,49 @@ describe('StatusPage', () => {
     expect(screen.queryByRole('button', { name: 'Luna următoare' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
     expect(localStorage.getItem('view.status')).toBe('year');
+  });
+
+  it('cele 4 carduri arată toată luna: de încasat, încasat cu bară, restanțe, fără taxă', async () => {
+    await loadedSession();
+    renderPage();
+    expect(screen.getByText('De încasat').closest('div')).toHaveTextContent('2.500,00 lei');
+    expect(screen.getByText('Încasat').closest('div')).toHaveTextContent('1.500,00 lei');
+    expect(screen.getByRole('progressbar', { name: 'Încasat din de încasat' })).toHaveAttribute('aria-valuenow', '60');
+    expect(screen.getByText('Restanțe').closest('div')).toHaveTextContent('1 copil');
+    expect(screen.getByText('Fără taxă setată').closest('div')).toHaveTextContent('1');
+  });
+
+  it('„Completează →" duce la Taxe și grupe', async () => {
+    await loadedSession();
+    const { onNavigate } = renderPage();
+    await userEvent.click(screen.getByRole('button', { name: 'Completează →' }));
+    expect(onNavigate).toHaveBeenCalledWith('fees');
+  });
+
+  it('segmentul de statut restrânge tabelul, cardurile rămân', async () => {
+    await loadedSession();
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'Achitat · 1' }));
+    expect(screen.getByText('Elena Marin')).toBeInTheDocument();
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+    expect(screen.getByText('De încasat').closest('div')).toHaveTextContent('2.500,00 lei');
+  });
+
+  it('Rest > 0 e roșu, Statut e badge, CTA depinde de statut', async () => {
+    await loadedSession();
+    const { onOpenChild } = renderPage();
+    const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+    expect(within(overdueRow).getByText('1.000,00 lei')).toHaveClass(/restDue/);
+    expect(within(overdueRow).getByRole('button', { name: 'Notifică' })).toBeDisabled();
+    const paidRow = screen.getByText('Elena Marin').closest('tr') as HTMLElement;
+    await userEvent.click(within(paidRow).getByRole('button', { name: 'Vezi fișa' }));
+    expect(onOpenChild).toHaveBeenCalledWith('c4');
+  });
+
+  it('bannerul de restanțieri apare cu „Notifică toți" dezactivat până la integrarea SMS', async () => {
+    await loadedSession();
+    renderPage();
+    expect(screen.getByText('1 restanțier')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Notifică toți' })).toBeDisabled();
   });
 });

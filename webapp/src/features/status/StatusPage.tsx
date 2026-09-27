@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  Badge,
   Card,
   DataTable,
   FilterPills,
@@ -7,6 +8,7 @@ import {
   SegmentedControl,
   groupTone,
   useTopbarActions,
+  type BadgeTone,
   type DataTableColumn,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -14,9 +16,29 @@ import type { ViewKey } from '@shared/view-key';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.mjs';
-import { useStatus, type StatusData, type StatusRowView } from './useStatus';
+import { useStatus, type StatusData, type StatusRowView, type StatusSegment } from './useStatus';
 import { useSchoolYearStatus, type SchoolYearData } from './useSchoolYearStatus';
 import styles from './StatusPage.module.css';
+
+const STATUS_TONE: Record<string, BadgeTone> = {
+  Restanță: 'pink',
+  'Plată parțială': 'yellow',
+  Plătit: 'mint',
+  'Scadent în curând': 'orange',
+};
+
+const NOTIFY_LABELS = new Set(['Restanță', 'Plată parțială']);
+const SMS_TITLE = 'Trimiterea SMS vine odată cu integrarea SMS (P2)';
+
+function segmentOptions(counts: StatusData['segmentCounts']) {
+  return [
+    { value: 'all' as const, label: `Toți · ${counts.all}` },
+    { value: 'overdue' as const, label: `Restanțieri · ${counts.overdue}` },
+    { value: 'partial' as const, label: `Parțial · ${counts.partial}` },
+    { value: 'paid' as const, label: `Achitat · ${counts.paid}` },
+    { value: 'upcoming' as const, label: `Urmează · ${counts.upcoming}` },
+  ];
+}
 
 export interface StatusPageProps {
   month: string;
@@ -76,11 +98,16 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
 
 function MonthView({
   data,
+  onNavigate,
+  onOpenChild,
 }: {
   data: StatusData;
   onNavigate: (view: ViewKey) => void;
   onOpenChild: (id: string) => void;
 }) {
+  const { summary } = data;
+  const pct = Math.round(summary.paidShare * 100);
+
   const columns: DataTableColumn<StatusRowView>[] = [
     {
       key: 'name',
@@ -88,6 +115,7 @@ function MonthView({
       sortValue: row => row.name,
       render: row => (row.archived ? `${row.name} (arhivat)` : row.name),
     },
+    { key: 'due', header: 'Scadență', sortValue: row => row.due, render: row => formatDate(row.due) },
     {
       key: 'expected',
       header: 'Taxă',
@@ -107,35 +135,135 @@ function MonthView({
       header: 'Rest',
       align: 'end',
       sortValue: row => row.rest ?? -1,
-      render: row => formatMoney(row.rest, row.currency),
+      render: row => (
+        <span className={row.rest && row.rest > 0 ? styles.restDue : undefined}>
+          {formatMoney(row.rest, row.currency)}
+        </span>
+      ),
     },
-    { key: 'due', header: 'Scadență', sortValue: row => row.due, render: row => formatDate(row.due) },
-    { key: 'label', header: 'Situație', sortValue: row => row.label, render: row => row.label },
+    {
+      key: 'label',
+      header: 'Statut',
+      sortValue: row => row.label,
+      render: row => <Badge tone={STATUS_TONE[row.label] ?? 'neutral'}>{row.label}</Badge>,
+    },
+    {
+      key: 'cta',
+      header: '',
+      align: 'end',
+      render: row =>
+        NOTIFY_LABELS.has(row.label) ? (
+          <button type="button" className={styles.ctaButton} disabled title={SMS_TITLE}>
+            Notifică
+          </button>
+        ) : (
+          <button type="button" className={styles.ctaButton} onClick={() => onOpenChild(row.id)}>
+            Vezi fișa
+          </button>
+        ),
+    },
   ];
 
   return (
     <>
-      <FilterPills
-        groups={[
-          {
-            label: 'Grupa',
-            value: data.groupFilter,
-            onChange: data.setGroupFilter,
-            options: [
-              { value: 'all', label: 'Toate', tone: 'neutral' },
-              ...data.groups.map(group => ({
-                value: group.id,
-                label: group.name,
-                tone: groupTone(group.id, data.groups),
-              })),
-              { value: 'none', label: 'Fără grupă', tone: 'neutral' },
-            ],
-          },
-        ]}
-      />
+      <div className={styles.summaryRow}>
+        <Card className={styles.summaryCard}>
+          <p className={styles.summaryLabel}>De încasat</p>
+          <strong className={styles.summaryValue}>{formatMoney(summary.expected)}</strong>
+          <small className={styles.summaryMeta}>{summary.owingChildren} copii activi</small>
+        </Card>
+        <Card tone="mint" className={styles.summaryCard}>
+          <p className={`${styles.summaryLabel} ${styles.mintInk}`}>Încasat</p>
+          <strong className={styles.summaryValue}>{formatMoney(summary.paid)}</strong>
+          <div
+            className={styles.progress}
+            role="progressbar"
+            aria-label="Încasat din de încasat"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={pct}
+          >
+            <span style={{ width: `${pct}%` }} />
+          </div>
+        </Card>
+        <Card tone={summary.overdueChildren > 0 ? 'pink' : 'white'} className={styles.summaryCard}>
+          <p className={`${styles.summaryLabel} ${styles.pinkInk}`}>Restanțe</p>
+          <strong className={summary.overdueChildren > 0 ? styles.summaryValue : styles.summaryValueZero}>
+            {summary.overdueChildren} {summary.overdueChildren === 1 ? 'copil' : 'copii'}
+          </strong>
+          <small className={`${styles.summaryMeta} ${styles.pinkInk}`}>
+            scadența a trecut · {formatMoney(summary.overdue)}
+          </small>
+        </Card>
+        <Card tone={data.missingFeeCount > 0 ? 'yellow' : 'white'} className={styles.summaryCard}>
+          <p className={`${styles.summaryLabel} ${styles.yellowInk}`}>Fără taxă setată</p>
+          <strong className={data.missingFeeCount > 0 ? styles.summaryValue : styles.summaryValueZero}>
+            {data.missingFeeCount}
+          </strong>
+          {data.missingFeeCount > 0 && (
+            <button type="button" className={styles.cardLink} onClick={() => onNavigate('fees')}>
+              Completează →
+            </button>
+          )}
+        </Card>
+      </div>
 
       <Card className={styles.tableCard}>
-        <DataTable columns={columns} rows={data.rows} rowKey={row => row.id} emptyState={<p>Nu sunt copii.</p>} />
+        <div className={styles.toolbar}>
+          <SegmentedControl<StatusSegment>
+            ariaLabel="Statut"
+            value={data.segment}
+            onChange={data.setSegment}
+            options={segmentOptions(data.segmentCounts)}
+          />
+          <input
+            className={styles.search}
+            type="search"
+            placeholder="Caută copil"
+            aria-label="Caută copil"
+            value={data.search}
+            onChange={event => data.setSearch(event.target.value)}
+          />
+        </div>
+
+        <FilterPills
+          groups={[
+            {
+              label: 'Grupa',
+              value: data.groupFilter,
+              onChange: data.setGroupFilter,
+              options: [
+                { value: 'all', label: 'Toate', tone: 'neutral' },
+                ...data.groups.map(group => ({
+                  value: group.id,
+                  label: group.name,
+                  tone: groupTone(group.id, data.groups),
+                })),
+                { value: 'none', label: 'Fără grupă', tone: 'neutral' },
+              ],
+            },
+          ]}
+        />
+
+        <DataTable
+          bare
+          columns={columns}
+          rows={data.rows}
+          rowKey={row => row.id}
+          emptyState={<p>Nu sunt copii pentru filtrele alese.</p>}
+        />
+
+        {summary.overdueChildren > 0 && (
+          <div className={styles.banner}>
+            <strong>
+              {summary.overdueChildren} {summary.overdueChildren === 1 ? 'restanțier' : 'restanțieri'}
+            </strong>
+            <span>Trimite o notificare tuturor părinților cu restanță</span>
+            <button type="button" className={styles.btnPrimary} disabled title={SMS_TITLE}>
+              Notifică toți
+            </button>
+          </div>
+        )}
       </Card>
     </>
   );
