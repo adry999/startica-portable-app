@@ -363,3 +363,13 @@ STARTICA_HOME=C:\tmp\startica-B STARTICA_PORT=8766 STARTICA_NO_BROWSER=1 npm sta
 - Nothing in this plan changes an HTTP contract of the existing routes; `/api/session` and `/api/state` only gain fields. A computer that never connects behaves exactly as today (no outbox rows, `SaveStatusCard` unchanged, no timers).
 - Backups (`VACUUM INTO`) now contain the three sync tables; restore keeps reading only `records`, so restoring an old backup on a synced branch propagates the differences as normal changes (with conflicts where the server moved on) — documented in `GHID-LIVRARE.md`.
 - The Telegram digest (`--telegram`) opens branch DBs read-only and is unaffected; `notify-schedule.json` stays per install.
+
+## Contract reconciliation after Phases 1–2 (27.09.2026)
+
+The server (`sync-server/`, commits 417647a–0b01433) and the app client (`src/features/sync/server/sync-http-client.mjs`, cfa1965) were built in parallel against this plan. The server is the source of truth (see `sync-server/README.md`); Phase 3/5 must align the client:
+
+1. `POST /v1/devices/pair` returns `{ deviceId, token, createdBy }` — **no `branches`**; after pairing the client calls `GET /v1/branches`.
+2. Snapshots are flat: upload `POST /v1/branches/:id/snapshot { entries: [{ kind, id, payload, updatedAt }] }` → `{ headSeq }` (409 if the branch already has records); download `GET …/snapshot` → `{ records: { <kind>: [{ id, revision, payload, updatedAt }] }, headSeq }`.
+3. `GET /v1/status` returns counts (`branches`, `devices`), not lists.
+4. Pull may answer **410** when `since` is older than the retained history → the client re-downloads the snapshot.
+5. SSE: `event: change` / `data: {"seq":N}`, heartbeat `: ping` every 25 s; the server flushes headers immediately.
