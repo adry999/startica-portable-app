@@ -40,16 +40,6 @@
   box-shadow: none;
 }
 
-.btnGhost {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
-}
-
 .btnPrimarySmall {
   border: none;
   background: var(--orange);

@@ -8,37 +8,6 @@
   gap: var(--space-12);
 }
 
-.btnGhost {
-  border: 1.5px solid var(--border);
-  background: #fff;
-  border-radius: var(--radius-pill);
-  padding: 8px 16px;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--slate);
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 800;
-  font-size: 13px;
-  box-shadow: var(--shadow-button-primary);
-}
-
-.btnWhite {
-  border: none;
-  background: var(--white);
-  color: var(--slate);
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 800;
-  font-size: 13px;
-}
-
 .statsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -117,17 +86,6 @@
   gap: var(--space-12);
   padding: 14px 16px;
   flex-wrap: wrap;
-}
-
-.search {
-  flex: 1;
-  min-width: 180px;
-  background: var(--cream);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
 }
 
 .filterSelect {

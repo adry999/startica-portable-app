@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Badge,
+  Button,
   Card,
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   RowMenu,
+  SearchInput,
   SearchSelect,
   SegmentedControl,
   SelectionBar,
@@ -87,12 +89,10 @@ function ChildrenListView({
 
   useTopbarActions(
     <div className={styles.headerActions}>
-      <button type="button" className={styles.btnGhost} onClick={() => navigate('/copii/zile-de-nastere')}>
+      <Button variant="outline" onClick={() => navigate('/copii/zile-de-nastere')}>
         Zile de naștere
-      </button>
-      <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
-        + Adaugă copil
-      </button>
+      </Button>
+      <Button onClick={() => setFormTarget('new')}>+ Adaugă copil</Button>
     </div>,
   );
 
@@ -357,13 +357,11 @@ function ChildrenListView({
 
       <div className={styles.tableCard}>
         <div className={styles.toolbar}>
-          <input
-            className={styles.search}
-            type="search"
+          <SearchInput
             placeholder="Caută nume sau contract…"
             value={query}
-            onChange={event => setQuery(event.target.value)}
-            aria-label="Caută copil"
+            onChange={setQuery}
+            ariaLabel="Caută copil"
           />
           <SegmentedControl
             ariaLabel="Filtru arhivare"

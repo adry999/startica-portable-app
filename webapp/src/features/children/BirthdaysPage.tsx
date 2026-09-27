@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FilterPills, MonthStepper, useTopbarActions, useTopbarTitle } from '@shared/ui';
+import { Button, FilterPills, MonthStepper, useTopbarActions, useTopbarTitle } from '@shared/ui';
 import { pluralRo } from '@shared/format/plural-ro';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useBirthdays, type BirthdaysGroupOption } from './useBirthdays';
@@ -35,9 +35,9 @@ export function BirthdaysPage() {
   useTopbarTitle({ title: 'Zile de naștere', eyebrow: 'Evidență · Copii' });
   useTopbarActions(
     <div className={styles.headerActions}>
-      <button type="button" className={styles.btnSecondary} onClick={birthdaysData.goToday}>
+      <Button variant="outline" onClick={birthdaysData.goToday}>
         Azi
-      </button>
+      </Button>
       <MonthStepper value={birthdaysData.month} onPrev={birthdaysData.prevMonth} onNext={birthdaysData.nextMonth} />
     </div>,
   );

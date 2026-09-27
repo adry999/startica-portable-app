@@ -4,16 +4,6 @@
   gap: var(--space-12);
 }
 
-.btnSecondary {
-  border: 1.5px solid var(--border);
-  background: #fff;
-  border-radius: var(--radius-pill);
-  padding: 8px 16px;
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--slate);
-}
-
 .notice {
   color: var(--subtle);
   grid-column: 1 / -1;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Card, DataTable, useToast, type DataTableColumn } from '@shared/ui';
+import { Badge, Button, Card, DataTable, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -96,16 +96,10 @@ export function ChildProfileView({
           </p>
         </div>
         <div className={styles.profileActions}>
-          <button type="button" className={styles.btnWhite} onClick={() => setEditDrawerOpen(true)}>
+          <Button variant="white" onClick={() => setEditDrawerOpen(true)}>
             Editează fișa
-          </button>
-          <button
-            type="button"
-            className={styles.btnPrimary}
-            onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}
-          >
-            + Plată
-          </button>
+          </Button>
+          <Button onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}>+ Plată</Button>
         </div>
       </Card>
 

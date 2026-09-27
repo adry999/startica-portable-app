@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
+import { Badge, Button, Card, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
 import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
@@ -101,12 +101,12 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
           >
             Trimite tuturor · {batchPlan.messages.length}
           </button>
-          <button type="button" className={styles.btnGhost} onClick={() => void copyAll()}>
+          <Button variant="ghost" onClick={() => void copyAll()}>
             Copiază toate mesajele
-          </button>
-          <button type="button" className={styles.btnGhost} onClick={() => window.print()}>
+          </Button>
+          <Button variant="ghost" onClick={() => window.print()}>
             Tipărește lista
-          </button>
+          </Button>
         </div>
       </div>
 
