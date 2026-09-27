@@ -54,7 +54,8 @@ function stubFetch() {
         });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/sms-status') return jsonResponse(smsStatus);
-      if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
+      if (path === '/api/sms-templates')
+        return jsonResponse({ templates: [defaultTemplate, customTemplate], usageCountById: { t1: 12, t2: 0 } });
       throw new Error(`neașteptat: ${path}`);
     }),
   );
@@ -71,6 +72,14 @@ describe('SmsTemplatesPanel', () => {
 
     expect(await screen.findByDisplayValue('Reamintire restanță')).toBeInTheDocument();
     expect(screen.queryByText('Șterge șablonul')).not.toBeInTheDocument();
+  });
+
+  it('arată „Folosit de N ori" pentru șablonul selectat', async () => {
+    stubFetch();
+    render(<SmsTemplatesPanel />);
+
+    await screen.findByDisplayValue('Reamintire restanță');
+    expect(screen.getByText('Folosit de 12 ori')).toBeInTheDocument();
   });
 
   it('un șablon care nu e implicit arată Șterge șablonul', async () => {

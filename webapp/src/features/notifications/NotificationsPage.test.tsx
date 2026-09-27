@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@shared/ui';
 import { NotificationsPage } from './NotificationsPage';
@@ -35,9 +36,11 @@ const preferences = {
 
 function renderPage() {
   return render(
-    <ToastProvider>
-      <NotificationsPage />
-    </ToastProvider>,
+    <MemoryRouter>
+      <ToastProvider>
+        <NotificationsPage />
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -84,6 +87,12 @@ const customTemplate = {
 
 const emptyState = { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] };
 
+const emptySmsLogPage = {
+  entries: [],
+  stats: { sentThisMonth: 0, failedThisMonth: 0, segmentsThisMonth: 0, monthlyLimit: null },
+  monthly: [],
+};
+
 function stubFullFetch(smsStatusBody: unknown = smsUnconfigured) {
   vi.stubGlobal(
     'fetch',
@@ -92,6 +101,8 @@ function stubFullFetch(smsStatusBody: unknown = smsUnconfigured) {
       if (path === '/api/notification-settings') return jsonResponse(preferences);
       if (path === '/api/sms-status') return jsonResponse(smsStatusBody);
       if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
+      if (path === '/api/sms-refresh-statuses') return jsonResponse({ updated: 0, entries: [] });
+      if (path.startsWith('/api/sms-log')) return jsonResponse(emptySmsLogPage);
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
       if (path === '/api/state')
         return jsonResponse({ state: emptyState, revision: 1, updatedAt: '2026-09-27T10:00:00Z' });
@@ -158,6 +169,18 @@ describe('NotificationsPage', () => {
 
     expect(await screen.findByText('Reamintire restanță')).toBeInTheDocument();
     expect(screen.getByText('Furnizor SMS')).toBeInTheDocument();
+  });
+
+  it('comutarea pe „Mesaje SMS" arată statisticile lunii și lista goală', async () => {
+    stubFullFetch();
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Conectează');
+    await user.click(screen.getByText('Mesaje SMS'));
+
+    expect(await screen.findByText('Trimise luna aceasta')).toBeInTheDocument();
+    expect(screen.getByText('Niciun SMS pentru filtrele alese.')).toBeInTheDocument();
   });
 
   it('cheia API nu apare când sms.md e deja configurat, doar tokenul mascat', async () => {

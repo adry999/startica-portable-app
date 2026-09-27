@@ -179,11 +179,16 @@ export function SmsTemplatesPanel() {
         )}
 
         <div className={styles.footer}>
-          {selectedId && !draft.isDefault && (
-            <button type="button" className={styles.deleteLink} onClick={() => setConfirmingDelete(true)}>
-              Șterge șablonul
-            </button>
-          )}
+          <div className={styles.footerMeta}>
+            {selectedId && !draft.isDefault && (
+              <button type="button" className={styles.deleteLink} onClick={() => setConfirmingDelete(true)}>
+                Șterge șablonul
+              </button>
+            )}
+            {selectedId && (
+              <span className={styles.usageCount}>Folosit de {templatesData.usageCountById[selectedId] ?? 0} ori</span>
+            )}
+          </div>
           <div className={styles.footerActions}>
             <Button type="button" variant="ghost" onClick={discard}>
               Renunță

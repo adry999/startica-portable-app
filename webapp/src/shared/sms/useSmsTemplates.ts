@@ -9,6 +9,8 @@ export interface SmsTemplatesData {
   failureMessage: string;
   templates: SmsTemplateView[];
   defaultTemplate: SmsTemplateView | null;
+  /** „Folosit de N ori" (14-sms.md §11b) — 0 pentru un șablon nou, nesalvat încă. */
+  usageCountById: Record<string, number>;
   saving: boolean;
   save: (input: SmsTemplateInputView) => Promise<SmsTemplateView>;
   removing: boolean;
@@ -21,12 +23,17 @@ export function useSmsTemplates(): SmsTemplatesData {
   const [status, setStatus] = useState<SmsTemplatesScreenStatus>('loading');
   const [failureMessage, setFailureMessage] = useState('');
   const [templates, setTemplates] = useState<SmsTemplateView[]>([]);
+  const [usageCountById, setUsageCountById] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
 
   async function refresh() {
-    const response = (await requestJson('/api/sms-templates')) as { templates: SmsTemplateView[] };
+    const response = (await requestJson('/api/sms-templates')) as {
+      templates: SmsTemplateView[];
+      usageCountById?: Record<string, number>;
+    };
     setTemplates(response.templates);
+    setUsageCountById(response.usageCountById ?? {});
     setStatus('ready');
   }
 
@@ -68,6 +75,7 @@ export function useSmsTemplates(): SmsTemplatesData {
     failureMessage,
     templates,
     defaultTemplate: templates.find(template => template.isDefault) ?? null,
+    usageCountById,
     saving,
     save,
     removing,

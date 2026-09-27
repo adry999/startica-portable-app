@@ -6,6 +6,10 @@ export type {
   SmsSendMessage as SmsSendMessageView,
   SmsSendResult as SmsSendResultView,
   SmsLastNotified as SmsLastNotifiedView,
+  SmsLogEntry as SmsLogEntryView,
+  SmsLogPage as SmsLogPageView,
+  SmsMonthlyBreakdown as SmsMonthlyBreakdownView,
   SmsLogStatus,
+  SmsSource,
   SmsRecipientRow,
 } from '#features/sms-notify/sms-notify.types.mjs';

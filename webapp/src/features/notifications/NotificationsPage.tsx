@@ -4,13 +4,15 @@ import { formatDateTime } from '#shared/format/date-format.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useTelegramStatus, type TelegramStatusView } from './useTelegramStatus';
 import { useNotificationPreferences } from './useNotificationPreferences';
+import { SmsMessagesPanel } from './SmsMessagesPanel';
 import { SmsTemplatesPanel } from './SmsTemplatesPanel';
 import styles from './NotificationsPage.module.css';
 
-type NotificationsTab = 'canale' | 'sabloane';
+type NotificationsTab = 'canale' | 'mesaje' | 'sabloane';
 
 const TAB_OPTIONS: { value: NotificationsTab; label: string }[] = [
   { value: 'canale', label: 'Canale' },
+  { value: 'mesaje', label: 'Mesaje SMS' },
   { value: 'sabloane', label: 'Șabloane' },
 ];
 
@@ -26,6 +28,7 @@ export function NotificationsPage() {
           <PreferencesSection />
         </>
       )}
+      {tab === 'mesaje' && <SmsMessagesPanel />}
       {tab === 'sabloane' && <SmsTemplatesPanel />}
     </>
   );

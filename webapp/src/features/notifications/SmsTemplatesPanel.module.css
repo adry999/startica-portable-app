@@ -87,12 +87,23 @@
   gap: var(--space-12);
 }
 
+.footerMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
 .deleteLink {
   border: none;
   background: none;
   color: var(--pink-ink);
   font-weight: 700;
   padding: 0;
+}
+
+.usageCount {
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .footerActions {

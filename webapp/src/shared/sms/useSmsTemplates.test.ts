@@ -47,6 +47,22 @@ describe('useSmsTemplates', () => {
     expect(result.current.defaultTemplate?.id).toBe('t1');
   });
 
+  it('expune usageCountById din răspuns, sau gol dacă lipsește', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/sms-templates')
+          return jsonResponse({ templates: [defaultTemplate, customTemplate], usageCountById: { t1: 5 } });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsTemplates());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    expect(result.current.usageCountById).toEqual({ t1: 5 });
+  });
+
   it('save trimite input-ul la /api/sms-template-save și reîmprospătează lista', async () => {
     vi.stubGlobal(
       'fetch',
