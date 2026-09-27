@@ -4,6 +4,7 @@ export type ViewKey =
   | 'groups'
   | 'attendance'
   | 'visits'
+  | 'personal'
   | 'payments'
   | 'expenses'
   | 'status'

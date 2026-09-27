@@ -8,6 +8,7 @@ export const VIEW_PATHS: Record<ViewKey, string> = {
   groups: '/grupe',
   attendance: '/prezenta',
   visits: '/vizite',
+  personal: '/personal',
   payments: '/achitari',
   expenses: '/cheltuieli',
   status: '/situatia-platilor',

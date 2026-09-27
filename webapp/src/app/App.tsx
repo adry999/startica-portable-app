@@ -12,6 +12,7 @@ import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { AttendancePage } from '@features/attendance';
 import { VisitsPage } from '@features/visits';
+import { PersonalPage, StaffProfilePage } from '@features/personal';
 import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
@@ -115,6 +116,8 @@ export function App() {
         />
         <Route path="/prezenta" element={<AttendancePage month={month} />} />
         <Route path="/vizite" element={<VisitsRoute />} />
+        <Route path="/personal" element={<PersonalPage month={month} />} />
+        <Route path="/personal/:id" element={<StaffProfilePage />} />
         <Route path="/achitari" element={<PaymentsRoute />} />
         <Route path="/achitari/:id/confirmare" element={<PaymentReceipt />} />
         <Route path="/achitari/:id/bon-58mm" element={<PaymentReceiptThermal />} />
