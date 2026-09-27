@@ -11,6 +11,9 @@ export const CHILD_STATUSES = [...STATUS_HISTORY_VALUES, 'De verificat'];
 export const CURRENCIES = ['MDL', 'EUR'];
 // Drumul unei vizite: „reprogramată” e un eveniment în history, nu un statut propriu.
 export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Înscris', 'Renunțat'];
+// Echipa grupei (Personal 24, decizia 3 din docs/superpowers/plans/2026-09-27-personal-bazin.md):
+// staff-ul e comun (baza „comun”), grupa e a filialei — de-aia trăiește pe `records`, nu ca kind separat.
+export const GROUP_TEAM_ROLES = ['principal', 'asistent', 'inlocuitor'];
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
 /** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[] }} */
 export const emptyState = () => ({
@@ -130,7 +133,7 @@ const FIELDS = {
     'archived',
     'archivedAt',
   ]),
-  groups: new Set(['id', 'name', 'capacity', 'educator']),
+  groups: new Set(['id', 'name', 'capacity', 'educator', 'team']),
   categories: new Set(['id', 'name']),
   visits: new Set([
     'id',
@@ -260,6 +263,31 @@ export function normalizeRecord(type, input) {
         'Capacitatea trebuie să fie un număr întreg între 1 și 1000.',
       );
     } else record.capacity = null;
+    record.team ??= [];
+    requireThat(Array.isArray(record.team) && record.team.length <= 50, 'Echipa grupei este invalidă.');
+    record.team = record.team.map(member => {
+      requireThat(
+        member && typeof member === 'object' && typeof member.staffId === 'string' && member.staffId,
+        'Membru de echipă invalid.',
+      );
+      requireThat(
+        GROUP_TEAM_ROLES.includes(member.role),
+        `Rol de echipă invalid: folosește ${GROUP_TEAM_ROLES.join(', ')}.`,
+      );
+      const normalized = { staffId: member.staffId, role: member.role };
+      if (member.days !== undefined) {
+        requireThat(
+          Array.isArray(member.days) && member.days.every(day => Number.isInteger(day) && day >= 1 && day <= 5),
+          'Zilele din echipa grupei trebuie să fie între 1 și 5.',
+        );
+        normalized.days = member.days;
+      }
+      return normalized;
+    });
+    requireThat(
+      record.team.filter(member => member.role === 'principal').length <= 1,
+      'Grupa poate avea un singur membru principal.',
+    );
   } else if (type === 'categories') {
     text(record.name, 'Nume categorie', true);
     record.name = record.name.trim();

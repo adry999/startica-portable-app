@@ -93,11 +93,22 @@ export interface Expense {
   archivedAt?: string | null;
 }
 
+export type GroupTeamRole = 'principal' | 'asistent' | 'inlocuitor';
+
+export interface GroupTeamMember {
+  staffId: string;
+  role: GroupTeamRole;
+  /** 1=luni … 5=vineri; absent = toate zilele lucrătoare. */
+  days?: number[];
+}
+
 export interface Group {
   id: string;
   name: string;
   capacity: number | null;
   educator?: string;
+  /** Personal 24 — un singur „principal”; staff-ul trăiește în baza comună, nu aici. */
+  team?: GroupTeamMember[];
 }
 
 export interface ExpenseCategory {

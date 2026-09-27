@@ -20,6 +20,7 @@ import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
 import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
+import { createPersonalRoutes } from '#features/personal/index.server.mjs';
 import {
   createSyncOutboxRepository,
   createSyncStateRepository,
@@ -218,6 +219,17 @@ export function createBranchContext({
       recordRepository,
       onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
     }),
+    // common e opțional doar pentru un context construit fără el (test izolat de filială);
+    // create-application.mjs îl dă întotdeauna, deci Personal e mereu montat în aplicația reală.
+    ...(common
+      ? createPersonalRoutes({
+          common,
+          branchId: branch.id,
+          listBranches,
+          auditTrail: auditLogRepository,
+          recordRepository,
+        })
+      : []),
     ...createNotificationSettingsRoutes({
       scheduleFile,
       readSetting,

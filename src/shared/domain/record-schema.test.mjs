@@ -558,3 +558,51 @@ test('normalizeRecord(payments) respinge o monedă necunoscută', () => {
     /monedă/i,
   );
 });
+
+test('grupa acceptă un singur principal în echipă', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('groups', {
+        id: 'GRP-1',
+        name: 'Grupa mare',
+        team: [
+          { staffId: 'STF-1', role: 'principal' },
+          { staffId: 'STF-2', role: 'principal' },
+        ],
+      }),
+    /un singur membru principal/,
+  );
+  const group = normalizeRecord('groups', {
+    id: 'GRP-1',
+    name: 'Grupa mare',
+    team: [
+      { staffId: 'STF-1', role: 'principal' },
+      { staffId: 'STF-2', role: 'asistent', days: [1, 3, 5] },
+    ],
+  });
+  assert.equal(group.team.length, 2);
+  assert.deepEqual(group.team[1].days, [1, 3, 5]);
+});
+
+test('grupa fără echipă are team gol, iar un rol sau o zi necunoscută sunt respinse', () => {
+  const group = normalizeRecord('groups', { id: 'GRP-1', name: 'Grupa mare' });
+  assert.deepEqual(group.team, []);
+  assert.throws(
+    () =>
+      normalizeRecord('groups', {
+        id: 'GRP-1',
+        name: 'Grupa mare',
+        team: [{ staffId: 'STF-1', role: 'sef' }],
+      }),
+    /Rol de echipă invalid/,
+  );
+  assert.throws(
+    () =>
+      normalizeRecord('groups', {
+        id: 'GRP-1',
+        name: 'Grupa mare',
+        team: [{ staffId: 'STF-1', role: 'principal', days: [0, 6] }],
+      }),
+    /Zilele din echipa grupei/,
+  );
+});
