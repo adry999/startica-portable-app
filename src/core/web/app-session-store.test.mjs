@@ -53,6 +53,24 @@ test('load reușit pune starea, revizia, ready și ultima salvare, apoi randeaz�
   assert.deepEqual(publishedEvents, [{ revision: 7 }]);
 });
 
+test('load reușit înregistrează cronologia pornirii, pentru pașii din ecranul de încărcare', async () => {
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1' };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  const { startedAt, serverAt, databaseAt } = store.state.startupTimings;
+  assert.ok(startedAt, 'startedAt este înregistrat');
+  assert.ok(serverAt, 'serverAt este înregistrat');
+  assert.ok(databaseAt, 'databaseAt este înregistrat');
+  assert.ok(serverAt >= startedAt, 'serverAt vine după startedAt');
+  assert.ok(databaseAt >= serverAt, 'databaseAt vine după serverAt');
+});
+
 test('mutate înainte de încărcarea datelor aruncă', async () => {
   const { store } = createHarness(async () => ({}));
   await assert.rejects(() => store.mutate('/api/record', { name: 'Ana' }), {

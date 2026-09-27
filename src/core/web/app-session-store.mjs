@@ -59,6 +59,10 @@ export function createAppSessionStore({
     lastSavedAt: '',
     saveError: '',
     connectionError: '',
+    // Cronologia reală a pornirii (ms epoch), pentru ecranul de încărcare (21a):
+    // pașii lui vin din aceste evenimente, nu dintr-un timer separat.
+    /** @type {{ startedAt: number | null, serverAt: number | null, databaseAt: number | null }} */
+    startupTimings: { startedAt: null, serverAt: null, databaseAt: null },
   };
 
   /** @param {any} result */
@@ -116,12 +120,15 @@ export function createAppSessionStore({
       return;
     }
     state.loading = true;
+    if (!state.startupTimings.startedAt) state.startupTimings.startedAt = Date.now();
     renderSaveStatus();
     try {
       const session = await requestJson('/api/session');
       state.token = session.token;
       state.version = session.version || '';
+      state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
+      state.startupTimings.databaseAt = Date.now();
       state.health = await requestJson('/api/health');
       state.saveError = '';
       renderers.health();
