@@ -31,11 +31,22 @@ export function MonthView({ month, data }: MonthViewProps) {
 
   const gridTemplateColumns = `200px repeat(${data.dates.length}, minmax(0, 1fr)) 70px`;
 
+  // Legenda din dreapta barei de filtre (18b): zile lucrătoare din lună + prezența medie a grupei.
+  const workingDaysCount = data.offDays.filter(off => !off).length;
+  const totalPresent = data.rows.reduce((sum, row) => sum + row.presentDays, 0);
+  const totalPossible = data.rows.reduce((sum, row) => sum + row.workingDays, 0);
+  const averageAttendanceLabel = totalPossible > 0 ? `${Math.round((totalPresent / totalPossible) * 100)}%` : '—';
+
   return (
     <div className={styles.root}>
       <div className={styles.filterBar}>
         <FilterPills
           groups={[{ label: 'Grupa', value: data.groupId, onChange: data.setGroupId, options: groupOptions }]}
+          trailing={
+            <span className={styles.legendStat}>
+              {workingDaysCount} zile lucrătoare · prezență medie <b>{averageAttendanceLabel}</b>
+            </span>
+          }
         />
       </div>
 
@@ -57,7 +68,7 @@ export function MonthView({ month, data }: MonthViewProps) {
                 {day}
               </div>
             ))}
-            <div className={styles.headCell}>Zile</div>
+            <div className={`${styles.headCell} ${styles.totalsHead}`}>Zile</div>
 
             {data.rows.map(row => (
               <Fragment key={row.id}>
@@ -103,7 +114,7 @@ export function MonthView({ month, data }: MonthViewProps) {
               </Fragment>
             ))}
 
-            <div className={styles.footCell}>Prezenți pe zi</div>
+            <div className={`${styles.footCell} ${styles.footLabel}`}>Prezenți pe zi</div>
             {data.presentPerDay.map((count, index) => (
               <div key={`present-${data.dates[index]}`} className={styles.footCell}>
                 {count ?? ''}
