@@ -8,6 +8,7 @@ import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { useAppSession } from '@shared/api/session';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { SmsRecipientRow } from '@shared/sms';
 
 export type NotifyStatus = 'loading' | 'ready' | 'failed';
 
@@ -45,6 +46,8 @@ export interface NotifyData {
   failureMessage: string;
   periodLabel: string;
   rows: NotifyRowView[];
+  /** Aceleași evaluări ca `rows`, în aceeași ordine — sursa pentru dialogul SMS (planSmsBatch are nevoie de {child, obligation}). */
+  recipients: SmsRecipientRow[];
   stats: NotifyStats;
   emptyMessage: string;
   copyAllMessages: () => Promise<{ ok: boolean; notice: string }>;
@@ -96,6 +99,7 @@ export function useNotify(month: string): NotifyData {
       failureMessage: saveError,
       periodLabel: '',
       rows: [],
+      recipients: [],
       stats: EMPTY_STATS,
       emptyMessage: '',
       copyAllMessages: async () => ({ ok: false, notice: '' }),
@@ -142,6 +146,7 @@ export function useNotify(month: string): NotifyData {
     failureMessage: '',
     periodLabel: `Luna ${month} · situație la ${formatDate(todayStr)}`,
     rows,
+    recipients: notified,
     stats: { late, soon, owed, unknown },
     emptyMessage: rows.length
       ? ''

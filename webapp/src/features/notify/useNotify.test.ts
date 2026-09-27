@@ -138,4 +138,14 @@ describe('useNotify', () => {
     expect(c1?.message).toContain('Andrei Popescu');
     expect(c1?.message).toContain('Rest de plată');
   });
+
+  it('recipients are în aceeași ordine ca rows, cu {child, obligation}', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useNotify('2026-09'));
+
+    expect(result.current.recipients.map(recipient => recipient.child.id)).toEqual(
+      result.current.rows.map(row => row.id),
+    );
+    expect(result.current.recipients[0].obligation.rest).toBe(result.current.rows[0].rest);
+  });
 });

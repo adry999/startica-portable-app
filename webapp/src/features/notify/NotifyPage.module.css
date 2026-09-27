@@ -23,6 +23,23 @@
   gap: var(--space-12);
 }
 
+.btnPrimary {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 4px 10px rgba(239, 138, 29, 0.28);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .btnGhost {
   border: 1px solid var(--input-border);
   background: none;
@@ -31,6 +48,30 @@
   font-weight: 700;
   font-size: 13px;
   color: var(--slate);
+}
+
+.btnPrimarySmall {
+  border: none;
+  background: var(--orange);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-4) var(--space-10);
+  font-weight: 800;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.btnPrimarySmall:disabled,
+.btnGhostSmall:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.messageActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-wrap: wrap;
 }
 
 .btnGhostSmall {

@@ -1,5 +1,10 @@
-import { Card, useToast } from '@shared/ui';
+import { useState } from 'react';
+import { Badge, Card, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
+import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
+import { DEFAULT_SMS_TEMPLATE_BODY } from '@domain/sms-template.mjs';
+import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useNotify, type NotifyRowView } from './useNotify';
 import type { ViewKey } from '@shared/view-key';
 import styles from './NotifyPage.module.css';
@@ -9,13 +14,68 @@ export interface NotifyPageProps {
   onNavigate: (view: ViewKey) => void;
 }
 
+const SMS_DISABLED_TITLE = 'Conectează sms.md în Notificări';
+// Ecranul nu are selector de șablon (P3): trimite cu diacritice eliminate, ca segmentele
+// numărate în dialog să rămână GSM-7, cel mai ieftin encoding.
+const STRIP_DIACRITICS = true;
+
 export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const notifyData = useNotify(month);
   const toast = useToast();
+  const sms = useSmsStatus();
+  const lastNotified = useSmsLastNotified();
+  const smsSend = useSmsSend();
+  const [dialog, setDialog] = useState<{ mode: 'single' | 'bulk'; recipients: SmsRecipientView[] } | null>(null);
 
   if (notifyData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
   if (notifyData.status === 'failed')
     return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+
+  const todayStr = todayFn();
+  const batchPlan = planSmsBatch({
+    rows: notifyData.recipients,
+    body: DEFAULT_SMS_TEMPLATE_BODY,
+    stripDiacritics: STRIP_DIACRITICS,
+    month,
+  });
+  const plannedByChildId = new Map(batchPlan.messages.map(message => [message.childId, message]));
+  const smsConfigured = sms.data?.configured ?? false;
+
+  function recipientView(row: NotifyRowView): SmsRecipientView {
+    const planned = plannedByChildId.get(row.id);
+    return {
+      id: row.id,
+      name: row.name,
+      phone: planned?.phone ?? null,
+      text: planned?.text ?? row.message,
+      rest: row.rest ?? undefined,
+      excludeReason: lastNotified.notifiedToday(row.id, todayStr) ? 'notificat azi' : undefined,
+    };
+  }
+
+  async function sendSelected(selectedIds: string[]): Promise<SmsSendResultView> {
+    const selected = new Set(selectedIds);
+    const messages = batchPlan.messages
+      .filter(message => selected.has(message.childId))
+      .map(message => ({
+        childId: message.childId,
+        childName: message.childName,
+        recipientName: message.recipientName,
+        phone: message.phone,
+        text: message.text,
+      }));
+    return smsSend.send({ source: 'notify', month, templateId: null, messages });
+  }
+
+  function handleSent(result: SmsSendResultView) {
+    const sentIds = result.results.filter(outcome => outcome.outcome === 'sent').map(outcome => outcome.childId);
+    if (sentIds.length === 1) {
+      toast.show({ message: `SMS trimis către ${plannedByChildId.get(sentIds[0])?.recipientName ?? ''}` });
+    } else if (sentIds.length > 1) {
+      toast.show({ message: `${sentIds.length} SMS trimise` });
+    }
+    void lastNotified.refresh();
+  }
 
   async function copyAll() {
     const { notice } = await notifyData.copyAllMessages();
@@ -32,6 +92,15 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
       <div className={styles.headerActions}>
         <p className={styles.period}>{notifyData.periodLabel}</p>
         <div className={styles.toolbar}>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            disabled={!smsConfigured || batchPlan.messages.length === 0}
+            title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+            onClick={() => setDialog({ mode: 'bulk', recipients: notifyData.rows.map(recipientView) })}
+          >
+            Trimite tuturor · {batchPlan.messages.length}
+          </button>
           <button type="button" className={styles.btnGhost} onClick={() => void copyAll()}>
             Copiază toate mesajele
           </button>
@@ -95,11 +164,35 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                 </td>
               </tr>
             ) : (
-              notifyData.rows.map(row => <NotifyRow key={row.id} row={row} onNavigate={onNavigate} onCopy={copyOne} />)
+              notifyData.rows.map(row => (
+                <NotifyRow
+                  key={row.id}
+                  row={row}
+                  onNavigate={onNavigate}
+                  onCopy={copyOne}
+                  smsConfigured={smsConfigured}
+                  notifiedToday={lastNotified.notifiedToday(row.id, todayStr)}
+                  onSendSms={() => setDialog({ mode: 'single', recipients: [recipientView(row)] })}
+                />
+              ))
             )}
           </tbody>
         </table>
       </Card>
+
+      {dialog && (
+        <SmsConfirmDialog
+          open
+          mode={dialog.mode}
+          recipients={dialog.recipients}
+          unitCostLei={sms.data?.unitCost ?? 0.3}
+          balanceLei={sms.data?.balance ? Number(sms.data.balance) : null}
+          onSend={sendSelected}
+          onRetry={sendSelected}
+          onClose={() => setDialog(null)}
+          onSent={handleSent}
+        />
+      )}
     </>
   );
 }
@@ -108,10 +201,16 @@ function NotifyRow({
   row,
   onNavigate,
   onCopy,
+  smsConfigured,
+  notifiedToday,
+  onSendSms,
 }: {
   row: NotifyRowView;
   onNavigate: (view: ViewKey) => void;
   onCopy: (message: string) => void;
+  smsConfigured: boolean;
+  notifiedToday: boolean;
+  onSendSms: () => void;
 }) {
   return (
     <tr className={row.late ? styles.lateRow : undefined}>
@@ -145,9 +244,21 @@ function NotifyRow({
         )}
       </td>
       <td>
-        <button type="button" className={styles.btnGhostSmall} onClick={() => onCopy(row.message)}>
-          Copiază
-        </button>
+        <div className={styles.messageActions}>
+          <button
+            type="button"
+            className={styles.btnPrimarySmall}
+            disabled={!smsConfigured}
+            title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+            onClick={onSendSms}
+          >
+            Trimite SMS
+          </button>
+          <button type="button" className={styles.btnGhostSmall} onClick={() => onCopy(row.message)}>
+            Copiază
+          </button>
+          {notifiedToday && <Badge tone="mint">Notificat azi</Badge>}
+        </div>
       </td>
     </tr>
   );
