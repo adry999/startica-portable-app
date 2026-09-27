@@ -1,5 +1,7 @@
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
+export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Card, type CardProps, type CardTone } from './Card';
+export { SearchInput, type SearchInputProps } from './SearchInput';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Drawer, type DrawerProps } from './Drawer';
 export { ToastProvider, useToast } from './Toast';

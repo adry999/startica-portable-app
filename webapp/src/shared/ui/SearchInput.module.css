@@ -1,0 +1,10 @@
+.search {
+  flex: 1;
+  min-width: 180px;
+  background: var(--cream);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-body);
+  font-size: 13px;
+}

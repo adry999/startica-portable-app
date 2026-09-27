@@ -1,0 +1,39 @@
+.btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--orange);
+  color: var(--white);
+  box-shadow: var(--shadow-button-primary);
+}
+
+.ghost {
+  border: 1px solid var(--input-border);
+  background: none;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.white {
+  background: var(--white);
+  color: var(--slate);
+}
+
+.outline {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--slate);
+}
