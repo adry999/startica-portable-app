@@ -17,3 +17,18 @@
   flex-direction: column;
   gap: var(--space-20);
 }
+
+/* Ecranele de tipărire (confirmarea de plată, situația plăților) își desenează
+   propria pagină, cu propriul @page — Sidebar și Topbar rămân doar pentru ecran. */
+@media print {
+  .shell > :first-child {
+    display: none;
+  }
+  .workspace > :first-child {
+    display: none;
+  }
+  .content {
+    padding: 0;
+    gap: 0;
+  }
+}

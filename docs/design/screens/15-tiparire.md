@@ -35,6 +35,6 @@
 - **Alb-negru lizibil:** statutul e scris, nu doar colorat; rândurile neachitate au fundal `#f6f4f0`; `thead { display: table-header-group }`; subsol „Pagina N din M · tipărit la …”.
 
 ## Criterii de acceptare
-- [ ] Ruta confirmării nu intră în conflict cu `/achitari/:paymentId`
-- [ ] Mențiunea „Nu ține locul bonului fiscal” e prezentă
+- [x] Ruta confirmării nu intră în conflict cu `/achitari/:paymentId`
+- [x] Mențiunea „Nu ține locul bonului fiscal” e prezentă
 - [ ] Situația tipărită se citește corect în alb-negru

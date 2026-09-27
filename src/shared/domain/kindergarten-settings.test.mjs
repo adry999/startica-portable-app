@@ -27,10 +27,7 @@ test('clampKindergartenSettings acceptă nextReceiptNumber pozitiv, altfel revin
   assert.equal(clampKindergartenSettings({ nextReceiptNumber: 42 }).nextReceiptNumber, 42);
   assert.equal(clampKindergartenSettings({ nextReceiptNumber: 0 }).nextReceiptNumber, 1);
   assert.equal(clampKindergartenSettings({ nextReceiptNumber: -5 }).nextReceiptNumber, 1);
-  assert.equal(
-    clampKindergartenSettings(/** @type {any} */ ({ nextReceiptNumber: 'zece' })).nextReceiptNumber,
-    1,
-  );
+  assert.equal(clampKindergartenSettings(/** @type {any} */ ({ nextReceiptNumber: 'zece' })).nextReceiptNumber, 1);
   assert.equal(clampKindergartenSettings({ nextReceiptNumber: 3.7 }).nextReceiptNumber, 4);
 });
 
