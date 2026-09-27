@@ -6,11 +6,12 @@ import { useRestore } from './useRestore';
 import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
+import { KindergartenSettings } from './KindergartenSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'rates';
+type ViewMode = 'backup' | 'rates' | 'kindergarten';
 
 export function BackupPage() {
   const backupData = useBackup();
@@ -82,12 +83,15 @@ export function BackupPage() {
           options={[
             { value: 'backup', label: 'Backup' },
             { value: 'rates', label: 'Curs valutar' },
+            { value: 'kindergarten', label: 'Grădinița' },
           ]}
         />
       </div>
 
       {viewMode === 'rates' ? (
         <ExchangeRateSettings />
+      ) : viewMode === 'kindergarten' ? (
+        <KindergartenSettings />
       ) : (
         <>
           <Card className={styles.panel}>
