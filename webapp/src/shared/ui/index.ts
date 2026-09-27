@@ -20,3 +20,4 @@ export {
   useTopbarTitle,
   type TopbarTitleOverride,
 } from './TopbarActions';
+export { SmsConfirmDialog, type SmsConfirmDialogProps, type SmsRecipientView } from './sms/SmsConfirmDialog';
