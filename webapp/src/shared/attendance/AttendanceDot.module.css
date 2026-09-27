@@ -1,0 +1,39 @@
+.dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.sm {
+  width: 10px;
+  height: 10px;
+}
+
+.present {
+  background: var(--success-dot);
+}
+
+.absent {
+  background: var(--raspberry);
+}
+
+.excused {
+  background: var(--yellow);
+}
+
+.unmarked {
+  background: transparent;
+  border: 1.5px solid var(--input-border);
+}
+
+.future {
+  background: transparent;
+  border: 1.5px dotted var(--border);
+}
+
+.off,
+.none {
+  background: transparent;
+}
