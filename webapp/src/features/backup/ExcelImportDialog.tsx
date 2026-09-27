@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Drawer, useToast } from '@shared/ui';
+import { Button, Drawer, useToast } from '@shared/ui';
 import type { ExcelImportData } from './useExcelTransfer';
 import styles from './ExcelImportDialog.module.css';
 
@@ -37,14 +37,9 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
         onClose();
       }}
       footer={
-        <button
-          type="button"
-          className={styles.btnPrimary}
-          disabled={!data.canCommit || data.committing}
-          onClick={() => void commit()}
-        >
+        <Button disabled={!data.canCommit || data.committing} onClick={() => void commit()}>
           Confirmă importul
-        </button>
+        </Button>
       }
     >
       <p className={styles.notice}>

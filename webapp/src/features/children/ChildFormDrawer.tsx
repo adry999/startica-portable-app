@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { usePlanPresets } from '@shared/api/usePlanPresets';
@@ -41,9 +41,9 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
       width={620}
       onClose={onClose}
       footer={
-        <button type="submit" form="child-form-drawer" className={styles.btnPrimary} disabled={submitting}>
+        <Button type="submit" form="child-form-drawer" disabled={submitting}>
           Salvează
-        </button>
+        </Button>
       }
     >
       <form

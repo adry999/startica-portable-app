@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Group, Visit } from '@contracts/record-types.mjs';
@@ -31,9 +31,7 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
       width={520}
       onClose={onClose}
       footer={
-        <button type="button" className={styles.btnPrimary} onClick={() => onSubmit({ fee, groupId, attendanceDate })}>
-          Înscrie
-        </button>
+        <Button onClick={() => onSubmit({ fee, groupId, attendanceDate })}>Înscrie</Button>
       }
     >
       <div className={styles.form}>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { defaultVisitFormValues, STATUS_LABEL, type VisitFormValues } from './visit-form';
@@ -59,9 +59,9 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
       width={620}
       onClose={onClose}
       footer={
-        <button type="submit" form="visit-form" className={styles.btnPrimary}>
+        <Button type="submit" form="visit-form">
           Salvează
-        </button>
+        </Button>
       }
     >
       <form id="visit-form" className={styles.form} onSubmit={handleSubmit}>

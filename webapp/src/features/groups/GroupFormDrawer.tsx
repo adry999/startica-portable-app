@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import styles from './GroupFormDrawer.module.css';
 
 export interface GroupFormDrawerProps {
@@ -37,9 +37,9 @@ export function GroupFormDrawer({ open, onSubmit, onClose }: GroupFormDrawerProp
       width={420}
       onClose={onClose}
       footer={
-        <button type="submit" form="group-form-drawer" className={styles.btnPrimary} disabled={submitting}>
+        <Button type="submit" form="group-form-drawer" disabled={submitting}>
           Salvează
-        </button>
+        </Button>
       }
     >
       <form
