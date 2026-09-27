@@ -2,7 +2,7 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthName } from '#shared/format/date-format.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
-/** @typedef {{ expected: number | null, paid: number | null, rest: number | null, due: string }} SmsObligation */
+/** @typedef {{ expected: number | null, paid: number | null, rest: number | null, due: string, currency?: import('#shared/contracts/record-types.mjs').Currency }} SmsObligation */
 
 export const SMS_TEMPLATE_VARIABLES = Object.freeze(['părinte', 'copil', 'luna', 'taxa', 'rest', 'achitat', 'zi']);
 export const SMS_TEMPLATE_MAX_LENGTH = 800;
@@ -28,13 +28,14 @@ export function renderSmsTemplate(body, variables) {
  * @returns {Record<string, string>}
  */
 export function smsVariablesFor({ child, parentName, obligation, month }) {
+  // Fără moneda taxei, un copil cu plan în EUR ar primi un mesaj cu suma corectă dar eticheta „lei” (queue 8).
   return {
     părinte: parentName,
     copil: child.name,
     luna: formatMonthName(month),
-    taxa: formatMoney(obligation.expected),
-    rest: formatMoney(obligation.rest),
-    achitat: formatMoney(obligation.paid),
+    taxa: formatMoney(obligation.expected, obligation.currency),
+    rest: formatMoney(obligation.rest, obligation.currency),
+    achitat: formatMoney(obligation.paid, obligation.currency),
     zi: formatDate(obligation.due),
   };
 }
