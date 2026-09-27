@@ -384,7 +384,7 @@ Aplicatie_Startica/
 
 Un feature are, de regulă: `README.md`, `<feature>.types.d.mts`, `index.server.mjs` și/sau `index.web.mjs`, apoi `domain/`, `server/`, `web/` și `test-support/`, doar cele necesare.
 
-Feature-urile adăugate după plan (`visits`, `telegram-notify`) urmează aceeași formă și sunt descrise în README-ul fiecăruia.
+Feature-urile adăugate după plan (`visits`, `telegram-notify`, `sms-notify`, `attendance`) urmează aceeași formă și sunt descrise în README-ul fiecăruia.
 
 ### 3.2 Rolul folderelor principale
 
