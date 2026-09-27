@@ -228,6 +228,7 @@ export function createBranchContext({
           listBranches,
           auditTrail: auditLogRepository,
           recordRepository,
+          runRevisionTransaction,
         })
       : []),
     ...createNotificationSettingsRoutes({

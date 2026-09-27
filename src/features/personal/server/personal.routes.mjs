@@ -2,6 +2,7 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 import { monthOK } from '#shared/domain/calendar-month.mjs';
 import { createPersonalRepository } from './personal.repository.mjs';
 import { createLeavesService } from './leaves.service.mjs';
+import { createSalariesRoutes } from './salaries.routes.mjs';
 
 const AUDIT_STAFF = 'personal: angajat';
 const AUDIT_ROLES = 'personal: funcții și departamente';
@@ -16,17 +17,36 @@ const YEAR_OK = /^\d{4}$/;
  * active, cu `recordType: null` (precedentul „filiale”) — operatorul era acolo, Istoricul
  * rămâne un singur ecran, chiar dacă datele trăiesc în altă bază.
  * @param {{
- *   common: import('./personal.repository.mjs').CommonContextPort,
+ *   common: import('./personal.repository.mjs').CommonContextPort & { pinSession: { unlockedUntil: number, failedAttempts: number, lockedUntil: number } },
  *   branchId: string,
  *   listBranches: () => { id: string }[],
  *   auditTrail: import('#shared/contracts/audit-trail.mjs').AuditTrail,
  *   recordRepository: import('#shared/contracts/persistence.mjs').RecordRepository,
+ *   runRevisionTransaction: import('#shared/contracts/persistence.mjs').RunRevisionTransaction,
+ *   readCoachPayForMonth?: (staffId: string, month: string) => unknown,
  * }} dependencies
  */
-export function createPersonalRoutes({ common, branchId, listBranches, auditTrail, recordRepository }) {
+export function createPersonalRoutes({
+  common,
+  branchId,
+  listBranches,
+  auditTrail,
+  recordRepository,
+  runRevisionTransaction,
+  readCoachPayForMonth,
+}) {
   const repository = createPersonalRepository(common);
   const listGroups = () => /** @type {any} */ (recordRepository.readSnapshot()).groups;
   const leavesService = createLeavesService({ repository, listGroups });
+  const salariesRoutes = createSalariesRoutes({
+    common,
+    branchId,
+    personalRepository: repository,
+    recordRepository,
+    runRevisionTransaction,
+    auditTrail,
+    readCoachPayForMonth,
+  });
 
   const branchStaffIds = () => repository.staffForBranch(branchId).map(staff => staff.id);
 
@@ -137,5 +157,6 @@ export function createPersonalRoutes({ common, branchId, listBranches, auditTrai
     { method: 'GET', path: '/api/personal/leaves', handle: handleGetLeaves },
     { method: 'POST', path: '/api/personal/leaves', handle: handlePostLeaves },
     { method: 'POST', path: '/api/personal/settings', handle: handleSaveSettings },
+    ...salariesRoutes,
   ];
 }

@@ -155,6 +155,40 @@ export function createPersonalRepository(common) {
     return rows.filter(leave => allowed.has(leave.staffId));
   }
 
+  /** @param {string} staffId @returns {import('../personal.types.d.mts').Salary[]} */
+  function salariesForStaff(staffId) {
+    return kinds.list('salaries').filter(salary => salary.staffId === staffId);
+  }
+
+  /** @param {unknown} input @returns {import('../personal.types.d.mts').Salary} */
+  function saveSalary(input) {
+    const normalized = normalizePersonalRecord('salaries', input);
+    if (!kinds.find('staff', normalized.staffId)) fail('Angajatul nu mai există.', 409);
+    kinds.save('salaries', normalized);
+    return normalized;
+  }
+
+  /** @param {string} month YYYY-MM @param {string[] | null} [staffIds] @returns {import('../personal.types.d.mts').Advance[]} */
+  function advancesForMonth(month, staffIds = null) {
+    const rows = kinds.list('advances').filter(advance => advance.month === month);
+    if (!staffIds) return rows;
+    const allowed = new Set(staffIds);
+    return rows.filter(advance => allowed.has(advance.staffId));
+  }
+
+  /** @param {string} year YYYY @param {string[] | null} [staffIds] @returns {import('../personal.types.d.mts').Advance[]} */
+  function advancesForYear(year, staffIds = null) {
+    const rows = kinds.list('advances').filter(advance => advance.date.slice(0, 4) === year);
+    if (!staffIds) return rows;
+    const allowed = new Set(staffIds);
+    return rows.filter(advance => allowed.has(advance.staffId));
+  }
+
+  /** @param {string} staffId @param {string} month @param {string} branchId */
+  function salaryPaymentId(staffId, month, branchId) {
+    return `SP-${staffId}-${month}-${branchId}`;
+  }
+
   /** @returns {PersonalSettings} */
   function readSettings() {
     const raw = common.readSetting(PERSONAL_SETTINGS_KEY);
@@ -201,6 +235,11 @@ export function createPersonalRepository(common) {
     timesheetForMonth,
     applyTimesheetChanges,
     leavesForYear,
+    salariesForStaff,
+    saveSalary,
+    advancesForMonth,
+    advancesForYear,
+    salaryPaymentId,
     readSettings,
     writeSettings,
   };
