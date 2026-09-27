@@ -58,9 +58,7 @@ describe('useSmsSend', () => {
     );
 
     const { result } = renderHook(() => useSmsSend());
-    await act(() =>
-      result.current.send({ source: 'notify', month: '2026-09', templateId: null, messages: [] }),
-    );
+    await act(() => result.current.send({ source: 'notify', month: '2026-09', templateId: null, messages: [] }));
 
     expect(result.current.lastResult?.results).toHaveLength(1);
     expect(result.current.sending).toBe(false);

@@ -69,9 +69,7 @@ describe('useSmsTemplates', () => {
       throw new Error(`neașteptat: ${path}`);
     });
 
-    await act(() =>
-      result.current.save({ name: 'Nou', body: 'Text', stripDiacritics: true, isDefault: false }),
-    );
+    await act(() => result.current.save({ name: 'Nou', body: 'Text', stripDiacritics: true, isDefault: false }));
     expect(result.current.templates).toHaveLength(2);
   });
 

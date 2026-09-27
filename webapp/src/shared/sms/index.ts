@@ -10,11 +10,7 @@ export type {
   SmsRecipientRow,
 } from './sms-types';
 export { useSmsStatus, type SmsStatusData, type SmsConnectInput, type SmsStatusScreenStatus } from './useSmsStatus';
-export {
-  useSmsTemplates,
-  type SmsTemplatesData,
-  type SmsTemplatesScreenStatus,
-} from './useSmsTemplates';
+export { useSmsTemplates, type SmsTemplatesData, type SmsTemplatesScreenStatus } from './useSmsTemplates';
 export { useSmsLastNotified, type SmsLastNotifiedData } from './useSmsLastNotified';
 export { useSmsSend, type SmsSendData } from './useSmsSend';
 export { SmsSegmentCounter, type SmsSegmentCounterProps } from './SmsSegmentCounter';

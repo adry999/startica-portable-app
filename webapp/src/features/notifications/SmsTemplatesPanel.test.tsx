@@ -47,7 +47,11 @@ function stubFetch() {
     vi.fn(async (path: string) => {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
       if (path === '/api/state')
-        return jsonResponse({ state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] }, revision: 1, updatedAt: '2026-09-27T10:00:00Z' });
+        return jsonResponse({
+          state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+          revision: 1,
+          updatedAt: '2026-09-27T10:00:00Z',
+        });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/sms-status') return jsonResponse(smsStatus);
       if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
@@ -98,7 +102,11 @@ describe('SmsTemplatesPanel', () => {
     const fetchMock = vi.fn(async (path: string, init?: RequestInit) => {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
       if (path === '/api/state')
-        return jsonResponse({ state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] }, revision: 1, updatedAt: '2026-09-27T10:00:00Z' });
+        return jsonResponse({
+          state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+          revision: 1,
+          updatedAt: '2026-09-27T10:00:00Z',
+        });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/sms-status') return jsonResponse(smsStatus);
       if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });

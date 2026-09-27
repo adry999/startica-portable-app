@@ -126,7 +126,9 @@ export function SmsConfirmDialog({
     : sending || selected.size === 0 || !!monthlyLimitNote;
 
   const sendCostLei = single ? unitCostLei : selected.size * unitCostLei;
-  const sendLabel = single ? `Trimite SMS (≈ ${formatMoney(sendCostLei)})` : `Trimite ${selected.size} SMS (≈ ${formatMoney(sendCostLei)})`;
+  const sendLabel = single
+    ? `Trimite SMS (≈ ${formatMoney(sendCostLei)})`
+    : `Trimite ${selected.size} SMS (≈ ${formatMoney(sendCostLei)})`;
 
   const resultCounts = result
     ? {

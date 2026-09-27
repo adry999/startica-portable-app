@@ -93,7 +93,8 @@ function stubFullFetch(smsStatusBody: unknown = smsUnconfigured) {
       if (path === '/api/sms-status') return jsonResponse(smsStatusBody);
       if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
-      if (path === '/api/state') return jsonResponse({ state: emptyState, revision: 1, updatedAt: '2026-09-27T10:00:00Z' });
+      if (path === '/api/state')
+        return jsonResponse({ state: emptyState, revision: 1, updatedAt: '2026-09-27T10:00:00Z' });
       if (path === '/api/health') return jsonResponse({});
       throw new Error(`neașteptat: ${path}`);
     }),

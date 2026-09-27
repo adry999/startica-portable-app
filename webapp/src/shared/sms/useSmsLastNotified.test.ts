@@ -16,7 +16,9 @@ describe('useSmsLastNotified', () => {
       'fetch',
       vi.fn(async (path: string) => {
         if (path === '/api/sms-last-notified')
-          return jsonResponse({ c1: { at: '2026-09-27T08:00:00.000Z', status: 'sent', month: '2026-09', templateName: 'Implicit' } });
+          return jsonResponse({
+            c1: { at: '2026-09-27T08:00:00.000Z', status: 'sent', month: '2026-09', templateName: 'Implicit' },
+          });
         throw new Error(`neașteptat: ${path}`);
       }),
     );

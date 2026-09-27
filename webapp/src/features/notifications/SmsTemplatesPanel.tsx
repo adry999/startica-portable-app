@@ -139,12 +139,7 @@ export function SmsTemplatesPanel() {
           <label htmlFor="sms-template-body">Text</label>
           <div className={styles.pills}>
             {SMS_TEMPLATE_VARIABLES.map(variable => (
-              <button
-                key={variable}
-                type="button"
-                className={styles.pill}
-                onClick={() => insertVariable(variable)}
-              >
+              <button key={variable} type="button" className={styles.pill} onClick={() => insertVariable(variable)}>
                 {variable}
               </button>
             ))}
