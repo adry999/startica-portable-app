@@ -10,12 +10,27 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
  *   backupService: { cancelScheduledBackup: () => void, safeBackup: (reason: string) => { warning?: string } },
  *   allowShutdown: boolean,
  *   shutdown: () => void,
+ *   branch: import('#core/server/branches/branch-registry.mjs').BranchEntry,
+ *   listBranches: () => import('#core/server/branches/branch-registry.mjs').BranchEntry[],
  * }} dependencies
  */
-export function createSessionRoutes({ sessionToken, version, readEnvelope, backupService, allowShutdown, shutdown }) {
+export function createSessionRoutes({
+  sessionToken,
+  version,
+  readEnvelope,
+  backupService,
+  allowShutdown,
+  shutdown,
+  branch,
+  listBranches,
+}) {
   let closing = false;
   return [
-    { method: 'GET', path: '/api/session', handle: () => ({ token: sessionToken, version }) },
+    {
+      method: 'GET',
+      path: '/api/session',
+      handle: () => ({ token: sessionToken, version, branch, branches: listBranches() }),
+    },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },
     {
       method: 'POST',

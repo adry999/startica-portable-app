@@ -5,10 +5,13 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, BRANCH_REGISTRY_FILE_NAME, dataLayout } from '#config/environment.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
+import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
 import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
 import { createBranchContext } from './create-branch-context.mjs';
+import { createBranchRoutes } from './branches.routes.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 
@@ -57,11 +60,25 @@ export function createApplication(options = {}) {
     server.closeIdleConnections();
   }
 
-  // Rutele filialelor (Task 3, branches.routes.mjs) sunt adăugate aici, o singură
-  // dată; fiecare filială deschisă le include, pentru că ele nu țin de o filială
-  // anume — citesc/scriu registrul și comută `active` din afara oricărui context.
-  /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */
-  const branchRoutes = [];
+  /** @returns {BranchEntry} */
+  function activeBranch() {
+    return active.branch;
+  }
+
+  // Rutele filialelor sunt construite o singură dată, nu per filială: ele nu
+  // țin de o filială anume — citesc/scriu registrul și comută `active` din
+  // afara oricărui context (funcțiile de mai jos sunt „function” — hoist-uite,
+  // deci pot fi referite aici înainte de a fi apelate mai jos în cod).
+  const branchRoutes = /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (
+    createBranchRoutes({
+      registry,
+      home,
+      legacy,
+      activeBranch,
+      selectBranch,
+      auditTrail: () => active.auditLogRepository,
+    })
+  );
 
   /** @param {BranchEntry} branch */
   function openBranchContext(branch) {
@@ -82,6 +99,7 @@ export function createApplication(options = {}) {
       allowShutdown: !!options.allowShutdown,
       fetch: options.fetch ?? globalThis.fetch,
       shutdown: shutdownServer,
+      listBranches: registry.list,
       branchRoutes,
     });
   }
@@ -96,27 +114,26 @@ export function createApplication(options = {}) {
       existingRegistry.branches[0];
     active = openBranchContext(target);
   } else {
-    // Filiala #1: rămâne pe folderele vechi, fără nicio mutare de fișier — placeholder-ul
-    // de mai jos e înlocuit cu intrarea reală imediat ce citim numele grădiniței din bază.
-    active = openBranchContext({ id: '', name: '', color: 'orange', address: '', createdAt: '', folder: null });
-    const kindergarten = parseKindergartenSettings(active.readSetting('kindergarten'));
+    // Filiala #1 rămâne pe folderele vechi, fără nicio mutare de fișier (decizia 4). Numele
+    // grădiniței vine dintr-o citire scurtă, separată — contextul complet se deschide o
+    // singură dată, mai jos, cu filiala deja cunoscută (nu un placeholder rescris ulterior,
+    // ca rutele de sesiune să nu prindă o referință veche la `branch`).
+    const { db: bootstrapDb } = openDatabase({ dataDir: legacy.dataDir, backupDir: legacy.backupDir });
+    const bootstrapSetting = /** @type {(key: string) => string} */ (createSettingsRepository(bootstrapDb).setting);
+    const kindergarten = parseKindergartenSettings(bootstrapSetting('kindergarten'));
+    bootstrapDb.close();
     const created = registry.ensure({
       name: kindergarten.name || 'Filiala principală',
       color: 'orange',
       address: kindergarten.address,
       folder: null,
     });
-    active.branch = created.branches.find(branch => branch.folder === null) ?? created.branches[0];
+    active = openBranchContext(created.branches.find(branch => branch.folder === null) ?? created.branches[0]);
   }
 
   const server = createServer((req, res) =>
     active.dispatchRequest(req, res, /** @type {import('node:net').AddressInfo} */ (server.address()).port),
   );
-
-  /** @returns {BranchEntry} */
-  function activeBranch() {
-    return active.branch;
-  }
 
   // Comutarea filialei active (Task 3 o expune prin POST /api/branches/select):
   // backup „schimbare-filiala” pe cea veche, deschidere a celei noi, punctare a

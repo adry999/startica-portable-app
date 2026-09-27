@@ -58,6 +58,7 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   allowShutdown: boolean,
  *   fetch: typeof fetch,
  *   shutdown: () => void,
+ *   listBranches: () => BranchEntry[],
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
  * }} options
  */
@@ -74,6 +75,7 @@ export function createBranchContext({
   allowShutdown,
   fetch: fetchImpl,
   shutdown,
+  listBranches,
   branchRoutes,
 }) {
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
@@ -130,6 +132,8 @@ export function createBranchContext({
       backupService: backups,
       allowShutdown: !!allowShutdown,
       shutdown,
+      branch,
+      listBranches,
     }),
     ...createDiagnosticRoutes({
       version,
@@ -246,11 +250,12 @@ export function createBranchContext({
     } catch (e) {
       console.error('Expirare jurnal SMS: ' + /** @type {Error} */ (e).message);
     }
-    try {
-      refreshExchangeRateIfMissing();
-    } catch (e) {
+    // refreshExchangeRateIfMissing e asincronă: un try/catch sincron în jurul apelului
+    // (fără await) nu prinde niciodată respingerea ei — .catch() e singurul mod corect,
+    // altfel o filială închisă chiar când sweep-ul rulează ar lăsa o respingere netratată.
+    refreshExchangeRateIfMissing().catch(e => {
       console.error('Curs BNM la pornire: ' + /** @type {Error} */ (e).message);
-    }
+    });
   }
 
   return {
@@ -261,6 +266,7 @@ export function createBranchContext({
     backupDir,
     backups,
     recordRepository,
+    auditLogRepository,
     readSetting,
     dispatchRequest,
     runStartupSweeps,

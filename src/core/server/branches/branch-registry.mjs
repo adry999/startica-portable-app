@@ -63,7 +63,19 @@ export function writeBranchRegistry(file, registry) {
 }
 
 /**
+ * @typedef {{
+ *   list: () => BranchEntry[],
+ *   find: (id: string) => BranchEntry | undefined,
+ *   add: (input: { name: string, color?: string | null, address?: string | null }) => BranchEntry,
+ *   update: (id: string, patch: { name?: string, color?: string, address?: string }) => BranchEntry,
+ *   setLastBranchId: (id: string) => void,
+ *   ensure: (initialBranch: { name: string, color: string, address: string, folder: string | null }) => BranchRegistry,
+ * }} BranchRegistryStore
+ */
+
+/**
  * @param {{ file: string, now?: () => string, createId: () => string }} dependencies
+ * @returns {BranchRegistryStore}
  */
 export function createBranchRegistryStore({ file, now = () => new Date().toISOString(), createId }) {
   const load = () => readBranchRegistry(file);

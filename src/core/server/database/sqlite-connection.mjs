@@ -10,9 +10,20 @@ export function openDatabase({ dataDir, backupDir }) {
   const dbFile = join(dataDir, 'startica.db');
   const isNewDatabase = !existsSync(dbFile);
   const db = new DatabaseSync(dbFile);
-  db.exec(CONNECTION_PRAGMAS);
-  applySchema(db);
-  runMigrations(db, backupDir, isNewDatabase);
+  try {
+    db.exec(CONNECTION_PRAGMAS);
+    applySchema(db);
+    runMigrations(db, backupDir, isNewDatabase);
+  } catch (error) {
+    // O bază coruptă (ex. o filială care nu se poate deschide, Faza 6) trebuie să elibereze
+    // imediat fișierul — altfel fiecare încercare ar lăsa în urmă un lacăt pe disc.
+    try {
+      db.close();
+    } catch {
+      // ignorat: baza poate fi deja într-o stare din care nu se mai poate închide normal.
+    }
+    throw error;
+  }
   return { db, dbFile };
 }
 
