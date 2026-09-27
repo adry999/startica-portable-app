@@ -1,19 +1,5 @@
-import { useMemo, useState, type FormEvent } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  ConfirmDeleteDialog,
-  DataTable,
-  FilterPills,
-  RowMenu,
-  SearchInput,
-  SegmentedControl,
-  SelectionBar,
-  useToast,
-  type BadgeTone,
-  type DataTableColumn,
-} from '@shared/ui';
+import { useMemo, useState } from 'react';
+import { Button, Card, ConfirmDeleteDialog, DataTable, SegmentedControl, SelectionBar, useToast } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
 import { total } from '@domain/money.mjs';
@@ -21,8 +7,13 @@ import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
-import { useExpenses, categoryStyleFor, type ExpenseFormInput } from './useExpenses';
+import { useExpenses, type ExpenseFormInput } from './useExpenses';
 import { ExpenseFormDrawer } from './ExpenseFormDrawer';
+import { ExpensesSummaryCards } from './ExpensesSummaryCards';
+import { ExpensesCategoryManager } from './ExpensesCategoryManager';
+import { ExpensesFilters, type ArchiveFilter } from './ExpensesFilters';
+import { buildExpenseColumns } from './expenseColumns';
+import { DailyExpensesView, type DailyGroup } from './DailyExpensesView';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
 
@@ -31,11 +22,6 @@ export interface ExpensesPageProps {
 }
 
 type ViewMode = 'table' | 'daily';
-type ArchiveFilter = 'active' | 'archived' | 'all';
-
-// Aceleași tonuri ca la achitări (PaymentsPage.METHOD_TONE), doar cu valori lowercase.
-const METHOD_TONE: Record<string, BadgeTone> = { cash: 'orange', card: 'yellow', transfer: 'mint' };
-const METHOD_LABEL: Record<string, string> = { cash: 'Cash', card: 'Card', transfer: 'Transfer' };
 
 export function ExpensesPage({ month }: ExpensesPageProps) {
   const expensesData = useExpenses(month);
@@ -49,10 +35,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [method, setMethod] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
-  const [newCategoryName, setNewCategoryName] = useState('');
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
-  const [editingCategoryName, setEditingCategoryName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'category'; id: string; name: string } | { kind: 'expense'; expense: Expense } | null
   >(null);
@@ -84,7 +67,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     );
   }
 
-  const dailyGroups = useMemo(() => {
+  const dailyGroups: DailyGroup[] = useMemo(() => {
     const byDate = new Map<string, Expense[]>();
     for (const expense of filteredExpenses) byDate.set(expense.date, [...(byDate.get(expense.date) ?? []), expense]);
     return [...byDate.entries()]
@@ -92,38 +75,10 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       .map(([date, items]) => ({ date, items, dayTotal: total(items) }));
   }, [filteredExpenses]);
 
-  async function handleCreateCategory(event: FormEvent) {
-    event.preventDefault();
-    try {
-      await expensesData.createCategory(newCategoryName);
-      setNewCategoryName('');
-      toast.show({ message: 'Categorie adăugată.' });
-    } catch (error) {
-      toast.show({ message: (error as Error).message });
-    }
-  }
-
   async function deleteCategoryConfirmed(id: string) {
     try {
       await expensesData.deleteCategory(id);
       toast.show({ message: 'Categorie ștearsă.' });
-    } catch (error) {
-      toast.show({ message: (error as Error).message });
-    }
-  }
-
-  function startEditingCategory(id: string, name: string) {
-    setEditingCategoryId(id);
-    setEditingCategoryName(name);
-  }
-
-  async function commitEditingCategory() {
-    if (!editingCategoryId) return;
-    const id = editingCategoryId;
-    setEditingCategoryId(null);
-    try {
-      await expensesData.renameCategory(id, editingCategoryName);
-      toast.show({ message: 'Categorie redenumită.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -190,58 +145,11 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const archivedTotal = expensesData.expenses.filter(expense => expense.archived).length;
   const selectedTotal = total(filteredExpenses.filter(expense => selectedRowKeys.has(expense.id)));
 
-  const columns: DataTableColumn<Expense>[] = [
-    { key: 'date', header: 'Data', sortValue: expense => expense.date, render: expense => formatDate(expense.date) },
-    {
-      key: 'description',
-      header: 'Descriere/furnizor',
-      sortValue: expense => expense.description,
-      render: expense => expense.description || '—',
-    },
-    {
-      key: 'category',
-      header: 'Categorie',
-      sortValue: expense => expense.category,
-      render: expense => <Badge tone={categoryStyleFor(expense.category).tone}>{expense.category}</Badge>,
-    },
-    {
-      key: 'method',
-      header: 'Metodă',
-      sortValue: expense => expense.method ?? '',
-      render: expense =>
-        expense.method ? <Badge tone={METHOD_TONE[expense.method]}>{METHOD_LABEL[expense.method]}</Badge> : '—',
-    },
-    {
-      key: 'amount',
-      header: 'Suma',
-      align: 'end',
-      sortValue: expense => expense.amount,
-      render: expense => <strong>{formatMoney(expense.amount)}</strong>,
-    },
-    {
-      key: 'menu',
-      header: '',
-      align: 'end',
-      render: expense => (
-        <RowMenu
-          items={[
-            { label: 'Editează', onClick: () => setFormTarget(expense) },
-            {
-              label: expense.archived ? 'Reactivează' : 'Arhivează',
-              onClick: () => void toggleArchived(expense),
-            },
-            {
-              label: 'Șterge definitiv',
-              danger: true,
-              disabled: !expense.archived,
-              title: expense.archived ? undefined : 'Arhivează întâi cheltuiala',
-              onClick: () => setDeleteTarget({ kind: 'expense', expense }),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columns = buildExpenseColumns({
+    onEdit: expense => setFormTarget(expense),
+    onToggleArchived: expense => void toggleArchived(expense),
+    onRequestDelete: expense => setDeleteTarget({ kind: 'expense', expense }),
+  });
 
   return (
     <>
@@ -261,158 +169,32 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
       </div>
 
-      <div className={styles.kpiRow}>
-        <Card tone="mint" decorative className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Total lună</p>
-          <strong className={styles.kpiValue}>{formatMoney(expensesData.monthTotal)}</strong>
-        </Card>
-
-        <Card className={styles.categoryCard}>
-          <p className={styles.kpiLabel}>Pe categorii, luna curentă</p>
-          <div className={styles.categoryBar}>
-            {expensesData.categorySummary
-              .filter(item => item.amount > 0)
-              .map(item => (
-                <span key={item.label} style={{ width: `${item.percent}%`, background: item.color }} />
-              ))}
-          </div>
-          <div className={styles.categoryLegend}>
-            {expensesData.categorySummary.map(item => (
-              <div key={item.label} className={styles.categoryLegendItem}>
-                <span className={styles.categoryDot} style={{ background: item.color }} />
-                <span>{item.label}</span>
-                <strong>{formatMoney(item.amount)}</strong>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+      <ExpensesSummaryCards monthTotal={expensesData.monthTotal} categorySummary={expensesData.categorySummary} />
 
       <Card className={styles.tableCard}>
-        <div className={styles.chipsRow}>
-          <div className={styles.chips}>
-            {expensesData.categories.length === 0 ? (
-              <span className={styles.notice}>
-                Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.
-              </span>
-            ) : (
-              expensesData.categories.map(cat =>
-                editingCategoryId === cat.id ? (
-                  <span key={cat.id} className={styles.chip}>
-                    <input
-                      autoFocus
-                      className={styles.chipEditInput}
-                      style={{ width: `${Math.max(4, editingCategoryName.length)}ch` }}
-                      value={editingCategoryName}
-                      aria-label={`Redenumește ${cat.name}`}
-                      onChange={event => setEditingCategoryName(event.target.value)}
-                      onBlur={() => void commitEditingCategory()}
-                      onKeyDown={event => {
-                        if (event.key === 'Enter') {
-                          event.preventDefault();
-                          void commitEditingCategory();
-                        } else if (event.key === 'Escape') {
-                          setEditingCategoryId(null);
-                        }
-                      }}
-                    />
-                  </span>
-                ) : (
-                  <span key={cat.id} className={styles.chip}>
-                    <button
-                      type="button"
-                      className={styles.chipLabel}
-                      title="Redenumește categoria"
-                      onClick={() => startEditingCategory(cat.id, cat.name)}
-                    >
-                      {cat.name}
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Șterge ${cat.name}`}
-                      title="Șterge categoria"
-                      onClick={() => setDeleteTarget({ kind: 'category', id: cat.id, name: cat.name })}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ),
-              )
-            )}
-          </div>
-          <form className={styles.chipForm} onSubmit={handleCreateCategory}>
-            <input
-              value={newCategoryName}
-              onChange={event => setNewCategoryName(event.target.value)}
-              placeholder="Categorie nouă"
-              aria-label="Categoria nouă"
-            />
-            <button type="submit" className={styles.btnGhostSmall}>
-              + Adaugă
-            </button>
-          </form>
-        </div>
+        <ExpensesCategoryManager
+          categories={expensesData.categories}
+          onCreateCategory={expensesData.createCategory}
+          onRenameCategory={expensesData.renameCategory}
+          onRequestDelete={category => setDeleteTarget({ kind: 'category', id: category.id, name: category.name })}
+        />
 
-        <div className={styles.toolbar}>
-          <SearchInput
-            placeholder="Caută descriere sau categorie…"
-            value={search}
-            onChange={setSearch}
-            ariaLabel="Caută cheltuială"
-          />
-          <input
-            className={styles.select}
-            type="month"
-            value={monthFrom}
-            onChange={event => setMonthFrom(event.target.value)}
-            aria-label="De la luna"
-          />
-          <input
-            className={styles.select}
-            type="month"
-            value={monthTo}
-            onChange={event => setMonthTo(event.target.value)}
-            aria-label="Până la luna"
-          />
-          <SegmentedControl
-            ariaLabel="Filtru arhivare"
-            value={archiveFilter}
-            onChange={setArchiveFilter}
-            options={[
-              { value: 'active', label: `Activi · ${activeTotal}` },
-              { value: 'archived', label: `Arhivați · ${archivedTotal}` },
-              { value: 'all', label: `Toți · ${activeTotal + archivedTotal}` },
-            ]}
-          />
-        </div>
-
-        <FilterPills
-          groups={[
-            {
-              label: 'Categorie',
-              value: category,
-              onChange: setCategory,
-              options: [
-                { value: '', label: 'Toate', tone: 'neutral' },
-                ...expensesData.categoryNames.map(name => ({
-                  value: name,
-                  label: name,
-                  tone: categoryStyleFor(name).tone,
-                })),
-              ],
-            },
-            {
-              label: 'Metodă',
-              value: method,
-              onChange: setMethod,
-              options: [
-                { value: '', label: 'Toate', tone: 'neutral' },
-                { value: 'cash', label: 'Cash', tone: METHOD_TONE.cash },
-                { value: 'card', label: 'Card', tone: METHOD_TONE.card },
-                { value: 'transfer', label: 'Transfer', tone: METHOD_TONE.transfer },
-              ],
-            },
-          ]}
+        <ExpensesFilters
+          search={search}
+          onSearchChange={setSearch}
+          monthFrom={monthFrom}
+          onMonthFromChange={setMonthFrom}
+          monthTo={monthTo}
+          onMonthToChange={setMonthTo}
+          archiveFilter={archiveFilter}
+          onArchiveFilterChange={setArchiveFilter}
+          activeTotal={activeTotal}
+          archivedTotal={archivedTotal}
+          category={category}
+          onCategoryChange={setCategory}
+          categoryNames={expensesData.categoryNames}
+          method={method}
+          onMethodChange={setMethod}
         />
 
         <p className={styles.summaryText}>
@@ -476,39 +258,5 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         }}
       />
     </>
-  );
-}
-
-interface DailyGroup {
-  date: string;
-  items: Expense[];
-  dayTotal: number;
-}
-
-/**
- * Vizualizare simplă „Pe zile”, fără coloana de buget — bugetul pe categorii e
- * o funcție nouă, explicit în afara scopului (vezi README-ul redesign-ului).
- */
-function DailyExpensesView({ groups }: { groups: DailyGroup[] }) {
-  if (groups.length === 0) return <p className={styles.notice}>Nu există înregistrări pentru filtrele alese.</p>;
-
-  return (
-    <div className={styles.dailyList}>
-      {groups.map(group => (
-        <div key={group.date} className={styles.dayGroup}>
-          <div className={styles.dayHead}>
-            <strong>{formatDate(group.date)}</strong>
-            <span>{formatMoney(group.dayTotal)}</span>
-          </div>
-          {group.items.map(expense => (
-            <div key={expense.id} className={styles.dayRow}>
-              <span className={styles.dayRowDesc}>{expense.description || '—'}</span>
-              <Badge tone={categoryStyleFor(expense.category).tone}>{expense.category}</Badge>
-              <span className={styles.dayRowAmount}>{formatMoney(expense.amount)}</span>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
   );
 }
