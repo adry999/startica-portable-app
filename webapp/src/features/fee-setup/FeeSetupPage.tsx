@@ -1,4 +1,4 @@
-import { Card, DataTable, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
+import { Button, Card, DataTable, SearchInput, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -157,13 +157,11 @@ export function FeeSetupPage() {
       </p>
 
       <div className={styles.toolbar}>
-        <input
-          className={styles.search}
-          type="search"
+        <SearchInput
           placeholder="Caută…"
           value={feeSetupData.search}
-          onChange={event => feeSetupData.setSearch(event.target.value)}
-          aria-label="Caută copil"
+          onChange={feeSetupData.setSearch}
+          ariaLabel="Caută copil"
         />
         <SegmentedControl<FeeSetupFilter>
           ariaLabel="Arată"
@@ -188,9 +186,7 @@ export function FeeSetupPage() {
       {feeSetupData.hasPendingEdits && (
         <div className={styles.saveBar}>
           <span>Ai completări nesalvate.</span>
-          <button type="button" className={styles.btnPrimary} onClick={() => void handleSave()}>
-            Salvează completările
-          </button>
+          <Button onClick={() => void handleSave()}>Salvează completările</Button>
         </div>
       )}
     </>
@@ -258,9 +254,9 @@ function BulkRow({ data }: { data: FeeSetupData }) {
           ))}
         </select>
       </label>
-      <button type="button" className={styles.btnGhost} onClick={applyAll}>
+      <Button variant="ghost" onClick={applyAll}>
         Aplică la rândurile afișate
-      </button>
+      </Button>
     </div>
   );
 }

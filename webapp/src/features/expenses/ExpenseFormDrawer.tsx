@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import type { ExpenseFormInput } from './useExpenses';
 import type { Expense } from '@contracts/record-types.mjs';
@@ -36,13 +36,7 @@ export function ExpenseFormDrawer({
       width={520}
       onClose={onClose}
       footer={
-        <button
-          type="button"
-          className={styles.btnPrimary}
-          onClick={() => onSubmit({ date, amount, category, method, description, notes })}
-        >
-          Salvează
-        </button>
+        <Button onClick={() => onSubmit({ date, amount, category, method, description, notes })}>Salvează</Button>
       }
     >
       <form className={styles.editorForm} onSubmit={handleSubmit}>

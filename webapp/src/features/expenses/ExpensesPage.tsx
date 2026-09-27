@@ -1,11 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import {
   Badge,
+  Button,
   Card,
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
   RowMenu,
+  SearchInput,
   SegmentedControl,
   SelectionBar,
   useToast,
@@ -253,12 +255,10 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             { value: 'daily', label: 'Pe zile' },
           ]}
         />
-        <button type="button" className={styles.btnGhost} onClick={exportFiltered}>
+        <Button variant="ghost" onClick={exportFiltered}>
           Exportă
-        </button>
-        <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
-          + Cheltuială nouă
-        </button>
+        </Button>
+        <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
       </div>
 
       <div className={styles.kpiRow}>
@@ -354,13 +354,11 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         </div>
 
         <div className={styles.toolbar}>
-          <input
-            className={styles.search}
-            type="search"
+          <SearchInput
             placeholder="Caută descriere sau categorie…"
             value={search}
-            onChange={event => setSearch(event.target.value)}
-            aria-label="Caută cheltuială"
+            onChange={setSearch}
+            ariaLabel="Caută cheltuială"
           />
           <input
             className={styles.select}

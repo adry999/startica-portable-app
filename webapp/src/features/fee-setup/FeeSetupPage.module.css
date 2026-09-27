@@ -16,17 +16,6 @@
   flex-wrap: wrap;
 }
 
-.search {
-  flex: 1;
-  min-width: 180px;
-  background: var(--cream);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
-}
-
 .bulkRow {
   display: flex;
   align-items: end;
@@ -51,27 +40,6 @@
   padding: var(--space-8) var(--space-10);
   font: inherit;
   font-size: 13px;
-}
-
-.btnGhost {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 800;
-  font-size: 13px;
-  box-shadow: var(--shadow-button-primary);
 }
 
 .tableCard {

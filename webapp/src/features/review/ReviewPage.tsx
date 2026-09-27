@@ -1,4 +1,4 @@
-import { Badge, Card, useToast, type BadgeTone } from '@shared/ui';
+import { Badge, Button, Card, SearchInput, useToast, type BadgeTone } from '@shared/ui';
 import { useReview, type ReviewRowView } from './useReview';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
@@ -70,17 +70,16 @@ export function ReviewPage({ onNavigate }: ReviewPageProps) {
             ))}
           </select>
         </label>
-        <input
+        <SearchInput
           className={styles.search}
-          type="search"
           placeholder="Nume, contract, sursă sau observație"
           value={reviewData.search}
-          onChange={event => reviewData.setSearch(event.target.value)}
-          aria-label="Caută"
+          onChange={reviewData.setSearch}
+          ariaLabel="Caută"
         />
-        <button type="button" className={styles.btnGhost} onClick={reviewData.resetFilters}>
+        <Button variant="ghost" onClick={reviewData.resetFilters}>
           Resetează filtrele
-        </button>
+        </Button>
       </div>
 
       <Card className={styles.listCard}>

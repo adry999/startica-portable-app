@@ -54,24 +54,7 @@
 }
 
 .search {
-  flex: 1;
   min-width: 220px;
-  background: var(--cream);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
-}
-
-.btnGhost {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
 }
 
 .btnGhostSmall {
