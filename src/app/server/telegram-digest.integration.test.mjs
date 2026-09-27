@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { BRANCHES_DIR_NAME } from '#config/environment.mjs';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
 import { runTelegramDigest } from './telegram-digest.mjs';
 import {
@@ -155,6 +156,53 @@ test('runTelegramDigest citește instantaneul serverului pornit și trimite, ret
 
   const stateAfterAll = await get('/api/state');
   assert.equal(stateAfterAll.revision, revisionBefore, 'baza serverului rămâne neschimbată după toate rulările');
+});
+
+test('rezumatul rulează pentru fiecare filială care are telegram.json, fără să atingă celelalte', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-telegram-digest-multi-'));
+  const dataDirA = join(home, 'Startica_Date');
+
+  const { post } = await startTestApplication(t, {
+    prefix: 'startica-telegram-digest-multi-app-',
+    dataDir: dataDirA,
+    backupDir: join(home, 'Startica_Backup'),
+    home,
+  });
+  t.after(() => rmSync(home, { recursive: true, force: true }));
+
+  const createdBranch = await post('/api/branches', { name: 'Botanica' });
+  assert.equal(createdBranch.status, 200, createdBranch.body.error);
+  const branchB = createdBranch.body.branch;
+  const dataDirB = join(home, BRANCHES_DIR_NAME, branchB.folder, 'Startica_Date');
+
+  // Doar filiala B are telegram.json — filiala A (migrată) nu a fost conectată niciodată.
+  writeTelegramConfig(dataDirB, {
+    token: TOKEN,
+    chatId: 555666777,
+    chatName: 'Ion Popescu',
+    botUsername: 'StaricaBot',
+  });
+
+  const telegram = fakeFetch({ mode: 'success' });
+  const log = fakeLog();
+  const exit = await runTelegramDigest({
+    home,
+    now: new Date('2026-09-15T08:00:00.000Z'),
+    fetch: telegram.fetchImpl,
+    log,
+  });
+
+  assert.equal(exit, 0);
+  assert.equal(telegram.calls.length, 1, 'un singur apel: doar filiala B e configurată');
+  assert.ok(
+    log.entries.some(entry => entry.message.startsWith('[Botanica]')),
+    'jurnalul are prefixul filialei când sunt cel puțin două',
+  );
+  assert.equal(
+    existsSync(join(dataDirA, 'telegram-stare.json')),
+    false,
+    'filiala A nu a fost atinsă (nu are telegram.json)',
+  );
 });
 
 test('cheia zilei se calculează din data locală, nu din UTC', async t => {

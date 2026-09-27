@@ -1,13 +1,15 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadEnvironment, dataLayout } from '#config/environment.mjs';
+import { loadEnvironment, dataLayout, BRANCH_REGISTRY_FILE_NAME } from '#config/environment.mjs';
 import { isoDateOf } from '#shared/domain/calendar-month.mjs';
 import { clampNotificationPreferences, isDigestRunTooLate } from '#shared/domain/notification-preferences.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { readSettingValue } from '#core/server/settings/settings-repository.mjs';
 import { createRotatingLogFile } from '#core/server/files/rotating-log-file.mjs';
+import { readBranchRegistry } from '#core/server/branches/branch-registry.mjs';
+import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
 import { listUpcomingBirthdays } from '#features/children/index.server.mjs';
 import { countVisitsForDays } from '#features/visits/index.server.mjs';
 import { evaluateChildrenForMonth } from '#features/billing/index.server.mjs';
@@ -56,16 +58,15 @@ function readNotificationPreferences(raw, log) {
 }
 
 /**
- * Compune rezumatul zilnic din cele trei feature-uri (§3.3 din specificație)
- * și îl trimite prin Telegram; procesul rulează separat de server, cu Startica închisă.
- * @param {{ home?: string, now?: Date, fetch: typeof fetch, log?: { write(level: string, message: string): void } }} options
+ * Rezumatul unei singure filiale — corpul de până la Faza 6, cu `dataDir`
+ * primit direct (îl calculează apelantul, per filială) în loc de `home`.
+ * Cu `branchName` dat, jurnalul e prefixat cu ea (mai multe filiale în registru).
+ * @param {{ dataDir: string, branchName?: string, now: Date, fetch: typeof fetch, log: { write(level: string, message: string): void } }} params
  * @returns {Promise<number>} codul de ieșire pentru `process.exitCode`
  */
-export async function runTelegramDigest({ home: homeOption, now = new Date(), fetch: fetchImpl, log: logOption }) {
-  const home = resolveHome(homeOption);
-  const log = logOption || defaultLog(home);
+async function runTelegramDigestForBranch({ dataDir, branchName, now, fetch: fetchImpl, log: baseLog }) {
+  const log = branchName ? { write: (level, message) => baseLog.write(level, `[${branchName}] ${message}`) } : baseLog;
   try {
-    const dataDir = dataLayout(home).dataDir;
     const todayStr = isoDateOf(now);
 
     const config = readTelegramConfig(dataDir);
@@ -164,4 +165,48 @@ export async function runTelegramDigest({ home: homeOption, now = new Date(), fe
     log.write('ERROR', `Excepție neașteptată: ${/** @type {Error} */ (error)?.stack || error}`);
     return 0;
   }
+}
+
+/**
+ * Compune rezumatul zilnic din cele trei feature-uri (§3.3 din specificație)
+ * și îl trimite prin Telegram, pentru fiecare filială care are `telegram.json`
+ * (decizia 8 din docs/superpowers/plans/2026-09-27-filiale.md — un registru lipsă
+ * înseamnă o singură filială, cea migrată, exact comportamentul de dinainte de Faza 6);
+ * procesul rulează separat de server, cu Startica închisă.
+ * @param {{ home?: string, now?: Date, fetch: typeof fetch, log?: { write(level: string, message: string): void } }} options
+ * @returns {Promise<number>} codul de ieșire pentru `process.exitCode` — cel mai mare dintre filiale
+ */
+export async function runTelegramDigest({ home: homeOption, now = new Date(), fetch: fetchImpl, log: logOption }) {
+  const home = resolveHome(homeOption);
+  const log = logOption || defaultLog(home);
+  const legacy = dataLayout(home);
+
+  /** @type {import('#core/server/branches/branch-registry.mjs').BranchEntry[]} */
+  let branches;
+  try {
+    const registry = readBranchRegistry(join(home, BRANCH_REGISTRY_FILE_NAME));
+    branches = registry?.branches?.length
+      ? registry.branches
+      : [{ id: '', name: '', color: '', address: '', createdAt: '', folder: null }];
+  } catch (error) {
+    // Un registru corupt oprește pornirea serverului cu mesaj (decizia 4), dar
+    // procesul programat nu are cui să-l arate: rămâne fără să trimită nimic azi.
+    log.write('ERROR', `Registrul filialelor (filiale.json) este corupt: ${/** @type {Error} */ (error).message}`);
+    return 0;
+  }
+
+  const multipleBranches = branches.length >= 2;
+  let worstExitCode = 0;
+  for (const branch of branches) {
+    const { dataDir } = branchDirectories({ home, legacy, branch });
+    const exitCode = await runTelegramDigestForBranch({
+      dataDir,
+      branchName: multipleBranches ? branch.name : undefined,
+      now,
+      fetch: fetchImpl,
+      log,
+    });
+    worstExitCode = Math.max(worstExitCode, exitCode);
+  }
+  return worstExitCode;
 }
