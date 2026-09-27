@@ -49,4 +49,23 @@ describe('useSmsLastNotified', () => {
     expect(result.current.notifiedToday('c2', '2026-09-27')).toBe(false);
     expect(result.current.notifiedToday('c3', '2026-09-27')).toBe(false);
   });
+
+  it('un SMS trimis la 00:30 ora locală contează ca „azi”, chiar dacă UTC arată ziua precedentă', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        // 00:30 la București (UTC+3, vara) în 28 septembrie e 21:30 UTC în 27 septembrie.
+        if (path === '/api/sms-last-notified')
+          return jsonResponse({
+            c1: { at: '2026-09-27T21:30:00.000Z', status: 'sent', month: '2026-09', templateName: 'Implicit' },
+          });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsLastNotified());
+    await waitFor(() => expect(Object.keys(result.current.byChild)).toHaveLength(1));
+
+    expect(result.current.notifiedToday('c1', '2026-09-28')).toBe(true);
+  });
 });

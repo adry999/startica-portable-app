@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import { isoDateOf } from '@domain/calendar-month.mjs';
 import type { SmsLastNotifiedView } from './sms-types';
 
 export interface SmsLastNotifiedData {
@@ -31,7 +32,9 @@ export function useSmsLastNotified(): SmsLastNotifiedData {
   function notifiedToday(childId: string, todayStr: string): boolean {
     const entry = byChild[childId];
     if (!entry) return false;
-    return entry.at.slice(0, 10) === todayStr;
+    // entry.at e UTC (created_at scris cu toISOString() pe server); o simplă felie de string
+    // ar compara data UTC, nu cea locală — un SMS trimis la 00:30 local n-ar mai apărea „azi”.
+    return isoDateOf(new Date(entry.at)) === todayStr;
   }
 
   return { byChild, refresh, notifiedToday };

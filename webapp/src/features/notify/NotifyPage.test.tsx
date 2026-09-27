@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { today as todayFn } from '@domain/calendar-month.mjs';
 import { NotifyPage } from './NotifyPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — „Trimite tuturor” și restul butoanelor ajung acolo, nu în pagină. */
@@ -205,9 +206,10 @@ describe('NotifyPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified')
+          // Data locală (nu toISOString, care e UTC): notifiedToday compară cu today() local — vezi NotifyPage.tsx.
           return jsonResponse(
             notified
-              ? { c1: { at: new Date().toISOString(), status: 'sent', month: '2026-09', templateName: 'Implicit' } }
+              ? { c1: { at: `${todayFn()}T12:00:00.000Z`, status: 'sent', month: '2026-09', templateName: 'Implicit' } }
               : {},
           );
         if (path === '/api/sms-send') {
