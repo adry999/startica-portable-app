@@ -1,0 +1,84 @@
+.card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.link {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--orange-ink);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.headRow {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+  padding: 10px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.date {
+  color: var(--muted);
+}
+
+.expense {
+  color: var(--pink-ink);
+}
+
+.balance {
+  font-weight: 800;
+}
+
+.alignEnd {
+  text-align: right;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px 20px;
+  color: var(--subtle);
+}
+
+.totalRow {
+  display: grid;
+  grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 800;
+  background: var(--cream);
+}

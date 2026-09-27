@@ -1,0 +1,65 @@
+.page {
+  display: none;
+}
+
+@media print {
+  .page {
+    display: block;
+    width: 100%;
+    padding: 24px;
+    font-family: var(--font-body);
+    color: var(--slate);
+  }
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  margin: 0;
+}
+
+.period {
+  margin: 4px 0 20px;
+  color: var(--muted);
+}
+
+.totals {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.totals > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 16px 0 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table td {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.alignEnd {
+  text-align: right;
+}

@@ -7,6 +7,13 @@
   justify-content: flex-end;
 }
 
+/* Un panou rămas deschis (ex. „Exportă pentru contabil” la tipărirea PDF) nu trebuie să apară pe pagina tipărită. */
+@media print {
+  .overlay {
+    display: none;
+  }
+}
+
 .panel {
   height: 100%;
   max-width: 100%;

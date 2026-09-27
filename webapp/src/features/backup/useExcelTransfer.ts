@@ -3,6 +3,7 @@ import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '@domain/calendar-month.mjs';
 import { findRecordIssues } from '#features/review-center/index.web.mjs';
 import { readWorkbook, exportWorkbook } from '#features/data-transfer/domain/excel-workbook.mjs';
+import { loadXlsx } from '@shared/xlsx-loader';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import type { ImportReport } from '#features/data-transfer/data-transfer.types.d.mts';
 
@@ -27,13 +28,6 @@ export interface ExcelTransferData {
   importDialog: ExcelImportData;
   exporting: boolean;
   exportAll: () => Promise<void>;
-}
-
-// Lazy: modulul (~950KB) nu trebuie să încarce la pornirea aplicației.
-let xlsxModule: Promise<typeof import('xlsx')> | null = null;
-function loadXlsx() {
-  if (!xlsxModule) xlsxModule = import('xlsx').catch(error => ((xlsxModule = null), Promise.reject(error)));
-  return xlsxModule;
 }
 
 /** Parsare client-side, revalidare server, apoi commit cu fraza „IMPORT”. */

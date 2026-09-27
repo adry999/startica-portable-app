@@ -1,0 +1,145 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-20);
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.pills {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.pill,
+.pillActive {
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+}
+
+.pill {
+  background: var(--neutral-soft);
+  color: var(--slate);
+}
+
+.pillActive {
+  background: var(--slate);
+  color: var(--white);
+}
+
+.intervalInputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.intervalInputs input {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 6px 10px;
+  font: inherit;
+}
+
+.formatGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-10);
+}
+
+.formatCard,
+.formatCardActive {
+  padding: 14px 16px;
+  border-radius: var(--radius-md-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: left;
+  cursor: pointer;
+  background: var(--white);
+}
+
+.formatCard {
+  border: 1.5px solid var(--border);
+}
+
+.formatCardActive {
+  border: 2px solid var(--orange);
+  background: var(--cream);
+}
+
+.formatTitle {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.formatHint {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding: 14px 16px;
+  border-radius: var(--radius-md-lg);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  margin-bottom: var(--space-20);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  font-weight: 700;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: 12px 14px;
+  border-radius: var(--radius-input);
+  background: var(--yellow-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.warningLink {
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  width: 100%;
+}
+
+.filename {
+  font-size: 13px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

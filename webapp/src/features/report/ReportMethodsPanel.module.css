@@ -1,0 +1,146 @@
+.panel {
+  gap: var(--space-12);
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mint-ink);
+}
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.methodRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.methodHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-10);
+  font-size: 14px;
+}
+
+.methodLabel {
+  font-weight: 800;
+}
+
+.methodCount {
+  color: var(--subtle);
+  font-size: 12px;
+}
+
+.methodValue {
+  margin-left: auto;
+  font-weight: 800;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--neutral-soft);
+  display: flex;
+}
+
+.barFill {
+  border-radius: 4px;
+  background: #3f9a6b;
+}
+
+.empty {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 14px;
+}
+
+.eurSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--border);
+}
+
+.eurHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-10);
+  font-size: 13px;
+}
+
+.eurTitle {
+  font-weight: 800;
+}
+
+.eurHint {
+  color: var(--muted);
+}
+
+.eurTotal {
+  margin-left: auto;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.eurTableHead {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 96px 64px 76px;
+  gap: var(--space-8);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.eurRow {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 96px 64px 76px;
+  gap: var(--space-8);
+  font-size: 12px;
+}
+
+.eurDate {
+  color: var(--muted);
+}
+
+.eurChild {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eurAmount {
+  font-weight: 800;
+}
+
+.eurRateManual {
+  text-align: right;
+  color: var(--orange-ink);
+  font-weight: 800;
+}
+
+.alignEnd {
+  text-align: right;
+}
+
+.eurNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.eurNoteManual {
+  font-weight: 800;
+  color: var(--orange-ink);
+}
