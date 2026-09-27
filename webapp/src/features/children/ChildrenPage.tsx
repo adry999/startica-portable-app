@@ -1,29 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Badge,
-  Button,
-  Card,
-  ConfirmDeleteDialog,
-  DataTable,
-  FilterPills,
-  RowMenu,
-  SearchInput,
-  SearchSelect,
-  SegmentedControl,
-  SelectionBar,
-  groupTone,
-  useToast,
-  useTopbarActions,
-  type DataTableColumn,
-  type PillTone,
-} from '@shared/ui';
+import { Button, ConfirmDeleteDialog, DataTable, useToast, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { useChildren, type ChildRow } from './useChildren';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
 import { ChildProfileView } from './ChildProfileView';
+import { ChildrenStatsRow } from './ChildrenStatsRow';
+import { ChildrenToolbar, type ArchiveFilter } from './ChildrenToolbar';
+import { ChildrenSelectionBar } from './ChildrenSelectionBar';
+import { buildChildrenColumns } from './childrenColumns';
 import type { Child } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
@@ -37,23 +24,6 @@ export interface ChildrenPageProps {
   onCloseChild: () => void;
 }
 
-const AVATAR_TONE_CLASS: Record<PillTone, string> = {
-  orange: 'toneOrange',
-  mint: 'toneMint',
-  yellow: 'toneYellow',
-  pink: 'tonePink',
-  neutral: 'toneOrange',
-};
-
-export function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('');
-}
-
 /** „Copii" (1c) + „Fișa copilului" (1e) — fișa e o rută imbricată (/copii/:childId), nu o intrare nouă în ViewKey. */
 export function ChildrenPage({ month, onNavigate, childId, onOpenChild, onCloseChild }: ChildrenPageProps) {
   if (childId) {
@@ -61,8 +31,6 @@ export function ChildrenPage({ month, onNavigate, childId, onOpenChild, onCloseC
   }
   return <ChildrenListView month={month} onNavigate={onNavigate} onOpenChild={onOpenChild} />;
 }
-
-type ArchiveFilter = 'active' | 'archived' | 'all';
 
 function ChildrenListView({
   month,
@@ -248,197 +216,54 @@ function ChildrenListView({
   if (childrenData.status === 'failed')
     return <p className={styles.notice}>{childrenData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const columns: DataTableColumn<ChildRow>[] = [
-    {
-      key: 'name',
-      header: 'Copil',
-      sortValue: row => row.name,
-      render: row => (
-        <div className={styles.childCell}>
-          <span
-            className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, childrenData.groups)]]}`}
-          >
-            {initials(row.name)}
-          </span>
-          <div>
-            <strong>{row.name}</strong>
-            <small>{row.contractLabel}</small>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: 'parent',
-      header: 'Părinte',
-      sortValue: row => row.parent,
-      render: row => (
-        <div className={styles.parentCell}>
-          <span>{row.parent || '—'}</span>
-          {row.phone && <small>{row.phone}</small>}
-        </div>
-      ),
-    },
-    {
-      key: 'group',
-      header: 'Grupă',
-      sortValue: row => row.groupName,
-      render: row =>
-        row.groupName ? (
-          <Badge tone={groupTone(row.groupId, childrenData.groups)}>{row.groupName}</Badge>
-        ) : (
-          <Badge tone="neutral">Nealocată</Badge>
-        ),
-    },
-    {
-      key: 'due',
-      header: 'Scadență',
-      render: row => row.dueDateLabel,
-    },
-    {
-      key: 'payment',
-      header: 'Plată luna curentă',
-      render: row => (
-        <Badge tone={row.payment.tone}>
-          <span className={styles.dot} />
-          {row.payment.label}
-        </Badge>
-      ),
-    },
-    {
-      key: 'menu',
-      header: '',
-      align: 'end',
-      render: row => (
-        <RowMenu
-          items={[
-            { label: 'Editează', onClick: () => setFormTarget(row.child) },
-            { label: row.archived ? 'Reactivează' : 'Arhivează', onClick: () => toggleArchived(row) },
-            {
-              label: 'Șterge definitiv',
-              danger: true,
-              disabled: !row.archived,
-              title: row.archived ? undefined : 'Arhivează întâi fișa',
-              onClick: () => setDeleteTarget(row),
-            },
-          ]}
-        />
-      ),
-    },
-  ];
+  const columns = buildChildrenColumns({
+    groups: childrenData.groups,
+    onEdit: row => setFormTarget(row.child),
+    onToggleArchived: row => void toggleArchived(row),
+    onRequestDelete: row => setDeleteTarget(row),
+  });
 
   return (
     <>
-      <div className={styles.statsRow}>
-        <Card tone="orange" className={styles.statCard}>
-          <strong className={styles.statValueOrange}>{childrenData.summary.activeCount}</strong>
-          <div>
-            <span>Copii activi</span>
-            <small>statut curent din fișă</small>
-          </div>
-        </Card>
-        <Card tone="mint" className={styles.statCard}>
-          <strong className={styles.statValueMint}>{childrenData.summary.occupiedGroupsCount}</strong>
-          <div>
-            <span>Grupe ocupate</span>
-            <small>din {childrenData.groups.length} grupe</small>
-          </div>
-        </Card>
-        <Card tone="yellow" className={styles.statCard}>
-          <strong className={styles.statValueYellow}>{childrenData.summary.incompleteCount}</strong>
-          <div className={styles.statMain}>
-            <span>Fișe de verificat</span>
-            <small>în centrul de verificare</small>
-          </div>
-          <button type="button" className={styles.statLink} onClick={() => onNavigate('review')}>
-            Verifică →
-          </button>
-        </Card>
-      </div>
+      <ChildrenStatsRow
+        activeCount={childrenData.summary.activeCount}
+        occupiedGroupsCount={childrenData.summary.occupiedGroupsCount}
+        groupsCount={childrenData.groups.length}
+        incompleteCount={childrenData.summary.incompleteCount}
+        onReview={() => onNavigate('review')}
+      />
 
       <div className={styles.tableCard}>
-        <div className={styles.toolbar}>
-          <SearchInput
-            placeholder="Caută nume sau contract…"
-            value={query}
-            onChange={setQuery}
-            ariaLabel="Caută copil"
-          />
-          <SegmentedControl
-            ariaLabel="Filtru arhivare"
-            value={archiveFilter}
-            onChange={value => {
-              setArchiveFilter(value);
-              setSelectedRowKeys(new Set());
-            }}
-            options={[
-              { value: 'active', label: `Activi · ${childrenData.activeTotal}` },
-              { value: 'archived', label: `Arhivați · ${childrenData.archivedTotal}` },
-              { value: 'all', label: `Toți · ${childrenData.activeTotal + childrenData.archivedTotal}` },
-            ]}
-          />
-        </div>
-
-        <FilterPills
-          groups={[
-            {
-              label: 'Grupă',
-              value: groupFilter,
-              onChange: setGroupFilter,
-              options: [
-                { value: 'all', label: 'Toate', tone: 'neutral' },
-                ...childrenData.groups.map(group => ({
-                  value: group.id,
-                  label: group.name,
-                  tone: groupTone(group.id, childrenData.groups),
-                })),
-                { value: 'none', label: 'Fără grupă', tone: 'neutral' },
-              ],
-            },
-            {
-              label: 'Plată',
-              value: paymentFilter,
-              onChange: setPaymentFilter,
-              options: [
-                { value: 'all', label: 'Toate', tone: 'neutral' },
-                { value: 'Achitat', label: 'Achitat', tone: 'mint' },
-                { value: 'Parțial', label: 'Parțial', tone: 'yellow' },
-                { value: 'Neachitat', label: 'Neachitat', tone: 'pink' },
-                { value: 'Scadent', label: 'Scadent', tone: 'neutral' },
-              ],
-            },
-          ]}
+        <ChildrenToolbar
+          query={query}
+          onQueryChange={setQuery}
+          archiveFilter={archiveFilter}
+          onArchiveFilterChange={value => {
+            setArchiveFilter(value);
+            setSelectedRowKeys(new Set());
+          }}
+          activeTotal={childrenData.activeTotal}
+          archivedTotal={childrenData.archivedTotal}
+          groupFilter={groupFilter}
+          onGroupFilterChange={setGroupFilter}
+          groups={childrenData.groups}
+          paymentFilter={paymentFilter}
+          onPaymentFilterChange={setPaymentFilter}
         />
 
         {selectedRowKeys.size > 0 && (
-          <SelectionBar label={<>{selectedRowKeys.size} selectați</>} onCancel={() => setSelectedRowKeys(new Set())}>
-            <span className={styles.selectionDivider}>|</span>
-            <SearchSelect
-              className={styles.filterSelect}
-              ariaLabel="Mută în grupa"
-              placeholder="Mută în grupă…"
-              value={moveGroupId}
-              onChange={setMoveGroupId}
-              options={[
-                { value: '__none__', label: 'Fără grupă' },
-                ...childrenData.groups.map(group => ({ value: group.id, label: group.name })),
-              ]}
-            />
-            <button type="button" disabled={!moveGroupId} onClick={() => void moveSelectedToGroup(moveGroupId)}>
-              Mută
-            </button>
-            <button type="button" onClick={exportSelected}>
-              Exportă
-            </button>
-            {archiveFilter === 'archived' ? (
-              <button type="button" className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
-                Dezarhivează
-              </button>
-            ) : (
-              <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
-                Arhivează
-              </button>
-            )}
-          </SelectionBar>
+          <ChildrenSelectionBar
+            selectedCount={selectedRowKeys.size}
+            onCancel={() => setSelectedRowKeys(new Set())}
+            moveGroupId={moveGroupId}
+            onMoveGroupIdChange={setMoveGroupId}
+            groups={childrenData.groups}
+            onMove={() => void moveSelectedToGroup(moveGroupId)}
+            onExport={exportSelected}
+            archiveFilter={archiveFilter}
+            onArchive={() => void archiveSelected()}
+            onUnarchive={() => void unarchiveSelected()}
+          />
         )}
 
         <DataTable

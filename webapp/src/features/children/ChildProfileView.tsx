@@ -11,7 +11,7 @@ import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mj
 import { useChildProfile } from './useChildProfile';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import { initials } from './ChildrenPage';
+import { initials } from './childrenColumns';
 import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
