@@ -6,15 +6,16 @@
 .headerActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-12);
-  margin-bottom: var(--space-8);
 }
 
-.period {
-  margin: 0;
-  font-size: 13px;
-  color: var(--muted);
+.yearSelect {
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-16);
+  font: 800 14px var(--font-body);
+  color: var(--slate);
 }
 
 .btnGhost {
@@ -30,11 +31,4 @@
 .tableCard {
   padding: 0;
   overflow: hidden;
-}
-
-.tableFootnote {
-  margin: 0;
-  padding: var(--space-8) var(--space-20) var(--space-16);
-  font-size: 12px;
-  color: var(--muted);
 }

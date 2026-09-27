@@ -92,7 +92,17 @@ export function App() {
         <Route path="/achitari" element={<PaymentsRoute />} />
         <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
         <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
-        <Route path="/situatia-platilor" element={<StatusPage month={month} />} />
+        <Route
+          path="/situatia-platilor"
+          element={
+            <StatusPage
+              month={month}
+              onMonthChange={setMonth}
+              onNavigate={onNavigate}
+              onOpenChild={id => navigate(`/copii/${id}`)}
+            />
+          }
+        />
         <Route path="/de-notificat" element={<NotifyPage month={month} onNavigate={onNavigate} />} />
         <Route path="/taxe-si-grupe" element={<FeeSetupPage />} />
         <Route path="/asociere-achitari" element={<AssignPage month={month} />} />
