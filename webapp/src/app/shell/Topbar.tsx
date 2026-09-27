@@ -20,9 +20,15 @@ export interface TopbarProps {
 /** Antetul paginii — eyebrow+titlu la stânga, acțiuni la dreapta (căutare globală doar pe Dashboard + selector lună). */
 export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   const titleOverride = useTopbarTitleSlot();
-  const { eyebrow, title } = titleOverride ?? VIEW_TITLES[view];
+  const { eyebrow: baseEyebrow, title } = titleOverride ?? VIEW_TITLES[view];
   const pageActions = useTopbarActionsSlot();
   const session = useAppSession();
+  // O singură filială (orice instalare imediat după migrare) n-ar trebui să citească
+  // „Filiala principală” pe fiecare ecran — eyebrow-ul arată filiala doar cu mai multe (17-filiale.md).
+  const eyebrow =
+    session.state.branches.length > 1 && session.state.branch
+      ? `${baseEyebrow} · Filiala ${session.state.branch.name}`
+      : baseEyebrow;
   const navigate = useNavigate();
   const { rates } = useExchangeRates();
   const todaysRate = latestKnownRate(rates);

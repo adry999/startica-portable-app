@@ -86,3 +86,37 @@ describe('StartupScreen', () => {
     expect(screen.getByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
   });
 });
+
+describe('StartupScreen — linia de filială (21a)', () => {
+  it('arată filiala de îndată ce sesiunea a răspuns, chiar dacă baza nu s-a citit încă', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session')
+          return jsonResponse({
+            token: 'TOK',
+            version: '2.0.0',
+            branch: { id: 'b1', name: 'Buiucani', color: 'orange', address: '' },
+            branches: [],
+          });
+        if (path === '/api/state') return new Promise(() => {}); // rămâne în așteptare
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    void session.result.current.load();
+    await act(flushMicrotasks);
+
+    render(<StartupScreen />);
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByText(/Filiala Buiucani/)).toBeInTheDocument();
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+});

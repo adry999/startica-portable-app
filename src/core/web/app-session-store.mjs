@@ -37,6 +37,11 @@ export function createAppSessionStore({
     revision: 0,
     token: '',
     version: '',
+    // Filiala deschisă acum și lista completă (17-filiale.md) — null/[] înainte de primul load().
+    /** @type {{ id: string, name: string, color: string, address: string } | null} */
+    branch: null,
+    /** @type {{ id: string, name: string, color: string, address: string }[]} */
+    branches: [],
     health: {},
     ready: false,
     // Operațiunea trimisă, dar neconfirmată. Rămâne setată după o cădere de
@@ -126,6 +131,8 @@ export function createAppSessionStore({
       const session = await requestJson('/api/session');
       state.token = session.token;
       state.version = session.version || '';
+      state.branch = session.branch ?? null;
+      state.branches = session.branches ?? [];
       state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
       state.startupTimings.databaseAt = Date.now();

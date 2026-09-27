@@ -53,6 +53,21 @@ test('load reușit pune starea, revizia, ready și ultima salvare, apoi randeaz�
   assert.deepEqual(publishedEvents, [{ revision: 7 }]);
 });
 
+test('load reușit pune filiala curentă și lista de filiale din sesiune', async () => {
+  const branch = { id: 'b1', name: 'Filiala Buiucani', color: 'orange', address: 'str. Exemplu 12' };
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1', branch, branches: [branch] };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  assert.deepEqual(store.state.branch, branch);
+  assert.deepEqual(store.state.branches, [branch]);
+});
+
 test('load reușit înregistrează cronologia pornirii, pentru pașii din ecranul de încărcare', async () => {
   const { store } = createHarness(async path => {
     if (path === '/api/session') return { token: 'TOKEN-1' };

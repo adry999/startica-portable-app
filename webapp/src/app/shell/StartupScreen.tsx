@@ -103,7 +103,11 @@ export function StartupScreen() {
             </li>
           ))}
         </ol>
-        <span className={styles.version}>{session.state.version}</span>
+        {/* Filiala e cunoscută din pasul 2 (/api/session a răspuns) — 21a. */}
+        <span className={styles.version}>
+          {session.state.branch ? `Filiala ${session.state.branch.name} · ` : ''}
+          {session.state.version}
+        </span>
       </div>
     </div>
   );

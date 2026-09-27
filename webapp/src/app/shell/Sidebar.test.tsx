@@ -44,6 +44,16 @@ describe('Sidebar', () => {
     expect(screen.getByText('v1.6.3')).toBeInTheDocument();
   });
 
+  it('versiunea stă în dreapta rândului Backup și setări, nu lângă logo', () => {
+    render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    const settingsRow = screen.getByRole('button', { name: /Backup și setări/ });
+    expect(within(settingsRow).getByText('v1.6.3')).toBeInTheDocument();
+    const logo = screen.getByRole('img', { name: 'Startica' });
+    expect(within(logo.parentElement as HTMLElement).queryByText('v1.6.3')).not.toBeInTheDocument();
+  });
+
   it('Prezența stă imediat după Grupe', () => {
     render(
       <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,

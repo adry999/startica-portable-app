@@ -17,8 +17,7 @@ export function Sidebar({ activeView, onNavigate, counts, version, saveStatus }:
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <img src="/assets/startica-logo.svg" alt="Startica" height={38} />
-        <small className={styles.version}>{version}</small>
+        <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logo} />
       </div>
 
       <nav className={styles.nav}>
@@ -39,6 +38,8 @@ export function Sidebar({ activeView, onNavigate, counts, version, saveStatus }:
                   <span className={`${styles.marker} ${styles[group.marker]}`} aria-hidden="true" />
                   <span className={styles.navLabel}>{item.label}</span>
                   {!!count && <Badge tone="pink">{count}</Badge>}
+                  {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare doar aici. */}
+                  {item.view === 'settings' && <small className={styles.navVersion}>{version}</small>}
                 </button>
               );
             })}

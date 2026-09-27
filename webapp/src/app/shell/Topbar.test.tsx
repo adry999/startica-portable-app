@@ -96,6 +96,27 @@ describe('Topbar', () => {
       expect(localStorage.getItem('view.backup')).toBe('curs');
     });
 
+    it('eyebrow-ul conține filiala doar când există mai multe filiale', async () => {
+      const branch = { id: 'b1', name: 'Buiucani', color: 'orange', address: '' };
+      const otherBranch = { id: 'b2', name: 'Botanica', color: 'mint', address: '' };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string) => {
+          if (path === '/api/session')
+            return jsonResponse({ token: 'tok', version: '1.6.3', branch, branches: [branch, otherBranch] });
+          if (path === '/api/state')
+            return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+          if (path === '/api/health') return jsonResponse({});
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
+      expect(screen.getByText(/Privire de ansamblu · Filiala Buiucani/)).toBeInTheDocument();
+    });
+
     it('scrierea unui query arată rezultate live, iar click navighează la fișa copilului', async () => {
       const session = renderHook(() => useAppSession());
       await act(() => session.result.current.load());
