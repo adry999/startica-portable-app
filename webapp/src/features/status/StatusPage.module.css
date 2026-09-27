@@ -181,3 +181,150 @@
   font-size: 15px;
   font-weight: 800;
 }
+
+/* ————————————————————————————————— tipărire (16c) ————————————————————————————————— */
+
+.printSheet {
+  display: none;
+}
+
+@media print {
+  .screenOnly {
+    display: none;
+  }
+
+  .printSheet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    color: var(--slate);
+  }
+}
+
+.printHeader {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-16);
+  padding-bottom: var(--space-14);
+  border-bottom: 2px solid var(--orange);
+}
+
+.printTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--space-16);
+}
+
+.printTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.printSubtitle {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.printKindergarten {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.printSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.printSummaryCell {
+  padding: var(--space-10) var(--space-14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 1px solid var(--border);
+}
+
+.printSummaryCell:first-child {
+  border-left: none;
+}
+
+.printSummaryCell span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.printSummaryCell strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.printTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.printTable thead {
+  /* Chrome repetă rândul de cap de tabel pe fiecare pagină tipărită. */
+  display: table-header-group;
+}
+
+.printTable th,
+.printTable td {
+  padding: 7px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.printTable thead th {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--slate);
+  border-bottom: 1px solid var(--slate);
+}
+
+.printAmountCol {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.printRowUnpaid {
+  background: var(--neutral-soft);
+}
+
+.printTable tfoot td {
+  font-weight: 800;
+  border-top: 1px solid var(--slate);
+  border-bottom: none;
+}
+
+.printFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+  font-size: 9px;
+  color: var(--subtle);
+  border-top: 1px solid var(--row-divider);
+  padding-top: var(--space-8);
+}

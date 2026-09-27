@@ -39,6 +39,8 @@ export function useKindergarten(): KindergartenState {
     void (async () => {
       try {
         setSettings((await requestJson('/api/kindergarten')) as KindergartenSettings);
+      } catch {
+        // Fără datele grădiniței, antetul documentului tipărit rămâne generic — nu blochează ecranul.
       } finally {
         setReady(true);
       }

@@ -204,4 +204,18 @@ describe('useStatus', () => {
 
     expect(result.current.rows.every(row => row.currency === 'MDL')).toBe(true);
   });
+
+  it('allRows rămâne complet, indiferent de filtrele de grupă/statut/căutare (16c: „toți copiii”)', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    act(() => {
+      result.current.setGroupFilter('g1');
+      result.current.setSegment('overdue');
+      result.current.setSearch('elena');
+    });
+
+    expect(result.current.rows.map(row => row.id)).toEqual([]);
+    expect(result.current.allRows.map(row => row.id).sort()).toEqual(['c1', 'c2', 'c3', 'c4']);
+  });
 });

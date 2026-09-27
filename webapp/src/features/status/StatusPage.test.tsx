@@ -120,6 +120,7 @@ describe('StatusPage', () => {
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -143,13 +144,18 @@ describe('StatusPage', () => {
     expect(screen.getByText('Restanță')).toBeInTheDocument();
   });
 
-  it('butonul de tipărire declanșează window.print', async () => {
+  it('butonul de tipărire deschide dialogul, apoi declanșează window.print', async () => {
     await loadedSession();
     renderPage();
 
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
-    await userEvent.click(screen.getByRole('button', { name: 'Tipărește' }));
-    expect(printSpy).toHaveBeenCalled();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Tipărește' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Tipărește situația plăților' });
+    await user.click(within(dialog).getByRole('button', { name: 'Tipărește' }));
+
+    await vi.waitFor(() => expect(printSpy).toHaveBeenCalled());
   });
 
   it('antetul are comutatorul Lună | An școlar și selectorul de lună în modul Lună', async () => {

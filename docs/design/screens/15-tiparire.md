@@ -37,4 +37,4 @@
 ## Criterii de acceptare
 - [x] Ruta confirmării nu intră în conflict cu `/achitari/:paymentId`
 - [x] Mențiunea „Nu ține locul bonului fiscal” e prezentă
-- [ ] Situația tipărită se citește corect în alb-negru
+- [x] Situația tipărită se citește corect în alb-negru
