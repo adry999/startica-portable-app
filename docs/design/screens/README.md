@@ -53,3 +53,8 @@ Pentru ca Claude Code să găsească singur spec-urile, copiază `CLAUDE-md-snip
 - `21-incarcare.md` — Încărcare (21a–21c)
 - `22-prima-pornire.md` — Prima pornire (20a–20c), opțional
 - `15-tiparire.md` — secțiune nouă 16d–16g, confirmarea pe A4 în două părți
+
+## Adăugate 27.09.2026 (2)
+- `23-bazin.md` — Bazin (22a–22d)
+- `24-personal.md` — Personal (23a–23k)
+- `25-bon-stickere.md` — Bon 58 mm și stickere (24a–24d)

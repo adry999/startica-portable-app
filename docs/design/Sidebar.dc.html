@@ -82,7 +82,7 @@ class Component extends DCLogic {
     const act = this.props.active ?? 'dashboard';
     const mkA = (items, dot) => items.map(([k, l, c]) => {
       const on = k === act;
-      const H = { dashboard: 'Dashboard.dc.html', copii: 'Copii.dc.html', grupe: 'Grupe.dc.html', prezenta: 'Prezenta.dc.html', bazin: 'Bazin.dc.html', vizite: 'Vizite.dc.html', achitari: 'Achitari.dc.html', cheltuieli: 'Cheltuieli.dc.html', situatia: 'Situatia.dc.html', notificat: 'De notificat.dc.html', raport: 'Raport contabil.dc.html', taxe: 'De rezolvat.dc.html#9a', verificat: 'De rezolvat.dc.html#9b', asociere: 'De rezolvat.dc.html#9c', istoric: 'Administrare.dc.html#10a', notificari: 'Administrare.dc.html#10b', backup: 'Administrare.dc.html#10c' };
+      const H = { dashboard: 'Dashboard.dc.html', copii: 'Copii.dc.html', grupe: 'Grupe.dc.html', prezenta: 'Prezenta.dc.html', bazin: 'Bazin.dc.html', personal: 'Personal.dc.html', vizite: 'Vizite.dc.html', achitari: 'Achitari.dc.html', cheltuieli: 'Cheltuieli.dc.html', situatia: 'Situatia.dc.html', notificat: 'De notificat.dc.html', raport: 'Raport contabil.dc.html', taxe: 'De rezolvat.dc.html#9a', verificat: 'De rezolvat.dc.html#9b', asociere: 'De rezolvat.dc.html#9c', istoric: 'Administrare.dc.html#10a', notificari: 'Administrare.dc.html#10b', backup: 'Administrare.dc.html#10c' };
       return { href: H[k] || '#', label: l, count: c ? String(c) : '', ver: k === 'backup' ? 'v2.0.0' : '', bg: on ? '#fcead3' : 'transparent', color: on ? '#a34f00' : '#3a4750', weight: on ? 800 : 600, dot: on ? '#ef8a1d' : dot };
     });
     const mkB = (items) => items.map(([k, l, c]) => {
@@ -98,7 +98,7 @@ class Component extends DCLogic {
       isA: v === 'a',
       isB: v === 'b',
       groupsA: [
-        { label: '', items: mkA([['dashboard', 'Dashboard'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['prezenta', 'Prezența'], ['bazin', 'Bazin'], ['vizite', 'Vizite', 0]], '#f9d257') },
+        { label: '', items: mkA([['dashboard', 'Dashboard'], ['copii', 'Copii'], ['grupe', 'Grupe'], ['prezenta', 'Prezența'], ['bazin', 'Bazin'], ['vizite', 'Vizite', 0], ['personal', 'Personal']], '#f9d257') },
         { label: 'Contabilitate', items: mkA([['achitari', 'Achitări'], ['cheltuieli', 'Cheltuieli'], ['situatia', 'Situația plăților'], ['notificat', 'De notificat', 1], ['raport', 'Raport contabil']], '#a8d8be') },
         { label: 'De rezolvat', items: mkA([['taxe', 'Taxe și grupe', 103], ['verificat', 'De verificat', 284], ['asociere', 'Asociere achitări', 64]], '#f3a6be') },
         { label: 'Administrare', items: mkA([['istoric', 'Istoric'], ['notificari', 'Notificări'], ['backup', 'Backup și setări']], '#c9c4ba') }

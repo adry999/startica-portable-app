@@ -1,27 +1,21 @@
-# Feedback după sync — 27.09.2026
+# Feedback după sync — 27.09.2026, 14:56
 
-Verificat pe `master-v2` față de design. Punctele sunt mici, de făcut înainte de a continua coada.
+Verificat pe `master-v2` (7b1b753) față de design. Punctele 8–15 din coadă sunt în cod. Corecturile de mai jos sunt mici.
 
-## Situația plăților (punctul 7) — ok
-- Pastilele Grupa filtrează doar tabelul. Corect.
-- Eticheta grupului de pastile: „Grupa” (ca în 7a și în Achitări), nu „Grupă”.
-- Paragraful lung de sub antet („Taxă integrală pentru luna începută…”) se mută în subsolul tabelului, 12px `--muted`, ca în 16c. Antetul rămâne compact.
-- „Se încarcă datele…” se înlocuiește cu scheletul din `screens/21-incarcare.md` (când se face punctul 12).
+## Prezența (19 · 18a/18b) — ok, trei corecturi
+- Cardurile Absenți și Motivați: cifra în culoarea stării (`--raspberry` / `--yellow-ink`), ca în 18a. Acum toate sunt `--slate`.
+- Luna (18b): popover-ul „Motivat” primește mereu `reason=""`. Trebuie să primească motivul salvat pentru acea zi, ca în Ziua.
+- „Tipărește” și „Exportă” stau în antet, lângă `MonthStepper` (ca 18b), nu în `trailing` al `FilterPills`.
 
-## Cheltuieli (6b) — ok
-- Câmpul `method` și pastilele Metodă sunt făcute. Nimic de corectat.
+## Raport contabil (20 · 19a/19b) — ok
+- Totalurile, lista EUR cu curs salvat și portocaliul pentru `fxRateSource: 'manual'` sunt corecte.
+- Rândul de total: „Total lună” pe Lună, „Total trimestru” / „Total an” pe celelalte. Acum e mereu „Total perioadă”.
+- Selectorul de filială din export rămâne pentru Faza 6. Ok.
 
-## Curs valutar (12a) — ok, trei corecturi
-- Cursul se afișează cu **4 zecimale** (1 € = 19,7400 lei), nu cu `formatMoney` (2 zecimale). La fel în „Ultimele 5 zile”. Funcție nouă `formatRate(n)` în `#shared/format/`.
-- Câmpul „Corectează cursul de azi”: `step="0.0001"`, placeholder „ex. 19,7400”.
-- „Se încarcă cursul valutar…” → schelet (punctul 12).
-
-## Achitare, copil cu taxă în EUR (12b) — ok, o problemă de date
-- **Lipsește sursa cursului pe achitare.** Când operatorul scrie un curs manual, se salvează doar `fxRate`. Adaugă `fxRateSource: 'bnm' | 'manual'` pe `Payment` (schemă + validare). Raportul contabil (`screens/20`) și confirmarea de plată marchează cursul manual cu portocaliu.
-- Sub câmpul Curs: „BNM 24.09.2026 · 19,7400” sau „Curs manual pentru această plată”, cu 4 zecimale.
-- Titlul panoului: „Achitare nouă” / „Editează achitarea” (ca 15b), nu „Adaugă: achitare”.
+## Lipsesc din `docs/design/`
+Încarcă din pachet: `Bazin.dc.html` (actualizat), `Personal.dc.html`, `Tiparire.dc.html` (actualizat), `Bon 58mm.dc.html`, `Set final.dc.html`, `screens/23-bazin.md`, `screens/24-personal.md`, `screens/25-bon-stickere.md`, `screens/README.md`.
 
 ## De făcut în continuare
-Coada din `RASPUNSURI.md`, în ordine: 8 (restul EUR), 9b (SMS P1, plan gata), 10 (Situația completă, plan gata), 11, apoi 12–15 și Bazin (`screens/23-bazin.md`, după aprobare).
-
-**Golul de arhitectură găsit la punctul 10** (`status/` nu poate importa `@features/sms`): `SmsConfirmDialog` se mută în `shared/ui/sms/` ca o componentă fără stare, care primește destinatarii și un `onSend`. Logica de trimitere rămâne în `features/sms` și e injectată din `App.tsx`/rută. Așa `status/` și `notify/` o pot folosi fără import între feature-uri.
+1. Corecturile de mai sus.
+2. Faza 6 (filiale, `17-filiale.md`), apoi sincronizarea (`18-sincronizare.md`), cum e confirmat în `COADA-DE-LUCRU.md`.
+3. Apoi, pe rând: `23-bazin.md`, `24-personal.md`, `25-bon-stickere.md`. `npm run check` + typecheck + test după fiecare.

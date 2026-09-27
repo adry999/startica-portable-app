@@ -20,9 +20,7 @@
 - **Date:** `sms_templates`.
 
 ## Criterii de acceptare
-- [x] Contorul de segmente e corect pentru GSM-7 și UCS-2 (există test) — P1, `countSmsSegments`
-- [x] Cheia API nu ajunge niciodată în frontend (se afișează doar mascată) — P1, `tokenMasked`/`sms.json`
-- [x] Șablonul implicit nu are „Șterge” — P1, `SmsTemplatesPanel`
-- [ ] Contorul lunar numără segmentele (nu doar mesajele), separat pe filială; fără limită — **depășit de RASPUNSURI.md 6**: limita e opțională (implicit dezactivată, nu inexistentă), contorul e global pe instalare (fără split pe filială — filialele sunt excluse întreaga sesiune). P1 implementează contorul global opțional; despărțirea pe filială nu se face în v1.
-
-11a „Mesaje SMS” (tabelul jurnalului, filtre, panoul de detaliu, „Retrimite”) e **P3**, neimplementat — vezi planul `docs/superpowers/plans/2026-09-27-sms-notify-p1.md`, secțiunea „Out of scope”.
+- [ ] Contorul de segmente e corect pentru GSM-7 și UCS-2 (există test)
+- [ ] Cheia API nu ajunge niciodată în frontend (se afișează doar mascată)
+- [ ] Șablonul implicit nu are „Șterge”
+- [ ] Contorul lunar numără segmentele (nu doar mesajele), separat pe filială; fără limită

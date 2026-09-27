@@ -1,17 +1,14 @@
 # Următorul pas pentru Claude Code
 
-Stadiu la 26.09.2026, 16:28 (commit b9ee0a5f61be): Faza 3 din roadmap e făcută pentru Copii, Vizite și Grupe.
+Stadiu la 27.09.2026, 14:56 (commit 7b1b753): punctele 8–15 din coadă sunt făcute (EUR, SMS P1, Situația, curățenie, Încărcare, Prezența, Raport contabil, Confirmarea de plată).
 
 Lipește în Claude Code:
 
 ```
-Continuă roadmap-ul din docs/superpowers/plans/2026-09-26-roadmap-modularizare.md:
-1. Termină Faza 0 și Faza 1 (npm run check verde, ștergerea stratului vanilla), apoi Faza 2 (architecture.test.ts).
-2. Apoi, în continuarea Fazei 3, aplică FilterPills și în:
-   - Achitări (docs/design/screens/05-achitari.md): FilterPills Metodă + Grupă, coloana Plătitor, cardurile Cash/Card/Transfer cu defalcarea reală (metoda filtrată doar evidențiată), „Tipărește confirmarea” în RowMenu; fără filtrul „Copil ▾”.
-   - Cheltuieli (06-cheltuieli.md): FilterPills Categorie + Metodă; antetul compact și în modul Pe zile.
-   - Situația plăților (07-situatia.md): FilterPills Grupa; antetul compact și în An școlar.
-Bifează criteriile de acceptare din fiecare spec și rulează npm run check.
+1. Aplică docs/design/FEEDBACK.md (Prezența și Raport contabil, corecturi mici).
+2. Faza 6: filialele după docs/design/screens/17-filiale.md (plan în docs/superpowers/plans/ întâi), apoi sincronizarea după 18-sincronizare.md.
+3. Apoi, pe rând: 23-bazin.md, 24-personal.md, 25-bon-stickere.md.
+După fiecare: npm run check, webapp typecheck + test, bifează criteriile din spec, commit.
 ```
 
 După push, scrie „sync”.

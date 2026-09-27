@@ -28,7 +28,7 @@
 - Secțiune nouă „Prezența”: luna curentă pe o linie de puncte + lista absențelor motivate cu motivul.
 
 ## Criterii de acceptare
-- [x] Un clic schimbă starea imediat; reîncărcarea paginii păstrează starea
-- [x] „Toți nemarcații → prezenți” nu atinge copiii deja marcați absent sau motivat
-- [x] Weekend-urile și sărbătorile nu intră în „zile lucrătoare”
-- [x] Nicio legătură cu taxa sau cu Situația plăților
+- [ ] Un clic schimbă starea imediat; reîncărcarea paginii păstrează starea
+- [ ] „Toți nemarcații → prezenți” nu atinge copiii deja marcați absent sau motivat
+- [ ] Weekend-urile și sărbătorile nu intră în „zile lucrătoare”
+- [ ] Nicio legătură cu taxa sau cu Situația plăților

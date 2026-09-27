@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Grupe.dc.html">Grupe</a><a href="Bazin.dc.html#22c">Bazin</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Raport contabil.dc.html">Raport contabil</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Personal</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Pagină nouă în meniu, cu trei file. <a href="#23a">23a</a> Echipa: cine lucrează la filiala deschisă în meniu, funcția, grupa, telefonul și zilele de naștere. Ca peste tot în aplicație, fiecare filială își vede doar oamenii ei; cine lucrează la ambele (de exemplu directorul) apare la amândouă, cu eticheta „ambele filiale”. <a href="#23b">23b</a> Pontaj: zilele lucrate, concediile și boala, pe lună. <a href="#23c">23c</a> Salarii: calculul lunii, avansurile și plata, care trece automat în Cheltuieli. Fila Salarii o vede doar administratorul, după PIN (<a href="#23d">23d</a>). Antrenorii de la bazin sunt tot aici; salariul lor vine din prezențele de la bazin.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="23a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">23a</span><span style="font-size:16px;font-weight:700">Echipa · clic pe angajat deschide fișa lui (23j)</span></div>
+      <div style="width:1440px;height:1100px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="personal" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Echipa</a><a href="#23b" style="padding:7px 14px;color:#6b7780">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a></div>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);white-space:nowrap">+ Angajat</span>
+          </header>
+          <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="width:280px;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕ Caută angajat</div>
+              <sc-for list="{{ rolePills }}" as="p" hint-placeholder-count="5">
+                <span onClick="{{ p.pick }}" style="padding:7px 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.label }}</span>
+              </sc-for>
+              <span style="margin-left:auto;font-size:13px;color:#6b7780">{{ teamLine }}</span>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+              <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.3fr) 130px 100px 20px;gap:12px;align-items:center;padding:12px 22px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc">
+                <sc-for list="{{ heads }}" as="h" hint-placeholder-count="3"><span onClick="{{ h.pick }}" style="cursor:pointer;color:{{ h.fg }};white-space:nowrap">{{ h.l }}</span></sc-for>
+                <span>Telefon</span><span>Azi</span><span></span>
+              </div>
+              <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="4">
+                <sc-if value="{{ sec.label }}"><div style="display:flex;align-items:center;gap:10px;padding:14px 22px 6px"><span style="width:8px;height:8px;border-radius:3px;background:{{ sec.c }}"></span><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5b666e">{{ sec.label }}</span><span style="font-size:12px;color:#9aa3a9">{{ sec.n }}</span></div></sc-if>
+                <sc-for list="{{ sec.rows }}" as="p" hint-placeholder-count="3">
+                  <a href="#23j" onClick="{{ p.open }}" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1.3fr) 130px 100px 20px;gap:12px;align-items:center;padding:11px 22px;border-top:1px solid #f3eee5;color:#3a4750;text-decoration:none;font-weight:400">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:36px;height:36px;border-radius:50%;background:{{ p.avBg }};color:{{ p.avFg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:13px;flex-shrink:0">{{ p.ini }}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span><sc-if value="{{ p.tags }}"><span style="font-size:12px;color:#9aa3a9;white-space:nowrap">{{ p.tagLine }}</span></sc-if></div></div>
+                    <span style="font-size:14px;color:#5b666e">{{ p.role }}</span>
+                    <div><sc-if value="{{ p.group }}"><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ p.gBg }};color:{{ p.gFg }};white-space:nowrap">{{ p.group }} · {{ p.gRole }}</span></sc-if><sc-if value="{{ p.noGroup }}"><span style="color:#c9c4ba">—</span></sc-if></div>
+                    <span style="font-size:14px;color:#5b666e">{{ p.phone }}</span>
+                    <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ p.tBg }};color:{{ p.tFg }}">{{ p.today }}</span>
+                    <span style="color:#c9c4ba;font-weight:800">›</span>
+                  </a>
+                </sc-for>
+              </sc-for>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="23j" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">23j</span><span style="font-size:16px;font-weight:700">Fișa angajatului · pagină proprie, ca fișa copilului</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="personal" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;padding:26px 40px 44px;display:flex;flex-direction:column;gap:20px">
+          <div style="font-size:13px;color:#6b7780"><a href="#23a">Personal</a> / {{ sel.name }}</div>
+          <div style="position:relative;overflow:hidden;display:flex;align-items:center;gap:20px;padding:24px 28px;border-radius:24px;background:#fcead3">
+            <span style="position:absolute;right:200px;bottom:-60px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.4)"></span>
+            <span style="position:relative;width:84px;height:84px;border-radius:50%;background:#fff;color:#a34f00;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px">{{ sel.ini }}</span>
+            <div style="position:relative;flex:1;display:flex;flex-direction:column;gap:6px"><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:36px;margin:0;line-height:1">{{ sel.name }}</h2><div style="display:flex;gap:8px;align-items:center;font-size:14px;color:#5b666e"><span>{{ sel.role }}</span>·<span>{{ sel.branch }}</span>·<span>din {{ sel.since }}</span><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#fff;color:#2e6b4c">La lucru azi</span></div></div>
+            <span style="position:relative;padding:10px 18px;border-radius:999px;background:#fff;font-weight:800;font-size:14px">Editează</span>
+            <span style="position:relative;padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;box-shadow:0 8px 18px rgba(239,138,29,.32)">+ Concediu</span>
+          </div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:16px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+                <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Date personale</span>
+                <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:14px"><span style="color:#6b7780">Telefon</span><span style="font-weight:700">{{ sel.phone }}</span><span style="color:#6b7780">Ziua de naștere</span><span style="font-weight:700">{{ sel.birth }}</span><span style="color:#6b7780">IDNP</span><span style="font-weight:700">1988 0000 5678 1</span><span style="color:#6b7780">Adresă</span><span style="font-weight:700">str. Ion Creangă 14, Chișinău</span></div>
+              </div>
+              <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Grupe</span><a href="#23i">+ Adaugă</a></div>
+                <sc-for list="{{ selGroups }}" as="g" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:14px;background:{{ g.bg }};color:{{ g.fg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px">{{ g.g }}</span><div style="flex:1;display:flex;flex-direction:column;font-size:14px"><span style="font-weight:800">Grupa {{ g.g }}</span><span style="color:#6b7780">{{ g.r }}</span></div></div></sc-for>
+              </div>
+              <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:space-between"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Note</span><a href="#23j">+ Notă</a></div>
+                <div style="padding:12px 14px;border-radius:14px;background:#f7f4ee;font-size:14px;line-height:1.45">Vine mai devreme lunea, la 7:30.<div style="font-size:12px;color:#9aa3a9;margin-top:4px">02.09.2026</div></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+                <div style="padding:16px 18px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Septembrie</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">{{ sel.work }} zile</span><span style="font-size:12px;color:#5b666e">lucrate · {{ sel.sick }} boală</span></div>
+                <div style="padding:16px 18px;border-radius:20px;background:#fdf3d2;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#7a5d00">Concediu rămas</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">{{ sel.leftLeave }}</span><span style="font-size:12px;color:#5b666e">în 2026</span></div>
+                <a href="#23d" style="padding:16px 18px;border-radius:20px;background:#fff;border:1.5px dashed #ede7dc;display:flex;flex-direction:column;gap:4px;color:#3a4750;text-decoration:none"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Salariu</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1;color:#c9c4ba">•••••</span><span style="font-size:12px;color:#a34f00;font-weight:800">Vezi cu PIN →</span></a>
+              </div>
+              <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:18px 22px;display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Pontaj · septembrie</span><a href="#23b">Toată echipa →</a></div>
+                <div style="display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:4px"><sc-for list="{{ selDots }}" as="d" hint-placeholder-count="30"><span style="height:20px;border-radius:5px;background:{{ d.bg }};border:{{ d.bd }};box-sizing:border-box;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ d.t }}</span></sc-for></div>
+              </div>
+              <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;overflow:hidden">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px 10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Concedii 2026</span><a href="#23f">Calendarul →</a></div>
+                <sc-for list="{{ selLeaves }}" as="l" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;align-items:center;padding:11px 22px;border-top:1px solid #f3eee5;font-size:14px"><span style="font-weight:800">{{ l.d }}</span><span style="color:#6b7780">{{ l.n }}</span><span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ l.bg }};color:{{ l.fg }}">{{ l.k }}</span></div></sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><span style="font-size:13px;font-weight:800;color:#b0284f">Nu mai lucrează aici</span></div>
+        </main>
+      </div>
+    </div>
+
+    <div id="23b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23b</span><span style="font-size:16px;font-weight:700">Pontaj · luna, clic pe celulă schimbă codul</span></div>
+      <div style="width:1440px;height:1100px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="personal" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;color:#6b7780">Echipa</a><a href="#23b" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-size:14px;font-weight:800"><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">‹</span><span style="padding:0 6px;white-space:nowrap">Septembrie 2026</span><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">›</span></div>
+            <span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Tipărește</span>
+          </header>
+          <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <sc-for list="{{ ptPills }}" as="p" hint-placeholder-count="5"><span onClick="{{ p.pick }}" style="padding:7px 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.label }}</span></sc-for>
+              <span style="margin-left:auto;font-size:13px;color:#6b7780">Toți lucrează implicit în zilele lucrătoare; se marchează doar excepțiile.</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;font-size:12px;font-weight:700;color:#6b7780;padding:0 4px">
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:18px;border-radius:5px;background:#e7f4ec"></span>Lucrat</span><span style="margin-left:auto"></span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:22px;height:18px;border-radius:5px;background:#e0b400;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">CO</span>Concediu de odihnă</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:22px;height:18px;border-radius:5px;background:#e9527c;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">CM</span>Concediu medical</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:18px;border-radius:5px;background:#6b7780;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">A</span>Absent</span></div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+              <div style="display:grid;grid-template-columns:190px repeat(30,minmax(0,1fr)) 44px 36px 36px;align-items:center;padding:10px 16px;font-size:10px;font-weight:800;color:#9aa3a9;border-bottom:1px solid #ede7dc">
+                <span style="font-size:11px;letter-spacing:.07em;text-transform:uppercase">Angajat</span>
+                <sc-for list="{{ days }}" as="d" hint-placeholder-count="30"><span style="text-align:center;color:{{ d.fg }};background:{{ d.bg }};border-radius:6px;padding:3px 0">{{ d.n }}</span></sc-for>
+                <span style="text-align:center;color:#2e6b4c">Zile</span><span style="text-align:center;color:#7a5d00">CO</span><span style="text-align:center;color:#b0284f">CM</span>
+              </div>
+              <sc-for list="{{ ptSections }}" as="sec" hint-placeholder-count="4">
+              <sc-if value="{{ sec.label }}"><div style="display:flex;align-items:center;gap:10px;padding:12px 16px 6px;background:#fffaf0;border-bottom:1px solid #f3eee5"><span style="width:8px;height:8px;border-radius:3px;background:{{ sec.c }}"></span><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5b666e">{{ sec.label }}</span><span style="font-size:12px;color:#9aa3a9">{{ sec.n }}</span></div></sc-if>
+              <sc-for list="{{ sec.rows }}" as="r" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:190px repeat(30,minmax(0,1fr)) 44px 36px 36px;align-items:center;padding:6px 16px;border-bottom:1px solid #f3eee5">
+                  <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="font-size:11px;color:#9aa3a9">{{ r.role }}</span></div>
+                  <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="30"><span onClick="{{ c.cycle }}" style="height:22px;margin:0 1px;border-radius:5px;background:{{ c.bg }};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:{{ c.cur }};border:{{ c.bd }};box-sizing:border-box">{{ c.t }}</span></sc-for>
+                  <span style="text-align:center;font-weight:800;font-size:13px">{{ r.w }}</span><span style="text-align:center;font-weight:800;font-size:13px;color:#7a5d00">{{ r.c }}</span><span style="text-align:center;font-weight:800;font-size:13px;color:#b0284f">{{ r.b }}</span>
+                </div>
+              </sc-for>
+              </sc-for>
+            </div>
+            <span style="font-size:13px;color:#6b7780">Weekend-urile și sărbătorile sunt gri. Zilele viitoare se pot marca dinainte (concediu planificat). Pontajul se tipărește pe A4 orizontal pentru dosar.</span>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="23c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23c</span><span style="font-size:16px;font-weight:700">Salarii · luna, după PIN</span></div>
+      <div style="width:1440px;height:1100px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="personal" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+            <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;color:#6b7780">Echipa</a><a href="#23b" style="padding:7px 14px;color:#6b7780">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23c" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Salarii</a></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-size:14px;font-weight:800"><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">‹</span><span style="padding:0 6px;white-space:nowrap">August 2026</span><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">›</span></div>
+            <span style="padding:8px 14px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:13px;color:#6b7780">Blochează</span>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);white-space:nowrap">Plătește 4 selectați</span>
+          </header>
+          <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+              <div style="position:relative;overflow:hidden;padding:16px 20px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:2px"><span style="position:absolute;right:-24px;bottom:-34px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.45)"></span><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Total salarii · 18</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">{{ payTotal }}</span></div>
+              <div style="padding:16px 20px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Avansuri date</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">{{ advTotal }}</span></div>
+              <div style="padding:16px 20px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Plătit</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">{{ paidTotal }}</span></div>
+              <div style="padding:16px 20px;border-radius:20px;background:#fff;border:2px solid #3a4750;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Rămas de plătit</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">{{ restTotal }}</span></div>
+            </div>
+            <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+              <div style="display:grid;grid-template-columns:40px minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,1.2fr) 110px 100px 110px 110px;gap:10px;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span></span><span>Angajat</span><span>Cum se calculează</span><span>Baza lunii</span><span style="text-align:right">Salariu</span><span style="text-align:right">Avans</span><span style="text-align:right">De plătit</span><span>Stare</span></div>
+              <sc-for list="{{ salaries }}" as="s" hint-placeholder-count="8">
+                <div style="display:grid;grid-template-columns:40px minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,1.2fr) 110px 100px 110px 110px;gap:10px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5;font-size:14px;background:{{ s.rowBg }}">
+                  <span style="width:16px;height:16px;border-radius:5px;border:1.5px solid {{ s.cbBd }};background:{{ s.cbBg }};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ s.cb }}</span>
+                  <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span><span style="font-size:12px;color:#9aa3a9">{{ s.role }}</span></div>
+                  <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ s.tBg }};color:{{ s.tFg }}">{{ s.type }}</span>
+                  <span style="font-size:13px;color:#5b666e">{{ s.base }}</span>
+                  <span style="text-align:right;font-weight:800">{{ s.sal }}</span>
+                  <span style="text-align:right;color:#6b7780">{{ s.adv }}</span>
+                  <span style="text-align:right;font-weight:800">{{ s.rest }}</span>
+                  <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ s.stBg }};color:{{ s.stFg }}">{{ s.st }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:14px">
+              <div style="flex:1;padding:14px 16px;border-radius:16px;background:#fdf3d2;font-size:13px;line-height:1.5"><b>Plătește</b> creează câte o cheltuială „Salariu august · nume” la categoria Salarii, cu data de azi și metoda aleasă. Avansul se dă din meniul ⋯ al rândului și se scade la plată.</div>
+              <div style="flex:1;padding:14px 16px;border-radius:16px;background:#fff;border:1px solid #ede7dc;font-size:13px;line-height:1.5;color:#5b666e"><b style="color:#3a4750">Fix</b>: suma lunară, minus zilele de absență nemotivată. <b style="color:#3a4750">Pe zile</b>: tariful × zilele lucrate din pontaj. <b style="color:#3a4750">Bazin</b>: tariful × copiii veniți, din <a href="Bazin.dc.html#22c">22c</a>. Concediul și boala nu scad salariul fix.</div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="23d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23d</span><span style="font-size:16px;font-weight:700">Salarii blocate · PIN</span></div>
+      <div style="position:relative;overflow:hidden;width:560px;height:520px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);display:flex;align-items:center;justify-content:center">
+        <span style="position:absolute;left:-70px;top:-70px;width:200px;height:200px;border-radius:50%;background:#f9d257"></span><span style="position:absolute;right:-50px;bottom:-60px;width:180px;height:180px;border-radius:50%;background:#fce9ef"></span>
+        <div style="position:relative;width:340px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+          <span style="width:64px;height:64px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(58,71,80,.1);display:flex;align-items:center;justify-content:center"><img src="web/assets/startica-icon.svg" alt="" style="width:38px;height:38px"></img></span>
+          <h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;margin:0;line-height:1.1">Salariile sunt protejate</h3>
+          <span style="font-size:14px;color:#6b7780">Introdu PIN-ul administratorului</span>
+          <div style="display:flex;gap:10px"><sc-for list="{{ pinDots }}" as="d" hint-placeholder-count="4"><span style="width:48px;height:56px;border-radius:14px;background:#fff;border:2px solid {{ d.bd }};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800">{{ d.v }}</span></sc-for></div>
+          <span style="padding:12px 30px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px">Deschide</span>
+          <span style="font-size:12px;color:#9aa3a9">Se blochează singur după 10 minute fără activitate. PIN-ul se setează în Backup și setări.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="23k" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23k</span><span style="font-size:16px;font-weight:700">Pontaj tipărit · A4 orizontal, alb-negru</span></div>
+      <div style="width:1123px;height:794px;box-sizing:border-box;background:#fff;box-shadow:0 20px 60px rgba(58,71,80,.16);padding:30px 36px;display:flex;flex-direction:column;gap:12px;font-family:Nunito,sans-serif;color:#222">
+        <div style="display:flex;align-items:flex-start;gap:16px;padding-bottom:10px;border-bottom:2px solid #222">
+          <div style="display:flex;flex-direction:column;gap:1px;font-size:10px"><span style="font-weight:800;font-size:11px">Startica SRL · IDNO 1000600000000</span><span>Subdiviziunea: Filiala Buiucani</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;line-height:1.1">Tabel de pontaj</span><span style="font-size:11px">pentru luna septembrie 2026 · 22 zile lucrătoare · 176 ore</span></div>
+          <span style="font-size:10px;text-align:right">Nr. 9 din 30.09.2026</span>
+        </div>
+        <div style="display:flex;flex-direction:column;font-size:9px">
+          <div style="display:grid;grid-template-columns:20px 150px repeat(30,minmax(0,1fr)) 30px 32px 24px 24px 20px;border-top:1px solid #222;border-bottom:1px solid #222;font-weight:800;align-items:center">
+            <span style="padding:4px 2px">Nr.</span><span style="padding:4px 4px">Numele, funcția</span>
+            <sc-for list="{{ printDays }}" as="d" hint-placeholder-count="30"><span style="text-align:center;padding:4px 0;background:{{ d.bg }};border-left:1px solid #ccc">{{ d.n }}</span></sc-for>
+            <span style="text-align:center;border-left:1px solid #222">Zile</span><span style="text-align:center;border-left:1px solid #ccc">Ore</span><span style="text-align:center;border-left:1px solid #ccc">CO</span><span style="text-align:center;border-left:1px solid #ccc">CM</span><span style="text-align:center;border-left:1px solid #ccc">A</span>
+          </div>
+          <sc-for list="{{ printRows }}" as="r" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:20px 150px repeat(30,minmax(0,1fr)) 30px 32px 24px 24px 20px;border-bottom:1px solid #ccc;align-items:stretch">
+              <span style="padding:5px 2px;color:#666">{{ r.nr }}</span>
+              <div style="display:flex;flex-direction:column;padding:3px 4px;line-height:1.2"><span style="font-weight:800;font-size:10px">{{ r.name }}</span><span style="color:#666">{{ r.role }}</span></div>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="30"><span style="display:flex;align-items:center;justify-content:center;background:{{ c.bg }};border-left:1px solid #e2e2e2;font-weight:700">{{ c.t }}</span></sc-for>
+              <span style="display:flex;align-items:center;justify-content:center;font-weight:800;border-left:1px solid #222">{{ r.z }}</span><span style="display:flex;align-items:center;justify-content:center;border-left:1px solid #ccc">{{ r.h }}</span><span style="display:flex;align-items:center;justify-content:center;border-left:1px solid #ccc">{{ r.co }}</span><span style="display:flex;align-items:center;justify-content:center;border-left:1px solid #ccc">{{ r.cm }}</span><span style="display:flex;align-items:center;justify-content:center;border-left:1px solid #ccc">{{ r.a }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-size:9px;color:#444;display:flex;gap:14px;flex-wrap:wrap"><b>Coduri:</b><span>8 = ore lucrate</span><span>CO = concediu de odihnă</span><span>CM = concediu medical</span><span>A = absență nemotivată</span><span>Î = învoire</span><span>FP = concediu fără plată</span><span>gri = zi liberă / sărbătoare</span></div>
+        <div style="margin-top:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;font-size:10px;color:#444">
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="height:26px;border-bottom:1px solid #222"></span><span>Întocmit: Ciobanu Maria, administrator</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="height:26px;border-bottom:1px solid #222"></span><span>Verificat: contabil</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px"><span style="height:26px;border-bottom:1px solid #222"></span><span>Aprobat: director · L.Ș.</span></div>
+        </div>
+      </div>
+      <div style="max-width:1123px;font-size:13px;color:#6b7780;line-height:1.5;text-wrap:pretty">Din 23b → „Tipărește”: o fereastră mică întreabă <b style="color:#3a4750">Ce tipăresc</b> (toată echipa / un departament / un angajat) și <b style="color:#3a4750">Cum arăt zilele</b> (ore „8” sau „P”). Codurile de pe foaie sunt aceleași ca pe ecran. Mai mult de ~14 angajați continuă pe pagina 2, cu antetul tabelului repetat.</div>
+    </div>
+
+    <div id="23f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">23f</span><span style="font-size:16px;font-weight:700">Concedii · anul pe un rând per angajat</span></div>
+      <div style="width:1192px;background:#fff;border-radius:22px;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.1);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid #ede7dc"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Concedii 2026</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#6b7780;margin-left:12px"><span style="width:18px;height:8px;border-radius:4px;background:#e0b400"></span>Concediu</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#6b7780"><span style="width:18px;height:8px;border-radius:4px;background:#e9527c"></span>Boală</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#6b7780"><span style="width:18px;height:8px;border-radius:4px;background:#f0d77a;border:1.5px dashed #b89a00;box-sizing:border-box"></span>Planificat</span><span style="margin-left:auto;padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">+ Concediu</span></div>
+        <div style="display:grid;grid-template-columns:220px minmax(0,1fr) 90px;align-items:center;padding:8px 22px;font-size:11px;font-weight:800;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span style="letter-spacing:.07em;text-transform:uppercase">Angajat</span><div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr))"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="text-align:center;border-radius:6px;padding:2px 0;background:{{ m.bg }};color:{{ m.fg }}">{{ m.l }}</span></sc-for></div><span style="text-align:right;letter-spacing:.07em;text-transform:uppercase">Rămas</span></div>
+        <sc-for list="{{ leaves }}" as="r" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:220px minmax(0,1fr) 90px;align-items:center;padding:9px 22px;border-bottom:1px solid #f3eee5">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span><span style="font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:{{ r.gBg }};color:{{ r.gFg }}">{{ r.grp }}</span></div>
+            <div style="position:relative;height:20px;border-radius:6px;background:repeating-linear-gradient(90deg,#faf7f1 0,#faf7f1 calc(100%/12 - 1px),#f1ece2 calc(100%/12 - 1px),#f1ece2 calc(100%/12))">
+              <sc-for list="{{ r.bars }}" as="b" hint-placeholder-count="2"><span style="position:absolute;top:3px;bottom:3px;left:{{ b.l }};width:{{ b.w }};border-radius:4px;background:{{ b.c }};border:{{ b.dash }};box-sizing:border-box"></span></sc-for>
+            </div>
+            <span style="text-align:right;font-size:13px;font-weight:800">{{ r.left }}</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:10px;margin:14px 22px 18px;padding:12px 14px;border-radius:12px;background:#fdf3d2;font-size:13px"><b>Atenție:</b><span>Doina Cebotari și Ala Munteanu (Mars) au concediu suprapus 15–27 iulie. Grupa rămâne fără educator; alege un înlocuitor.</span></div>
+      </div>
+    </div>
+
+    <div id="23g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23g</span><span style="font-size:16px;font-weight:700">Avansuri · filă în Salarii, cu istoric</span></div>
+      <div style="width:760px;background:#fff;border-radius:22px;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.1);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid #ede7dc"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Avansuri</span><span style="font-size:13px;color:#6b7780">de scăzut în septembrie: <b style="color:#3a4750">8.000 lei</b></span><span style="margin-left:auto;padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">+ Avans</span></div>
+        <div style="display:grid;grid-template-columns:100px minmax(0,1fr) 100px 90px 100px 100px;gap:10px;padding:10px 22px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Data</span><span>Angajat</span><span style="text-align:right">Sumă</span><span>Metodă</span><span>Din luna</span><span>Stare</span></div>
+        <sc-for list="{{ advances }}" as="a" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:100px minmax(0,1fr) 100px 90px 100px 100px;gap:10px;align-items:center;padding:10px 22px;border-bottom:1px solid #f3eee5;font-size:14px"><span style="color:#6b7780">{{ a.d }}</span><span style="font-weight:800">{{ a.n }}</span><span style="text-align:right;font-weight:800">{{ a.a }}</span><span style="color:#6b7780">{{ a.m }}</span><span style="color:#6b7780">{{ a.mo }}</span><span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ a.sBg }};color:{{ a.sFg }}">{{ a.st }}</span></div>
+        </sc-for>
+        <span style="display:block;padding:12px 22px 16px;font-size:12px;color:#6b7780">Avansul intră în Cheltuieli în ziua în care se dă. La plata salariului se scade automat, deci nu se înregistrează de două ori.</span>
+      </div>
+    </div>
+
+    <div id="23h" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23h</span><span style="font-size:16px;font-weight:700">Istoricul salariilor · panou la clic pe un rând din Salarii</span></div>
+      <div style="width:420px;background:#fff;border-radius:22px;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.1);overflow:hidden;display:flex;flex-direction:column">
+        <div style="padding:20px 22px 16px;background:#fcead3;display:flex;align-items:center;gap:12px"><span style="width:48px;height:48px;border-radius:50%;background:#fff;color:#a34f00;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">AM</span><div style="display:flex;flex-direction:column"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Ala Munteanu</span><span style="font-size:13px;color:#5b666e">Educator · fix 9.500 lei din aprilie</span></div></div>
+        <div style="padding:18px 22px 8px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">2026 · salariu și avans</span>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:110px;padding-top:10px">
+            <sc-for list="{{ histBars }}" as="b" hint-placeholder-count="9"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><div style="position:relative;width:100%;height:{{ b.h }};border-radius:6px 6px 3px 3px;background:{{ b.c }}"><span style="position:absolute;left:0;right:0;bottom:0;height:{{ b.ah }};border-radius:3px;background:rgba(255,255,255,.45)"></span></div><span style="font-size:10px;font-weight:800;color:#9aa3a9">{{ b.m }}</span></div></sc-for>
+          </div>
+          <span style="font-size:11px;color:#9aa3a9">Partea deschisă din bară = avansul. Verde = plătit, portocaliu = de plătit.</span>
+        </div>
+        <div style="padding:6px 22px 18px;display:flex;flex-direction:column">
+          <sc-for list="{{ histRows }}" as="h" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:80px 1fr 1fr 90px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #f3eee5;font-size:13px"><span style="font-weight:800">{{ h.m }}</span><span style="color:#6b7780">avans {{ h.a }}</span><span style="text-align:right;font-weight:800">{{ h.s }}</span><span style="justify-self:end;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:{{ h.sBg }};color:{{ h.sFg }}">{{ h.st }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div id="23i" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23i</span><span style="font-size:16px;font-weight:700">Echipa unei grupe · în Grupe și în fișa angajatului</span></div>
+      <div style="display:flex;gap:16px">
+        <sc-for list="{{ teamGroups }}" as="t" hint-placeholder-count="2">
+          <div style="width:320px;background:#fff;border-radius:22px;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.1);padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:40px;height:40px;border-radius:12px;background:{{ t.bg }};color:{{ t.fg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">{{ t.g }}</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Grupa {{ t.g }}</span></div>
+            <sc-for list="{{ t.m }}" as="p" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px"><span style="flex:1;font-weight:800">{{ p.n }}</span><span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:{{ p.rb }};color:{{ p.rf }}">{{ p.r }}</span></div></sc-for>
+            <span style="font-size:13px;font-weight:800;color:#a34f00">+ Adaugă în echipă</span>
+          </div>
+        </sc-for>
+      </div>
+      <span style="font-size:13px;color:#6b7780;max-width:660px">Roluri: Principal (unul pe grupă), Asistent, Înlocuitor (cu zilele când vine). Un om poate fi în mai multe grupe, cu roluri diferite.</span>
+    </div>
+
+    <div id="23e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">23e</span><span style="font-size:16px;font-weight:700">Departamente și funcții · listă editabilă, comună pentru ambele filiale</span></div>
+      <div style="width:520px;background:#fff;border-radius:22px;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.1);padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:baseline"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Funcții în grădiniță</span><span style="margin-left:auto;font-size:12px;color:#9aa3a9">trage ca să schimbi ordinea</span></div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ roleList }}" as="d" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:3px;background:{{ d.c }}"></span><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#5b666e">{{ d.label }}</span><span style="margin-left:auto;font-size:12px;font-weight:800;color:#a34f00">+ funcție</span></div>
+              <sc-for list="{{ d.roles }}" as="r" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px"><span style="color:#c9c4ba;font-weight:800">⋮⋮</span><span style="flex:1;font-weight:800">{{ r.l }}</span><span style="font-size:12px;color:#6b7780">{{ r.n }}</span><span style="font-size:13px;font-weight:800;color:#6b7780">Redenumește</span></div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <span style="font-size:13px;font-weight:800;color:#a34f00">+ Departament</span>
+        </div>
+        <div style="display:flex;gap:8px"><span style="flex:1;padding:10px 14px;border-radius:12px;border:1.5px solid #ef8a1d;font-size:14px;color:#9aa3a9">ex. Logoped, Psiholog, Paznic…</span><span style="padding:10px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Adaugă</span></div>
+        <span style="font-size:12px;color:#6b7780;line-height:1.45">Fiecare funcție aparține unui departament. Echipa filtrează pe departamente și se poate sorta pe departament, funcție sau nume. O funcție cu angajați nu se poate șterge, doar redenumi sau muta în alt departament. Numărul de angajați e pe ambele filiale.</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { role: 'all', sel: 0, pt: {}, sort: 'dept', pdept: 'all' };
+  renderVals() {
+    const G = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'], Luna: ['#fdf3d2', '#7a5d00'], Stele: ['#fce9ef', '#b0284f'] };
+    const R = { dir: 'Director', adm: 'Administrator', edu: 'Educator', asis: 'Asistent educator', men: 'Menajeră', buc: 'Bucătar', antr: 'Antrenor bazin' };
+    const people = [
+      ['Ala Munteanu', 'edu', 'Mars', 'bu', '069 112 334', '14.03.1988', '09.2021', 'p'], ['Doina Cebotari', 'asis', 'Mars', 'bu', '068 441 902', '28.09.1995', '09.2023', 'p'],
+      ['Elena Rotaru', 'edu', 'Soare', 'bu', '079 225 610', '02.07.1990', '01.2022', 'c'], ['Irina Bivol', 'asis', 'Soare', 'bu', '060 318 774', '11.11.1998', '03.2024', 'p'],
+      ['Natalia Guțu', 'edu', 'Luna', 'bo', '069 870 441', '19.05.1985', '09.2020', 'p'], ['Olga Sîrbu', 'edu', 'Stele', 'bo', '068 552 190', '30.09.1992', '09.2022', 'b'],
+      ['Tatiana Lungu', 'buc', '', 'bu', '079 004 388', '07.01.1979', '09.2019', 'p'], ['Vera Ursu', 'buc', '', 'bo', '060 773 512', '23.04.1983', '02.2023', 'p'],
+      ['Maria Ciobanu', 'dir', '', 'bu', '069 000 111', '16.08.1987', '09.2019', 'p'], ['Ion Popa', 'adm', '', 'bo', '068 210 447', '03.02.1981', '09.2020', 'p'],
+      ['Svetlana Rusu', 'men', '', 'bu', '079 518 023', '21.06.1976', '10.2021', 'p'], ['Rusu Vlad', 'antr', '', 'bu', '078 663 205', '05.12.1994', '06.2025', 'p']
+    ];
+    people[8][3] = 'both';
+    const vis = people.map((p, i) => [p, i]).filter(([p]) => p[3] === 'bu' || p[3] === 'both');
+    const T = { p: ['La lucru', '#e7f4ec', '#2e6b4c'], c: ['Concediu', '#fdf3d2', '#7a5d00'], b: ['Boală', '#fce9ef', '#b0284f'] };
+    const av = [['#fcead3', '#a34f00'], ['#e7f4ec', '#2e6b4c'], ['#fdf3d2', '#7a5d00'], ['#fce9ef', '#b0284f'], ['#f1ece2', '#5b666e']];
+    const DEPT = { dir: 'adm', adm: 'adm', edu: 'edu', asis: 'edu', buc: 'buc', men: 'alt', antr: 'alt' };
+    const DL = [['adm', 'Administrație', '#6b7780'], ['edu', 'Educatori', '#ef8a1d'], ['buc', 'Bucătărie', '#e0b400'], ['alt', 'Altele', '#e9527c']];
+    const filt = vis.filter(([p]) => this.state.role === 'all' || DEPT[p[1]] === this.state.role);
+    const staff = filt.map(([p, i]) => { const [name, r, group, br, phone, birth, since, t] = p; const on = i === this.state.sel; const bm = birth.slice(3, 5) === '09';
+      return { tagLine: [br === 'both' ? 'ambele filiale' : '', bm ? 'ziua de naștere ' + birth.slice(0, 5) : ''].filter(Boolean).join(' · '), gRole: r === 'edu' ? 'principal' : 'asistent', tags: br === 'both' || bm, dept: DEPT[r], rk: r, name, ini: name.split(' ').map(w => w[0]).join(''), role: R[r], group, noGroup: !group, gBg: group ? G[group][0] : '', gFg: group ? G[group][1] : '', both: br === 'both', phone, today: T[t][0], tBg: T[t][1], tFg: T[t][2], bday: bm ? 'Ziua ' + birth.slice(0, 5) : '', avBg: av[i % 5][0], avFg: av[i % 5][1], rowBg: on ? '#fffaf0' : '#fff', rowSh: on ? 'inset 4px 0 0 #ef8a1d' : 'none', open: () => this.setState({ sel: i }) }; });
+    const sp = people[this.state.sel];
+    const sel = { name: sp[0], ini: sp[0].split(' ').map(w => w[0]).join(''), role: R[sp[1]], branch: sp[3] === 'both' ? 'ambele filiale' : 'Filiala Buiucani', phone: sp[4], birth: sp[5], since: sp[6], groupLine: sp[2] ? sp[2] + ' · ' + (sp[1] === 'edu' ? 'educator principal' : 'asistent') : '—', work: '17', leave: sp[7] === 'c' ? '5' : '0', sick: sp[7] === 'b' ? '2' : '1', leftLeave: '14 zile din 28' };
+    const cnt = k => vis.filter(([p]) => p[7] === k).length;
+    const teamStats = [['Angajați · Buiucani', String(vis.length), '#fff', '#ede7dc', '#6b7780'], ['La lucru azi', String(cnt('p')), '#e7f4ec', '#e7f4ec', '#2e6b4c'], ['Concediu · boală', cnt('c') + ' · ' + cnt('b'), '#fff', '#ede7dc', '#7a5d00'], ['Zile de naștere în sept.', String(vis.filter(([p]) => p[5].slice(3, 5) === '09').length), '#fce9ef', '#fce9ef', '#b0284f']].map(([l, v, bg, bd, fg]) => ({ l, v, bg, bd, fg }));
+    const roleOpts = [['all', 'Toți', '#f4f1ea', '#3a4750'], ['adm', 'Administrație', '#f1ece2', '#5b666e'], ['edu', 'Educatori', '#fcead3', '#a34f00'], ['buc', 'Bucătărie', '#fdf3d2', '#7a5d00'], ['alt', 'Altele', '#fce9ef', '#b0284f']];
+    const ROrder = ['dir', 'adm', 'edu', 'asis', 'buc', 'men', 'antr'];
+    const srt = this.state.sort;
+    let sections;
+    if (srt === 'dept') sections = DL.map(([k, label, c]) => { const rows = staff.filter(s => s.dept === k).sort((a, b) => ROrder.indexOf(a.rk) - ROrder.indexOf(b.rk) || a.name.localeCompare(b.name, 'ro')); return { label, c, n: rows.length + (rows.length === 1 ? ' angajat' : ' angajați'), rows }; }).filter(s => s.rows.length);
+    else { const rows = [...staff].sort((a, b) => srt === 'az' ? a.name.localeCompare(b.name, 'ro') : srt === 'group' ? (a.group || 'zz').localeCompare(b.group || 'zz') || a.name.localeCompare(b.name, 'ro') : ROrder.indexOf(a.rk) - ROrder.indexOf(b.rk) || a.name.localeCompare(b.name, 'ro')); sections = [{ label: '', c: '', n: '', rows }]; }
+    const heads = [['az', 'Angajat'], ['role', 'Funcția'], ['group', 'Grupa și rolul']].map(([k, l]) => ({ l: l + (srt === k ? ' ↓' : ''), fg: srt === k ? '#3a4750' : '#9aa3a9', pick: () => this.setState(st => ({ sort: st.sort === k ? 'dept' : k })) }));
+    const roleList = DL.map(([k, label, c]) => ({ label, c, roles: Object.entries(R).filter(([rk]) => DEPT[rk] === k).map(([rk, l]) => { const n = people.filter(p => p[1] === rk).length; return { l, n: n + (n === 1 ? ' angajat' : ' angajați') }; }) }));
+    const rolePills = roleOpts.map(([k, label, bg, fg]) => ({ label, bg: this.state.role === k ? '#3a4750' : bg, fg: this.state.role === k ? '#fff' : fg, pick: () => this.setState({ role: k }) }));
+    const wk = d => { const w = new Date(2026, 8, d).getDay(); return w === 0 || w === 6; };
+    const days = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), fg: wk(i + 1) ? '#c9c4ba' : i + 1 === 24 ? '#fff' : '#9aa3a9', bg: i + 1 === 24 ? '#ef8a1d' : 'transparent' }));
+    const seedP = { 2: { 21: 'C', 22: 'C', 23: 'C', 24: 'C', 25: 'C' }, 5: { 23: 'B', 24: 'B' }, 1: { 10: 'B' }, 7: { 3: 'A' } };
+    const PC = { '': ['#e7f4ec', ''], C: ['#e0b400', 'CO'], B: ['#e9527c', 'CM'], A: ['#6b7780', 'A'] };
+    const nxt = { '': 'C', C: 'B', B: 'A', A: '' };
+    const pontaj = vis.map(([p]) => p).map((p, r) => { let w = 0, c = 0, b = 0;
+      const cells = Array.from({ length: 30 }, (_, i) => { const d = i + 1;
+        if (wk(d)) return { bg: '#f6f4f0', t: '', cur: 'default', bd: 'none', cycle: null };
+        const k = this.state.pt[r + '-' + d] ?? ((seedP[r] || {})[d] || '');
+        if (d <= 24) { if (k === '') w++; if (k === 'C') c++; if (k === 'B') b++; }
+        const fut = d > 24 && k === '';
+        return { bg: fut ? '#fff' : PC[k][0], t: PC[k][1], bd: fut ? '1.5px dashed #ede7dc' : 'none', cur: 'pointer', cycle: () => this.setState(s => ({ pt: { ...s.pt, [r + '-' + d]: nxt[k] } })) };
+      });
+      return { dept: DEPT[p[1]], name: p[0], role: R[p[1]], cells, w: String(w), c: c ? String(c) : '—', b: b ? String(b) : '—' };
+    });
+    const TY = { fix: ['Fix lunar', '#f1ece2', '#5b666e'], zi: ['Pe zile', '#fdf3d2', '#7a5d00'], baz: ['Bazin · pe copil', '#fce9ef', '#b0284f'] };
+    const ST = { paid: ['Plătit', '#e7f4ec', '#2e6b4c'], due: ['De plătit', '#fcead3', '#a34f00'] };
+    const sr = [['Ala Munteanu', 'Educator', 'fix', '9.500 lei / lună', 9500, 3000, 'due', 1], ['Doina Cebotari', 'Asistent educator', 'fix', '6.800 lei / lună', 6800, 2000, 'due', 1], ['Elena Rotaru', 'Educator', 'fix', '9.500 lei · 2 zile absent', 8636, 3000, 'due', 1], ['Tatiana Lungu', 'Bucătărie', 'zi', '380 lei × 21 zile', 7980, 0, 'due', 1], ['Maria Ciobanu', 'Administrație', 'fix', '11.000 lei / lună', 11000, 0, 'paid', 0], ['Rusu Vlad', 'Antrenor bazin', 'baz', '60 lei × 85 copii', 5100, 0, 'paid', 0], ['Irina Bivol', 'Asistent educator', 'fix', '6.800 lei / lună', 6800, 2000, 'paid', 0], ['Svetlana Rusu', 'Menajeră', 'fix', '6.200 lei / lună', 6200, 0, 'paid', 0]];
+    const f = n => n.toLocaleString('de-DE') + ' lei';
+    let tot = 0, adv = 0, paid = 0, rest = 0;
+    const salaries = sr.map(([name, role, t, base, sal, a, s, on]) => { tot += sal; adv += a; if (s === 'paid') paid += sal - a; else rest += sal - a;
+      return { name, role, type: TY[t][0], tBg: TY[t][1], tFg: TY[t][2], base, sal: f(sal), adv: a ? f(a) : '—', rest: s === 'paid' ? '0 lei' : f(sal - a), st: ST[s][0], stBg: ST[s][1], stFg: ST[s][2], cb: on ? '✓' : '', cbBg: on ? '#ef8a1d' : '#fff', cbBd: on ? '#ef8a1d' : '#c9c4ba', rowBg: on ? '#fffaf0' : '#fff' }; });
+    const pinDots = ['•', '•', '', ''].map((v, i) => ({ v, bd: i === 2 ? '#ef8a1d' : '#ede7dc' }));
+    const teamLine = vis.length + ' angajați · ' + cnt('p') + ' la lucru azi · ' + cnt('c') + ' în concediu · ' + cnt('b') + ' bolnav';
+    const MON = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
+    const months = MON.map((l, i) => ({ l, bg: i === 8 ? '#fcead3' : 'transparent', fg: i === 8 ? '#a34f00' : '#9aa3a9' }));
+    const lv = [['Ala Munteanu', 'Mars', 28, [[6.0, 6.9, 'c'], [11.7, 11.95, 'c']]], ['Doina Cebotari', 'Mars', 28, [[6.5, 7.3, 'c']]], ['Elena Rotaru', 'Soare', 28, [[7.0, 7.7, 'c'], [8.65, 8.8, 'c']]], ['Irina Bivol', 'Soare', 28, [[7.2, 7.8, 'c'], [2.3, 2.45, 'b']]], ['Tatiana Lungu', '', 28, [[5.5, 6.2, 'c']]], ['Svetlana Rusu', '', 28, [[7.6, 8.3, 'c']]], ['Maria Ciobanu', '', 28, [[7.4, 8.0, 'c'], [11.8, 12, 'p']]], ['Rusu Vlad', '', 14, [[9.5, 9.8, 'p']]]];
+    const LC = { c: ['#e0b400', 'Concediu'], b: ['#e9527c', 'Boală'], p: ['#f0d77a', 'Planificat'] };
+    const leaves = lv.map(([name, grp, tot, bars]) => { const used = Math.round(bars.filter(b => b[2] === 'c').reduce((a, b) => a + (b[1] - b[0]) * 30, 0) * 5 / 7);
+      return { name, grp: grp || '—', gBg: grp ? G[grp][0] : '#f1ece2', gFg: grp ? G[grp][1] : '#9aa3a9', left: (tot - used) + ' din ' + tot, bars: bars.map(([a, b, k]) => ({ l: (a / 12 * 100) + '%', w: Math.max(0.8, (b - a) / 12 * 100) + '%', c: LC[k][0], dash: k === 'p' ? '1.5px dashed #b89a00' : 'none' })) }; });
+    const advances = [['24.09.2026', 'Ala Munteanu', '3.000 lei', 'Cash', 'septembrie', 'De scăzut'], ['24.09.2026', 'Elena Rotaru', '3.000 lei', 'Cash', 'septembrie', 'De scăzut'], ['20.09.2026', 'Doina Cebotari', '2.000 lei', 'Transfer', 'septembrie', 'De scăzut'], ['15.08.2026', 'Ala Munteanu', '3.000 lei', 'Cash', 'august', 'Scăzut'], ['15.08.2026', 'Irina Bivol', '2.000 lei', 'Cash', 'august', 'Scăzut'], ['14.07.2026', 'Ala Munteanu', '2.500 lei', 'Transfer', 'iulie', 'Scăzut']].map(([d, n, a, m, mo, st]) => ({ d, n, a, m, mo, st, sBg: st === 'Scăzut' ? '#e7f4ec' : '#fcead3', sFg: st === 'Scăzut' ? '#2e6b4c' : '#a34f00' }));
+    const hist = [['Sep', 9500, 3000, 0], ['Aug', 9500, 3000, 1], ['Iul', 9500, 2500, 1], ['Iun', 9500, 0, 1], ['Mai', 9500, 3000, 1], ['Apr', 9000, 3000, 1], ['Mar', 9000, 0, 1], ['Feb', 9000, 3000, 1], ['Ian', 9000, 2000, 1]];
+    const histBars = [...hist].reverse().map(([m, s, a, p]) => ({ m, h: Math.round(s / 9500 * 90) + 'px', ah: Math.round(a / 9500 * 90) + 'px', c: p ? '#3f9a6b' : '#ef8a1d' }));
+    const histRows = hist.slice(0, 5).map(([m, s, a, p]) => ({ m: m + ' 2026', s: f(s), a: a ? f(a) : '—', r: p ? f(s - a) : f(s - a), st: p ? 'Plătit' : 'De plătit', sBg: p ? '#e7f4ec' : '#fcead3', sFg: p ? '#2e6b4c' : '#a34f00' }));
+    const teamGroups = [['Mars', [['Ala Munteanu', 'Principal', '#fcead3', '#a34f00'], ['Doina Cebotari', 'Asistent', '#e7f4ec', '#2e6b4c'], ['Natalia Guțu', 'Înlocuitor · marți', '#f1ece2', '#5b666e']]], ['Soare', [['Elena Rotaru', 'Principal', '#fcead3', '#a34f00'], ['Irina Bivol', 'Asistent', '#e7f4ec', '#2e6b4c']]]].map(([g, m]) => ({ g, bg: G[g][0], fg: G[g][1], m: m.map(([n, r, rb, rf]) => ({ n, r, rb, rf })) }));
+    const selGroups = teamGroups.flatMap(t => t.m.filter(m => m.n === sel.name).map(m => ({ g: t.g, bg: t.bg, fg: t.fg, r: m.r })));
+    const selDots = Array.from({ length: 30 }, (_, i) => { const d = i + 1; if (wk(d)) return { bg: '#f6f4f0', bd: 'none', t: '' }; if (d > 24) return { bg: '#fff', bd: '1.5px dashed #ede7dc', t: '' }; const k = d === 10 ? 'B' : ''; return { bg: k ? '#e9527c' : '#3f9a6b', bd: 'none', t: k }; });
+    const selLeaves = [['6–27 iulie', '16 zile', 'Concediu', '#fdf3d2', '#7a5d00'], ['21–31 decembrie', '7 zile', 'Planificat', '#fffaf0', '#7a5d00'], ['10 septembrie', '1 zi', 'Boală', '#fce9ef', '#b0284f']].map(([d, n, k, bg, fg]) => ({ d, n, k, bg, fg }));
+    const PMAP = { C: 'CO', B: 'CM', A: 'A' };
+    const printDays = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), bg: wk(i + 1) ? '#eeeeee' : 'transparent' }));
+    const printRows = vis.map(([p], r) => { let z = 0, co = 0, cm = 0, a = 0;
+      const cells = Array.from({ length: 30 }, (_, i) => { const d = i + 1; if (wk(d)) return { t: '', bg: '#eeeeee' }; const k = this.state.pt[r + '-' + d] ?? ((seedP[r] || {})[d] || ''); if (k === '') { z++; return { t: '8', bg: 'transparent' }; } if (k === 'C') co++; if (k === 'B') cm++; if (k === 'A') a++; return { t: PMAP[k], bg: 'transparent' }; });
+      return { nr: String(r + 1), name: p[0], role: R[p[1]], cells, z: String(z), h: String(z * 8), co: co ? String(co) : '', cm: cm ? String(cm) : '', a: a ? String(a) : '' }; });
+    const pd = this.state.pdept;
+    const ptPills = [['all', 'Toți'], ['adm', 'Administrație'], ['edu', 'Educatori'], ['buc', 'Bucătărie'], ['alt', 'Altele']].map(([k, label]) => { const o = roleOpts.find(x => x[0] === k); return { label, bg: pd === k ? '#3a4750' : o[2], fg: pd === k ? '#fff' : o[3], pick: () => this.setState({ pdept: k }) }; });
+    const ptSections = DL.filter(([k]) => pd === 'all' || pd === k).map(([k, label, c]) => { const rows = pontaj.filter(r => r.dept === k); return { label, c, n: rows.length + (rows.length === 1 ? ' angajat' : ' angajați'), rows }; }).filter(x => x.rows.length);
+    return { ptPills, ptSections, printDays, printRows, selGroups, selDots, selLeaves, heads, teamLine, months, leaves, advances, histBars, histRows, teamGroups, roleList, sections, sel, teamStats, rolePills, days, pontaj, salaries, payTotal: f(tot), advTotal: f(adv), paidTotal: f(paid), restTotal: f(rest), pinDots };
+  }
+}
+</script>
+</body>
+</html>

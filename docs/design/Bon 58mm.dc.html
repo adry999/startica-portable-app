@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Tiparire.dc.html">Tipărire</a><a href="Achitari.dc.html">Achitări</a><a href="Bazin.dc.html">Bazin</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Bonuri pe imprimanta SK58</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Hârtie termică de 58 mm, zonă de tipar 48 mm (384 puncte). Doar negru, fără gri: tot ce e „colorat” în aplicație devine contur, linie punctată sau text îngroșat. Se tipăresc ca imagine, cu fonturile Startica. <a href="#24a">24a</a> confirmare de plată scurtă · <a href="#24b">24b</a> închiderea zilei (cash) · <a href="#24c">24c</a> programarea la bazin pentru părinte. Afișate la mărimea reală × 1.</p>
+  </div>
+  <div style="display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="24a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">24a</span><span style="font-size:16px;font-weight:700">Confirmare de plată</span></div>
+      <div style="width:384px;background:#fff;box-shadow:0 16px 40px rgba(58,71,80,.16);padding:18px 16px 26px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;color:#000;font-size:15px">
+        <img src="web/assets/startica-logo.svg" alt="Startica" style="height:40px;align-self:center;filter:grayscale(1) brightness(0)"></img>
+        <div style="text-align:center;font-size:12px;line-height:1.35">Startica SRL · IDNO 1000600000000<br></br>str. Exemplu 12, Chișinău · 060 000 000</div>
+        <div style="border-top:2px solid #000"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0"><span style="font-size:12px;font-weight:800;letter-spacing:.14em">CONFIRMARE DE PLATĂ</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">Nr. 0147</span><span style="font-size:12px">24.09.2026 · 10:42</span></div>
+        <div style="border-top:1px dashed #000"></div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:14px"><span>Copil</span><b style="text-align:right">Avram Maria</b><span>Grupa</span><b style="text-align:right">Mars</b><span>Plătitor</span><b style="text-align:right">Avram Valentin</b><span>Metodă</span><b style="text-align:right">Cash</b></div>
+        <div style="border-top:1px dashed #000"></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Taxă sept. · integral</span><b>9.993,00</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Taxă oct. · parțial</span><b>5.007,00</b></div>
+        <div style="border-top:2px solid #000"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800">TOTAL</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1">15.000,00 lei</span></div>
+        <div style="border:1.5px solid #000;border-radius:8px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between"><span>Rest octombrie</span><b>4.986,00 lei · 6 oct.</b></div>
+        <div style="display:flex;justify-content:center;gap:4px;padding:4px 0"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="width:22px;height:22px;border-radius:50%;border:1.5px solid #000;background:{{ m.bg }};color:{{ m.fg }};font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ m.l }}</span></sc-for></div>
+        <span style="text-align:center;font-size:11px">● achitat · ◐ parțial · ○ urmează</span>
+        <div style="border-top:1px dashed #000"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:12px"><span style="height:26px;border-bottom:1px solid #000"></span><span>Primit: Ciobanu Maria</span></div>
+        <span style="text-align:center;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px">Mulțumim!</span>
+        <span style="text-align:center;font-size:11px">Nu ține locul bonului fiscal.</span>
+      </div>
+    </div>
+
+    <div id="24b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">24b</span><span style="font-size:16px;font-weight:700">Închiderea zilei · pentru casă</span></div>
+      <div style="width:384px;background:#fff;box-shadow:0 16px 40px rgba(58,71,80,.16);padding:18px 16px 26px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;color:#000;font-size:14px">
+        <img src="web/assets/startica-icon.svg" alt="" style="height:44px;align-self:center;filter:grayscale(1) brightness(0)"></img>
+        <div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:12px;font-weight:800;letter-spacing:.14em">ÎNCHIDEREA ZILEI</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.15">Joi, 24.09.2026</span><span style="font-size:12px">Filiala Buiucani · 18:05</span></div>
+        <div style="border-top:2px solid #000"></div>
+        <sc-for list="{{ dayPays }}" as="p" hint-placeholder-count="6"><div style="display:flex;justify-content:space-between;gap:8px"><span>{{ p.t }} {{ p.n }}</span><b style="white-space:nowrap">{{ p.a }}</b></div></sc-for>
+        <div style="border-top:1px dashed #000"></div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:3px 10px"><span>Cash · 4</span><b style="text-align:right">31.800,00</b><span>Card · 1</span><b style="text-align:right">9.600,00</b><span>Transfer · 1</span><b style="text-align:right">12.981,00</b></div>
+        <div style="border-top:1px dashed #000"></div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:3px 10px"><span>Cheltuieli cash</span><b style="text-align:right">−1.240,00</b><span>Avans salariu</span><b style="text-align:right">−3.000,00</b></div>
+        <div style="border-top:2px solid #000"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800">ÎN CASĂ</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1">27.560,00</span></div>
+        <div style="border:1.5px solid #000;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:13px"><div style="display:flex;justify-content:space-between"><span>Numărat efectiv</span><span>____________</span></div><div style="display:flex;justify-content:space-between"><span>Diferență</span><span>____________</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;margin-top:6px"><span style="height:26px;border-bottom:1px solid #000"></span><span>Predat · Primit</span></div>
+      </div>
+    </div>
+
+    <div id="24c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">24c</span><span style="font-size:16px;font-weight:700">Bazin · biletul copilului</span></div>
+      <div style="width:384px;background:#fff;box-shadow:0 16px 40px rgba(58,71,80,.16);padding:18px 16px 26px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;color:#000;font-size:14px">
+        <img src="web/assets/startica-logo.svg" alt="Startica" style="height:34px;align-self:center;filter:grayscale(1) brightness(0)"></img>
+        <div style="border-top:2px solid #000"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.14em">BAZIN · OCTOMBRIE</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Avram Maria</span><span style="font-size:12px">Grupa Mars · antrenor Rusu Vlad</span></div>
+        <div style="border:2px solid #000;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center"><span style="font-size:12px;font-weight:800">ÎN FIECARE</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:34px;line-height:1">Marți · 10:30</span></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"><sc-for list="{{ swim }}" as="d" hint-placeholder-count="4"><div style="border:1.5px {{ d.st }} #000;border-radius:8px;padding:6px 0;display:flex;flex-direction:column;align-items:center"><b style="font-size:16px">{{ d.n }}</b><span style="font-size:10px">{{ d.l }}</span></div></sc-for></div>
+        <span style="text-align:center;font-size:12px">4 ședințe × 150 lei = 600 lei, cu taxa lunii.<br></br>Linie punctată = ziua liberă, nu se taxează.</span>
+        <div style="border-top:1px dashed #000"></div>
+        <span style="text-align:center;font-size:12px">Costum de baie, cască, prosop, papuci.</span>
+      </div>
+    </div>
+
+    <div id="24d" style="display:flex;flex-direction:column;gap:14px;flex-basis:100%">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">24d</span><span style="font-size:16px;font-weight:700">Stickere · text propriu, în stilul Startica (se poate încerca)</span></div>
+      <div style="width:1100px;display:grid;grid-template-columns:420px minmax(0,1fr);background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="background:#fff;border-right:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Sticker nou</span>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:800;color:#6b7780">Model</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ tplPills }}" as="p" hint-placeholder-count="5"><span onClick="{{ p.pick }}" style="padding:7px 13px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.l }}</span></sc-for></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:800;color:#6b7780">Mărime etichetă</span><div style="display:flex;gap:6px"><sc-for list="{{ sizePills }}" as="p" hint-placeholder-count="3"><span onClick="{{ p.pick }}" style="padding:7px 13px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.l }}</span></sc-for></div></div>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:#6b7780">Text mare<input value="{{ t1 }}" onChange="{{ onT1 }}" style="padding:11px 14px;border-radius:12px;border:1.5px solid #ef8a1d;font:700 16px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:#6b7780">Rândul 2<input value="{{ t2 }}" onChange="{{ onT2 }}" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:#6b7780">Rândul 3 (opțional)<input value="{{ t3 }}" onChange="{{ onT3 }}" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:800;color:#6b7780">Decor</span><div style="display:flex;gap:6px"><sc-for list="{{ decoPills }}" as="p" hint-placeholder-count="3"><span onClick="{{ p.pick }}" style="padding:7px 13px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.l }}</span></sc-for></div></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:auto"><span style="font-size:13px;font-weight:800;color:#6b7780">Copii</span><span style="padding:8px 14px;border-radius:12px;border:1px solid #c9c4ba;font-weight:800">× 1</span><span style="margin-left:auto;padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Tipărește</span></div>
+        </div>
+        <div style="padding:28px;display:flex;flex-direction:column;gap:18px;align-items:center;justify-content:center">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Previzualizare · {{ sizeLabel }} · mărime reală × 1,5</span>
+          <div style="position:relative;overflow:hidden;width:330px;height:{{ stH }};background:#fff;border-radius:14px;box-shadow:0 12px 30px rgba(58,71,80,.16);padding:16px 18px;box-sizing:border-box;display:flex;align-items:center;gap:14px;color:#000;border:{{ frame }}">
+            <sc-if value="{{ dots }}"><span style="position:absolute;right:-26px;top:-26px;width:80px;height:80px;border-radius:50%;border:2px solid #000"></span><span style="position:absolute;right:30px;bottom:-14px;width:30px;height:30px;border-radius:50%;background:#000"></span><span style="position:absolute;left:-12px;bottom:-12px;width:36px;height:36px;border-radius:50%;border:2px dashed #000"></span></sc-if>
+            <sc-if value="{{ showIcon }}"><img src="web/assets/startica-icon.svg" alt="" style="position:relative;width:{{ iconW }};height:{{ iconW }};flex-shrink:0;filter:grayscale(1) brightness(0)"></img></sc-if>
+            <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:{{ align }};text-align:{{ align }}">
+              <sc-if value="{{ badge }}"><span style="font-size:11px;font-weight:800;letter-spacing:.14em;border:1.5px solid #000;border-radius:999px;padding:1px 9px;margin-bottom:3px">{{ badge }}</span></sc-if>
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:{{ big }};line-height:1.05;word-break:break-word">{{ t1 }}</span>
+              <span style="font-size:14px;font-weight:700">{{ t2 }}</span>
+              <span style="font-size:12px">{{ t3 }}</span>
+            </div>
+          </div>
+          <span style="font-size:13px;color:#6b7780;max-width:420px;text-align:center;line-height:1.5">Pentru etichete autoadezive de 58 mm pe rolă. „Nume copil” poate lua numele direct din fișă, inclusiv pentru toată grupa deodată (Grupe → ⋯ → „Stickere pentru grupă”).</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div style="max-width:1100px;font-size:14px;color:#6b7780;line-height:1.55;text-wrap:pretty"><b style="color:#3a4750">Cum se tipărește:</b> în Achitări ⋯ → „Tipărește confirmarea” apare alegerea <b style="color:#3a4750">A4 · A5 · Bon 58 mm</b> (implicit se ține minte ultima). La 58 mm, pagina are <code>@page { size: 58mm auto; margin: 0 }</code>, lățime 48 mm, fără culori (<code>filter: grayscale(1)</code> pe logo). Imprimanta SK58 se alege în Windows ca imprimantă implicită pentru bonuri. „Închiderea zilei” se tipărește din Dashboard, seara.</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const months = ['I', 'F', 'M', 'A', 'M', 'I', 'I', 'A', 'S', 'O', 'N', 'D'].map((l, i) => ({ l, bg: i < 9 ? '#000' : i === 9 ? 'linear-gradient(90deg,#000 50%,#fff 50%)' : '#fff', fg: i < 9 ? '#fff' : '#000' }));
+    const dayPays = [['09:12', 'Bivol Eva', '9.600,00'], ['09:40', 'Coceva Alisa', '13.058,00'], ['10:42', 'Avram Maria', '15.000,00'], ['12:05', 'Lungu Matei', '9.600,00'], ['15:30', 'Popa David', '1.200,00'], ['16:48', 'Rusu Ana', '5.923,00']].map(([t, n, a]) => ({ t, n, a }));
+    const swim = [['6', 'oct'], ['13', 'oct'], ['20', 'oct'], ['27', 'oct']].map(([n, l], i) => ({ n, l, st: i === 2 ? 'dashed' : 'solid' }));
+    const TPL = { nume: ['Nume copil', 'Avram Maria', 'Grupa Mars', 'dulapul 7', '', 1], alergie: ['Alergie', 'Fără arahide', 'Avram Maria · Mars', 'anunțați educatorul', 'ALERGIE', 1], anunt: ['Anunț', 'Ședința cu părinții', 'Joi, 2 octombrie · 18:00', 'sala mare', 'ANUNȚ', 0], obiect: ['Obiect', 'Cutia cu plastilină', 'Grupa Soare', '', '', 1], liber: ['Text liber', 'Scrie aici', '', '', '', 0] };
+    const st = this.state || {}; const tk = st.tpl || 'nume'; const T = TPL[tk];
+    const t1 = st.t1 ?? T[1], t2 = st.t2 ?? T[2], t3 = st.t3 ?? T[3];
+    const sz = st.sz || '40'; const deco = st.deco || 'cercuri';
+    const pill = (on) => ({ bg: on ? '#3a4750' : '#f4f1ea', fg: on ? '#fff' : '#3a4750' });
+    const tplPills = Object.entries(TPL).map(([k, v]) => ({ l: v[0], ...pill(k === tk), pick: () => this.setState({ tpl: k, t1: undefined, t2: undefined, t3: undefined }) }));
+    const sizePills = [['30', '58 × 30'], ['40', '58 × 40'], ['60', '58 × 60']].map(([k, l]) => ({ l, ...pill(k === sz), pick: () => this.setState({ sz: k }) }));
+    const decoPills = [['cercuri', 'Cercuri'], ['chenar', 'Chenar'], ['simplu', 'Simplu']].map(([k, l]) => ({ l, ...pill(k === deco), pick: () => this.setState({ deco: k }) }));
+    const H = { '30': 128, '40': 170, '60': 255 }[sz];
+    const len = (t1 || '').length;
+    return { months, dayPays, swim, tplPills, sizePills, decoPills, t1, t2, t3,
+      onT1: e => this.setState({ t1: e.target.value }), onT2: e => this.setState({ t2: e.target.value }), onT3: e => this.setState({ t3: e.target.value }),
+      stH: H + 'px', sizeLabel: '58 × ' + sz + ' mm', dots: deco === 'cercuri', frame: deco === 'chenar' ? '3px double #000' : 'none',
+      showIcon: !!T[5] && sz !== '30', iconW: sz === '60' ? '64px' : '46px', align: T[5] && sz !== '30' ? 'flex-start' : 'center', badge: T[4],
+      big: (len > 18 ? 20 : len > 12 ? 24 : 30) + (sz === '60' ? 6 : sz === '30' ? -4 : 0) + 'px' };
+  }
+}
+</script>
+</body>
+</html>
