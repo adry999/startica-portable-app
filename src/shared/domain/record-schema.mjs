@@ -107,6 +107,7 @@ const FIELDS = {
     'fxRate',
     'fxRateSource',
     'amountEur',
+    'receiptNumber',
     'allocations',
     'type',
     'notes',
@@ -350,6 +351,11 @@ export function normalizeRecord(type, input) {
         requireThat(['bnm', 'manual'].includes(record.fxRateSource), 'Proveniența cursului este invalidă.');
       if (record.amountEur !== undefined)
         requireThat(Number.isFinite(record.amountEur) && record.amountEur > 0, 'Sumă în euro invalidă.');
+      if (record.receiptNumber !== undefined)
+        requireThat(
+          Number.isInteger(record.receiptNumber) && record.receiptNumber >= 1,
+          'Numărul confirmării de plată este invalid.',
+        );
       record.method ||= 'Cash';
       record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Badge,
   Card,
@@ -6,6 +7,7 @@ import {
   DataTable,
   FilterPills,
   LoadingState,
+  RowMenu,
   SegmentedControl,
   SelectionBar,
   groupTone,
@@ -245,6 +247,7 @@ function TableView({
   onOpenChild: (id: string) => void;
 }) {
   const toast = useToast();
+  const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<PaymentRowView | null>(null);
 
@@ -391,23 +394,20 @@ function TableView({
             header: '',
             align: 'end',
             render: row => (
-              <div className={styles.rowActions} onClick={event => event.stopPropagation()}>
-                <button type="button" className={styles.linkButton} onClick={() => toggleArchived(row)}>
-                  {row.archived ? 'Dezarhivează' : 'Arhivează'}
-                </button>
-                <button type="button" className={styles.linkButton} onClick={() => onEdit(row.id)}>
-                  Editează
-                </button>
-                <button
-                  type="button"
-                  className={styles.linkButton}
-                  disabled={!row.archived}
-                  title={row.archived ? undefined : 'Arhivează întâi achitarea'}
-                  onClick={() => setDeleteTarget(row)}
-                >
-                  Șterge
-                </button>
-              </div>
+              <RowMenu
+                items={[
+                  { label: 'Tipărește confirmarea', onClick: () => navigate(`/achitari/${row.id}/confirmare`) },
+                  { label: 'Editează', onClick: () => onEdit(row.id) },
+                  { label: row.archived ? 'Dezarhivează' : 'Arhivează', onClick: () => toggleArchived(row) },
+                  {
+                    label: 'Șterge definitiv',
+                    danger: true,
+                    disabled: !row.archived,
+                    title: row.archived ? undefined : 'Arhivează întâi achitarea',
+                    onClick: () => setDeleteTarget(row),
+                  },
+                ]}
+              />
             ),
           },
         ]}

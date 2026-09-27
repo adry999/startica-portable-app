@@ -31,6 +31,8 @@ import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
 import { createNotificationSettingsRoutes } from './notification-settings.routes.mjs';
 import { createPlanPresetsRoutes } from './plan-presets.routes.mjs';
+import { createKindergartenSettingsRoutes } from './kindergarten-settings.routes.mjs';
+import { createReceiptNumberingService, createReceiptNumberingRoutes } from '#features/receipts/index.server.mjs';
 import {
   parseExchangeRates,
   clampExchangeRates,
@@ -102,6 +104,11 @@ export function createApplication(options = {}) {
 
   const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
   const paymentAssignmentService = createPaymentAssignmentService(recordWriteDependencies);
+  const receiptNumberingService = createReceiptNumberingService({
+    ...recordWriteDependencies,
+    readSetting,
+    writeSetting: settings.setSetting,
+  });
   const visitsService = createVisitsService(recordWriteDependencies);
   // readEnvelope() nu are câmpul „ok” din RevisionEnvelope (nu e rezultatul unei scrieri);
   // rutele de previzualizare citesc doar state/revision/updatedAt din el.
@@ -179,6 +186,8 @@ export function createApplication(options = {}) {
       fetch: options.fetch ?? globalThis.fetch,
     }),
     ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
+    ...createKindergartenSettingsRoutes({ readSetting, writeSetting: settings.setSetting }),
+    ...createReceiptNumberingRoutes({ receiptNumberingService }),
   ];
 
   const { dispatchRequest } = createRouteDispatcher({

@@ -18,7 +18,7 @@
   gap: var(--space-20);
 }
 
-/* Tipărire (Situația plăților, Prezența · Luna): doar conținutul, fără meniu sau antet. */
+/* Tipărire (confirmarea de plată, Situația plăților, Prezența · Luna): doar conținutul, fără meniu sau antet. */
 @media print {
   .shell > aside {
     display: none;
@@ -30,5 +30,6 @@
 
   .content {
     padding: 0;
+    gap: 0;
   }
 }

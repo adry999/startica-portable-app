@@ -13,6 +13,10 @@ export const formatMonthName = v =>
   v ? new Date(v + '-01T12:00:00').toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }) : '—';
 export const formatDateTime = v => (v ? new Date(v).toLocaleString('ro-RO') : 'niciodată');
 
+// „24 septembrie 2026” — fără ziua săptămânii, pentru antetul confirmării de plată (16b).
+export const formatDateLong = v =>
+  v ? new Date(v + 'T12:00:00').toLocaleDateString('ro-RO', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+
 // Titlul rezumatului zilnic Telegram, cu ziua săptămânii scrisă complet.
 export const formatLongDate = v =>
   new Date(v + 'T12:00:00').toLocaleDateString('ro-RO', {

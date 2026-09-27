@@ -18,6 +18,8 @@ export interface StatusRowView {
   archived: boolean;
   groupId: string | null;
   groupName: string;
+  parent: string;
+  phone: string;
   currency: Currency;
   expected: number | null;
   paid: number | null;
@@ -40,6 +42,8 @@ export interface StatusData {
   failureMessage: string;
   /** Tabelul: după grupă, statut și căutare. */
   rows: StatusRowView[];
+  /** Toți copiii, fără filtrele de grupă/statut/căutare — pentru „toți copiii” la tipărire (16c). */
+  allRows: StatusRowView[];
   /** Cardurile și contoarele: toată luna, indiferent de filtre (RASPUNSURI.md). */
   summary: MonthStatusSummary;
   missingFeeCount: number;
@@ -102,6 +106,7 @@ export function useStatus(month: string): StatusData {
       status: loading || !saveError ? 'loading' : 'failed',
       failureMessage: saveError,
       rows: [],
+      allRows: [],
       summary: EMPTY_SUMMARY,
       missingFeeCount: 0,
       segmentCounts: EMPTY_COUNTS,
@@ -124,6 +129,24 @@ export function useStatus(month: string): StatusData {
   }
 
   const normalizedSearch = normalizeSearchText(search);
+  const byLabelThenName = (a: (typeof evaluations)[number], b: (typeof evaluations)[number]) =>
+    LABEL_ORDER.indexOf(a.obligation.label) - LABEL_ORDER.indexOf(b.obligation.label) ||
+    a.child.name.localeCompare(b.child.name, 'ro');
+  const toRowView = ({ child, obligation }: (typeof evaluations)[number]): StatusRowView => ({
+    id: child.id,
+    name: child.name,
+    archived: Boolean(child.archived),
+    groupId: child.groupId,
+    groupName: groupNameOf(child.groupId, records.groups),
+    parent: child.parent || '',
+    phone: child.phone || '',
+    currency: obligation.currency as Currency,
+    expected: obligation.expected,
+    paid: obligation.paid,
+    rest: obligation.rest,
+    due: obligation.due,
+    label: obligation.label,
+  });
   const rows: StatusRowView[] = evaluations
     .filter(
       ({ child, obligation }) =>
@@ -131,30 +154,16 @@ export function useStatus(month: string): StatusData {
         (segment === 'all' || SEGMENT_BY_LABEL[obligation.label] === segment) &&
         matchesRecordListSearch('children', child, records, normalizedSearch),
     )
-    .sort(
-      (a, b) =>
-        LABEL_ORDER.indexOf(a.obligation.label) - LABEL_ORDER.indexOf(b.obligation.label) ||
-        a.child.name.localeCompare(b.child.name, 'ro'),
-    )
-    .map(({ child, obligation }) => ({
-      id: child.id,
-      name: child.name,
-      archived: Boolean(child.archived),
-      groupId: child.groupId,
-      groupName: groupNameOf(child.groupId, records.groups),
-      currency: obligation.currency as Currency,
-      expected: obligation.expected,
-      paid: obligation.paid,
-      rest: obligation.rest,
-      due: obligation.due,
-      label: obligation.label,
-    }));
+    .sort(byLabelThenName)
+    .map(toRowView);
+  const allRows: StatusRowView[] = [...evaluations].sort(byLabelThenName).map(toRowView);
   const groups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
 
   return {
     status: 'ready',
     failureMessage: '',
     rows,
+    allRows,
     summary,
     missingFeeCount,
     segmentCounts,

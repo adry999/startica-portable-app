@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Badge,
   Button,
@@ -21,6 +21,8 @@ import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.
 import { useStatus, type StatusData, type StatusRowView, type StatusSegment } from './useStatus';
 import { useSchoolYearStatus, type SchoolYearData } from './useSchoolYearStatus';
 import { PaymentHeatmap } from './PaymentHeatmap';
+import { PrintOptionsDialog, type PrintOptions } from './PrintOptionsDialog';
+import { StatusPrint } from './StatusPrint';
 import styles from './StatusPage.module.css';
 
 const STATUS_TONE: Record<string, BadgeTone> = {
@@ -32,6 +34,28 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 
 const NOTIFY_LABELS = new Set(['Restanță', 'Plată parțială']);
 const SMS_TITLE = 'Trimiterea SMS vine odată cu integrarea SMS (P2)';
+
+const SEGMENT_LABEL: Record<StatusSegment, string | null> = {
+  all: null,
+  overdue: 'Restanțieri',
+  partial: 'Parțial',
+  paid: 'Achitat',
+  upcoming: 'Urmează',
+};
+
+/** Descrierea filtrului activ, pentru antetul situației tipărite (16c). */
+function describeFilter(data: StatusData): string {
+  const parts = [
+    SEGMENT_LABEL[data.segment],
+    data.groupFilter === 'all'
+      ? null
+      : data.groupFilter === 'none'
+        ? 'fără grupă'
+        : data.groups.find(g => g.id === data.groupFilter)?.name,
+    data.search ? `căutare „${data.search}”` : null,
+  ].filter((part): part is string => Boolean(part));
+  return parts.length > 0 ? parts.join(' · ') : 'toate grupele';
+}
 
 function segmentOptions(counts: StatusData['segmentCounts']) {
   return [
@@ -59,8 +83,23 @@ const MODE_OPTIONS = [
 export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: StatusPageProps) {
   const [mode, setMode] = usePersistedState<StatusMode>('view.status', 'month');
   const [startYear, setStartYear] = useState(() => schoolYearStartOf(month));
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  const [printOptions, setPrintOptions] = useState<PrintOptions | null>(null);
   const statusData = useStatus(month);
   const yearData = useSchoolYearStatus(mode === 'year' ? startYear : null);
+
+  // Randarea confirmării tipărite trebuie să apară în DOM înainte de window.print();
+  // afterprint golește starea, ca situația tipărită să nu rămână montată pe ecran.
+  useEffect(() => {
+    if (!printOptions) return;
+    const timer = setTimeout(() => window.print(), 0);
+    const onAfterPrint = () => setPrintOptions(null);
+    window.addEventListener('afterprint', onAfterPrint);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('afterprint', onAfterPrint);
+    };
+  }, [printOptions]);
 
   useTopbarActions(
     <div className={styles.headerActions}>
@@ -81,7 +120,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           ))}
         </select>
       )}
-      <Button variant="ghost" onClick={() => window.print()}>
+      <Button variant="ghost" disabled={mode !== 'month'} onClick={() => setPrintDialogOpen(true)}>
         Tipărește
       </Button>
     </div>,
@@ -92,10 +131,36 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   if (activeData.status === 'failed')
     return <p className={styles.notice}>{activeData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  return mode === 'month' ? (
-    <MonthView data={statusData} onNavigate={onNavigate} onOpenChild={onOpenChild} />
-  ) : (
-    <YearView data={yearData} />
+  return (
+    <>
+      <div className={styles.screenOnly}>
+        {mode === 'month' ? (
+          <MonthView data={statusData} onNavigate={onNavigate} onOpenChild={onOpenChild} />
+        ) : (
+          <YearView data={yearData} />
+        )}
+      </div>
+
+      {printOptions && (
+        <StatusPrint
+          month={month}
+          asOf={statusData.asOf}
+          filterLabel={printOptions.scope === 'all' ? 'toți copiii' : describeFilter(statusData)}
+          rows={printOptions.scope === 'all' ? statusData.allRows : statusData.rows}
+          showPhone={printOptions.showPhone}
+          orientation={printOptions.orientation}
+        />
+      )}
+
+      <PrintOptionsDialog
+        open={printDialogOpen}
+        onCancel={() => setPrintDialogOpen(false)}
+        onConfirm={options => {
+          setPrintDialogOpen(false);
+          setPrintOptions(options);
+        }}
+      />
+    </>
   );
 }
 

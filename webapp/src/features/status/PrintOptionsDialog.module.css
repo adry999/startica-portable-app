@@ -1,0 +1,66 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 71, 80, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.dialog {
+  width: 380px;
+  max-width: calc(100vw - var(--space-40));
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--slate);
+}
+
+.field {
+  border: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.field legend {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--subtle);
+  margin-bottom: var(--space-4);
+  padding: 0;
+}
+
+.field label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-12);
+  margin-top: var(--space-8);
+}
+
+.actions > * {
+  flex: 1;
+}

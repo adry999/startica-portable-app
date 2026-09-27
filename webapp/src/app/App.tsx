@@ -10,7 +10,7 @@ import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { AttendancePage } from '@features/attendance';
 import { VisitsPage } from '@features/visits';
-import { PaymentsPage } from '@features/payments';
+import { PaymentsPage, PaymentReceipt } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
@@ -93,6 +93,7 @@ export function App() {
         <Route path="/prezenta" element={<AttendancePage month={month} />} />
         <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/achitari" element={<PaymentsRoute />} />
+        <Route path="/achitari/:id/confirmare" element={<PaymentReceipt />} />
         <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
         <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
         <Route

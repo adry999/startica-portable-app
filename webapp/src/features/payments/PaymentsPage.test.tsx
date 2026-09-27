@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -60,9 +61,11 @@ function PaymentsHarness({ onOpenChild = () => {} }: { onOpenChild?: (id: string
 
 function renderPage(onOpenChild?: (id: string) => void) {
   return render(
-    <ToastProvider>
-      <PaymentsHarness onOpenChild={onOpenChild} />
-    </ToastProvider>,
+    <MemoryRouter>
+      <ToastProvider>
+        <PaymentsHarness onOpenChild={onOpenChild} />
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -161,6 +164,7 @@ describe('PaymentsPage', () => {
 
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
     await userEvent.click(within(row).getByRole('button', { name: 'Editează' }));
 
     expect(onOpenChild).not.toHaveBeenCalled();
@@ -177,8 +181,10 @@ describe('PaymentsPage', () => {
       return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
     });
 
-    const archiveButtons = screen.getAllByRole('button', { name: 'Arhivează' });
-    await userEvent.click(archiveButtons[0]);
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: 'Arhivează' }));
 
     expect(await screen.findByText('Achitare arhivată.')).toBeInTheDocument();
   });
@@ -214,6 +220,7 @@ describe('PaymentsPage', () => {
 
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
     const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
@@ -232,7 +239,8 @@ describe('PaymentsPage', () => {
 
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
-    expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    expect(within(row).getByRole('button', { name: 'Șterge definitiv' })).toBeDisabled();
   });
 
   it('la o achitare nouă duplicat, confirmarea utilizatorului o creează totuși', async () => {
@@ -284,6 +292,7 @@ describe('PaymentsPage', () => {
 
     const table = screen.getByRole('table');
     const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
     const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
@@ -327,6 +336,7 @@ describe('PaymentsPage', () => {
 
     const activeTable = screen.getByRole('table');
     const activeRow = within(activeTable).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(activeRow).getByLabelText('Mai multe acțiuni'));
     await user.click(within(activeRow).getByRole('button', { name: 'Arhivează' }));
     expect(await screen.findByText('Achitare arhivată.')).toBeInTheDocument();
 
@@ -342,7 +352,8 @@ describe('PaymentsPage', () => {
       return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
     });
 
-    await user.click(within(row).getByRole('button', { name: 'Șterge' }));
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Șterge definitiv' }));
 
     const dialog = screen.getByRole('alertdialog', { name: 'Ștergere definitivă' });
     await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');

@@ -179,7 +179,11 @@ export function ChildProfileView({
                 Toate achitările →
               </button>
             </div>
-            <PaymentHistoryTable payments={profileData.payments} showEurColumns={isEurChild} />
+            <PaymentHistoryTable
+              payments={profileData.payments}
+              showEurColumns={isEurChild}
+              onPrint={paymentId => navigate(`/achitari/${paymentId}/confirmare`)}
+            />
           </Card>
 
           <ChildAttendanceSection childId={child.id} month={month} />
@@ -212,7 +216,15 @@ function ParentRow({ name, phone, onAddPhone }: { name: string; phone: string; o
   );
 }
 
-function PaymentHistoryTable({ payments, showEurColumns }: { payments: Payment[]; showEurColumns: boolean }) {
+function PaymentHistoryTable({
+  payments,
+  showEurColumns,
+  onPrint,
+}: {
+  payments: Payment[];
+  showEurColumns: boolean;
+  onPrint: (paymentId: string) => void;
+}) {
   if (payments.length === 0) return <p className={styles.notice}>Fără achitări.</p>;
 
   const columns: DataTableColumn<Payment>[] = [
@@ -254,6 +266,22 @@ function PaymentHistoryTable({ payments, showEurColumns }: { payments: Payment[]
       header: '',
       render: payment => (
         <Badge tone={payment.archived ? 'neutral' : 'mint'}>{payment.archived ? 'Arhivată' : 'Achitat'}</Badge>
+      ),
+    },
+    {
+      key: 'print',
+      header: '',
+      render: payment => (
+        <button
+          type="button"
+          className={styles.sectionLink}
+          onClick={event => {
+            event.stopPropagation();
+            onPrint(payment.id);
+          }}
+        >
+          Tipărește
+        </button>
       ),
     },
   ];

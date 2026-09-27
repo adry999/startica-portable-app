@@ -1,0 +1,699 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-10);
+  align-self: flex-start;
+}
+
+/* ————————————————————————————————— A5 (16b) ————————————————————————————————— */
+
+.sheetA5 {
+  width: 559px;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  padding: 40px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  color: var(--slate);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding-bottom: var(--space-16);
+  border-bottom: 2px solid var(--orange);
+}
+
+.logo {
+  height: 34px;
+  width: auto;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+}
+
+.kindergartenInfo {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.35;
+}
+
+.kindergartenInfo strong {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-12);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--orange-ink);
+}
+
+.receiptNumber {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.receiptDate {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: var(--space-8) var(--space-16);
+  font-size: 12px;
+}
+
+.detailsGrid dt {
+  color: var(--muted);
+}
+
+.detailsGrid dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.detailsGrid dd.strong {
+  font-weight: 800;
+}
+
+.allocationTable {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--slate);
+}
+
+.allocationHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  padding: var(--space-8) 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.allocationRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  padding: var(--space-10) 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.allocationAmount {
+  text-align: right;
+  font-weight: 700;
+}
+
+.totalRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  align-items: baseline;
+  padding: var(--space-12) 0;
+}
+
+.totalLabel {
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.totalAmount {
+  text-align: right;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.amountInWords {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.eurBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-soft);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.eurBlock strong {
+  color: var(--slate);
+}
+
+.restBox {
+  padding: var(--space-12) var(--space-14);
+  border-radius: var(--radius-sm);
+  background: var(--yellow-soft);
+  font-size: 11px;
+  line-height: 1.45;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.restBox strong {
+  font-weight: 800;
+}
+
+.signatures {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-28);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.signatureLine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.signatureRule {
+  height: 34px;
+  border-bottom: 1px solid var(--slate);
+}
+
+.footer {
+  margin: 0;
+  font-size: 9px;
+  color: var(--subtle);
+  border-top: 1px solid var(--row-divider);
+  padding-top: var(--space-10);
+}
+
+/* ————————————————————————————————— A4 · 1/3 + 2/3 (16d–16g) ————————————————————————————————— */
+
+.sheetA4 {
+  width: 1123px;
+  height: 794px;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  display: grid;
+  grid-template-columns: 374px 1px minmax(0, 1fr);
+  color: var(--slate);
+}
+
+.kindergartenCopy {
+  padding: 30px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  min-width: 0;
+}
+
+.kindergartenCopyHead {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-bottom: var(--space-10);
+  border-bottom: 2px solid var(--slate);
+}
+
+.copyTag {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--slate);
+  padding: 3px 8px;
+  border: 1px solid var(--slate);
+  border-radius: 4px;
+}
+
+.kindergartenCopyNumberRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-10);
+}
+
+.kindergartenCopyNumber {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.kindergartenCopyDate {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.kindergartenCopyDetails {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 5px var(--space-10);
+  font-size: 11px;
+}
+
+.kindergartenCopyDetails dt {
+  color: var(--muted);
+}
+
+.kindergartenCopyDetails dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.kindergartenCopyTotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--slate);
+  border-bottom: 1px solid var(--slate);
+}
+
+.kindergartenCopyTotal strong {
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.kindergartenCopyTotalAmount {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.kindergartenCopySignatures {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.cutLine {
+  position: relative;
+  border-left: 1.5px dashed var(--subtle);
+  z-index: 1;
+}
+
+.cutLabel {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  background: var(--white);
+  padding: 0 var(--space-8);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  white-space: nowrap;
+}
+
+.stamp {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--subtle);
+}
+
+.parentCopy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.parentBand {
+  position: relative;
+  overflow: hidden;
+  background: var(--yellow);
+  padding: 26px 44px 22px 52px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-18);
+}
+
+.parentBandCircleOrange,
+.parentBandCirclePink,
+.parentBandCircleMint {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.parentBandCircleOrange {
+  right: -40px;
+  top: -60px;
+  width: 190px;
+  height: 190px;
+  background: var(--orange);
+  opacity: 0.9;
+}
+
+.parentBandCirclePink {
+  right: 120px;
+  top: -26px;
+  width: 64px;
+  height: 64px;
+  background: var(--pink);
+}
+
+.parentBandCircleMint {
+  right: 170px;
+  bottom: -22px;
+  width: 44px;
+  height: 44px;
+  background: var(--mint);
+}
+
+.parentBandIcon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md-lg);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--orange-ink);
+}
+
+.parentBandTitle {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.parentBandTitle strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.parentBandTitle span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange-ink);
+}
+
+.parentBody {
+  flex: 1;
+  padding: 24px 44px 26px 52px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  min-height: 0;
+}
+
+.childRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.childAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--mint-ink);
+  border: 3px solid var(--white);
+  box-shadow: 0 0 0 2px var(--mint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.childInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.childName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.childName strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.childMeta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.paidAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.paidAmount span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.paidAmount strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.yearBandHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-10);
+}
+
+.yearBandHead span:first-child {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.yearBandHead span:last-child {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.yearBand {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.yearBandCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 2px 7px;
+  border-radius: var(--radius-sm);
+}
+
+.yearBandCell.paid {
+  background: var(--mint-soft);
+  border: 1.5px solid var(--mint);
+  color: var(--mint-ink);
+}
+
+.yearBandCell.partial {
+  background: var(--yellow-soft);
+  border: 1.5px solid var(--yellow);
+  color: var(--yellow-ink);
+}
+
+.yearBandCell.other {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--subtle);
+}
+
+.yearBandCell span:first-child {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.yearBandCell span:last-child {
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.parentTable {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--slate);
+}
+
+.parentTableHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 120px;
+  gap: var(--space-12);
+  padding: 7px 0;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.parentTableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 120px;
+  gap: var(--space-12);
+  padding: 9px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.parentTableAmount {
+  text-align: right;
+  font-weight: 700;
+}
+
+.parentTableRest {
+  text-align: right;
+  font-weight: 800;
+}
+
+.parentTableRest.zero {
+  color: var(--mint-ink);
+}
+
+.parentNote {
+  padding-top: var(--space-8);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.parentBottom {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: var(--space-28);
+  align-items: end;
+}
+
+.parentIban {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.parentIban strong {
+  color: var(--slate);
+}
+
+.parentFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+  font-size: 9px;
+  color: var(--subtle);
+  border-top: 1px solid var(--row-divider);
+  padding-top: var(--space-8);
+}
+
+/* ————————————————————————————————— tipărire ————————————————————————————————— */
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+
+  .page {
+    align-items: stretch;
+  }
+
+  .sheetA5 {
+    box-shadow: none;
+    width: auto;
+  }
+
+  .sheetA4 {
+    box-shadow: none;
+    width: auto;
+    height: auto;
+  }
+}
