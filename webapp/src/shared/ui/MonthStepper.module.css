@@ -3,9 +3,15 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--yellow-soft);
-  border: 1px solid #f6e3a6;
+  border: 1px solid var(--yellow-border);
   border-radius: var(--radius-pill);
   padding: var(--space-4);
+}
+
+/* Ecrane fără meniu de lună (Prezența/Luna, Raport) — aceeași formă ca DayStepper. */
+.white {
+  background: var(--white);
+  border: 1.5px solid var(--border);
 }
 
 .arrow {
@@ -17,6 +23,12 @@
   background: var(--white);
   font-size: 16px;
   line-height: 1;
+}
+
+.arrowWhite {
+  width: 30px;
+  height: 30px;
+  background: var(--cream);
 }
 
 .label {

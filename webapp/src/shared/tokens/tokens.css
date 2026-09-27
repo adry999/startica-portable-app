@@ -74,6 +74,14 @@
   --sand-soft: #faf7f1;
   /* Prezența · Luna (18b): fundalul weekend-urilor și sărbătorilor din grilă. */
   --off-day: #f6f4f0;
+  /* Bordura pilulei galbene de lună (MonthPicker/MonthStepper) — Dashboard, Situația, Zile de naștere. */
+  --yellow-border: #f6e3a6;
+  /* Bordura cardului „dashed” din Dashboard (Card tone="dashed"); Grupe folosește --dashed-border-empty. */
+  --dashed-border: #e6d9c4;
+  /* Stare goală „Primul pas” (13-formulare.md §15e) și cardul dashed din Grupe. */
+  --dashed-border-empty: #e0d5c2;
+  /* Dashboard: bara „lună trecută” din progresul de completare a taxelor. */
+  --orange-bar-past: #f6c98f;
 
   /* Tipografie. */
   --font-heading: 'Baloo 2', Arial, sans-serif;
