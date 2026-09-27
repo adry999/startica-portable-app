@@ -149,7 +149,7 @@ describe('ReportPage', () => {
     renderPage();
 
     expect(screen.getByText('Pe zile')).toBeInTheDocument();
-    expect(screen.getByText('Total perioadă')).toBeInTheDocument();
+    expect(screen.getByText('Total lună')).toBeInTheDocument();
   });
 
   it('deschide panoul de export la click pe butonul din antet, cu avertizarea de achitări neasociate', async () => {

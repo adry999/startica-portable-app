@@ -50,7 +50,7 @@ export function ReportPage({ month, onMonthChange, onOpenPayments, onOpenAssign 
           <ReportMethodsPanel report={data.report} />
           <ReportCategoriesPanel report={data.report} />
         </div>
-        <ReportDaysTable report={data.report} onOpenPayments={onOpenPayments} />
+        <ReportDaysTable report={data.report} mode={mode} onOpenPayments={onOpenPayments} />
       </div>
 
       <ReportExportDrawer

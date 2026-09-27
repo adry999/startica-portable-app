@@ -1,20 +1,23 @@
 import { Card } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import type { AccountingReport } from './useAccountingReport';
+import type { AccountingReport, ReportMode } from './useAccountingReport';
 import styles from './ReportDaysTable.module.css';
 
 export interface ReportDaysTableProps {
   report: AccountingReport;
+  mode: ReportMode;
   onOpenPayments: () => void;
 }
+
+const TOTAL_LABEL: Record<ReportMode, string> = { month: 'Total lună', quarter: 'Total trimestru', year: 'Total an' };
 
 function formatSigned(amount: number): string {
   return `${amount < 0 ? '−' : '+'}${formatMoney(Math.abs(amount))}`;
 }
 
 /** Tabelul „Pe zile” (19a) — doar zilele cu mișcări, cu rândul Total la final. */
-export function ReportDaysTable({ report, onOpenPayments }: ReportDaysTableProps) {
+export function ReportDaysTable({ report, mode, onOpenPayments }: ReportDaysTableProps) {
   const totals = report.days.reduce(
     (sum, day) => ({
       cash: sum.cash + day.cash,
@@ -54,7 +57,7 @@ export function ReportDaysTable({ report, onOpenPayments }: ReportDaysTableProps
       ))}
       {!report.days.length && <p className={styles.empty}>Nicio mișcare în această perioadă.</p>}
       <div className={styles.totalRow}>
-        <span>Total perioadă</span>
+        <span>{TOTAL_LABEL[mode]}</span>
         <span className={styles.alignEnd}>{formatMoney(totals.cash)}</span>
         <span className={styles.alignEnd}>{formatMoney(totals.cardTransfer)}</span>
         <span className={`${styles.alignEnd} ${styles.expense}`}>
