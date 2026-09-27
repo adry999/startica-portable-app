@@ -75,3 +75,21 @@ test('schema creează sms_log și sms_templates cu indexurile lor, idempotent', 
   );
   db.close();
 });
+
+test('schema creează attendance cu cheia (child_id,date) și indexul pe date, idempotent', t => {
+  const { db } = openDatabase(createTemporaryHome(t));
+  applySchema(db);
+  const table = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='attendance'").get();
+  assert.ok(table, 'tabelul attendance a fost creat');
+
+  const indexes = db.prepare("PRAGMA index_list('attendance')").all();
+  const indexNames = indexes.map(row => row.name);
+  assert.ok(indexNames.includes('attendance_date'), 'indexul attendance_date există');
+  assert.ok(
+    indexes.some(row => row.origin === 'pk'),
+    'indexul cheii primare (child_id,date) există',
+  );
+
+  assert.doesNotThrow(() => applySchema(db));
+  db.close();
+});

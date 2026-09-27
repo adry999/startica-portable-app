@@ -10,7 +10,9 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
   CREATE TABLE IF NOT EXISTS sms_templates(id TEXT PRIMARY KEY,name TEXT NOT NULL,body TEXT NOT NULL,strip_diacritics INTEGER NOT NULL DEFAULT 1,is_default INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS sms_log(id INTEGER PRIMARY KEY,created_at TEXT NOT NULL,child_id TEXT,recipient_name TEXT NOT NULL,child_name TEXT NOT NULL,phone TEXT NOT NULL,text TEXT NOT NULL,template_id TEXT,template_name TEXT NOT NULL,month TEXT,source TEXT NOT NULL,characters INTEGER NOT NULL,segments INTEGER NOT NULL,encoding TEXT NOT NULL,cost TEXT,status TEXT NOT NULL,provider_id TEXT,provider_status TEXT NOT NULL DEFAULT '',provider_error TEXT NOT NULL DEFAULT '',status_checked_at TEXT NOT NULL DEFAULT '');
   CREATE INDEX IF NOT EXISTS sms_log_child_created ON sms_log(child_id,created_at);
-  CREATE INDEX IF NOT EXISTS sms_log_status ON sms_log(status);`;
+  CREATE INDEX IF NOT EXISTS sms_log_status ON sms_log(status);
+  CREATE TABLE IF NOT EXISTS attendance(child_id TEXT NOT NULL,date TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,PRIMARY KEY(child_id,date));
+  CREATE INDEX IF NOT EXISTS attendance_date ON attendance(date);`;
 
 /** @param {import('node:sqlite').DatabaseSync} database */
 export function applySchema(database) {
