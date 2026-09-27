@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { applySchema } from '#core/server/database/schema.mjs';
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { createRecordingAuditTrail } from '#test-support/recording-audit-trail.mjs';
+import { startTestApplication } from '#test-support/start-test-application.mjs';
 import { createSmsRoutes } from './sms.routes.mjs';
 import { createSmsService } from './sms.service.mjs';
 import { smsConfigFilePath } from './sms-config.repository.mjs';
@@ -254,5 +255,14 @@ test('template-delete pe șablonul implicit întoarce 400', async t => {
   assert.match(response.body.error, /implicit nu se poate șterge/);
 });
 
-// Cazul de la nivel de aplicație (createApplication, app.expireSmsLog) e adăugat la Task 15,
-// odată cu integrarea rutelor în composition root.
+test('GET /api/sms-status neconfigurat nu face niciun apel de rețea, prin createApplication', async t => {
+  const { get } = await startTestApplication(t, { fetch: createFakeSmsApi().fetch });
+  const status = await get('/api/sms-status');
+  assert.equal(status.configured, false);
+});
+
+test('app.expireSmsLog expiră rândurile mai vechi de 365 de zile', async t => {
+  const { app } = await startTestApplication(t, { fetch: createFakeSmsApi().fetch });
+  const result = app.expireSmsLog('2026-09-27');
+  assert.deepEqual(result, { expired: 0 });
+});

@@ -24,6 +24,7 @@ import { createChildrenRoutes } from '#features/children/index.server.mjs';
 import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
+import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
@@ -158,6 +159,12 @@ export function createApplication(options = {}) {
       telegramService: createTelegramService({ fetch: options.fetch ?? globalThis.fetch }),
       auditTrail: auditLogRepository,
     }),
+    ...createSmsRoutes({
+      database: db,
+      dataDirectory: dataDir,
+      smsService: createSmsService({ fetch: options.fetch ?? globalThis.fetch }),
+      auditTrail: auditLogRepository,
+    }),
     ...createNotificationSettingsRoutes({
       dataDirectory: dataDir,
       readSetting,
@@ -211,6 +218,11 @@ export function createApplication(options = {}) {
     safeBackup: backups.safeBackup,
     health: backups.health,
     expireHealthNotes: visitsService.expireHealthNotes,
+    // Un al doilea repository doar pentru sweep e mai simplu decât să scoatem instanța rutelor.
+    // Implicit today(): expireOldEntries n-are valoare implicită pentru todayStr, iar main.mjs
+    // apelează fără argument, ca la expireHealthNotes (deviere față de planul literal).
+    /** @param {string} [todayStr] */
+    expireSmsLog: (todayStr = today()) => createSmsLogRepository(db).expireOldEntries(todayStr),
     refreshExchangeRateIfMissing,
     envelope: recordRepository.readEnvelope,
     close: () =>

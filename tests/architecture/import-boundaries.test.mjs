@@ -120,6 +120,12 @@ test('permite dependențele din arhitectura țintă', () => {
         '#features/billing/index.server.mjs',
         '#features/telegram-notify/index.server.mjs',
       ),
+      sourceFile(
+        'src/features/sms-notify/domain/sms-batch.mjs',
+        '#shared/domain/phone-number.mjs',
+        '#shared/domain/sms-template.mjs',
+      ),
+      sourceFile('src/app/server/create-application.mjs', '#features/sms-notify/index.server.mjs'),
     ]),
     [],
   );
@@ -169,6 +175,10 @@ test('semnalează fiecare tip de încălcare a granițelor', () => {
         'src/features/telegram-notify/server/telegram-digest-helper.mjs',
         '#features/children/index.server.mjs',
       ),
+      'feature-imports-feature',
+    ],
+    [
+      sourceFile('src/features/sms-notify/server/sms-send.service.mjs', '#features/billing/index.server.mjs'),
       'feature-imports-feature',
     ],
   ];

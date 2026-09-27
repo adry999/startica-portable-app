@@ -93,6 +93,11 @@ export function startServer() {
         console.error('Expirare date medicale: ' + /** @type {Error} */ (e).message);
       }
       try {
+        app.expireSmsLog();
+      } catch (e) {
+        console.error('Expirare jurnal SMS: ' + /** @type {Error} */ (e).message);
+      }
+      try {
         app.refreshExchangeRateIfMissing();
       } catch (e) {
         console.error('Curs BNM la pornire: ' + /** @type {Error} */ (e).message);
