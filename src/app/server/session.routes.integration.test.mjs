@@ -33,7 +33,12 @@ test('POST /api/shutdown răspunde 404 când nu este permisă oprirea', async t 
 
 test('Oprire desktop autentificată, cu backup final și închiderea bazei', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'startica-shutdown-'));
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), allowShutdown: true });
+  const app = createApplication({
+    dataDir: join(dir, 'data'),
+    backupDir: join(dir, 'backups'),
+    home: dir,
+    allowShutdown: true,
+  });
   await new Promise(done => app.server.listen(0, '127.0.0.1', done));
   const url = `http://127.0.0.1:${app.server.address().port}`;
   try {
@@ -70,7 +75,12 @@ test('Oprire desktop autentificată, cu backup final și închiderea bazei', asy
 
 test('al doilea POST /api/shutdown nu face un al doilea backup', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'startica-shutdown-'));
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), allowShutdown: true });
+  const app = createApplication({
+    dataDir: join(dir, 'data'),
+    backupDir: join(dir, 'backups'),
+    home: dir,
+    allowShutdown: true,
+  });
   await new Promise(done => app.server.listen(0, '127.0.0.1', done));
   const url = `http://127.0.0.1:${app.server.address().port}`;
   try {

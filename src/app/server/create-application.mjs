@@ -3,44 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, dataLayout } from '#config/environment.mjs';
-import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
-import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
-import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
-import { createRevisionTransaction } from '#core/server/persistence/revision-transaction.mjs';
-import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
-import { createAuditLogRepository, createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
-import { createBackupService, createBackupRoutes } from '#features/backup/index.server.mjs';
-import {
-  createPaymentAssignmentService,
-  createPaymentAssignmentRoutes,
-} from '#features/payment-assignment/index.server.mjs';
-import { createGroupsRoutes } from '#features/groups/index.server.mjs';
-import { createExpenseCategoriesRoutes } from '#features/expenses/index.server.mjs';
-import { createFeeSetupRoutes } from '#features/fee-setup/index.server.mjs';
-import { createRecordEditingRoutes } from '#features/record-editing/index.server.mjs';
-import { createVisitsService, createVisitsRoutes } from '#features/visits/index.server.mjs';
-import { createChildrenRoutes } from '#features/children/index.server.mjs';
-import { createDataTransferRoutes } from '#features/data-transfer/index.server.mjs';
-import { findRecordIssues } from '#features/review-center/index.server.mjs';
-import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
-import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
-import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
-import { createSessionRoutes } from './session.routes.mjs';
-import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
-import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
-import { createNotificationSettingsRoutes } from './notification-settings.routes.mjs';
-import { createPlanPresetsRoutes } from './plan-presets.routes.mjs';
-import { createKindergartenSettingsRoutes } from './kindergarten-settings.routes.mjs';
-import { createReceiptNumberingService, createReceiptNumberingRoutes } from '#features/receipts/index.server.mjs';
-import {
-  parseExchangeRates,
-  clampExchangeRates,
-  parseExchangeRateSources,
-  clampExchangeRateSources,
-} from '#shared/domain/exchange-rates.mjs';
-import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
-import { today, shiftDays } from '#shared/domain/calendar-month.mjs';
+import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, BRANCH_REGISTRY_FILE_NAME, dataLayout } from '#config/environment.mjs';
+import { fail } from '#core/server/errors/domain-error.mjs';
+import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
+import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
+import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
+import { createBranchContext } from './create-branch-context.mjs';
+
+/** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 // Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
@@ -59,200 +29,157 @@ const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
  * }} [options]
  */
 export function createApplication(options = {}) {
-  const root = options.root || ROOT,
-    layout = dataLayout(root),
-    dataDir = options.dataDir || layout.dataDir,
-    backupDir = options.backupDir || layout.backupDir;
+  const root = options.root || ROOT;
+  // Rădăcina filialelor (registru + folderul Filiale\): implicit rădăcina de date de până acum,
+  // ca instalările existente, fără STARTICA_HOME sau root explicit, să nu schimbe nimic (Faza 6, decizia 3).
+  const home = options.home ?? options.root ?? ROOT;
+  const legacyLayout = dataLayout(home);
+  const legacy = {
+    dataDir: options.dataDir || legacyLayout.dataDir,
+    backupDir: options.backupDir || legacyLayout.backupDir,
+  };
   const autoBackupIntervalMs = Number.isFinite(options.autoBackupIntervalMs)
     ? /** @type {number} */ (options.autoBackupIntervalMs)
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
-
-  const { db, dbFile } = openDatabase({ dataDir, backupDir });
-  // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers) ar arunca la o bază deja închisă.
-  let databaseClosed = false;
-  function closeDatabase() {
-    if (databaseClosed) return;
-    databaseClosed = true;
-    db.close();
-  }
-  const settings = createSettingsRepository(db);
-  // settings.setting citește o coloană SQLite (tip generic în node:sqlite); valorile scrise
-  // sunt mereu string (vezi settings-repository.mjs), deci tipul e sigur aici.
-  const readSetting = /** @type {(key: string) => string} */ (settings.setting);
-  const backups = createBackupService({
-    database: db,
-    databaseFile: dbFile,
-    backupDirectory: backupDir,
-    dataDirectory: dataDir,
-    readSetting,
-    writeSetting: settings.setSetting,
-    autoBackupIntervalMs,
-  });
-
-  const recordRepository = createRecordRepository(db);
-  const auditLogRepository = createAuditLogRepository(db);
-  const { runRevisionTransaction, replaceAllRecords } = createRevisionTransaction({
-    database: db,
-    recordRepository,
-    backups,
-    auditTrail: auditLogRepository,
-  });
-
-  // Tokenul de sesiune se schimbă la fiecare pornire: o filă rămasă deschisă
-  // dintr-o rulare anterioară trebuie să reîncarce înainte să scrie.
+  // Tokenul de sesiune se schimbă la fiecare pornire a procesului, nu la fiecare
+  // schimbare de filială: o filă rămasă deschisă dintr-o rulare anterioară trebuie
+  // să reîncarce înainte să scrie, indiferent pe ce filială scrie.
   const token = randomUUID();
+  const registryFile = join(home, BRANCH_REGISTRY_FILE_NAME);
+  const registry = createBranchRegistryStore({ file: registryFile, createId: randomUUID });
 
-  const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
-  const paymentAssignmentService = createPaymentAssignmentService(recordWriteDependencies);
-  const receiptNumberingService = createReceiptNumberingService({
-    ...recordWriteDependencies,
-    readSetting,
-    writeSetting: settings.setSetting,
-  });
-  const visitsService = createVisitsService(recordWriteDependencies);
-  // readEnvelope() nu are câmpul „ok” din RevisionEnvelope (nu e rezultatul unei scrieri);
-  // rutele de previzualizare citesc doar state/revision/updatedAt din el.
-  const readEnvelope = /** @type {() => import('#shared/contracts/persistence.mjs').RevisionEnvelope} */ (
-    recordRepository.readEnvelope
-  );
+  let switching = false;
+  /** @type {import('./create-branch-context.mjs').createBranchContext extends (...args: any) => infer R ? R : never} */
+  let active;
 
-  const routes = [
-    ...createSessionRoutes({
-      sessionToken: token,
-      version,
-      readEnvelope: recordRepository.readEnvelope,
-      backupService: backups,
-      allowShutdown: !!options.allowShutdown,
-      shutdown: () => {
-        server.close(() => closeDatabase());
-        server.closeIdleConnections();
-      },
-    }),
-    ...createDiagnosticRoutes({
-      version,
+  function shutdownServer() {
+    server.close(() => active.close());
+    server.closeIdleConnections();
+  }
+
+  // Rutele filialelor (Task 3, branches.routes.mjs) sunt adăugate aici, o singură
+  // dată; fiecare filială deschisă le include, pentru că ele nu țin de o filială
+  // anume — citesc/scriu registrul și comută `active` din afara oricărui context.
+  /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */
+  const branchRoutes = [];
+
+  /** @param {BranchEntry} branch */
+  function openBranchContext(branch) {
+    const dirs = branchDirectories({ home, legacy, branch });
+    return createBranchContext({
+      branch,
+      dataDir: dirs.dataDir,
+      backupDir: dirs.backupDir,
+      // Home-ul afișat în diagnostic (Task 5, nu în această fază) rămâne exact ce a
+      // dat lansatorul, nu rădăcina rezolvată mai sus — un dev fără STARTICA_HOME
+      // trebuie să vadă tot „” ca înainte de Faza 6.
       home: options.home,
       logFile: options.logFile,
-      database: dbFile,
-      backupDirectory: backupDir,
-      readSetting,
-      backupService: backups,
+      root,
+      version,
+      sessionToken: token,
+      autoBackupIntervalMs,
       allowShutdown: !!options.allowShutdown,
-    }),
-    ...createAuditLogRoutes({ auditLogRepository }),
-    ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
-    ...createVisitsRoutes({ visitsService }),
-    ...createRecordEditingRoutes(recordWriteDependencies),
-    ...createChildrenRoutes({ ...recordWriteDependencies, readEnvelope }),
-    ...createDataTransferRoutes({
-      ...recordWriteDependencies,
-      replaceAllRecords,
-      readEnvelope,
-      findRecordIssues,
-    }),
-    ...createGroupsRoutes(recordWriteDependencies),
-    ...createExpenseCategoriesRoutes(recordWriteDependencies),
-    ...createFeeSetupRoutes(recordWriteDependencies),
-    ...createBackupRoutes({
-      backupService: backups,
-      readSetting,
-      writeSetting: settings.setSetting,
-      auditTrail: auditLogRepository,
-      runRevisionTransaction,
-      replaceAllRecords,
-      dataDirectory: dataDir,
-      backupDirectory: backupDir,
-    }),
-    ...createTelegramRoutes({
-      dataDirectory: dataDir,
-      telegramService: createTelegramService({ fetch: options.fetch ?? globalThis.fetch }),
-      auditTrail: auditLogRepository,
-    }),
-    ...createSmsRoutes({
-      database: db,
-      dataDirectory: dataDir,
-      smsService: createSmsService({ fetch: options.fetch ?? globalThis.fetch }),
-      auditTrail: auditLogRepository,
-    }),
-    ...createAttendanceRoutes({ database: db, recordRepository }),
-    ...createNotificationSettingsRoutes({
-      dataDirectory: dataDir,
-      readSetting,
-      writeSetting: settings.setSetting,
-      auditTrail: auditLogRepository,
-    }),
-    ...createExchangeRatesRoutes({
-      readSetting,
-      writeSetting: settings.setSetting,
       fetch: options.fetch ?? globalThis.fetch,
-    }),
-    ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
-    ...createKindergartenSettingsRoutes({ readSetting, writeSetting: settings.setSetting }),
-    ...createReceiptNumberingRoutes({ receiptNumberingService }),
-  ];
+      shutdown: shutdownServer,
+      branchRoutes,
+    });
+  }
 
-  const { dispatchRequest } = createRouteDispatcher({
-    root,
-    sessionToken: token,
-    // Fiecare feature își tipează propriile rute; adunate aici, TS lărgește
-    // `method` la string — cast spre forma așteptată de dispatcher.
-    routes: /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (routes),
-  });
+  // Un registru care există dar nu se poate citi oprește pornirea aici, înainte
+  // de a deschide vreo bază — altfel am recrea registrul peste folderul unei
+  // filiale #2 deja existente (decizia 4 din plan).
+  const existingRegistry = readBranchRegistry(registryFile);
+  if (existingRegistry) {
+    const target =
+      existingRegistry.branches.find(branch => branch.id === existingRegistry.lastBranchId) ??
+      existingRegistry.branches[0];
+    active = openBranchContext(target);
+  } else {
+    // Filiala #1: rămâne pe folderele vechi, fără nicio mutare de fișier — placeholder-ul
+    // de mai jos e înlocuit cu intrarea reală imediat ce citim numele grădiniței din bază.
+    active = openBranchContext({ id: '', name: '', color: 'orange', address: '', createdAt: '', folder: null });
+    const kindergarten = parseKindergartenSettings(active.readSetting('kindergarten'));
+    const created = registry.ensure({
+      name: kindergarten.name || 'Filiala principală',
+      color: 'orange',
+      address: kindergarten.address,
+      folder: null,
+    });
+    active.branch = created.branches.find(branch => branch.folder === null) ?? created.branches[0];
+  }
+
   const server = createServer((req, res) =>
-    dispatchRequest(req, res, /** @type {import('node:net').AddressInfo} */ (server.address()).port),
+    active.dispatchRequest(req, res, /** @type {import('node:net').AddressInfo} */ (server.address()).port),
   );
 
-  // Apelat o dată la pornire (main.mjs): completează retroactiv orice zi
-  // lucrătoare fără curs salvat, nu doar ziua curentă — dacă aplicația a stat
-  // închisă câteva zile, un calcul ulterior tot trebuie să găsească exact
-  // cursul zilei respective, nu doar pe cel mai recent cunoscut. Fără istoric
-  // deloc (instalare nouă), completarea se oprește la ultimele
-  // EXCHANGE_RATE_BACKFILL_DAYS zile. Nu aruncă niciodată — o zi fără curs
-  // publicat (weekend, sărbătoare) sau un eșec de rețea rămâne pur și simplu
-  // necompletată, fără să oprească celelalte zile din interval.
-  const EXCHANGE_RATE_BACKFILL_DAYS = 30;
-  async function refreshExchangeRateIfMissing() {
-    const todayStr = today();
-    const current = parseExchangeRates(readSetting('exchangeRates'));
-    const currentSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
-    const lastKnownDate = Object.keys(current).sort().at(-1);
-    const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
-    if (startDate > todayStr) return;
+  /** @returns {BranchEntry} */
+  function activeBranch() {
+    return active.branch;
+  }
 
-    const rates = { ...current };
-    const sources = { ...currentSources };
-    for (let date = startDate; date <= todayStr; date = shiftDays(date, 1)) {
-      if (Object.hasOwn(rates, date)) continue;
-      const result = await fetchBnmEurRate({ fetch: options.fetch ?? globalThis.fetch, date });
-      if ('rate' in result) {
-        rates[date] = result.rate;
-        sources[date] = 'bnm';
+  // Comutarea filialei active (Task 3 o expune prin POST /api/branches/select):
+  // backup „schimbare-filiala” pe cea veche, deschidere a celei noi, punctare a
+  // `active` spre ea; închiderea celei vechi și sweep-urile celei noi sunt
+  // amânate cu un tick, ca răspunsul HTTP să nu aștepte după ele (decizia 2).
+  /** @param {string} id */
+  function selectBranch(id) {
+    if (id === active.branch.id) return active.branch;
+    if (switching) fail('Schimbarea filialei e deja în curs.', 409);
+    const target = registry.find(id);
+    if (!target) fail('Filială inexistentă.', 404);
+    switching = true;
+    try {
+      active.backups.cancelScheduledBackup();
+      active.backups.safeBackup('schimbare-filiala');
+      let next;
+      try {
+        next = openBranchContext(target);
+      } catch (error) {
+        console.error(/** @type {Error} */ (error).stack);
+        fail(`Filiala „${target.name}” nu s-a putut deschide: ${/** @type {Error} */ (error).message}`, 500);
       }
+      const previous = active;
+      active = next;
+      registry.setLastBranchId(id);
+      setTimeout(() => {
+        previous.close();
+        next.runStartupSweeps();
+      }, 0);
+      return next.branch;
+    } finally {
+      switching = false;
     }
-    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates(rates)));
-    settings.setSetting('exchangeRateSources', JSON.stringify(clampExchangeRateSources(sources)));
   }
 
   return {
     server,
-    db,
-    database: dbFile,
-    backup: backups.backup,
-    safeBackup: backups.safeBackup,
-    health: backups.health,
-    expireHealthNotes: visitsService.expireHealthNotes,
-    // Un al doilea repository doar pentru sweep e mai simplu decât să scoatem instanța rutelor.
-    // Implicit today(): expireOldEntries n-are valoare implicită pentru todayStr, iar main.mjs
-    // apelează fără argument, ca la expireHealthNotes (deviere față de planul literal).
+    get db() {
+      return active.db;
+    },
+    get database() {
+      return active.dbFile;
+    },
+    /** @param {string} [reason] */
+    backup: reason => active.backup(reason),
+    /** @param {string} [reason] */
+    safeBackup: reason => active.safeBackup(reason),
+    health: () => active.health(),
     /** @param {string} [todayStr] */
-    expireSmsLog: (todayStr = today()) => createSmsLogRepository(db).expireOldEntries(todayStr),
-    refreshExchangeRateIfMissing,
-    envelope: recordRepository.readEnvelope,
+    expireHealthNotes: todayStr => active.expireHealthNotes(todayStr),
+    /** @param {string} [todayStr] */
+    expireSmsLog: todayStr => active.expireSmsLog(todayStr),
+    refreshExchangeRateIfMissing: () => active.refreshExchangeRateIfMissing(),
+    runStartupSweeps: () => active.runStartupSweeps(),
+    envelope: () => active.envelope(),
+    activeBranch,
+    selectBranch,
+    registry,
     close: () =>
       /** @type {Promise<void>} */ (
         new Promise(resolveClose => {
-          backups.cancelScheduledBackup();
           server.close(() => {
-            closeDatabase();
+            active.close();
             resolveClose();
           });
         })

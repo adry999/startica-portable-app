@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, renameSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  renameSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -153,7 +162,7 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   const state = { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [] };
   old.prepare('INSERT INTO app_state VALUES(1,?)').run(JSON.stringify(state));
   old.close();
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups') });
+  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
   assert.deepEqual(app.envelope().state, { ...state, visits: [] });
   assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
   app.db.close();
@@ -162,4 +171,64 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
     resolve(dir).startsWith(resolve(tmpdir()) + '/startica-migration-')
   )
     rmSync(dir, { recursive: true, force: true });
+});
+
+test('Prima pornire creează filiale.json cu filiala principală pe folderele vechi și nu mută nimic', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-branch-first-run-'));
+  const dataDir = join(dir, 'data');
+  const backupDir = join(dir, 'backups');
+  const registryFile = join(dir, 'filiale.json');
+  try {
+    const first = createApplication({ dataDir, backupDir, home: dir, autoBackupIntervalMs: 0 });
+    await new Promise(done => first.server.listen(0, '127.0.0.1', done));
+    const origin = `http://127.0.0.1:${/** @type {import('node:net').AddressInfo} */ (first.server.address()).port}`;
+    const { token } = await (await fetch(origin + '/api/session')).json();
+    const importRequest = {
+      state: { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [], visits: [] },
+      confirm: 'IMPORT',
+      revision: 0,
+      requestId: randomUUID(),
+    };
+    const imported = await fetch(origin + '/api/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
+      body: JSON.stringify(importRequest),
+    });
+    assert.equal(imported.status, 200);
+    const revisionAfterImport = (await imported.json()).revision;
+    await first.close();
+
+    assert.ok(existsSync(registryFile), 'filiale.json nu a fost creat la prima pornire');
+    const registryAfterFirstRun = JSON.parse(readFileSync(registryFile, 'utf8'));
+    assert.equal(registryAfterFirstRun.branches.length, 1);
+    assert.equal(registryAfterFirstRun.branches[0].folder, null, 'filiala migrată nu are voie să mute datele');
+    assert.equal(registryAfterFirstRun.lastBranchId, registryAfterFirstRun.branches[0].id);
+    assert.ok(existsSync(join(dataDir, 'startica.db')), 'datele vechi trebuie să rămână pe loc, nu mutate');
+    assert.ok(!existsSync(join(dir, 'Filiale')), 'o instalare cu o singură filială nu are voie să creeze Filiale\\');
+
+    const second = createApplication({ dataDir, backupDir, home: dir, autoBackupIntervalMs: 0 });
+    assert.equal(second.envelope().revision, revisionAfterImport, 'restart-ul trebuie să vadă exact aceleași date');
+    second.db.close();
+    const registryAfterRestart = JSON.parse(readFileSync(registryFile, 'utf8'));
+    assert.deepEqual(registryAfterRestart, registryAfterFirstRun, 'o a doua pornire nu rescrie registrul existent');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('Un registru corupt oprește pornirea cu mesaj', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-branch-corrupt-'));
+  try {
+    writeFileSync(join(dir, 'filiale.json'), '{ nu e json');
+    assert.throws(
+      () => createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir }),
+      /Registrul filialelor \(filiale\.json\) este corupt/,
+    );
+    assert.ok(
+      !existsSync(join(dir, 'data', 'startica.db')),
+      'niciun fișier nu are voie să fie creat înainte de eroare',
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -87,21 +87,10 @@ export function startServer() {
       } catch (e) {
         console.error('Backup la pornire: ' + /** @type {Error} */ (e).message);
       }
-      try {
-        app.expireHealthNotes();
-      } catch (e) {
-        console.error('Expirare date medicale: ' + /** @type {Error} */ (e).message);
-      }
-      try {
-        app.expireSmsLog();
-      } catch (e) {
-        console.error('Expirare jurnal SMS: ' + /** @type {Error} */ (e).message);
-      }
-      try {
-        app.refreshExchangeRateIfMissing();
-      } catch (e) {
-        console.error('Curs BNM la pornire: ' + /** @type {Error} */ (e).message);
-      }
+      // Notele medicale, jurnalul SMS și cursul BNM: fiecare sweep își prinde
+      // singur eroarea (vezi create-branch-context.mjs), la fel la pornirea
+      // procesului ca și după o schimbare de filială din selector.
+      app.runStartupSweeps();
     }, 0);
   });
   // Lansatorul folosește existența fișierului ca să afle dacă instanța găsită mai este vie.

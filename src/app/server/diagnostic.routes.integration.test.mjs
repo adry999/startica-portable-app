@@ -13,10 +13,12 @@ test('GET /api/diagnostic răspunde 404 fără allowShutdown', async t => {
   assert.equal(response.status, 404);
 });
 
-test('GET /api/diagnostic întoarce starea aplicației, fără jurnal când nu există home', async t => {
+test('GET /api/diagnostic întoarce starea aplicației, fără jurnal când nu există fișier de jurnal', async t => {
   const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true });
   const response = await bundle.get('/api/diagnostic');
-  assert.equal(response.home, '');
+  // De la Faza 6 (filiale), startTestApplication dă mereu un home (directorul temporar al
+  // testului, ca să nu ajungă filiale.json în rădăcina reală) — vezi tests/support/start-test-application.mjs.
+  assert.equal(response.home, bundle.dir);
   assert.deepEqual(response.log, []);
   assert.equal(response.node, process.version);
   assert.equal(response.platform, process.platform);

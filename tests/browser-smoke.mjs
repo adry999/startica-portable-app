@@ -26,7 +26,12 @@ if (!existsSync(distIndex))
   throw Error('webapp/dist nu este construit. Rulează "cd webapp && npm run build" înainte de acest test.');
 
 const dir = mkdtempSync(join(tmpdir(), 'startica-browser-'));
-const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), autoBackupIntervalMs: 0 });
+const app = createApplication({
+  dataDir: join(dir, 'data'),
+  backupDir: join(dir, 'backups'),
+  home: dir,
+  autoBackupIntervalMs: 0,
+});
 await new Promise(r => app.server.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${app.server.address().port}`;
 console.log('UI test server ready');

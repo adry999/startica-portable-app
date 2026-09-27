@@ -13,6 +13,9 @@ export async function startTestApplication(t, options = {}) {
   const app = createApplication({
     dataDir: join(dir, 'data'),
     backupDir: join(dir, 'backups'),
+    // Registrul filialelor (filiale.json) trebuie să stea în directorul temporar al
+    // testului, niciodată în rădăcina reală a proiectului (vezi #config/environment.mjs).
+    home: dir,
     autoBackupIntervalMs: 0,
     fetch: fetchOverride,
     ...applicationOptions,

@@ -26,7 +26,7 @@ const CHILD = { id: 'ID-1', name: 'Copil', dueDay: 10, status: 'Activ' };
 test('Backupul curăță fișierele .tmp rămase de la o întrerupere', async t => {
   const { dir, remove } = temporary('startica-tmp-');
   const backupDir = join(dir, 'backups');
-  const app = createApplication({ dataDir: join(dir, 'data'), backupDir });
+  const app = createApplication({ dataDir: join(dir, 'data'), backupDir, home: dir });
   t.after(async () => {
     await app.close();
     remove();
