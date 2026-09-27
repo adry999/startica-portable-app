@@ -40,4 +40,7 @@ Te oprești doar dacă:
 - **14 (Raport contabil):** DONE 2026-09-27 — `/raport`, export Excel/PDF; fără selector de filială (INTREBARI.md).
 - **15 (Confirmarea de plată):** DONE 2026-09-27 — fila Grădinița (16a), A5 și A4 1/3+2/3 (16b, 16g), numerotare, sumă în litere, Situația tipărită (16c; fără „Pagina N din M”, Chrome nu știe numărul total de pagini).
 - **Extra (cerut 2026-09-27):** istoricul cursului BNM se completează retroactiv la pornire; iconiță ↗ spre pagina BNM a zilei lângă fiecare curs afișat.
+- **FEEDBACK 27.09 (Prezența, Raport contabil):** DONE 2026-09-27.
+- **Design system:** DONE 2026-09-27 — `/design-system` (doar dev) + build static pentru Vercel (`npm run build:design-system`, rădăcina `webapp`); nepublicat încă.
+- **Faza 6 — filialele:** DONE 2026-09-27 — plan `docs/superpowers/plans/2026-09-27-filiale.md`; câte o bază + folder de backup pe filială, registru `filiale.json`, instalarea existentă = filiala 1 (fără mutări), selector în meniu, dialog pentru formular nesalvat, fila Filiale, „Ambele” în exportul Raportului contabil, Telegram pe filiale.
 - **După 12–15:** Faza 6 — filialele (`17-filiale.md`), apoi sincronizarea (`18-sincronizare.md`), confirmat de utilizator 2026-09-27. La filiale se revin deciziile provizorii din `INTREBARI.md` (selectorul de filială din exportul Raportului contabil, pasul „Sincronizez” de la pornire).
