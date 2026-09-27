@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Card } from '@shared/ui';
+import { Badge, Button, Card } from '@shared/ui';
 import { useSmsStatus } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import styles from './SmsProviderCard.module.css';
@@ -91,9 +91,9 @@ export function SmsProviderCard() {
         <div className={notificationsStyles.field}>
           Cheie API
           <span>{sms.data?.tokenMasked}</span>
-          <button type="button" className={notificationsStyles.btnGhost} onClick={() => setTokenRevealed(true)}>
+          <Button type="button" variant="ghost" onClick={() => setTokenRevealed(true)}>
             Schimbă
-          </button>
+          </Button>
         </div>
       )}
 
@@ -138,27 +138,17 @@ export function SmsProviderCard() {
       {sms.data?.lastError && <p className={notificationsStyles.error}>{sms.data.lastError}</p>}
 
       <div className={notificationsStyles.toolbar}>
-        <button
-          type="button"
-          className={notificationsStyles.btnPrimary}
-          disabled={sms.connecting}
-          onClick={() => void save()}
-        >
+        <Button type="button" variant="primary" disabled={sms.connecting} onClick={() => void save()}>
           {configured ? 'Salvează' : 'Conectează'}
-        </button>
+        </Button>
         {configured && (
           <>
-            <button type="button" className={notificationsStyles.btnGhost} onClick={() => setTesting(true)}>
+            <Button type="button" variant="ghost" onClick={() => setTesting(true)}>
               Trimite SMS de test
-            </button>
-            <button
-              type="button"
-              className={notificationsStyles.btnGhost}
-              disabled={sms.disconnecting}
-              onClick={() => void sms.disconnect()}
-            >
+            </Button>
+            <Button type="button" variant="ghost" disabled={sms.disconnecting} onClick={() => void sms.disconnect()}>
               Deconectează
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -169,9 +159,9 @@ export function SmsProviderCard() {
             Telefon pentru test
             <input value={testPhone} onChange={event => setTestPhone(event.target.value)} />
           </label>
-          <button type="button" className={notificationsStyles.btnGhost} onClick={() => void confirmTest()}>
+          <Button type="button" variant="ghost" onClick={() => void confirmTest()}>
             Trimite — costă 1 SMS (≈ {formatMoney(TEST_SMS_COST_LEI)})
-          </button>
+          </Button>
         </div>
       )}
     </Card>

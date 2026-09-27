@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Badge, BnmRateLink, Card, useToast } from '@shared/ui';
+import { Badge, BnmRateLink, Button, Card, useToast } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { today } from '@domain/calendar-month.mjs';
@@ -83,9 +83,9 @@ export function ExchangeRateSettings() {
         {exchangeRates.todayRate === undefined ? (
           <div className={styles.todayRow} data-testid="today-rate">
             <span className={backupStyles.notice}>Fără curs azi</span>
-            <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
+            <Button type="button" variant="ghost" onClick={() => void refresh()}>
               Preia de la BNM
-            </button>
+            </Button>
           </div>
         ) : (
           <div className={styles.todayRow} data-testid="today-rate">
@@ -94,9 +94,9 @@ export function ExchangeRateSettings() {
             </Badge>
             <BnmRateLink date={today()} />
             {exchangeRates.todayTone === 'yellow' && (
-              <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
+              <Button type="button" variant="ghost" onClick={() => void refresh()}>
                 Revino la cursul BNM
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -113,9 +113,9 @@ export function ExchangeRateSettings() {
               placeholder="ex. 19,7400"
             />
           </label>
-          <button type="submit" className={backupStyles.btnPrimary} disabled={!correctionInput}>
+          <Button type="submit" variant="primary" disabled={!correctionInput}>
             Salvează
-          </button>
+          </Button>
         </form>
 
         <h4 className={styles.subtitle}>Ultimele 5 zile</h4>
@@ -163,21 +163,21 @@ export function ExchangeRateSettings() {
                   placeholder="Preț €"
                   aria-label="Preț presetare în euro"
                 />
-                <button type="button" className={backupStyles.btnGhost} onClick={() => removePreset(preset.id)}>
+                <Button type="button" variant="ghost" onClick={() => removePreset(preset.id)}>
                   Șterge
-                </button>
+                </Button>
               </div>
             ))}
           </div>
         )}
 
         <div className={backupStyles.toolbar}>
-          <button type="button" className={backupStyles.btnGhost} onClick={addPreset}>
+          <Button type="button" variant="ghost" onClick={addPreset}>
             + Adaugă presetare
-          </button>
-          <button type="button" className={backupStyles.btnPrimary} onClick={() => void savePresets()}>
+          </Button>
+          <Button type="button" variant="primary" onClick={() => void savePresets()}>
             Salvează presetările
-          </button>
+          </Button>
         </div>
       </Card>
     </>

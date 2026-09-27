@@ -375,3 +375,13 @@
   font-family: var(--font-heading);
   font-size: 20px;
 }
+
+.backLink {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 0;
+  margin-bottom: var(--space-16);
+}

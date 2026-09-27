@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, ConfirmDeleteDialog } from '@shared/ui';
+import { Badge, Button, ConfirmDeleteDialog } from '@shared/ui';
 import { useSmsTemplates, SmsSegmentCounter, type SmsTemplateView } from '@shared/sms';
 import { finalizeSmsText } from '#features/sms-notify/index.web.mjs';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
@@ -118,9 +118,9 @@ export function SmsTemplatesPanel() {
               {template.isDefault && <Badge tone="mint">Implicit</Badge>}
             </button>
           ))}
-          <button type="button" className={notificationsStyles.btnGhost} onClick={startNewTemplate}>
+          <Button type="button" variant="ghost" onClick={startNewTemplate}>
             + Șablon nou
-          </button>
+          </Button>
         </div>
         <SmsProviderCard />
       </div>
@@ -185,12 +185,12 @@ export function SmsTemplatesPanel() {
             </button>
           )}
           <div className={styles.footerActions}>
-            <button type="button" className={notificationsStyles.btnGhost} onClick={discard}>
+            <Button type="button" variant="ghost" onClick={discard}>
               Renunță
-            </button>
-            <button type="button" className={notificationsStyles.btnPrimary} onClick={() => void save()}>
+            </Button>
+            <Button type="button" variant="primary" onClick={() => void save()}>
               Salvează șablonul
-            </button>
+            </Button>
           </div>
         </div>
       </div>
