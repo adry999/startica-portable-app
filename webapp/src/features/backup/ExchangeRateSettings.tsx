@@ -88,7 +88,9 @@ export function ExchangeRateSettings() {
           </div>
         ) : (
           <div className={styles.todayRow} data-testid="today-rate">
-            <Badge tone={exchangeRates.todayTone === 'yellow' ? 'yellow' : 'mint'}>1 € = {formatRate(exchangeRates.todayRate)} lei</Badge>
+            <Badge tone={exchangeRates.todayTone === 'yellow' ? 'yellow' : 'mint'}>
+              1 € = {formatRate(exchangeRates.todayRate)} lei
+            </Badge>
             {exchangeRates.todayTone === 'yellow' && (
               <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
                 Revino la cursul BNM
