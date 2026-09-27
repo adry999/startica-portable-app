@@ -34,4 +34,6 @@ export interface AttendanceRoutesDependencies {
   recordRepository: Pick<RecordRepository, 'exists' | 'readSnapshot'>;
   now?: () => Date;
   today?: () => string;
+  /** Sincronizare (Faza 2): scris în aceeași tranzacție ca fiecare schimbare de prezență. */
+  onChange?: (change: { kind: 'attendance'; id: string; payload: AttendanceEntry | null }) => void;
 }

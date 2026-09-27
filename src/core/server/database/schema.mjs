@@ -12,7 +12,11 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
   CREATE INDEX IF NOT EXISTS sms_log_child_created ON sms_log(child_id,created_at);
   CREATE INDEX IF NOT EXISTS sms_log_status ON sms_log(status);
   CREATE TABLE IF NOT EXISTS attendance(child_id TEXT NOT NULL,date TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,PRIMARY KEY(child_id,date));
-  CREATE INDEX IF NOT EXISTS attendance_date ON attendance(date);`;
+  CREATE INDEX IF NOT EXISTS attendance_date ON attendance(date);
+  CREATE TABLE IF NOT EXISTS sync_state(kind TEXT NOT NULL,id TEXT NOT NULL,server_revision INTEGER NOT NULL,updated_at TEXT NOT NULL,updated_by_device TEXT NOT NULL,updated_by_name TEXT NOT NULL DEFAULT '',PRIMARY KEY(kind,id));
+  CREATE TABLE IF NOT EXISTS sync_outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,change_id TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,record_id TEXT NOT NULL,base_revision INTEGER NOT NULL,payload TEXT,created_at TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending');
+  CREATE UNIQUE INDEX IF NOT EXISTS sync_outbox_record ON sync_outbox(kind,record_id) WHERE status='pending';
+  CREATE TABLE IF NOT EXISTS sync_conflicts(id TEXT PRIMARY KEY,kind TEXT NOT NULL,record_id TEXT NOT NULL,local_payload TEXT,local_updated_at TEXT NOT NULL,remote_payload TEXT,remote_revision INTEGER NOT NULL,remote_updated_at TEXT NOT NULL,remote_device_id TEXT NOT NULL,remote_device_name TEXT NOT NULL,created_at TEXT NOT NULL,outbox_seq INTEGER);`;
 
 /** @param {import('node:sqlite').DatabaseSync} database */
 export function applySchema(database) {

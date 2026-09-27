@@ -12,8 +12,14 @@ import { createAttendanceRepository } from './attendance.repository.mjs';
 const FUTURE_DATE_MESSAGE = 'Nu se marchează prezența pentru zile viitoare.';
 
 /** @param {AttendanceRoutesDependencies} dependencies */
-export function createAttendanceRoutes({ database, recordRepository, now = () => new Date(), today = todayDefault }) {
-  const repository = createAttendanceRepository(database, { now });
+export function createAttendanceRoutes({
+  database,
+  recordRepository,
+  now = () => new Date(),
+  today = todayDefault,
+  onChange,
+}) {
+  const repository = createAttendanceRepository(database, { now, onChange });
 
   /** @param {string} groupId @returns {string[]} */
   function childIdsForGroup(groupId) {

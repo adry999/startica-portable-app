@@ -29,6 +29,11 @@ function createRecordingAuditTrail() {
   return { changes, recordChange: change => changes.push(change) };
 }
 
+function createRecordingChangeSink() {
+  const changes = [];
+  return { changes, record: (kind, id, payload) => changes.push({ kind, id, payload }) };
+}
+
 function createHarness(t, overrides = {}) {
   const database = new DatabaseSync(':memory:');
   applySchema(database);
@@ -36,7 +41,8 @@ function createHarness(t, overrides = {}) {
   const recordRepository = createRecordRepository(database);
   const backups = overrides.backups || createRecordingBackups();
   const auditTrail = createRecordingAuditTrail();
-  const transaction = createRevisionTransaction({ database, recordRepository, backups, auditTrail });
+  const changeSink = overrides.changeSink;
+  const transaction = createRevisionTransaction({ database, recordRepository, backups, auditTrail, changeSink });
   return { database, recordRepository, backups, auditTrail, ...transaction };
 }
 
@@ -181,4 +187,30 @@ test('replaceAllRecords consemnează câte o schimbare în istoric doar pentru �
 
   assert.deepEqual(auditTrail.changes.map(change => change.recordId).sort(), ['CHILD-2', 'CHILD-3']);
   assert.deepEqual(recordRepository.readSnapshot().children, snapshot.children);
+});
+
+test('replaceAllRecords trimite în outbox doar diferențele, cu payload-ul nou sau null la ștergere', t => {
+  const changeSink = createRecordingChangeSink();
+  const { replaceAllRecords, recordRepository } = createHarness(t, { changeSink });
+  recordRepository.save('children', { id: 'CHILD-1', name: 'Ana' });
+  recordRepository.save('children', { id: 'CHILD-2', name: 'Ioana' });
+
+  replaceAllRecords(
+    {
+      ...emptyState(),
+      children: [
+        { id: 'CHILD-1', name: 'Ana' },
+        { id: 'CHILD-3', name: 'Mihai' },
+      ],
+    },
+    'import',
+  );
+
+  assert.deepEqual(
+    changeSink.changes.map(change => ({ kind: change.kind, id: change.id, payload: change.payload })),
+    [
+      { kind: 'children', id: 'CHILD-2', payload: null },
+      { kind: 'children', id: 'CHILD-3', payload: { id: 'CHILD-3', name: 'Mihai' } },
+    ],
+  );
 });

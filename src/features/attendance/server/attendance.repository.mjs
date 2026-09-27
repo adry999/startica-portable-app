@@ -21,9 +21,9 @@ function monthBounds(month) {
 
 /**
  * @param {import('node:sqlite').DatabaseSync} database
- * @param {{ now?: () => Date }} [options]
+ * @param {{ now?: () => Date, onChange?: (change: { kind: 'attendance', id: string, payload: AttendanceEntry | null }) => void }} [options]
  */
-export function createAttendanceRepository(database, { now = () => new Date() } = {}) {
+export function createAttendanceRepository(database, { now = () => new Date(), onChange } = {}) {
   const selectByDateStatement = database.prepare(
     'SELECT child_id,date,status,reason,updated_at FROM attendance WHERE date=? ORDER BY child_id',
   );
@@ -70,12 +70,19 @@ export function createAttendanceRepository(database, { now = () => new Date() } 
       const removed = [];
       for (const change of byKey.values()) {
         const { childId, date, status, reason = '' } = change;
+        const outboxId = `${childId}|${date}`;
         if (status === null) {
           deleteStatement.run(childId, date);
           removed.push({ childId, date });
+          // onChange rulează în aceeași tranzacție BEGIN IMMEDIATE ca upsert-ul/ștergerea de
+          // mai sus (decizia 4 din planul de sincronizare): scrierea în outbox e atomică cu
+          // scrierea prezenței, nu o operațiune separată care ar putea rămâne fără pereche.
+          onChange?.({ kind: 'attendance', id: outboxId, payload: null });
         } else {
           upsertStatement.run(childId, date, status, reason, nowIso);
-          saved.push(toEntry(selectOneStatement.get(childId, date)));
+          const entry = toEntry(selectOneStatement.get(childId, date));
+          saved.push(entry);
+          onChange?.({ kind: 'attendance', id: outboxId, payload: entry });
         }
       }
       database.exec('COMMIT');

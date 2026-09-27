@@ -25,9 +25,10 @@ const REQUEST_RETENTION = 1000;
  *   recordRepository: ReturnType<typeof import('./record-repository.mjs').createRecordRepository>,
  *   backups: { backup: (reason?: string) => unknown, autoBackup: () => { warning?: string }, health: () => unknown },
  *   auditTrail: import('#shared/contracts/audit-trail.mjs').AuditTrail,
+ *   changeSink?: import('#shared/contracts/change-sink.d.mts').ChangeSink,
  * }} dependencies
  */
-export function createRevisionTransaction({ database, recordRepository, backups, auditTrail }) {
+export function createRevisionTransaction({ database, recordRepository, backups, auditTrail, changeSink }) {
   // Orice modificare trece pe aici. Trei garanții:
   //  - idempotență: același requestId întoarce rezultatul anterior, deci o
   //    cerere reluată după o cădere de rețea nu produce o a doua înregistrare;
@@ -82,7 +83,10 @@ export function createRevisionTransaction({ database, recordRepository, backups,
   }
 
   // Înlocuiește toată evidența (import sau restaurare), consemnând în jurnal
-  // fiecare înregistrare care chiar diferă.
+  // fiecare înregistrare care chiar diferă. changeSink (Faza 2 a sincronizării)
+  // primește aceleași diferențe, ca o restaurare sau un import să ajungă în
+  // outbox exact ca o scriere normală — nimic din data-transfer sau backup nu
+  // trebuie să știe de sincronizare.
   function replaceAllRecords(snapshot, action) {
     const before = recordRepository.readSnapshot();
     database.exec('DELETE FROM records');
@@ -91,7 +95,7 @@ export function createRevisionTransaction({ database, recordRepository, backups,
       const previousById = new Map(before[type].map(record => [record.id, record]));
       const nextById = new Map(snapshot[type].map(record => [record.id, record]));
       for (const id of new Set([...previousById.keys(), ...nextById.keys()]))
-        if (JSON.stringify(previousById.get(id)) !== JSON.stringify(nextById.get(id)))
+        if (JSON.stringify(previousById.get(id)) !== JSON.stringify(nextById.get(id))) {
           auditTrail.recordChange({
             action,
             recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType} */ (type),
@@ -99,6 +103,8 @@ export function createRevisionTransaction({ database, recordRepository, backups,
             before: previousById.get(id),
             after: nextById.get(id),
           });
+          changeSink?.record(type, id, nextById.get(id) ?? null);
+        }
     }
   }
 
