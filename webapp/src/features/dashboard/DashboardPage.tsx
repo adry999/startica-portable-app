@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, SegmentedControl } from '@shared/ui';
+import { Card, LoadingState, SegmentedControl } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
@@ -66,7 +66,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
   const [activeBar, setActiveBar] = useState<string | null>(null);
 
-  if (dashboardData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (dashboardData.status === 'loading') return <LoadingState />;
   if (dashboardData.status === 'failed')
     return <p className={styles.notice}>{dashboardData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

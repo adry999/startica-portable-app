@@ -5,6 +5,7 @@ import {
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
+  LoadingState,
   SegmentedControl,
   SelectionBar,
   groupTone,
@@ -61,7 +62,7 @@ export function PaymentsPage({
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
 
-  if (paymentsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (paymentsData.status === 'loading') return <LoadingState />;
   if (paymentsData.status === 'failed')
     return <p className={styles.notice}>{paymentsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

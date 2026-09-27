@@ -6,6 +6,7 @@ import {
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
+  LoadingState,
   RowMenu,
   SearchSelect,
   SegmentedControl,
@@ -107,7 +108,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     </button>,
   );
 
-  if (visitsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (visitsData.status === 'loading') return <LoadingState />;
   if (visitsData.status === 'failed')
     return <p className={styles.notice}>{visitsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

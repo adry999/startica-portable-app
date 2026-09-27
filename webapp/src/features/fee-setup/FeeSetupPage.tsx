@@ -1,4 +1,13 @@
-import { Button, Card, DataTable, SearchInput, SegmentedControl, useToast, type DataTableColumn } from '@shared/ui';
+import {
+  Button,
+  Card,
+  DataTable,
+  LoadingState,
+  SearchInput,
+  SegmentedControl,
+  useToast,
+  type DataTableColumn,
+} from '@shared/ui';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -27,7 +36,7 @@ export function FeeSetupPage() {
   const { rates } = useExchangeRates();
   const todaysRate = latestKnownRate(rates);
 
-  if (feeSetupData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (feeSetupData.status === 'loading') return <LoadingState />;
   if (feeSetupData.status === 'failed')
     return <p className={styles.notice}>{feeSetupData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

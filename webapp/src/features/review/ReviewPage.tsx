@@ -1,4 +1,4 @@
-import { Badge, Button, Card, SearchInput, useToast, type BadgeTone } from '@shared/ui';
+import { Badge, Button, Card, LoadingState, SearchInput, useToast, type BadgeTone } from '@shared/ui';
 import { useReview, type ReviewRowView } from './useReview';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
@@ -20,7 +20,7 @@ export function ReviewPage({ onNavigate }: ReviewPageProps) {
   const reviewData = useReview();
   const toast = useToast();
 
-  if (reviewData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (reviewData.status === 'loading') return <LoadingState />;
   if (reviewData.status === 'failed')
     return <p className={styles.notice}>{reviewData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

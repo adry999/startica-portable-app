@@ -4,6 +4,7 @@ import {
   Card,
   ConfirmDeleteDialog,
   groupTone,
+  LoadingState,
   SearchSelect,
   SegmentedControl,
   useToast,
@@ -42,7 +43,7 @@ export function GroupsPage() {
     </div>,
   );
 
-  if (groupsData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (groupsData.status === 'loading') return <LoadingState />;
   if (groupsData.status === 'failed')
     return <p className={styles.notice}>{groupsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

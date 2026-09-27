@@ -5,6 +5,7 @@ import {
   Card,
   DataTable,
   FilterPills,
+  LoadingState,
   MonthPicker,
   SegmentedControl,
   groupTone,
@@ -87,7 +88,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   );
 
   const activeData = mode === 'month' ? statusData : yearData;
-  if (activeData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (activeData.status === 'loading') return <LoadingState />;
   if (activeData.status === 'failed')
     return <p className={styles.notice}>{activeData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

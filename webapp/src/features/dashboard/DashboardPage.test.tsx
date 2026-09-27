@@ -64,9 +64,17 @@ describe('DashboardPage', () => {
     );
   });
 
-  it('arată un mesaj de încărcare înainte ca sesiunea să fie gata', () => {
-    renderDashboard({ month: '2026-09', onNavigate: () => {} });
-    expect(screen.getByText('Se încarcă datele…')).toBeInTheDocument();
+  it('arată starea de încărcare înainte ca sesiunea să fie gata', () => {
+    vi.useFakeTimers();
+    try {
+      renderDashboard({ month: '2026-09', onNavigate: () => {} });
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(screen.getByRole('status', { name: 'Se încarcă…' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('randează KPI-urile după încărcare', async () => {

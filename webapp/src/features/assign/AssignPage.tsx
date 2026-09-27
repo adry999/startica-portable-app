@@ -1,4 +1,4 @@
-import { Button, Card, useToast } from '@shared/ui';
+import { Button, Card, LoadingState, useToast } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { useAssign, type AssignRowView } from './useAssign';
@@ -12,7 +12,7 @@ export function AssignPage({ month }: AssignPageProps) {
   const assignData = useAssign(month);
   const toast = useToast();
 
-  if (assignData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (assignData.status === 'loading') return <LoadingState />;
   if (assignData.status === 'failed')
     return <p className={styles.notice}>{assignData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

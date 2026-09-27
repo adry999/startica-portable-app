@@ -112,9 +112,17 @@ describe('AssignPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('arată un mesaj de încărcare înainte ca sesiunea să fie gata', () => {
-    renderPage();
-    expect(screen.getByText('Se încarcă datele…')).toBeInTheDocument();
+  it('arată starea de încărcare înainte ca sesiunea să fie gata', () => {
+    vi.useFakeTimers();
+    try {
+      renderPage();
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(screen.getByRole('status', { name: 'Se încarcă…' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('arată achitarea neasociată și riscul', async () => {

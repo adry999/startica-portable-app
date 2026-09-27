@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, Card, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
+import { Badge, Button, Card, LoadingState, SmsConfirmDialog, useToast, type SmsRecipientView } from '@shared/ui';
 import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
@@ -27,7 +27,7 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const smsSend = useSmsSend();
   const [dialog, setDialog] = useState<{ mode: 'single' | 'bulk'; recipients: SmsRecipientView[] } | null>(null);
 
-  if (notifyData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (notifyData.status === 'loading') return <LoadingState />;
   if (notifyData.status === 'failed')
     return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
