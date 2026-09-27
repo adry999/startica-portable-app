@@ -17,6 +17,8 @@ Modul **independent**: nu importă alt feature. Achitările, grupele și indicii
 | Export | Rol |
 | --- | --- |
 | `evaluateChildrenForMonth(records, month, asOf)` | aceeași funcție, reexportată pentru ecranele web |
+| `schoolYearStartOf`, `schoolYearMonths`, `schoolYearLabel`, `evaluateChildrenForSchoolYear` | calendarul anului școlar + evaluarea pe 12 luni cu un singur index |
+| `toMdlToday`, `summarizeMonthStatus`, `heatCellKind`, `summarizeSchoolYear` | cardurile Situației plăților și celulele hărții |
 
 ## Cum rămâne decuplat
 
@@ -38,12 +40,17 @@ billing/
 ├── index.web.mjs
 └── domain/
     ├── month-evaluation.mjs        # evaluateChildrenForMonth
-    └── month-evaluation.test.mjs
+    ├── month-evaluation.test.mjs
+    ├── school-year-evaluation.mjs  # calendarul anului școlar + evaluarea pe 12 luni
+    ├── school-year-evaluation.test.mjs
+    ├── status-summary.mjs          # cardurile Situației + heatCellKind
+    └── status-summary.test.mjs
 ```
 
 ## Decizii
 
 - **`evaluateChildrenForMonth` calculează obligația fiecărui copil** din `allChildren` cu un `paymentIndex` + `obligation()` per copil.
+- Sumele pe mai mulți copii se convertesc în lei la cel mai recent curs (proiecție), per `16-planuri-eur.md` regula 9; un rând de copil rămâne în moneda lui.
 - **Randarea păstrează id-urile de tabel** (`statusHead`/`statusPager`, `notifyHead`), pentru ca sortarea și paginarea existente să continue să funcționeze neschimbate.
 - Tabelul de notificat nu se paginează — doar „Situația plăților” foloseşte `paginateRows`.
 

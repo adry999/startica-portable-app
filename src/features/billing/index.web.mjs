@@ -5,3 +5,4 @@ export {
   schoolYearLabel,
   evaluateChildrenForSchoolYear,
 } from './domain/school-year-evaluation.mjs';
+export { toMdlToday, summarizeMonthStatus, heatCellKind, summarizeSchoolYear } from './domain/status-summary.mjs';
