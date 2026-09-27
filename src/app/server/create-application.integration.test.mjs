@@ -165,7 +165,7 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
   assert.deepEqual(app.envelope().state, { ...state, visits: [] });
   assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
-  app.db.close();
+  app.closeSync();
   if (
     resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-migration-') ||
     resolve(dir).startsWith(resolve(tmpdir()) + '/startica-migration-')
@@ -208,7 +208,7 @@ test('Prima pornire creează filiale.json cu filiala principală pe folderele ve
 
     const second = createApplication({ dataDir, backupDir, home: dir, autoBackupIntervalMs: 0 });
     assert.equal(second.envelope().revision, revisionAfterImport, 'restart-ul trebuie să vadă exact aceleași date');
-    second.db.close();
+    second.closeSync();
     const registryAfterRestart = JSON.parse(readFileSync(registryFile, 'utf8'));
     assert.deepEqual(registryAfterRestart, registryAfterFirstRun, 'o a doua pornire nu rescrie registrul existent');
   } finally {

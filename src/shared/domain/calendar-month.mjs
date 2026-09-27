@@ -20,3 +20,18 @@ export const shiftDays = (day, delta) =>
   new Date(new Date(day + 'T12:00:00Z').getTime() + delta * 86400000).toISOString().slice(0, 10);
 export const daysBetween = (from, to) =>
   Math.round((new Date(to + 'T12:00:00Z').getTime() - new Date(from + 'T12:00:00Z').getTime()) / 86400000);
+
+/**
+ * Toate zilele unei luni, în ordine (folosită de pontaj și de raportul de prezență).
+ * @param {string} month format YYYY-MM
+ * @returns {string[]}
+ */
+export function monthDates(month) {
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7)) - 1;
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, day) => {
+    const date = String(day + 1).padStart(2, '0');
+    return `${month}-${date}`;
+  });
+}

@@ -1,8 +1,19 @@
 import { join } from 'node:path';
-import { BRANCHES_DIR_NAME, dataLayout } from '#config/environment.mjs';
+import { BRANCHES_DIR_NAME, COMMON_DIR_NAME, dataLayout } from '#config/environment.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 
 /** @typedef {{ dataDir: string, backupDir: string }} BranchDataLayout */
+
+/**
+ * Folderele bazei comune (personal, comun ambelor filiale): `<home>\Comun\Startica_Date` și
+ * `\Startica_Backup`, fără `logDir` — jurnalul rămâne unic, per proces, nu per bază.
+ * @param {string} home
+ * @returns {BranchDataLayout}
+ */
+export function commonDirectories(home) {
+  const { dataDir, backupDir } = dataLayout(join(home, COMMON_DIR_NAME));
+  return { dataDir, backupDir };
+}
 
 /**
  * Folderele de date/backup ale unei filiale: cele vechi pentru filiala

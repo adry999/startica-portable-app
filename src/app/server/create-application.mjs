@@ -13,10 +13,11 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
-import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
+import { branchDirectories, commonDirectories } from '#core/server/branches/branch-layout.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
 import { createSyncDeviceRepository } from '#features/sync/index.server.mjs';
 import { createBranchContext } from './create-branch-context.mjs';
+import { createCommonContext } from './create-common-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
 import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
 
@@ -77,14 +78,19 @@ export function createApplication(options = {}) {
   // funcție, nu o listă calculată o dată, ca o filială adăugată după pornire să fie
   // deja acoperită.
   function forbiddenFolders() {
-    return registry.list().flatMap(branch => {
+    const branchFolders = registry.list().flatMap(branch => {
       const dirs = branchDirectories({ home, legacy, branch });
       return [dirs.dataDir, dirs.backupDir];
     });
+    const commonFolders = commonDirectories(home);
+    return [...branchFolders, commonFolders.dataDir, commonFolders.backupDir];
   }
 
   function shutdownServer() {
-    server.close(() => active.close());
+    server.close(() => {
+      active.close();
+      common.close();
+    });
     server.closeIdleConnections();
   }
 
@@ -132,34 +138,49 @@ export function createApplication(options = {}) {
       forbiddenFolders,
       branchRoutes,
       syncDevice,
+      common,
     });
   }
 
   // Un registru care există dar nu se poate citi oprește pornirea aici, înainte
   // de a deschide vreo bază — altfel am recrea registrul peste folderul unei
-  // filiale #2 deja existente (decizia 4 din plan).
+  // filiale #2 deja existente (decizia 4 din plan). common se deschide abia după
+  // această verificare: un filiale.json corupt nu are voie să lase în urmă un
+  // fișier Comun\ pe jumătate pornit, cu handlere pe care nimeni nu le închide
+  // (createApplication aruncă mai jos, fără să întoarcă vreun `app` de închis).
   const existingRegistry = readBranchRegistry(registryFile);
-  if (existingRegistry) {
-    const target =
-      existingRegistry.branches.find(branch => branch.id === existingRegistry.lastBranchId) ??
-      existingRegistry.branches[0];
-    active = openBranchContext(target);
-  } else {
-    // Filiala #1 rămâne pe folderele vechi, fără nicio mutare de fișier (decizia 4). Numele
-    // grădiniței vine dintr-o citire scurtă, separată — contextul complet se deschide o
-    // singură dată, mai jos, cu filiala deja cunoscută (nu un placeholder rescris ulterior,
-    // ca rutele de sesiune să nu prindă o referință veche la `branch`).
-    const { db: bootstrapDb } = openDatabase({ dataDir: legacy.dataDir, backupDir: legacy.backupDir });
-    const bootstrapSetting = /** @type {(key: string) => string} */ (createSettingsRepository(bootstrapDb).setting);
-    const kindergarten = parseKindergartenSettings(bootstrapSetting('kindergarten'));
-    bootstrapDb.close();
-    const created = registry.ensure({
-      name: kindergarten.name || 'Filiala principală',
-      color: 'orange',
-      address: kindergarten.address,
-      folder: null,
-    });
-    active = openBranchContext(created.branches.find(branch => branch.folder === null) ?? created.branches[0]);
+  // Baza comună (Personal 24, decizia 1): deschisă o singură dată aici, înainte de
+  // prima filială, și ținută deschisă la orice schimbare de filială — nu ține de
+  // contextul unei filiale anume, ca syncDevice sau registry mai sus.
+  const common = createCommonContext({ home, autoBackupIntervalMs });
+  try {
+    if (existingRegistry) {
+      const target =
+        existingRegistry.branches.find(branch => branch.id === existingRegistry.lastBranchId) ??
+        existingRegistry.branches[0];
+      active = openBranchContext(target);
+    } else {
+      // Filiala #1 rămâne pe folderele vechi, fără nicio mutare de fișier (decizia 4). Numele
+      // grădiniței vine dintr-o citire scurtă, separată — contextul complet se deschide o
+      // singură dată, mai jos, cu filiala deja cunoscută (nu un placeholder rescris ulterior,
+      // ca rutele de sesiune să nu prindă o referință veche la `branch`).
+      const { db: bootstrapDb } = openDatabase({ dataDir: legacy.dataDir, backupDir: legacy.backupDir });
+      const bootstrapSetting = /** @type {(key: string) => string} */ (createSettingsRepository(bootstrapDb).setting);
+      const kindergarten = parseKindergartenSettings(bootstrapSetting('kindergarten'));
+      bootstrapDb.close();
+      const created = registry.ensure({
+        name: kindergarten.name || 'Filiala principală',
+        color: 'orange',
+        address: kindergarten.address,
+        folder: null,
+      });
+      active = openBranchContext(created.branches.find(branch => branch.folder === null) ?? created.branches[0]);
+    }
+  } catch (error) {
+    // Filiala nu s-a putut deschide (bază coruptă) — nimeni nu mai primește un `app` de
+    // închis, deci common trebuie închis chiar aici, altfel rămâne blocat pe disc.
+    common.close();
+    throw error;
   }
 
   const server = createServer((req, res) =>
@@ -208,10 +229,18 @@ export function createApplication(options = {}) {
     get database() {
       return active.dbFile;
     },
+    // common.safeBackup rulează întâi și nu aruncă niciodată: o filială care nu se
+    // poate copia (disc plin, blocaj) nu are voie să lase Comun\ fără propria copie.
     /** @param {string} [reason] */
-    backup: reason => active.backup(reason),
+    backup: reason => {
+      common.safeBackup(reason);
+      return active.backup(reason);
+    },
     /** @param {string} [reason] */
-    safeBackup: reason => active.safeBackup(reason),
+    safeBackup: reason => {
+      common.safeBackup(reason);
+      return active.safeBackup(reason);
+    },
     health: () => active.health(),
     /** @param {string} [todayStr] */
     expireHealthNotes: todayStr => active.expireHealthNotes(todayStr),
@@ -223,11 +252,19 @@ export function createApplication(options = {}) {
     activeBranch,
     selectBranch,
     registry,
+    // Închidere sincronă, fără serverul HTTP (teste care nu ascultă niciodată pe port):
+    // `common` e o a doua bază, deschisă separat — un test care închidea doar `app.db`
+    // ar lăsa fișierul ei blocat pe disc la ștergerea folderului temporar.
+    closeSync: () => {
+      active.close();
+      common.close();
+    },
     close: () =>
       /** @type {Promise<void>} */ (
         new Promise(resolveClose => {
           server.close(() => {
             active.close();
+            common.close();
             resolveClose();
           });
         })

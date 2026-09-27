@@ -1,23 +1,14 @@
 import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
+import { monthDates } from '#shared/domain/calendar-month.mjs';
 import { attendanceKey, isChildEnrolledOn } from './attendance-rules.mjs';
 
-/** @typedef {import('../attendance.types.d.mts').AttendanceEntry} AttendanceEntry */
-/** @typedef {import('../attendance.types.d.mts').DayCellKind} DayCellKind */
+/** @typedef {import('../attendance.types.mjs').AttendanceEntry} AttendanceEntry */
+/** @typedef {import('../attendance.types.mjs').DayCellKind} DayCellKind */
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
 
-/**
- * @param {string} month format YYYY-MM
- * @returns {string[]}
- */
-export function monthDates(month) {
-  const year = Number(month.slice(0, 4));
-  const monthIndex = Number(month.slice(5, 7)) - 1;
-  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-  return Array.from({ length: daysInMonth }, (_, day) => {
-    const date = String(day + 1).padStart(2, '0');
-    return `${month}-${date}`;
-  });
-}
+// Mutată în #shared/domain/calendar-month.mjs (Personal 24 o folosește și pentru pontaj);
+// re-exportată aici ca importurile existente din attendance să nu se schimbe.
+export { monthDates };
 
 /**
  * @param {string} date

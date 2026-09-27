@@ -159,7 +159,7 @@ test('ultima filială deschisă e reținută și se deschide la repornire', asyn
       autoBackupIntervalMs: 0,
     });
     assert.equal(second.activeBranch().id, branchB.id);
-    second.db.close();
+    second.closeSync();
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

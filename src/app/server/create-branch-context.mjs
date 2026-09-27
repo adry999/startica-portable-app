@@ -70,6 +70,7 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   forbiddenFolders: () => string[],
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
  *   syncDevice?: { read: () => unknown, write: (device: any) => void, clear: () => void },
+ *   common?: import('./create-common-context.mjs').CommonContext,
  * }} options
  */
 export function createBranchContext({
@@ -92,6 +93,9 @@ export function createBranchContext({
   // Neconfigurat implicit, ca un context construit fără parametrul acesta (dacă
   // vreun test o face direct) să se comporte exact ca o instalare fără sync.json.
   syncDevice = { read: () => null, write: () => {}, clear: () => {} },
+  // Baza comună (Personal 24): opțional aici — rutele care o folosesc (Task 3) o
+  // cer explicit; un context construit fără el (teste izolate de filială) nu o vede deloc.
+  common,
 }) {
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
   // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers, ori
