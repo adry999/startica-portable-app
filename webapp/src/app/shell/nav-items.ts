@@ -26,6 +26,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { view: 'groups', label: 'Grupe' },
       { view: 'attendance', label: 'Prezența' },
       { view: 'visits', label: 'Vizite' },
+      { view: 'personal', label: 'Personal' },
     ],
   },
   {
@@ -63,9 +64,10 @@ export const NAV_GROUPS: NavGroup[] = [
 export const VIEW_TITLES: Record<ViewKey, { eyebrow: string; title: string }> = {
   dashboard: { eyebrow: 'Privire de ansamblu', title: 'Rezumatul lunii' },
   children: { eyebrow: 'Evidență', title: 'Copii' },
-  groups: { eyebrow: 'Administrare', title: 'Grupe' },
+  groups: { eyebrow: 'Organizare', title: 'Grupe' },
   attendance: { eyebrow: 'Evidență', title: 'Prezența' },
   visits: { eyebrow: 'Înscrieri', title: 'Vizite' },
+  personal: { eyebrow: 'Evidență', title: 'Personal' },
   payments: { eyebrow: 'Contabilitate', title: 'Achitări' },
   expenses: { eyebrow: 'Contabilitate', title: 'Cheltuieli' },
   status: { eyebrow: 'Contabilitate', title: 'Situația plăților' },

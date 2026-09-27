@@ -72,9 +72,9 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
 
   return (
     <header className={styles.topbar}>
-      <div>
-        <p className={styles.eyebrow}>{eyebrow}</p>
+      <div className={styles.heading}>
         <h1 className={styles.title}>{title}</h1>
+        <p className={styles.eyebrow}>{eyebrow}</p>
       </div>
       <div className={styles.actions}>
         {view === 'dashboard' && (
