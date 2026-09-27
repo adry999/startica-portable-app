@@ -40,3 +40,7 @@ webapp/dist-design-system/
 sync-server/data/
 # Identitatea unui calculator conectat (token în clar); per install, niciodată în istoric.
 sync.json
+
+# ─── Server local ─────────────────────────────────────────────────────────────
+# Portul pe care ascultă serverul, scris în STARTICA_HOME la pornire (main.mjs).
+startica.port
