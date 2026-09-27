@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -30,12 +30,12 @@ const fixtureState = {
   visits: [],
 };
 
-function renderPage() {
+function renderPage(onOpenGroupStickers?: (groupId: string) => void) {
   return render(
     <ToastProvider>
       <TopbarActionsProvider>
         <TopbarActionsSlot />
-        <GroupsPage />
+        <GroupsPage onOpenGroupStickers={onOpenGroupStickers} />
       </TopbarActionsProvider>
     </ToastProvider>,
   );
@@ -144,5 +144,18 @@ describe('GroupsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();
+  });
+
+  it('cere navigarea la stickerele grupei din meniul ⋯, fără să deschidă editorul', async () => {
+    await loadedSession();
+    const onOpenGroupStickers = vi.fn();
+    renderPage(onOpenGroupStickers);
+
+    const menu = screen.getByLabelText('Acțiuni grupa Fluturași').closest('details')!;
+    await userEvent.click(screen.getByLabelText('Acțiuni grupa Fluturași'));
+    await userEvent.click(within(menu).getByRole('button', { name: 'Stickere pentru grupă' }));
+
+    expect(onOpenGroupStickers).toHaveBeenCalledWith('g1');
+    expect(screen.queryByText(/^Copii în grupă/)).not.toBeInTheDocument();
   });
 });

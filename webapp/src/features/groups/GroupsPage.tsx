@@ -5,6 +5,7 @@ import {
   ConfirmDeleteDialog,
   groupTone,
   LoadingState,
+  RowMenu,
   SearchSelect,
   SegmentedControl,
   useToast,
@@ -29,7 +30,12 @@ function tileTone(group: GroupCardView, groups: GroupCardView[]): CardTone {
   return tone === 'neutral' ? 'orange' : tone;
 }
 
-export function GroupsPage() {
+export interface GroupsPageProps {
+  /** Grupe → ⋯ → „Stickere pentru grupă" — navigarea trăiește în App.tsx, ca acest ecran să rămână fără router. */
+  onOpenGroupStickers?: (groupId: string) => void;
+}
+
+export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const groupsData = useGroups();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
@@ -83,6 +89,7 @@ export function GroupsPage() {
                 tone={tileTone(group, groupsData.groups)}
                 isOpen={group.id === groupsData.openGroupId}
                 onToggle={() => groupsData.toggleGroup(group.id)}
+                onOpenStickers={onOpenGroupStickers ? () => onOpenGroupStickers(group.id) : undefined}
               />
               {openGroup && openGroup.id === group.id && (
                 <div className={styles.editorSlot}>
@@ -141,32 +148,44 @@ interface GroupTileProps {
   tone: CardTone;
   isOpen: boolean;
   onToggle: () => void;
+  onOpenStickers?: () => void;
 }
 
-function GroupTile({ group, tone, isOpen, onToggle }: GroupTileProps) {
+/** Cardul rămâne un div, nu un buton, ca RowMenu (⋯, un <details>) să nu ajungă imbricat într-un <button>. */
+function GroupTile({ group, tone, isOpen, onToggle, onOpenStickers }: GroupTileProps) {
   return (
-    <Card tone={tone} onClick={onToggle} className={isOpen ? styles.tileOpen : undefined}>
-      <div className={styles.tileHead}>
-        <p className={styles.tileName}>{group.name}</p>
-        <span className={styles.tilePill}>{isOpen ? '▴ Restrânge' : '▾ Deschide'}</span>
-      </div>
-      <strong className={styles.tileOccupancy}>{group.occupancyLabel}</strong>
-      <div className={styles.occupancyBar}>
-        {group.capacity != null && <span style={{ width: `${group.occupancyPercent}%` }} />}
-      </div>
-      <p className={styles.tileMeta}>
-        {group.educator || 'fără educator'} · {group.ageRangeLabel}
-      </p>
-      {group.memberCount > 0 && (
-        <div className={styles.avatarStack}>
-          {group.avatarInitials.map((initial, index) => (
-            <span key={index} className={styles.avatar}>
-              {initial}
-            </span>
-          ))}
-          {group.extraMemberCount > 0 && <span className={styles.avatarExtra}>+{group.extraMemberCount}</span>}
+    <Card tone={tone} className={isOpen ? styles.tileOpen : undefined}>
+      {onOpenStickers && (
+        <div className={styles.tileMenu}>
+          <RowMenu
+            items={[{ label: 'Stickere pentru grupă', onClick: onOpenStickers }]}
+            ariaLabel={`Acțiuni grupa ${group.name}`}
+          />
         </div>
       )}
+      <button type="button" className={styles.tileToggle} onClick={onToggle}>
+        <div className={styles.tileHead}>
+          <p className={styles.tileName}>{group.name}</p>
+          <span className={styles.tilePill}>{isOpen ? '▴ Restrânge' : '▾ Deschide'}</span>
+        </div>
+        <strong className={styles.tileOccupancy}>{group.occupancyLabel}</strong>
+        <div className={styles.occupancyBar}>
+          {group.capacity != null && <span style={{ width: `${group.occupancyPercent}%` }} />}
+        </div>
+        <p className={styles.tileMeta}>
+          {group.educator || 'fără educator'} · {group.ageRangeLabel}
+        </p>
+        {group.memberCount > 0 && (
+          <div className={styles.avatarStack}>
+            {group.avatarInitials.map((initial, index) => (
+              <span key={index} className={styles.avatar}>
+                {initial}
+              </span>
+            ))}
+            {group.extraMemberCount > 0 && <span className={styles.avatarExtra}>+{group.extraMemberCount}</span>}
+          </div>
+        )}
+      </button>
     </Card>
   );
 }

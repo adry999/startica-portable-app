@@ -23,6 +23,25 @@
   outline-offset: -2px;
 }
 
+.tileMenu {
+  position: absolute;
+  top: var(--space-14);
+  right: var(--space-14);
+  z-index: 1;
+}
+
+.tileToggle {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .tileHead {
   display: flex;
   align-items: flex-start;

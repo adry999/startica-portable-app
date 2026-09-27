@@ -1,0 +1,126 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-20);
+  max-width: 420px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.fieldGroupLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.pillRow {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 7px 13px;
+  font: 800 13px var(--font-body);
+  background: var(--neutral-soft);
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.pillActive {
+  background: var(--slate);
+  color: var(--white);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.field input {
+  padding: 10px 14px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--input-border);
+  font: 600 14px var(--font-body);
+  color: var(--slate);
+}
+
+.notice {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-10);
+}
+
+.previewLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.previewFrame {
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.printSheet {
+  display: none;
+}
+
+@media print {
+  .toolbar,
+  .editor,
+  .previewSection {
+    display: none;
+  }
+
+  .printSheet {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .printSheet > * {
+    break-after: page;
+  }
+}
