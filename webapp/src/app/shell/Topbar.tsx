@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MonthPicker, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
+import { BnmRateLink, MonthPicker, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
-import { latestKnownRate } from '#shared/domain/exchange-rates.mjs';
+import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
@@ -26,6 +26,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   const navigate = useNavigate();
   const { rates } = useExchangeRates();
   const todaysRate = latestKnownRate(rates);
+  const todaysRateDate = latestKnownRateDate(rates);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -133,9 +134,12 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
         )}
         {pageActions}
         {view === 'dashboard' && todaysRate != null && (
-          <button type="button" className={styles.ratePill} onClick={goToCursValutar}>
-            <span className={styles.ratePillDot} />1 € = {formatRate(todaysRate)} lei
-          </button>
+          <span className={styles.ratePillGroup}>
+            <button type="button" className={styles.ratePill} onClick={goToCursValutar}>
+              <span className={styles.ratePillDot} />1 € = {formatRate(todaysRate)} lei
+            </button>
+            {todaysRateDate && <BnmRateLink date={todaysRateDate} />}
+          </span>
         )}
         {view === 'dashboard' && <MonthPicker value={month} onChange={onMonthChange} />}
       </div>

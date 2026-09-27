@@ -7,9 +7,11 @@ import {
   parseExchangeRateSources,
   eurToMdlRate,
   latestKnownRate,
+  latestKnownRateDate,
   convertAmount,
   parseBnmEurRate,
   bnmDateParam,
+  bnmRatesPageUrl,
 } from './exchange-rates.mjs';
 
 test('clampExchangeRates păstrează doar chei dată-validă cu valori numerice pozitive', () => {
@@ -110,4 +112,13 @@ test('parseExchangeRateSources citește JSON valid și cade pe {} la JSON strica
   assert.deepEqual(parseExchangeRateSources('{"2026-09-23":"bnm"}'), { '2026-09-23': 'bnm' });
   assert.deepEqual(parseExchangeRateSources('nu-i json'), {});
   assert.deepEqual(parseExchangeRateSources(undefined), {});
+});
+
+test('latestKnownRateDate întoarce ziua celui mai recent curs, undefined pe hartă goală', () => {
+  assert.equal(latestKnownRateDate({ '2026-09-20': 20.1, '2026-09-25': 19.9 }), '2026-09-25');
+  assert.equal(latestKnownRateDate({}), undefined);
+});
+
+test('bnmRatesPageUrl duce la pagina publică BNM a zilei, în formatul de dată al BNM', () => {
+  assert.equal(bnmRatesPageUrl('2026-09-05'), 'https://www.bnm.md/ro/official_exchange_rates?date=05.09.2026');
 });

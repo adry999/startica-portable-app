@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Badge, Card, useToast } from '@shared/ui';
+import { Badge, BnmRateLink, Card, useToast } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
+import { today } from '@domain/calendar-month.mjs';
 import { useExchangeRates, type PlanPreset } from './useExchangeRates';
 import backupStyles from './BackupPage.module.css';
 import styles from './ExchangeRateSettings.module.css';
@@ -91,6 +92,7 @@ export function ExchangeRateSettings() {
             <Badge tone={exchangeRates.todayTone === 'yellow' ? 'yellow' : 'mint'}>
               1 € = {formatRate(exchangeRates.todayRate)} lei
             </Badge>
+            <BnmRateLink date={today()} />
             {exchangeRates.todayTone === 'yellow' && (
               <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
                 Revino la cursul BNM
@@ -124,7 +126,10 @@ export function ExchangeRateSettings() {
             {exchangeRates.lastFiveDays.map(entry => (
               <li key={entry.date} className={styles.lastFiveRow}>
                 <span>{formatDate(entry.date)}</span>
-                <span>1 € = {formatRate(entry.rate)} lei</span>
+                <span>
+                  1 € = {formatRate(entry.rate)} lei
+                  <BnmRateLink date={entry.date} />
+                </span>
                 {entry.source && (
                   <Badge tone={entry.source === 'bnm' ? 'mint' : 'yellow'}>{SOURCE_LABEL[entry.source]}</Badge>
                 )}

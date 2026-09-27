@@ -1,4 +1,4 @@
-import { Card } from '@shared/ui';
+import { BnmRateLink, Card } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -53,6 +53,7 @@ export function ReportMethodsPanel({ report }: ReportMethodsPanelProps) {
               <span className={styles.alignEnd}>{formatMoney(row.amount)}</span>
               <span className={row.fxRateSource === 'manual' ? styles.eurRateManual : styles.alignEnd}>
                 {formatRate(row.fxRate)}
+                <BnmRateLink date={row.date} />
               </span>
               <span className={`${styles.alignEnd} ${styles.eurAmount}`}>{formatMoney(row.amountEur, 'EUR')}</span>
             </div>

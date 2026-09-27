@@ -30,6 +30,11 @@
   gap: var(--space-12);
 }
 
+.ratePillGroup {
+  display: inline-flex;
+  align-items: center;
+}
+
 .ratePill {
   display: flex;
   align-items: center;

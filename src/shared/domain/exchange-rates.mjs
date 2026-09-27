@@ -97,6 +97,14 @@ export function eurToMdlRate(rates, date) {
 }
 
 /**
+ * @param {ExchangeRates} rates
+ * @returns {string | undefined} ziua (YYYY-MM-DD) a celui mai recent curs cunoscut
+ */
+export function latestKnownRateDate(rates) {
+  return Object.keys(rates).sort().at(-1);
+}
+
+/**
  * Cursul celei mai recente zile cunoscute, indiferent de dată — folosit pentru
  * sume încă neîncasate (proiecție „cât ar costa azi", nu un fapt istoric).
  * @param {ExchangeRates} rates
@@ -131,6 +139,12 @@ export function bnmDateParam(dateKey) {
   const [year, month, day] = dateKey.split('-');
   return `${day}.${month}.${year}`;
 }
+
+export const BNM_OFFICIAL_RATES_URL = 'https://www.bnm.md/ro/official_exchange_rates';
+
+// Pagina publică BNM cu cursurile unei zile — operatorul verifică de acolo cursul salvat.
+/** @param {string} dateKey YYYY-MM-DD */
+export const bnmRatesPageUrl = dateKey => `${BNM_OFFICIAL_RATES_URL}?date=${bnmDateParam(dateKey)}`;
 
 /**
  * Citește valoarea EUR din răspunsul XML al BNM

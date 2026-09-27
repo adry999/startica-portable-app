@@ -1,0 +1,19 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--space-4);
+  color: var(--muted);
+  vertical-align: middle;
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--orange-ink);
+}
+
+@media print {
+  .link {
+    display: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { BnmRateLink, Button, Drawer } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -205,6 +205,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
                   : bnmRate !== undefined
                     ? `BNM ${formatDate(values.date)} · ${formatRate(bnmRate)}`
                     : 'Niciun curs cunoscut pentru această dată — completează manual'}
+                {values.date && <BnmRateLink date={values.date} />}
               </p>
             </>
           )}

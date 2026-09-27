@@ -1,6 +1,4 @@
-import { bnmDateParam, parseBnmEurRate } from '#shared/domain/exchange-rates.mjs';
-
-const BNM_ROOT = 'https://www.bnm.md/ro/official_exchange_rates';
+import { BNM_OFFICIAL_RATES_URL, bnmDateParam, parseBnmEurRate } from '#shared/domain/exchange-rates.mjs';
 const REQUEST_TIMEOUT_MS = 10000;
 
 /**
@@ -11,7 +9,7 @@ const REQUEST_TIMEOUT_MS = 10000;
  * @returns {Promise<{ rate: number } | { error: string }>}
  */
 export async function fetchBnmEurRate({ fetch: fetchImpl, date }) {
-  const url = `${BNM_ROOT}?get_xml=1&date=${bnmDateParam(date)}`;
+  const url = `${BNM_OFFICIAL_RATES_URL}?get_xml=1&date=${bnmDateParam(date)}`;
   try {
     const response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
     if (!response.ok) return { error: `BNM a răspuns cu eroare HTTP ${response.status}.` };
