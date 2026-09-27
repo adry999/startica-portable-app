@@ -8,11 +8,13 @@ import { VIEW_PATHS, viewForPathname } from './shell/routes';
 import { DashboardPage, useDashboard } from '@features/dashboard';
 import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
+import { AttendancePage } from '@features/attendance';
 import { VisitsPage } from '@features/visits';
 import { PaymentsPage } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
+import { ReportPage } from '@features/report';
 import { FeeSetupPage, useFeeSetup } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
@@ -88,6 +90,7 @@ export function App() {
         <Route path="/copii/zile-de-nastere" element={<BirthdaysPage />} />
         <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
         <Route path="/grupe" element={<GroupsPage />} />
+        <Route path="/prezenta" element={<AttendancePage month={month} />} />
         <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/achitari" element={<PaymentsRoute />} />
         <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
@@ -104,6 +107,17 @@ export function App() {
           }
         />
         <Route path="/de-notificat" element={<NotifyPage month={month} onNavigate={onNavigate} />} />
+        <Route
+          path="/raport"
+          element={
+            <ReportPage
+              month={month}
+              onMonthChange={setMonth}
+              onOpenPayments={() => navigate('/achitari')}
+              onOpenAssign={() => navigate('/asociere-achitari')}
+            />
+          }
+        />
         <Route path="/taxe-si-grupe" element={<FeeSetupPage />} />
         <Route path="/asociere-achitari" element={<AssignPage month={month} />} />
         <Route path="/de-verificat" element={<ReviewPage onNavigate={onNavigate} />} />

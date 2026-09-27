@@ -43,4 +43,14 @@ describe('Sidebar', () => {
     );
     expect(screen.getByText('v1.6.3')).toBeInTheDocument();
   });
+
+  it('Prezența stă imediat după Grupe', () => {
+    render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    const labels = screen.getAllByRole('button').map(button => button.textContent);
+    const groupsIndex = labels.findIndex(label => label?.includes('Grupe'));
+    const attendanceIndex = labels.findIndex(label => label?.includes('Prezența'));
+    expect(attendanceIndex).toBe(groupsIndex + 1);
+  });
 });
