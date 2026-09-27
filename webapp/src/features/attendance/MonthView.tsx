@@ -1,5 +1,5 @@
 import { Fragment, useState } from 'react';
-import { Button, Card, FilterPills, groupTone, type PillTone } from '@shared/ui';
+import { Button, Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { formatMonthName } from '#shared/format/date-format.mjs';
 import { exportAttendanceMonth } from './attendance-export';
@@ -16,7 +16,7 @@ export interface MonthViewProps {
 export function MonthView({ month, data }: MonthViewProps) {
   const [excuseTarget, setExcuseTarget] = useState<{ childId: string; date: string } | null>(null);
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (data.status === 'loading') return <LoadingState />;
   if (data.status === 'failed')
     return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

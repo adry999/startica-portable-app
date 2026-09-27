@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, FilterPills, groupTone, type PillTone } from '@shared/ui';
+import { Badge, Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { ChildTile } from './ChildTile';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
@@ -14,7 +14,7 @@ export interface DayViewProps {
 export function DayView({ data }: DayViewProps) {
   const [excuseTarget, setExcuseTarget] = useState<string | null>(null);
 
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (data.status === 'loading') return <LoadingState />;
   if (data.status === 'failed')
     return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

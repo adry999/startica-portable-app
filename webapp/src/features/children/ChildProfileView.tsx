@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Card, DataTable, useToast, type DataTableColumn } from '@shared/ui';
+import { Badge, BnmRateLink, Button, Card, DataTable, LoadingState, useToast, type DataTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -35,7 +35,7 @@ export function ChildProfileView({
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
 
-  if (profileData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (profileData.status === 'loading') return <LoadingState />;
   if (profileData.status === 'failed')
     return <p className={styles.notice}>{profileData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
   if (profileData.status === 'not-found' || !profileData.child) {
@@ -251,7 +251,12 @@ function PaymentHistoryTable({
             key: 'fxRate',
             header: 'Curs',
             align: 'end' as const,
-            render: (payment: Payment) => formatRate(payment.fxRate),
+            render: (payment: Payment) => (
+              <>
+                {formatRate(payment.fxRate)}
+                {payment.fxRate != null && <BnmRateLink date={payment.date} />}
+              </>
+            ),
           },
           {
             key: 'amountEur',

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { Button, Card, SegmentedControl, useToast } from '@shared/ui';
+import { Button, Card, LoadingState, SegmentedControl, useToast } from '@shared/ui';
 import {
   useKindergarten,
   type KindergartenSettings as KindergartenSettingsData,
@@ -51,7 +51,7 @@ export function KindergartenSettings() {
     if (kindergarten.ready && kindergarten.settings && !form) setForm(kindergarten.settings);
   }, [kindergarten.ready, kindergarten.settings, form]);
 
-  if (!kindergarten.ready || !form) return <p className={backupStyles.notice}>Se încarcă datele grădiniței…</p>;
+  if (!kindergarten.ready || !form) return <LoadingState />;
 
   function updateField(key: keyof KindergartenSettingsData, value: string | number) {
     setForm(current => (current ? { ...current, [key]: value } : current));
