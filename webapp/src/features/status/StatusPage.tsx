@@ -8,18 +8,24 @@ import {
   LoadingState,
   MonthPicker,
   SegmentedControl,
+  SmsConfirmDialog,
   groupTone,
+  useToast,
   useTopbarActions,
   type BadgeTone,
   type DataTableColumn,
+  type SmsRecipientView,
 } from '@shared/ui';
+import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsRecipientRow, type SmsSendResultView } from '@shared/sms';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import type { ViewKey } from '@shared/view-key';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.mjs';
-import { useStatus, type StatusData, type StatusRowView, type StatusSegment } from './useStatus';
-import { useSchoolYearStatus, type SchoolYearData } from './useSchoolYearStatus';
+import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
+import { DEFAULT_SMS_TEMPLATE_BODY, renderSmsTemplate, smsVariablesFor } from '@domain/sms-template.mjs';
+import { useStatus, NOTIFIABLE_LABELS, type StatusData, type StatusRowView, type StatusSegment } from './useStatus';
+import { useSchoolYearStatus, type SchoolYearData, type YearRecipientRow } from './useSchoolYearStatus';
 import { PaymentHeatmap } from './PaymentHeatmap';
 import { PrintOptionsDialog, type PrintOptions } from './PrintOptionsDialog';
 import { StatusPrint } from './StatusPrint';
@@ -32,8 +38,61 @@ const STATUS_TONE: Record<string, BadgeTone> = {
   'Scadent în curând': 'orange',
 };
 
-const NOTIFY_LABELS = new Set(['Restanță', 'Plată parțială']);
-const SMS_TITLE = 'Trimiterea SMS vine odată cu integrarea SMS (P2)';
+const SMS_DISABLED_TITLE = 'Conectează sms.md în Notificări';
+
+type PlannedSmsMessage = ReturnType<typeof planSmsBatch>['messages'][number];
+
+/** Textul mesajului când destinatarul n-are telefon valid (nu se trimite, dar previzualizarea trebuie să arate ceva). */
+function fallbackSmsText(recipient: SmsRecipientRow, month: string): string {
+  return renderSmsTemplate(
+    DEFAULT_SMS_TEMPLATE_BODY,
+    smsVariablesFor({ child: recipient.child, parentName: recipient.child.parent, obligation: recipient.obligation, month }),
+  );
+}
+
+function toSmsRecipientView(
+  recipient: SmsRecipientRow,
+  plannedByChildId: Map<string, PlannedSmsMessage>,
+  month: string,
+  isNotifiedToday: (id: string) => boolean,
+): SmsRecipientView {
+  const planned = plannedByChildId.get(recipient.child.id);
+  return {
+    id: recipient.child.id,
+    name: recipient.child.name,
+    phone: planned?.phone ?? null,
+    text: planned?.text ?? fallbackSmsText(recipient, month),
+    rest: recipient.obligation.rest ?? undefined,
+    excludeReason: isNotifiedToday(recipient.child.id) ? 'notificat azi' : undefined,
+  };
+}
+
+/** Trimite doar rândurile bifate/alese din `plannedMessages`; folosit atât pentru „Notifică” unic cât și pentru loturi. */
+function createSendHandler(
+  sendBatch: (request: {
+    source: 'status-row' | 'status-bulk';
+    month: string | null;
+    templateId: null;
+    messages: { childId: string; childName: string; recipientName: string; phone: string; text: string }[];
+  }) => Promise<SmsSendResultView>,
+  source: 'status-row' | 'status-bulk',
+  requestMonth: string | null,
+  plannedMessages: PlannedSmsMessage[],
+) {
+  return async (selectedIds: string[]): Promise<SmsSendResultView> => {
+    const selected = new Set(selectedIds);
+    const messages = plannedMessages
+      .filter(message => selected.has(message.childId))
+      .map(message => ({
+        childId: message.childId,
+        childName: message.childName,
+        recipientName: message.recipientName,
+        phone: message.phone,
+        text: message.text,
+      }));
+    return sendBatch({ source, month: requestMonth, templateId: null, messages });
+  };
+}
 
 const SEGMENT_LABEL: Record<StatusSegment, string | null> = {
   all: null,
@@ -87,6 +146,89 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   const [printOptions, setPrintOptions] = useState<PrintOptions | null>(null);
   const statusData = useStatus(month);
   const yearData = useSchoolYearStatus(mode === 'year' ? startYear : null);
+  const sms = useSmsStatus();
+  const lastNotified = useSmsLastNotified();
+  const smsSend = useSmsSend();
+  const toast = useToast();
+  const [smsDialog, setSmsDialog] = useState<{
+    mode: 'single' | 'bulk';
+    recipients: SmsRecipientView[];
+    send: (ids: string[]) => Promise<SmsSendResultView>;
+    namesByChildId: Map<string, string>;
+  } | null>(null);
+
+  const smsConfigured = sms.data?.configured ?? false;
+  const isNotifiedToday = (id: string) => lastNotified.notifiedToday(id, statusData.asOf);
+
+  // Lot Lună: rândurile cu Restanță/Plată parțială (buton pe rând); bannerul „Notifică toți” alege
+  // doar restanțierii dintre acestea (aceeași populație ca summary.overdueChildren).
+  const monthBatchPlan = planSmsBatch({
+    rows: statusData.notifiableRecipients,
+    body: DEFAULT_SMS_TEMPLATE_BODY,
+    stripDiacritics: true,
+    month,
+  });
+  const monthPlannedByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message]));
+  const monthRecipientByChildId = new Map(statusData.notifiableRecipients.map(recipient => [recipient.child.id, recipient]));
+  const monthNameByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message.recipientName]));
+
+  // Lot An școlar: fiecare copil cu sold > 0 are propria lună reprezentativă (cea mai veche restanță
+  // neachitată) — planSmsBatch cere o singură lună per apel, deci grupăm destinatarii pe lună.
+  const yearRecipientsByMonth = new Map<string, YearRecipientRow[]>();
+  for (const recipient of yearData.recipients) {
+    const group = yearRecipientsByMonth.get(recipient.month) ?? [];
+    group.push(recipient);
+    yearRecipientsByMonth.set(recipient.month, group);
+  }
+  const yearBatchMessages = [...yearRecipientsByMonth.entries()].flatMap(
+    ([groupMonth, rows]) =>
+      planSmsBatch({ rows, body: DEFAULT_SMS_TEMPLATE_BODY, stripDiacritics: true, month: groupMonth }).messages,
+  );
+  const yearPlannedByChildId = new Map(yearBatchMessages.map(message => [message.childId, message]));
+  const yearNameByChildId = new Map(yearBatchMessages.map(message => [message.childId, message.recipientName]));
+
+  function openRowNotify(row: StatusRowView) {
+    const recipient = monthRecipientByChildId.get(row.id);
+    if (!recipient) return;
+    setSmsDialog({
+      mode: 'single',
+      recipients: [toSmsRecipientView(recipient, monthPlannedByChildId, month, isNotifiedToday)],
+      send: createSendHandler(smsSend.send, 'status-row', month, monthBatchPlan.messages),
+      namesByChildId: monthNameByChildId,
+    });
+  }
+
+  function openBannerNotify() {
+    setSmsDialog({
+      mode: 'bulk',
+      recipients: statusData.overdueRecipients.map(recipient =>
+        toSmsRecipientView(recipient, monthPlannedByChildId, month, isNotifiedToday),
+      ),
+      send: createSendHandler(smsSend.send, 'status-bulk', month, monthBatchPlan.messages),
+      namesByChildId: monthNameByChildId,
+    });
+  }
+
+  function openYearNotify() {
+    setSmsDialog({
+      mode: 'bulk',
+      recipients: yearData.recipients.map(recipient =>
+        toSmsRecipientView(recipient, yearPlannedByChildId, recipient.month, isNotifiedToday),
+      ),
+      send: createSendHandler(smsSend.send, 'status-bulk', null, yearBatchMessages),
+      namesByChildId: yearNameByChildId,
+    });
+  }
+
+  function handleSmsSent(result: SmsSendResultView, namesByChildId: Map<string, string>) {
+    const sentIds = result.results.filter(outcome => outcome.outcome === 'sent').map(outcome => outcome.childId);
+    if (sentIds.length === 1) {
+      toast.show({ message: `SMS trimis către ${namesByChildId.get(sentIds[0]) ?? ''}` });
+    } else if (sentIds.length > 1) {
+      toast.show({ message: `${sentIds.length} SMS trimise` });
+    }
+    void lastNotified.refresh();
+  }
 
   // Randarea confirmării tipărite trebuie să apară în DOM înainte de window.print();
   // afterprint golește starea, ca situația tipărită să nu rămână montată pe ecran.
@@ -135,9 +277,17 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     <>
       <div className={styles.screenOnly}>
         {mode === 'month' ? (
-          <MonthView data={statusData} onNavigate={onNavigate} onOpenChild={onOpenChild} />
+          <MonthView
+            data={statusData}
+            smsConfigured={smsConfigured}
+            isNotifiedToday={isNotifiedToday}
+            onNavigate={onNavigate}
+            onOpenChild={onOpenChild}
+            onNotifyRow={openRowNotify}
+            onNotifyAll={openBannerNotify}
+          />
         ) : (
-          <YearView data={yearData} />
+          <YearView data={yearData} smsConfigured={smsConfigured} onNotifyYear={openYearNotify} />
         )}
       </div>
 
@@ -160,18 +310,40 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           setPrintOptions(options);
         }}
       />
+
+      {smsDialog && (
+        <SmsConfirmDialog
+          open
+          mode={smsDialog.mode}
+          recipients={smsDialog.recipients}
+          unitCostLei={sms.data?.unitCost ?? 0.3}
+          balanceLei={sms.data?.balance ? Number(sms.data.balance) : null}
+          onSend={smsDialog.send}
+          onRetry={smsDialog.send}
+          onClose={() => setSmsDialog(null)}
+          onSent={result => handleSmsSent(result, smsDialog.namesByChildId)}
+        />
+      )}
     </>
   );
 }
 
 function MonthView({
   data,
+  smsConfigured,
+  isNotifiedToday,
   onNavigate,
   onOpenChild,
+  onNotifyRow,
+  onNotifyAll,
 }: {
   data: StatusData;
+  smsConfigured: boolean;
+  isNotifiedToday: (id: string) => boolean;
   onNavigate: (view: ViewKey) => void;
   onOpenChild: (id: string) => void;
+  onNotifyRow: (row: StatusRowView) => void;
+  onNotifyAll: () => void;
 }) {
   const { summary } = data;
   const pct = Math.round(summary.paidShare * 100);
@@ -220,10 +392,19 @@ function MonthView({
       header: '',
       align: 'end',
       render: row =>
-        NOTIFY_LABELS.has(row.label) ? (
-          <button type="button" className={styles.ctaButton} disabled title={SMS_TITLE}>
-            Notifică
-          </button>
+        NOTIFIABLE_LABELS.has(row.label) ? (
+          <div className={styles.ctaCell}>
+            <button
+              type="button"
+              className={styles.ctaButton}
+              disabled={!smsConfigured}
+              title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+              onClick={() => onNotifyRow(row)}
+            >
+              Notifică
+            </button>
+            {isNotifiedToday(row.id) && <Badge tone="mint">Notificat azi</Badge>}
+          </div>
         ) : (
           <button type="button" className={styles.ctaButton} onClick={() => onOpenChild(row.id)}>
             Vezi fișa
@@ -327,7 +508,7 @@ function MonthView({
               {summary.overdueChildren} {summary.overdueChildren === 1 ? 'restanțier' : 'restanțieri'}
             </strong>
             <span>Trimite o notificare tuturor părinților cu restanță</span>
-            <Button disabled title={SMS_TITLE}>
+            <Button disabled={!smsConfigured} title={smsConfigured ? undefined : SMS_DISABLED_TITLE} onClick={onNotifyAll}>
               Notifică toți
             </Button>
           </div>
@@ -337,7 +518,15 @@ function MonthView({
   );
 }
 
-function YearView({ data }: { data: SchoolYearData }) {
+function YearView({
+  data,
+  smsConfigured,
+  onNotifyYear,
+}: {
+  data: SchoolYearData;
+  smsConfigured: boolean;
+  onNotifyYear: () => void;
+}) {
   return (
     <>
       <div className={styles.yearCards}>
@@ -348,7 +537,13 @@ function YearView({ data }: { data: SchoolYearData }) {
             <small>{formatMoney(data.summary.unrecovered)} nerecuperați</small>
           </div>
           {data.summary.overdueChildren > 0 && (
-            <button type="button" className={styles.ctaButton} disabled title={SMS_TITLE}>
+            <button
+              type="button"
+              className={styles.ctaButton}
+              disabled={!smsConfigured || data.recipients.length === 0}
+              title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+              onClick={onNotifyYear}
+            >
               Notifică
             </button>
           )}

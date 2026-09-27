@@ -8,6 +8,7 @@ import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Currency, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { SmsRecipientRow } from '@shared/sms';
 
 export type StatusScreenStatus = 'loading' | 'ready' | 'failed';
 export type StatusSegment = 'all' | 'overdue' | 'partial' | 'paid' | 'upcoming';
@@ -44,6 +45,10 @@ export interface StatusData {
   rows: StatusRowView[];
   /** Toți copiii, fără filtrele de grupă/statut/căutare — pentru „toți copiii” la tipărire (16c). */
   allRows: StatusRowView[];
+  /** {child, obligation} pentru copiii cu Restanță/Plată parțială — sursa pentru „Notifică” pe rând (SMS P2). */
+  notifiableRecipients: SmsRecipientRow[];
+  /** Doar restanțierii — aceeași populație ca summary.overdueChildren, sursa pentru „Notifică toți" (SMS P2). */
+  overdueRecipients: SmsRecipientRow[];
   /** Cardurile și contoarele: toată luna, indiferent de filtre (RASPUNSURI.md). */
   summary: MonthStatusSummary;
   missingFeeCount: number;
@@ -57,6 +62,9 @@ export interface StatusData {
   setSearch: (value: string) => void;
   asOf: string;
 }
+
+// Rândurile cu buton „Notifică" (7a) — restanțe și plăți parțiale; „Scadent în curând"/„Nescadent" nu se notifică.
+export const NOTIFIABLE_LABELS = new Set(['Restanță', 'Plată parțială']);
 
 const SEGMENT_BY_LABEL: Record<string, Exclude<StatusSegment, 'all'>> = {
   Restanță: 'overdue',
@@ -107,6 +115,8 @@ export function useStatus(month: string): StatusData {
       failureMessage: saveError,
       rows: [],
       allRows: [],
+      notifiableRecipients: [],
+      overdueRecipients: [],
       summary: EMPTY_SUMMARY,
       missingFeeCount: 0,
       segmentCounts: EMPTY_COUNTS,
@@ -158,12 +168,19 @@ export function useStatus(month: string): StatusData {
     .map(toRowView);
   const allRows: StatusRowView[] = [...evaluations].sort(byLabelThenName).map(toRowView);
   const groups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  // Neafectate de filtre, la fel ca summary — planul SMS trebuie să acopere exact ce arată bannerul/CTA-urile.
+  const notifiableRecipients: SmsRecipientRow[] = evaluations.filter(({ obligation }) =>
+    NOTIFIABLE_LABELS.has(obligation.label),
+  );
+  const overdueRecipients: SmsRecipientRow[] = evaluations.filter(({ obligation }) => obligation.label === 'Restanță');
 
   return {
     status: 'ready',
     failureMessage: '',
     rows,
     allRows,
+    notifiableRecipients,
+    overdueRecipients,
     summary,
     missingFeeCount,
     segmentCounts,

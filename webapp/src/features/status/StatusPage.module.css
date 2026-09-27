@@ -155,6 +155,13 @@
   cursor: not-allowed;
 }
 
+.ctaCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
 .yearCards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

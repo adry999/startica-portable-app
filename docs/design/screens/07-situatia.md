@@ -21,4 +21,4 @@ Se modifică: `status/StatusPage.tsx`, `.module.css`, `.test.tsx`. Se creează: 
 ## 5. Criterii de acceptare
 - [x] Antetul An școlar e compact, identic cu Lună (nu H2 de 36px în conținut)
 - [x] Filtrul de grupă e cu pastile, nu cu dropdown
-- [ ] „Notifică” pe un rând → #7c; „Notifică toți” → #7d — **rămâne (SMS P2)**, vezi `docs/superpowers/plans/2026-09-27-situatia-platilor-complet.md` §„Handoff to SMS P2”: butoanele sunt vizibile, dezactivate, cu explicație
+- [x] „Notifică” pe un rând → #7c; „Notifică toți” → #7d — cablate la `SmsConfirmDialog` (SMS P2): rând → mod `single`, banner și „Notifică” din An școlar → mod `bulk`; dezactivate cu explicație cât sms.md nu e conectat

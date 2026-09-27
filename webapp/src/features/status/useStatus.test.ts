@@ -205,6 +205,15 @@ describe('useStatus', () => {
     expect(result.current.rows.every(row => row.currency === 'MDL')).toBe(true);
   });
 
+  it('notifiableRecipients conține restanța și plata parțială; overdueRecipients doar restanța (SMS P2)', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useStatus('2026-09'));
+
+    expect(result.current.notifiableRecipients.map(recipient => recipient.child.id)).toEqual(['c1']);
+    expect(result.current.overdueRecipients.map(recipient => recipient.child.id)).toEqual(['c1']);
+    expect(result.current.overdueRecipients[0].obligation.rest).toBe(1000);
+  });
+
   it('allRows rămâne complet, indiferent de filtrele de grupă/statut/căutare (16c: „toți copiii”)', async () => {
     await loadedSession();
     const { result } = renderHook(() => useStatus('2026-09'));

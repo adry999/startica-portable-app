@@ -12,9 +12,13 @@ import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Currency, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { SmsRecipientRow } from '@shared/sms';
 import type { StatusScreenStatus } from './useStatus';
 
 export type HeatCellKind = 'paid' | 'partial' | 'unpaid' | 'upcoming' | 'none';
+
+/** Un rând cu sold > 0, plus luna cea mai veche cu rest neachitat scadent — sursa mesajului SMS pentru acel copil. */
+export type YearRecipientRow = SmsRecipientRow & { month: string };
 
 export interface HeatRowView {
   id: string;
@@ -37,6 +41,8 @@ export interface SchoolYearData {
   failureMessage: string;
   /** Harta: după căutare, fără copiii complet în afara anului; sortată după sold descrescător, apoi nume. */
   rows: HeatRowView[];
+  /** Copiii cu sold > 0, indiferent de căutare — sursa pentru „Notifică" din cardul de restanțe (SMS P2). */
+  recipients: YearRecipientRow[];
   /** Cardurile: tot anul, indiferent de căutare. */
   summary: SchoolYearSummaryView;
   months: string[];
@@ -69,6 +75,7 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
       status: loading || !saveError ? 'loading' : 'failed',
       failureMessage: saveError,
       rows: [],
+      recipients: [],
       summary: EMPTY_SUMMARY,
       months: [],
       monthLabels: [],
@@ -99,6 +106,7 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
       status: 'ready',
       failureMessage: '',
       rows: [],
+      recipients: [],
       summary: EMPTY_SUMMARY,
       months: [],
       monthLabels: [],
@@ -111,12 +119,8 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
 
   const months = schoolYearMonths(startYear);
   const referenceMonth = todayMonth < months[0] ? months[0] : todayMonth > months[11] ? months[11] : todayMonth;
-  const yearSummary = summarizeSchoolYear(
-    evaluateChildrenForSchoolYear(records, startYear, todayStr, rates),
-    todayStr,
-    referenceMonth,
-    rates,
-  );
+  const yearEvaluations = evaluateChildrenForSchoolYear(records, startYear, todayStr, rates);
+  const yearSummary = summarizeSchoolYear(yearEvaluations, todayStr, referenceMonth, rates);
   const normalizedSearch = normalizeSearchText(search);
   const rows: HeatRowView[] = yearSummary.rows
     .filter(row => row.hasObligation && matchesRecordListSearch('children', row.child, records, normalizedSearch))
@@ -137,11 +141,23 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
     collectionRate: yearSummary.collectionRate,
     partialThisMonth: yearSummary.partialThisMonth,
   };
+  // Mesajul SMS e per-lună (planSmsBatch); pentru sold acumulat pe mai multe luni luăm luna cea mai
+  // veche cu rest scadent neachitat — aceeași condiție ca overdueMonths din status-summary.mjs.
+  const recipients: YearRecipientRow[] = yearSummary.rows
+    .filter(row => row.sold.amount > 0)
+    .flatMap(row => {
+      const evaluation = yearEvaluations.find(entry => entry.child.id === row.child.id);
+      const overdueMonth = evaluation?.months.find(
+        ({ obligation }) => obligation.expected !== null && obligation.rest !== null && obligation.rest > 0 && todayStr > obligation.due,
+      );
+      return overdueMonth ? [{ child: row.child, obligation: overdueMonth.obligation, month: overdueMonth.month }] : [];
+    });
 
   return {
     status: 'ready',
     failureMessage: '',
     rows,
+    recipients,
     summary,
     months,
     monthLabels,

@@ -1,8 +1,10 @@
 import { render, renderHook, act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { today as todayFn } from '@domain/calendar-month.mjs';
 import { StatusPage } from './StatusPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — comutatorul de mod ajunge acolo, nu în pagină. */
@@ -27,6 +29,9 @@ const fixtureState = {
       status: 'Activ',
       statusHistory: [],
       feeHistory: [{ from: '2026-01', amount: 1500 }],
+      parent: 'Maria Popescu',
+      // Numărul e format valid moldovenesc (069xxxxxx), ca destinatarul SMS să fie ales de chooseSmsRecipient.
+      phone: '069000000',
       archived: false,
     },
     {
@@ -90,17 +95,35 @@ const fixtureState = {
   visits: [],
 };
 
+const smsUnconfigured = {
+  configured: false,
+  sender: '',
+  tokenMasked: '',
+  monthlyLimit: null,
+  sentThisMonth: 0,
+  failedThisMonth: 0,
+  segmentsThisMonth: 0,
+  balance: null,
+  balanceCheckedAt: '',
+  unitCost: 0.3,
+  lastError: '',
+};
+
+const smsConfigured = { ...smsUnconfigured, configured: true, sender: 'Startica' };
+
 function renderPage() {
   const onMonthChange = vi.fn();
   const onNavigate = vi.fn();
   const onOpenChild = vi.fn();
   render(
-    <ToastProvider>
-      <TopbarActionsProvider>
-        <TopbarActionsSlot />
-        <StatusPage month="2026-09" onMonthChange={onMonthChange} onNavigate={onNavigate} onOpenChild={onOpenChild} />
-      </TopbarActionsProvider>
-    </ToastProvider>,
+    <MemoryRouter>
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <StatusPage month="2026-09" onMonthChange={onMonthChange} onNavigate={onNavigate} onOpenChild={onOpenChild} />
+        </TopbarActionsProvider>
+      </ToastProvider>
+    </MemoryRouter>,
   );
   return { onMonthChange, onNavigate, onOpenChild };
 }
@@ -121,6 +144,8 @@ describe('StatusPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -214,20 +239,22 @@ describe('StatusPage', () => {
     const { onOpenChild } = renderPage();
     const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
     expect(within(overdueRow).getByText('1.000,00 lei')).toHaveClass(/restDue/);
-    expect(within(overdueRow).getByRole('button', { name: 'Notifică' })).toBeDisabled();
+    const notifyButton = within(overdueRow).getByRole('button', { name: 'Notifică' });
+    expect(notifyButton).toBeDisabled();
+    expect(notifyButton).toHaveAttribute('title', 'Conectează sms.md în Notificări');
     const paidRow = screen.getByText('Elena Marin').closest('tr') as HTMLElement;
     await userEvent.click(within(paidRow).getByRole('button', { name: 'Vezi fișa' }));
     expect(onOpenChild).toHaveBeenCalledWith('c4');
   });
 
-  it('bannerul de restanțieri apare cu „Notifică toți" dezactivat până la integrarea SMS', async () => {
+  it('bannerul de restanțieri apare cu „Notifică toți" dezactivat cât sms.md nu e conectat', async () => {
     await loadedSession();
     renderPage();
     expect(screen.getByText('1 restanțier')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Notifică toți' })).toBeDisabled();
   });
 
-  it('modul An școlar arată cele trei carduri și „Notifică" dezactivat până la integrarea SMS', async () => {
+  it('modul An școlar arată cele trei carduri și „Notifică" dezactivat cât sms.md nu e conectat', async () => {
     await loadedSession();
     renderPage();
     await userEvent.click(screen.getByRole('radio', { name: 'An școlar' }));
@@ -236,6 +263,130 @@ describe('StatusPage', () => {
     expect(screen.getByText('rată de încasare')).toBeInTheDocument();
     expect(screen.getByText('plăți parțiale')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Notifică' })).toBeDisabled();
+  });
+
+  it('cu sms.md conectat, „Notifică” pe un rând deschide dialogul cu numele și telefonul copilului', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+    await user.click(within(overdueRow).getByRole('button', { name: 'Notifică' }));
+
+    expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(1);
+    // planSmsBatch normalizează telefonul la E.164 (chooseSmsRecipient/normalizeMoldovanPhone).
+    expect(screen.getByText('+37369000000')).toBeInTheDocument();
+    expect(screen.getByText(/Trimite SMS \(≈/)).toBeInTheDocument();
+  });
+
+  it('cu sms.md conectat, „Notifică toți” deschide dialogul de lot cu restanțierii', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Notifică toți' }));
+
+    expect(screen.getByRole('dialog', { name: 'Trimite SMS către mai mulți destinatari' })).toBeInTheDocument();
+    expect(screen.getByText(/Trimite 1 SMS \(≈/)).toBeInTheDocument();
+  });
+
+  it('cu sms.md conectat, „Notifică” din cardul An școlar deschide dialogul de lot', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('radio', { name: 'An școlar' }));
+    await user.click(screen.getByRole('button', { name: 'Notifică' }));
+
+    expect(screen.getByRole('dialog', { name: 'Trimite SMS către mai mulți destinatari' })).toBeInTheDocument();
+  });
+
+  it('o trimitere reușită arată toast-ul și marchează rândul „Notificat azi"', async () => {
+    let notified = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified')
+          // Data locală (nu toISOString, care e UTC): notifiedToday compară cu today() local — vezi useStatus.ts.
+          return jsonResponse(
+            notified
+              ? { c1: { at: `${todayFn()}T12:00:00.000Z`, status: 'sent', month: '2026-09', templateName: 'Implicit' } }
+              : {},
+          );
+        if (path === '/api/sms-send') {
+          notified = true;
+          return jsonResponse({
+            ok: true,
+            results: [{ childId: 'c1', outcome: 'sent', logId: 1, segments: 1, cost: '0.30', error: '' }],
+            stopped: null,
+            status: smsConfigured,
+          });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+    await user.click(within(overdueRow).getByRole('button', { name: 'Notifică' }));
+    await user.click(screen.getByText(/Trimite SMS \(≈/));
+
+    expect(await screen.findByText('1 trimise · 0 eșuate · 0 netrimise')).toBeInTheDocument();
+    await user.click(screen.getByText('Închide'));
+
+    expect(await screen.findByText('SMS trimis către Maria Popescu')).toBeInTheDocument();
+    expect(await screen.findByText('Notificat azi')).toBeInTheDocument();
   });
 
   it('căutarea din harta anului școlar restrânge la copilul căutat', async () => {

@@ -33,6 +33,20 @@ const fixtureState = {
       feeHistory: [{ from: '2027-09', amount: 1000 }],
       archived: false,
     },
+    {
+      id: 'c3',
+      name: 'Radu Popa',
+      contractDate: '2025-09-05',
+      attendanceDate: '2025-09-05',
+      withdrawalDate: null,
+      status: 'Activ',
+      statusHistory: [],
+      // Fără nicio achitare de la 2025-09: garantat restanță pe septembrie 2026, indiferent de data reală a testului.
+      feeHistory: [{ from: '2025-09', amount: 800 }],
+      parent: 'Elena Popa',
+      phone: '069111222',
+      archived: false,
+    },
   ],
   payments: [
     {
@@ -95,8 +109,21 @@ describe('useSchoolYearStatus', () => {
   it('ascunde copiii complet în afara anului și sortează după sold', async () => {
     await loadedSession();
     const { result } = renderHook(() => useSchoolYearStatus(2026));
-    expect(result.current.rows.map(row => row.id)).toEqual(['c1']);
-    expect(result.current.rows[0].cells[0].kind).toBe('paid');
+    // c3 acumulează restanțe de la 2025-09, deci soldul lui e mai mare decât al lui c1 (plătit pe septembrie).
+    expect(result.current.rows.map(row => row.id)).toEqual(['c3', 'c1']);
+    expect(result.current.rows.find(row => row.id === 'c1')?.cells[0].kind).toBe('paid');
+  });
+
+  it('recipients conține copiii cu sold > 0, cu luna cea mai veche de restanță (sursa „Notifică” din SMS P2)', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useSchoolYearStatus(2026));
+
+    const recipient = result.current.recipients.find(entry => entry.child.id === 'c3');
+    expect(recipient).toBeDefined();
+    expect(recipient?.child.name).toBe('Radu Popa');
+    expect(recipient?.month).toBe('2026-09');
+    expect(recipient?.obligation.rest).toBeGreaterThan(0);
+    expect(result.current.recipients.some(entry => entry.child.id === 'c1')).toBe(false);
   });
 
   it('opțiunile de an pornesc de la primul contract și ajung la anul curent', async () => {
