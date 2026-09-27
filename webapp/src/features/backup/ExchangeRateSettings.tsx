@@ -9,7 +9,7 @@ import styles from './ExchangeRateSettings.module.css';
 const SOURCE_LABEL: Record<'bnm' | 'manual', string> = { bnm: 'BNM', manual: 'corectat' };
 
 export function ExchangeRateSettings() {
-  const data = useExchangeRates();
+  const exchangeRates = useExchangeRates();
   const toast = useToast();
 
   const [correctionInput, setCorrectionInput] = useState('');
@@ -19,11 +19,11 @@ export function ExchangeRateSettings() {
   // Lista se editează liber în memorie; se sincronizează cu serverul o singură
   // dată, la încărcare, nu la fiecare schimbare a datelor din hook.
   useEffect(() => {
-    if (data.ready && !presetsSeeded) {
-      setLocalPresets(data.presets);
+    if (exchangeRates.ready && !presetsSeeded) {
+      setLocalPresets(exchangeRates.presets);
       setPresetsSeeded(true);
     }
-  }, [data.ready, data.presets, presetsSeeded]);
+  }, [exchangeRates.ready, exchangeRates.presets, presetsSeeded]);
 
   async function submitCorrection(event: FormEvent) {
     event.preventDefault();
@@ -33,7 +33,7 @@ export function ExchangeRateSettings() {
       return;
     }
     try {
-      await data.correctToday(rate);
+      await exchangeRates.correctToday(rate);
       setCorrectionInput('');
       toast.show({ message: 'Cursul de azi a fost corectat.' });
     } catch (error) {
@@ -43,7 +43,7 @@ export function ExchangeRateSettings() {
 
   async function refresh() {
     try {
-      const result = await data.refreshFromBnm();
+      const result = await exchangeRates.refreshFromBnm();
       if (result.ok) toast.show({ message: 'Cursul BNM a fost actualizat.' });
       else toast.show({ message: result.error || 'BNM indisponibil.' });
     } catch (error) {
@@ -65,21 +65,21 @@ export function ExchangeRateSettings() {
 
   async function savePresets() {
     try {
-      await data.savePresets(localPresets);
+      await exchangeRates.savePresets(localPresets);
       toast.show({ message: 'Presetările de plan au fost salvate.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
   }
 
-  if (!data.ready) return <p className={backupStyles.notice}>Se încarcă cursul valutar…</p>;
+  if (!exchangeRates.ready) return <p className={backupStyles.notice}>Se încarcă cursul valutar…</p>;
 
   return (
     <>
       <Card className={backupStyles.panel}>
         <h3 className={backupStyles.panelTitle}>Curs valutar azi</h3>
 
-        {data.todayRate === undefined ? (
+        {exchangeRates.todayRate === undefined ? (
           <div className={styles.todayRow} data-testid="today-rate">
             <span className={backupStyles.notice}>Fără curs azi</span>
             <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
@@ -88,8 +88,8 @@ export function ExchangeRateSettings() {
           </div>
         ) : (
           <div className={styles.todayRow} data-testid="today-rate">
-            <Badge tone={data.todayTone === 'yellow' ? 'yellow' : 'mint'}>1 € = {formatRate(data.todayRate)} lei</Badge>
-            {data.todayTone === 'yellow' && (
+            <Badge tone={exchangeRates.todayTone === 'yellow' ? 'yellow' : 'mint'}>1 € = {formatRate(exchangeRates.todayRate)} lei</Badge>
+            {exchangeRates.todayTone === 'yellow' && (
               <button type="button" className={backupStyles.btnGhost} onClick={() => void refresh()}>
                 Revino la cursul BNM
               </button>
@@ -115,11 +115,11 @@ export function ExchangeRateSettings() {
         </form>
 
         <h4 className={styles.subtitle}>Ultimele 5 zile</h4>
-        {data.lastFiveDays.length === 0 ? (
+        {exchangeRates.lastFiveDays.length === 0 ? (
           <p className={backupStyles.notice}>Niciun curs înregistrat încă.</p>
         ) : (
           <ul className={styles.lastFiveList}>
-            {data.lastFiveDays.map(entry => (
+            {exchangeRates.lastFiveDays.map(entry => (
               <li key={entry.date} className={styles.lastFiveRow}>
                 <span>{formatDate(entry.date)}</span>
                 <span>1 € = {formatRate(entry.rate)} lei</span>

@@ -50,18 +50,19 @@ export function buildReviewCenter(records) {
         reasons: [],
         categories: new Set(),
       });
-    const item = grouped.get(key);
-    item.reasons.push(issue.reason);
-    item.categories.add(category(issue, record));
+    const groupedEntry = grouped.get(key);
+    groupedEntry.reasons.push(issue.reason);
+    groupedEntry.categories.add(category(issue, record));
   }
   const items = [...grouped.values()]
-    .map(item => {
-      const categories = [...item.categories].filter(c => c !== 'all');
+    .map(entry => {
+      const categories = [...entry.categories].filter(c => c !== 'all');
       const blocking = categories.some(c => ['unassigned', 'duplicate', 'provisional', 'advance'].includes(c));
       return {
-        ...item,
+        ...entry,
         categories: categories.length ? categories : ['all'],
-        canConfirm: item.type === 'payments' && !item.record.reviewed && item.categories.has('automatic') && !blocking,
+        canConfirm:
+          entry.type === 'payments' && !entry.record.reviewed && entry.categories.has('automatic') && !blocking,
       };
     })
     .sort((a, b) => {

@@ -126,25 +126,25 @@ export function createSmsSendService({
         }),
       );
       try {
-        const data = await sendOne(config, message.phone, message.text);
+        const sendResult = await sendOne(config, message.phone, message.text);
         smsLogRepository.update(logId, {
           status: 'sent',
-          providerId: data.id,
+          providerId: sendResult.id,
           providerStatus: 'Queued',
-          characters: data.characters,
-          segments: data.segments,
-          encoding: data.encoding,
-          cost: data.cost,
+          characters: sendResult.characters,
+          segments: sendResult.segments,
+          encoding: sendResult.encoding,
+          cost: sendResult.cost,
         });
         results.push({
           childId: message.childId,
           outcome: 'sent',
           logId,
-          segments: data.segments,
-          cost: data.cost,
+          segments: sendResult.segments,
+          cost: sendResult.cost,
           error: '',
         });
-        totalCost += Number(data.cost);
+        totalCost += Number(sendResult.cost);
       } catch (error) {
         const failure = smsService.classifySmsFailure(error);
         smsLogRepository.update(logId, { providerError: `${failure.code}: ${failure.message}` });
@@ -209,15 +209,15 @@ export function createSmsSendService({
       }),
     );
     try {
-      const data = await sendOne(config, normalizedPhone, TEST_MESSAGE_TEXT);
+      const sendResult = await sendOne(config, normalizedPhone, TEST_MESSAGE_TEXT);
       smsLogRepository.update(logId, {
         status: 'sent',
-        providerId: data.id,
+        providerId: sendResult.id,
         providerStatus: 'Queued',
-        characters: data.characters,
-        segments: data.segments,
-        encoding: data.encoding,
-        cost: data.cost,
+        characters: sendResult.characters,
+        segments: sendResult.segments,
+        encoding: sendResult.encoding,
+        cost: sendResult.cost,
       });
     } catch (error) {
       const failure = smsService.classifySmsFailure(error);
@@ -235,15 +235,18 @@ export function createSmsSendService({
 
     const entries = [];
     for (const entry of smsLogRepository.pendingDelivery(50)) {
-      let data;
+      let messageStatus;
       try {
-        data = await smsService.getMessage({ token: config.token, id: /** @type {string} */ (entry.providerId) });
+        messageStatus = await smsService.getMessage({
+          token: config.token,
+          id: /** @type {string} */ (entry.providerId),
+        });
       } catch (error) {
         const failure = smsService.classifySmsFailure(error);
         if (failure.kind === 'transient') break;
         continue;
       }
-      const statusName = data.status.name;
+      const statusName = messageStatus.status.name;
       const statusCheckedAt = now().toISOString();
       const terminalStatus = statusName === 'Delivered' ? 'delivered' : TERMINAL_STATUS_BY_NAME[statusName];
       smsLogRepository.update(entry.id, {

@@ -120,10 +120,10 @@ export function useReview(): ReviewData {
 }
 
 function paymentDetails(payment: Payment, children: Child[]): string {
-  const parts = [formatDate(payment.date), formatMoney(payment.amount)];
-  if (payment.sourceName) parts.push(`sursă: ${payment.sourceName}`);
-  if (payment.childId) parts.push(`copil: ${childNameOf(payment, children)}`);
-  return parts.join(' · ');
+  const segments = [formatDate(payment.date), formatMoney(payment.amount)];
+  if (payment.sourceName) segments.push(`sursă: ${payment.sourceName}`);
+  if (payment.childId) segments.push(`copil: ${childNameOf(payment, children)}`);
+  return segments.join(' · ');
 }
 
 function childDetails(child: Child, groups: RecordsSnapshot['groups']): string {

@@ -96,8 +96,8 @@ export function createSmsRoutes({
     const config = readSmsConfig(dataDirectory);
     if (!config) return;
     try {
-      const data = await smsService.getBalance({ token: config.token });
-      balance = data.balance;
+      const balanceResult = await smsService.getBalance({ token: config.token });
+      balance = balanceResult.balance;
       balanceCheckedAt = now().toISOString();
     } catch {
       balance = null;

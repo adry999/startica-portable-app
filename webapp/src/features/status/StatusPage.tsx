@@ -85,10 +85,10 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     </div>,
   );
 
-  const data = mode === 'month' ? statusData : yearData;
-  if (data.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
-  if (data.status === 'failed')
-    return <p className={styles.notice}>{data.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+  const activeData = mode === 'month' ? statusData : yearData;
+  if (activeData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (activeData.status === 'failed')
+    return <p className={styles.notice}>{activeData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   return mode === 'month' ? (
     <MonthView data={statusData} onNavigate={onNavigate} onOpenChild={onOpenChild} />

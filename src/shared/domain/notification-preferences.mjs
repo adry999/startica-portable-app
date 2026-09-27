@@ -54,24 +54,26 @@ const asBoolean = (value, fallback) => (typeof value === 'boolean' ? value : fal
  * @returns {NotificationPreferences}
  */
 export function clampNotificationPreferences(overrides) {
-  const o = overrides && typeof overrides === 'object' ? overrides : {};
+  const input = overrides && typeof overrides === 'object' ? overrides : {};
   const d = DEFAULT_NOTIFICATION_PREFERENCES;
   return {
-    birthdaysEnabled: asBoolean(o.birthdaysEnabled, d.birthdaysEnabled),
-    birthdaysDaysBefore: clampInt(o.birthdaysDaysBefore, 0, 14, d.birthdaysDaysBefore),
-    visitsEnabled: asBoolean(o.visitsEnabled, d.visitsEnabled),
-    visitsHorizonDays: clampInt(o.visitsHorizonDays, 0, 14, d.visitsHorizonDays),
-    overdueEnabled: asBoolean(o.overdueEnabled, d.overdueEnabled),
+    birthdaysEnabled: asBoolean(input.birthdaysEnabled, d.birthdaysEnabled),
+    birthdaysDaysBefore: clampInt(input.birthdaysDaysBefore, 0, 14, d.birthdaysDaysBefore),
+    visitsEnabled: asBoolean(input.visitsEnabled, d.visitsEnabled),
+    visitsHorizonDays: clampInt(input.visitsHorizonDays, 0, 14, d.visitsHorizonDays),
+    overdueEnabled: asBoolean(input.overdueEnabled, d.overdueEnabled),
     overdueCadence:
-      typeof o.overdueCadence === 'string' && OVERDUE_CADENCES.includes(o.overdueCadence)
-        ? /** @type {OverdueCadence} */ (o.overdueCadence)
+      typeof input.overdueCadence === 'string' && OVERDUE_CADENCES.includes(input.overdueCadence)
+        ? /** @type {OverdueCadence} */ (input.overdueCadence)
         : d.overdueCadence,
-    nothingToReportEnabled: asBoolean(o.nothingToReportEnabled, d.nothingToReportEnabled),
+    nothingToReportEnabled: asBoolean(input.nothingToReportEnabled, d.nothingToReportEnabled),
     digestTime:
-      typeof o.digestTime === 'string' && DIGEST_TIME_PATTERN.test(o.digestTime) ? o.digestTime : d.digestTime,
-    windowsVisitsTodayEnabled: asBoolean(o.windowsVisitsTodayEnabled, d.windowsVisitsTodayEnabled),
-    windowsVisitSoonEnabled: asBoolean(o.windowsVisitSoonEnabled, d.windowsVisitSoonEnabled),
-    windowsVisitSoonMinutes: clampInt(o.windowsVisitSoonMinutes, 5, 120, d.windowsVisitSoonMinutes),
+      typeof input.digestTime === 'string' && DIGEST_TIME_PATTERN.test(input.digestTime)
+        ? input.digestTime
+        : d.digestTime,
+    windowsVisitsTodayEnabled: asBoolean(input.windowsVisitsTodayEnabled, d.windowsVisitsTodayEnabled),
+    windowsVisitSoonEnabled: asBoolean(input.windowsVisitSoonEnabled, d.windowsVisitSoonEnabled),
+    windowsVisitSoonMinutes: clampInt(input.windowsVisitSoonMinutes, 5, 120, d.windowsVisitSoonMinutes),
   };
 }
 
