@@ -1,22 +1,55 @@
+import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 import { openSyncDatabase } from './database.mjs';
-import { createRouter } from './router.mjs';
+import { createRouter, fail } from './router.mjs';
+import { bearerToken, createRateLimiter, hashToken } from './auth.mjs';
+import { createDevicesRepository } from './devices.repository.mjs';
+import { createPairingService } from './pairing.service.mjs';
+import { createBranchesRepository } from './branches.repository.mjs';
+import { scheduleDailyBackup } from './backup.service.mjs';
+import { createDevicesRoutes } from './devices.routes.mjs';
+import { createBranchesRoutes } from './branches.routes.mjs';
+import { createStatusRoutes } from './status.routes.mjs';
+
+const PAIRING_RATE_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
 
 /**
  * Compunerea serverului de sincronizare — echivalentul create-application.mjs din
  * aplicație, dar pentru sync-server/ (pachet separat, fără nicio dependență din src/).
- * Doar scheletul din Task 1 (bază + router, fără rute): devices/pairing/branches (Task 2)
- * și changes/events (Task 3) se adaugă aici, incremental.
- * @param {{ config: import('./config.mjs').SyncServerConfig, log?: (message: unknown) => void }} options
+ * Task 2: dispozitive, cod de conectare, registrul filialelor, status, backup zilnic.
+ * Rutele de modificări/instantanee/evenimente (Task 3) se adaugă separat.
+ * @param {{
+ *   config: import('./config.mjs').SyncServerConfig,
+ *   now?: () => Date,
+ *   createId?: () => string,
+ *   log?: (message: unknown) => void,
+ * }} options
  */
-export function createSyncServer({ config, log = console.error }) {
+export function createSyncServer({ config, now = () => new Date(), createId = randomUUID, log = console.error }) {
   const database = openSyncDatabase(config.dataDir);
+  const devices = createDevicesRepository(database);
+  const pairing = createPairingService(database);
+  const branches = createBranchesRepository(database);
+  const pairingRateLimiter = createRateLimiter(PAIRING_RATE_LIMIT);
+
+  /** @param {import('node:http').IncomingMessage} request */
+  function authenticate(request) {
+    const token = bearerToken(request);
+    if (!token) fail('device-token-missing', 401);
+    const device = devices.findByTokenHash(hashToken(token));
+    if (!device) fail('device-unknown', 401);
+    if (device.revokedAt) fail('device-revoked', 401);
+    devices.touchLastSeen(device.id, { now: now().toISOString() });
+    return device;
+  }
+
+  const deviceRoutes = createDevicesRoutes({ devices, pairing, config, pairingRateLimiter, createId, now });
+  const branchRoutes = createBranchesRoutes({ branches, devices, now });
+  const statusRoutes = createStatusRoutes({ database, branches, devices, now });
 
   const router = createRouter({
-    routes: [],
-    authenticate: () => {
-      throw Object.assign(new Error('Niciun dispozitiv nu este încă acceptat.'), { status: 501 });
-    },
+    routes: [...deviceRoutes.routes, ...branchRoutes.routes, ...statusRoutes.routes],
+    authenticate,
     trustProxy: config.trustProxy,
     log,
   });
@@ -25,9 +58,19 @@ export function createSyncServer({ config, log = console.error }) {
     router.handleRequest(request, response);
   });
 
+  const backup = scheduleDailyBackup({
+    database,
+    dataDir: config.dataDir,
+    hour: config.backupHour,
+    keep: config.backupKeep,
+    historyDays: config.historyDays,
+    now,
+  });
+
   function close() {
+    backup.stop();
     return new Promise(done => server.close(() => done(undefined))).then(() => database.close());
   }
 
-  return { server, database, close };
+  return { server, database, devices, branches, pairing, close };
 }
