@@ -12,3 +12,6 @@ webapp/dist/
 
 # Resturi de dezarhivare la rădăcină (nesincronizate cu docs/design/ încă) — vezi INTREBARI.md.
 Startica V2/
+
+# Worktree-uri temporare ale agenților (copii ale repo-ului).
+.claude/
