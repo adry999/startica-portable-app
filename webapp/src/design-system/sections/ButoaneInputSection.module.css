@@ -1,0 +1,47 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--slate);
+}
+
+.toneList {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.tonePill {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--neutral-soft);
+  color: var(--slate);
+}
+
+.tonePill[data-tone='orange'] {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.tonePill[data-tone='mint'] {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.tonePill[data-tone='yellow'] {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.tonePill[data-tone='pink'] {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}

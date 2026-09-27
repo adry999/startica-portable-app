@@ -1,0 +1,40 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+  color: var(--slate);
+}
+
+.demoFrame {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  width: 100%;
+}
+
+.fakeTopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: 12px var(--space-20);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--slate);
+}
+
+.fakeScreen {
+  padding: var(--space-20);
+  font-size: 13px;
+  color: var(--muted);
+}

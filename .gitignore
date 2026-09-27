@@ -31,3 +31,5 @@ launcher/obj/
 
 # ─── webapp/ (React+Vite, redesign/react-vite) ───────────────────────────────
 webapp/dist/
+# Build static al paginii design-system (npm run build:design-system), separat de dist/.
+webapp/dist-design-system/
