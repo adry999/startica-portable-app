@@ -1,0 +1,28 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: 14px 20px;
+  border-radius: var(--radius-md-lg);
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--slate);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--orange);
+}

@@ -54,6 +54,28 @@ describe('Sidebar', () => {
     expect(within(logo.parentElement as HTMLElement).queryByText('v1.6.3')).not.toBeInTheDocument();
   });
 
+  it('randează selectorul de filială sub logo doar când filiala e cunoscută', () => {
+    const branch = { id: 'b1', name: 'Buiucani', color: 'orange', address: '' };
+    const { rerender } = render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    expect(screen.queryByText('Filiala')).not.toBeInTheDocument();
+
+    rerender(
+      <Sidebar
+        activeView="dashboard"
+        onNavigate={() => {}}
+        counts={{}}
+        version="v1.6.3"
+        saveStatus={saveStatus}
+        branch={branch}
+        branches={[branch]}
+      />,
+    );
+    expect(screen.getByText('Filiala')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Buiucani/ })).toBeInTheDocument();
+  });
+
   it('Prezența stă imediat după Grupe', () => {
     render(
       <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
+import { useToast } from '@shared/ui';
 import { AppShell } from './shell/AppShell';
+import { performBranchSwitch, readBranchSwitchNote } from './shell/useBranchSwitch';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { VIEW_PATHS, viewForPathname } from './shell/routes';
@@ -44,6 +46,7 @@ export function App() {
   const session = useAppSession();
   const location = useLocation();
   const navigate = useNavigate();
+  const toast = useToast();
   const [month, setMonth] = useState(() => today().slice(0, 7));
   const view = viewForPathname(location.pathname);
 
@@ -52,6 +55,21 @@ export function App() {
     session.load().catch(() => {
       // Eroarea e deja în session.state.saveError — SaveStatusCard din sidebar o citește direct.
     });
+  }, []);
+
+  useEffect(() => {
+    // Biletul e lăsat de performBranchSwitch chiar înainte de reîncărcare (17-filiale.md 13a) —
+    // citit o singură dată, aici, ca toast-ul „Acum lucrezi în…” să apară după ce ecranul s-a redeschis.
+    const note = readBranchSwitchNote();
+    if (!note) return;
+    toast.show({
+      message: `Acum lucrezi în ${note.to}`,
+      actionLabel: note.from ? `Înapoi la ${note.from}` : undefined,
+      onAction: note.fromId
+        ? () => void performBranchSwitch({ id: note.fromId, name: note.from }, { id: '', name: note.to }, location.pathname)
+        : undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
