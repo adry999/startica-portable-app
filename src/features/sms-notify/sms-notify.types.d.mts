@@ -147,10 +147,8 @@ export type SmsSendResult = SmsBatchResult & { status: SmsStatus };
 
 export interface SmsSendServiceDependencies {
   smsService: SmsService;
-  // TODO(Task 9): restore once sms-log.repository.mjs exists.
-  // smsLogRepository: import('./server/sms-log.repository.mjs').SmsLogRepository;
-  // TODO(Task 8): restore once sms-template.repository.mjs exists.
-  // smsTemplateRepository: import('./server/sms-template.repository.mjs').SmsTemplateRepository;
+  smsLogRepository: import('./server/sms-log.repository.mjs').SmsLogRepository;
+  smsTemplateRepository: import('./server/sms-template.repository.mjs').SmsTemplateRepository;
   readConfig: () => SmsConfig | null;
   auditTrail: AuditTrail;
   now?: () => Date;
