@@ -30,9 +30,7 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
       title={visit ? `Înscrie copilul: ${visit.name}` : 'Înscrie copilul'}
       width={520}
       onClose={onClose}
-      footer={
-        <Button onClick={() => onSubmit({ fee, groupId, attendanceDate })}>Înscrie</Button>
-      }
+      footer={<Button onClick={() => onSubmit({ fee, groupId, attendanceDate })}>Înscrie</Button>}
     >
       <div className={styles.form}>
         <fieldset className={styles.section}>
