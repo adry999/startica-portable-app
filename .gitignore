@@ -5,6 +5,9 @@ Startica_Date/
 Startica_Backup/
 # Jurnalele de pornire ale serverului.
 Jurnale/
+# Registrul filialelor și folderele filialelor create din aplicație (Faza 6).
+filiale.json
+Filiale/
 
 # ─── Node ───────────────────────────────────────────────────────────────────
 node_modules/

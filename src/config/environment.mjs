@@ -3,6 +3,11 @@ import { isAbsolute, join } from 'node:path';
 // Copia integrală a bazei nu are ce căuta pe calea fiecărei salvări (vezi features/backup/server/backup.service.mjs).
 export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
 
+// Folderul filialelor create din aplicație (Faza 6) și numele registrului lor,
+// amândouă relative la STARTICA_HOME — vezi core/server/branches/.
+export const BRANCHES_DIR_NAME = 'Filiale';
+export const BRANCH_REGISTRY_FILE_NAME = 'filiale.json';
+
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */
 
 /**
