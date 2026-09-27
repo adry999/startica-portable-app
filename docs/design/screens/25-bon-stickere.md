@@ -13,5 +13,5 @@
 - Copii: nr. exemplare. Grupe → ⋯ → „Stickere pentru grupă” = câte un sticker „Nume copil” per copil activ.
 
 ## Criterii de acceptare
-- [ ] Previzualizarea = ce iese pe hârtie
-- [ ] Textul nu iese din etichetă la nicio mărime
+- [x] Previzualizarea = ce iese pe hârtie — bonul (24a/24b) folosește aceeași lățime `48mm` (CSS, nu px) atât pe ecran cât și la tipar, ca px-ul CSS fiind mereu 1/96" indiferent de dpi-ul imprimantei, un px fix ar fi rupt rândurile diferit; `@media print` doar ascunde bara de acțiuni și scoate umbra. Stickerele (24d) folosesc `mm` peste tot în `StickerLabel`, fără nicio dimensiune specifică tipăririi.
+- [x] Textul nu iese din etichetă la nicio mărime — `bigTextFitsLabel` (sticker-text-fit.test.ts) verifică, pentru fiecare mărime de etichetă și un interval realist de lungimi, că fontul calculat de `bigTextFontSizePx` încape pe lățimea de tipar (48 mm), cu un factor conservator de lățime per caracter.

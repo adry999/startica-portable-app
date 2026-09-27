@@ -1,0 +1,199 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-10);
+  align-self: flex-start;
+}
+
+/* Lățime utilă 48 mm (384 px la 203 dpi, specificația SK58) — mm, nu px, ca previzualizarea de pe ecran
+   să fie exact lățimea tipărită: px CSS e mereu 1/96", indiferent de dpi-ul imprimantei, deci un px
+   fix ar rupe altfel rândurile pe ecran față de bon. */
+.bon {
+  width: 48mm;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  padding: 18px 16px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #000;
+  font-size: 14px;
+  font-family: var(--font-body), Arial, sans-serif;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  align-self: center;
+  filter: grayscale(1) brightness(0);
+}
+
+.kindergartenInfo {
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.ruleSolid {
+  border-top: 2px solid #000;
+}
+
+.ruleDashed {
+  border-top: 1px dashed #000;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.receiptNumber {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.receiptDate {
+  font-size: 12px;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.detailsGrid dt {
+  margin: 0;
+}
+
+.detailsGrid dd {
+  margin: 0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.allocationRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 800;
+}
+
+.totalAmount {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.restBox {
+  border: 1.5px solid #000;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.monthDots {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.monthDot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #000;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.monthDot.paid {
+  background: #000;
+  color: #fff;
+}
+
+.monthDot.partial {
+  background: linear-gradient(90deg, #000 50%, #fff 50%);
+  color: #000;
+}
+
+.monthDot.other {
+  background: #fff;
+  color: #000;
+}
+
+.monthLegend {
+  text-align: center;
+  font-size: 11px;
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.signatureRule {
+  height: 26px;
+  border-bottom: 1px solid #000;
+}
+
+.thanks {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.footer {
+  text-align: center;
+  font-size: 11px;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+
+  .page {
+    align-items: stretch;
+  }
+
+  .bon {
+    box-shadow: none;
+  }
+}

@@ -12,7 +12,7 @@ import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { AttendancePage } from '@features/attendance';
 import { VisitsPage } from '@features/visits';
-import { PaymentsPage, PaymentReceipt } from '@features/payments';
+import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
@@ -23,6 +23,7 @@ import { ReviewPage } from '@features/review';
 import { AuditLogPage } from '@features/audit-log';
 import { NotificationsPage } from '@features/notifications';
 import { BackupPage } from '@features/backup';
+import { StickerPrintPage } from '@features/stickers';
 
 const LAST_VIEW_KEY = 'nav.view';
 
@@ -108,11 +109,16 @@ export function App() {
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
         <Route path="/copii/zile-de-nastere" element={<BirthdaysPage />} />
         <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
-        <Route path="/grupe" element={<GroupsPage />} />
+        <Route
+          path="/grupe"
+          element={<GroupsPage onOpenGroupStickers={id => navigate(`/tiparire/stickere?grupa=${id}`)} />}
+        />
         <Route path="/prezenta" element={<AttendancePage month={month} />} />
         <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/achitari" element={<PaymentsRoute />} />
         <Route path="/achitari/:id/confirmare" element={<PaymentReceipt />} />
+        <Route path="/achitari/:id/bon-58mm" element={<PaymentReceiptThermal />} />
+        <Route path="/achitari/bon-zi" element={<DayClosingReceipt />} />
         <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
         <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
         <Route
@@ -144,6 +150,7 @@ export function App() {
         <Route path="/istoric" element={<AuditLogPage />} />
         <Route path="/notificari" element={<NotificationsPage />} />
         <Route path="/backup-si-setari" element={<BackupPage />} />
+        <Route path="/tiparire/stickere" element={<StickerPrintPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

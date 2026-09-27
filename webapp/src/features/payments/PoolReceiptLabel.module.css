@@ -1,0 +1,106 @@
+/* Lățime utilă 48 mm, în mm — nu are încă rută de tipar, dar rămâne consecvent cu 24a/24b. */
+.bon {
+  width: 48mm;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  padding: 18px 16px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #000;
+  font-size: 14px;
+  font-family: var(--font-body), Arial, sans-serif;
+}
+
+.logo {
+  height: 34px;
+  width: auto;
+  align-self: center;
+  filter: grayscale(1) brightness(0);
+}
+
+.ruleSolid {
+  border-top: 2px solid #000;
+}
+
+.ruleDashed {
+  border-top: 1px dashed #000;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.childName {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.meta {
+  font-size: 12px;
+}
+
+.scheduleBox {
+  border: 2px solid #000;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.scheduleLabel {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scheduleValue {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.sessionGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sessionCell {
+  border: 1.5px solid #000;
+  border-radius: 8px;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sessionCell.dashed {
+  border-style: dashed;
+}
+
+.sessionCell strong {
+  font-size: 16px;
+}
+
+.sessionCell span {
+  font-size: 10px;
+}
+
+.note {
+  text-align: center;
+  font-size: 12px;
+}

@@ -1,0 +1,129 @@
+import { useNavigate, useParams } from 'react-router-dom';
+import { Button } from '@shared/ui';
+import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatDateLong } from '#shared/format/date-format.mjs';
+import { usePaymentReceipt } from './usePaymentReceipt';
+import styles from './PaymentReceiptThermal.module.css';
+
+const MONTH_INITIALS = ['I', 'F', 'M', 'A', 'M', 'I', 'I', 'A', 'S', 'O', 'N', 'D'];
+
+/**
+ * Bonul 58 mm (24a) — aceeași achitare, același număr de confirmare ca A5/A4 (usePaymentReceipt
+ * asignează o singură dată, indiferent de câte formate se tipăresc). Alb-negru, 48 mm zonă de tipar.
+ */
+export function PaymentReceiptThermal() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const receipt = usePaymentReceipt(id ?? '');
+
+  if (receipt.status === 'loading') return <p>Se încarcă bonul…</p>;
+  if (receipt.status === 'not-found' || !receipt.payment)
+    return (
+      <>
+        <button type="button" onClick={() => navigate('/achitari')}>
+          ← Achitări
+        </button>
+        <p>Achitarea nu a putut fi găsită.</p>
+      </>
+    );
+
+  const { payment, child, kindergarten } = receipt;
+  const receiptNumber = payment.receiptNumber ? String(payment.receiptNumber).padStart(4, '0') : '—';
+
+  return (
+    <div className={styles.page}>
+      <style>{'@page { size: 58mm auto; margin: 0; }'}</style>
+      <div className={styles.toolbar}>
+        <Button variant="white" onClick={() => navigate(-1)}>
+          ← Înapoi
+        </Button>
+        <Button onClick={() => window.print()}>Tipărește</Button>
+      </div>
+
+      <div className={styles.bon}>
+        {kindergarten?.logoDataUrl && <img src={kindergarten.logoDataUrl} alt="" className={styles.logo} />}
+        <div className={styles.kindergartenInfo}>
+          <strong>{kindergarten?.displayName || kindergarten?.name || 'Startica'}</strong>
+          {kindergarten?.idno && <span> · IDNO {kindergarten.idno}</span>}
+          <br />
+          {[kindergarten?.address, kindergarten?.phone].filter(Boolean).join(' · ')}
+        </div>
+
+        <div className={styles.ruleSolid} />
+
+        <div className={styles.titleBlock}>
+          <span className={styles.eyebrow}>CONFIRMARE DE PLATĂ</span>
+          <span className={styles.receiptNumber}>Nr. {receiptNumber}</span>
+          <span className={styles.receiptDate}>{formatDateLong(payment.date)}</span>
+        </div>
+
+        <div className={styles.ruleDashed} />
+
+        <dl className={styles.detailsGrid}>
+          <dt>Copil</dt>
+          <dd>{child ? child.name : payment.childName || payment.sourceName || '—'}</dd>
+          {receipt.groupName && (
+            <>
+              <dt>Grupa</dt>
+              <dd>{receipt.groupName}</dd>
+            </>
+          )}
+          <dt>Plătitor</dt>
+          <dd>{payment.sourceName || child?.parent || '—'}</dd>
+          <dt>Metodă</dt>
+          <dd>{payment.method}</dd>
+        </dl>
+
+        <div className={styles.ruleDashed} />
+
+        {receipt.allocationRows.map(row => (
+          <div key={row.month} className={styles.allocationRow}>
+            <span>
+              {row.label} · {row.statusLabel}
+            </span>
+            <strong>{formatMoney(row.amount)}</strong>
+          </div>
+        ))}
+
+        <div className={styles.ruleSolid} />
+
+        <div className={styles.totalRow}>
+          <span>TOTAL</span>
+          <span className={styles.totalAmount}>{formatMoney(receipt.total)}</span>
+        </div>
+
+        {receipt.restBox && (
+          <div className={styles.restBox}>
+            <span>Rest {receipt.allocationRows.at(-1)?.label.replace('Taxă ', '')}</span>
+            <strong>
+              {formatMoney(receipt.restBox.amount, receipt.restBox.currency)} · scadent {receipt.restBox.dueLabel}
+            </strong>
+          </div>
+        )}
+
+        {receipt.yearMonths.length > 0 && (
+          <>
+            <div className={styles.monthDots}>
+              {receipt.yearMonths.map((cell, index) => (
+                <span key={cell.month} className={`${styles.monthDot} ${styles[cell.kind]}`}>
+                  {MONTH_INITIALS[Number(cell.month.slice(5, 7)) - 1] ?? index}
+                </span>
+              ))}
+            </div>
+            <span className={styles.monthLegend}>● achitat · ◐ parțial · ○ urmează</span>
+          </>
+        )}
+
+        <div className={styles.ruleDashed} />
+
+        <div className={styles.signature}>
+          <span className={styles.signatureRule} />
+          <span>Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}</span>
+        </div>
+
+        <span className={styles.thanks}>Mulțumim!</span>
+        <span className={styles.footer}>Nu ține locul bonului fiscal.</span>
+      </div>
+    </div>
+  );
+}

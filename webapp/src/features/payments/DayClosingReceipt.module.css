@@ -1,0 +1,142 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-10);
+  align-self: flex-start;
+}
+
+/* Lățime utilă 48 mm — în mm, nu px, ca previzualizarea de pe ecran să fie exact lățimea tipărită
+   (px CSS e mereu 1/96", indiferent de dpi-ul imprimantei). */
+.bon {
+  width: 48mm;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  padding: 18px 16px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #000;
+  font-size: 14px;
+  font-family: var(--font-body), Arial, sans-serif;
+}
+
+.icon {
+  height: 44px;
+  width: 44px;
+  align-self: center;
+  filter: grayscale(1) brightness(0);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.dayLabel {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.ruleSolid {
+  border-top: 2px solid #000;
+}
+
+.ruleDashed {
+  border-top: 1px dashed #000;
+}
+
+.notice {
+  margin: 0;
+  text-align: center;
+}
+
+.paymentRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.methodGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+}
+
+.methodRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 800;
+}
+
+.totalAmount {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.countedBox {
+  border: 1.5px solid #000;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.countedRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.signatureRule {
+  height: 26px;
+  border-bottom: 1px solid #000;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+
+  .page {
+    align-items: stretch;
+  }
+
+  .bon {
+    box-shadow: none;
+  }
+}

@@ -29,6 +29,7 @@ import {
 import { PaymentFormDrawer } from './PaymentFormDrawer';
 import type { PaymentFormValues } from './payment-form';
 import type { Payment } from '@contracts/record-types.mjs';
+import { today } from '@domain/calendar-month.mjs';
 import styles from './PaymentsPage.module.css';
 
 type ViewMode = 'table' | 'months';
@@ -62,6 +63,7 @@ export function PaymentsPage({
 }: PaymentsPageProps) {
   const paymentsData = usePayments(initialChildId);
   const toast = useToast();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
 
   if (paymentsData.status === 'loading') return <LoadingState />;
@@ -107,9 +109,18 @@ export function PaymentsPage({
           onChange={setViewMode}
           ariaLabel="Mod de afișare"
         />
-        <button type="button" className={styles.primaryButton} onClick={onOpenCreate}>
-          + Achitare nouă
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={() => navigate(`/achitari/bon-zi?zi=${today()}`)}
+          >
+            Bon zi
+          </button>
+          <button type="button" className={styles.primaryButton} onClick={onOpenCreate}>
+            + Achitare nouă
+          </button>
+        </div>
       </div>
 
       <SummaryCards summary={paymentsData.summary} method={paymentsData.method} />

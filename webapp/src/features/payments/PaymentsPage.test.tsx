@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -121,6 +121,26 @@ describe('PaymentsPage', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('butonul „Bon zi" navighează la bonul de închidere a zilei de azi', async () => {
+    await loadedSession();
+    function LocationDisplay() {
+      const location = useLocation();
+      return <div data-testid="location">{location.pathname + location.search}</div>;
+    }
+    render(
+      <MemoryRouter>
+        <ToastProvider>
+          <LocationDisplay />
+          <PaymentsHarness />
+        </ToastProvider>
+      </MemoryRouter>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Bon zi' }));
+
+    expect(screen.getByTestId('location').textContent).toMatch(/^\/achitari\/bon-zi\?zi=\d{4}-\d{2}-\d{2}$/);
   });
 
   it('randează rândurile din tabel cu sumarul pe metodă', async () => {

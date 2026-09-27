@@ -43,6 +43,9 @@ export function PaymentReceipt() {
           ← Înapoi
         </Button>
         <Button onClick={() => window.print()}>Tipărește</Button>
+        <Button variant="white" onClick={() => navigate(`/achitari/${receipt.payment?.id}/bon-58mm`)}>
+          Bon 58 mm
+        </Button>
       </div>
       {isA4 ? <ReceiptA4Third data={receipt} /> : <ReceiptA5 data={receipt} />}
     </div>
