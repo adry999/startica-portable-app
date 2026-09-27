@@ -15,10 +15,7 @@ function monthBounds(month) {
   const year = Number(month.slice(0, 4));
   const monthNumber = Number(month.slice(5, 7));
   const start = `${month}-01`;
-  const end =
-    monthNumber === 12
-      ? `${year + 1}-01-01`
-      : `${year}-${String(monthNumber + 1).padStart(2, '0')}-01`;
+  const end = monthNumber === 12 ? `${year + 1}-01-01` : `${year}-${String(monthNumber + 1).padStart(2, '0')}-01`;
   return [start, end];
 }
 

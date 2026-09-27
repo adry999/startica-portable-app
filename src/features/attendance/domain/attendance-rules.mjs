@@ -71,7 +71,7 @@ export function changesToMarkUnmarkedPresent(childIds, entriesByChild, date) {
 
 /**
  * @param {AttendanceChange} change
- * @returns {AttendanceChange}
+ * @returns {{ childId: string, date: string, status: AttendanceStatus | null, reason: string }}
  */
 export function normalizeAttendanceChange(change) {
   const reason = change.status === 'excused' ? (change.reason ?? '').trim().slice(0, REASON_MAX_LENGTH) : '';

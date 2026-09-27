@@ -64,11 +64,12 @@ test('listByMonth întoarce doar zilele lunii, filtrate după copii, ordonate du
 
 test('o eroare la mijlocul lotului anulează tot lotul', () => {
   const { database, repository } = createRepository();
-  assert.throws(() =>
-    repository.applyChanges([
-      { childId: 'c1', date: '2026-09-27', status: 'present', reason: '' },
-      { childId: 'c2', date: null, status: 'present', reason: '' },
-    ]),
-  );
+  // date: null nu e o schimbare validă (ar fi respinsă de rutele care validează dinainte);
+  // testul verifică doar atomicitatea tranzacției din repository, la nivelul SQLite.
+  const badBatch = /** @type {any} */ ([
+    { childId: 'c1', date: '2026-09-27', status: 'present', reason: '' },
+    { childId: 'c2', date: null, status: 'present', reason: '' },
+  ]);
+  assert.throws(() => repository.applyChanges(badBatch));
   assert.equal(database.prepare('SELECT * FROM attendance').all().length, 0);
 });

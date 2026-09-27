@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import { attendanceKey } from './attendance-rules.mjs';
 import { monthDates, summarizeMonth } from './attendance-month.mjs';
 
-const entry = (childId, date, status) => [attendanceKey(childId, date), { childId, date, status, reason: '', updatedAt: '' }];
+/** @typedef {import('../attendance.types.d.mts').AttendanceEntry} AttendanceEntry */
+
+/** @returns {[string, AttendanceEntry]} */
+const entry = (childId, date, status) => [
+  attendanceKey(childId, date),
+  { childId, date, status, reason: '', updatedAt: '' },
+];
 
 test('monthDates întoarce toate zilele lunii, în ordine', () => {
   assert.deepEqual(monthDates('2026-09').slice(0, 3), ['2026-09-01', '2026-09-02', '2026-09-03']);
@@ -21,10 +27,12 @@ test('weekend-urile și sărbătorile sunt off, zilele de după azi sunt future,
   });
   const rowA = rows.find(row => row.childId === 'A');
   const rowB = rows.find(row => row.childId === 'B');
-  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-05').kind, 'off');
-  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-11').kind, 'future');
-  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-08').kind, 'unmarked');
-  assert.equal(rowB.cells.find(cell => cell.date === '2026-09-08').kind, 'none');
+  assert.ok(rowA);
+  assert.ok(rowB);
+  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-05')?.kind, 'off');
+  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-11')?.kind, 'future');
+  assert.equal(rowA.cells.find(cell => cell.date === '2026-09-08')?.kind, 'unmarked');
+  assert.equal(rowB.cells.find(cell => cell.date === '2026-09-08')?.kind, 'none');
 });
 
 test('Zile = prezențe / zile lucrătoare până azi, per copil', () => {
@@ -35,7 +43,12 @@ test('Zile = prezențe / zile lucrătoare până azi, per copil', () => {
     entry('C', '2026-09-03', 'present'),
     entry('C', '2026-09-04', 'absent'),
   ]);
-  const { rows, workingDays } = summarizeMonth({ children: [child], month: '2026-09', entries, todayStr: '2026-09-10' });
+  const { rows, workingDays } = summarizeMonth({
+    children: [child],
+    month: '2026-09',
+    entries,
+    todayStr: '2026-09-10',
+  });
   const row = rows[0];
   // Zile lucrătoare 1-10 septembrie, fără weekend-ul 5-6: 1,2,3,4,7,8,9,10.
   assert.equal(row.workingDays, 8);

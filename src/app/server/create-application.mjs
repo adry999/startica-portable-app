@@ -25,6 +25,7 @@ import { createDataTransferRoutes } from '#features/data-transfer/index.server.m
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
+import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
@@ -165,6 +166,7 @@ export function createApplication(options = {}) {
       smsService: createSmsService({ fetch: options.fetch ?? globalThis.fetch }),
       auditTrail: auditLogRepository,
     }),
+    ...createAttendanceRoutes({ database: db, recordRepository }),
     ...createNotificationSettingsRoutes({
       dataDirectory: dataDir,
       readSetting,
