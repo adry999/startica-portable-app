@@ -13,7 +13,7 @@ import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'rates' | 'kindergarten' | 'branches';
+type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches';
 
 export function BackupPage() {
   const session = useAppSession();
@@ -21,7 +21,11 @@ export function BackupPage() {
   const restore = useRestore(backupData.health?.externalDir ?? '');
   const excel = useExcelTransfer();
   const toast = useToast();
-  const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.backup', 'backup');
+  // Topbar.tsx scrie 'curs' în localStorage pentru pastila de curs din Dashboard; 'rates' e
+  // cheia veche (pre-redenumire filă), citită tot ca fila de curs, ca link-ul salvat să rămână valabil.
+  const [storedViewMode, setStoredViewMode] = usePersistedState<ViewMode | 'rates'>('view.backup', 'backup');
+  const viewMode: ViewMode = storedViewMode === 'rates' ? 'curs' : storedViewMode;
+  const setViewMode = (next: ViewMode) => setStoredViewMode(next);
 
   async function exportExcel() {
     try {
@@ -85,7 +89,7 @@ export function BackupPage() {
           onChange={setViewMode}
           options={[
             { value: 'backup', label: 'Backup' },
-            { value: 'rates', label: 'Curs valutar' },
+            { value: 'curs', label: 'Planuri și curs' },
             { value: 'kindergarten', label: 'Grădinița' },
             { value: 'branches', label: 'Filiale' },
           ]}
@@ -94,7 +98,7 @@ export function BackupPage() {
         <span className={styles.version}>{session.state.version}</span>
       </div>
 
-      {viewMode === 'rates' ? (
+      {viewMode === 'curs' ? (
         <ExchangeRateSettings />
       ) : viewMode === 'kindergarten' ? (
         <KindergartenSettings />

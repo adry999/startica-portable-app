@@ -1,15 +1,217 @@
-.todayRow {
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--space-20);
+  align-items: start;
+}
+
+.plansColumn,
+.rateColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+}
+
+.planList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+}
+
+.planCard {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) 170px 150px auto;
+  gap: var(--space-18);
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-18) var(--space-20) var(--space-18) var(--space-16);
+}
+
+.planStripe {
+  align-self: stretch;
+  border-radius: var(--radius-pill);
+}
+
+/* Tonurile benzii — aceleași patru culori ciclice ca group-tone.ts, aplicate ca a doua clasă (vezi Badge). */
+.orange {
+  background: var(--orange);
+}
+
+.mint {
+  background: var(--mint);
+}
+
+.yellow {
+  background: var(--yellow);
+}
+
+.pink {
+  background: var(--pink);
+}
+
+.planInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.planNameRow {
+  display: flex;
+  gap: var(--space-10);
+}
+
+.planNameInput {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.planHoursInput {
+  width: 150px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.planDescInput {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-12);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.planPriceField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.planPriceValue {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
-  margin-bottom: var(--space-16);
+  justify-content: space-between;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--input-border);
+}
+
+.planPriceValue input {
+  width: 100%;
+  border: none;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--slate);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.eur {
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.planTodayRate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.planTodayRateLabel {
+  font-size: 12px;
+  color: var(--subtle);
+  font-weight: 700;
+}
+
+.planTodayRateValue {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.rateHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-10);
+}
+
+.rateEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: var(--text-eyebrow-letter-spacing);
+  text-transform: uppercase;
+}
+
+.rateValue {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.rateNote {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.rateActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.correctionCard {
+  border: 1.5px solid var(--orange);
+}
+
+.correctionForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.correctionTitle {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.correctionHint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.correctionActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
 }
 
 .subtitle {
-  margin: var(--space-16) 0 var(--space-8);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
+  margin: 0 0 var(--space-4);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: var(--text-eyebrow-letter-spacing);
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .lastFiveList {
@@ -18,41 +220,30 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
 
 .lastFiveRow {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
-  font-size: 13px;
+  gap: var(--space-10);
+  font-size: 14px;
+  padding: var(--space-6) 0;
+  border-bottom: 1px solid var(--row-divider);
 }
 
-.presetsList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  margin-bottom: var(--space-12);
-}
-
-.presetRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-}
-
-.presetRow input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-}
-
-.presetRow input:first-child {
+.lastFiveDate {
   flex: 1;
+  color: var(--muted);
 }
 
-.presetRow input[type='number'] {
-  width: 100px;
+.lastFiveRate {
+  font-weight: 800;
+}
+
+.historyNote {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: 12px;
+  color: var(--subtle);
 }

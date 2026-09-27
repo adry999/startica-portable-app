@@ -72,3 +72,40 @@ test('POST /api/plan-presets respinge un corp care nu e un array', async t => {
 
   assert.equal(status, 400);
 });
+
+test('POST /api/plan-presets salvează orarul și descrierea opționale și le recitește prin GET', async t => {
+  const { post, get } = await startTestApplication(t);
+
+  const withExtras = {
+    id: 'PLAN-1',
+    name: 'Program mediu',
+    priceEur: 350,
+    hours: '8:00–17:00',
+    description: 'Toate mesele, somn de zi.',
+  };
+  const { status, body } = await post('/api/plan-presets', [withExtras]);
+
+  assert.equal(status, 200);
+  assert.deepEqual(body, [withExtras]);
+  assert.deepEqual(await get('/api/plan-presets'), [withExtras]);
+});
+
+test('POST /api/plan-presets rămâne compatibilă cu presetări fără orar sau descriere', async t => {
+  const { post, get } = await startTestApplication(t);
+
+  const { body } = await post('/api/plan-presets', [preset]);
+
+  assert.deepEqual(body, [preset]);
+  assert.equal('hours' in body[0], false);
+  assert.equal('description' in body[0], false);
+  assert.deepEqual(await get('/api/plan-presets'), [preset]);
+});
+
+test('POST /api/plan-presets respinge un orar prea lung, fără să salveze nimic', async t => {
+  const { post, get } = await startTestApplication(t);
+
+  const { status } = await post('/api/plan-presets', [{ ...preset, hours: 'x'.repeat(41) }]);
+
+  assert.equal(status, 400);
+  assert.deepEqual(await get('/api/plan-presets'), []);
+});

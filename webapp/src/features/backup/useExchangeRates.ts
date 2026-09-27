@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
 import { today } from '@domain/calendar-month.mjs';
 
 export type ExchangeRateSource = 'bnm' | 'manual';
@@ -9,6 +10,8 @@ export interface PlanPreset {
   id: string;
   name: string;
   priceEur: number;
+  hours?: string;
+  description?: string;
 }
 
 export interface LastFiveDaysEntry {
@@ -28,7 +31,10 @@ export interface ExchangeRatesData {
   ready: boolean;
   rates: Record<string, number>;
   sources: Record<string, ExchangeRateSource>;
+  /** Cursul zilei — sau, în weekend/sărbători, ultimul curs publicat (regula din 16-planuri-eur.md). */
   todayRate: number | undefined;
+  /** Ziua căreia îi corespunde `todayRate` — poate fi anterioară azi (weekend). */
+  rateDate: string | undefined;
   todayTone: TodayTone;
   lastFiveDays: LastFiveDaysEntry[];
   correctToday: (rate: number) => Promise<void>;
@@ -56,14 +62,14 @@ export function useExchangeRates(): ExchangeRatesData {
     })();
   }, []);
 
-  const todayDate = today();
-  const todayRate = rates[todayDate];
+  const rateDate = latestKnownRateDate(rates);
+  const todayRate = latestKnownRate(rates);
   const todayTone: TodayTone =
-    todayRate === undefined
+    rateDate === undefined
       ? null
-      : sources[todayDate] === 'bnm'
+      : sources[rateDate] === 'bnm'
         ? 'mint'
-        : sources[todayDate] === 'manual'
+        : sources[rateDate] === 'manual'
           ? 'yellow'
           : null;
 
@@ -73,7 +79,9 @@ export function useExchangeRates(): ExchangeRatesData {
     .map(date => ({ date, rate: rates[date], source: sources[date] }));
 
   async function correctToday(rate: number) {
-    const response = (await requestJson('/api/exchange-rates', { date: todayDate, rate })) as ExchangeRatesResponse;
+    // Corectarea vizează întotdeauna ziua calendaristică de azi, nu ultima zi cu curs cunoscut
+    // (care poate fi vineri, dacă azi e weekend și BNM nu a publicat încă).
+    const response = (await requestJson('/api/exchange-rates', { date: today(), rate })) as ExchangeRatesResponse;
     setRates(response.rates);
     setSources(response.sources);
   }
@@ -97,6 +105,7 @@ export function useExchangeRates(): ExchangeRatesData {
     rates,
     sources,
     todayRate,
+    rateDate,
     todayTone,
     lastFiveDays,
     correctToday,

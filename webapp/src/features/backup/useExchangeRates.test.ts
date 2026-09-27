@@ -59,6 +59,26 @@ describe('useExchangeRates', () => {
     expect(result.current.presets).toEqual(initialPresets);
   });
 
+  it('fără curs pentru azi, cade pe ultimul curs cunoscut (weekend/sărbătoare)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/exchange-rates' && !isPost)
+          return jsonResponse({ rates: { [yesterday]: 19.58 }, sources: { [yesterday]: 'bnm' } });
+        if (path === '/api/plan-presets' && !isPost) return jsonResponse(initialPresets);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useExchangeRates());
+    await vi.waitFor(() => expect(result.current.ready).toBe(true));
+
+    expect(result.current.todayRate).toBe(19.58);
+    expect(result.current.rateDate).toBe(yesterday);
+    expect(result.current.todayTone).toBe('mint');
+  });
+
   it('correctToday trimite data de azi și marchează sursa drept manuală', async () => {
     const { result } = renderHook(() => useExchangeRates());
     await vi.waitFor(() => expect(result.current.ready).toBe(true));
