@@ -18,6 +18,7 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.mjs';
 import { useStatus, type StatusData, type StatusRowView, type StatusSegment } from './useStatus';
 import { useSchoolYearStatus, type SchoolYearData } from './useSchoolYearStatus';
+import { PaymentHeatmap } from './PaymentHeatmap';
 import styles from './StatusPage.module.css';
 
 const STATUS_TONE: Record<string, BadgeTone> = {
@@ -269,6 +270,53 @@ function MonthView({
   );
 }
 
-function YearView({ data: _data }: { data: SchoolYearData }) {
-  return <p className={styles.notice}>Harta anului școlar vine într-un task următor.</p>;
+function YearView({ data }: { data: SchoolYearData }) {
+  return (
+    <>
+      <div className={styles.yearCards}>
+        <Card tone={data.summary.overdueChildren > 0 ? 'pink' : 'white'} className={styles.yearCard}>
+          <strong className={styles.yearCardValue}>{data.summary.overdueChildren}</strong>
+          <div>
+            <p className={styles.yearCardTitle}>copii cu restanță</p>
+            <small>{formatMoney(data.summary.unrecovered)} nerecuperați</small>
+          </div>
+          {data.summary.overdueChildren > 0 && (
+            <button type="button" className={styles.ctaButton} disabled title={SMS_TITLE}>
+              Notifică
+            </button>
+          )}
+        </Card>
+        <Card tone="mint" className={styles.yearCard}>
+          <strong className={styles.yearCardValue}>
+            {data.summary.collectionRate === null ? '—' : `${Math.round(data.summary.collectionRate * 100)}%`}
+          </strong>
+          <div>
+            <p className={styles.yearCardTitle}>rată de încasare</p>
+            <small>pe anul școlar, până azi</small>
+          </div>
+        </Card>
+        <Card tone="yellow" className={styles.yearCard}>
+          <strong className={styles.yearCardValue}>{data.summary.partialThisMonth}</strong>
+          <div>
+            <p className={styles.yearCardTitle}>plăți parțiale</p>
+            <small>luna aceasta</small>
+          </div>
+        </Card>
+      </div>
+
+      <Card className={styles.tableCard}>
+        <div className={styles.toolbar}>
+          <input
+            className={styles.search}
+            type="search"
+            placeholder="Caută copil"
+            aria-label="Caută copil"
+            value={data.search}
+            onChange={event => data.setSearch(event.target.value)}
+          />
+        </div>
+        <PaymentHeatmap rows={data.rows} monthLabels={data.monthLabels} currentMonth={data.currentMonth} />
+      </Card>
+    </>
+  );
 }

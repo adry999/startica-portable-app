@@ -1,0 +1,110 @@
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-14) var(--space-16);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+}
+
+.paid {
+  background: var(--mint);
+}
+
+.partial {
+  background: var(--yellow);
+}
+
+.unpaid {
+  background: var(--raspberry);
+}
+
+.upcoming {
+  background: var(--sand);
+}
+
+.none {
+  background: var(--sand-soft);
+}
+
+.empty {
+  color: var(--subtle);
+  padding: 0 var(--space-16) var(--space-16);
+  margin: 0;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 0 var(--space-16) var(--space-16);
+}
+
+.headRow,
+.row {
+  display: grid;
+  grid-template-columns: 230px repeat(12, minmax(0, 1fr)) 130px;
+  gap: 6px;
+  align-items: center;
+}
+
+.headRow {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.currentLabel {
+  color: var(--orange-ink);
+}
+
+.soldHeader {
+  text-align: right;
+}
+
+.name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell {
+  height: 30px;
+  border-radius: var(--radius-xs);
+}
+
+.current {
+  outline: 2px solid var(--orange-soft);
+  outline-offset: 2px;
+}
+
+.soldPositive,
+.soldZero {
+  text-align: right;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.soldPositive {
+  color: var(--pink-ink);
+}
+
+.soldZero {
+  color: var(--subtle);
+}

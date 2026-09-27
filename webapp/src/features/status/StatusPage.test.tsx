@@ -212,4 +212,38 @@ describe('StatusPage', () => {
     expect(screen.getByText('1 restanțier')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Notifică toți' })).toBeDisabled();
   });
+
+  it('modul An școlar arată cele trei carduri și „Notifică" dezactivat până la integrarea SMS', async () => {
+    await loadedSession();
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'An școlar' }));
+
+    expect(screen.getByText('copii cu restanță')).toBeInTheDocument();
+    expect(screen.getByText('rată de încasare')).toBeInTheDocument();
+    expect(screen.getByText('plăți parțiale')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Notifică' })).toBeDisabled();
+  });
+
+  it('căutarea din harta anului școlar restrânge la copilul căutat', async () => {
+    await loadedSession();
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'An școlar' }));
+
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Caută copil' }), 'andrei');
+    expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(screen.queryByText('Elena Marin')).not.toBeInTheDocument();
+  });
+
+  it('schimbarea anului școlar din selector re-randează harta fără eroare', async () => {
+    await loadedSession();
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'An școlar' }));
+
+    const yearSelect = screen.getByRole('combobox', { name: 'Anul școlar' }) as HTMLSelectElement;
+    const otherOption = within(yearSelect)
+      .getAllByRole('option')
+      .find(option => (option as HTMLOptionElement).value !== yearSelect.value) as HTMLOptionElement;
+    await userEvent.selectOptions(yearSelect, otherOption);
+    expect(yearSelect.value).toBe(otherOption.value);
+  });
 });
