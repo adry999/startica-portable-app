@@ -28,3 +28,16 @@ Te oprești doar dacă:
 
 12. **Faza 6, două filiale:** scrie întâi planul tehnic după `17-filiale.md` (date separate pe filială, selector în Sidebar). 
 13. **Faza 16b, sincronizare:** după 12, scrie spec-ul tehnic și planul după `18-sincronizare.md` (server de reconciliere, local-first, conflicte), apoi implementează.
+
+## Stadiu — coada fină din RASPUNSURI.md „Coada, continuare”
+
+- **8 (EUR/BNM UI):** DONE 2026-09-27 — fila Curs valutar (12a), selector în `PaymentFormDrawer` (12b), monedă în Taxe și grupe (12g) + Copil nou (3a), € pe fișa copilului (12d), pastilă curs pe Dashboard (12f). Commit-uri `fc25d06`, `5f94422`. Rămân **12c** (Situația plăților €, în punctul 10) și **12e** (Confirmarea de plată €, în punctul 15) — se fac odată cu ecranele lor, nu separat.
+- **9b (SMS P1):** DONE 2026-09-27 — toate cele 21 de taskuri din plan implementate (shared domain, storage, client sms.md, orchestrare trimitere, rute, webapp: hooks + dialog + Notificări + De notificat). `npm run check` + `webapp` typecheck/test + `npm run test:e2e` verde. P3 (jurnalul „Mesaje SMS”, „Retrimite”) și P2 (dialogul din Situația plăților) rămân neimplementate, cum era planificat.
+- **10 (Situația plăților completă):** DONE 2026-09-27 — toate cele 10 taskuri din plan implementate (obligation().currency, evaluare an școlar, cardurile lunii, harta 12 luni, antet compact Lună/An școlar). `npm run check` + webapp typecheck/test verde. „Notifică”/„Notifică toți” rămân vizibile, dezactivate — SMS P2, plan separat.
+- **11 (curățenie):** DONE 2026-09-27 — R6 (ștergerile folosesc „Scrie ȘTERGE”; confirmarea de plată duplicată rămâne `window.confirm`, nu e ștergere), R7 (nume generice eliminate), R10 (ChildrenPage/ExpensesPage împărțite), `Button`/`SearchInput` comune (20 + 4 fișiere). **R9 (rute per feature) NEFĂCUT** — schimbare de arhitectură, nu mecanică; de decis separat.
+- **12 (Încărcare):** DONE 2026-09-27 — StartupScreen, Skeleton/LoadingState peste tot, ecranul de 15 s (fără „Lucrez fără legătură”, vezi INTREBARI.md).
+- **13 (Prezența):** DONE 2026-09-27 — plan `docs/superpowers/plans/2026-09-27-prezenta.md`; tabel `attendance` separat, vederi Zi/Lună, secțiunea din fișă; nu atinge taxele.
+- **14 (Raport contabil):** DONE 2026-09-27 — `/raport`, export Excel/PDF; fără selector de filială (INTREBARI.md).
+- **15 (Confirmarea de plată):** DONE 2026-09-27 — fila Grădinița (16a), A5 și A4 1/3+2/3 (16b, 16g), numerotare, sumă în litere, Situația tipărită (16c; fără „Pagina N din M”, Chrome nu știe numărul total de pagini).
+- **Extra (cerut 2026-09-27):** istoricul cursului BNM se completează retroactiv la pornire; iconiță ↗ spre pagina BNM a zilei lângă fiecare curs afișat.
+- **După 12–15:** Faza 6 — filialele (`17-filiale.md`), apoi sincronizarea (`18-sincronizare.md`), confirmat de utilizator 2026-09-27. La filiale se revin deciziile provizorii din `INTREBARI.md` (selectorul de filială din exportul Raportului contabil, pasul „Sincronizez” de la pornire).

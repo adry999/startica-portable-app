@@ -19,6 +19,6 @@ Se modifică: `status/StatusPage.tsx`, `.module.css`, `.test.tsx`. Se creează: 
 - **Hartă:** coloana copil de 230px + 12 coloane de lună + Sold de 130px; celule de 30px, radius 8: achitat `--mint`, parțial `--yellow`, neachitat `--raspberry`, urmează `#f1ece2`, înainte de contract `#faf7f1`; luna curentă cu outline de 2px `--orange-soft`. Legenda sus.
 
 ## 5. Criterii de acceptare
-- [ ] Antetul An școlar e compact, identic cu Lună (nu H2 de 36px în conținut)
-- [ ] Filtrul de grupă e cu pastile, nu cu dropdown
-- [ ] „Notifică” pe un rând → #7c; „Notifică toți” → #7d
+- [x] Antetul An școlar e compact, identic cu Lună (nu H2 de 36px în conținut)
+- [x] Filtrul de grupă e cu pastile, nu cu dropdown
+- [ ] „Notifică” pe un rând → #7c; „Notifică toți” → #7d — **rămâne (SMS P2)**, vezi `docs/superpowers/plans/2026-09-27-situatia-platilor-complet.md` §„Handoff to SMS P2”: butoanele sunt vizibile, dezactivate, cu explicație
