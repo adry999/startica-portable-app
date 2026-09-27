@@ -100,6 +100,7 @@ describe('AttendancePage · Ziua', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    localStorage.clear(); // usePersistedState scrie mod-ul (Ziua/Luna) — fără curățare, testele următoare pornesc în Luna.
   });
 
   it('un clic pe placă trece Prezent → Absent → Motivat → nemarcat și trimite POST-ul după 400 ms', async () => {
@@ -200,6 +201,35 @@ describe('AttendancePage · Ziua', () => {
     expect(unmarkedValue().textContent).toBe('3');
   });
 
+  it('cifra Absenți e roz-raspberry și Motivați e galben, restul rămân slate', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    const absentTile = screen.getByRole('button', { name: /Ana Popescu:/ });
+    await user.click(absentTile); // prezent
+    await user.click(absentTile); // absent
+
+    const excusedTile = screen.getByRole('button', { name: /Bogdan Rusu:/ });
+    await user.click(excusedTile); // prezent
+    await user.click(excusedTile); // absent
+    await user.click(excusedTile); // motivat -> popover
+    await user.keyboard('{Escape}');
+
+    const absentValue = screen.getByText('Absenți').nextSibling as HTMLElement;
+    const excusedValue = screen.getByText('Motivați').nextSibling as HTMLElement;
+    const presentValue = screen.getByText('Prezenți').nextSibling as HTMLElement;
+    const unmarkedValue = screen.getByText('Nemarcați').nextSibling as HTMLElement;
+
+    expect(absentValue.textContent).toBe('1');
+    expect(absentValue.className).toMatch(/cardValueAbsent/);
+    expect(excusedValue.textContent).toBe('1');
+    expect(excusedValue.className).toMatch(/cardValueExcused/);
+    expect(presentValue.className).not.toMatch(/cardValueAbsent|cardValueExcused/);
+    expect(unmarkedValue.className).not.toMatch(/cardValueAbsent|cardValueExcused/);
+  });
+
   it('copiii arhivați sau înscriși după zi nu apar', async () => {
     stubFetch([]);
     await renderPage();
@@ -232,5 +262,26 @@ describe('AttendancePage · Ziua', () => {
 
     expect(posted).toHaveLength(1);
     expect(posted[0].changes[0]).toMatchObject({ childId: 'c1', status: 'present' });
+  });
+
+  it('„Tipărește” și „Exportă” stau în antet, lângă MonthStepper, nu în bara de filtre', async () => {
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    stubFetch([]);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('radio', { name: 'Luna' }));
+    await screen.findByText('Ana Popescu');
+
+    const printButton = screen.getByRole('button', { name: 'Tipărește' });
+    const exportButton = screen.getByRole('button', { name: 'Exportă' });
+    const filterBar = screen.getByRole('toolbar');
+    expect(filterBar).not.toContainElement(printButton);
+    expect(filterBar).not.toContainElement(exportButton);
+
+    await user.click(printButton);
+    expect(printSpy).toHaveBeenCalled();
+
+    printSpy.mockRestore();
   });
 });

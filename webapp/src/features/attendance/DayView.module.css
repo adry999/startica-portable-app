@@ -35,6 +35,14 @@
   color: var(--subtle);
 }
 
+.cardValueAbsent {
+  color: var(--raspberry);
+}
+
+.cardValueExcused {
+  color: var(--yellow-ink);
+}
+
 .legend {
   display: inline-flex;
   align-items: center;

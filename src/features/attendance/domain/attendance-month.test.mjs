@@ -6,9 +6,9 @@ import { monthDates, summarizeMonth } from './attendance-month.mjs';
 /** @typedef {import('../attendance.types.d.mts').AttendanceEntry} AttendanceEntry */
 
 /** @returns {[string, AttendanceEntry]} */
-const entry = (childId, date, status) => [
+const entry = (childId, date, status, reason = '') => [
   attendanceKey(childId, date),
-  { childId, date, status, reason: '', updatedAt: '' },
+  { childId, date, status, reason, updatedAt: '' },
 ];
 
 test('monthDates întoarce toate zilele lunii, în ordine', () => {
@@ -33,6 +33,16 @@ test('weekend-urile și sărbătorile sunt off, zilele de după azi sunt future,
   assert.equal(rowA.cells.find(cell => cell.date === '2026-09-11')?.kind, 'future');
   assert.equal(rowA.cells.find(cell => cell.date === '2026-09-08')?.kind, 'unmarked');
   assert.equal(rowB.cells.find(cell => cell.date === '2026-09-08')?.kind, 'none');
+});
+
+test('celula unei zile motivate poartă motivul salvat, altfel gol', () => {
+  const child = { id: 'C', attendanceDate: '2026-09-01' };
+  const entries = new Map([entry('C', '2026-09-02', 'excused', 'Boală'), entry('C', '2026-09-03', 'absent')]);
+  const { rows } = summarizeMonth({ children: [child], month: '2026-09', entries, todayStr: '2026-09-10' });
+  const row = rows[0];
+  assert.equal(row.cells.find(cell => cell.date === '2026-09-02')?.reason, 'Boală');
+  assert.equal(row.cells.find(cell => cell.date === '2026-09-03')?.reason, '');
+  assert.equal(row.cells.find(cell => cell.date === '2026-09-08')?.reason, '', 'nemarcat: fără motiv');
 });
 
 test('Zile = prezențe / zile lucrătoare până azi, per copil', () => {

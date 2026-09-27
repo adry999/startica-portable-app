@@ -10,7 +10,7 @@ import type { Group, RecordsSnapshot } from '@contracts/record-types.mjs';
 export interface MonthRowView {
   id: string;
   name: string;
-  cells: { date: string; kind: DayCellKind }[];
+  cells: { date: string; kind: DayCellKind; reason: string }[];
   presentDays: number;
   workingDays: number;
 }

@@ -1,8 +1,7 @@
 import { Fragment, useState } from 'react';
-import { Button, Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
+import { Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { formatMonthName } from '#shared/format/date-format.mjs';
-import { exportAttendanceMonth } from './attendance-export';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
 import type { AttendanceMonthData } from './useAttendanceMonth';
 import styles from './MonthView.module.css';
@@ -35,23 +34,7 @@ export function MonthView({ month, data }: MonthViewProps) {
   return (
     <div className={styles.root}>
       <div className={styles.filterBar}>
-        <FilterPills
-          groups={[{ label: 'Grupa', value: data.groupId, onChange: data.setGroupId, options: groupOptions }]}
-          trailing={
-            <span className={styles.actions}>
-              <Button variant="ghost" onClick={() => window.print()}>
-                Tipărește
-              </Button>
-              <Button
-                variant="ghost"
-                disabled={data.rows.length === 0}
-                onClick={() => void exportAttendanceMonth(data.rows, data.dates, data.groupName, month)}
-              >
-                Exportă
-              </Button>
-            </span>
-          }
-        />
+        <FilterPills groups={[{ label: 'Grupa', value: data.groupId, onChange: data.setGroupId, options: groupOptions }]} />
       </div>
 
       <h2 className={styles.printTitle}>
@@ -102,7 +85,7 @@ export function MonthView({ month, data }: MonthViewProps) {
                     {excuseTarget?.childId === row.id && excuseTarget.date === cell.date && (
                       <ExcuseReasonPopover
                         childName={row.name}
-                        reason=""
+                        reason={cell.reason}
                         onSave={reason => {
                           data.setReason(row.id, cell.date, reason);
                           setExcuseTarget(null);

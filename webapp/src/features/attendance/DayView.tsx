@@ -28,7 +28,10 @@ export function DayView({ data }: DayViewProps) {
     ...data.groups.map(group => ({ value: group.id, label: group.name, tone: groupTone(group.id, data.groups) })),
   ];
 
-  const cardValueClass = (value: number) => (value === 0 ? `${styles.cardValue} ${styles.subtle}` : styles.cardValue);
+  const cardValueClass = (value: number, toneClass?: string) => {
+    if (value === 0) return `${styles.cardValue} ${styles.subtle}`;
+    return toneClass ? `${styles.cardValue} ${toneClass}` : styles.cardValue;
+  };
 
   return (
     <div className={styles.root}>
@@ -39,11 +42,11 @@ export function DayView({ data }: DayViewProps) {
         </Card>
         <Card>
           <span className={styles.cardLabel}>Absenți</span>
-          <span className={cardValueClass(data.counts.absent)}>{data.counts.absent}</span>
+          <span className={cardValueClass(data.counts.absent, styles.cardValueAbsent)}>{data.counts.absent}</span>
         </Card>
         <Card>
           <span className={styles.cardLabel}>Motivați</span>
-          <span className={cardValueClass(data.counts.excused)}>{data.counts.excused}</span>
+          <span className={cardValueClass(data.counts.excused, styles.cardValueExcused)}>{data.counts.excused}</span>
         </Card>
         <Card>
           <span className={styles.cardLabel}>Nemarcați</span>

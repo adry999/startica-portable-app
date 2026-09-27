@@ -9,12 +9,6 @@
   color: var(--muted);
 }
 
-.actions {
-  margin-left: auto;
-  display: inline-flex;
-  gap: var(--space-8);
-}
-
 .printTitle {
   display: none;
 }

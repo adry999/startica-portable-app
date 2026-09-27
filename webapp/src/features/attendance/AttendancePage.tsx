@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, DayStepper, MonthStepper, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { exportAttendanceMonth } from './attendance-export';
 import { useAttendanceDay } from './useAttendanceDay';
 import { useAttendanceMonth } from './useAttendanceMonth';
 import { DayView } from './DayView';
@@ -64,6 +65,16 @@ export function AttendancePage({ month }: AttendancePageProps) {
           onPrev={() => setMonthKey(shiftMonth(monthKey, -1))}
           onNext={() => setMonthKey(current => (current >= CURRENT_MONTH ? current : shiftMonth(current, 1)))}
         />
+        <Button variant="ghost" onClick={() => window.print()}>
+          Tipărește
+        </Button>
+        <Button
+          variant="ghost"
+          disabled={monthData.rows.length === 0}
+          onClick={() => void exportAttendanceMonth(monthData.rows, monthData.dates, monthData.groupName, monthKey)}
+        >
+          Exportă
+        </Button>
       </>
     ),
   );

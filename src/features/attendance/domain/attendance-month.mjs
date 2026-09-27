@@ -49,7 +49,7 @@ export function summarizeMonth({ children, month, entries, todayStr }) {
     const cells = dates.map(date => {
       const enrolled = isChildEnrolledOn(child, date);
       const entry = entries.get(attendanceKey(child.id, date));
-      return { date, kind: cellKindOf(date, todayStr, enrolled, entry) };
+      return { date, kind: cellKindOf(date, todayStr, enrolled, entry), reason: entry?.reason ?? '' };
     });
     const presentDays = cells.filter(cell => cell.kind === 'present').length;
     const rowWorkingDays = cells.filter(
