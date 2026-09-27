@@ -25,4 +25,5 @@
 - [x] Șablonul implicit nu are „Șterge” — P1, `SmsTemplatesPanel`
 - [ ] Contorul lunar numără segmentele (nu doar mesajele), separat pe filială; fără limită — **depășit de RASPUNSURI.md 6**: limita e opțională (implicit dezactivată, nu inexistentă), contorul e global pe instalare (fără split pe filială — filialele sunt excluse întreaga sesiune). P1 implementează contorul global opțional; despărțirea pe filială nu se face în v1.
 
-11a „Mesaje SMS” (tabelul jurnalului, filtre, panoul de detaliu, „Retrimite”) e **P3**, neimplementat — vezi planul `docs/superpowers/plans/2026-09-27-sms-notify-p1.md`, secțiunea „Out of scope”.
+- [x] 11a „Mesaje SMS” (tabelul jurnalului, filtre, panoul de detaliu, „Retrimite”) — P3, `SmsMessagesPanel`, `GET /api/sms-log`
+- [x] „Folosit de N ori” în editorul de șabloane — P3, `usageCountByTemplate`/`SmsTemplatesPanel`
