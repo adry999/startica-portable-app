@@ -13,9 +13,13 @@ import {
   type CardTone,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { usePersonal } from '@shared/personal/usePersonal';
+import type { Staff } from '@shared/personal/personal.types';
+import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
 import { GroupFormDrawer } from './GroupFormDrawer';
+import { GroupTeamCard } from './GroupTeamCard';
 import styles from './GroupsPage.module.css';
 
 type ViewMode = 'cards' | 'board';
@@ -37,6 +41,7 @@ export interface GroupsPageProps {
 
 export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const groupsData = useGroups();
+  const personal = usePersonal();
   const toast = useToast();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('groups.viewMode', 'cards');
   const [formOpen, setFormOpen] = useState(false);
@@ -104,6 +109,8 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                   <GroupEditor
                     group={openGroup}
                     unassignedChildren={groupsData.unassignedChildren}
+                    staff={personal.staff}
+                    onSaveTeam={team => groupsData.saveTeam(openGroup.id, team)}
                     onSave={async (name, capacityRaw, educator) => {
                       try {
                         await groupsData.updateGroup(openGroup.id, name, capacityRaw, educator);
@@ -204,13 +211,15 @@ function GroupTile({ group, tone, isOpen, onToggle, onOpenStickers }: GroupTileP
 interface GroupEditorProps {
   group: GroupCardView;
   unassignedChildren: UnassignedChild[];
+  staff: Staff[];
+  onSaveTeam: (team: GroupTeamMember[]) => Promise<void>;
   onSave: (name: string, capacityRaw: string, educator: string) => Promise<void>;
   onDelete: () => void;
   onAssign: (childId: string) => Promise<void>;
   onRemove: (childId: string) => Promise<void>;
 }
 
-function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, onRemove }: GroupEditorProps) {
+function GroupEditor({ group, unassignedChildren, staff, onSaveTeam, onSave, onDelete, onAssign, onRemove }: GroupEditorProps) {
   const [name, setName] = useState(group.name);
   const [capacityRaw, setCapacityRaw] = useState(group.capacity != null ? String(group.capacity) : '');
   const [educator, setEducator] = useState(group.educator);
@@ -294,6 +303,12 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
           + Adaugă
         </Button>
       </div>
+
+      <GroupTeamCard
+        group={{ id: group.id, name: group.name, capacity: group.capacity, team: group.team }}
+        staff={staff}
+        onSave={onSaveTeam}
+      />
 
       <div className={styles.deleteRow}>
         <button

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { formatAge } from '#shared/format/date-format.mjs';
-import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { Child, Group, GroupTeamMember, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type GroupsStatus = 'loading' | 'ready' | 'failed';
 
@@ -25,6 +25,7 @@ export interface GroupCardView {
   extraMemberCount: number;
   members: GroupMemberView[];
   blocksDelete: boolean;
+  team: GroupTeamMember[];
 }
 
 export interface UnassignedChild {
@@ -47,6 +48,7 @@ export interface GroupsData {
   assignChild: (groupId: string, childId: string) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
   reorderGroups: (draggedId: string, targetId: string) => void;
+  saveTeam: (groupId: string, team: GroupTeamMember[]) => Promise<void>;
 }
 
 const GROUP_ORDER_KEY = 'groups.order';
@@ -124,6 +126,7 @@ function buildGroupCard(group: Group, activeChildren: Child[], allChildren: Chil
     extraMemberCount: Math.max(0, memberCount - 5),
     members: members.map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) })),
     blocksDelete,
+    team: group.team ?? [],
   };
 }
 
@@ -192,6 +195,13 @@ export function useGroups(): GroupsData {
     await session.mutate('/api/record', { type: 'children', mode: 'update', record: { ...child, groupId: null } });
   }
 
+  /** Echipa grupei (23i) — scrie Group.team prin mutația obișnuită de înregistrare. */
+  async function saveTeam(groupId: string, team: GroupTeamMember[]) {
+    const group = records.groups.find(candidate => candidate.id === groupId);
+    if (!group) throw new Error('Grupa nu mai există.');
+    await session.mutate('/api/record', { type: 'groups', mode: 'update', record: { ...group, team } });
+  }
+
   const { groups, unassignedChildren } = useMemo(() => {
     if (!ready) return { groups: [] as GroupCardView[], unassignedChildren: [] as UnassignedChild[] };
     const activeChildren = records.children.filter(child => !child.archived);
@@ -220,6 +230,7 @@ export function useGroups(): GroupsData {
       assignChild,
       removeChild,
       reorderGroups,
+      saveTeam,
     };
   }
 
@@ -237,5 +248,6 @@ export function useGroups(): GroupsData {
     assignChild,
     removeChild,
     reorderGroups,
+    saveTeam,
   };
 }

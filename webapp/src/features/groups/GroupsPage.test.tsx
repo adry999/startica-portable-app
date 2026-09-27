@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { reloadPersonal } from '@shared/personal/usePersonal';
 import { GroupsPage } from './GroupsPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Grupă nouă" ajunge acolo, nu în pagină. */
@@ -30,6 +31,24 @@ const fixtureState = {
   visits: [],
 };
 
+const fixturePersonalState = {
+  departments: [{ id: 'DEP-1', name: 'Educatori', order: 1 }],
+  roles: [{ id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 }],
+  staff: [
+    {
+      id: 'STF-1',
+      name: 'Ana Popescu',
+      roleId: 'ROL-1',
+      branchIds: ['bu'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
+  ],
+  settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
+};
+
 function renderPage(onOpenGroupStickers?: (groupId: string) => void) {
   return render(
     <ToastProvider>
@@ -46,6 +65,7 @@ function renderPage(onOpenGroupStickers?: (groupId: string) => void) {
 async function loadedSession() {
   const session = renderHook(() => useAppSession());
   await act(() => session.result.current.load());
+  await act(() => reloadPersonal());
 }
 
 describe('GroupsPage', () => {
@@ -60,6 +80,7 @@ describe('GroupsPage', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -162,9 +183,33 @@ describe('GroupsPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Copil fără grupă' }));
     await userEvent.click(screen.getByText('Vlad Marin'));
-    await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
+    // Primul „+ Adaugă” e cel al copiilor fără grupă; al doilea e cel al Echipei grupei (23i).
+    await userEvent.click(screen.getAllByRole('button', { name: '+ Adaugă' })[0]);
 
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();
+  });
+
+  it('echipa grupei (23i) apare în editorul grupei și se salvează cu Group.team', async () => {
+    await loadedSession();
+    renderPage();
+
+    await userEvent.click(screen.getByText('Fluturași'));
+    const teamCard = screen.getByText('Echipa grupei').parentElement!;
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
+      const body = JSON.parse(options.body as string);
+      expect(body.type).toBe('groups');
+      expect(body.record.id).toBe('g1');
+      expect(body.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+
+    const staffSelect = within(teamCard).getAllByRole('combobox')[0];
+    await userEvent.selectOptions(staffSelect, 'STF-1');
+    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Adaugă' }));
+    await userEvent.click(within(teamCard).getByRole('button', { name: 'Salvează echipa' }));
+
+    expect(await screen.findByText('Echipa grupei a fost salvată.')).toBeInTheDocument();
   });
 
   it('cere navigarea la stickerele grupei din meniul ⋯, fără să deschidă editorul', async () => {
