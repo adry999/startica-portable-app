@@ -32,7 +32,7 @@ Dacă există un formular cu modificări, înainte de schimbare apare un dialog:
 
 ## Criterii de acceptare
 - [x] Selectorul apare pe toate ecranele, sub logo, în culoarea filialei curente
-- [ ] Nicio dată a unei filiale nu apare în cealaltă (există test)
+- [x] Nicio dată a unei filiale nu apare în cealaltă (există test) — `src/app/server/branches.routes.integration.test.mjs`
 - [x] La schimbare rămâi pe același modul, cu filtrele resetate
 - [x] Formularul nesalvat cere confirmare
 - [x] Eyebrow-ul antetului arată filiala
