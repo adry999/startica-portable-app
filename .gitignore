@@ -33,3 +33,9 @@ launcher/obj/
 webapp/dist/
 # Build static al paginii design-system (npm run build:design-system), separat de dist/.
 webapp/dist-design-system/
+
+# ─── sync-server/ (18-sincronizare) ──────────────────────────────────────────
+# Baza serverului de sincronizare și copiile ei de siguranță zilnice.
+sync-server/data/
+# Identitatea unui calculator conectat (token în clar); per install, niciodată în istoric.
+sync.json

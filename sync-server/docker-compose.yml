@@ -1,0 +1,39 @@
+# Exemplu pentru un VPS mic în UE (decizia utilizatorului #1): serverul de sincronizare
+# + Caddy (HTTPS automat, Let's Encrypt). Rulează din rădăcina depozitului:
+#   cp sync-server/Caddyfile.example sync-server/Caddyfile   # apoi editează domeniul
+#   docker compose -f sync-server/docker-compose.yml up -d
+services:
+  sync:
+    build:
+      context: ..
+      dockerfile: sync-server/Dockerfile
+    restart: unless-stopped
+    environment:
+      SYNC_SETUP_KEY: ${SYNC_SETUP_KEY}
+      SYNC_SETUP_KEY_ALWAYS: ${SYNC_SETUP_KEY_ALWAYS:-0}
+      SYNC_BACKUP_HOUR: ${SYNC_BACKUP_HOUR:-3}
+      SYNC_BACKUP_KEEP: ${SYNC_BACKUP_KEEP:-14}
+      SYNC_HISTORY_DAYS: ${SYNC_HISTORY_DAYS:-365}
+      SYNC_TRUST_PROXY: '1'
+    volumes:
+      - sync-data:/data
+    expose:
+      - '8790'
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - sync
+
+volumes:
+  sync-data:
+  caddy-data:
+  caddy-config:

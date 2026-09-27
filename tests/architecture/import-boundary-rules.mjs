@@ -7,6 +7,7 @@ const ALIAS_TARGETS = {
   '#shared/': 'src/shared/',
   '#features/': 'src/features/',
   '#test-support/': 'tests/support/',
+  '#sync-server/': 'sync-server/src/',
 };
 
 const ALLOWED_TARGET_AREAS = {
@@ -17,6 +18,7 @@ const ALLOWED_TARGET_AREAS = {
   features: ['features', 'core', 'shared'],
   entry: ['app', 'config', 'core', 'shared', 'features'],
   tests: ['app', 'config', 'core', 'shared', 'features'],
+  outside: [],
 };
 
 const SRC_AREAS = ['app', 'config', 'core', 'shared', 'features'];
@@ -96,13 +98,27 @@ export function findImportViolations(sourceFiles) {
         continue;
       }
 
+      // sync-server/ e un pachet separat, deployat singur (decizia 1 din planul de
+      // sincronizare): nu importă nimic din src/, iar restul depozitului nu îl importă
+      // decât din teste (fixture-uri și integrări) — #sync-server/* nu e un alias liber.
+      const sourceIsSyncServer = path.startsWith('sync-server/');
+      if (sourceIsSyncServer && target.startsWith('src/')) report('sync-server-imports-src');
+      const allowedToImportSyncServer = path.startsWith('tests/') || path.endsWith('.integration.test.mjs');
+      if (!sourceIsSyncServer && target.startsWith('sync-server/src/') && !allowedToImportSyncServer)
+        report('sync-server-import-restricted');
+
       const isRelative = !specifier.startsWith('#');
       if (sourceInSrc && isRelative && (specifier.match(/\.\.\//g)?.length ?? 0) > 1) report('deep-relative-import');
 
       const destination = locate(target);
       if (!SRC_AREAS.includes(destination.area)) {
-        // scripts/, tests/ și rădăcina pot importa liber în afara src/ (ex. startica_server.mjs, fixture-uri).
-        if (sourceInSrc && !(isTestFile(path) && target.startsWith('tests/support/'))) report('import-outside-src');
+        // scripts/, tests/ și rădăcina pot importa liber în afara src/ (ex. startica_server.mjs, fixture-uri);
+        // un test (unitar cu tests/support/, sau de integrare cu sync-server/) la fel —
+        // altfel e deja semnalat mai sus prin sync-server-import-restricted.
+        const isExemptTestImport =
+          isTestFile(path) &&
+          (target.startsWith('tests/support/') || (target.startsWith('sync-server/src/') && allowedToImportSyncServer));
+        if (sourceInSrc && !isExemptTestImport) report('import-outside-src');
         continue;
       }
       if (sourceInSrc && isRelative && !sameModule(source, destination)) report('relative-import-across-boundary');

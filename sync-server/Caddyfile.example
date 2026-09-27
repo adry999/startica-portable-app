@@ -1,0 +1,6 @@
+# Copiază acest fișier ca „Caddyfile” lângă docker-compose.yml și pune adresa reală.
+# Caddy termină TLS (certificat automat Let's Encrypt) și transmite către serverul de
+# sincronizare, care ascultă doar HTTP pe rețeaua internă a Docker Compose.
+sync.exemplul-tau.ro {
+	reverse_proxy sync:8790
+}

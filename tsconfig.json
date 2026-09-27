@@ -11,6 +11,6 @@
     "strict": true,
     "noImplicitAny": false
   },
-  "include": ["src/**/*.mjs", "src/**/*.d.mts", "tests/architecture/**/*.mjs"],
+  "include": ["src/**/*.mjs", "src/**/*.d.mts", "tests/architecture/**/*.mjs", "sync-server/src/**/*.mjs"],
   "exclude": ["**/*.integration.test.mjs"]
 }

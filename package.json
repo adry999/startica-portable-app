@@ -12,11 +12,12 @@
     "#core/*": "./src/core/*",
     "#shared/*": "./src/shared/*",
     "#features/*": "./src/features/*",
-    "#test-support/*": "./tests/support/*"
+    "#test-support/*": "./tests/support/*",
+    "#sync-server/*": "./sync-server/src/*"
   },
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning startica_server.mjs",
-    "test": "node --test \"tests/*.test.mjs\" \"tests/architecture/*.test.mjs\" \"src/**/*.test.mjs\"",
+    "test": "node --test \"tests/*.test.mjs\" \"tests/architecture/*.test.mjs\" \"src/**/*.test.mjs\" \"sync-server/src/**/*.test.mjs\"",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:e2e": "node tests/browser-smoke.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File tests/desktop-lifecycle.ps1",
     "typecheck": "tsc -p .",

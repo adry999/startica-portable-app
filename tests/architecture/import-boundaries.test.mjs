@@ -47,6 +47,7 @@ function collectApplicationFiles() {
     ...collectRepoFiles('src', /\.(mjs|d\.mts)$/),
     ...collectRepoFiles('scripts', /\.mjs$/),
     ...collectRepoFiles('tests', /\.mjs$/, 'tests/architecture/'),
+    ...collectRepoFiles('sync-server/src', /\.mjs$/),
     ...rootFiles,
   ];
 }
@@ -126,6 +127,16 @@ test('permite dependențele din arhitectura țintă', () => {
         '#shared/domain/sms-template.mjs',
       ),
       sourceFile('src/app/server/create-application.mjs', '#features/sms-notify/index.server.mjs'),
+      sourceFile('sync-server/src/create-sync-server.mjs', './router.mjs', 'node:http', './devices.repository.mjs'),
+      sourceFile(
+        'tests/sync-shared-constants.test.mjs',
+        '#sync-server/change-policy.mjs',
+        '#shared/domain/record-schema.mjs',
+      ),
+      sourceFile(
+        'src/features/sync/server/sync-engine.service.integration.test.mjs',
+        '#sync-server/create-sync-server.mjs',
+      ),
     ]),
     [],
   );
@@ -180,6 +191,15 @@ test('semnalează fiecare tip de încălcare a granițelor', () => {
     [
       sourceFile('src/features/sms-notify/server/sms-send.service.mjs', '#features/billing/index.server.mjs'),
       'feature-imports-feature',
+    ],
+    [sourceFile('sync-server/src/database.mjs', '#core/server/database/schema.mjs'), 'sync-server-imports-src'],
+    [
+      sourceFile('src/features/sync/server/sync-http-client.mjs', '#sync-server/change-policy.mjs'),
+      'sync-server-import-restricted',
+    ],
+    [
+      sourceFile('src/features/sync/server/sync-http-client.test.mjs', '#sync-server/change-policy.mjs'),
+      'sync-server-import-restricted',
     ],
   ];
 
