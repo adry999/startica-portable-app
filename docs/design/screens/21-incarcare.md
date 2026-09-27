@@ -19,6 +19,6 @@
 - Dacă nici baza locală nu se deschide: același ecran, cu textul erorii și „Deschide dosarul cu backupuri”.
 
 ## Criterii de acceptare
-- [ ] O pornire sub 1 s nu arată ecranul 21a
-- [ ] O navigare sub 300 ms nu clipește
-- [ ] 21c apare doar după 15 s și permite lucrul offline
+- [x] O pornire sub 1 s nu arată ecranul 21a
+- [x] O navigare sub 300 ms nu clipește
+- [ ] 21c apare doar după 15 s și permite lucrul offline — decizie provizorie (INTREBARI.md): fără server comun în această etapă, „Lucrez fără legătură” nu are sens și nu apare; 21c după 15 s arată doar „Încearcă din nou”
