@@ -33,11 +33,21 @@
 .outline {
   border: 1.5px solid var(--border);
   background: var(--white);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 14px;
   color: var(--slate);
 }
 
 .lg {
   padding: var(--space-10) var(--space-20);
+}
+
+/* Butonul principal de antet (00-comun A) — padding și font propriu, umbră mai mică pe `primary`. */
+.header {
+  padding: var(--space-8) var(--space-18);
+  font-size: 15px;
+}
+
+.primary.header {
+  box-shadow: var(--shadow-button-header);
 }

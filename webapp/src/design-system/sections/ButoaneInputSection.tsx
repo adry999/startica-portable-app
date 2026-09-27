@@ -69,6 +69,7 @@ export function ButoaneInputSection() {
         <DemoRow label="size">
           <Button size="md">Mărime md</Button>
           <Button size="lg">Mărime lg</Button>
+          <Button size="header">+ Adaugă copil</Button>
         </DemoRow>
         <DemoRow label="disabled">
           <Button disabled>Primary dezactivat</Button>

@@ -94,8 +94,12 @@
   /* Umbre. */
   --shadow-card: 0 8px 24px rgba(58, 71, 80, 0.1);
   --shadow-button-primary: 0 8px 18px rgba(239, 138, 29, 0.32);
+  /* Buton primar de antet (00-comun A) — umbră mai mică decât cea din corpul paginii. */
+  --shadow-button-header: 0 4px 10px rgba(239, 138, 29, 0.28);
   --shadow-floating-bar: 0 12px 28px rgba(58, 71, 80, 0.25);
   --shadow-panel: -20px 0 60px rgba(58, 71, 80, 0.2);
+  /* Opțiunea activă dintr-un SegmentedControl — umbră mică, nu „plutește” (DESIGN.md §Suprafețe). */
+  --shadow-pill-active: 0 1px 3px rgba(58, 71, 80, 0.12);
 
   /* Spațiere: 4 / 6 / 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 40. */
   --space-4: 4px;

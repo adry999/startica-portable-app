@@ -2,11 +2,12 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import styles from './Button.module.css';
 
 export type ButtonVariant = 'primary' | 'ghost' | 'white' | 'outline';
-export type ButtonSize = 'md' | 'lg';
+export type ButtonSize = 'md' | 'lg' | 'header';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   variant?: ButtonVariant;
-  /** `'lg'` = padding mai mare, pentru acțiunea principală a paginii (ex. Salvează asocierile din Asociere achitări). */
+  /** `'lg'` = padding mai mare, pentru acțiunea principală a paginii (ex. Salvează asocierile din Asociere achitări).
+   * `'header'` = dimensiunea butoanelor din antet (00-comun A): padding 8px 18px, font 15px, umbră mai mică. */
   size?: ButtonSize;
   children: ReactNode;
 }
@@ -20,7 +21,9 @@ export function Button({
   children,
   ...rest
 }: ButtonProps) {
-  const classes = [styles.btn, styles[variant], size === 'lg' ? styles.lg : null, className].filter(Boolean).join(' ');
+  const classes = [styles.btn, styles[variant], size !== 'md' ? styles[size] : null, className]
+    .filter(Boolean)
+    .join(' ');
   return (
     <button type={type} className={classes} {...rest}>
       {children}
