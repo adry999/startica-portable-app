@@ -124,4 +124,31 @@ describe('KindergartenSettings', () => {
     await user.click(a4Option);
     expect(a4Option).toHaveAttribute('aria-checked', 'true');
   });
+
+  it('setează PIN administrator din cardul dedicat', async () => {
+    let configured = false;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(emptySettings);
+        if (path === '/api/personal/pin' && !isPost) return jsonResponse({ configured, unlocked: false });
+        if (path === '/api/personal/pin' && isPost) {
+          configured = true;
+          return jsonResponse({ ok: true });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    await screen.findByText('4 · PIN administrator');
+    const pinInput = screen.getByLabelText('Setează PIN (4–6 cifre)');
+    await user.type(pinInput, '1234');
+    await user.click(screen.getByRole('button', { name: 'Setează PIN-ul' }));
+
+    expect(await screen.findByText('PIN administrator setat.')).toBeInTheDocument();
+  });
 });

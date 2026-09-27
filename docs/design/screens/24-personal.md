@@ -30,8 +30,10 @@
 - Antrenorii de bazin: salariul vine din 23-bazin.
 
 ## Criterii de acceptare
-- [ ] Filiala activă filtrează tot; „ambele” apar la ambele
-- [ ] Concediul adăugat apare în pontaj și scade din zilele rămase
-- [ ] Avansul se scade o singură dată
-- [ ] Tipărirea încape pe A4 orizontal fără tăiere
-- [ ] Salariile nu se văd fără PIN
+- [x] Filiala activă filtrează tot; „ambele” apar la ambele — `GET /api/personal/state` filtrează pe `staffForBranch(branchId)` (backend); webapp arată eticheta „ambele filiale” (`TeamView.test.tsx`). Neverificat manual într-o pornire reală a aplicației.
+- [x] Concediul adăugat apare în pontaj și scade din zilele rămase — `leaves.service.mjs` scrie rândurile de pontaj cu `leaveId` în aceeași tranzacție; webapp portă exact același calcul de zile rămase (`leave-days.ts`) și avertizarea de suprapunere (`LeavesView.test.tsx`).
+- [x] Avansul se scade o singură dată — `salaries.service.mjs` (backend) scade avansul o singură dată prin `deductedAt`/`deductedBy`; webapp arată starea „Scăzut”/„De scăzut” fără să dubleze cererea (`AdvancesTab.test.tsx`).
+- [x] Tipărirea încape pe A4 orizontal fără tăiere — `TimesheetPrint.tsx` + test (`@page A4 landscape`, antet repetat, ≤14 rânduri/pagină).
+- [x] Salariile nu se văd fără PIN — `PinGate.tsx` + test (fără PIN corect, nimic din Salarii nu se randează; un 403 de la server pune `useSalaries` pe „locked”).
+
+Verificarea de mai sus e pe bază de teste automate (webapp + backend, separat); nu s-a făcut o verificare manuală end-to-end cu serverul și webapp-ul pornite împreună.

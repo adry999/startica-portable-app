@@ -1,0 +1,39 @@
+.notice {
+  padding: var(--space-12) 0;
+  color: var(--muted);
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.headRow,
+.row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr 1fr 80px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.headRow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.removeButton {
+  border: none;
+  background: none;
+  color: var(--pink-ink);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.removeButton:disabled {
+  color: var(--subtle);
+  cursor: not-allowed;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button, Card, LoadingState, SegmentedControl, useToast } from '@shared/ui';
+import { usePinStatus } from '@shared/personal/usePinStatus';
 import {
   useKindergarten,
   type KindergartenSettings as KindergartenSettingsData,
@@ -184,6 +185,8 @@ export function KindergartenSettings() {
             />
           </label>
         </Card>
+
+        <AdminPinCard />
       </div>
 
       <div className={styles.right}>
@@ -217,5 +220,70 @@ export function KindergartenSettings() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** „PIN administrator” (24-personal.md, decizia 8) — nu e securitate, doar oprește o privire din mers. */
+function AdminPinCard() {
+  const pin = usePinStatus();
+  const toast = useToast();
+  const [currentPin, setCurrentPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  if (pin.status === 'loading') return <LoadingState />;
+
+  async function submit() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const outcome = await pin.set(newPin, pin.configured ? currentPin : undefined);
+      if (outcome.ok) {
+        toast.show({ message: pin.configured ? 'PIN-ul a fost schimbat.' : 'PIN administrator setat.' });
+        setCurrentPin('');
+        setNewPin('');
+      } else {
+        toast.show({ message: outcome.message });
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card className={backupStyles.panel}>
+      <span className={styles.sectionLabel}>4 · PIN administrator</span>
+      <p className={styles.notice}>
+        PIN-ul protejează doar ecranul Salarii de o privire din mers — oricine are acces la calculator poate deschide
+        fișierul bazei de date sau o copie de siguranță și citi salariile. Nu ține loc de cont de utilizator sau
+        criptare.
+      </p>
+      <form
+        className={styles.fieldsGrid}
+        onSubmit={event => {
+          event.preventDefault();
+          void submit();
+        }}
+      >
+        {pin.configured && (
+          <label className={styles.field}>
+            PIN curent
+            <input
+              type="password"
+              inputMode="numeric"
+              value={currentPin}
+              onChange={event => setCurrentPin(event.target.value)}
+            />
+          </label>
+        )}
+        <label className={styles.field}>
+          {pin.configured ? 'PIN nou' : 'Setează PIN (4–6 cifre)'}
+          <input type="password" inputMode="numeric" value={newPin} onChange={event => setNewPin(event.target.value)} />
+        </label>
+        <Button type="submit" disabled={saving || newPin.length < 4}>
+          {pin.configured ? 'Schimbă PIN-ul' : 'Setează PIN-ul'}
+        </Button>
+      </form>
+    </Card>
   );
 }

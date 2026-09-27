@@ -1,0 +1,78 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.notice {
+  padding: var(--space-12) 0;
+  color: var(--muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-12);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.card span {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.card strong {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  color: var(--slate);
+}
+
+.payBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.payBar select {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: 6px var(--space-10);
+  font-size: 13px;
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.headRow,
+.row {
+  display: grid;
+  grid-template-columns: 40px 1.5fr 1.3fr 1.2fr 110px 100px 110px 110px;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.headRow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.rowEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  justify-content: flex-end;
+}
