@@ -20,6 +20,13 @@ import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
 import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
+import {
+  createSyncOutboxRepository,
+  createSyncStateRepository,
+  createSyncConflictsRepository,
+  createOutboxRecordingRepository,
+  createChangeSink,
+} from '#features/sync/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
 import { createExchangeRatesRoutes } from './exchange-rates.routes.mjs';
@@ -62,6 +69,7 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   scheduleFile: string,
  *   forbiddenFolders: () => string[],
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
+ *   syncDevice?: { read: () => unknown, write: (device: any) => void, clear: () => void },
  * }} options
  */
 export function createBranchContext({
@@ -81,6 +89,9 @@ export function createBranchContext({
   scheduleFile,
   forbiddenFolders,
   branchRoutes,
+  // Neconfigurat implicit, ca un context construit fără parametrul acesta (dacă
+  // vreun test o face direct) să se comporte exact ca o instalare fără sync.json.
+  syncDevice = { read: () => null, write: () => {}, clear: () => {} },
 }) {
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
   // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers, ori
@@ -105,13 +116,25 @@ export function createBranchContext({
     forbiddenFolders,
   });
 
-  const recordRepository = createRecordRepository(db);
+  const rawRecordRepository = createRecordRepository(db);
   const auditLogRepository = createAuditLogRepository(db);
+
+  // Sincronizare (Faza 2 a planului): trei depozite noi pe baza acestei filiale și
+  // o singură verificare de activare (sync.json există), partajată de depozitul
+  // împachetat mai jos, de changeSink (replaceAllRecords) și de prezență.
+  const syncOutboxRepository = createSyncOutboxRepository(db);
+  const syncStateRepository = createSyncStateRepository(db);
+  const syncConflictsRepository = createSyncConflictsRepository(db);
+  const isSyncEnabled = () => !!syncDevice.read();
+  const recordRepository = createOutboxRecordingRepository(rawRecordRepository, syncOutboxRepository, isSyncEnabled);
+  const syncChangeSink = createChangeSink({ outbox: syncOutboxRepository, isEnabled: isSyncEnabled });
+
   const { runRevisionTransaction, replaceAllRecords } = createRevisionTransaction({
     database: db,
     recordRepository,
     backups,
     auditTrail: auditLogRepository,
+    changeSink: syncChangeSink,
   });
 
   const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
@@ -186,7 +209,11 @@ export function createBranchContext({
       smsService: createSmsService({ fetch: fetchImpl ?? globalThis.fetch }),
       auditTrail: auditLogRepository,
     }),
-    ...createAttendanceRoutes({ database: db, recordRepository }),
+    ...createAttendanceRoutes({
+      database: db,
+      recordRepository,
+      onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
+    }),
     ...createNotificationSettingsRoutes({
       scheduleFile,
       readSetting,
@@ -274,6 +301,15 @@ export function createBranchContext({
     recordRepository,
     auditLogRepository,
     readSetting,
+    // Motorul de sincronizare (Faza 3, nu construită aici) se leagă de exact aceste
+    // depozite; rawRecordRepository e drumul prin care aplică modificările primite
+    // de pe server, ca ele să nu se întoarcă în propriul outbox (decizia 4 din plan).
+    sync: {
+      outbox: syncOutboxRepository,
+      state: syncStateRepository,
+      conflicts: syncConflictsRepository,
+      rawRecordRepository,
+    },
     dispatchRequest,
     runStartupSweeps,
     envelope: recordRepository.readEnvelope,

@@ -8,6 +8,10 @@ export const DEFAULT_AUTO_BACKUP_INTERVAL_MS = 300000;
 export const BRANCHES_DIR_NAME = 'Filiale';
 export const BRANCH_REGISTRY_FILE_NAME = 'filiale.json';
 
+// Identitatea de dispozitiv pentru sincronizare (docs/superpowers/plans/2026-09-27-sincronizare.md,
+// decizia 2), tot per instalare, lângă filiale.json — nu per filială.
+export const SYNC_DEVICE_FILE_NAME = 'sync.json';
+
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */
 
 /**

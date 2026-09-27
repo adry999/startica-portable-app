@@ -3,13 +3,19 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, BRANCH_REGISTRY_FILE_NAME, dataLayout } from '#config/environment.mjs';
+import {
+  DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+  BRANCH_REGISTRY_FILE_NAME,
+  SYNC_DEVICE_FILE_NAME,
+  dataLayout,
+} from '#config/environment.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
 import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
+import { createSyncDeviceRepository } from '#features/sync/index.server.mjs';
 import { createBranchContext } from './create-branch-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
 import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
@@ -51,6 +57,11 @@ export function createApplication(options = {}) {
   const token = randomUUID();
   const registryFile = join(home, BRANCH_REGISTRY_FILE_NAME);
   const registry = createBranchRegistryStore({ file: registryFile, createId: randomUUID });
+
+  // Citit o singură dată la pornirea procesului, ca filiale.json: un sync.json corupt
+  // oprește pornirea aici, înainte de a deschide vreo filială (decizia 2 din planul de
+  // sincronizare) — nu per filială, pentru că identitatea de dispozitiv e per instalare.
+  const syncDevice = createSyncDeviceRepository(join(home, SYNC_DEVICE_FILE_NAME));
 
   let switching = false;
   /** @type {import('./create-branch-context.mjs').createBranchContext extends (...args: any) => infer R ? R : never} */
@@ -120,6 +131,7 @@ export function createApplication(options = {}) {
       scheduleFile,
       forbiddenFolders,
       branchRoutes,
+      syncDevice,
     });
   }
 
