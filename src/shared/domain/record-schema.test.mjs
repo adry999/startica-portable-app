@@ -508,6 +508,30 @@ test('normalizeRecord(payments) respinge un fxRateSource necunoscut', () => {
   );
 });
 
+test('normalizeRecord(payments) acceptă receiptNumber valid', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 3000,
+    method: 'Cash',
+    receiptNumber: 7,
+  });
+  assert.equal(record.receiptNumber, 7);
+});
+
+test('normalizeRecord(payments) fără receiptNumber rămâne fără el, nu se defaultează', () => {
+  const record = normalizeRecord('payments', { id: 'P-1', date: '2026-09-15', amount: 500, method: 'Cash' });
+  assert.equal('receiptNumber' in record, false);
+});
+
+test('normalizeRecord(payments) respinge un receiptNumber invalid', () => {
+  for (const receiptNumber of [0, -1, 1.5, '7'])
+    assert.throws(
+      () => normalizeRecord('payments', { id: 'P-1', date: '2026-09-15', amount: 3000, method: 'Cash', receiptNumber }),
+      /confirmării de plată este invalid/,
+    );
+});
+
 test('normalizeRecord(expenses) acceptă o metodă validă, dar respinge una necunoscută', () => {
   const base = { id: 'EXP-1', date: '2026-09-01', amount: 100 };
   assert.equal(normalizeRecord('expenses', { ...base, method: 'cash' }).method, 'cash');

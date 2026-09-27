@@ -67,6 +67,8 @@ export interface Payment {
   fxRateSource?: 'bnm' | 'manual';
   /** amount (lei) convertit la fxRate, rotunjit la ban — doar când fxRate există. */
   amountEur?: number;
+  /** Numărul confirmării de plată (16b) — asignat o singură dată, la prima tipărire, din kindergarten.nextReceiptNumber. */
+  receiptNumber?: number;
   allocations: PaymentAllocation[];
   type?: string;
   notes?: string;
