@@ -1,0 +1,198 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.notice {
+  padding: var(--space-12) 0;
+  color: var(--muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-12);
+}
+
+.cardLabel {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cardValue {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--slate);
+}
+
+.subtle {
+  color: var(--subtle);
+}
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.sectionMeta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sectionAction {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-10);
+}
+
+.tileWrap {
+  position: relative;
+}
+
+.tile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-10);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tilePresent {
+  background: var(--mint-soft);
+  border-color: var(--mint);
+}
+
+.tileAbsent {
+  background: var(--pink-soft);
+  border-color: var(--pink);
+}
+
+.tileExcused {
+  background: var(--yellow-soft);
+  border-color: var(--yellow);
+}
+
+.tileUnmarked {
+  background: #fff;
+  border-color: var(--border);
+}
+
+.avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.orange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.neutral {
+  background: var(--neutral-soft);
+  color: var(--slate);
+}
+
+.tileName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.tileStatus {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+}
+
+.markPresent {
+  background: var(--success-dot);
+}
+
+.markAbsent {
+  background: var(--raspberry);
+}
+
+.markExcused {
+  background: var(--yellow);
+  color: var(--yellow-ink);
+}
+
+.markUnmarked {
+  background: #fff;
+  border: 1.5px solid var(--input-border);
+}
