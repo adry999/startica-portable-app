@@ -2,13 +2,6 @@
   color: var(--subtle);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-16);
-}
-
 .headerActions {
   display: flex;
   align-items: center;

@@ -4,9 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { PaymentsPage } from './PaymentsPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — comutatorul și butoanele ajung acolo, nu în pagină. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -63,7 +68,10 @@ function renderPage(onOpenChild?: (id: string) => void) {
   return render(
     <MemoryRouter>
       <ToastProvider>
-        <PaymentsHarness onOpenChild={onOpenChild} />
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <PaymentsHarness onOpenChild={onOpenChild} />
+        </TopbarActionsProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
@@ -132,8 +140,11 @@ describe('PaymentsPage', () => {
     render(
       <MemoryRouter>
         <ToastProvider>
-          <LocationDisplay />
-          <PaymentsHarness />
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <LocationDisplay />
+            <PaymentsHarness />
+          </TopbarActionsProvider>
         </ToastProvider>
       </MemoryRouter>,
     );

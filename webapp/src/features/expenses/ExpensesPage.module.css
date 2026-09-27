@@ -30,9 +30,7 @@
 .headerActions {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-12);
-  margin-bottom: var(--space-16);
 }
 
 .btnGhostSmall {

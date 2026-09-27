@@ -12,6 +12,7 @@ import {
   SelectionBar,
   groupTone,
   useToast,
+  useTopbarActions,
   type BadgeTone,
   type CardTone,
   type PillTone,
@@ -66,6 +67,28 @@ export function PaymentsPage({
   const navigate = useNavigate();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('payments.viewMode', 'table');
 
+  // Antetul e identic în Tabel și în Pe luni (05-achitari.md #2) — comutator + Bon zi + Achitare nouă.
+  useTopbarActions(
+    <div className={styles.headerActions}>
+      <SegmentedControl
+        options={VIEW_MODE_OPTIONS}
+        value={viewMode}
+        onChange={setViewMode}
+        ariaLabel="Mod de afișare"
+      />
+      <button
+        type="button"
+        className={styles.secondaryButton}
+        onClick={() => navigate(`/achitari/bon-zi?zi=${today()}`)}
+      >
+        Bon zi
+      </button>
+      <button type="button" className={styles.primaryButton} onClick={onOpenCreate}>
+        + Achitare nouă
+      </button>
+    </div>,
+  );
+
   if (paymentsData.status === 'loading') return <LoadingState />;
   if (paymentsData.status === 'failed')
     return <p className={styles.notice}>{paymentsData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
@@ -102,27 +125,6 @@ export function PaymentsPage({
 
   return (
     <>
-      <div className={styles.header}>
-        <SegmentedControl
-          options={VIEW_MODE_OPTIONS}
-          value={viewMode}
-          onChange={setViewMode}
-          ariaLabel="Mod de afișare"
-        />
-        <div className={styles.headerActions}>
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => navigate(`/achitari/bon-zi?zi=${today()}`)}
-          >
-            Bon zi
-          </button>
-          <button type="button" className={styles.primaryButton} onClick={onOpenCreate}>
-            + Achitare nouă
-          </button>
-        </div>
-      </div>
-
       <SummaryCards summary={paymentsData.summary} method={paymentsData.method} />
       <Filters data={paymentsData} />
 

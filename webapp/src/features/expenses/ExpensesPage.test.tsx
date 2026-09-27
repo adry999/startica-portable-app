@@ -2,9 +2,14 @@ import { act, render, renderHook, screen, waitFor, within } from '@testing-libra
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ExpensesPage } from './ExpensesPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — comutatorul, Exportă și + Cheltuială nouă ajung acolo. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -41,7 +46,10 @@ const fixtureState = {
 function renderPage() {
   return render(
     <ToastProvider>
-      <ExpensesPage month="2026-09" />
+      <TopbarActionsProvider>
+        <TopbarActionsSlot />
+        <ExpensesPage month="2026-09" />
+      </TopbarActionsProvider>
     </ToastProvider>,
   );
 }

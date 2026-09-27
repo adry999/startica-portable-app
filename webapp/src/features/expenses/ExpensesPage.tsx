@@ -8,6 +8,7 @@ import {
   SegmentedControl,
   SelectionBar,
   useToast,
+  useTopbarActions,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
@@ -146,6 +147,25 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
+  // Antetul e identic în Tabel și în Pe zile (06-cheltuieli.md #2) — comutator + Exportă + Cheltuială nouă.
+  useTopbarActions(
+    <div className={styles.headerActions}>
+      <SegmentedControl
+        ariaLabel="Vizualizare cheltuieli"
+        value={viewMode}
+        onChange={setViewMode}
+        options={[
+          { value: 'table', label: 'Tabel' },
+          { value: 'daily', label: 'Pe zile' },
+        ]}
+      />
+      <Button variant="ghost" onClick={exportFiltered}>
+        Exportă
+      </Button>
+      <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
+    </div>,
+  );
+
   if (expensesData.status === 'loading') return <LoadingState />;
   if (expensesData.status === 'failed')
     return <p className={styles.notice}>{expensesData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
@@ -162,22 +182,6 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   return (
     <>
-      <div className={styles.headerActions}>
-        <SegmentedControl
-          ariaLabel="Vizualizare cheltuieli"
-          value={viewMode}
-          onChange={setViewMode}
-          options={[
-            { value: 'table', label: 'Tabel' },
-            { value: 'daily', label: 'Pe zile' },
-          ]}
-        />
-        <Button variant="ghost" onClick={exportFiltered}>
-          Exportă
-        </Button>
-        <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
-      </div>
-
       <ExpensesSummaryCards monthTotal={expensesData.monthTotal} categorySummary={expensesData.categorySummary} />
 
       <Card className={styles.tableCard}>
