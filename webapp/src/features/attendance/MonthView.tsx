@@ -34,7 +34,9 @@ export function MonthView({ month, data }: MonthViewProps) {
   return (
     <div className={styles.root}>
       <div className={styles.filterBar}>
-        <FilterPills groups={[{ label: 'Grupa', value: data.groupId, onChange: data.setGroupId, options: groupOptions }]} />
+        <FilterPills
+          groups={[{ label: 'Grupa', value: data.groupId, onChange: data.setGroupId, options: groupOptions }]}
+        />
       </div>
 
       <h2 className={styles.printTitle}>
