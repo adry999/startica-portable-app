@@ -59,6 +59,8 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   fetch: typeof fetch,
  *   shutdown: () => void,
  *   listBranches: () => BranchEntry[],
+ *   scheduleFile: string,
+ *   forbiddenFolders: () => string[],
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
  * }} options
  */
@@ -76,6 +78,8 @@ export function createBranchContext({
   fetch: fetchImpl,
   shutdown,
   listBranches,
+  scheduleFile,
+  forbiddenFolders,
   branchRoutes,
 }) {
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
@@ -95,10 +99,10 @@ export function createBranchContext({
     database: db,
     databaseFile: dbFile,
     backupDirectory: backupDir,
-    dataDirectory: dataDir,
     readSetting,
     writeSetting: settings.setSetting,
     autoBackupIntervalMs,
+    forbiddenFolders,
   });
 
   const recordRepository = createRecordRepository(db);
@@ -144,6 +148,8 @@ export function createBranchContext({
       readSetting,
       backupService: backups,
       allowShutdown: !!allowShutdown,
+      branch,
+      listBranches,
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
@@ -166,8 +172,8 @@ export function createBranchContext({
       auditTrail: auditLogRepository,
       runRevisionTransaction,
       replaceAllRecords,
-      dataDirectory: dataDir,
       backupDirectory: backupDir,
+      forbiddenFolders,
     }),
     ...createTelegramRoutes({
       dataDirectory: dataDir,
@@ -182,7 +188,7 @@ export function createBranchContext({
     }),
     ...createAttendanceRoutes({ database: db, recordRepository }),
     ...createNotificationSettingsRoutes({
-      dataDirectory: dataDir,
+      scheduleFile,
       readSetting,
       writeSetting: settings.setSetting,
       auditTrail: auditLogRepository,

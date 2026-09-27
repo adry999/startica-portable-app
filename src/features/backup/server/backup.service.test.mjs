@@ -37,10 +37,10 @@ function createHarness(t, { autoBackupIntervalMs = 0 } = {}) {
     database,
     databaseFile,
     backupDirectory,
-    dataDirectory,
     readSetting,
     writeSetting,
     autoBackupIntervalMs,
+    forbiddenFolders: () => [dataDirectory, backupDirectory],
   });
   // Ordinea contează pe Windows: fișierul bazei trebuie închis înainte să fie șters folderul temporar.
   t.after(() => service.cancelScheduledBackup());

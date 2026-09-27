@@ -12,6 +12,7 @@ import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
 import { createBranchContext } from './create-branch-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
+import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 
@@ -54,6 +55,22 @@ export function createApplication(options = {}) {
   let switching = false;
   /** @type {import('./create-branch-context.mjs').createBranchContext extends (...args: any) => infer R ? R : never} */
   let active;
+
+  // Fixă, la folderul de date al filialei migrate (calea citită de lansator, fără
+  // driver SQLite): rămâne aceeași indiferent care filială e activă la salvare
+  // (decizia 8 din docs/superpowers/plans/2026-09-27-filiale.md).
+  const scheduleFile = join(legacy.dataDir, SCHEDULE_FILE_NAME);
+
+  // Toate folderele de date/backup ale tuturor filialelor, nu doar cea activă: un
+  // folder extern nu are voie să fie folderul vreunei filiale (decizia 12 din plan) —
+  // funcție, nu o listă calculată o dată, ca o filială adăugată după pornire să fie
+  // deja acoperită.
+  function forbiddenFolders() {
+    return registry.list().flatMap(branch => {
+      const dirs = branchDirectories({ home, legacy, branch });
+      return [dirs.dataDir, dirs.backupDir];
+    });
+  }
 
   function shutdownServer() {
     server.close(() => active.close());
@@ -100,6 +117,8 @@ export function createApplication(options = {}) {
       fetch: options.fetch ?? globalThis.fetch,
       shutdown: shutdownServer,
       listBranches: registry.list,
+      scheduleFile,
+      forbiddenFolders,
       branchRoutes,
     });
   }

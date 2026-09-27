@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fail } from '#core/server/errors/domain-error.mjs';
 
+/** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
+
 const LOG_LINES_SHOWN = 200;
 const BACKUPS_SHOWN = 10;
 
@@ -21,6 +23,8 @@ function recentLogLines(logFile) {
  *   readSetting: (key: string) => string,
  *   backupService: { health: () => unknown, listBackups: () => { name: string }[] },
  *   allowShutdown: boolean,
+ *   branch: BranchEntry,
+ *   listBranches: () => BranchEntry[],
  * }} dependencies
  */
 export function createDiagnosticRoutes({
@@ -32,6 +36,8 @@ export function createDiagnosticRoutes({
   readSetting,
   backupService,
   allowShutdown,
+  branch,
+  listBranches,
 }) {
   return [
     {
@@ -54,6 +60,8 @@ export function createDiagnosticRoutes({
             .slice(0, BACKUPS_SHOWN)
             .map(entry => entry.name),
           log: recentLogLines(logFile),
+          branch: { id: branch.id, name: branch.name, folder: branch.folder },
+          branches: listBranches().length,
         };
       },
     },

@@ -46,10 +46,11 @@ export interface BackupServiceDependencies {
   database: DatabaseSync;
   databaseFile: string;
   backupDirectory: string;
-  dataDirectory: string;
   readSetting: (key: string) => string;
   writeSetting: (key: string, value: string) => void;
   autoBackupIntervalMs: number;
+  /** Toate folderele de date/backup ale tuturor filialelor (registrul), niciodată doar cel curent — vezi decizia 12 din planul Filiale. */
+  forbiddenFolders: () => string[];
 }
 
 export interface BackupService {
@@ -71,8 +72,8 @@ export interface BackupRoutesDependencies {
   auditTrail: AuditTrail;
   runRevisionTransaction: RunRevisionTransaction;
   replaceAllRecords: (snapshot: RecordsSnapshot, action: string) => void;
-  dataDirectory: string;
   backupDirectory: string;
+  forbiddenFolders: () => string[];
 }
 
 export interface BackupControllerDependencies {

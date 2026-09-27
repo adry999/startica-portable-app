@@ -31,8 +31,8 @@ export function createBackupRoutes({
   auditTrail,
   runRevisionTransaction,
   replaceAllRecords,
-  dataDirectory,
   backupDirectory,
+  forbiddenFolders,
 }) {
   // dir gol sau absent înseamnă lista locală.
   function resolveRestoreFile({ name, dir }) {
@@ -159,7 +159,7 @@ export function createBackupRoutes({
       /** @param {{ body: any }} request */
       handle: ({ body }) => {
         const folder = normalizeExternalFolder(body.externalDir);
-        assertUsableExternalFolder(folder, [dataDirectory, backupDirectory]);
+        assertUsableExternalFolder(folder, forbiddenFolders());
         configureExternalDir(folder);
         return { ok: true, ...backupService.safeBackup('configurare'), health: backupService.health() };
       },

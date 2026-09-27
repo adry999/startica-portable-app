@@ -114,10 +114,10 @@ export function createBackupService({
   database,
   databaseFile,
   backupDirectory,
-  dataDirectory,
   readSetting,
   writeSetting,
   autoBackupIntervalMs,
+  forbiddenFolders,
 }) {
   let lastBackupAt = 0,
     scheduled = null;
@@ -295,7 +295,7 @@ export function createBackupService({
    * @returns {BackupFileEntry[]}
    */
   function listExternalBackups(dir) {
-    assertUsableExternalFolder(dir, [dataDirectory, backupDirectory]);
+    assertUsableExternalFolder(dir, forbiddenFolders());
     try {
       return fileList(dir);
     } catch {
@@ -310,7 +310,7 @@ export function createBackupService({
    * @returns {string}
    */
   function resolveExternalBackupFile(dir, name) {
-    assertUsableExternalFolder(dir, [dataDirectory, backupDirectory]);
+    assertUsableExternalFolder(dir, forbiddenFolders());
     assertBackupName(name);
     const file = join(dir, name);
     if (!existsSync(file)) fail('Backup inexistent.');

@@ -113,6 +113,19 @@ test('setările refuză folosirea folderului de backupuri ca folder extern', asy
   assert.equal(result.status, 400);
 });
 
+test('setările refuză folderul de date al altei filiale ca folder extern', async t => {
+  const { post, dir } = await startTestApplication(t, { prefix: 'startica-backup-routes-branch-' });
+
+  const created = await post('/api/branches', { name: 'Botanica' });
+  assert.equal(created.status, 200, created.body.error);
+  const branchB = created.body.branch;
+  const otherBranchDataDir = join(dir, 'Filiale', branchB.folder, 'Startica_Date');
+
+  const result = await post('/api/settings', { externalDir: otherBranchDataDir });
+
+  assert.equal(result.status, 400);
+});
+
 test('previzualizarea unui backup vechi, fără entitatea grupe, semnalează aducerea la zi', async t => {
   const { get, dir } = await startTestApplication(t, { prefix: 'startica-backup-routes-' });
   const name = 'startica_test_old_format.db';
