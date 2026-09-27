@@ -7,17 +7,18 @@ import { createDevicesRepository } from './devices.repository.mjs';
 import { createPairingService } from './pairing.service.mjs';
 import { createBranchesRepository } from './branches.repository.mjs';
 import { scheduleDailyBackup } from './backup.service.mjs';
+import { createChangesService } from './changes.service.mjs';
+import { createEventHub } from './events.mjs';
 import { createDevicesRoutes } from './devices.routes.mjs';
 import { createBranchesRoutes } from './branches.routes.mjs';
 import { createStatusRoutes } from './status.routes.mjs';
+import { createChangesRoutes } from './changes.routes.mjs';
 
 const PAIRING_RATE_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
 
 /**
  * Compunerea serverului de sincronizare — echivalentul create-application.mjs din
  * aplicație, dar pentru sync-server/ (pachet separat, fără nicio dependență din src/).
- * Task 2: dispozitive, cod de conectare, registrul filialelor, status, backup zilnic.
- * Rutele de modificări/instantanee/evenimente (Task 3) se adaugă separat.
  * @param {{
  *   config: import('./config.mjs').SyncServerConfig,
  *   now?: () => Date,
@@ -30,6 +31,8 @@ export function createSyncServer({ config, now = () => new Date(), createId = ra
   const devices = createDevicesRepository(database);
   const pairing = createPairingService(database);
   const branches = createBranchesRepository(database);
+  const changesService = createChangesService({ database, devices });
+  const events = createEventHub();
   const pairingRateLimiter = createRateLimiter(PAIRING_RATE_LIMIT);
 
   /** @param {import('node:http').IncomingMessage} request */
@@ -46,9 +49,10 @@ export function createSyncServer({ config, now = () => new Date(), createId = ra
   const deviceRoutes = createDevicesRoutes({ devices, pairing, config, pairingRateLimiter, createId, now });
   const branchRoutes = createBranchesRoutes({ branches, devices, now });
   const statusRoutes = createStatusRoutes({ database, branches, devices, now });
+  const changeRoutes = createChangesRoutes({ changesService, branches, devices, events, now });
 
   const router = createRouter({
-    routes: [...deviceRoutes.routes, ...branchRoutes.routes, ...statusRoutes.routes],
+    routes: [...deviceRoutes.routes, ...branchRoutes.routes, ...statusRoutes.routes, ...changeRoutes.routes],
     authenticate,
     trustProxy: config.trustProxy,
     log,
@@ -69,8 +73,13 @@ export function createSyncServer({ config, now = () => new Date(), createId = ra
 
   function close() {
     backup.stop();
+    events.closeAll();
+    // O conexiune SSE abandonată de client (fetch anulat) poate rămâne „pe jumătate
+    // deschisă” din perspectiva serverului până la următoarea scriere; closeAllConnections
+    // o rupe imediat, altfel server.close() ar aștepta degeaba oprirea acelui soclu.
+    server.closeAllConnections();
     return new Promise(done => server.close(() => done(undefined))).then(() => database.close());
   }
 
-  return { server, database, devices, branches, pairing, close };
+  return { server, database, devices, branches, pairing, changesService, events, close };
 }
