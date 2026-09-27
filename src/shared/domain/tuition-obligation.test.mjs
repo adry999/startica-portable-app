@@ -160,6 +160,21 @@ test('obligation: câmpul currency reflectă moneda taxei lunii, MDL implicit pe
   assert.equal(obligation(mdlChild, '2026-09', [], '2026-09-30').currency, 'MDL');
 });
 
+test('obligation: moneda urmează intrarea din feeHistory valabilă în luna cerută, nu pe cea mai nouă', () => {
+  const switchedChild = normalizeRecord('children', {
+    id: 'C-SW',
+    name: 'Ana',
+    status: 'Activ',
+    attendanceDate: '2026-01-01',
+    feeHistory: [
+      { from: '2026-01', amount: 2000 },
+      { from: '2026-09', amount: 100, currency: 'EUR' },
+    ],
+  });
+  assert.equal(obligation(switchedChild, '2026-08', [], '2026-09-30').currency, 'MDL');
+  assert.equal(obligation(switchedChild, '2026-09', [], '2026-09-30').currency, 'EUR');
+});
+
 test('obligation: taxă EUR, achitare MDL — convertește MDL în EUR cu cursul zilei achitării', () => {
   const eurChild = normalizeRecord('children', {
     id: 'C-EUR',
