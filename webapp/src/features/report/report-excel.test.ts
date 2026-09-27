@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as XLSX from 'xlsx';
-import { buildAccountingReportWorkbook, downloadAccountingReportExcel, reportExportFilename } from './report-excel';
+import {
+  buildAccountingReportWorkbook,
+  buildMultiBranchWorkbook,
+  downloadAccountingReportExcel,
+  downloadMultiBranchReportExcel,
+  reportExportFilename,
+  reportExportFilenameAmbele,
+} from './report-excel';
 import type { AccountingReport } from './useAccountingReport';
 
 const { writeFileMock } = vi.hoisted(() => ({ writeFileMock: vi.fn() }));
@@ -141,6 +148,58 @@ describe('report-excel', () => {
 
     expect(reportExportFilename(report.period)).toBe('startica-raport-2026-08.xlsx');
     expect(writeFileMock).toHaveBeenCalledWith(expect.anything(), 'startica-raport-2026-08.xlsx', {
+      compression: true,
+    });
+  });
+
+  it('exportul „Ambele” are o foaie Încasări și una Cheltuieli per filială și un Rezumat comun cu total', async () => {
+    const buiucani = fakeReport();
+    const botanica = fakeReport();
+    const entries = [
+      { branchName: 'Filiala Buiucani', report: buiucani },
+      { branchName: 'Filiala Botanica', report: botanica },
+    ];
+    const { workbook } = await buildMultiBranchWorkbook(entries, { includePayerNames: true, includeEurDetails: true });
+
+    expect(workbook.SheetNames).toEqual([
+      'Rezumat',
+      'Filiala Buiucani Încasări',
+      'Filiala Buiucani Cheltuieli',
+      'Filiala Botanica Încasări',
+      'Filiala Botanica Cheltuieli',
+    ]);
+
+    const buiucaniIncome = XLSX.utils.sheet_to_json<Record<string, number>>(
+      workbook.Sheets['Filiala Buiucani Încasări'],
+    );
+    expect(buiucaniIncome.reduce((sum, row) => sum + Number(row.Lei), 0)).toBe(buiucani.income);
+    const botanicaExpense = XLSX.utils.sheet_to_json<Record<string, number>>(
+      workbook.Sheets['Filiala Botanica Cheltuieli'],
+    );
+    expect(botanicaExpense.reduce((sum, row) => sum + Number(row.Lei), 0)).toBe(botanica.expense);
+
+    const summaryRows = XLSX.utils.sheet_to_json<(string | number)[]>(workbook.Sheets['Rezumat'], { header: 1 });
+    const totalRowIndex = summaryRows.findIndex(row => row[0] === 'Total');
+    const totalIncomeRow = summaryRows[totalRowIndex + 1];
+    const totalExpenseRow = summaryRows[totalRowIndex + 2];
+    expect(totalIncomeRow[1]).toBe(buiucani.income + botanica.income);
+    expect(totalExpenseRow[1]).toBe(buiucani.expense + botanica.expense);
+  });
+
+  it('numele foilor sunt tăiate la 31 de caractere, limita Excel', async () => {
+    const entries = [{ branchName: 'Filiala cu un nume foarte foarte lung', report: fakeReport() }];
+    const { workbook } = await buildMultiBranchWorkbook(entries, { includePayerNames: true, includeEurDetails: true });
+
+    for (const name of workbook.SheetNames) expect(name.length).toBeLessThanOrEqual(31);
+  });
+
+  it('downloadMultiBranchReportExcel scrie fișierul cu numele startica-raport-AAAA-LL-ambele.xlsx', async () => {
+    const entries = [{ branchName: 'Filiala Buiucani', report: fakeReport() }];
+    const period = { from: '2026-08-01' };
+    await downloadMultiBranchReportExcel(entries, { includePayerNames: true, includeEurDetails: true }, period);
+
+    expect(reportExportFilenameAmbele(period)).toBe('startica-raport-2026-08-ambele.xlsx');
+    expect(writeFileMock).toHaveBeenCalledWith(expect.anything(), 'startica-raport-2026-08-ambele.xlsx', {
       compression: true,
     });
   });

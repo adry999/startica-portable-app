@@ -87,6 +87,18 @@ export interface AccountingReport {
   expenseRows: ReportExpenseRow[];
 }
 
+/**
+ * Același calcul ca ecranul, dar peste înregistrările unei alte filiale (citite read-only,
+ * vezi `@shared/api/branches#fetchBranchRecords`) — folosit de exportul „Ambele” (20).
+ */
+export function buildForRecords(
+  records: RecordsSnapshot,
+  period: ReportPeriod,
+  options?: { includeArchived?: boolean },
+): AccountingReport {
+  return buildAccountingReport(records, period, options) as AccountingReport;
+}
+
 export type ReportStatus = 'loading' | 'ready' | 'failed';
 
 export interface AccountingReportData {

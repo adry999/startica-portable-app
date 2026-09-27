@@ -52,6 +52,27 @@
   font: inherit;
 }
 
+.branchOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.branchOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .formatGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
