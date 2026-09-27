@@ -37,7 +37,7 @@ import {
   clampExchangeRateSources,
 } from '#shared/domain/exchange-rates.mjs';
 import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
-import { today } from '#shared/domain/calendar-month.mjs';
+import { today, shiftDays } from '#shared/domain/calendar-month.mjs';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 // Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
@@ -190,24 +190,35 @@ export function createApplication(options = {}) {
     dispatchRequest(req, res, /** @type {import('node:net').AddressInfo} */ (server.address()).port),
   );
 
-  // Apelat o dată la pornire (main.mjs): dacă ziua curentă n-are deja un curs
-  // salvat, îl cere de la BNM. Nu aruncă niciodată — un eșec doar lasă cursul
-  // lipsă, tratat de eurToMdlRate() prin căderea pe ultima zi cunoscută.
+  // Apelat o dată la pornire (main.mjs): completează retroactiv orice zi
+  // lucrătoare fără curs salvat, nu doar ziua curentă — dacă aplicația a stat
+  // închisă câteva zile, un calcul ulterior tot trebuie să găsească exact
+  // cursul zilei respective, nu doar pe cel mai recent cunoscut. Fără istoric
+  // deloc (instalare nouă), completarea se oprește la ultimele
+  // EXCHANGE_RATE_BACKFILL_DAYS zile. Nu aruncă niciodată — o zi fără curs
+  // publicat (weekend, sărbătoare) sau un eșec de rețea rămâne pur și simplu
+  // necompletată, fără să oprească celelalte zile din interval.
+  const EXCHANGE_RATE_BACKFILL_DAYS = 30;
   async function refreshExchangeRateIfMissing() {
-    const date = today();
+    const todayStr = today();
     const current = parseExchangeRates(readSetting('exchangeRates'));
-    if (Object.hasOwn(current, date)) return;
-    const result = await fetchBnmEurRate({ fetch: options.fetch ?? globalThis.fetch, date });
-    if ('error' in result) {
-      console.error('Curs BNM la pornire: ' + result.error);
-      return;
-    }
-    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates({ ...current, [date]: result.rate })));
     const currentSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
-    settings.setSetting(
-      'exchangeRateSources',
-      JSON.stringify(clampExchangeRateSources({ ...currentSources, [date]: 'bnm' })),
-    );
+    const lastKnownDate = Object.keys(current).sort().at(-1);
+    const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
+    if (startDate > todayStr) return;
+
+    const rates = { ...current };
+    const sources = { ...currentSources };
+    for (let date = startDate; date <= todayStr; date = shiftDays(date, 1)) {
+      if (Object.hasOwn(rates, date)) continue;
+      const result = await fetchBnmEurRate({ fetch: options.fetch ?? globalThis.fetch, date });
+      if ('rate' in result) {
+        rates[date] = result.rate;
+        sources[date] = 'bnm';
+      }
+    }
+    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates(rates)));
+    settings.setSetting('exchangeRateSources', JSON.stringify(clampExchangeRateSources(sources)));
   }
 
   return {
