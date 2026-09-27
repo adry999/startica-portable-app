@@ -1,4 +1,5 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -7,7 +8,7 @@ import { reloadPersonal } from '@shared/personal/usePersonal';
 import { PersonalPage } from './PersonalPage';
 
 function TopbarActionsSlot() {
-  return <>{useTopbarActionsSlot()}</>;
+  return <div data-testid="topbar-slot">{useTopbarActionsSlot()}</div>;
 }
 
 function jsonResponse(body: unknown) {
@@ -68,5 +69,55 @@ describe('PersonalPage', () => {
 
     expect(screen.getByRole('radio', { name: 'Echipa' })).toBeInTheDocument();
     expect(await screen.findByText('Ana Popescu')).toBeInTheDocument();
+  });
+
+  it('„+ Angajat” stă în antet la fila Echipa, nu în corpul paginii', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <MemoryRouter>
+            <PersonalPage month="2026-09" />
+          </MemoryRouter>
+        </TopbarActionsProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    expect(within(topbarSlot).getByRole('button', { name: '+ Angajat' })).toBeInTheDocument();
+
+    await userEvent.click(within(topbarSlot).getByRole('button', { name: '+ Angajat' }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('la fila Pontaj, luna și „Tipărește” stau în antet, nu în corpul paginii', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <MemoryRouter>
+            <PersonalPage month="2026-09" />
+          </MemoryRouter>
+        </TopbarActionsProvider>
+      </ToastProvider>,
+    );
+
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    await userEvent.click(within(topbarSlot).getByRole('radio', { name: 'Pontaj' }));
+
+    await screen.findByText('Ana Popescu');
+    // Comutatorul de file rămâne în antet — un singur apel useTopbarActions, nu unul rescris de Pontaj.
+    expect(within(topbarSlot).getByRole('radio', { name: 'Pontaj' })).toBeInTheDocument();
+    expect(within(topbarSlot).getByText(/2026/)).toBeInTheDocument();
+    expect(within(topbarSlot).getByRole('button', { name: 'Tipărește' })).toBeInTheDocument();
+    // Un singur buton „Tipărește” în tot documentul — nu unul dublat în corpul paginii.
+    expect(screen.getAllByRole('button', { name: 'Tipărește' })).toHaveLength(1);
   });
 });

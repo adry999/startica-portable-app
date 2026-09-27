@@ -1,46 +1,39 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Button, Card, FilterPills, LoadingState, MonthStepper, type PillTone } from '@shared/ui';
+import { Card, FilterPills, LoadingState, type PillTone } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { nextTimesheetCode, summarizeTimesheetMonth, timesheetKey } from '@shared/personal/timesheet-rules';
 import { useTimesheet } from './useTimesheet';
-import { TimesheetPrintDialog } from './TimesheetPrintDialog';
+import { TimesheetPrintDialog, type TimesheetPrintOptions } from './TimesheetPrintDialog';
 import { TimesheetPrint } from './TimesheetPrint';
 import type { TimesheetCode } from '@shared/personal/personal.types';
 import styles from './TimesheetView.module.css';
 
 export interface TimesheetViewProps {
   month: string;
+  /** „Tipărește” (23b) stă în antet, în PersonalPage — dialogul și tipărirea rămân aici, controlate de acolo. */
+  printOptions: TimesheetPrintOptions | null;
+  onPrintOptionsChange: (options: TimesheetPrintOptions | null) => void;
 }
 
 const CELL_LABEL: Record<string, string> = { CO: 'CO', CM: 'CM', A: 'A' };
 
 /** Pontaj (23b) — grilă lună × angajat, clic ciclează gol → CO → CM → A → gol. */
-export function TimesheetView({ month: initialMonth }: TimesheetViewProps) {
-  const [month, setMonth] = useState(initialMonth.slice(0, 7));
+export function TimesheetView({ month, printOptions, onPrintOptionsChange }: TimesheetViewProps) {
   const personal = usePersonal();
   const timesheet = useTimesheet(month);
   const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [printOptions, setPrintOptions] = useState<{ scope: 'all' | 'department' | 'staff'; targetId?: string } | null>(
-    null,
-  );
 
   useEffect(() => {
     if (!printOptions) return;
     const timer = setTimeout(() => window.print(), 0);
-    const onAfterPrint = () => setPrintOptions(null);
+    const onAfterPrint = () => onPrintOptionsChange(null);
     window.addEventListener('afterprint', onAfterPrint);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('afterprint', onAfterPrint);
     };
-  }, [printOptions]);
-
-  function shiftMonth(delta: number) {
-    const [year, monthNumber] = month.split('-').map(Number);
-    const date = new Date(year, monthNumber - 1 + delta, 1);
-    setMonth(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
-  }
+  }, [printOptions, onPrintOptionsChange]);
 
   const activeStaff = personal.staff.filter(person => !person.archivedAt);
   const filteredStaff =
@@ -71,13 +64,6 @@ export function TimesheetView({ month: initialMonth }: TimesheetViewProps) {
 
   return (
     <div className={styles.root}>
-      <div className={styles.toolbar}>
-        <MonthStepper value={month} onPrev={() => shiftMonth(-1)} onNext={() => shiftMonth(1)} />
-        <Button variant="outline" onClick={() => setPrintOptions({ scope: 'all' })}>
-          Tipărește
-        </Button>
-      </div>
-
       <FilterPills
         groups={[
           {
@@ -166,8 +152,8 @@ export function TimesheetView({ month: initialMonth }: TimesheetViewProps) {
         open={printOptions !== null}
         departments={departmentsSorted}
         staff={activeStaff}
-        onCancel={() => setPrintOptions(null)}
-        onConfirm={options => setPrintOptions(options)}
+        onCancel={() => onPrintOptionsChange(null)}
+        onConfirm={options => onPrintOptionsChange(options)}
       />
 
       {printOptions && (

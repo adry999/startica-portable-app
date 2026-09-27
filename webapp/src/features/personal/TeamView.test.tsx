@@ -97,7 +97,7 @@ describe('TeamView', () => {
 
     render(
       <ToastProvider>
-        <TeamView onOpenStaff={() => {}} />
+        <TeamView onOpenStaff={() => {}} staffFormTarget={null} onCloseStaffForm={() => {}} />
       </ToastProvider>,
     );
 
@@ -117,7 +117,7 @@ describe('TeamView', () => {
 
     render(
       <ToastProvider>
-        <TeamView onOpenStaff={() => {}} />
+        <TeamView onOpenStaff={() => {}} staffFormTarget={null} onCloseStaffForm={() => {}} />
       </ToastProvider>,
     );
 
@@ -132,7 +132,7 @@ describe('TeamView', () => {
 
     render(
       <ToastProvider>
-        <TeamView onOpenStaff={onOpenStaff} />
+        <TeamView onOpenStaff={onOpenStaff} staffFormTarget={null} onCloseStaffForm={() => {}} />
       </ToastProvider>,
     );
 

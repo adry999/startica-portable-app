@@ -12,6 +12,9 @@ import styles from './TeamView.module.css';
 
 export interface TeamViewProps {
   onOpenStaff: (id: string) => void;
+  /** „+ Angajat” (23a) stă în antet, în PersonalPage — formularul rămâne aici, controlat de acolo. */
+  staffFormTarget: Staff | 'new' | null;
+  onCloseStaffForm: () => void;
 }
 
 type SortKey = 'name' | 'role' | 'group';
@@ -38,7 +41,7 @@ function todayBadgeLabel(code: TimesheetRow['code'] | '' | undefined): string {
 }
 
 /** Echipa (23a): tabel grupat pe departamente, cu filtru și sortare din antet. Rând → fișa angajatului (23j). */
-export function TeamView({ onOpenStaff }: TeamViewProps) {
+export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: TeamViewProps) {
   const personal = usePersonal();
   const session = useAppSession();
   const groups = (session.state.state?.groups ?? []) as Group[];
@@ -47,7 +50,6 @@ export function TeamView({ onOpenStaff }: TeamViewProps) {
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [sort, setSort] = useState<SortKey>('name');
-  const [staffFormTarget, setStaffFormTarget] = useState<Staff | 'new' | null>(null);
   const [rolesOpen, setRolesOpen] = useState(false);
   const [todayCodes, setTodayCodes] = useState<Map<string, string>>(new Map());
 
@@ -108,7 +110,6 @@ export function TeamView({ onOpenStaff }: TeamViewProps) {
         <Button variant="outline" onClick={() => setRolesOpen(true)}>
           Funcții
         </Button>
-        <Button onClick={() => setStaffFormTarget('new')}>+ Angajat</Button>
       </div>
 
       <FilterPills
@@ -197,7 +198,7 @@ export function TeamView({ onOpenStaff }: TeamViewProps) {
         ))}
       </Card>
 
-      <StaffFormDrawer target={staffFormTarget} onClose={() => setStaffFormTarget(null)} />
+      <StaffFormDrawer target={staffFormTarget} onClose={onCloseStaffForm} />
       <RolesDrawer open={rolesOpen} onClose={() => setRolesOpen(false)} />
     </div>
   );

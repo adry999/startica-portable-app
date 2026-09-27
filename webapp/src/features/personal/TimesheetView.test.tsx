@@ -74,7 +74,7 @@ describe('TimesheetView', () => {
 
     render(
       <ToastProvider>
-        <TimesheetView month="2026-09" />
+        <TimesheetView month="2026-09" printOptions={null} onPrintOptionsChange={() => {}} />
       </ToastProvider>,
     );
 
