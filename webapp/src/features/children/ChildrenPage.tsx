@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, ConfirmDeleteDialog, DataTable, useToast, useTopbarActions } from '@shared/ui';
+import { Button, ConfirmDeleteDialog, DataTable, LoadingState, useToast, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { useChildren, type ChildRow } from './useChildren';
@@ -212,7 +212,7 @@ function ChildrenListView({
     }
   }
 
-  if (childrenData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (childrenData.status === 'loading') return <LoadingState />;
   if (childrenData.status === 'failed')
     return <p className={styles.notice}>{childrenData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 

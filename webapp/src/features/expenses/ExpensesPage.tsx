@@ -1,5 +1,14 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, ConfirmDeleteDialog, DataTable, SegmentedControl, SelectionBar, useToast } from '@shared/ui';
+import {
+  Button,
+  Card,
+  ConfirmDeleteDialog,
+  DataTable,
+  LoadingState,
+  SegmentedControl,
+  SelectionBar,
+  useToast,
+} from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
 import { total } from '@domain/money.mjs';
@@ -137,7 +146,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
-  if (expensesData.status === 'loading') return <p className={styles.notice}>Se încarcă datele…</p>;
+  if (expensesData.status === 'loading') return <LoadingState />;
   if (expensesData.status === 'failed')
     return <p className={styles.notice}>{expensesData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
