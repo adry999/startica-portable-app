@@ -255,6 +255,62 @@ test('template-delete pe șablonul implicit întoarce 400', async t => {
   assert.match(response.body.error, /implicit nu se poate șterge/);
 });
 
+test('GET /api/sms-log cu after invalid întoarce 400', async t => {
+  const { fetch: fakeFetch } = createFakeSmsApi();
+  const { origin } = await startSmsServer(t, { fetch: fakeFetch });
+  const response = await globalThis.fetch(origin + '/api/sms-log?after=nu-e-data');
+  assert.equal(response.status, 400);
+});
+
+test('GET /api/sms-log implicit (fără after) întoarce lotul trimis, statisticile lunii și defalcarea pe luni', async t => {
+  const { fetch } = createFakeSmsApi();
+  const { origin } = await startSmsServer(t, { fetch, now: () => new Date('2026-09-27T12:00:00.000Z') });
+  await postJson(origin, '/api/sms-connect', { token: VALID_TOKEN, sender: 'Startica', monthlyLimit: 500 });
+  await postJson(origin, '/api/sms-send', {
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    messages: [{ childId: 'c1', childName: 'Ion', recipientName: 'Maria', phone: '+37369123456', text: 'Salut' }],
+  });
+
+  const page = await getJson(origin, '/api/sms-log');
+  assert.equal(page.entries.length, 1);
+  assert.equal(page.entries[0].childId, 'c1');
+  assert.equal(page.stats.sentThisMonth, 1);
+  assert.equal(page.stats.monthlyLimit, 500);
+  assert.deepEqual(page.monthly, [{ month: '2026-09', sent: 1, segments: page.entries[0].segments, failed: 0 }]);
+});
+
+test('GET /api/sms-log?after= exclude rândurile de dinainte de cutoff', async t => {
+  const { fetch } = createFakeSmsApi();
+  const { origin } = await startSmsServer(t, { fetch, now: () => new Date('2026-09-27T12:00:00.000Z') });
+  await postJson(origin, '/api/sms-connect', { token: VALID_TOKEN, sender: 'Startica', monthlyLimit: null });
+  await postJson(origin, '/api/sms-send', {
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    messages: [{ childId: 'c1', childName: 'Ion', recipientName: 'Maria', phone: '+37369123456', text: 'Salut' }],
+  });
+
+  const page = await getJson(origin, '/api/sms-log?after=2026-09-28');
+  assert.equal(page.entries.length, 0);
+});
+
+test('GET /api/sms-templates completează usageCountById după un lot trimis cu un șablon', async t => {
+  const { fetch } = createFakeSmsApi();
+  const { origin } = await startSmsServer(t, { fetch });
+  await postJson(origin, '/api/sms-connect', { token: VALID_TOKEN, sender: 'Startica', monthlyLimit: null });
+  await postJson(origin, '/api/sms-send', {
+    source: 'notify',
+    month: '2026-09',
+    templateId: DEFAULT_SMS_TEMPLATE_ID,
+    messages: [{ childId: 'c1', childName: 'Ion', recipientName: 'Maria', phone: '+37369123456', text: 'Salut' }],
+  });
+
+  const response = await getJson(origin, '/api/sms-templates');
+  assert.equal(response.usageCountById[DEFAULT_SMS_TEMPLATE_ID], 1);
+});
+
 test('GET /api/sms-status neconfigurat nu face niciun apel de rețea, prin createApplication', async t => {
   const { get } = await startTestApplication(t, { fetch: createFakeSmsApi().fetch });
   const status = await get('/api/sms-status');

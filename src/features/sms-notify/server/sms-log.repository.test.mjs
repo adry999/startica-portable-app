@@ -135,6 +135,40 @@ test('markUnknownOlderThan trece pe „unknown” doar rândurile sent mai vechi
   assert.equal(repository.find(failedOld)?.status, 'failed');
 });
 
+test('listSince: doar rândurile de la cutoff încolo, cele mai noi primele', t => {
+  const { repository } = openRepository(t);
+  const old = repository.insert(entry({ createdAt: '2026-08-01T10:00:00.000Z' }));
+  const first = repository.insert(entry({ createdAt: '2026-09-10T10:00:00.000Z' }));
+  const second = repository.insert(entry({ createdAt: '2026-09-20T10:00:00.000Z' }));
+  assert.deepEqual(
+    repository.listSince('2026-09-01T00:00:00.000Z').map(row => row.id),
+    [second, first],
+  );
+  void old;
+});
+
+test('monthlyBreakdown: adună mesaje, segmente (non-failed) și eșuate pe fiecare lună, descrescător', t => {
+  const { repository } = openRepository(t);
+  repository.insert(entry({ createdAt: '2026-08-01T10:00:00.000Z', status: 'sent', segments: 2 }));
+  repository.insert(entry({ createdAt: '2026-08-15T10:00:00.000Z', status: 'failed', segments: 9 }));
+  repository.insert(entry({ createdAt: '2026-09-05T10:00:00.000Z', status: 'delivered', segments: 3 }));
+  repository.insert(entry({ createdAt: '2026-09-06T10:00:00.000Z', status: 'sent', segments: 1 }));
+  assert.deepEqual(repository.monthlyBreakdown(), [
+    { month: '2026-09', sent: 2, segments: 4, failed: 0 },
+    { month: '2026-08', sent: 1, segments: 2, failed: 1 },
+  ]);
+});
+
+test('usageCountByTemplate: numără doar non-failed, grupat pe templateId', t => {
+  const { repository } = openRepository(t);
+  repository.insert(entry({ templateId: 'TPL-a', status: 'sent' }));
+  repository.insert(entry({ templateId: 'TPL-a', status: 'delivered' }));
+  repository.insert(entry({ templateId: 'TPL-a', status: 'failed' }));
+  repository.insert(entry({ templateId: 'TPL-b', status: 'sent' }));
+  repository.insert(entry({ templateId: null, status: 'sent' }));
+  assert.deepEqual(repository.usageCountByTemplate(), { 'TPL-a': 2, 'TPL-b': 1 });
+});
+
 test('expireOldEntries golește text/phone la exact 365 de zile; e idempotent', t => {
   const { repository } = openRepository(t);
   const expired = repository.insert(entry({ createdAt: '2025-09-27T18:00:00.000Z' }));

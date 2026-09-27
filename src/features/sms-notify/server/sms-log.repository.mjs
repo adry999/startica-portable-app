@@ -4,6 +4,7 @@ import { shiftDays } from '#shared/domain/calendar-month.mjs';
 /** @typedef {import('../sms-notify.types.mjs').NewSmsLogEntry} NewSmsLogEntry */
 /** @typedef {import('../sms-notify.types.mjs').SmsMonthlyStats} SmsMonthlyStats */
 /** @typedef {import('../sms-notify.types.mjs').SmsLastNotified} SmsLastNotified */
+/** @typedef {import('../sms-notify.types.mjs').SmsMonthlyBreakdown} SmsMonthlyBreakdown */
 
 export const SMS_LOG_RETENTION_DAYS = 365;
 
@@ -72,6 +73,23 @@ export function createSmsLogRepository(database) {
   );
   const pendingDeliveryStatement = database.prepare(
     `SELECT id,${COLUMNS} FROM sms_log WHERE status='sent' AND provider_id IS NOT NULL ORDER BY created_at DESC, rowid DESC LIMIT ?`,
+  );
+  const listSinceStatement = database.prepare(
+    `SELECT id,${COLUMNS} FROM sms_log WHERE created_at>=? ORDER BY created_at DESC, rowid DESC`,
+  );
+  // substr, nu strftime: created_at e mereu ISO 8601 (toISOString()), deci primele 7 caractere sunt 'YYYY-MM'.
+  // Alias `ym`, nu `month`: sms_log are deja o coloană reală `month` (luna facturată), iar SQLite
+  // rezolvă GROUP BY pe un nume ambiguu spre coloana reală, nu spre alias-ul din SELECT.
+  const monthlyBreakdownStatement = database.prepare(
+    `SELECT substr(created_at,1,7) AS ym,
+       SUM(CASE WHEN status!='failed' THEN 1 ELSE 0 END) AS sent,
+       SUM(CASE WHEN status!='failed' THEN segments ELSE 0 END) AS segmentsSum,
+       SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) AS failed
+     FROM sms_log GROUP BY ym ORDER BY ym DESC`,
+  );
+  const usageCountByTemplateStatement = database.prepare(
+    `SELECT template_id,COUNT(*) AS count FROM sms_log
+     WHERE template_id IS NOT NULL AND status!='failed' GROUP BY template_id`,
   );
   const markUnknownStatement = database.prepare(
     "UPDATE sms_log SET status='unknown' WHERE status='sent' AND created_at<?",
@@ -144,6 +162,30 @@ export function createSmsLogRepository(database) {
     return pendingDeliveryStatement.all(limit).map(toEntry);
   }
 
+  /** @param {string} cutoffIso @returns {SmsLogEntry[]} */
+  function listSince(cutoffIso) {
+    return listSinceStatement.all(cutoffIso).map(toEntry);
+  }
+
+  /** @returns {SmsMonthlyBreakdown[]} */
+  function monthlyBreakdown() {
+    return /** @type {any[]} */ (monthlyBreakdownStatement.all()).map(row => ({
+      month: row.ym,
+      sent: Number(row.sent ?? 0),
+      segments: Number(row.segmentsSum ?? 0),
+      failed: Number(row.failed ?? 0),
+    }));
+  }
+
+  /** @returns {Record<string, number>} */
+  function usageCountByTemplate() {
+    /** @type {Record<string, number>} */
+    const result = {};
+    for (const row of /** @type {any[]} */ (usageCountByTemplateStatement.all()))
+      result[row.template_id] = Number(row.count);
+    return result;
+  }
+
   /** @param {string} cutoffIso @returns {number} */
   function markUnknownOlderThan(cutoffIso) {
     return Number(markUnknownStatement.run(cutoffIso).changes);
@@ -166,6 +208,9 @@ export function createSmsLogRepository(database) {
     lastUnitCost,
     lastNotifiedByChild,
     pendingDelivery,
+    listSince,
+    monthlyBreakdown,
+    usageCountByTemplate,
     markUnknownOlderThan,
     expireOldEntries,
   };

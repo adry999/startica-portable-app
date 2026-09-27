@@ -1,4 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { dateOK, isoDateOf, shiftDays } from '#shared/domain/calendar-month.mjs';
 import { findUnknownSmsVariables, SMS_TEMPLATE_MAX_LENGTH } from '#shared/domain/sms-template.mjs';
 import { readSmsConfig, writeSmsConfig, removeSmsConfig, maskSmsToken } from './sms-config.repository.mjs';
 import { createSmsLogRepository } from './sms-log.repository.mjs';
@@ -19,6 +20,8 @@ const TOKEN_WHITESPACE_MESSAGE = 'Tokenul sms.md nu poate conține spații.';
 const INVALID_SENDER_MESSAGE = 'Expeditorul trebuie să aibă între 1 și 15 caractere.';
 const INVALID_MONTHLY_LIMIT_MESSAGE = 'Limita lunară trebuie să fie un număr întreg între 1 și 5000, sau necompletată.';
 const DEFAULT_TEMPLATE_DELETE_MESSAGE = 'Șablonul implicit nu se poate șterge. Alege alt implicit mai întâi.';
+const INVALID_AFTER_MESSAGE = 'Data „după” trebuie să fie în formatul AAAA-LL-ZZ.';
+const LOG_DEFAULT_PERIOD_DAYS = 30;
 
 /** @param {string} name */
 const senderActiveMessage = (name, activeSenders) =>
@@ -187,6 +190,20 @@ export function createSmsRoutes({
     if (unknownVariables.length > 0) fail(`Variabilă necunoscută în șablon: {${unknownVariables[0]}}.`);
   }
 
+  /** Fila „Mesaje SMS" (11a): lot din perioadă (implicit 30 de zile) + statistici + defalcarea pe luni. */
+  /** @param {string | null} afterParam */
+  function readSmsLog(afterParam) {
+    const afterDate = afterParam ?? shiftDays(isoDateOf(now()), -LOG_DEFAULT_PERIOD_DAYS);
+    if (!dateOK(afterDate)) fail(INVALID_AFTER_MESSAGE);
+    const stats = smsLogRepository.monthlyStats(now());
+    const config = readSmsConfig(dataDirectory);
+    return {
+      entries: smsLogRepository.listSince(`${afterDate}T00:00:00.000Z`),
+      stats: { ...stats, monthlyLimit: config?.monthlyLimit ?? null },
+      monthly: smsLogRepository.monthlyBreakdown(),
+    };
+  }
+
   /** @param {SmsTemplateInput} input */
   function saveTemplate({ id, name, body, stripDiacritics, isDefault }) {
     assertValidTemplateInput({ name, body });
@@ -245,7 +262,19 @@ export function createSmsRoutes({
     },
     { method: 'GET', path: '/api/sms-last-notified', handle: () => smsLogRepository.lastNotifiedByChild() },
     { method: 'POST', path: '/api/sms-refresh-statuses', handle: () => smsSendService.refreshDeliveryStatuses() },
-    { method: 'GET', path: '/api/sms-templates', handle: () => ({ templates: smsTemplateRepository.list() }) },
+    {
+      method: 'GET',
+      path: '/api/sms-log',
+      /** @param {{ url: URL }} request */ handle: ({ url }) => readSmsLog(url.searchParams.get('after')),
+    },
+    {
+      method: 'GET',
+      path: '/api/sms-templates',
+      handle: () => ({
+        templates: smsTemplateRepository.list(),
+        usageCountById: smsLogRepository.usageCountByTemplate(),
+      }),
+    },
     {
       method: 'POST',
       path: '/api/sms-template-save',

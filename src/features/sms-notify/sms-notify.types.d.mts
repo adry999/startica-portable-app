@@ -63,6 +63,27 @@ export interface SmsMonthlyStats {
   segmentsThisMonth: number;
 }
 
+/** Un rând al tabelului „Toate lunile" (11a) — agregat pe lună calendaristică (created_at). */
+export interface SmsMonthlyBreakdown {
+  month: string;
+  sent: number;
+  segments: number;
+  failed: number;
+}
+
+/** Răspunsul `GET /api/sms-log` — jurnalul filtrat pe perioadă (client-side: stare/șablon/căutare). */
+export interface SmsLogPage {
+  entries: SmsLogEntry[];
+  stats: SmsMonthlyStats & { monthlyLimit: number | null };
+  monthly: SmsMonthlyBreakdown[];
+}
+
+/** Răspunsul `GET /api/sms-templates` — completat cu „Folosit de N ori" per șablon. */
+export interface SmsTemplatesPage {
+  templates: SmsTemplate[];
+  usageCountById: Record<string, number>;
+}
+
 export interface SmsLastNotified {
   at: string;
   status: SmsLogStatus;
