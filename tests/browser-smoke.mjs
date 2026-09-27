@@ -164,8 +164,8 @@ try {
   // Versiunea afișată în sidebar trebuie să fie cea servită de /api/session, nu o valoare fixă.
   assert.equal(await evaluate("document.querySelector('aside small')?.textContent"), session.version);
 
-  // Meniul lateral: 14 ecrane, exact unul marcat curent (Dashboard, la încărcare).
-  assert.equal(await evaluate("document.querySelectorAll('aside nav button').length"), 14);
+  // Meniul lateral: 16 ecrane, exact unul marcat curent (Dashboard, la încărcare).
+  assert.equal(await evaluate("document.querySelectorAll('aside nav button').length"), 16);
   assert.equal(await evaluate("document.querySelectorAll('aside nav button[aria-current=page]').length"), 1);
   assert.equal(
     await evaluate("document.querySelector('aside nav button[aria-current=page]')?.children[1]?.textContent"),
@@ -202,7 +202,11 @@ try {
       `[...document.querySelectorAll('aside nav button')].find(b=>b.children[1]?.textContent===${JSON.stringify(navLabel)})?.click()`,
     );
     await until(() => evaluate('location.pathname').then(p => p === path), `Navigare la ${navLabel} a eșuat`);
-    assert.equal(await evaluate("document.querySelector('header h1')?.textContent"), title);
+    // URL-ul se schimbă înainte ca React să randeze noul ecran; antetul vine în tura următoare.
+    await until(
+      () => evaluate("document.querySelector('header h1')?.textContent").then(text => text === title),
+      `Antetul ${title} nu a apărut`,
+    );
     await noPageOverflow();
   }
 
@@ -250,9 +254,15 @@ try {
   await command('Fetch.enable', { patterns: [{ urlPattern: '*/api/*' }] });
   apiBlocked = true;
   await command('Page.reload', { ignoreCache: true });
-  await until(() => saveStatusState().then(s => s === 'error'), 'Căderea de rețea trebuie să arate roșu');
+  // Fără sesiune, shell-ul nu se randează: apare ecranul de pornire cu eroarea și „Încearcă din nou” (21c).
+  await until(
+    () => evaluate("document.querySelector('h2')?.textContent").then(text => text === 'Datele nu s-au putut încărca'),
+    'Căderea de rețea trebuie să arate ecranul de eroare',
+  );
   apiBlocked = false;
-  await evaluate("document.querySelector('[role=status] button')?.click()");
+  await evaluate(
+    "[...document.querySelectorAll('button')].find(button => button.textContent === 'Încearcă din nou')?.click()",
+  );
   await until(() => saveStatusState().then(s => s === 'saved'), 'Reîncercarea trebuie să arate verde la reconectare');
   await command('Fetch.disable');
   // errors/consoleErrors nu se re-verifică aici: căderea de rețea de mai sus a produs,

@@ -129,7 +129,7 @@ function StartupError({ message, backupPath, onRetry }: { message: string; backu
     <div className={styles.screen}>
       <div className={styles.messageCard}>
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logoSmall} />
-        <h2 className={styles.title}>Baza de date locală nu s-a putut deschide</h2>
+        <h2 className={styles.title}>Datele nu s-au putut încărca</h2>
         <p className={styles.explanation}>{message}</p>
         <div className={styles.actions}>
           <Button onClick={onRetry}>Încearcă din nou</Button>

@@ -26,7 +26,7 @@ describe('StartupScreen — baza locală nu se deschide', () => {
 
     render(<StartupScreen />);
 
-    expect(screen.getByText('Baza de date locală nu s-a putut deschide')).toBeInTheDocument();
+    expect(screen.getByText('Datele nu s-au putut încărca')).toBeInTheDocument();
     expect(screen.getByText(/Deschide dosarul cu backupuri/, { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByText(String.raw`%LOCALAPPDATA%\Startica\Startica_Backup`)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
@@ -38,11 +38,11 @@ describe('StartupScreen — baza locală nu se deschide', () => {
     await act(() => session.result.current.load().catch(() => {}));
 
     render(<StartupScreen />);
-    expect(screen.getByText('Baza de date locală nu s-a putut deschide')).toBeInTheDocument();
+    expect(screen.getByText('Datele nu s-au putut încărca')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Încearcă din nou' }));
 
-    expect(screen.queryByText('Baza de date locală nu s-a putut deschide')).not.toBeInTheDocument();
+    expect(screen.queryByText('Datele nu s-au putut încărca')).not.toBeInTheDocument();
   });
 });
 
