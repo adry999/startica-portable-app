@@ -98,12 +98,7 @@ function renderPage() {
     <ToastProvider>
       <TopbarActionsProvider>
         <TopbarActionsSlot />
-        <StatusPage
-          month="2026-09"
-          onMonthChange={onMonthChange}
-          onNavigate={onNavigate}
-          onOpenChild={onOpenChild}
-        />
+        <StatusPage month="2026-09" onMonthChange={onMonthChange} onNavigate={onNavigate} onOpenChild={onOpenChild} />
       </TopbarActionsProvider>
     </ToastProvider>,
   );
