@@ -28,3 +28,9 @@ Comentariul „fără filtre — situația unei luni trebuie să rămână compl
 
 ## ✅ Situația plăților — ecranul complet (punctul 10) — rezolvat, plan înainte de cod
 Ecran separat, plan scris înainte de cod (`docs/superpowers/plans/`). Ordinea: (1) pastilele Grupa — punctul 7, (2) cele 4 carduri + modul An școlar + harta — punctul 10, (3) SMS — după P1 din spec-ul SMS.
+
+## ✅ Raport contabil (punctul 14) — selectorul de filială din export — decis provizoriu
+`20-raport-contabil.md` 19b cere „Filiala (Ambele pe foi separate / una)”, dar filialele sunt excluse din această etapă (Faza 6). Decizie: v1 fără selector de filială — o singură grădiniță, un singur set de foi. Criteriul „Filtrul de filială funcționează și pe «Ambele»” rămâne nebifat până la Faza 6.
+
+## ✅ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — decis provizoriu
+Nu există server comun (Faza 6 exclusă): pasul de sincronizare nu apare (spec-ul permite asta), iar pe 21c butonul „Lucrez fără legătură” nu are sens fără server comun — rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri”.
