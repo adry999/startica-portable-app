@@ -1,5 +1,6 @@
 import { Fragment, useState, type FormEvent } from 'react';
 import {
+  Button,
   Card,
   ConfirmDeleteDialog,
   groupTone,
@@ -37,9 +38,7 @@ export function GroupsPage() {
   useTopbarActions(
     <div className={styles.headerActions}>
       <SegmentedControl ariaLabel="Vizualizare Grupe" options={VIEW_OPTIONS} value={viewMode} onChange={setViewMode} />
-      <button type="button" className={styles.btnPrimary} onClick={() => setFormOpen(true)}>
-        + Grupă nouă
-      </button>
+      <Button onClick={() => setFormOpen(true)}>+ Grupă nouă</Button>
     </div>,
   );
 
@@ -219,9 +218,7 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
             aria-label="Capacitate"
           />
         </label>
-        <button type="submit" className={styles.btnPrimary}>
-          Salvează
-        </button>
+        <Button type="submit">Salvează</Button>
       </form>
 
       <p className={styles.editorSubtitle}>
@@ -262,9 +259,9 @@ function GroupEditor({ group, unassignedChildren, onSave, onDelete, onAssign, on
           ariaLabel="Copil fără grupă"
           disabled={unassignedChildren.length === 0}
         />
-        <button type="button" className={styles.btnPrimary} disabled={!selectedChildId} onClick={handleAssign}>
+        <Button disabled={!selectedChildId} onClick={handleAssign}>
           + Adaugă
-        </button>
+        </Button>
       </div>
 
       <div className={styles.deleteRow}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Drawer } from '@shared/ui';
+import { Button, Drawer } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -146,14 +146,9 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
       width={560}
       onClose={onClose}
       footer={
-        <button
-          type="submit"
-          form="payment-form-drawer"
-          className={styles.btnPrimary}
-          disabled={submitting || (isEurChild && !effectiveRate)}
-        >
+        <Button type="submit" form="payment-form-drawer" disabled={submitting || (isEurChild && !effectiveRate)}>
           Salvează
-        </button>
+        </Button>
       }
     >
       <form

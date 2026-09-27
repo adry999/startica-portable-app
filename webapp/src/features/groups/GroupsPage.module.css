@@ -107,22 +107,6 @@
   margin-left: var(--space-4);
 }
 
-.btnPrimary {
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--orange);
-  color: var(--white);
-  font-weight: 800;
-  font-size: 13px;
-  padding: var(--space-8) var(--space-16);
-  box-shadow: var(--shadow-button-primary);
-}
-
-.btnPrimary:disabled {
-  opacity: 0.5;
-  box-shadow: none;
-}
-
 .editor {
   margin-top: var(--space-16);
   display: flex;
