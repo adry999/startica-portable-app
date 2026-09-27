@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
 import { Badge, Button, Card, Drawer, SegmentedControl, useToast, type BadgeTone } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useBackup, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
@@ -7,13 +8,15 @@ import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
 import { KindergartenSettings } from './KindergartenSettings';
+import { BranchesSettings } from './BranchesSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'rates' | 'kindergarten';
+type ViewMode = 'backup' | 'rates' | 'kindergarten' | 'branches';
 
 export function BackupPage() {
+  const session = useAppSession();
   const backupData = useBackup();
   const restore = useRestore(backupData.health?.externalDir ?? '');
   const excel = useExcelTransfer();
@@ -84,14 +87,19 @@ export function BackupPage() {
             { value: 'backup', label: 'Backup' },
             { value: 'rates', label: 'Curs valutar' },
             { value: 'kindergarten', label: 'Grădinița' },
+            { value: 'branches', label: 'Filiale' },
           ]}
         />
+        {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare aici, în antetul filei. */}
+        <span className={styles.version}>{session.state.version}</span>
       </div>
 
       {viewMode === 'rates' ? (
         <ExchangeRateSettings />
       ) : viewMode === 'kindergarten' ? (
         <KindergartenSettings />
+      ) : viewMode === 'branches' ? (
+        <BranchesSettings />
       ) : (
         <>
           <Card className={styles.panel}>
@@ -114,7 +122,9 @@ export function BackupPage() {
               </label>
               <p className={styles.hint}>
                 Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google Drive.
-                Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile.
+                Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile. Cu
+                mai multe filiale, folosește un subfolder pe filială, ex. „G:\My Drive\Startica_Backup\Botanica” —
+                folderul de date sau backup al altei filiale nu poate fi folosit ca destinație externă.
               </p>
               {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
               <Button type="submit" disabled={backupData.settingsBusy}>
