@@ -142,9 +142,10 @@ export function bnmDateParam(dateKey) {
 
 export const BNM_OFFICIAL_RATES_URL = 'https://www.bnm.md/ro/official_exchange_rates';
 
-// Pagina publică BNM cu cursurile unei zile — operatorul verifică de acolo cursul salvat.
+// Lista oficială BNM a zilei (XML, EUR primul). Fără get_xml=1 browserul e redirecționat pe
+// prima pagină bnm.md, iar pagina „Ratele de schimb” ignoră data din adresă (verificat 2026-09-28).
 /** @param {string} dateKey YYYY-MM-DD */
-export const bnmRatesPageUrl = dateKey => `${BNM_OFFICIAL_RATES_URL}?date=${bnmDateParam(dateKey)}`;
+export const bnmRatesPageUrl = dateKey => `${BNM_OFFICIAL_RATES_URL}?get_xml=1&date=${bnmDateParam(dateKey)}`;
 
 /**
  * Citește valoarea EUR din răspunsul XML al BNM

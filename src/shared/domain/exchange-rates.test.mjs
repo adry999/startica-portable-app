@@ -120,5 +120,8 @@ test('latestKnownRateDate întoarce ziua celui mai recent curs, undefined pe har
 });
 
 test('bnmRatesPageUrl duce la pagina publică BNM a zilei, în formatul de dată al BNM', () => {
-  assert.equal(bnmRatesPageUrl('2026-09-05'), 'https://www.bnm.md/ro/official_exchange_rates?date=05.09.2026');
+  assert.equal(
+    bnmRatesPageUrl('2026-09-05'),
+    'https://www.bnm.md/ro/official_exchange_rates?get_xml=1&date=05.09.2026',
+  );
 });
