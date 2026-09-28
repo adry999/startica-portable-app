@@ -10,6 +10,7 @@
   height: 100vh;
   position: sticky;
   top: 0;
+  z-index: var(--z-sticky);
   /* AB-1: fără overflow aici — setat pe .sidebar, CSS forțează și overflow-x:auto pe axa
      cealaltă, care tăia dropdown-ul de 300px al BranchSelector (sidebar-ul e de 248px).
      Doar .nav scrolează; restul (logo, selector, cardul de jos) rămâne fix. */

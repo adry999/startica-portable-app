@@ -123,8 +123,9 @@
   --space-28: 28px;
   --space-40: 40px;
 
-  /* Scara de z-index (FEEDBACK.md 28.09, 2a) — popover-urile portalate (BranchSelector) o folosesc;
-     restul (Drawer, Toast, dialogurile) rămân pe valorile lor proprii, migrare separată. */
+  /* Scara de z-index (FEEDBACK.md 28.09, 2a) — .sidebar (sticky), popover-urile portalate
+     (BranchSelector, SearchSelect, MonthPicker, RowMenu), Drawer, Toast și dialogurile de
+     confirmare (ConfirmDeleteDialog, SmsConfirmDialog) sunt toate pe această scară. */
   --z-sticky: 10;
   --z-drawer: 100;
   --z-popover: 200;
