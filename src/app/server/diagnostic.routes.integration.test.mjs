@@ -31,12 +31,13 @@ test('GET /api/diagnostic întoarce starea aplicației, fără jurnal când nu e
 
 test('GET /api/diagnostic citește ultimele 200 de linii din jurnal și ultimele backupuri', async t => {
   const home = mkdtempSync(join(tmpdir(), 'startica-diagnostic-home-'));
-  t.after(() => rmSync(home, { recursive: true, force: true }));
   mkdirSync(join(home, 'Jurnale'), { recursive: true });
   const logFile = join(home, 'Jurnale', 'startica.log');
   const lines = Array.from({ length: 205 }, (_, i) => `linia ${i}`);
   writeFileSync(logFile, lines.join('\n') + '\n');
   const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true, home, logFile });
+  // Înregistrat după aplicație: baza comună (Comun\) stă deschisă până la close(), iar pe Windows un fișier deschis nu se șterge.
+  t.after(() => rmSync(home, { recursive: true, force: true }));
   await bundle.post('/api/backup', {});
   const response = await bundle.get('/api/diagnostic');
   assert.equal(response.home, home);
@@ -49,7 +50,6 @@ test('GET /api/diagnostic citește ultimele 200 de linii din jurnal și ultimele
 
 test('raportul de diagnostic nu conține date personale', async t => {
   const home = mkdtempSync(join(tmpdir(), 'startica-diagnostic-home-'));
-  t.after(() => rmSync(home, { recursive: true, force: true }));
   mkdirSync(join(home, 'Jurnale'), { recursive: true });
   const logFile = join(home, 'Jurnale', 'startica.log');
   writeFileSync(
@@ -58,6 +58,8 @@ test('raportul de diagnostic nu conține date personale', async t => {
       '    at Object.handle (C:\\Users\\PCC\\Aplicatie_Startica\\src\\features\\children\\server\\children.routes.mjs:42:11)\n',
   );
   const bundle = await startTestApplication(t, { prefix: 'startica-diagnostic-', allowShutdown: true, home, logFile });
+  // Înregistrat după aplicație: baza comună (Comun\) stă deschisă până la close(), iar pe Windows un fișier deschis nu se șterge.
+  t.after(() => rmSync(home, { recursive: true, force: true }));
   const childName = 'Zorro Testescu';
   const parentName = 'Ramona Testescu';
   const phone = '+37369999123';
