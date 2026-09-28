@@ -194,6 +194,19 @@ Rulate cu crew multiple în paralel (worktree-uri izolate), fiecare verificat pe
 
 **De reținut pentru orice sesiune viitoare:** dacă cineva (uman sau agent) raportează că seria C/D „nu s-a făcut încă” sau „e neatinsă de la un anumit commit”, verifică ÎNTÂI cu `grep -rn "C-1\|C-2\|...".` pe codul curent înainte de a re-porni lucrul — au fost cel puțin 2 rânduri de confuzie pe acest subiect în aceeași sesiune, ambele rezolvate prin verificare directă pe disc, nu prin presupuneri.
 
+## Verificare end-to-end LIVE — 18-sincronizare.md, toate cele 6 criterii PASS
+
+Server real (`sync-server`) + 2 instanțe reale de aplicație (homes separate), nu teste unitare/mock-uri — Task 9-12 nu fuseseră niciodată testate integrat, împreună, live, până acum:
+
+1. **Conectare, primul calculator (cheie de instalare):** PASS — `POST /api/sync/connect` 200, filiala urcată.
+2. **Cod de asociere + al doilea calculator:** PASS — B a adoptat filiala serverului (calculator nou cu filială goală, decizia 9 din plan), nu a dublat-o.
+3. **Editare pe A → apare pe B:** PASS — confirmat prin `/api/state` pe B după `sync/now`.
+4. **Offline → resincronizare:** PASS — server oprit → `connection:"offline"`, pending crescut; repornit → `"online"` pe ambele.
+5. **Conflict vizibil, rezolvabil:** PASS — editare simultană pe `children` (CONFLICT_KIND) → `GET /api/sync/conflicts` arată ambele variante, câmpul diferit marcat corect; `resolve` funcționează, lista se golește.
+6. **Deconectare:** PASS — `devices/revoke` de pe A → B primește `connection:"revoked"` imediat.
+
+Sincronizarea end-to-end (motor + server + UI 14b/14c) e confirmată funcțională complet, nu doar pe bucăți testate separat.
+
 ## Etapa S — sincronizare (cerută direct, nu din URMATORUL-PAS.md)
 
 - **S.1 (serie C, C-1…C-9) și S.2 (serie D, D-1/D-2 majore):** DEJA REPARATE — de sesiuni concurente (teammates ale acestei echipe: vezi module1-dashboard…fix-B1-category-seeding), între momentul auditului și acest pas. Corectează secțiunea „Verificare sincronizare” de mai jos, care spunea „nu s-a lucrat la ele azi” — era adevărat atunci, nu mai e. Verificat direct pe cod (nu doar din mesajele de commit) de mine, independent de rapoartele agenților: `sync-outbox.repository.mjs` (C-1, gardă pe `change_id`), `create-branch-context.mjs:189` (C-2, `rawRecordRepository`), plus comentarii explicite C-3…C-9/D-1/D-2 în `sync-engine.service.mjs`/`change-applier.mjs`/`sync-server/src/*`. Commit-uri (deja în istoric, dinainte de acest pas): `dbd6602` (D-1), `b0863f2` (D-2), `b85609e` (D-3/D-4), `66eb502` (D-5/D-6/D-10), `190c57e` (D-7), `ee19597` (D-8), `5ace28c` (D-9), `6935d75` (C-1, C-3…C-9, D-2), `9099214` (A-3 rezidual). `node --test` pe toată suita de sincronizare (165 teste) + `npm run check` rădăcină — verzi, rulate independent. **Niciun commit nou** — nimic de schimbat.
