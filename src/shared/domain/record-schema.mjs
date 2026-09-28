@@ -212,7 +212,9 @@ export function normalizeRecord(type, input) {
     'postVisitNotes',
     'educator',
   ])
-    if (record[field] !== undefined) text(record[field], field);
+    // `notes` la `children` e o listă de note cu dată (CF-4, 09-copii-fisa.md), nu text liber —
+    // validată mai jos, împreună cu feeHistory/statusHistory.
+    if (!(field === 'notes' && type === 'children') && record[field] !== undefined) text(record[field], field);
   if (type === 'children') {
     text(record.name, 'Nume copil', true);
     record.name = record.name.trim();
@@ -262,6 +264,22 @@ export function normalizeRecord(type, input) {
       }
       record[field].sort((a, b) => a.from.localeCompare(b.from));
     }
+    // Note (CF-4, 09-copii-fisa.md): listă, nu text liber — cea mai recentă primul rând, pe
+    // yellow-soft în fișă. Migrarea 003 (bază) + upgradeSnapshot() (import/restaurare) convertesc
+    // un `notes` vechi de tip text într-o listă cu o singură intrare, înainte să ajungă aici.
+    record.notes ??= [];
+    requireThat(Array.isArray(record.notes) && record.notes.length <= 500, 'Note: listă invalidă.');
+    const seenNoteIds = new Set();
+    record.notes = record.notes.map(note => {
+      requireThat(note && typeof note === 'object', 'Notă invalidă.');
+      const id = typeof note.id === 'string' && note.id ? note.id : `NOTE-${crypto.randomUUID()}`;
+      requireThat(!seenNoteIds.has(id), 'Notă: id repetat.');
+      seenNoteIds.add(id);
+      text(note.text, 'Text notă', true);
+      requireThat(dateOK(note.date), 'Notă: dată invalidă.');
+      return { id, text: note.text.trim(), date: note.date };
+    });
+    record.notes.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
   } else if (type === 'groups') {
     text(record.name, 'Nume grupă', true);
     record.name = record.name.trim();

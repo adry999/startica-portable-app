@@ -1,5 +1,6 @@
 import { TYPES, emptyState } from './record-schema.mjs';
 import { missingDefaultCategorySeeds, missingExpenseOnlyCategorySeeds } from './expense-categories.mjs';
+import { today } from './calendar-month.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 
@@ -47,6 +48,18 @@ export function upgradeSnapshot(input) {
     notes.push(
       `Format vechi, actualizat: ${createdGroups} ${createdGroups === 1 ? 'grupă creată' : 'grupe create'} din câmpul text al copiilor.`,
     );
+
+  // Note vechi (migrarea 003 din baza SQLite face același lucru la nivel de bază — aici e
+  // varianta pentru un export/backup adus dintr-o instalare care nu a trecut încă prin ea).
+  const todayStr = today();
+  let convertedNotes = 0;
+  for (const child of snapshot.children) {
+    if (!child || typeof child.notes !== 'string') continue;
+    const text = child.notes.trim();
+    child.notes = text ? [{ id: `NOTE-${crypto.randomUUID()}`, text, date: todayStr }] : [];
+    convertedNotes++;
+  }
+  if (convertedNotes) notes.push(`Format vechi, actualizat: ${convertedNotes} notă/note de copii mutate în listă.`);
 
   // Un import sau o restaurare poate readuce un instantaneu fără categoriile implicite
   // (backup vechi, dinainte ca ele să fie înregistrări reale) sau cu cheltuieli a căror

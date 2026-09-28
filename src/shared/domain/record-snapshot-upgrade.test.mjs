@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { emptyState } from './record-schema.mjs';
 import { upgradeSnapshot } from './record-snapshot-upgrade.mjs';
 import { DEFAULT_EXPENSE_CATEGORY_SEEDS } from './expense-categories.mjs';
+import { today } from './calendar-month.mjs';
 
 test('un copil cu câmp text group primește o grupă nouă și groupId', () => {
   const input = {
@@ -93,4 +94,37 @@ test('o cheltuială cu o categorie fără înregistrare corespunzătoare primeș
 
   assert.ok(snapshot.categories.some(category => category.name === 'Rechizite școlare'));
   assert.ok(notes.some(note => note.includes('Rechizite școlare')));
+});
+
+test('un copil cu notes text vechi (CF-4) primește o listă cu o singură notă datată azi', () => {
+  const input = { ...emptyState(), children: [{ id: 'C1', name: 'Ana', notes: '  text vechi  ' }] };
+
+  const { snapshot, notes } = upgradeSnapshot(input);
+
+  assert.equal(snapshot.children[0].notes?.length, 1);
+  assert.equal(snapshot.children[0].notes?.[0].text, 'text vechi');
+  assert.equal(snapshot.children[0].notes?.[0].date, today());
+  assert.ok(notes.some(note => note.includes('notă/note de copii mutate în listă')));
+});
+
+test('un copil cu notes text gol devine listă goală, fără notă din nimic', () => {
+  const input = { ...emptyState(), children: [{ id: 'C1', name: 'Ana', notes: '   ' }] };
+
+  const { snapshot } = upgradeSnapshot(input);
+
+  assert.deepEqual(snapshot.children[0].notes, []);
+});
+
+test('un copil cu notes deja listă (format nou) nu se modifică', () => {
+  const existing = [{ id: 'NOTE-1', text: 'deja convertit', date: '2026-01-01' }];
+  const input = {
+    ...emptyState(),
+    categories: [{ id: 'CAT-general', name: 'General' }],
+    children: [{ id: 'C1', name: 'Ana', notes: existing }],
+  };
+
+  const { snapshot, notes } = upgradeSnapshot(input);
+
+  assert.deepEqual(snapshot.children[0].notes, existing);
+  assert.deepEqual(notes, []);
 });
