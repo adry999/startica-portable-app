@@ -5,15 +5,25 @@ import { sortByGroupOrder, type OrderableGroup } from '@shared/format/group-orde
 // cele 8 tonuri sunt acum comune ambelor sisteme; „mint” aici == „green” acolo (același token).
 const TONES: PillTone[] = ['yellow', 'pink', 'teal', 'mint', 'blue', 'orange', 'purple', 'coral'];
 
-/** Grupele nu au culoare salvată explicit pentru pastile (Grupe v2 permite alegere manuală prin
- * `group.tone`, vezi `groupBoardTone.ts`; aici rămâne pur pozițional — de aliniat dacă se cere).
- * Culoarea vine din poziția grupei — `order` (03-grupe.md §3b) dacă există, altfel ordinea
+function isPillTone(value: string | null | undefined): value is PillTone {
+  return !!value && (TONES as string[]).includes(value);
+}
+
+export interface ToneableGroup extends OrderableGroup {
+  tone?: string | null;
+}
+
+/** `group.tone` dacă e o cheie cunoscută (aleasă manual în Drawer, vezi `groupBoardTone.ts`),
+ * altfel calculat din poziția grupei — `order` (03-grupe.md §3b) dacă există, altfel ordinea
  * alfabetică curentă — deci e stabilă și consistentă cu ordinea afișată în Grupe (aceeași grupă
- * are aceeași culoare peste tot: badge, pastile, calendar, tablă). */
-export function groupTone(groupId: string | null, groups: OrderableGroup[]): PillTone {
+ * are aceeași culoare peste tot: badge, pastile, calendar, tablă, Tablă din Grupe v2). */
+export function groupTone(groupId: string | null, groups: ToneableGroup[]): PillTone {
   if (!groupId) return 'neutral';
+  const group = groups.find(candidate => candidate.id === groupId);
+  if (!group) return 'neutral';
+  if (isPillTone(group.tone)) return group.tone;
   const sorted = sortByGroupOrder(groups);
-  const index = sorted.findIndex(group => group.id === groupId);
+  const index = sorted.findIndex(candidate => candidate.id === groupId);
   if (index === -1) return 'neutral';
   return TONES[index % TONES.length];
 }
