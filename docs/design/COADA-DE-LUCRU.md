@@ -272,6 +272,13 @@ Verificat prin semnale (prezența modulului/rutei/componentei), nu calitate cod 
 - **CF-1, CF-3, CF-5, CF-6, CF-8, CF-9 — verificate din nou la cererea coordonatorului, confirmate deja rezolvate, fără cod nou.** Tabelul CF din `AUDIT-UI-2026-09-28.md` era scris înainte de introducerea `ProfileLayout`/`StatCard`/`RowMenu` (`@shared/ui`) și de unificarea tonurilor (S.5); codul curent (verificat linie cu linie, cu `git log`/`git blame` care arată commit-uri anterioare acestei sesiuni, nu munca de azi) le are deja pe toate: hero cu `heroTone`+`neutral→white` (CF-1), pătrat 48px+`SearchSelect` (CF-3), al treilea rând `sub` pe toate cele 3 mini-carduri (CF-5), `RowMenu` cu „Tipărește confirmarea” (CF-6), titlu secțiune Baloo 18px din `ProfileLayout.module.css` (CF-8), zero hex hardcodat / `--muted` peste tot (CF-9). Detaliile exacte (fișier:linie pentru fiecare) sunt adăugate direct în `AUDIT-UI-2026-09-28.md`, secțiunea 2.3, ca să nu se piardă la următoarea citire a auditului. Niciun commit nou de cod — doar `docs(design)` pentru actualizarea auditului. Rulat din nou webapp typecheck (curat) ca să confirm că nimic nu s-a stricat între timp.
 - **Concluzie:** din cele 10 puncte CF, 9 sunt închise (CF-1, CF-3, CF-4, CF-5, CF-6, CF-7, CF-8, CF-9, CF-10); singurul rămas e CF-2, amânat intenționat.
 
+## Build + hash instalator final
+
+- **DONE** — `npm run check:full` (format+tsc+teste+smoke browser+ciclu de viață lansator) verde, apoi `scripts\pachet-client\build-client-package.ps1` din HEAD `feabc05` (Bazin complet + Fișa copilului CF-1..10 minus CF-2, merged).
+- `Livrare\Startica_Setup_2.0.0.exe` — 22.73 MB.
+- **SHA-256:** `53CDFF0CC590BBE8FE12C4B261C4B7458FD22BF927493F1493746F0F11F0A47D`
+- Instalerele vechi (build-uri anterioare de azi) mutate, nu șterse: `Startica_Setup_2.0.0.exe.stale-20260928`, `Startica_Setup_2.0.0.exe.prev-4a9633d`.
+- Rămân doar pașii manuali de la client din `GHID-LIVRARE.md` (instalare de probă, Google Drive, Telegram) — necesită prezență fizică, în afara a ce se poate automatiza.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
-- Build + hash instaler final, după ce confirmi că merge tot testat local.
