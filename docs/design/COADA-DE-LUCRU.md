@@ -106,6 +106,19 @@ Personal a intrat în cod după ce s-a scris auditul, deci fără o listă gata 
 
 - **Font pe butoane:** `<button>/<input>/<select>/<textarea>` nu moștenesc `font-family` din browser implicit; `Button.module.css` nu-l seta explicit → butoane cu fontul de sistem (Segoe UI), nu Nunito/Baloo. Fix global în `tokens.css`. Commit `6203eb1`.
 - **Bara de selecție „sare”:** apare inline (conform `02-copii-lista.md`) și împinge tabelul instant. Adăugată animație de intrare 160ms (max-height+opacity) — rămâne inline (spec), doar tranziția e nouă. Commit `6203eb1`.
-- Server local rebuildat + repornit de 2 ori în timpul sesiunii — `webapp/dist` nu se reconstruiește automat la `npm start`, orice testare live cere `npm run build` înainte.
+- **Pagina „sare” la lățime când apare/dispare scroll-ul:** `scrollbar-gutter: stable` pe `html`, global — gutter-ul rezervat mereu. Commit în lucru (mixat cu tokens.css al Modulului 5, se comite la închiderea lui).
+- Server local rebuildat + repornit de mai multe ori în timpul sesiunii — `webapp/dist` nu se reconstruiește automat la `npm start`, orice testare live cere `npm run build` înainte.
+- **Cerut, neînceput încă:** scroll custom (`ScrollArea`) peste tot, inclusiv `DataTable` — task mare, pus pe coadă după Modulele 5/6/7 (risc de coliziune cu `DataTable.tsx`, atins de mai multe module acum).
+
+## Modulul 6 — Cheltuieli (`06-cheltuieli.md`) — DONE 2026-09-28
+
+Rulat concurent cu Modulul 5 (fișiere disjuncte `features/expenses/*` vs `features/payments/*`). Verificat pe disc, scop de teste `expenses/` (37/37 verde, evitat tree complet cât Modulul 5 încă scria fișiere noi). Commit `e9559b9`.
+
+- **E-1 (cea mai mare):** DONE — lună locală + `MonthStepper` în antet, independentă de `MonthPicker`-ul global; tabelul urmărea greșit toate lunile înainte de fix.
+- **E-2, E-4…E-9, E-11, E-12:** DONE — `DataTable bare`, scos input-uri de lună + segmented, dropdown „Nearhivate”, subsol sub tabel, etichetă cu contor, legendă pe grid, „Sumă”, Metodă text simplu, bloc „Adaugă rapid” la Pe zile.
+- **E-3, E-10 [decizie]:** aplicate — categorii mutate în Drawer din RowMenu; descriere pe 2 rânduri cu `notes`.
+- **Toate criteriile de acceptare:** confirmate. Integrarea `?nou=1` din Modulul 1 — verificată, funcțională.
+
+**Următorul:** Modulul 7 — Situația plăților (după ce se închide Modulul 5).
 
 **Următorul:** Modulul 5 — Achitări (`Achitari.dc.html`, `Tiparire.dc.html#16g`, spec-uri 05/15).
