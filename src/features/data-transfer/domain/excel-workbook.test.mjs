@@ -242,3 +242,52 @@ test('Datele medicale nu ajung în fila Startica_Date, iar reimportul le lasă g
   assert.equal(back.state.visits[0].healthNotes, '');
   assert.equal(back.state.children[0].healthNotes, undefined);
 });
+
+test('foaia Bazin e doar lizibilă și nu dublează taxele la reimportul complet', () => {
+  const charge = normalizeRecord('charges', {
+    id: 'CHG-bazin-ID-test-2026-09',
+    childId: 'ID-test',
+    month: '2026-09',
+    kind: 'bazin',
+    label: 'Bazin septembrie: 5 × 150 lei',
+    amount: 750,
+    currency: 'MDL',
+    date: '2026-09-30',
+  });
+  const state = {
+    children: [child()],
+    payments: [],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+    charges: [charge],
+  };
+  const wb = exportWorkbook(state, XLSX);
+  const bazinRows = XLSX.utils.sheet_to_json(wb.Sheets.Bazin);
+  assert.deepEqual(bazinRows, [
+    {
+      ID: charge.id,
+      ID_copil: 'ID-test',
+      Copil: 'Copil test',
+      Luna: '2026-09',
+      Descriere: charge.label,
+      Suma: 750,
+      Data: '2026-09-30',
+    },
+  ]);
+
+  // Reimportul complet (Startica_Format + Startica_Date) restaurează taxa o singură dată,
+  // din fila brută — nu din Bazin, care rămâne doar lizibilă.
+  const back = readWorkbook(
+    XLSX.read(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
+    XLSX,
+    findRecordIssues,
+  );
+  assert.deepEqual(back.errors, []);
+  assert.ok(back.state);
+  // O singură taxă, nu două — dovadă că Bazin (prezentă și ea în același workbook) nu a
+  // fost și ea citită ca sursă de charges; singura sursă e Startica_Date.
+  assert.equal((back.state.charges ?? []).length, 1);
+  assert.equal(back.state.charges?.[0].id, charge.id);
+});

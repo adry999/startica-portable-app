@@ -278,6 +278,22 @@ export function exportWorkbook(records, XLSX) {
       Arhivat: !!expense.archived,
     })),
   );
+  // Doar lizibilă — taxele suplimentare (azi doar Bazin) intră deja în fila brută Startica_Date
+  // prin bucla `for (const type of TYPES)` de mai jos; la reimport, această filă se ignoră
+  // complet (readWorkbook citește doar Copii/Achitari/Cheltuieli sau Startica_Date, niciodată
+  // un nume de filă necunoscut) — datele de bazin se restaurează doar din backup/sincronizare.
+  sheet(
+    'Bazin',
+    (records.charges ?? []).map(charge => ({
+      ID: charge.id,
+      ID_copil: charge.childId,
+      Copil: records.children.find(c => c.id === charge.childId)?.name || '',
+      Luna: charge.month,
+      Descriere: charge.label,
+      Suma: charge.amount,
+      Data: charge.date,
+    })),
+  );
   XLSX.utils.book_append_sheet(
     wb,
     XLSX.utils.aoa_to_sheet([
