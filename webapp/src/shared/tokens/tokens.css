@@ -156,6 +156,12 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Rezervă mereu locul pentru scrollbar-ul paginii — fără asta, pagina „sare” la lățime
+     de fiecare dată când conținutul trece pragul de la fără scroll la cu scroll. */
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: var(--cream);
