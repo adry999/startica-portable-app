@@ -8,6 +8,7 @@ const AUDIT_STAFF = 'personal: angajat';
 const AUDIT_ROLES = 'personal: funcții și departamente';
 const AUDIT_LEAVE = 'personal: concediu';
 const AUDIT_SETTINGS = 'personal: setări';
+const AUDIT_CANDIDATE = 'personal: candidat';
 const MAX_TIMESHEET_CHANGES = 500;
 const YEAR_OK = /^\d{4}$/;
 
@@ -144,6 +145,36 @@ export function createPersonalRoutes({
     return { leave };
   }
 
+  function handleGetCandidates() {
+    return { candidates: repository.candidates() };
+  }
+
+  /** @param {{ body: { mode?: string, candidate?: any } }} request */
+  function handleSaveCandidate({ body }) {
+    const mode = body?.mode;
+    if (mode !== 'create' && mode !== 'update') fail('Mod de salvare invalid.');
+    const input = body?.candidate;
+    const before = mode === 'update' ? repository.kinds.find('candidates', input?.id) : null;
+    const candidate = repository.saveCandidate(input, mode);
+    auditTrail.recordChange({
+      action: AUDIT_CANDIDATE,
+      recordType: null,
+      recordId: candidate.id,
+      before,
+      after: candidate,
+    });
+    return { candidate };
+  }
+
+  /** @param {{ body: { id?: string } }} request */
+  function handleDeleteCandidate({ body }) {
+    const id = body?.id;
+    if (typeof id !== 'string') fail('Candidat invalid.');
+    const before = repository.deleteCandidate(id);
+    auditTrail.recordChange({ action: AUDIT_CANDIDATE, recordType: null, recordId: id, before, after: null });
+    return { ok: true };
+  }
+
   /** @param {{ body: { annualLeaveDays?: unknown, deductOnlyUnexcused?: unknown } }} request */
   function handleSaveSettings({ body }) {
     const settings = repository.writeSettings(body || {});
@@ -166,6 +197,9 @@ export function createPersonalRoutes({
     { method: 'POST', path: '/api/personal/timesheet', handle: handlePostTimesheet },
     { method: 'GET', path: '/api/personal/leaves', handle: handleGetLeaves },
     { method: 'POST', path: '/api/personal/leaves', handle: handlePostLeaves },
+    { method: 'GET', path: '/api/personal/candidates', handle: handleGetCandidates },
+    { method: 'POST', path: '/api/personal/candidates', handle: handleSaveCandidate },
+    { method: 'POST', path: '/api/personal/candidates-delete', handle: handleDeleteCandidate },
     { method: 'POST', path: '/api/personal/settings', handle: handleSaveSettings },
     ...salariesRoutes,
   ];

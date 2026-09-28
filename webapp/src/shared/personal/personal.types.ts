@@ -98,6 +98,20 @@ export interface PersonalSettings {
   deductOnlyUnexcused: boolean;
 }
 
+/** 23l Candidați — listă simplă, comună ambelor filiale, fără legare de `Staff`. */
+export interface Candidate {
+  id: string;
+  name: string;
+  position: string;
+  age: number | null;
+  experience: string;
+  city: string;
+  phone: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TimesheetCell {
   date: string;
   kind: 'off' | 'none' | 'future' | '' | TimesheetCode;

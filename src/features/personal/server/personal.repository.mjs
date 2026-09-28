@@ -189,6 +189,33 @@ export function createPersonalRepository(common) {
     return `SP-${staffId}-${month}-${branchId}`;
   }
 
+  /** @returns {import('../personal.types.d.mts').Candidate[]} */
+  function candidates() {
+    return kinds.list('candidates');
+  }
+
+  /** @param {unknown} input @param {'create' | 'update'} mode @returns {import('../personal.types.d.mts').Candidate} */
+  function saveCandidate(input, mode) {
+    const now = new Date().toISOString();
+    const existing = mode === 'update' ? kinds.find('candidates', /** @type {any} */ (input)?.id) : null;
+    if (mode === 'update' && !existing) fail('Candidatul nu mai există.', 409);
+    const normalized = normalizePersonalRecord('candidates', {
+      ...input,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    });
+    kinds.save('candidates', normalized);
+    return normalized;
+  }
+
+  /** @param {string} id */
+  function deleteCandidate(id) {
+    const existing = kinds.find('candidates', id);
+    if (!existing) fail('Candidatul nu mai există.', 409);
+    kinds.remove('candidates', id);
+    return existing;
+  }
+
   /** @returns {PersonalSettings} */
   function readSettings() {
     const raw = common.readSetting(PERSONAL_SETTINGS_KEY);
@@ -240,6 +267,9 @@ export function createPersonalRepository(common) {
     advancesForMonth,
     advancesForYear,
     salaryPaymentId,
+    candidates,
+    saveCandidate,
+    deleteCandidate,
     readSettings,
     writeSettings,
   };

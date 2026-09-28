@@ -12,6 +12,7 @@ export const PERSONAL_KINDS = [
   'salaries',
   'advances',
   'salary_payments',
+  'candidates',
 ];
 
 const ID_PREFIXES = {
@@ -23,6 +24,7 @@ const ID_PREFIXES = {
   salaries: 'SAL-',
   advances: 'ADV-',
   salary_payments: 'SP-',
+  candidates: 'CAN-',
 };
 
 export const TIMESHEET_CODES = ['CO', 'CM', 'A', 'I', 'FP'];
@@ -99,6 +101,18 @@ const FIELDS = {
   salaries: new Set(['id', 'staffId', 'mode', 'amount', 'validFrom']),
   advances: new Set(['id', 'staffId', 'date', 'amount', 'method', 'month', 'deductedAt', 'deductedBy', 'expenseId']),
   salary_payments: new Set(['id', 'staffId', 'month', 'branchId', 'mode', 'amount', 'advances', 'expenseId', 'paidAt']),
+  candidates: new Set([
+    'id',
+    'name',
+    'position',
+    'age',
+    'experience',
+    'city',
+    'phone',
+    'notes',
+    'createdAt',
+    'updatedAt',
+  ]),
 };
 
 /** @param {string} kind */
@@ -189,6 +203,35 @@ export function normalizePersonalRecord(kind, input) {
     record.deductedBy ??= null;
     if (record.deductedBy !== null) text(record.deductedBy, 'Plata care a scăzut avansul');
     text(record.expenseId, 'Cheltuiala avansului', true);
+    return record;
+  }
+
+  if (kind === 'candidates') {
+    text(record.name, 'Nume, prenume', true);
+    record.name = record.name.trim();
+    record.position ??= '';
+    text(record.position, 'Poziție');
+    if (record.age !== undefined && record.age !== null && record.age !== '') {
+      requireThat(Number.isInteger(record.age) && record.age >= 0 && record.age <= 120, 'Vârsta este invalidă.');
+    } else {
+      record.age = null;
+    }
+    record.experience ??= '';
+    text(record.experience, 'Experiență');
+    record.city ??= '';
+    text(record.city, 'Unde locuiește');
+    record.phone ??= '';
+    text(record.phone, 'Telefon');
+    record.notes ??= '';
+    text(record.notes, 'Notițe');
+    requireThat(
+      typeof record.createdAt === 'string' && !Number.isNaN(Date.parse(record.createdAt)),
+      'Data creării este invalidă.',
+    );
+    requireThat(
+      typeof record.updatedAt === 'string' && !Number.isNaN(Date.parse(record.updatedAt)),
+      'Data actualizării este invalidă.',
+    );
     return record;
   }
 
