@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, DataTable, FilterPills, LoadingState, SearchInput, type PillTone } from '@shared/ui';
+import { Button, DataTable, FilterPills, ListToolbar, LoadingState, type PillTone } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -82,12 +82,11 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
 
   return (
     <div className={styles.root}>
-      <div className={styles.toolbar}>
-        <SearchInput value={search} onChange={setSearch} ariaLabel="Caută angajat" placeholder="Caută angajat" />
+      <ListToolbar search={{ value: search, onChange: setSearch, ariaLabel: 'Caută angajat', placeholder: 'Caută angajat' }}>
         <Button variant="outline" onClick={() => setRolesOpen(true)}>
           Funcții
         </Button>
-      </div>
+      </ListToolbar>
 
       <FilterPills
         groups={[

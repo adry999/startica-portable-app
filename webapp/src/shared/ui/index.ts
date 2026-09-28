@@ -13,6 +13,7 @@ export { MonthPicker, type MonthPickerProps } from './MonthPicker';
 export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from './SearchSelect';
 export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone } from './FilterPills';
 export { PersonCell, type PersonCellProps } from './PersonCell';
+export { ListToolbar, type ListToolbarProps, type ListToolbarSearch } from './ListToolbar';
 export { groupTone } from './group-tone';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
 export { DayStepper, type DayStepperProps } from './DayStepper';

@@ -1,4 +1,4 @@
-import { FilterPills, SearchInput, SegmentedControl, groupTone } from '@shared/ui';
+import { FilterPills, ListToolbar, SegmentedControl, groupTone } from '@shared/ui';
 import type { Group } from '@contracts/record-types.mjs';
 import styles from './ChildrenPage.module.css';
 
@@ -33,13 +33,15 @@ export function ChildrenToolbar({
 }: ChildrenToolbarProps) {
   return (
     <>
-      <div className={styles.toolbar}>
-        <SearchInput
-          placeholder="Caută după nume, părinte, telefon sau nr. contract"
-          value={query}
-          onChange={onQueryChange}
-          ariaLabel="Caută copil"
-        />
+      <ListToolbar
+        className={styles.toolbar}
+        search={{
+          value: query,
+          onChange: onQueryChange,
+          placeholder: 'Caută după nume, părinte, telefon sau nr. contract',
+          ariaLabel: 'Caută copil',
+        }}
+      >
         <SegmentedControl
           ariaLabel="Filtru arhivare"
           value={archiveFilter}
@@ -50,7 +52,7 @@ export function ChildrenToolbar({
             { value: 'all', label: 'Toți' },
           ]}
         />
-      </div>
+      </ListToolbar>
 
       <FilterPills
         groups={[
