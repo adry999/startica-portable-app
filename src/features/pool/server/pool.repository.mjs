@@ -20,9 +20,12 @@ const toSession = row => ({ bookingId: row.booking_id, date: row.date, status: r
 /**
  * Depozitul dedicat al bazinului (decizia 11, 2026-09-27-personal-bazin.md) — tabele proprii, nu
  * `records(kind,id,payload)`: sesiunile sunt copii × săptămâni și n-au ce căuta în `/api/state`.
+ * `onChange` (precedentul attendance) alimentează outbox-ul de sincronizare la fiecare scriere —
+ * construit o singură dată, ca la `createAttendanceRepository`, nu pasat per apel.
  * @param {import('node:sqlite').DatabaseSync} database
+ * @param {{ onChange?: (change: { kind: 'pool_bookings' | 'pool_sessions' | 'pool_closings', id: string, payload: unknown }) => void }} [options]
  */
-export function createPoolRepository(database) {
+export function createPoolRepository(database, { onChange } = {}) {
   const selectBookingsStatement = database.prepare(
     'SELECT id,child_id,coach_id,weekday,time,start_date,end_date,archived_at,updated_at FROM pool_bookings ORDER BY weekday,time',
   );
@@ -64,18 +67,29 @@ export function createPoolRepository(database) {
 
   /** @param {PoolBooking} booking */
   function saveBooking(booking) {
-    insertBookingStatement.run(
-      booking.id,
-      booking.childId,
-      booking.coachId,
-      booking.weekday,
-      booking.time,
-      booking.startDate,
-      booking.endDate,
-      booking.archivedAt,
-      booking.updatedAt,
-    );
-    return /** @type {PoolBooking} */ (findBooking(booking.id));
+    database.exec('BEGIN IMMEDIATE');
+    try {
+      insertBookingStatement.run(
+        booking.id,
+        booking.childId,
+        booking.coachId,
+        booking.weekday,
+        booking.time,
+        booking.startDate,
+        booking.endDate,
+        booking.archivedAt,
+        booking.updatedAt,
+      );
+      const saved = /** @type {PoolBooking} */ (findBooking(booking.id));
+      // onChange în aceeași tranzacție ca scrierea (precedentul attendance) — altfel un
+      // onChange care aruncă ar lăsa programarea scrisă fără intrarea ei în coada de sincronizare.
+      onChange?.({ kind: 'pool_bookings', id: saved.id, payload: saved });
+      database.exec('COMMIT');
+      return saved;
+    } catch (error) {
+      database.exec('ROLLBACK');
+      throw error;
+    }
   }
 
   /** @param {string} month YYYY-MM @returns {PoolSession[]} */
@@ -90,9 +104,8 @@ export function createPoolRepository(database) {
    * O singură tranzacție pentru tot lotul (precedentul attendance) — `status: null` șterge rândul.
    * @param {{ bookingId: string, date: string, status: import('../pool.types.d.mts').PoolSessionStatus | null }[]} changes
    * @param {() => string} now
-   * @param {(change: { kind: 'pool_sessions', id: string, payload: PoolSession | null }) => void} [onChange]
    */
-  function applySessionChanges(changes, now, onChange) {
+  function applySessionChanges(changes, now) {
     database.exec('BEGIN IMMEDIATE');
     try {
       const saved = [];
@@ -125,9 +138,15 @@ export function createPoolRepository(database) {
     return row ? { month: /** @type {any} */ (row).month, closedAt: /** @type {any} */ (row).closed_at } : null;
   }
 
-  /** @param {string} month @param {string} closedAt */
+  /**
+   * Fără propria tranzacție — apelată mereu din `pool-closing.service.mjs`, deja în interiorul
+   * `runRevisionTransaction` (un `BEGIN IMMEDIATE` imbricat ar arunca „cannot start a transaction
+   * within a transaction”); onChange rămâne totuși în transacția exterioară, deci atomic cu restul.
+   * @param {string} month @param {string} closedAt
+   */
   function saveClosing(month, closedAt) {
     upsertClosingStatement.run(month, closedAt);
+    onChange?.({ kind: 'pool_closings', id: month, payload: { month, closedAt } });
   }
 
   return { listBookings, findBooking, saveBooking, sessionsForMonth, applySessionChanges, closingFor, saveClosing };

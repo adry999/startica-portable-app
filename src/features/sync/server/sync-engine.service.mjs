@@ -38,6 +38,7 @@ function toWireChange(row) {
  *   readSetting: (key: string) => string,
  *   writeSetting: (key: string, value: string) => void,
  *   attendanceRepository: ReturnType<typeof import('./change-applier.mjs').createSyncAttendanceWriter>,
+ *   poolRepository?: ReturnType<typeof import('./change-applier.mjs').createSyncPoolWriter>,
  *   client: ReturnType<typeof import('./sync-http-client.mjs').createSyncHttpClient>,
  *   deviceId: string,
  *   deviceName?: string,
@@ -72,6 +73,7 @@ export function createSyncEngine({
   readSetting,
   writeSetting,
   attendanceRepository,
+  poolRepository,
   client,
   deviceId,
   deviceName = '',
@@ -85,7 +87,13 @@ export function createSyncEngine({
   setIntervalFn = setInterval,
   clearIntervalFn = clearInterval,
 }) {
-  const applier = createChangeApplier({ rawRecordRepository, attendanceRepository, syncState, auditTrail });
+  const applier = createChangeApplier({
+    rawRecordRepository,
+    attendanceRepository,
+    poolRepository,
+    syncState,
+    auditTrail,
+  });
 
   /** @type {'online' | 'offline' | 'revoked'} */
   let connection = 'online';
@@ -254,6 +262,7 @@ export function createSyncEngine({
           const applied = applySnapshotEntry({
             rawRecordRepository,
             attendanceRepository,
+            poolRepository,
             kind,
             recordId: entry.id,
             payload: entry.payload,

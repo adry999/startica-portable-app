@@ -8,7 +8,12 @@ export {
   writeSyncDeviceFile,
 } from './server/sync-device.repository.mjs';
 export { createSyncHttpClient, SyncNetworkError, SyncRevokedError, SyncHttpError } from './server/sync-http-client.mjs';
-export { createChangeApplier, createSyncAttendanceWriter, SyncApplyError } from './server/change-applier.mjs';
+export {
+  createChangeApplier,
+  createSyncAttendanceWriter,
+  createSyncPoolWriter,
+  SyncApplyError,
+} from './server/change-applier.mjs';
 export { createSyncEngine } from './server/sync-engine.service.mjs';
 export { createSyncRoutes } from './server/sync.routes.mjs';
 export { createSyncConflictsRoutes } from './server/sync-conflicts.routes.mjs';

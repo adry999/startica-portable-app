@@ -26,7 +26,6 @@ const SESSION_STATUSES = ['present', 'absent', 'excused', 'cancelled'];
  *   writeSetting: (key: string, value: string) => void,
  *   listCoaches: () => { id: string, name: string }[],
  *   payCoach: (input: { staffId: string, month: string, gross: number, date: string, method: string }) => { paid: boolean },
- *   onChange?: (change: { kind: 'pool_sessions', id: string, payload: unknown }) => void,
  *   today?: () => string,
  * }} dependencies
  */
@@ -39,7 +38,6 @@ export function createPoolRoutes({
   writeSetting,
   listCoaches,
   payCoach,
-  onChange,
   today = localToday,
 }) {
   const closingService = createPoolClosingService({
@@ -185,7 +183,7 @@ export function createPoolRoutes({
       if (change.date > todayStr && change.status !== null && change.status !== 'cancelled')
         fail('Ziua viitoare acceptă doar anularea.');
     }
-    const { saved, removed } = poolRepository.applySessionChanges(changes, () => new Date().toISOString(), onChange);
+    const { saved, removed } = poolRepository.applySessionChanges(changes, () => new Date().toISOString());
     return { ok: true, saved, removed };
   }
 

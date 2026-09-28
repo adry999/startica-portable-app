@@ -41,6 +41,7 @@ import {
   createOutboxRecordingRepository,
   createChangeSink,
   createSyncAttendanceWriter,
+  createSyncPoolWriter,
   createSyncHttpClient,
   createSyncEngine,
   createSyncRoutes,
@@ -162,6 +163,7 @@ export function createBranchContext({
   // (constrângere obligatorie a planului). Reconectarea (Faza 5) reconstruiește
   // contextul filialei, ca un motor nou să se construiască cu noul sync.json.
   const syncAttendanceWriter = createSyncAttendanceWriter(db);
+  const syncPoolWriter = createSyncPoolWriter(db);
   /** @type {ReturnType<typeof createSyncEngine> | null} */
   let syncEngine = null;
   const syncRoutes = createSyncRoutes({ syncDevice, getEngine: () => syncEngine });
@@ -178,6 +180,7 @@ export function createBranchContext({
       readSetting,
       writeSetting: settings.setSetting,
       attendanceRepository: syncAttendanceWriter,
+      poolRepository: syncPoolWriter,
       backups,
       client: createSyncHttpClient({
         serverUrl: syncDeviceFile.serverUrl,
@@ -251,7 +254,9 @@ export function createBranchContext({
         auditTrail: auditLogRepository,
       })
     : null;
-  const poolRepository = createPoolRepository(db);
+  const poolRepository = createPoolRepository(db, {
+    onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
+  });
   // Portul citit de Personal (decizia 6): cardul de salariu și „Închide luna” calculează cu
   // aceeași funcție, pe aceleași date — niciodată două formule pentru aceeași sumă.
   const readCoachPayForMonth = (staffId, month) => {
@@ -353,7 +358,6 @@ export function createBranchContext({
           writeSetting: settings.setSetting,
           listCoaches,
           payCoach: coachPaymentWriter.payCoach,
-          onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
         })
       : []),
     ...createNotificationSettingsRoutes({
