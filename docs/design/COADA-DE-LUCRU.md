@@ -92,4 +92,20 @@ Rulat concurent cu Modulul 2 (fișiere disjuncte `features/groups/*` vs `feature
 - **De revizuit — decizie de arhitectură a agentului:** `groupBoardTone.ts` e un sistem de 8 tonuri LOCAL modulului groups, nu extinde `@shared/ui/group-tone.ts` (4-5 tonuri, folosit în children/attendance/payments/status/fee-setup). Funcționează, dar cele două sisteme de culori coexistă — de unificat quando se atinge și restul ecranelor cu >4 grupe.
 - **Neatins (best-effort, cum s-a indicat):** ordinea grupelor nu s-a propagat în `FilterPills` din Copii/Achitări/Situația plăților — rămân pe ordinea veche (alfabetică/id) acolo.
 
-**Următorul:** Modulul 4 — Personal (`Personal.dc.html`, `24-personal.md`) — verifică și legătura cu `GroupTeamCard` (echipa pe grupă), neatinsă de Modulul 3.
+## Modulul 4 — Personal (`Personal.dc.html`, `24-personal.md`) — DONE 2026-09-28
+
+Personal a intrat în cod după ce s-a scris auditul, deci fără o listă gata de puncte — agentul a comparat 11 ecrane (23a…23k) direct cu spec-ul. Codul era deja foarte solid; doar 2 lipsuri reale. Verificat pe disc + tsc/vitest (137/744 verde) + prettier, commit `ffd5463`.
+
+- **23b Pontaj:** FĂCUT — grupare pe departamente (lipsea, era doar filtrabil).
+- **23k Pontaj tipărit:** FĂCUT — toggle „Cum arăt zilele" (Ore „8” / Prezență „P”), lipsea complet, codul tipărea mereu „8”.
+- **23a, 23j, 23c/d+PIN, 23f, 23g, 23h, 23i:** OK-DEJA, verificate ecran cu ecran, neschimbate.
+- **Toate cele 5 criterii de acceptare:** confirmate (filială activă, concediu→pontaj+zile rămase, avans scăzut o singură dată, A4 fără tăiere, PIN pe salarii).
+- **De clarificat (neblocant):** `annualLeaveDays`/`deductOnlyUnexcused` au valorile implicite corecte dar niciun ecran de editare (doar rută API) — spec zice „de confirmat”, nu cere explicit un ecran; lăsat așa.
+
+## Fixuri găsite la testare locală (nu erau în nicio listă) — DONE 2026-09-28
+
+- **Font pe butoane:** `<button>/<input>/<select>/<textarea>` nu moștenesc `font-family` din browser implicit; `Button.module.css` nu-l seta explicit → butoane cu fontul de sistem (Segoe UI), nu Nunito/Baloo. Fix global în `tokens.css`. Commit `6203eb1`.
+- **Bara de selecție „sare”:** apare inline (conform `02-copii-lista.md`) și împinge tabelul instant. Adăugată animație de intrare 160ms (max-height+opacity) — rămâne inline (spec), doar tranziția e nouă. Commit `6203eb1`.
+- Server local rebuildat + repornit de 2 ori în timpul sesiunii — `webapp/dist` nu se reconstruiește automat la `npm start`, orice testare live cere `npm run build` înainte.
+
+**Următorul:** Modulul 5 — Achitări (`Achitari.dc.html`, `Tiparire.dc.html#16g`, spec-uri 05/15).
