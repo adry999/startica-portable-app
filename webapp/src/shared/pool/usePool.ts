@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { requestJson, useAppSession } from '@shared/api/session';
 import type { Child } from '@contracts/record-types.mjs';
-import type { PoolBooking, PoolSettings, PoolSessionStatus, CoachPay } from '#features/pool/pool.types.d.mts';
+import type {
+  PoolBooking,
+  PoolSession,
+  PoolSettings,
+  PoolSessionStatus,
+  CoachPay,
+} from '#features/pool/pool.types.d.mts';
 
 export interface WeekEntry {
   booking: PoolBooking;
@@ -72,6 +78,9 @@ export interface ChildMonthRow {
   unmarked: number;
   amount: number;
   charged: boolean;
+  /** Programările și ședințele copilului pe luna cerută — pentru bonul de 58 mm (Task 11). */
+  bookings: PoolBooking[];
+  sessions: PoolSession[];
 }
 
 export interface CoachMonthRow {

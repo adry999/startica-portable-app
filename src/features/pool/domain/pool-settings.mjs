@@ -16,6 +16,7 @@ export const POOL_SETTINGS_SEED = {
   chargeUnexcusedAbsence: true,
   coachPayMode: 'per_child',
   coachRate: 60,
+  itemsNote: '',
 };
 
 /** @param {unknown} input @returns {boolean} */
@@ -41,7 +42,9 @@ export function validatePoolSettings(input) {
     COACH_PAY_MODES.includes(settings.coachPayMode) &&
     Number.isFinite(settings.coachRate) &&
     settings.coachRate > 0 &&
-    settings.coachRate <= 100000
+    settings.coachRate <= 100000 &&
+    // Opțional — setări salvate înainte de bonul de 58mm (Task 11) nu-l au încă.
+    (settings.itemsNote === undefined || (typeof settings.itemsNote === 'string' && settings.itemsNote.length <= 300))
   );
 }
 
@@ -57,6 +60,7 @@ export function normalizePoolSettings(settings) {
     chargeUnexcusedAbsence: !!settings.chargeUnexcusedAbsence,
     coachPayMode: settings.coachPayMode,
     coachRate: settings.coachRate,
+    itemsNote: typeof settings.itemsNote === 'string' ? settings.itemsNote : '',
   };
 }
 

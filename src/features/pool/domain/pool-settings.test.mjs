@@ -11,6 +11,15 @@ test('validatePoolSettings acceptă semințele și refuză valori în afara inte
   assert.equal(validatePoolSettings({ ...POOL_SETTINGS_SEED, seatsPerSlot: null }), true);
 });
 
+test('itemsNote e opțional (setări salvate înainte de bonul de 58mm) și limitat la 300 de caractere', () => {
+  const { itemsNote: _itemsNote, ...withoutItemsNote } = POOL_SETTINGS_SEED;
+  assert.equal(validatePoolSettings(withoutItemsNote), true);
+  assert.equal(validatePoolSettings({ ...POOL_SETTINGS_SEED, itemsNote: 'a'.repeat(301) }), false);
+  assert.equal(validatePoolSettings({ ...POOL_SETTINGS_SEED, itemsNote: 'a'.repeat(300) }), true);
+  const parsed = parsePoolSettings(JSON.stringify(withoutItemsNote));
+  assert.equal(parsed?.itemsNote, '');
+});
+
 test('parsePoolSettings întoarce null pentru JSON lipsă sau invalid', () => {
   assert.equal(parsePoolSettings(''), null);
   assert.equal(parsePoolSettings('nu e json'), null);

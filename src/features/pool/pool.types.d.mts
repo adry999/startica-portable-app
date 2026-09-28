@@ -14,6 +14,8 @@ export interface PoolSettings {
   chargeUnexcusedAbsence: boolean;
   coachPayMode: CoachPayMode;
   coachRate: number;
+  /** Ce trebuie să aducă copilul, tipărit pe bonul de 58 mm (Task 11), ex. „Costum de baie, cască, prosop, papuci.". */
+  itemsNote: string;
 }
 
 export interface PoolBooking {

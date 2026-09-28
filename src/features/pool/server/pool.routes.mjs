@@ -199,18 +199,18 @@ export function createPoolRoutes({
     const { children } = recordRepository.readSnapshot();
     const childIds = [...new Set(bookings.map(booking => booking.childId))];
     const childRows = childIds.map(childId => {
-      const row = childMonth({
-        bookings: bookings.filter(booking => booking.childId === childId),
-        sessions,
-        month,
-        settings,
-        todayStr,
-      });
+      const childBookings = bookings.filter(booking => booking.childId === childId);
+      const bookingIds = new Set(childBookings.map(booking => booking.id));
+      const row = childMonth({ bookings: childBookings, sessions, month, settings, todayStr });
       return {
         childId,
         child: children.find(child => child.id === childId) ?? null,
         ...row,
         charged: !!recordRepository.find('charges', `CHG-bazin-${childId}-${month}`),
+        // Programările și ședințele copilului — folosite de bonul de 58mm (Task 11), ca
+        // rândul agregat de mai sus să nu ceară un al doilea apel de rețea pentru detaliu.
+        bookings: childBookings,
+        sessions: sessions.filter(session => bookingIds.has(session.bookingId)),
       };
     });
     const coachRows = listCoaches().map(coach => ({

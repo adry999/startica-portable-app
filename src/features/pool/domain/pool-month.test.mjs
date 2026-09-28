@@ -13,6 +13,7 @@ const settings = {
   chargeUnexcusedAbsence: true,
   coachPayMode: 'per_child',
   coachRate: 60,
+  itemsNote: '',
 };
 
 // Marțile din septembrie 2026: 01, 08, 15, 22, 29 (5 ședințe).
