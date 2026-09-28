@@ -98,9 +98,7 @@ export function DataTable<Row>({
 
   const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
-  const pageRows = groupBy
-    ? sortedRows
-    : sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const pageRows = groupBy ? sortedRows : sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
 
   function toggleSort(column: DataTableColumn<Row>) {
     if (!column.sortValue) return;
@@ -162,12 +160,7 @@ export function DataTable<Row>({
       >
         {selectable && (
           <td className={styles.checkboxCell} onClick={event => event.stopPropagation()}>
-            <input
-              type="checkbox"
-              aria-label="Selectează rândul"
-              checked={selected}
-              onChange={() => toggleRow(key)}
-            />
+            <input type="checkbox" aria-label="Selectează rândul" checked={selected} onChange={() => toggleRow(key)} />
           </td>
         )}
         {columns.map(column => (

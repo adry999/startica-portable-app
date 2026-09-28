@@ -1,6 +1,6 @@
 import { useAppSession } from '@shared/api/session';
 import { AttendanceDot, useAttendance } from '@shared/attendance';
-import { Card } from '@shared/ui';
+import { ProfileSection } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { formatDate, formatMonthName } from '#shared/format/date-format.mjs';
 import { attendanceKey, summarizeMonth } from '#features/attendance/index.web.mjs';
@@ -33,8 +33,7 @@ export function ChildAttendanceSection({ childId, month }: ChildAttendanceSectio
     }));
 
   return (
-    <Card className={styles.profileSection}>
-      <p className={styles.sectionTitle}>Prezența</p>
+    <ProfileSection title="Prezența">
       <p className={styles.sectionMeta}>
         {formatMonthName(month)} · {row?.presentDays ?? 0} din {row?.workingDays ?? 0} zile
       </p>
@@ -54,6 +53,6 @@ export function ChildAttendanceSection({ childId, month }: ChildAttendanceSectio
           ))}
         </ul>
       )}
-    </Card>
+    </ProfileSection>
   );
 }

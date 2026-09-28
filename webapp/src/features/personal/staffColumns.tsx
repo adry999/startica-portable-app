@@ -31,7 +31,12 @@ function todayBadgeLabel(code: TimesheetRow['code'] | '' | undefined): string {
   return 'La lucru';
 }
 
-export function buildStaffColumns({ groups, branchIds, roleName, todayCodes }: StaffColumnsOptions): DataTableColumn<Staff>[] {
+export function buildStaffColumns({
+  groups,
+  branchIds,
+  roleName,
+  todayCodes,
+}: StaffColumnsOptions): DataTableColumn<Staff>[] {
   return [
     {
       key: 'name',

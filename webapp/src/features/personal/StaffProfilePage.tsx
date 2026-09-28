@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Badge, Button, Card, ConfirmDeleteDialog, LoadingState, useToast, useTopbarTitle } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  ConfirmDeleteDialog,
+  LoadingState,
+  ProfileLayout,
+  ProfileNotFound,
+  ProfileSection,
+  StatCard,
+  useToast,
+  useTopbarTitle,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { bothBranchesLabel, birthdayTag } from '@shared/personal/staff-labels';
-import { initials } from '@shared/format/initials';
 import { summarizeTimesheetMonth } from '@shared/personal/timesheet-rules';
 import { leaveDaysRemaining } from '@shared/personal/leave-days';
 import { useTimesheet } from './useTimesheet';
@@ -46,14 +56,7 @@ export function StaffProfilePage() {
 
   const staff = id ? personal.staffById.get(id) : undefined;
   if (!staff) {
-    return (
-      <>
-        <button type="button" className={styles.backLink} onClick={() => navigate('/personal')}>
-          ← Personal
-        </button>
-        <p className={styles.notice}>Fișa nu a putut fi găsită.</p>
-      </>
-    );
+    return <ProfileNotFound back={{ label: 'Personal', onClick: () => navigate('/personal') }} />;
   }
 
   const staffId = staff.id;
@@ -91,122 +94,112 @@ export function StaffProfilePage() {
 
   return (
     <>
-      <p className={styles.breadcrumb}>
-        <button type="button" onClick={() => navigate('/personal')}>
-          Personal
-        </button>{' '}
-        / {staff.name}
-      </p>
+      <ProfileLayout
+        back={{ label: 'Personal', onClick: () => navigate('/personal') }}
+        header={{
+          name: staff.name,
+          tone: 'orange',
+          meta: personal.roleName(staff.roleId),
+          badges: [
+            { label: staff.archivedAt ? 'Nu mai lucrează' : 'Activ', tone: 'mint' },
+            ...(branchTag || birthday
+              ? [
+                  {
+                    label: [branchTag, birthday && `ziua de naștere ${birthday}`].filter(Boolean).join(' · '),
+                    tone: 'orange' as const,
+                  },
+                ]
+              : []),
+          ],
+          actions: (
+            <Button variant="white" onClick={() => setEditOpen(true)}>
+              Editează fișa
+            </Button>
+          ),
+        }}
+        left={
+          <>
+            <ProfileSection title="Date personale">
+              <p>Telefon: {staff.phone || '—'}</p>
+              <p>IDNP: {staff.idnp || '—'}</p>
+              <p>Adresă: {staff.address || '—'}</p>
+              <p>Angajat din: {formatDate(staff.since)}</p>
+            </ProfileSection>
 
-      <Card tone="orange" decorative className={styles.profileHeader}>
-        <span className={styles.profileAvatar}>{initials(staff.name)}</span>
-        <div className={styles.profileHeadInfo}>
-          <h2 className={styles.profileName}>{staff.name}</h2>
-          <p className={styles.profileMeta}>
-            {personal.roleName(staff.roleId)}
-            <span className={styles.profileBadgeMint}>{staff.archivedAt ? 'Nu mai lucrează' : 'Activ'}</span>
-            {(branchTag || birthday) && (
-              <span className={styles.profileBadgeOrange}>
-                {[branchTag, birthday && `ziua de naștere ${birthday}`].filter(Boolean).join(' · ')}
-              </span>
-            )}
-          </p>
-        </div>
-        <div className={styles.profileActions}>
-          <Button variant="white" onClick={() => setEditOpen(true)}>
-            Editează fișa
-          </Button>
-        </div>
-      </Card>
-
-      <div className={styles.profileGrid}>
-        <div className={styles.profileLeft}>
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Date personale</p>
-            <p>Telefon: {staff.phone || '—'}</p>
-            <p>IDNP: {staff.idnp || '—'}</p>
-            <p>Adresă: {staff.address || '—'}</p>
-            <p>Angajat din: {formatDate(staff.since)}</p>
-          </Card>
-
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Grupe</p>
-            {staffGroups.length === 0 && <p className={styles.notice}>Fără grupă asignată.</p>}
-            {staffGroups.map(({ group, entry }) => (
-              <p key={group.id}>
-                {group.name} ·{' '}
-                {entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor'}
-              </p>
-            ))}
-          </Card>
-
-          <Card tone="yellow" className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Note</p>
-            {staff.notes.length === 0 && <p>Fără note.</p>}
-            {staff.notes.map(note => (
-              <p key={note.at}>
-                {formatDate(note.at)} — {note.text}
-              </p>
-            ))}
-          </Card>
-
-          <Button variant="outline" onClick={() => setArchiveConfirmOpen(true)}>
-            Nu mai lucrează aici
-          </Button>
-        </div>
-
-        <div className={styles.profileRight}>
-          <div className={styles.miniCards}>
-            <Card tone="mint" className={styles.miniCard}>
-              <span>Zile lucrate · boală</span>
-              <strong>
-                {timesheetSummary.worked} · {timesheetSummary.cm}
-              </strong>
-            </Card>
-            <Card tone="yellow" className={styles.miniCard}>
-              <span>Concediu rămas</span>
-              <strong>
-                {remaining.remaining} din {personal.settings.annualLeaveDays}
-              </strong>
-              {remaining.planned > 0 && <small>{remaining.planned} planificate</small>}
-            </Card>
-            <Card className={styles.miniCard}>
-              <span>Salariu</span>
-              <strong>•••••</strong>
-              <button type="button" className={styles.salaryLink} onClick={() => navigate('/personal?tab=salarii')}>
-                Vezi cu PIN →
-              </button>
-            </Card>
-          </div>
-
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Pontajul lunii</p>
-            <div className={styles.dotsRow}>
-              {timesheetSummary.cells.map(cell => (
-                <span key={cell.date} className={styles.dot} title={cell.date} data-kind={cell.kind || 'worked'}>
-                  {cell.kind && cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future'
-                    ? (TIMESHEET_CELL_LABEL[cell.kind] ?? '')
-                    : ''}
-                </span>
+            <ProfileSection title="Grupe">
+              {staffGroups.length === 0 && <p className={styles.notice}>Fără grupă asignată.</p>}
+              {staffGroups.map(({ group, entry }) => (
+                <p key={group.id}>
+                  {group.name} ·{' '}
+                  {entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor'}
+                </p>
               ))}
-            </div>
-          </Card>
+            </ProfileSection>
 
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Concediile anului</p>
-            {yearLeaves.length === 0 && <p className={styles.notice}>Fără concedii în {year}.</p>}
-            {yearLeaves.map(leave => (
-              <p key={leave.id}>
-                <Badge tone={leave.type === 'CO' ? 'yellow' : leave.type === 'CM' ? 'pink' : 'neutral'}>
-                  {leave.type}
-                </Badge>{' '}
-                {formatDate(leave.from)} – {formatDate(leave.to)}
-                {leave.planned && ' · planificat'}
-              </p>
-            ))}
-          </Card>
-        </div>
-      </div>
+            <ProfileSection title="Note" tone="yellow">
+              {staff.notes.length === 0 && <p>Fără note.</p>}
+              {staff.notes.map(note => (
+                <p key={note.at}>
+                  {formatDate(note.at)} — {note.text}
+                </p>
+              ))}
+            </ProfileSection>
+
+            <Button variant="outline" onClick={() => setArchiveConfirmOpen(true)}>
+              Nu mai lucrează aici
+            </Button>
+          </>
+        }
+        stats={[
+          <StatCard
+            key="worked"
+            label="Zile lucrate · boală"
+            tone="mint"
+            value={`${timesheetSummary.worked} · ${timesheetSummary.cm}`}
+          />,
+          <StatCard
+            key="leave"
+            label="Concediu rămas"
+            tone="yellow"
+            value={`${remaining.remaining} din ${personal.settings.annualLeaveDays}`}
+            sub={remaining.planned > 0 ? `${remaining.planned} planificate` : undefined}
+          />,
+          <StatCard
+            key="salary"
+            label="Salariu"
+            value="•••••"
+            link={{ label: 'Vezi cu PIN →', onClick: () => navigate('/personal?tab=salarii') }}
+          />,
+        ]}
+        right={
+          <>
+            <ProfileSection title="Pontajul lunii">
+              <div className={styles.dotsRow}>
+                {timesheetSummary.cells.map(cell => (
+                  <span key={cell.date} className={styles.dot} title={cell.date} data-kind={cell.kind || 'worked'}>
+                    {cell.kind && cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future'
+                      ? (TIMESHEET_CELL_LABEL[cell.kind] ?? '')
+                      : ''}
+                  </span>
+                ))}
+              </div>
+            </ProfileSection>
+
+            <ProfileSection title="Concediile anului">
+              {yearLeaves.length === 0 && <p className={styles.notice}>Fără concedii în {year}.</p>}
+              {yearLeaves.map(leave => (
+                <p key={leave.id}>
+                  <Badge tone={leave.type === 'CO' ? 'yellow' : leave.type === 'CM' ? 'pink' : 'neutral'}>
+                    {leave.type}
+                  </Badge>{' '}
+                  {formatDate(leave.from)} – {formatDate(leave.to)}
+                  {leave.planned && ' · planificat'}
+                </p>
+              ))}
+            </ProfileSection>
+          </>
+        }
+      />
 
       {/* C2: fără key, drawer-ul rămâne montat cu target=null de la prima randare —
           defaultValues(null) nu se mai recalculează la „Editează fișa”, iar formularul

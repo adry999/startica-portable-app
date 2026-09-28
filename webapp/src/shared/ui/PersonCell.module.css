@@ -44,6 +44,23 @@
   font-family: var(--font-heading);
 }
 
+.cellLg {
+  gap: var(--space-20);
+}
+
+.cellLg .name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.cellLg .sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 14px;
+}
+
 .orange {
   background: var(--orange-soft);
   color: var(--orange-ink);

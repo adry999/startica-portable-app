@@ -52,7 +52,10 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
   const departmentTone = useMemo(
     () =>
       new Map(
-        departmentsSorted.map((department, index) => [department.id, DEPARTMENT_TONES[index % DEPARTMENT_TONES.length]]),
+        departmentsSorted.map((department, index) => [
+          department.id,
+          DEPARTMENT_TONES[index % DEPARTMENT_TONES.length],
+        ]),
       ),
     [departmentsSorted],
   );
@@ -82,7 +85,9 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
 
   return (
     <div className={styles.root}>
-      <ListToolbar search={{ value: search, onChange: setSearch, ariaLabel: 'Caută angajat', placeholder: 'Caută angajat' }}>
+      <ListToolbar
+        search={{ value: search, onChange: setSearch, ariaLabel: 'Caută angajat', placeholder: 'Caută angajat' }}
+      >
         <Button variant="outline" onClick={() => setRolesOpen(true)}>
           Funcții
         </Button>

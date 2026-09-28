@@ -1,0 +1,150 @@
+.breadcrumb {
+  margin: 0 0 var(--space-16);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.breadcrumb button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--orange-ink);
+  font-weight: 700;
+}
+
+.backLink {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+  margin-bottom: var(--space-12);
+}
+
+.notice {
+  color: var(--subtle);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-20);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-16);
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--white);
+}
+
+.badge_orange {
+  color: var(--orange-ink);
+}
+
+.badge_mint {
+  color: var(--mint-ink);
+}
+
+.badge_yellow {
+  color: var(--yellow-ink);
+}
+
+.badge_pink {
+  color: var(--pink-ink);
+}
+
+.badge_neutral {
+  color: var(--subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: var(--space-20);
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-12);
+}
+
+.section {
+  border-radius: var(--radius-lg);
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sectionHead .sectionTitle {
+  margin: 0;
+}
+
+.sectionTitle {
+  margin: 0 0 var(--space-8);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.sectionLink {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: var(--space-8);
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+}
+
+.statCard strong {
+  font-family: var(--font-heading);
+  font-size: 24px;
+}
+
+.statLink {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 12px;
+}
