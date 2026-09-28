@@ -71,7 +71,7 @@ test('schema creează sms_log și sms_templates cu indexurile lor, idempotent', 
     .all();
   assert.deepEqual(
     indexes.map(row => row.name),
-    ['sms_log_child_created', 'sms_log_status'],
+    ['sms_log_batch', 'sms_log_child_created', 'sms_log_status'],
   );
   db.close();
 });

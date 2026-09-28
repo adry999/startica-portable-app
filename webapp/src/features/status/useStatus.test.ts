@@ -163,6 +163,7 @@ describe('useStatus', () => {
       owingChildren: 2,
       overdueChildren: 1,
       overdue: 1000,
+      hasMissingRate: false,
     });
     expect(result.current.missingFeeCount).toBe(1);
 
