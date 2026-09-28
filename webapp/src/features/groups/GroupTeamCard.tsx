@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge, Button, Card, useToast } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import type { Staff } from '@shared/personal/personal.types';
 import type { Group, GroupTeamMember } from '@contracts/record-types.mjs';
 import styles from './GroupTeamCard.module.css';
@@ -53,17 +54,23 @@ export function GroupTeamCard({ group, staff, onSave }: GroupTeamCardProps) {
     );
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setSaving(true);
     try {
       await onSave(team);
       toast.show({ message: 'Echipa grupei a fost salvată.' });
+      return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     } finally {
       setSaving(false);
     }
   }
+
+  // 13b: nesalvat înseamnă că echipa de aici diferă de ultima echipă confirmată a grupei.
+  const dirty = JSON.stringify(team) !== JSON.stringify(group.team ?? []);
+  useDirtyForm(dirty ? { label: 'o echipă de grupă', save } : null);
 
   return (
     <Card className={styles.root}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Drawer, useToast } from '@shared/ui';
 import { usePersonal } from '@shared/personal/usePersonal';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import type { Department, Role } from '@shared/personal/personal.types';
 import styles from './RolesDrawer.module.css';
 
@@ -76,18 +77,27 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
     setRoles(previous => previous.filter(role => role.id !== id));
   }
 
-  async function save() {
+  async function save(): Promise<boolean> {
     setSaving(true);
     try {
       await personal.saveRoles(departments, roles);
       toast.show({ message: 'Funcțiile au fost salvate.' });
       onClose();
+      return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     } finally {
       setSaving(false);
     }
   }
+
+  // 13b: nesalvat înseamnă că departamentele/funcțiile de aici diferă de ultima stare confirmată.
+  const dirty =
+    open &&
+    (JSON.stringify(departments) !== JSON.stringify(personal.departments) ||
+      JSON.stringify(roles) !== JSON.stringify(personal.roles));
+  useDirtyForm(dirty ? { label: 'o modificare la funcții', save } : null);
 
   return (
     <Drawer

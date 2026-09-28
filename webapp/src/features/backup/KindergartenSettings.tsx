@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button, Card, LoadingState, SegmentedControl, useToast } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { usePinStatus } from '@shared/personal/usePinStatus';
 import {
   useKindergarten,
@@ -52,6 +53,11 @@ export function KindergartenSettings() {
     if (kindergarten.ready && kindergarten.settings && !form) setForm(kindergarten.settings);
   }, [kindergarten.ready, kindergarten.settings, form]);
 
+  // 13b: nesalvat înseamnă că formularul diferă de ultimele date confirmate de server. Hook-ul
+  // trebuie apelat necondiționat (înaintea ramurilor de mai jos), ca orice alt hook.
+  const dirty = form !== null && JSON.stringify(form) !== JSON.stringify(kindergarten.settings);
+  useDirtyForm(dirty ? { label: 'o modificare la datele grădiniței', save } : null);
+
   if (kindergarten.status === 'failed')
     return (
       <div className={backupStyles.panel}>
@@ -71,14 +77,16 @@ export function KindergartenSettings() {
     setForm(kindergarten.settings);
   }
 
-  async function save() {
-    if (!form) return;
+  async function save(): Promise<boolean> {
+    if (!form) return false;
     setSaving(true);
     try {
       await kindergarten.save(form);
       toast.show({ message: 'Datele grădiniței au fost salvate.' });
+      return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     } finally {
       setSaving(false);
     }

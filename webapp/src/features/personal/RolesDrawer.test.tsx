@@ -1,7 +1,9 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { reloadPersonal } from '@shared/personal/usePersonal';
 import { RolesDrawer } from './RolesDrawer';
 
@@ -74,5 +76,28 @@ describe('RolesDrawer', () => {
     const asistentRow = screen.getByDisplayValue('Asistent educator').closest('li')!;
     const asistentRemove = asistentRow.querySelector('button')!;
     expect(asistentRemove).not.toBeDisabled();
+  });
+
+  // 13b (m10): editarea unui departament/funcție trebuie înregistrată ca formular nesalvat,
+  // altfel operatorul pierde modificările la un „Salvează și schimbă” de filială.
+  it('formularul devine „nesalvat" după redenumirea unui departament (13b)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByDisplayValue('Educator');
+    expect(readDirtyForms()).toEqual([]);
+
+    // „Educatori” apare și ca text de opțiune în select-ul de funcție nouă — luăm câmpul de nume.
+    const [departmentInput] = screen.getAllByDisplayValue('Educatori');
+    await userEvent.type(departmentInput, ' II');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o modificare la funcții');
   });
 });

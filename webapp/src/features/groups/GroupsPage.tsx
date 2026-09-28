@@ -13,6 +13,7 @@ import {
   type CardTone,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { usePersonal } from '@shared/personal/usePersonal';
 import type { Staff } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
@@ -234,10 +235,22 @@ function GroupEditor({
   const [educator, setEducator] = useState(group.educator);
   const [selectedChildId, setSelectedChildId] = useState('');
 
+  async function save(): Promise<boolean> {
+    await onSave(name, capacityRaw, educator);
+    return true;
+  }
+
   async function handleSave(event: FormEvent) {
     event.preventDefault();
-    await onSave(name, capacityRaw, educator);
+    await save();
   }
+
+  // 13b: nesalvat înseamnă că numele/educatorul/capacitatea diferă de ultima stare confirmată a grupei.
+  const dirty =
+    name !== group.name ||
+    capacityRaw !== (group.capacity != null ? String(group.capacity) : '') ||
+    educator !== group.educator;
+  useDirtyForm(dirty ? { label: 'o grupă', save } : null);
 
   async function handleAssign() {
     if (!selectedChildId) return;

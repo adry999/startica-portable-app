@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { KindergartenSettings } from './KindergartenSettings';
 import type { KindergartenSettings as KindergartenSettingsData } from './useKindergarten';
 
@@ -102,6 +103,30 @@ describe('KindergartenSettings', () => {
 
     await user.click(screen.getByText('Renunță'));
     expect(screen.getByLabelText('Denumire')).toHaveValue('Grădinița A');
+  });
+
+  // 13b (m10): editarea unui câmp trebuie înregistrată ca formular nesalvat, altfel operatorul
+  // pierde modificările la un „Salvează și schimbă” de filială.
+  it('formularul devine „nesalvat" după editarea unui câmp (13b)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse({ ...emptySettings, name: 'Grădinița A' });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    const nameInput = await screen.findByLabelText('Denumire');
+    expect(readDirtyForms()).toEqual([]);
+
+    await user.type(nameInput, ' II');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o modificare la datele grădiniței');
   });
 
   it('permite schimbarea formatului confirmării de plată', async () => {

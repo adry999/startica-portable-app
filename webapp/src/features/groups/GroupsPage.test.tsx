@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { reloadPersonal } from '@shared/personal/usePersonal';
 import { GroupsPage } from './GroupsPage';
 
@@ -142,6 +143,21 @@ describe('GroupsPage', () => {
     expect(screen.queryByText(/^Copii în grupă · 2/)).not.toBeInTheDocument();
   });
 
+  // 13b (m10): editarea numelui/educatorului/capacității în editorul grupei trebuie înregistrată
+  // ca formular nesalvat, altfel operatorul pierde modificările la un „Salvează și schimbă” de filială.
+  it('editorul grupei devine „nesalvat" după modificarea educatorului (13b)', async () => {
+    await loadedSession();
+    renderPage();
+
+    await userEvent.click(screen.getByText('Fluturași'));
+    expect(readDirtyForms()).toEqual([]);
+
+    await userEvent.type(screen.getByLabelText('Educator'), ' Popescu');
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o grupă');
+  });
+
   it('creează o grupă nouă din cardul punctat', async () => {
     await loadedSession();
     renderPage();
@@ -210,6 +226,24 @@ describe('GroupsPage', () => {
     await userEvent.click(within(teamCard).getByRole('button', { name: 'Salvează echipa' }));
 
     expect(await screen.findByText('Echipa grupei a fost salvată.')).toBeInTheDocument();
+  });
+
+  // 13b (m10): adăugarea unui membru în echipa grupei, înainte de „Salvează echipa”, trebuie
+  // înregistrată ca formular nesalvat.
+  it('echipa grupei devine „nesalvată" după adăugarea unui membru, înainte de Salvează (13b)', async () => {
+    await loadedSession();
+    renderPage();
+
+    await userEvent.click(screen.getByText('Fluturași'));
+    const teamCard = screen.getByText('Echipa grupei').parentElement!;
+    expect(readDirtyForms()).toEqual([]);
+
+    const staffSelect = within(teamCard).getAllByRole('combobox')[0];
+    await userEvent.selectOptions(staffSelect, 'STF-1');
+    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Adaugă' }));
+
+    const dirtyForm = readDirtyForms().find(form => form.label === 'o echipă de grupă');
+    expect(dirtyForm).toBeDefined();
   });
 
   it('cere navigarea la stickerele grupei din meniul ⋯, fără să deschidă editorul', async () => {

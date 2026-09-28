@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@shared/ui';
+import { readDirtyForms } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
 
@@ -177,6 +178,31 @@ describe('ExchangeRateSettings', () => {
 
     await user.click(screen.getByText('Renunță'));
     expect(screen.getAllByLabelText('Nume plan')).toHaveLength(1);
+  });
+
+  // 13b (m10): adăugarea/editarea unui plan trebuie înregistrată ca formular nesalvat, altfel
+  // operatorul pierde modificările la un „Salvează și schimbă” de filială.
+  it('planurile devin „nesalvate" după adăugarea unui plan (13b)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/exchange-rates' && !isPost) return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/plan-presets' && !isPost) return jsonResponse([]);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    await screen.findByText('Niciun plan adăugat încă.');
+    expect(readDirtyForms()).toEqual([]);
+
+    await user.click(screen.getByText('+ Adaugă plan'));
+
+    const [dirtyForm] = readDirtyForms();
+    expect(dirtyForm.label).toBe('o modificare la planuri');
   });
 
   it('eșecul încărcării arată eroarea cu „Încearcă din nou”, nu rămâne blocat pe „Se încarcă” (M6)', async () => {

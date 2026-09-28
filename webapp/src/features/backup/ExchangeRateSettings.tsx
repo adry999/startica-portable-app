@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Badge, BnmRateLink, Button, Card, useToast, type BadgeTone } from '@shared/ui';
+import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -81,14 +82,20 @@ export function ExchangeRateSettings() {
     setLocalPresets(exchangeRates.presets);
   }
 
-  async function savePresets() {
+  async function savePresets(): Promise<boolean> {
     try {
       await exchangeRates.savePresets(localPresets);
       toast.show({ message: 'Planurile au fost salvate.' });
+      return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     }
   }
+
+  // 13b: nesalvat înseamnă că lista de planuri diferă de ultima listă confirmată de server.
+  const presetsDirty = presetsSeeded && JSON.stringify(localPresets) !== JSON.stringify(exchangeRates.presets);
+  useDirtyForm(presetsDirty ? { label: 'o modificare la planuri', save: savePresets } : null);
 
   if (exchangeRates.status === 'failed')
     return (
