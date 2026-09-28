@@ -52,6 +52,15 @@ export function KindergartenSettings() {
     if (kindergarten.ready && kindergarten.settings && !form) setForm(kindergarten.settings);
   }, [kindergarten.ready, kindergarten.settings, form]);
 
+  if (kindergarten.status === 'failed')
+    return (
+      <div className={backupStyles.panel}>
+        <p className={backupStyles.notice}>{kindergarten.failureMessage || 'Datele grădiniței nu au putut fi încărcate.'}</p>
+        <Button type="button" variant="outline" onClick={() => void kindergarten.reload()}>
+          Încearcă din nou
+        </Button>
+      </div>
+    );
   if (!kindergarten.ready || !form) return <LoadingState />;
 
   function updateField(key: keyof KindergartenSettingsData, value: string | number) {

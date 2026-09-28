@@ -151,4 +151,27 @@ describe('KindergartenSettings', () => {
 
     expect(await screen.findByText('PIN administrator setat.')).toBeInTheDocument();
   });
+
+  it('eșecul încărcării arată eroarea cu „Încearcă din nou”, nu rămâne blocat pe LoadingState (M6)', async () => {
+    let attempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/kindergarten' && !isPost) {
+          attempts += 1;
+          if (attempts === 1) throw new Error('Conexiune întreruptă.');
+          return jsonResponse(emptySettings);
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+
+    expect(await screen.findByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Încearcă din nou' }));
+    expect(await screen.findByText('1 · Identitate')).toBeInTheDocument();
+  });
 });

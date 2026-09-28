@@ -153,4 +153,26 @@ describe('BranchesSettings', () => {
     expect(await screen.findByText('0 copii · 0 grupe · salvat niciodată')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /șterge/i })).not.toBeInTheDocument();
   });
+
+  it('eșecul încărcării arată eroarea cu „Încearcă din nou”, nu rămâne blocat pe LoadingState (M6)', async () => {
+    let attempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/branches' && init?.method !== 'POST') {
+          attempts += 1;
+          if (attempts === 1) throw new Error('Conexiune întreruptă.');
+          return jsonResponse({ activeBranchId: 'BR-1', branches: [buiucani, botanica] });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+
+    expect(await screen.findByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Încearcă din nou' }));
+    expect(await screen.findByText('Filiala Buiucani')).toBeInTheDocument();
+  });
 });

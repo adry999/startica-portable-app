@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
 import { today } from '@domain/calendar-month.mjs';
@@ -29,6 +29,12 @@ type RefreshResult = { ok: true } | { ok: false; error: string };
 
 export interface ExchangeRatesData {
   ready: boolean;
+  /** M6: `ready` rămâne fals la un eșec — `status`/`failureMessage` disting „se încarcă” de „a eșuat”, ca ecranul
+   * să nu rămână blocat pe „Se încarcă cursul valutar…” la nesfârșit când /api/exchange-rates sau
+   * /api/plan-presets pică. */
+  status: 'loading' | 'ready' | 'failed';
+  failureMessage: string;
+  reload: () => Promise<void>;
   rates: Record<string, number>;
   sources: Record<string, ExchangeRateSource>;
   /** Cursul zilei — sau, în weekend/sărbători, ultimul curs publicat (regula din 16-planuri-eur.md). */
@@ -47,10 +53,12 @@ export function useExchangeRates(): ExchangeRatesData {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [sources, setSources] = useState<Record<string, ExchangeRateSource>>({});
   const [presets, setPresets] = useState<PlanPreset[]>([]);
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [failureMessage, setFailureMessage] = useState('');
 
-  useEffect(() => {
-    void (async () => {
+  const load = useCallback(async () => {
+    setStatus('loading');
+    try {
       const [ratesResponse, presetsResponse] = await Promise.all([
         requestJson('/api/exchange-rates') as Promise<ExchangeRatesResponse>,
         requestJson('/api/plan-presets') as Promise<PlanPreset[]>,
@@ -58,9 +66,16 @@ export function useExchangeRates(): ExchangeRatesData {
       setRates(ratesResponse.rates);
       setSources(ratesResponse.sources);
       setPresets(presetsResponse);
-      setReady(true);
-    })();
+      setStatus('ready');
+    } catch (error) {
+      setFailureMessage((error as Error).message);
+      setStatus('failed');
+    }
   }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const rateDate = latestKnownRateDate(rates);
   const todayRate = latestKnownRate(rates);
@@ -101,7 +116,10 @@ export function useExchangeRates(): ExchangeRatesData {
   }
 
   return {
-    ready,
+    ready: status === 'ready',
+    status,
+    failureMessage,
+    reload: load,
     rates,
     sources,
     todayRate,

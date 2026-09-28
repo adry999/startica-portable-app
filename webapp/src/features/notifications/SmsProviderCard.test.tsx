@@ -1,10 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@shared/ui';
 import { SmsProviderCard } from './SmsProviderCard';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
+}
+
+function renderCard() {
+  return render(
+    <ToastProvider>
+      <SmsProviderCard />
+    </ToastProvider>,
+  );
 }
 
 const unconfigured = {
@@ -49,7 +58,7 @@ describe('SmsProviderCard', () => {
       }),
     );
 
-    render(<SmsProviderCard />);
+    renderCard();
 
     expect(await screen.findByText('Neconectat')).toBeInTheDocument();
     expect(screen.getByLabelText('Cheie API')).toBeInTheDocument();
@@ -64,7 +73,7 @@ describe('SmsProviderCard', () => {
       }),
     );
 
-    render(<SmsProviderCard />);
+    renderCard();
     const user = userEvent.setup();
 
     expect(await screen.findByText('Conectat')).toBeInTheDocument();
@@ -87,7 +96,7 @@ describe('SmsProviderCard', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<SmsProviderCard />);
+    renderCard();
     const user = userEvent.setup();
 
     await screen.findByText('Conectat');
@@ -109,7 +118,7 @@ describe('SmsProviderCard', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<SmsProviderCard />);
+    renderCard();
     const user = userEvent.setup();
 
     await screen.findByText('Conectat');
@@ -134,7 +143,7 @@ describe('SmsProviderCard', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<SmsProviderCard />);
+    renderCard();
     const user = userEvent.setup();
 
     await screen.findByText('Conectat');
@@ -143,5 +152,26 @@ describe('SmsProviderCard', () => {
     await user.click(screen.getByText('costă 1 SMS (≈ 0,30 lei)', { exact: false }));
 
     expect(fetchMock).toHaveBeenCalledWith('/api/sms-test', expect.anything());
+  });
+
+  it('un 400 la conectare (cheie invalidă) arată eroarea, nu doar butonul reactivat (M7)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/sms-status') return jsonResponse(unconfigured);
+        if (path === '/api/sms-connect')
+          return { ok: false, status: 400, json: async () => ({ error: 'Cheia API nu e validă.' }) };
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderCard();
+    const user = userEvent.setup();
+
+    await screen.findByText('Neconectat');
+    await user.type(screen.getByLabelText('Cheie API'), 'gresit');
+    await user.click(screen.getByText('Conectează'));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Cheia API nu e validă.');
   });
 });

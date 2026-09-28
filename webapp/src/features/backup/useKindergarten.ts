@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 
 export type ReceiptFormat = 'a5' | 'a4-third';
@@ -23,6 +23,11 @@ export interface KindergartenSettings {
 
 export interface KindergartenData {
   ready: boolean;
+  /** M6: `ready` rămâne fals la un eșec — `status`/`failureMessage` disting „se încarcă” de „a eșuat”, ca fila
+   * „Grădinița” să nu rămână blocată pe LoadingState la nesfârșit când /api/kindergarten pică. */
+  status: 'loading' | 'ready' | 'failed';
+  failureMessage: string;
+  reload: () => Promise<void>;
   settings: KindergartenSettings | null;
   save: (next: KindergartenSettings) => Promise<KindergartenSettings>;
 }
@@ -30,14 +35,23 @@ export interface KindergartenData {
 /** Datele grădiniței (16a) — un singur obiect în settings, folosit și de confirmarea de plată. */
 export function useKindergarten(): KindergartenData {
   const [settings, setSettings] = useState<KindergartenSettings | null>(null);
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [failureMessage, setFailureMessage] = useState('');
+
+  const load = useCallback(async () => {
+    setStatus('loading');
+    try {
+      setSettings((await requestJson('/api/kindergarten')) as KindergartenSettings);
+      setStatus('ready');
+    } catch (error) {
+      setFailureMessage((error as Error).message);
+      setStatus('failed');
+    }
+  }, []);
 
   useEffect(() => {
-    void (async () => {
-      setSettings((await requestJson('/api/kindergarten')) as KindergartenSettings);
-      setReady(true);
-    })();
-  }, []);
+    void load();
+  }, [load]);
 
   async function save(next: KindergartenSettings) {
     const saved = (await requestJson('/api/kindergarten', next)) as KindergartenSettings;
@@ -45,5 +59,5 @@ export function useKindergarten(): KindergartenData {
     return saved;
   }
 
-  return { ready, settings, save };
+  return { ready: status === 'ready', status, failureMessage, reload: load, settings, save };
 }

@@ -1,8 +1,11 @@
 import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as XLSX from 'xlsx';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { exportWorkbook } from '#features/data-transfer/domain/excel-workbook.mjs';
+import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { BackupPage } from './BackupPage';
 
 const { writeFileMock } = vi.hoisted(() => ({ writeFileMock: vi.fn() }));
@@ -10,6 +13,12 @@ vi.mock('xlsx', async importOriginal => {
   const actual = await importOriginal<typeof import('xlsx')>();
   return { ...actual, writeFile: writeFileMock };
 });
+
+function exportedFile(state: RecordsSnapshot, name = 'export.xlsx') {
+  const workbook = exportWorkbook(state, XLSX);
+  const bytes = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer;
+  return new File([bytes], name);
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -125,5 +134,19 @@ describe('BackupPage', () => {
     await user.click(screen.getByText('Import Excel'));
     expect(screen.getByRole('dialog', { name: 'Import Excel' })).toBeInTheDocument();
     expect(screen.getByLabelText('Scrie IMPORT pentru a înlocui datele')).toBeInTheDocument();
+  });
+
+  it('un eșec al serverului la previzualizare arată eroarea în dialogul de import, nu doar tăcere (M6)', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Import Excel'));
+    const fileInput = screen.getByLabelText('Fișier Excel') as HTMLInputElement;
+    // Fișier valid — eșecul vine de la /api/import-preview, care nu e mock-uit în fixtura de mai sus.
+    await user.upload(fileInput, exportedFile(fixtureState));
+
+    await waitFor(() => expect(screen.queryByText('Se previzualizează…')).not.toBeInTheDocument());
+    expect(screen.getByText(/Conexiune întreruptă/)).toBeInTheDocument();
   });
 });

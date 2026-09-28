@@ -67,6 +67,15 @@ export function BirthdaysPage() {
   const toneFor = (groupId: string | null) => groupOf(groupId, birthdaysData.groups)?.tone ?? 'neutral';
   const groupNameFor = (groupId: string | null) => groupOf(groupId, birthdaysData.groups)?.name ?? 'Fără grupă';
 
+  // M9: eșecul sesiunii nu trebuie să apară ca „Nicio zi de naștere” — asta ascunde o eroare reală.
+  if (birthdaysData.status === 'failed') {
+    return (
+      <div className={styles.page}>
+        <p className={styles.notice}>{birthdaysData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.page}>
       <FilterPills

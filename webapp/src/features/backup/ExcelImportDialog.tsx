@@ -53,6 +53,7 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
       </label>
 
       {data.loading && <p className={styles.notice}>Se previzualizează…</p>}
+      {data.pickError && <p className={styles.error}>{data.pickError}</p>}
 
       {data.report && (
         <div className={styles.preview}>

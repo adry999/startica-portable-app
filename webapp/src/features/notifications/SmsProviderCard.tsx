@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card } from '@shared/ui';
+import { Badge, Button, Card, useToast } from '@shared/ui';
 import { useSmsStatus } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import styles from './SmsProviderCard.module.css';
@@ -11,6 +11,7 @@ const TEST_SMS_COST_LEI = 0.3;
 /** Card „Furnizor SMS" din Notificări → Șabloane (docs/design/screens/14-sms.md §11b). */
 export function SmsProviderCard() {
   const sms = useSmsStatus();
+  const toast = useToast();
   const [sender, setSender] = useState('');
   const [token, setToken] = useState('');
   // Derivat direct din sms.data (nu sincronizat printr-un efect): un efect ar întârzia
@@ -34,18 +35,34 @@ export function SmsProviderCard() {
   if (sms.status === 'loading') return <Card className={notificationsStyles.panel}>Se încarcă furnizorul SMS…</Card>;
 
   async function save() {
-    await sms.connect({
-      token: token || undefined,
-      sender,
-      monthlyLimit: limitEnabled ? Math.min(MONTHLY_LIMIT_MAX, Math.max(1, limitValue)) : null,
-    });
-    setToken('');
+    try {
+      await sms.connect({
+        token: token || undefined,
+        sender,
+        monthlyLimit: limitEnabled ? Math.min(MONTHLY_LIMIT_MAX, Math.max(1, limitValue)) : null,
+      });
+      setToken('');
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   async function confirmTest() {
-    await sms.sendTest(testPhone);
-    setTesting(false);
-    setTestPhone('');
+    try {
+      await sms.sendTest(testPhone);
+      setTesting(false);
+      setTestPhone('');
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function disconnect() {
+    try {
+      await sms.disconnect();
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   const configured = sms.data?.configured ?? false;
@@ -146,7 +163,7 @@ export function SmsProviderCard() {
             <Button type="button" variant="ghost" onClick={() => setTesting(true)}>
               Trimite SMS de test
             </Button>
-            <Button type="button" variant="ghost" disabled={sms.disconnecting} onClick={() => void sms.disconnect()}>
+            <Button type="button" variant="ghost" disabled={sms.disconnecting} onClick={() => void disconnect()}>
               Deconectează
             </Button>
           </>

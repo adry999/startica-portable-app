@@ -20,6 +20,15 @@ export function BranchesSettings() {
   const [addAddress, setAddAddress] = useState('');
   const [busy, setBusy] = useState(false);
 
+  if (branchesData.status === 'failed')
+    return (
+      <div className={backupStyles.panel}>
+        <p className={backupStyles.notice}>{branchesData.failureMessage || 'Filialele nu au putut fi încărcate.'}</p>
+        <Button variant="outline" onClick={() => void branchesData.reload()}>
+          Încearcă din nou
+        </Button>
+      </div>
+    );
   if (!branchesData.ready) return <LoadingState />;
 
   function startRename(branch: BranchSummary) {

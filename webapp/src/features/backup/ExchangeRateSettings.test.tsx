@@ -178,4 +178,30 @@ describe('ExchangeRateSettings', () => {
     await user.click(screen.getByText('Renunță'));
     expect(screen.getAllByLabelText('Nume plan')).toHaveLength(1);
   });
+
+  it('eșecul încărcării arată eroarea cu „Încearcă din nou”, nu rămâne blocat pe „Se încarcă” (M6)', async () => {
+    let planPresetsAttempts = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/plan-presets' && !isPost) {
+          planPresetsAttempts += 1;
+          if (planPresetsAttempts === 1) throw new Error('Conexiune întreruptă.');
+          return jsonResponse([]);
+        }
+        if (path === '/api/exchange-rates' && !isPost)
+          return jsonResponse({ rates: { [todayDate]: 19.62 }, sources: { [todayDate]: 'bnm' } });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+
+    expect(await screen.findByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
+    expect(screen.queryByText('Se încarcă cursul valutar…')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Încearcă din nou' }));
+    expect(await screen.findByTestId('today-rate')).toBeInTheDocument();
+  });
 });

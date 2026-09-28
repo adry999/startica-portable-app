@@ -16,6 +16,9 @@ export interface ExcelImportData {
   loading: boolean;
   report: ImportReport | null;
   fileName: string;
+  /** M6: eroarea de parsare/validare a fișierului ales — `pickFile` o prindea, dar nimeni n-o arăta;
+   * operatorul vedea doar „Se previzualizează…” dispărând, fără niciun mesaj. */
+  pickError: string;
   confirmText: string;
   setConfirmText: (value: string) => void;
   canCommit: boolean;
@@ -39,6 +42,7 @@ export function useExcelTransfer(): ExcelTransferData {
   const [report, setReport] = useState<ImportReport | null>(null);
   const [parsedState, setParsedState] = useState<RecordsSnapshot | null>(null);
   const [fileName, setFileName] = useState('');
+  const [pickError, setPickError] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [committing, setCommitting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -48,6 +52,7 @@ export function useExcelTransfer(): ExcelTransferData {
     setReport(null);
     setParsedState(null);
     setFileName('');
+    setPickError('');
     setConfirmText('');
   }
 
@@ -60,6 +65,7 @@ export function useExcelTransfer(): ExcelTransferData {
     setReport(null);
     setParsedState(null);
     setConfirmText('');
+    setPickError('');
     setLoading(true);
     try {
       const XLSX = await loadXlsx();
@@ -76,6 +82,8 @@ export function useExcelTransfer(): ExcelTransferData {
         notes: [...(parsed.notes ?? []), ...(checked.notes ?? [])],
       });
       setParsedState(checked.state ?? null);
+    } catch (error) {
+      setPickError((error as Error).message || 'Fișierul nu a putut fi previzualizat.');
     } finally {
       setLoading(false);
     }
@@ -112,6 +120,7 @@ export function useExcelTransfer(): ExcelTransferData {
       loading,
       report,
       fileName,
+      pickError,
       confirmText,
       setConfirmText,
       canCommit: Boolean(report && !report.errors.length && parsedState && confirmText === IMPORT_CONFIRMATION),

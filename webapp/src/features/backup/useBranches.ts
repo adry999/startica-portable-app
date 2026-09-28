@@ -3,6 +3,10 @@ import { createBranch, fetchBranches, updateBranch, type BranchSummary } from '@
 
 export interface BranchesData {
   ready: boolean;
+  /** M6: `ready` rămâne fals la un eșec — `status`/`failureMessage` disting „se încarcă” de „a eșuat”, ca fila
+   * „Filiale” să nu rămână blocată pe LoadingState la nesfârșit când /api/branches pică. */
+  status: 'loading' | 'ready' | 'failed';
+  failureMessage: string;
   activeBranchId: string;
   branches: BranchSummary[];
   reload: () => Promise<void>;
@@ -13,15 +17,22 @@ export interface BranchesData {
 
 /** Fila „Filiale” din Backup și setări (13c) — listă cu contoare, redenumire, culoare, adăugare. Fără ștergere. */
 export function useBranches(): BranchesData {
-  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [failureMessage, setFailureMessage] = useState('');
   const [activeBranchId, setActiveBranchId] = useState('');
   const [branches, setBranches] = useState<BranchSummary[]>([]);
 
   const load = useCallback(async () => {
-    const response = await fetchBranches();
-    setActiveBranchId(response.activeBranchId);
-    setBranches(response.branches);
-    setReady(true);
+    setStatus('loading');
+    try {
+      const response = await fetchBranches();
+      setActiveBranchId(response.activeBranchId);
+      setBranches(response.branches);
+      setStatus('ready');
+    } catch (error) {
+      setFailureMessage((error as Error).message);
+      setStatus('failed');
+    }
   }, []);
 
   useEffect(() => {
@@ -43,5 +54,5 @@ export function useBranches(): BranchesData {
     await load();
   }
 
-  return { ready, activeBranchId, branches, reload: load, create, rename, setColor };
+  return { ready: status === 'ready', status, failureMessage, activeBranchId, branches, reload: load, create, rename, setColor };
 }

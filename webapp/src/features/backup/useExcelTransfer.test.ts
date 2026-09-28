@@ -122,6 +122,29 @@ describe('useExcelTransfer', () => {
     expect(result.current.importDialog.open).toBe(false);
   });
 
+  it('un eșec al /api/import-preview arată eroarea în pickError, nu doar „Se previzualizează…” care dispare (M6)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/import-preview') throw new Error('Conexiune întreruptă.');
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    const { result } = renderHook(() => useExcelTransfer());
+
+    act(() => result.current.importDialog.openDialog());
+    await act(() => result.current.importDialog.pickFile(exportedFile(fixtureState)));
+
+    expect(result.current.importDialog.loading).toBe(false);
+    expect(result.current.importDialog.report).toBeNull();
+    expect(result.current.importDialog.pickError).not.toBe('');
+  });
+
   it('exportAll declanșează XLSX.writeFile cu numele așteptat', async () => {
     await loadedSession();
     const { result } = renderHook(() => useExcelTransfer());
