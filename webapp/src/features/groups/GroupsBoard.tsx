@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SearchInput, useToast } from '@shared/ui';
+import { ScrollArea, SearchInput, useToast } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { GroupTile } from './GroupTile';
 import type { GroupsData } from './useGroups';
@@ -67,27 +67,29 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
         </h3>
         <SearchInput value={search} onChange={setSearch} placeholder="Caută copil" ariaLabel="Caută copil fără grupă" />
         <p className={styles.hint}>Ordonați după vârstă · trage pe o grupă</p>
-        <div className={styles.poolList}>
-          {visiblePool.map(child => (
-            <div
-              key={child.id}
-              className={styles.poolRow}
-              draggable={!groupsData.busy}
-              onDragStart={event => {
-                event.dataTransfer.setData('text/plain', child.id);
-                event.dataTransfer.effectAllowed = 'move';
-              }}
-            >
-              <span className={styles.poolHandle} aria-hidden="true">
-                ⋮⋮
-              </span>
-              <span className={styles.poolAvatar}>{initials(child.name)}</span>
-              <span className={styles.poolName}>{child.name}</span>
-              <span className={styles.poolAge}>{child.ageLabel}</span>
-            </div>
-          ))}
-          {visiblePool.length === 0 && <p className={styles.poolEmpty}>Niciun copil fără grupă.</p>}
-        </div>
+        <ScrollArea className={styles.poolList}>
+          <div className={styles.poolListInner}>
+            {visiblePool.map(child => (
+              <div
+                key={child.id}
+                className={styles.poolRow}
+                draggable={!groupsData.busy}
+                onDragStart={event => {
+                  event.dataTransfer.setData('text/plain', child.id);
+                  event.dataTransfer.effectAllowed = 'move';
+                }}
+              >
+                <span className={styles.poolHandle} aria-hidden="true">
+                  ⋮⋮
+                </span>
+                <span className={styles.poolAvatar}>{initials(child.name)}</span>
+                <span className={styles.poolName}>{child.name}</span>
+                <span className={styles.poolAge}>{child.ageLabel}</span>
+              </div>
+            ))}
+            {visiblePool.length === 0 && <p className={styles.poolEmpty}>Niciun copil fără grupă.</p>}
+          </div>
+        </ScrollArea>
       </aside>
 
       <div className={`${styles.tiles} ${groupsData.busy ? styles.tilesBusy : ''}`}>

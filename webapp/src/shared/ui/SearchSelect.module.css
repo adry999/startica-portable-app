@@ -55,9 +55,13 @@
 .options {
   display: flex;
   flex-direction: column;
-  gap: 2px;
   max-height: 220px;
-  overflow-y: auto;
+}
+
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .option {

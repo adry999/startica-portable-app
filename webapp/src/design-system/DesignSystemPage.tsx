@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { ToastProvider } from '@shared/ui';
+import { ScrollArea, ToastProvider } from '@shared/ui';
 import { AlteleSection } from './sections/AlteleSection';
 import { ButoaneInputSection } from './sections/ButoaneInputSection';
 import { DateSection } from './sections/DateSection';
@@ -27,14 +27,16 @@ export function DesignSystemPage() {
       <ToastProvider>
         <div className={styles.layout}>
           <nav className={styles.nav} aria-label="Secțiuni">
-            <p className={styles.navTitle}>Startica · Design system</p>
-            <ul className={styles.navList}>
-              {SECTIONS.map(section => (
-                <li key={section.id}>
-                  <a href={`#${section.id}`}>{section.label}</a>
-                </li>
-              ))}
-            </ul>
+            <ScrollArea className={styles.navScroll}>
+              <p className={styles.navTitle}>Startica · Design system</p>
+              <ul className={styles.navList}>
+                {SECTIONS.map(section => (
+                  <li key={section.id}>
+                    <a href={`#${section.id}`}>{section.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
           </nav>
           <main className={styles.content}>
             <header className={styles.pageHeader}>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { ScrollArea } from '../ScrollArea';
 // SmsSegmentCounter e definit în shared/sms (Task 16) — e stateless (nu are fetch), deci
 // reutilizarea lui aici nu rupe regula „shared/ui fără fetch" a acestui dialog.
 import { SmsSegmentCounter, type SmsSendResultView } from '@shared/sms';
@@ -175,29 +176,31 @@ export function SmsConfirmDialog({
 
         {!single && (
           <>
-            <div className={styles.list}>
-              {recipients.map(row => (
-                <label key={row.id} className={styles.row}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(row.id)}
-                    disabled={row.phone === null}
-                    onChange={() => toggle(row.id)}
-                  />
-                  <span className={styles.rowName}>{row.name}</span>
-                  {row.phone === null ? (
-                    <>
-                      <span className={styles.noPhone}>Fără telefon valid</span>
-                      <Link className={styles.fixLink} to={`/copii/${row.id}`}>
-                        Corectează telefonul
-                      </Link>
-                    </>
-                  ) : (
-                    row.excludeReason && <span className={styles.excludeReason}>{row.excludeReason}</span>
-                  )}
-                </label>
-              ))}
-            </div>
+            <ScrollArea className={styles.list}>
+              <div className={styles.listInner}>
+                {recipients.map(row => (
+                  <label key={row.id} className={styles.row}>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(row.id)}
+                      disabled={row.phone === null}
+                      onChange={() => toggle(row.id)}
+                    />
+                    <span className={styles.rowName}>{row.name}</span>
+                    {row.phone === null ? (
+                      <>
+                        <span className={styles.noPhone}>Fără telefon valid</span>
+                        <Link className={styles.fixLink} to={`/copii/${row.id}`}>
+                          Corectează telefonul
+                        </Link>
+                      </>
+                    ) : (
+                      row.excludeReason && <span className={styles.excludeReason}>{row.excludeReason}</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+            </ScrollArea>
             {checkedRecipients.length > 0 && (
               <div className={styles.preview}>
                 <button

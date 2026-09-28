@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BnmRateLink, MonthPicker, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
+import { BnmRateLink, MonthPicker, ScrollArea, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
@@ -95,7 +95,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
               <kbd>Ctrl K</kbd>
             </label>
             {open && query.trim() && (
-              <div className={styles.searchResults}>
+              <ScrollArea className={styles.searchResults}>
                 {results.length === 0 ? (
                   <p className={styles.searchEmpty}>Niciun rezultat.</p>
                 ) : (
@@ -134,7 +134,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
                     )}
                   </>
                 )}
-              </div>
+              </ScrollArea>
             )}
           </div>
         )}

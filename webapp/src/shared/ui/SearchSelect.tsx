@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { ScrollArea } from './ScrollArea';
 import styles from './SearchSelect.module.css';
 
 export interface SearchSelectOption {
@@ -161,22 +162,24 @@ export function SearchSelect({
               aria-label={`Caută în ${ariaLabel}`}
               autoFocus
             />
-            <div className={styles.options} role="listbox" aria-label={ariaLabel}>
-              {filtered.length === 0 && <p className={styles.empty}>{emptyLabel}</p>}
-              {filtered.map((option, index) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={option.value === value}
-                  className={index === activeIndex ? `${styles.option} ${styles.optionActive}` : styles.option}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => pick(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            <ScrollArea className={styles.options}>
+              <div className={styles.optionsList} role="listbox" aria-label={ariaLabel}>
+                {filtered.length === 0 && <p className={styles.empty}>{emptyLabel}</p>}
+                {filtered.map((option, index) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={option.value === value}
+                    className={index === activeIndex ? `${styles.option} ${styles.optionActive}` : styles.option}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onClick={() => pick(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>,
           document.body,
         )}

@@ -77,9 +77,13 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
   max-height: 320px;
-  overflow-y: auto;
+}
+
+.listInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .row {

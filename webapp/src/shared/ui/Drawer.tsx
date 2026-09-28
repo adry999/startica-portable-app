@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { ScrollArea } from './ScrollArea';
 import styles from './Drawer.module.css';
 
 export interface DrawerProps {
@@ -52,7 +53,7 @@ export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, fo
             ×
           </button>
         </header>
-        <div className={styles.body}>{children}</div>
+        <ScrollArea className={styles.body}>{children}</ScrollArea>
         {footer && <footer className={styles.footer}>{footer}</footer>}
       </aside>
     </div>

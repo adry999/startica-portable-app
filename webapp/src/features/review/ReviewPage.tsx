@@ -6,6 +6,7 @@ import {
   Card,
   EmptyState,
   LoadingState,
+  ScrollArea,
   SearchInput,
   SegmentedControl,
   useToast,
@@ -122,7 +123,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
             ariaLabel="Caută"
           />
         </div>
-        <div className={styles.queueList}>
+        <ScrollArea className={styles.queueList}>
           {rows.map(row => (
             <button
               key={rowKey(row)}
@@ -139,7 +140,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
               <span className={styles.queueType}>{TYPE_LABEL[row.type]}</span>
             </button>
           ))}
-        </div>
+        </ScrollArea>
       </Card>
 
       {active && (

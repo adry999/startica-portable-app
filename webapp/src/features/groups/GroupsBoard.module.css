@@ -38,9 +38,13 @@
 .poolList {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
   max-height: calc(100vh - 260px);
-  overflow-y: auto;
+}
+
+.poolListInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .poolRow {
