@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button, Card, LoadingState, SegmentedControl, useToast } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { usePinStatus } from '@shared/personal/usePinStatus';
+import { useUiScale, type UiScale } from '@shared/state/ui-scale';
 import {
   useKindergarten,
   type KindergartenSettings as KindergartenSettingsData,
@@ -13,6 +14,12 @@ import styles from './KindergartenSettings.module.css';
 const RECEIPT_FORMAT_OPTIONS: { value: ReceiptFormat; label: string }[] = [
   { value: 'a5', label: 'A5' },
   { value: 'a4-third', label: 'A4 · 1/3 + 2/3' },
+];
+
+const UI_SCALE_OPTIONS: { value: UiScale; label: string }[] = [
+  { value: 'compact', label: 'Compact 90%' },
+  { value: 'normal', label: 'Normal 100%' },
+  { value: 'large', label: 'Mare 110%' },
 ];
 
 /** Câmpurile 1-2 (identitate, contact și plăți) — perechi [etichetă, cheie]. */
@@ -206,6 +213,7 @@ export function KindergartenSettings() {
         </Card>
 
         <AdminPinCard />
+        <UiScaleCard />
       </div>
 
       <div className={styles.right}>
@@ -303,6 +311,25 @@ function AdminPinCard() {
           {pin.configured ? 'Schimbă PIN-ul' : 'Setează PIN-ul'}
         </Button>
       </form>
+    </Card>
+  );
+}
+
+/** Mărimea interfeței (FEEDBACK.md #6) — preferință per calculator, nu se salvează în /api/kindergarten. */
+function UiScaleCard() {
+  const { scale, setScale } = useUiScale();
+
+  return (
+    <Card className={backupStyles.panel}>
+      <span className={styles.sectionLabel}>5 · Interfață</span>
+      <label className={styles.field}>
+        Mărimea interfeței
+        <SegmentedControl ariaLabel="Mărimea interfeței" value={scale} onChange={setScale} options={UI_SCALE_OPTIONS} />
+      </label>
+      <p className={styles.notice}>
+        Se ține minte doar pe acest calculator. Tipăriturile (ex. Pontaj) rămân la mărimea reală, indiferent de această
+        setare.
+      </p>
     </Card>
   );
 }

@@ -190,3 +190,11 @@ button {
   cursor: pointer;
   color: inherit;
 }
+
+/* „Mărimea interfeței” (FEEDBACK.md #6) e o preferință de ecran, per calculator — tipăriturile
+   A4 (ex. 23k Pontaj tipărit) nu trebuie să se scaleze după ea. */
+@media print {
+  html {
+    zoom: 1 !important;
+  }
+}
