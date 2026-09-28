@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
-import { today } from '#shared/domain/calendar-month.mjs';
+import { today, shiftDays } from '#shared/domain/calendar-month.mjs';
 import { bnmDateParam } from '#shared/domain/exchange-rates.mjs';
 import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
 
@@ -270,4 +270,46 @@ test('cursul BNM se completează la deschiderea unei filiale', async t => {
 
   const rates = (await bundle.get('/api/exchange-rates')).rates;
   assert.ok(Object.hasOwn(rates, todayStr), 'cursul BNM al zilei curente nu s-a completat la deschiderea filialei B');
+});
+
+test('o corectare manuală de curs făcută în timpul sweep-ului BNM nu se pierde la scriere (M8)', async t => {
+  const todayStr = today();
+  const correctedDate = shiftDays(todayStr, -25);
+  const xmlForRate = rate =>
+    `<ValCurs><Valute ID="47"><CharCode>EUR</CharCode><Value>${rate}</Value></Valute></ValCurs>`;
+  let correctionIssued = false;
+  const { promise: lastCallDone, resolve: onLastCall } = Promise.withResolvers();
+  /** @type {{ post: (path: string, body: unknown) => Promise<{ status: number, body: any }> } | null} */
+  let bundleRef = null;
+
+  const fetch = async url => {
+    const requestedDate = new URL(url).searchParams.get('date');
+    // Chiar înainte de ultima cerere BNM a sweep-ului: o corectare manuală (echivalentul
+    // POST /api/exchange-rates din 12b) ajunge cât sweep-ul (zeci de cereri, până la
+    // EXCHANGE_RATE_BACKFILL_DAYS) e încă în zbor, pentru o zi deja „văzută” de buclă.
+    if (requestedDate === bnmDateParam(todayStr) && !correctionIssued) {
+      correctionIssued = true;
+      const corrected = await bundleRef.post('/api/exchange-rates', { date: correctedDate, rate: 25.5 });
+      assert.equal(corrected.status, 200, corrected.body.error);
+    }
+    if (requestedDate === bnmDateParam(todayStr)) onLastCall();
+    return { ok: true, text: async () => xmlForRate(19.9) };
+  };
+  const bundle = await startTestApplication(t, { prefix: 'startica-branches-bnm-manual-', fetch });
+  bundleRef = bundle;
+
+  const branchB = (await bundle.post('/api/branches', { name: 'Botanica' })).body.branch;
+  const selected = await bundle.post('/api/branches/select', { id: branchB.id });
+  assert.equal(selected.status, 200);
+
+  await lastCallDone;
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  const after = await bundle.get('/api/exchange-rates');
+  assert.equal(
+    after.rates[correctedDate],
+    25.5,
+    'corectarea manuală făcută cât sweep-ul BNM era în zbor a fost suprascrisă de instantaneul vechi',
+  );
+  assert.equal(after.sources[correctedDate], 'manual');
 });

@@ -325,23 +325,33 @@ export function createBranchContext({
   async function refreshExchangeRateIfMissing() {
     const todayStr = today();
     const current = parseExchangeRates(readSetting('exchangeRates'));
-    const currentSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
     const lastKnownDate = Object.keys(current).sort().at(-1);
     const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
     if (startDate > todayStr) return;
 
-    const rates = { ...current };
-    const sources = { ...currentSources };
+    // Doar completările reale ale acestei bucle — nu un instantaneu al lui `current`,
+    // ca să nu suprascriem la scriere o corectare manuală (POST /api/exchange-rates)
+    // făcută în timp ce bucla încă așteaptă alte zeci de cereri (M8 din audit).
+    const fetchedRates = {};
+    const fetchedSources = {};
     for (let date = startDate; date <= todayStr; date = shiftDays(date, 1)) {
-      if (Object.hasOwn(rates, date)) continue;
+      if (Object.hasOwn(current, date)) continue;
       const result = await fetchBnmEurRate({ fetch: fetchImpl ?? globalThis.fetch, date });
       if ('rate' in result) {
-        rates[date] = result.rate;
-        sources[date] = 'bnm';
+        fetchedRates[date] = result.rate;
+        fetchedSources[date] = 'bnm';
       }
     }
-    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates(rates)));
-    settings.setSetting('exchangeRateSources', JSON.stringify(clampExchangeRateSources(sources)));
+    if (Object.keys(fetchedRates).length === 0) return;
+    // Recitite chiar înainte de scriere, ca o corectare făcută în timpul buclei de mai
+    // sus să câștige: completarea BNM se aplică doar peste zilele încă lipsă acum.
+    const latestRates = parseExchangeRates(readSetting('exchangeRates'));
+    const latestSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
+    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates({ ...fetchedRates, ...latestRates })));
+    settings.setSetting(
+      'exchangeRateSources',
+      JSON.stringify(clampExchangeRateSources({ ...fetchedSources, ...latestSources })),
+    );
   }
 
   // Rulat la fiecare deschidere a acestei filiale (pornirea procesului sau
