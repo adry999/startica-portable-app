@@ -79,12 +79,20 @@ describe('useReview', () => {
     expect(result.current.rows.find(row => row.id === 'c1')?.categories).toContain('children');
   });
 
-  it('filtrul "unassigned" arată doar achitările fără copil', async () => {
+  it('typeFilter "payments" arată doar achitările', async () => {
     await loadedSession();
     const { result } = renderHook(() => useReview());
 
-    act(() => result.current.setFilter('unassigned'));
+    act(() => result.current.setTypeFilter('payments'));
     expect(result.current.rows.map(row => row.id)).toEqual(['p1']);
+  });
+
+  it('typeFilter "children" arată doar fișele', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useReview());
+
+    act(() => result.current.setTypeFilter('children'));
+    expect(result.current.rows.map(row => row.id)).toEqual(['c1']);
   });
 
   it('căutarea filtrează după nume', async () => {
@@ -95,18 +103,11 @@ describe('useReview', () => {
     expect(result.current.rows.map(row => row.id)).toEqual(['c1']);
   });
 
-  it('resetFilters golește căutarea și filtrul', async () => {
+  it('numărătoarea din antet reflectă câte fișe/achitări sunt de rezolvat', async () => {
     await loadedSession();
     const { result } = renderHook(() => useReview());
 
-    act(() => {
-      result.current.setSearch('Andrei');
-      result.current.setFilter('children');
-    });
-    act(() => result.current.resetFilters());
-
-    expect(result.current.search).toBe('');
-    expect(result.current.filter).toBe('all');
+    expect(result.current.counts).toEqual({ all: 2, children: 1, payments: 1 });
   });
 
   it('confirmReview trimite reviewed:true pentru achitare', async () => {

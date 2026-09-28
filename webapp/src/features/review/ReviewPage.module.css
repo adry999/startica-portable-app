@@ -1,137 +1,242 @@
 .notice {
   color: var(--subtle);
-  margin: 0 0 var(--space-16);
-}
-
-.progressRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-16);
-  margin-bottom: var(--space-16);
-}
-
-.progressCard {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.progressLabel {
   margin: 0;
-  font-size: 13px;
-  font-weight: 700;
 }
 
-.progressValue {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 26px;
+.grid {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: start;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  margin-bottom: var(--space-16);
-  flex-wrap: wrap;
+.queueCard {
+  padding: 0;
+  overflow: hidden;
 }
 
-.filterField {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
-.filterField select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-10);
-  font: inherit;
-  font-size: 13px;
+.queueToolbar {
+  padding: var(--space-14) var(--space-16);
+  border-bottom: 1px solid var(--border);
 }
 
 .search {
-  min-width: 220px;
+  width: 100%;
 }
 
-.btnGhostSmall {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-6) var(--space-12);
-  font-weight: 700;
-  font-size: 12px;
-  color: var(--slate);
-  white-space: nowrap;
-}
-
-.listCard {
+.queueList {
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
 }
 
-.empty {
-  padding: var(--space-20);
-  color: var(--subtle);
-  margin: 0;
-}
-
-.row {
+.queueRow {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-16);
-  padding: var(--space-16);
+  align-items: center;
+  gap: var(--space-12);
+  width: 100%;
+  border: none;
   border-bottom: 1px solid var(--row-divider);
+  background: none;
+  padding: var(--space-12) var(--space-16);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
-.row:last-child {
+.queueRow:last-child {
   border-bottom: none;
 }
 
-.rowTitle {
-  margin: 0 0 var(--space-6);
-  font-size: 14px;
+.queueRowActive {
+  background: var(--cream);
+  box-shadow: inset 4px 0 0 var(--orange);
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
-.rowDetails {
-  display: block;
-  color: var(--muted);
+.dotHigh {
+  background: var(--raspberry);
 }
 
-.rowReasons {
-  display: block;
-  color: var(--subtle);
+.dotMedium {
+  background: var(--yellow);
 }
 
-.rowActions {
+.dotLow {
+  background: var(--mint);
+}
+
+.queueText {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
-  align-items: flex-end;
-  flex: none;
 }
 
-.linkButton {
-  border: none;
-  background: none;
-  color: var(--orange);
-  font-weight: 700;
-  font-size: 13px;
+.queueText strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.queueText small {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.linkButton:disabled {
+.queueType {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--subtle);
-  cursor: default;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.progressRow strong {
+  color: var(--slate);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sand);
+  overflow: hidden;
+}
+
+.progressTrack > span {
+  display: block;
+  height: 100%;
+  background: var(--orange);
+}
+
+.skipHint {
+  white-space: nowrap;
+}
+
+.skipHint kbd {
+  margin-left: var(--space-4);
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--neutral-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.caseCard {
+  padding: 26px 28px;
+  gap: var(--space-18);
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.identityAvatar {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.identityText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.identityText strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.identityText span {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.openLink {
+  flex: none;
+  border: none;
+  background: none;
+  color: var(--orange-ink);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.problemBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 14px 18px;
+  border-radius: var(--radius-md-lg);
+  background: var(--pink-soft);
+}
+
+.problemBox strong {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--pink-ink);
+}
+
+.problemBox span {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  flex-wrap: wrap;
+}
+
+.skipButton {
+  margin-left: auto;
+  border: none;
+  background: none;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--muted);
 }

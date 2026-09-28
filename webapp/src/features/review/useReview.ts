@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
-import { buildReviewCenter, REVIEW_FILTERS, filterReviewItems } from '#features/review-center/domain/review-center.mjs';
-import { childNameOf, groupNameOf } from '#shared/domain/record-labels.mjs';
+import { buildReviewCenter, filterReviewItems } from '#features/review-center/domain/review-center.mjs';
+import { childNameOf, contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { Child, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type ReviewStatus = 'loading' | 'ready' | 'failed';
+export type ReviewTypeFilter = 'all' | 'children' | 'payments';
+export type ReviewSeverity = 'high' | 'medium' | 'low';
+
+const HIGH_SEVERITY_CATEGORIES = new Set(['unassigned', 'duplicate']);
+const MEDIUM_SEVERITY_CATEGORIES = new Set(['provisional', 'advance']);
+
+function severityOf(categories: string[]): ReviewSeverity {
+  if (categories.some(category => HIGH_SEVERITY_CATEGORIES.has(category))) return 'high';
+  if (categories.some(category => MEDIUM_SEVERITY_CATEGORIES.has(category))) return 'medium';
+  return 'low';
+}
 
 export interface ReviewRowView {
   type: 'children' | 'payments';
   id: string;
   name: string;
+  /** A doua linie din identitate: „Fișă copil · contract #N” / „Achitare · 17.08.2026”. */
+  subtitle: string;
   details: string;
   reasons: string[];
   categories: string[];
+  severity: ReviewSeverity;
   canConfirm: boolean;
   confirmed: boolean;
 }
@@ -25,19 +39,23 @@ export interface ReviewProgressView {
   pending: number;
 }
 
+export interface ReviewTypeCounts {
+  all: number;
+  children: number;
+  payments: number;
+}
+
 export interface ReviewData {
   status: ReviewStatus;
   failureMessage: string;
   rows: ReviewRowView[];
-  totalItems: number;
+  counts: ReviewTypeCounts;
   progress: ReviewProgressView;
   labels: Record<string, string>;
-  filterOptions: readonly (readonly [string, string])[];
   search: string;
   setSearch: (value: string) => void;
-  filter: string;
-  setFilter: (value: string) => void;
-  resetFilters: () => void;
+  typeFilter: ReviewTypeFilter;
+  setTypeFilter: (value: ReviewTypeFilter) => void;
   confirmReview: (paymentId: string) => Promise<void>;
 }
 
@@ -50,34 +68,35 @@ export function useReview(): ReviewData {
   const { state, ready, loading, saveError } = session.state;
 
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
-
-  function resetFilters() {
-    setSearch('');
-    setFilter('all');
-  }
+  const [typeFilter, setTypeFilter] = useState<ReviewTypeFilter>('all');
 
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
       failureMessage: saveError,
       rows: [],
-      totalItems: 0,
+      counts: { all: 0, children: 0, payments: 0 },
       progress: { total: 0, confirmed: 0, pending: 0 },
       labels: {},
-      filterOptions: REVIEW_FILTERS,
       search,
       setSearch,
-      filter,
-      setFilter,
-      resetFilters,
+      typeFilter,
+      setTypeFilter,
       confirmReview: async () => {},
     };
   }
 
   const records = state as RecordsSnapshot;
   const center = buildReviewCenter(records);
-  const filtered = filterReviewItems(center, filter, search);
+  // Segmentul din antet e „Toate · Fișe · Achitări” (tip de înregistrare), nu cele 7 categorii ale
+  // review-center-ului — categoria rămâne folosită doar pentru culoarea punctului și eticheta problemei.
+  const searched = filterReviewItems(center, 'all', search);
+  const counts: ReviewTypeCounts = {
+    all: searched.length,
+    children: searched.filter(item => item.type === 'children').length,
+    payments: searched.filter(item => item.type === 'payments').length,
+  };
+  const filtered = searched.filter(item => typeFilter === 'all' || item.type === typeFilter);
 
   const rows: ReviewRowView[] = filtered.map(item => {
     const isPayment = item.type === 'payments';
@@ -88,9 +107,13 @@ export function useReview(): ReviewData {
       type: item.type,
       id: item.id,
       name: item.name,
+      subtitle: isPayment
+        ? `Achitare · ${formatDate((item.record as Payment).date)}`
+        : `Fișă copil · contract #${contractNumberOf(item.record as Child)}`,
       details,
       reasons: item.reasons,
       categories: item.categories,
+      severity: severityOf(item.categories),
       canConfirm: item.canConfirm,
       confirmed: isPayment ? Boolean((item.record as Payment).reviewed) : false,
     };
@@ -106,15 +129,13 @@ export function useReview(): ReviewData {
     status: 'ready',
     failureMessage: '',
     rows,
-    totalItems: center.items.length,
+    counts,
     progress: center.progress,
     labels: center.labels,
-    filterOptions: REVIEW_FILTERS,
     search,
     setSearch,
-    filter,
-    setFilter,
-    resetFilters,
+    typeFilter,
+    setTypeFilter,
     confirmReview,
   };
 }
@@ -127,5 +148,5 @@ function paymentDetails(payment: Payment, children: Child[]): string {
 }
 
 function childDetails(child: Child, groups: RecordsSnapshot['groups']): string {
-  return `Contract: ${child.contractNumber || child.id} · Grupă: ${groupNameOf(child.groupId, groups) || 'necompletată'}`;
+  return `Contract: ${contractNumberOf(child)} · Grupă: ${groupNameOf(child.groupId, groups) || 'necompletată'}`;
 }

@@ -1,148 +1,199 @@
-import { Badge, Button, Card, LoadingState, SearchInput, useToast, type BadgeTone } from '@shared/ui';
-import { useReview, type ReviewRowView } from './useReview';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Badge,
+  Button,
+  Card,
+  EmptyState,
+  LoadingState,
+  SearchInput,
+  SegmentedControl,
+  useToast,
+  useTopbarActions,
+} from '@shared/ui';
+import { initials } from '@shared/format/initials';
+import { useReview, type ReviewRowView, type ReviewTypeCounts, type ReviewTypeFilter } from './useReview';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
 
-const CATEGORY_TONE: Record<string, BadgeTone> = {
-  unassigned: 'pink',
-  duplicate: 'pink',
-  provisional: 'yellow',
-  automatic: 'mint',
-  advance: 'orange',
-  children: 'neutral',
+const TYPE_LABEL: Record<ReviewRowView['type'], string> = {
+  children: 'Fișă',
+  payments: 'Achitare',
 };
+
+function typeOptions(counts: ReviewTypeCounts) {
+  return [
+    { value: 'all' as const, label: `Toate · ${counts.all}` },
+    { value: 'children' as const, label: `Fișe · ${counts.children}` },
+    { value: 'payments' as const, label: `Achitări · ${counts.payments}` },
+  ];
+}
+
+function rowKey(row: ReviewRowView): string {
+  return `${row.type} ${row.id}`;
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export interface ReviewPageProps {
   onNavigate: (view: ViewKey) => void;
 }
 
-export function ReviewPage({ onNavigate }: ReviewPageProps) {
+/** `onNavigate` rămâne în semnătură pentru App.tsx (ruta de sub `/de-verificat`); ecranul navighează
+ * direct spre fișa/achitarea în cauză cu `useNavigate` din react-router (R-5), nu spre lista generică. */
+export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
   const reviewData = useReview();
   const toast = useToast();
+  const navigate = useNavigate();
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  const rows = reviewData.rows;
+  const foundIndex = rows.findIndex(row => rowKey(row) === activeKey);
+  const activeIndex = foundIndex === -1 ? 0 : foundIndex;
+  const active = rows[activeIndex] ?? null;
+
+  function skip() {
+    if (rows.length === 0) return;
+    const next = (activeIndex + 1) % rows.length;
+    setActiveKey(rowKey(rows[next]));
+  }
+
+  useTopbarActions(
+    <SegmentedControl<ReviewTypeFilter>
+      ariaLabel="Arată"
+      value={reviewData.typeFilter}
+      onChange={reviewData.setTypeFilter}
+      options={typeOptions(reviewData.counts)}
+    />,
+  );
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 's') return;
+      const target = event.target as HTMLElement | null;
+      // Nu fură tasta "s" cât timp utilizatorul scrie în căutare sau alt câmp.
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      skip();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, activeIndex]);
 
   if (reviewData.status === 'loading') return <LoadingState />;
   if (reviewData.status === 'failed')
     return <p className={styles.notice}>{reviewData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
+  function openRecord(row: ReviewRowView) {
+    navigate(row.type === 'payments' ? `/achitari/${row.id}` : `/copii/${row.id}`);
+  }
+
   async function confirm(paymentId: string) {
     try {
       await reviewData.confirmReview(paymentId);
-      toast.show({ message: 'Potrivirea automată a fost marcată ca verificată.' });
+      toast.show({ message: 'Marcat ca verificat.' });
+      skip();
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
   }
 
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        variant="resolved"
+        title="Totul e verificat"
+        description="Nu mai sunt fișe sau achitări de corectat."
+      />
+    );
+  }
+
   return (
-    <>
-      <p className={styles.notice}>
-        Fiecare rând reprezintă o singură fișă sau achitare. Corectează înainte de a confirma.
-      </p>
-
-      <div className={styles.progressRow}>
-        <Card className={styles.progressCard}>
-          <p className={styles.progressLabel}>Probleme afișate</p>
-          <strong className={styles.progressValue}>{reviewData.rows.length}</strong>
-          <small>din {reviewData.totalItems} fișe / achitări cu observații</small>
-        </Card>
-        <Card className={styles.progressCard}>
-          <p className={styles.progressLabel}>Verificări import confirmate</p>
-          <strong className={styles.progressValue}>
-            {reviewData.progress.confirmed} / {reviewData.progress.total}
-          </strong>
-          <small>confirmarea păstrează asocierea și suma existente</small>
-        </Card>
-        <Card className={styles.progressCard}>
-          <p className={styles.progressLabel}>Verificări import rămase</p>
-          <strong className={styles.progressValue}>{reviewData.progress.pending}</strong>
-          <small>achitările fără copil, dublurile și sumele provizorii necesită corectare</small>
-        </Card>
-      </div>
-
-      <div className={styles.toolbar}>
-        <label className={styles.filterField}>
-          Arată
-          <select value={reviewData.filter} onChange={event => reviewData.setFilter(event.target.value)}>
-            {reviewData.filterOptions.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <SearchInput
-          className={styles.search}
-          placeholder="Nume, contract, sursă sau observație"
-          value={reviewData.search}
-          onChange={reviewData.setSearch}
-          ariaLabel="Caută"
-        />
-        <Button variant="ghost" onClick={reviewData.resetFilters}>
-          Resetează filtrele
-        </Button>
-      </div>
-
-      <Card className={styles.listCard}>
-        {reviewData.rows.length === 0 ? (
-          <p className={styles.empty}>Nu există înregistrări pentru filtrul ales.</p>
-        ) : (
-          reviewData.rows.map(row => (
-            <ReviewRow
-              key={`${row.type} ${row.id}`}
-              row={row}
-              onConfirm={confirm}
-              labels={reviewData.labels}
-              onNavigate={onNavigate}
-            />
-          ))
-        )}
-      </Card>
-    </>
-  );
-}
-
-function ReviewRow({
-  row,
-  onConfirm,
-  labels,
-  onNavigate,
-}: {
-  row: ReviewRowView;
-  onConfirm: (paymentId: string) => void;
-  labels: Record<string, string>;
-  onNavigate: (view: ViewKey) => void;
-}) {
-  return (
-    <div className={styles.row}>
-      <div>
-        <p className={styles.rowTitle}>
-          <strong>{row.name}</strong> · {row.id}
-        </p>
-        <div className={styles.tags}>
-          {row.categories.map(category => (
-            <Badge key={category} tone={CATEGORY_TONE[category] ?? 'neutral'}>
-              {labels[category] ?? category}
-            </Badge>
-          ))}
-          {row.confirmed && <Badge tone="mint">Verificat</Badge>}
+    <div className={styles.grid}>
+      <Card className={styles.queueCard}>
+        <div className={styles.queueToolbar}>
+          <SearchInput
+            className={styles.search}
+            placeholder="Nume, contract, sursă sau observație"
+            value={reviewData.search}
+            onChange={reviewData.setSearch}
+            ariaLabel="Caută"
+          />
         </div>
-        <small className={styles.rowDetails}>{row.details}</small>
-        <small className={styles.rowReasons}>{row.reasons.join(' · ')}</small>
-      </div>
-      <div className={styles.rowActions}>
-        <button
-          type="button"
-          className={styles.linkButton}
-          onClick={() => onNavigate(row.type === 'payments' ? 'payments' : 'children')}
-        >
-          {row.type === 'payments' ? 'Corectează achitarea' : 'Corectează fișa'}
-        </button>
-        {row.canConfirm && (
-          <button type="button" className={styles.btnGhostSmall} onClick={() => onConfirm(row.id)}>
-            Confirmă asocierea
-          </button>
-        )}
-      </div>
+        <div className={styles.queueList}>
+          {rows.map(row => (
+            <button
+              key={rowKey(row)}
+              type="button"
+              className={row === active ? `${styles.queueRow} ${styles.queueRowActive}` : styles.queueRow}
+              aria-current={row === active}
+              onClick={() => setActiveKey(rowKey(row))}
+            >
+              <span className={`${styles.dot} ${styles[`dot${capitalize(row.severity)}`]}`} aria-hidden="true" />
+              <span className={styles.queueText}>
+                <strong>{row.name}</strong>
+                <small>{row.reasons[0]}</small>
+              </span>
+              <span className={styles.queueType}>{TYPE_LABEL[row.type]}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {active && (
+        <div className={styles.detail}>
+          <div className={styles.progressRow}>
+            <strong>
+              {activeIndex + 1} din {rows.length}
+            </strong>
+            <div className={styles.progressTrack}>
+              <span style={{ width: `${((activeIndex + 1) / rows.length) * 100}%` }} />
+            </div>
+            <span className={styles.skipHint}>
+              Sari peste <kbd>S</kbd>
+            </span>
+          </div>
+
+          <Card className={styles.caseCard}>
+            <div className={styles.identity}>
+              <span className={styles.identityAvatar}>{initials(active.name)}</span>
+              <div className={styles.identityText}>
+                <strong>{active.name}</strong>
+                <span>{active.subtitle}</span>
+              </div>
+              <button type="button" className={styles.openLink} onClick={() => openRecord(active)}>
+                {active.type === 'payments' ? 'Deschide achitarea →' : 'Deschide fișa →'}
+              </button>
+            </div>
+
+            <div className={styles.problemBox}>
+              <strong>{reviewData.labels[active.categories[0]] ?? 'Problemă'}</strong>
+              <span>{active.reasons.join(' · ')}</span>
+              {active.confirmed && <Badge tone="mint">Verificat</Badge>}
+            </div>
+
+            <div className={styles.actionsRow}>
+              {active.canConfirm ? (
+                <Button onClick={() => void confirm(active.id)}>Confirmă asocierea</Button>
+              ) : (
+                <Button onClick={() => openRecord(active)}>
+                  {active.type === 'payments' ? 'Corectează achitarea' : 'Corectează fișa'}
+                </Button>
+              )}
+              {active.type === 'payments' && !active.canConfirm && !active.confirmed && (
+                <Button variant="outline" onClick={() => void confirm(active.id)}>
+                  Nu e o problemă · marchează verificat
+                </Button>
+              )}
+              <button type="button" className={styles.skipButton} onClick={skip}>
+                Sari peste
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
