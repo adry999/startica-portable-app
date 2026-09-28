@@ -45,6 +45,44 @@ function applyAttendanceEntry(attendanceRepository, recordId, payload) {
   }
 }
 
+// Tabelele proprii ale Bazinului (decizia 11, 2026-09-27-personal-bazin.md) — sincronizate
+// last-writer-wins, ca attendance, prin `createSyncPoolWriter` mai jos.
+const POOL_KINDS = /** @type {const} */ (['pool_bookings', 'pool_sessions', 'pool_closings']);
+
+/**
+ * Formă locală, nu importată din `#features/pool` (nicio feature nu importă alt feature) —
+ * doar câmpurile efectiv citite de `upsertBooking` mai jos.
+ * @typedef {{
+ *   id: string, childId: string, coachId: string, weekday: number, time: string,
+ *   startDate: string, endDate: string | null, archivedAt: string | null, updatedAt: string,
+ * }} SyncPoolBooking
+ */
+
+/**
+ * @param {ReturnType<typeof createSyncPoolWriter>} poolRepository
+ * @param {'pool_bookings' | 'pool_sessions' | 'pool_closings'} kind
+ * @param {string} recordId @param {unknown} payload
+ */
+function applyPoolEntry(poolRepository, kind, recordId, payload) {
+  if (kind === 'pool_bookings') {
+    if (payload === null) poolRepository.removeBooking(recordId);
+    else poolRepository.upsertBooking(/** @type {SyncPoolBooking} */ (payload));
+    return;
+  }
+  if (kind === 'pool_sessions') {
+    const [bookingId, date] = recordId.split('|');
+    if (payload === null) poolRepository.removeSession(bookingId, date);
+    else {
+      const session = /** @type {{ status: string, updatedAt: string }} */ (payload);
+      poolRepository.upsertSession({ bookingId, date, status: session.status, updatedAt: session.updatedAt });
+    }
+    return;
+  }
+  // pool_closings — nu se șterge niciodată (o reînchidere suprascrie), payload mereu nenul.
+  const closing = /** @type {{ month: string, closedAt: string }} */ (payload);
+  poolRepository.upsertClosing(closing.month, closing.closedAt);
+}
+
 /**
  * Scrie o intrare din snapshot-ul serverului (410/resincronizare — C-5) prin depozitul
  * brut potrivit tipului, **fără** audit și **fără** `sync_state` — o resincronizare ține
@@ -55,17 +93,34 @@ function applyAttendanceEntry(attendanceRepository, recordId, payload) {
  * @param {{
  *   rawRecordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
  *   attendanceRepository: ReturnType<typeof createSyncAttendanceWriter>,
+ *   poolRepository?: ReturnType<typeof createSyncPoolWriter>,
  *   kind: string, recordId: string, payload: unknown,
  * }} input
  * @returns {boolean} fals pentru un tip neîntreținut încă (sms_templates/settings)
  */
-export function applySnapshotEntry({ rawRecordRepository, attendanceRepository, kind, recordId, payload }) {
+export function applySnapshotEntry({
+  rawRecordRepository,
+  attendanceRepository,
+  poolRepository,
+  kind,
+  recordId,
+  payload,
+}) {
   if (TYPES.includes(kind)) {
     applyRecordEntry(rawRecordRepository, kind, recordId, payload);
     return true;
   }
   if (kind === 'attendance') {
     applyAttendanceEntry(attendanceRepository, recordId, payload);
+    return true;
+  }
+  if (poolRepository && POOL_KINDS.includes(/** @type {any} */ (kind))) {
+    applyPoolEntry(
+      poolRepository,
+      /** @type {'pool_bookings' | 'pool_sessions' | 'pool_closings'} */ (kind),
+      recordId,
+      payload,
+    );
     return true;
   }
   return false;
@@ -100,6 +155,66 @@ export function createSyncAttendanceWriter(database) {
 }
 
 /**
+ * Scrie datele Bazinului primite de pe server direct pe tabelele proprii, fără tranzacție
+ * proprie și fără `onChange` — același motiv ca `createSyncAttendanceWriter`: motorul rulează
+ * lotul într-o `BEGIN IMMEDIATE` proprie (nu se poate imbrica) și o modificare venită de pe
+ * alt calculator nu trebuie să se întoarcă în propria coadă de trimis.
+ * @param {import('node:sqlite').DatabaseSync} database
+ */
+export function createSyncPoolWriter(database) {
+  const upsertBookingStatement = database.prepare(
+    `INSERT INTO pool_bookings(id,child_id,coach_id,weekday,time,start_date,end_date,archived_at,updated_at)
+     VALUES(?,?,?,?,?,?,?,?,?)
+     ON CONFLICT(id) DO UPDATE SET child_id=excluded.child_id,coach_id=excluded.coach_id,weekday=excluded.weekday,
+       time=excluded.time,start_date=excluded.start_date,end_date=excluded.end_date,archived_at=excluded.archived_at,
+       updated_at=excluded.updated_at`,
+  );
+  const deleteBookingStatement = database.prepare('DELETE FROM pool_bookings WHERE id=?');
+  const upsertSessionStatement = database.prepare(
+    `INSERT INTO pool_sessions(booking_id,date,status,updated_at) VALUES(?,?,?,?)
+     ON CONFLICT(booking_id,date) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at`,
+  );
+  const deleteSessionStatement = database.prepare('DELETE FROM pool_sessions WHERE booking_id=? AND date=?');
+  const upsertClosingStatement = database.prepare(
+    `INSERT INTO pool_closings(month,closed_at) VALUES(?,?)
+     ON CONFLICT(month) DO UPDATE SET closed_at=excluded.closed_at`,
+  );
+
+  return {
+    /** @param {SyncPoolBooking} booking */
+    upsertBooking(booking) {
+      upsertBookingStatement.run(
+        booking.id,
+        booking.childId,
+        booking.coachId,
+        booking.weekday,
+        booking.time,
+        booking.startDate,
+        booking.endDate,
+        booking.archivedAt,
+        booking.updatedAt,
+      );
+    },
+    /** @param {string} id */
+    removeBooking(id) {
+      deleteBookingStatement.run(id);
+    },
+    /** @param {{ bookingId: string, date: string, status: string, updatedAt: string }} session */
+    upsertSession({ bookingId, date, status, updatedAt }) {
+      upsertSessionStatement.run(bookingId, date, status, updatedAt);
+    },
+    /** @param {string} bookingId @param {string} date */
+    removeSession(bookingId, date) {
+      deleteSessionStatement.run(bookingId, date);
+    },
+    /** @param {string} month @param {string} closedAt */
+    upsertClosing(month, closedAt) {
+      upsertClosingStatement.run(month, closedAt);
+    },
+  };
+}
+
+/**
  * Aplică modificări venite de pe server (pull) sau capul serverului după un push
  * „superseded”/„conflict rezolvat” — mereu prin depozitul brut (rawRecordRepository),
  * niciodată prin cel împachetat cu outbox-ul (decizia 4 din plan): altfel o modificare
@@ -107,11 +222,18 @@ export function createSyncAttendanceWriter(database) {
  * @param {{
  *   rawRecordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
  *   attendanceRepository: ReturnType<typeof createSyncAttendanceWriter>,
+ *   poolRepository?: ReturnType<typeof createSyncPoolWriter>,
  *   syncState: ReturnType<typeof import('./sync-state.repository.mjs').createSyncStateRepository>,
  *   auditTrail: import('#shared/contracts/audit-trail.d.mts').AuditTrail,
  * }} dependencies
  */
-export function createChangeApplier({ rawRecordRepository, attendanceRepository, syncState, auditTrail }) {
+export function createChangeApplier({
+  rawRecordRepository,
+  attendanceRepository,
+  poolRepository,
+  syncState,
+  auditTrail,
+}) {
   /**
    * O singură modificare, primită de pe server — apelantul o rulează în interiorul unei
    * tranzacții deja deschise (pull-ul întregului lot, sau un push „superseded”/conflict).
@@ -125,12 +247,14 @@ export function createChangeApplier({ rawRecordRepository, attendanceRepository,
   function apply({ kind, recordId, payload, revision, changedAt, device }) {
     const isRecordKind = TYPES.includes(kind);
     const isAttendance = kind === 'attendance';
+    const isPool = poolRepository && POOL_KINDS.includes(/** @type {any} */ (kind));
     // sms_templates / settings: numele de tip e deja rezervat (KINDS din sync-server/), dar
     // nimeni nu le trimite încă — până la Faza 6, nici audit, nici sync_state (C-8).
-    if (!isRecordKind && !isAttendance) return false;
+    if (!isRecordKind && !isAttendance && !isPool) return false;
     const before = isRecordKind ? (rawRecordRepository.find(kind, recordId) ?? null) : null;
     if (isRecordKind) applyRecordEntry(rawRecordRepository, kind, recordId, payload);
-    else applyAttendanceEntry(attendanceRepository, recordId, payload);
+    else if (isAttendance) applyAttendanceEntry(attendanceRepository, recordId, payload);
+    else applyPoolEntry(/** @type {any} */ (poolRepository), /** @type {any} */ (kind), recordId, payload);
     auditTrail.recordChange({
       action: `sincronizare de pe ${device.name || 'alt calculator'}`,
       recordType: isRecordKind ? /** @type {import('#shared/contracts/record-types.mjs').RecordType} */ (kind) : null,

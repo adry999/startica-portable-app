@@ -73,3 +73,47 @@ test('setările bazinului sunt per filială: Botanica nu vede prețul din Buiuca
   const sessionB = await get('/api/session');
   assert.equal(sessionB.pool.enabled, false);
 });
+
+test('GET /api/pool/month întoarce programările și ședințele fiecărui copil (pentru bonul de 58 mm)', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-pool-month-detail-' });
+  await post('/api/pool/settings', SETTINGS);
+
+  let revision = (await get('/api/state')).revision;
+  const created = await post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: childRecord('C-1'),
+    revision,
+    requestId: 'seed-child-C-1',
+  });
+  revision = created.body.revision;
+  await post('/api/personal/staff', {
+    mode: 'create',
+    staff: {
+      id: 'STF-1',
+      name: 'Antrenor unu',
+      roleId: 'ROL-antrenor-bazin',
+      branchIds: [(await get('/api/session')).branch.id],
+      since: '2026-01-01',
+    },
+  });
+
+  const booking = await post('/api/pool/bookings', {
+    booking: { childId: 'C-1', coachId: 'STF-1', weekday: 2, time: '09:00', startDate: '2026-09-01', endDate: null },
+  });
+  assert.equal(booking.status, 200, JSON.stringify(booking.body));
+  const bookingId = booking.body.booking.id;
+
+  await post('/api/pool/sessions', { changes: [{ bookingId, date: '2026-09-01', status: 'present' }] });
+
+  const month = await get('/api/pool/month?month=2026-09');
+  assert.equal(month.children.length, 1);
+  const row = month.children[0];
+  assert.equal(row.bookings.length, 1);
+  assert.equal(row.bookings[0].id, bookingId);
+  assert.equal(row.sessions.length, 1);
+  assert.deepEqual(
+    { bookingId: row.sessions[0].bookingId, date: row.sessions[0].date, status: row.sessions[0].status },
+    { bookingId, date: '2026-09-01', status: 'present' },
+  );
+});

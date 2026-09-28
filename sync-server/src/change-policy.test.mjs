@@ -7,7 +7,7 @@ test('fișele, grupele, categoriile și vizitele intră în conflict, restul sun
   for (const kind of KINDS.filter(k => !CONFLICT_KINDS.includes(k))) assert.equal(isLastWriterWins(kind), true, kind);
 });
 
-test('KINDS conține toate tipurile de fișe plus prezența, șabloanele SMS și setările', () => {
+test('KINDS conține toate tipurile de fișe plus prezența, tabelele Bazinului, șabloanele SMS și setările', () => {
   assert.deepEqual(KINDS, [
     'children',
     'payments',
@@ -17,6 +17,9 @@ test('KINDS conține toate tipurile de fișe plus prezența, șabloanele SMS și
     'visits',
     'charges',
     'attendance',
+    'pool_bookings',
+    'pool_sessions',
+    'pool_closings',
     'sms_templates',
     'settings',
   ]);

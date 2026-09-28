@@ -8,6 +8,7 @@ import { createRecordingAuditTrail } from '#test-support/recording-audit-trail.m
 import {
   createChangeApplier,
   createSyncAttendanceWriter,
+  createSyncPoolWriter,
   applySnapshotEntry,
   SyncApplyError,
 } from './change-applier.mjs';
@@ -17,10 +18,17 @@ function createHarness() {
   applySchema(database);
   const rawRecordRepository = createRecordRepository(database);
   const attendanceRepository = createSyncAttendanceWriter(database);
+  const poolRepository = createSyncPoolWriter(database);
   const syncState = createSyncStateRepository(database);
   const auditTrail = createRecordingAuditTrail();
-  const applier = createChangeApplier({ rawRecordRepository, attendanceRepository, syncState, auditTrail });
-  return { database, rawRecordRepository, attendanceRepository, syncState, auditTrail, applier };
+  const applier = createChangeApplier({
+    rawRecordRepository,
+    attendanceRepository,
+    poolRepository,
+    syncState,
+    auditTrail,
+  });
+  return { database, rawRecordRepository, attendanceRepository, poolRepository, syncState, auditTrail, applier };
 }
 
 const DEVICE = { id: 'dev-b', name: 'Calculator B' };
@@ -208,6 +216,148 @@ test('applySnapshotEntry scrie o fișă și întoarce fals pentru un tip netrata
       kind: 'settings',
       recordId: 'kindergarten',
       payload: { value: {} },
+    }),
+    false,
+  );
+});
+
+const BOOKING = {
+  id: 'PB-1',
+  childId: 'C-1',
+  coachId: 'STF-1',
+  weekday: 2,
+  time: '09:00',
+  startDate: '2026-09-01',
+  endDate: null,
+  archivedAt: null,
+  updatedAt: '2026-09-01T00:00:00Z',
+};
+
+test('apply pentru pool_bookings scrie direct pe pool_bookings', () => {
+  const { database, applier } = createHarness();
+
+  applier.apply({
+    kind: 'pool_bookings',
+    recordId: BOOKING.id,
+    payload: BOOKING,
+    revision: 1,
+    changedAt: '2026-09-27T10:00:00.000Z',
+    device: DEVICE,
+  });
+
+  const row = /** @type {{ coach_id: string }} */ (
+    database.prepare('SELECT * FROM pool_bookings WHERE id=?').get(BOOKING.id)
+  );
+  assert.equal(row.coach_id, 'STF-1');
+});
+
+test('apply pentru pool_bookings cu payload null șterge rândul', () => {
+  const { database, applier } = createHarness();
+  applier.apply({
+    kind: 'pool_bookings',
+    recordId: BOOKING.id,
+    payload: BOOKING,
+    revision: 1,
+    changedAt: '2026-09-27T10:00:00.000Z',
+    device: DEVICE,
+  });
+
+  applier.apply({
+    kind: 'pool_bookings',
+    recordId: BOOKING.id,
+    payload: null,
+    revision: 2,
+    changedAt: '2026-09-27T10:01:00.000Z',
+    device: DEVICE,
+  });
+
+  assert.equal(database.prepare('SELECT * FROM pool_bookings WHERE id=?').get(BOOKING.id), undefined);
+});
+
+test('apply pentru pool_sessions scrie pe pool_sessions, cheia fiind bookingId|date', () => {
+  const { database, applier } = createHarness();
+
+  applier.apply({
+    kind: 'pool_sessions',
+    recordId: 'PB-1|2026-09-08',
+    payload: { status: 'present', updatedAt: '2026-09-08T10:00:00.000Z' },
+    revision: 1,
+    changedAt: '2026-09-27T10:00:00.000Z',
+    device: DEVICE,
+  });
+
+  const row = /** @type {{ status: string }} */ (
+    database.prepare('SELECT * FROM pool_sessions WHERE booking_id=? AND date=?').get('PB-1', '2026-09-08')
+  );
+  assert.equal(row.status, 'present');
+});
+
+test('apply pentru pool_sessions cu payload null șterge rândul', () => {
+  const { database, applier } = createHarness();
+  database
+    .prepare('INSERT INTO pool_sessions(booking_id,date,status,updated_at) VALUES(?,?,?,?)')
+    .run('PB-1', '2026-09-08', 'present', '2026-09-08T10:00:00.000Z');
+
+  applier.apply({
+    kind: 'pool_sessions',
+    recordId: 'PB-1|2026-09-08',
+    payload: null,
+    revision: 2,
+    changedAt: '2026-09-27T10:01:00.000Z',
+    device: DEVICE,
+  });
+
+  assert.equal(
+    database.prepare('SELECT * FROM pool_sessions WHERE booking_id=? AND date=?').get('PB-1', '2026-09-08'),
+    undefined,
+  );
+});
+
+test('apply pentru pool_closings scrie pe pool_closings, cheia fiind luna', () => {
+  const { database, applier } = createHarness();
+
+  applier.apply({
+    kind: 'pool_closings',
+    recordId: '2026-09',
+    payload: { month: '2026-09', closedAt: '2026-09-30T12:00:00.000Z' },
+    revision: 1,
+    changedAt: '2026-09-27T10:00:00.000Z',
+    device: DEVICE,
+  });
+
+  const row = /** @type {{ closed_at: string }} */ (
+    database.prepare('SELECT * FROM pool_closings WHERE month=?').get('2026-09')
+  );
+  assert.equal(row.closed_at, '2026-09-30T12:00:00.000Z');
+});
+
+test('applySnapshotEntry scrie o programare de bazin dintr-un snapshot', () => {
+  const { database, rawRecordRepository, attendanceRepository, poolRepository } = createHarness();
+
+  const applied = applySnapshotEntry({
+    rawRecordRepository,
+    attendanceRepository,
+    poolRepository,
+    kind: 'pool_bookings',
+    recordId: BOOKING.id,
+    payload: BOOKING,
+  });
+
+  assert.equal(applied, true);
+  const row = database.prepare('SELECT * FROM pool_bookings WHERE id=?').get(BOOKING.id);
+  assert.ok(row);
+});
+
+test('applySnapshotEntry fără poolRepository injectat întoarce fals pentru un kind de bazin (compatibilitate)', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+
+  assert.equal(
+    applySnapshotEntry({
+      rawRecordRepository,
+      attendanceRepository,
+      kind: 'pool_bookings',
+      recordId: BOOKING.id,
+      payload: BOOKING,
     }),
     false,
   );

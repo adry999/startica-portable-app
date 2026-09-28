@@ -1,4 +1,5 @@
-import { Badge, Button, Card, useToast } from '@shared/ui';
+import { useNavigate } from 'react-router-dom';
+import { Badge, Button, Card, RowMenu, useToast } from '@shared/ui';
 import type { ChildMonthRow, CoachMonthRow } from '@shared/pool/usePool';
 import styles from './MonthView.module.css';
 
@@ -25,6 +26,7 @@ export function MonthView({
   onCloseMonth,
 }: MonthViewProps) {
   const toast = useToast();
+  const navigate = useNavigate();
   const revenue = children.reduce((sum, row) => sum + row.amount, 0);
   const coachTotal = coaches.reduce((sum, row) => sum + row.amount, 0);
 
@@ -70,6 +72,7 @@ export function MonthView({
               <th>Motivat</th>
               <th>Sumă</th>
               <th>Stare</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -84,11 +87,18 @@ export function MonthView({
                 <td>
                   <Badge tone={row.charged ? 'mint' : 'neutral'}>{row.charged ? 'Taxat' : 'Neînchis'}</Badge>
                 </td>
+                <td>
+                  <RowMenu
+                    items={[
+                      { label: 'Bon 58 mm', onClick: () => navigate(`/bazin/bon/${row.childId}?month=${month}`) },
+                    ]}
+                  />
+                </td>
               </tr>
             ))}
             {children.length === 0 && (
               <tr>
-                <td colSpan={7} className={styles.empty}>
+                <td colSpan={8} className={styles.empty}>
                   Nicio programare în luna asta.
                 </td>
               </tr>

@@ -115,6 +115,15 @@ export function PoolSettings() {
             onChange={event => setForm({ ...form, coachRate: Number(event.target.value) })}
           />
         </label>
+        <label className={backupStyles.field}>
+          Ce aduce copilul (pe bonul de 58 mm)
+          <input
+            value={form.itemsNote}
+            maxLength={300}
+            placeholder="Costum de baie, cască, prosop, papuci."
+            onChange={event => setForm({ ...form, itemsNote: event.target.value })}
+          />
+        </label>
         <p className={backupStyles.notice}>
           Antrenorii se aleg din Personal, funcția „Antrenor bazin”.{' '}
           {pool.coaches.length === 0

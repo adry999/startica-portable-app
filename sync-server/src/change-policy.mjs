@@ -8,9 +8,18 @@ export const SENSITIVE_FIELDS = { visits: ['healthNotes'], children: ['healthNot
 // din aceste nume, nu un cod hex — serverul respingea orice culoare reală înainte de fix.
 export const BRANCH_COLORS = ['orange', 'mint', 'yellow', 'pink'];
 
-// Tipurile sincronizate în total: fișele (RECORD_KINDS) + prezența + șabloanele SMS +
+// Tipurile sincronizate în total: fișele (RECORD_KINDS) + prezența + tabelele proprii ale
+// Bazinului (decizia 11, 2026-09-27-personal-bazin.md — ca attendance, LWW) + șabloanele SMS +
 // setările sincronizate (Faza 6 le tratează efectiv; aici numele de tip e deja rezervat).
-export const KINDS = [...RECORD_KINDS, 'attendance', 'sms_templates', 'settings'];
+export const KINDS = [
+  ...RECORD_KINDS,
+  'attendance',
+  'pool_bookings',
+  'pool_sessions',
+  'pool_closings',
+  'sms_templates',
+  'settings',
+];
 
 // Fișele și grupele nu se pierd niciodată în tăcere: o revizie depășită devine conflict,
 // rezolvat de utilizator (14c). Restul tipurilor sunt last-writer-wins (decizia 5).

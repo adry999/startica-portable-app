@@ -26,7 +26,6 @@ const SESSION_STATUSES = ['present', 'absent', 'excused', 'cancelled'];
  *   writeSetting: (key: string, value: string) => void,
  *   listCoaches: () => { id: string, name: string }[],
  *   payCoach: (input: { staffId: string, month: string, gross: number, date: string, method: string }) => { paid: boolean },
- *   onChange?: (change: { kind: 'pool_sessions', id: string, payload: unknown }) => void,
  *   today?: () => string,
  * }} dependencies
  */
@@ -39,7 +38,6 @@ export function createPoolRoutes({
   writeSetting,
   listCoaches,
   payCoach,
-  onChange,
   today = localToday,
 }) {
   const closingService = createPoolClosingService({
@@ -185,7 +183,7 @@ export function createPoolRoutes({
       if (change.date > todayStr && change.status !== null && change.status !== 'cancelled')
         fail('Ziua viitoare acceptă doar anularea.');
     }
-    const { saved, removed } = poolRepository.applySessionChanges(changes, () => new Date().toISOString(), onChange);
+    const { saved, removed } = poolRepository.applySessionChanges(changes, () => new Date().toISOString());
     return { ok: true, saved, removed };
   }
 
@@ -201,18 +199,18 @@ export function createPoolRoutes({
     const { children } = recordRepository.readSnapshot();
     const childIds = [...new Set(bookings.map(booking => booking.childId))];
     const childRows = childIds.map(childId => {
-      const row = childMonth({
-        bookings: bookings.filter(booking => booking.childId === childId),
-        sessions,
-        month,
-        settings,
-        todayStr,
-      });
+      const childBookings = bookings.filter(booking => booking.childId === childId);
+      const bookingIds = new Set(childBookings.map(booking => booking.id));
+      const row = childMonth({ bookings: childBookings, sessions, month, settings, todayStr });
       return {
         childId,
         child: children.find(child => child.id === childId) ?? null,
         ...row,
         charged: !!recordRepository.find('charges', `CHG-bazin-${childId}-${month}`),
+        // Programările și ședințele copilului — folosite de bonul de 58mm (Task 11), ca
+        // rândul agregat de mai sus să nu ceară un al doilea apel de rețea pentru detaliu.
+        bookings: childBookings,
+        sessions: sessions.filter(session => bookingIds.has(session.bookingId)),
       };
     });
     const coachRows = listCoaches().map(coach => ({
