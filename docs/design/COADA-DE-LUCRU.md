@@ -167,6 +167,12 @@ Niciun cod de producție nou. Rămân nereparate din audit-ul separat (`docs/sup
 
 **Nu am construit 14b/14c** — e task mare, separat, cu bug-uri de reparat întâi; aștept decizia ta.
 
+## Etapa 0.5–0.9 (URMATORUL-PAS.md, sync 28.09 13:46)
+
+Rulate cu crew multiple în paralel (worktree-uri izolate), fiecare verificat pe disc (diff + `npm run check` + webapp typecheck/test) înainte de merge în `master-v2`.
+
+- **0.9 Culori grupe:** DONE — `groupTone()` din `group-tone.ts` trecut de pe sortare alfabetică pe `sortByGroupOrder` (`group.order`, reutilizat din `@shared/format/group-order`). Cauza reală era mai mare decât fișierul indicat în URMATORUL-PAS: 8 hook-uri de date (`useAttendanceDay/Month`, `useBirthdays`, `useChildProfile`, `useChildren`, `useFeeSetup`, `usePayments`, `useStatus`) sortau independent lista de grupe alfabetic înainte s-o dea filtrelor — toate trecute pe `sortByGroupOrder`. Cele două sisteme de tonuri (`PillTone` 4 valori vs `BoardTone` 8 valori din `groupBoardTone.ts`, folosit doar în modulul Grupe) **rămân separate**, intenționat — nu s-au contopit, motivul e documentat în cod (Grupe v2 cere 7+ tonuri distincte, PillTone e plafonat la 4 și folosit în alte ecrane; contopirea ar risca regresie vizuală acolo). `npm run check` (1048/1050, 2 skip) + webapp typecheck/test (753/753) verzi. Commit `be1d961`.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
 - Build + hash instaler final, după ce confirmi că merge tot testat local.
