@@ -1,0 +1,200 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 71, 80, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dialog);
+}
+
+.dialog {
+  width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--slate);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.weekRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  background: var(--neutral-soft);
+  border-radius: var(--radius-pill);
+  padding: 6px 8px;
+}
+
+.arrow {
+  border: 0;
+  background: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--slate);
+  padding: 2px 6px;
+}
+
+.arrow:disabled {
+  color: var(--subtle);
+  cursor: default;
+}
+
+.stepperLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.groupsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quickActions {
+  display: flex;
+  gap: var(--space-10);
+}
+
+.linkButton {
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--orange-ink);
+  padding: 0;
+}
+
+.pillRow {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.groupPill {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 6px 12px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--white);
+  cursor: pointer;
+}
+
+.optionsBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-12) var(--space-14);
+}
+
+.optionsHead {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.optionsNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.previewTabs {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.previewTab {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.previewTabActive {
+  background: var(--slate);
+  color: var(--white);
+  border-color: var(--slate);
+}
+
+.previewFrame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--neutral-soft);
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.previewScale {
+  transform: scale(0.28);
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.message {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 16px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-10);
+  margin-top: var(--space-8);
+}
