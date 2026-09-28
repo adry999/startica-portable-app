@@ -3,7 +3,8 @@ import { Badge, Button, Card, FilterPills, LoadingState, SearchInput, type PillT
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
-import { bothBranchesLabel, birthdayTag, initials } from '@shared/personal/staff-labels';
+import { bothBranchesLabel, birthdayTag } from '@shared/personal/staff-labels';
+import { initials } from '@shared/format/initials';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import { RolesDrawer } from './RolesDrawer';
 import type { Staff, TimesheetRow } from '@shared/personal/personal.types';
