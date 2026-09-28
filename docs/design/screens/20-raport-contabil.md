@@ -21,6 +21,6 @@
 - **PDF**: rezumatul pe o pagină A4, cu antetul grădiniței (16a), prin `@media print`.
 
 ## Criterii de acceptare
-- [x] Totalurile din 19a = suma rândurilor din Excel (`buildAccountingReport` calculează ambele din același `paymentRows`/`expenseRows`; testat în `accounting-report.test.mjs` și `report-excel.test.ts`)
-- [x] Suma în lei a unei achitări EUR e cea salvată, chiar dacă între timp s-a schimbat cursul zilei (`amount`/`amountEur`/`fxRate` citite direct de pe achitare, niciodată recalculate)
-- [x] Filtrul de filială funcționează și pe „Ambele” (o foaie pe filială + Rezumat comun) — implementat în Faza 4 a `2026-09-27-filiale.md`: `ReportExportDrawer.tsx` (selectorul „Filiala”, doar cu mai multe filiale), `report-excel.ts` (`buildMultiBranchWorkbook`); testat în `ReportExportDrawer.test.tsx` și `report-excel.test.ts`
+- [ ] Totalurile din 19a = suma rândurilor din Excel
+- [ ] Suma în lei a unei achitări EUR e cea salvată, chiar dacă între timp s-a schimbat cursul zilei
+- [ ] Filtrul de filială funcționează și pe „Ambele” (o foaie pe filială + Rezumat comun)

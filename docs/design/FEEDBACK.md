@@ -1,21 +1,75 @@
-# Feedback după sync — 27.09.2026, 14:56
+# Feedback după sync — 28.09.2026, 09:45
 
-Verificat pe `master-v2` (7b1b753) față de design. Punctele 8–15 din coadă sunt în cod. Corecturile de mai jos sunt mici.
+Am verificat `master-v2` după `7b1b753`: 129 de commituri, 300 de fișiere. Au intrat în cod filialele (Faza 6), sincronizarea (server + client), Personal (echipă, pontaj, salarii, avansuri, concedii, PIN), stickerele, bonul de 58 mm, Situația tipărită, `design-system.html` și auditul `AUDIT-UI-2026-09-28.md`. Auditul e bun și rămâne lista de referință pentru alinierea vizuală. Mai jos sunt doar lucrurile noi față de audit și ce vine din designul de azi.
 
-## Prezența (19 · 18a/18b) — ok, trei corecturi
-- Cardurile Absenți și Motivați: cifra în culoarea stării (`--raspberry` / `--yellow-ink`), ca în 18a. Acum toate sunt `--slate`.
-- Luna (18b): popover-ul „Motivat” primește mereu `reason=""`. Trebuie să primească motivul salvat pentru acea zi, ca în Ziua.
-- „Tipărește” și „Exportă” stau în antet, lângă `MonthStepper` (ca 18b), nu în `trailing` al `FilterPills`.
+## 0. Întâi: urcă pachetul nou în `docs/design/`
+În repo lipsesc designul și spec-urile de azi. Fără ele, punctele 2–5 nu au referință:
+- `Grupe.dc.html` (4a/4b/4c; 3a/3b scoase) și `screens/03-grupe.md` (rescris)
+- `Prezenta.dc.html` (18c/18d, anulare, indicator de salvare), `screens/19-prezenta.md` și `screens/26-foaie-saptamana.md` (nou)
+- `Formulare.dc.html` (15g, scroll subțire) și `screens/13-formulare.md`
+- `Set final.dc.html` și `screens/README.md`
 
-## Raport contabil (20 · 19a/19b) — ok
-- Totalurile, lista EUR cu curs salvat și portocaliul pentru `fxRateSource: 'manual'` sunt corecte.
-- Rândul de total: „Total lună” pe Lună, „Total trimestru” / „Total an” pe celelalte. Acum e mereu „Total perioadă”.
-- Selectorul de filială din export rămâne pentru Faza 6. Ok.
+Păstrează `COADA-DE-LUCRU.md`, `INTREBARI.md`, `RASPUNSURI.md` și `AUDIT-UI-2026-09-28.md` din repo.
 
-## Lipsesc din `docs/design/`
-Încarcă din pachet: `Bazin.dc.html` (actualizat), `Personal.dc.html`, `Tiparire.dc.html` (actualizat), `Bon 58mm.dc.html`, `Set final.dc.html`, `screens/23-bazin.md`, `screens/24-personal.md`, `screens/25-bon-stickere.md`, `screens/README.md`.
+## 1. Bug: „Toată grupa prezentă” șterge Absent și Motivat — prioritar
+`useAttendanceDay.ts` → `markGroupPresent` trimite `status: 'present'` pentru **toți** copiii secțiunii, deci suprascrie absențele și motivele. Butonul din antet face corect (`changesToMarkUnmarkedPresent`).
+- Fix: `markGroupPresent` folosește `changesToMarkUnmarkedPresent(childIds, entriesByChildId, date)` pe secțiune, iar butonul se dezactivează când `section.unmarked === 0`.
+- Test: un copil Absent și unul Motivat în grupă → după clic rămân Absent și Motivat.
 
-## De făcut în continuare
-1. Corecturile de mai sus.
-2. Faza 6 (filiale, `17-filiale.md`), apoi sincronizarea (`18-sincronizare.md`), cum e confirmat în `COADA-DE-LUCRU.md`.
-3. Apoi, pe rând: `23-bazin.md`, `24-personal.md`, `25-bon-stickere.md`. `npm run check` + typecheck + test după fiecare.
+## 2. Meniul lateral (confirmă AB-1 din audit)
+Rămâne valabil textul de mai jos (dropdown-ul de filială prin portal + `ScrollArea`). **Cauza reală:** `.sidebar` are `position: sticky` + `overflow-y: auto` (`Sidebar.module.css:10-13`), iar `.dropdown` are `position:absolute; width:300px; z-index:10` (`BranchSelector.module.css:70-84`). Z-index-ul contează doar în contextul sidebar-ului, deci `main` se desenează peste dropdown și 52px din el sunt tăiați.
+
+### 2a. Dropdown prin portal
+- `BranchSelector.tsx`: `createPortal(<div className={s.dropdown} style={{ top, left }}>…</div>, document.body)`. Poziția vine din `trigger.getBoundingClientRect()`: `top = rect.bottom + 8`, `left = rect.left`. Se recalculează la `resize` și la `scroll` pe sidebar. Dacă nu încape jos, se deschide deasupra butonului.
+- `.dropdown`: `position: fixed; z-index: var(--z-popover);`. În `tokens.css`: `--z-sticky: 10; --z-drawer: 100; --z-popover: 200; --z-toast: 300; --z-dialog: 400;`. `RowMenu`, `Drawer`, `Toast` și dialogurile trec și ele pe aceste variabile.
+- Esc și click în afară închid dropdown-ul; focusul revine pe buton.
+- Test: cu sidebar-ul derulat și fereastra de 900px, `document.elementFromPoint` în centrul dropdown-ului întoarce un nod din dropdown.
+
+### 2b. Scroll subțire — `ScrollArea` (design: `Formulare.dc.html#15g`, spec `13-formulare.md` 15g)
+Bara are **3 px, iar la hover sau la tragere 5 px**. Pista e invizibilă și bara nu ocupă loc. Nu se folosește bara nativă: în Chrome are minimum ~6 px și ocupă loc, în Firefox ~8 px.
+```tsx
+<ScrollArea className={s.sidebar}>{children}</ScrollArea>
+// root > viewport{children} + bar > thumb
+```
+```css
+.root { position: relative; overflow: hidden; }
+.viewport { height: 100%; overflow-y: auto; scrollbar-width: none; }
+.viewport::-webkit-scrollbar { display: none; }
+.bar { position: absolute; top: 6px; bottom: 6px; right: 2px; width: 7px; border-radius: 99px;
+       opacity: 0; transition: opacity .2s .8s, background .15s; }
+.root:hover .bar, .root:focus-within .bar, .bar.dragging { opacity: 1; transition-delay: 0s; }
+.thumb { position: absolute; left: 50%; transform: translateX(-50%); width: 3px; min-height: 32px;
+         border-radius: 99px; background: #e0d5c2; transition: width .15s, background .15s; }
+.bar:hover { background: rgba(58,71,80,.04); }
+.bar:hover .thumb { width: 5px; background: #c9c4ba; }
+.bar.dragging { background: rgba(58,71,80,.06); }
+.bar.dragging .thumb { width: 5px; background: #9aa3a9; }
+```
+- `thumbHeight = max(32, clientHeight² / scrollHeight)`, `thumbTop = scrollTop / (scrollHeight - clientHeight) * (barHeight - thumbHeight)`. Se actualizează pe `scroll` (cu rAF) și prin `ResizeObserver`. Fără overflow, bara nu se randează.
+- Tragere cu `pointerdown` + `setPointerCapture`; click pe pistă sare cu o pagină. Bara are `aria-hidden`.
+- Umbra de continuare: `.root::after`, gradient de 48px până la `var(--white)`, ascuns cu `.atEnd`.
+- Meniul lateral: se derulează doar modulele; cardul de salvare sau sincronizare rămâne în afara viewport-ului, lipit jos.
+- Se mai folosește la: dropdown-ul de filială, „Modificări azi”, `Drawer`, `RowMenu` lung, tabelele cu înălțime fixă.
+
+## 3. Grupe → v2 (`03-grupe.md`, rescris)
+Codul e încă pe 3a/3b (carduri de 4 coloane cu editor inline, cardul punctat, „+ Grupă nouă” doar în Tablă, coloane cu wrap). Punctele G-1…G-16 din audit **se înlocuiesc** cu spec-ul v2:
+- Tabla e implicită; cheia devine `view.groups`, cu valoarea implicită `'board'`.
+- Tabla are pool-ul „Fără grupă” fixat la stânga și tile-urile pe 2 coloane, cu maximum 9 pastile + „+N”.
+- Cardurile sunt compacte, pe 4 coloane, cu editorul dedesubt și copiii pe 4 coloane.
+- „+ Grupă nouă” e în antet în ambele moduri și deschide `Drawer`-ul 4c (previzualizare, culoare din 8 tonuri, capacitate, vârstă, educator principal + asistent din Personal). Grupa nouă se pune **prima**.
+- **Reordonare:** butoanele ‹ › din `GroupsBoard.tsx` (G-16) se înlocuiesc cu tragerea de mânerul „⋮⋮”, plus Alt+↑/↓. Câmpul `order` se salvează și se folosește peste tot (și în `useAttendanceDay`, care acum sortează alfabetic).
+- `GroupTeamCard` (echipa pe grupă) e bun și rămâne: în editorul din Carduri și sursă pentru „Educator principal / Asistent” pe tile și pe foaia săptămânii.
+
+## 4. Prezența → anulare, indicator de salvare, foaia săptămânii
+- **Anulare** (`19-prezenta.md` → „Anulare și istoric”): stiva de acțiuni per zi și filială, persistată. Butonul dublu „↶ Anulează | N ▾” (Ctrl+Z) și popover-ul „Modificări azi” cu „Anulează până aici”. Toastul de după acțiunea în masă nu dispare singur. Butonul din antet devine „Nemarcații (N) → prezenți”.
+- **Indicator de salvare** lângă titlu: Salvat · ora / Se salvează… / Nesalvat · N modificări + „Încearcă din nou”. Cu modificări nesalvate, plecarea de pe pagină cere confirmare. Înlocuiește toastul actual cu `saveError`.
+- **Foaia săptămânii** (`26-foaie-saptamana.md`): butonul „Foi pe săptămână” (în Ziua stă în bara de filtre, în Luna în antet), fereastra 18c și ruta `/prezenta/foi`, cu 16 rânduri pe foaie și fără date de contact. „Tipărește” din Luna devine „Tipărește luna”.
+
+## 5. Bazin
+În webapp nu există încă un ecran Bazin (doar `PoolReceiptLabel` și planul `2026-09-27-personal-bazin.md`). Urmează după punctele 1–4, după `23-bazin.md`.
+
+## Ordinea
+1 → 2 → 3 → 4 → 5, apoi batch-urile din `AUDIT-UI-2026-09-28.md` (T-1…T-6 întâi, pentru că schimbă antetul pe toate ecranele). `npm run check` + webapp typecheck + test după fiecare.
+
+---
+_Istoric: feedback-ul din 27.09 (Prezența, Raport contabil) e marcat DONE în `COADA-DE-LUCRU.md`._

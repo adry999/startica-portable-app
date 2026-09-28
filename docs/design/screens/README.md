@@ -28,7 +28,7 @@ Bifează fiecare criteriu de acceptare din spec și raportează-le pe cele nebif
 | 00 | Componente comune (antet compact, bara de filtre, comutator) | toate | `00-comun.md` |
 | 01 | Copii → Zile de naștere | Copii.dc.html#2c | `01-copii-zile-de-nastere.md` |
 | 02 | Copii → listă | Copii.dc.html#2a | `02-copii-lista.md` |
-| 03 | Grupe (Carduri / Tablă) | Grupe.dc.html#3a, #3b | `03-grupe.md` |
+| 03 | Grupe (Tablă / Carduri) · v2 | Grupe.dc.html#4b, #4a | `03-grupe.md` |
 | 04 | Vizite | Vizite.dc.html#4a | `04-vizite.md` |
 | 05 | Achitări (Tabel / Pe luni) | Achitari.dc.html#5a, #5b | `05-achitari.md` |
 | 06 | Cheltuieli (Tabel / Pe zile) | Cheltuieli.dc.html#6a, #6b | `06-cheltuieli.md` |
@@ -58,3 +58,7 @@ Pentru ca Claude Code să găsească singur spec-urile, copiază `CLAUDE-md-snip
 - `23-bazin.md` — Bazin (22a–22d)
 - `24-personal.md` — Personal (23a–23k)
 - `25-bon-stickere.md` — Bon 58 mm și stickere (24a–24d)
+
+## Adăugate 28.09.2026
+- `03-grupe.md` — **rescris (v2)** pentru 7+ grupe: Tabla implicită, „+ Grupă nouă” în antet (4a, 4b). Varianta 3a/3b a fost scoasă.
+- `26-foaie-saptamana.md` — foaia de prezență pe săptămână, A4 orizontal, câte una pe grupă (18c, 18d)

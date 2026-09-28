@@ -19,6 +19,6 @@ Se modifică: `status/StatusPage.tsx`, `.module.css`, `.test.tsx`. Se creează: 
 - **Hartă:** coloana copil de 230px + 12 coloane de lună + Sold de 130px; celule de 30px, radius 8: achitat `--mint`, parțial `--yellow`, neachitat `--raspberry`, urmează `#f1ece2`, înainte de contract `#faf7f1`; luna curentă cu outline de 2px `--orange-soft`. Legenda sus.
 
 ## 5. Criterii de acceptare
-- [x] Antetul An școlar e compact, identic cu Lună (nu H2 de 36px în conținut)
-- [x] Filtrul de grupă e cu pastile, nu cu dropdown
-- [x] „Notifică” pe un rând → #7c; „Notifică toți” → #7d — cablate la `SmsConfirmDialog` (SMS P2): rând → mod `single`, banner și „Notifică” din An școlar → mod `bulk`; dezactivate cu explicație cât sms.md nu e conectat
+- [ ] Antetul An școlar e compact, identic cu Lună (nu H2 de 36px în conținut)
+- [ ] Filtrul de grupă e cu pastile, nu cu dropdown
+- [ ] „Notifică” pe un rând → #7c; „Notifică toți” → #7d

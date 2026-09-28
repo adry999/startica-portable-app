@@ -12,175 +12,221 @@
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
     <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Grupe</h1>
-    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un singur ecran cu comutatorul „Carduri | Tablă” în antet, ca la Achitări. <a href="#3a">3a</a>: carduri de grupă cu ocupare și editorul grupei selectate dedesubt. <a href="#3b">3b</a>: tablă cu coloane; copiii fără grupă se trag în grupa dorită. Antetul e identic în ambele moduri; alegerea se ține minte.</p>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un singur ecran cu comutatorul „Tablă | Carduri” în antet și „+ Grupă nouă” lângă el, în ambele moduri. Ordinea grupelor e a voastră: trage de „⋮⋮” (în Tablă) sau de tot cardul (în Carduri) ca s-o schimbi; ordinea se salvează și e aceeași peste tot în aplicație (filtre, Prezența, foi tipărite). Încearcă aici. „+ Grupă nouă” deschide panoul lateral <a href="#4c">4c</a>. La deschidere apare Tabla (<a href="#4b">4b</a>); comutatorul e „Tablă | Carduri”. <a href="#4a">4a</a>: carduri compacte în grilă de 4 (două rânduri), editorul grupei alese dedesubt; stările Plină, Peste capacitate, Goală și Fără educator se văd direct pe card. <a href="#4b">4b</a>: coloanele nu mai încap, așa că tabla devine „Fără grupă” fixat la stânga și grupele ca ținte de plasare în grilă de 2; fiecare arată primii 9 copii, restul „+N”.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
-    <div id="3a" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">3a</span><span style="font-size:16px;font-weight:700">Grupe → vizualizare Carduri</span></div>
+    <div id="4b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">4b</span><span style="font-size:16px;font-weight:700">Grupe → Tablă, 7 grupe · vizualizarea implicită la deschidere</span></div>
       <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
         <dc-import name="Sidebar" variant="a" active="grupe" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Organizare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Grupe</h2></div>
-            <span style="font-size:14px;color:#6b7780">7 copii în grupe · 92 fără grupă</span>
-            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#3a" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Carduri</a><a href="#3b" style="padding:7px 14px;color:#6b7780;text-decoration:none">Tablă</a></div>
+            <span style="font-size:14px;color:#6b7780">7 grupe · 77 copii în grupe · <b style="color:#a34f00">22 fără grupă</b></span>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#4b" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Tablă</a><a href="#4a" style="padding:7px 14px;color:#6b7780;text-decoration:none">Carduri</a></div>
+            <a href="#4c" style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);text-decoration:none">+ Grupă nouă</a>
           </header>
-          <div style="padding:28px 40px 44px;display:flex;flex-direction:column;gap:20px">
-            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
-              <div onClick="{{ toggleMars }}" style="position:relative;overflow:hidden;border-radius:24px;padding:22px 24px;background:#fcead3;border:2px solid {{ marsBd }};display:flex;flex-direction:column;gap:12px;cursor:pointer">
-                <span style="position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.45)"></span>
-                <div style="display:flex;justify-content:space-between;align-items:baseline;position:relative"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Mars</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;color:#a34f00">7<span style="font-size:18px;color:#c48a4a">/10</span></span></div>
-                <div style="height:8px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:70%;height:100%;background:#ef8a1d;border-radius:99px"></span></div>
-                <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px;color:#5b666e">Educator <b>Ala</b> · 2a 5l – 6a 9l</span><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fff;color:#a34f00">{{ marsLbl }}</span></div>
-                <div style="display:flex">
-                  <sc-for list="{{ stack }}" as="s" hint-placeholder-count="5"><span style="width:32px;height:32px;margin-right:-8px;border-radius:50%;border:2px solid #fcead3;background:{{ s.bg }};color:{{ s.fg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">{{ s.ini }}</span></sc-for>
-                  <span style="width:32px;height:32px;border-radius:50%;border:2px solid #fcead3;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-left:8px">+2</span>
-                </div>
-              </div>
-              <div onClick="{{ toggleSoare }}" style="position:relative;overflow:hidden;border-radius:24px;padding:22px 24px;background:#e7f4ec;border:2px solid {{ soareBd }};display:flex;flex-direction:column;gap:12px;cursor:pointer">
-                <span style="position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.45)"></span>
-                <div style="display:flex;justify-content:space-between;align-items:baseline;position:relative"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Soare</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;color:#2e6b4c">0<span style="font-size:18px;color:#7fae93">/10</span></span></div>
-                <div style="height:8px;border-radius:99px;background:#fff"></div>
-                <span style="font-size:13px;color:#5b666e">Fără educator · <span style="color:#2e6b4c;font-weight:800">Setează</span></span>
-                <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:13px;color:#2e6b4c;font-weight:800">Grupă goală — adaugă copii</span><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fff;color:#2e6b4c">{{ soareLbl }}</span></div>
-              </div>
-              <div style="border-radius:24px;padding:22px 24px;border:2px dashed #e0d5c2;display:flex;flex-direction:column;gap:10px">
-                <a href="Grupe.dc.html#3a" style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;color:#3a4750;text-decoration:none">+ Grupă nouă</a>
-                <div style="display:flex;gap:8px"><span style="flex:1;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">Nume grupă</span><span style="width:90px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">Locuri</span></div>
-                <span style="align-self:flex-start;padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:13px">Creează</span>
-              </div>
+          <div style="padding:20px 40px 36px;display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start">
+            <div style="border-radius:22px;background:#f4f1ea;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:baseline;gap:8px;padding:2px 4px"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Fără grupă</span><span style="font-weight:800;color:#a34f00">22</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕ Caută copil</div>
+              <span style="font-size:12px;color:#6b7780;padding:0 4px">Ordonați după vârstă · trage pe o grupă</span>
+              <sc-for list="{{ pool2 }}" as="k" hint-placeholder-count="12">
+                <div style="display:flex;align-items:center;gap:8px;padding:6px 10px 6px 6px;border-radius:12px;background:#fff;opacity:{{ k.op }}"><span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;font-size:12px">⋮⋮</span><span style="width:26px;height:26px;border-radius:50%;background:{{ k.abg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">{{ k.ini }}</span><span style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ k.name }}</span><span style="font-size:12px;color:#6b7780">{{ k.age }}</span></div>
+              </sc-for>
             </div>
-            <sc-if value="{{ marsOpen }}" hint-placeholder-val="{{ true }}">
-            <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:20px">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:-6px"><span style="width:10px;height:10px;border-radius:3px;background:#ef8a1d"></span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Editează grupa Mars</span><span onClick="{{ toggleMars }}" style="padding:6px 12px;border-radius:999px;border:1.5px solid #ede7dc;font-size:13px;font-weight:800;cursor:pointer">▴ Restrânge</span></div>
-              <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:12px;align-items:end">
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Nume grupă<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">Mars</span></label>
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Educator<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">Ala</span></label>
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Capacitate<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">10</span></label>
-                <span style="padding:12px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Copii în grupă · 7</span><span style="font-size:13px;color:#6b7780">Vârste: <b>2 ani 5 luni – 6 ani 9 luni</b></span></div>
-              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
-                <sc-for list="{{ mars }}" as="k" hint-placeholder-count="7">
-                  <div style="display:flex;align-items:center;gap:12px;padding:8px 10px 8px 8px;border-radius:14px;background:#fffaf0;border:1px solid #f1e8d6">
-                    <span style="width:34px;height:34px;border-radius:50%;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">{{ k.ini }}</span>
-                    <span style="flex:1;font-weight:700;font-size:14px">{{ k.name }}</span><span style="font-size:12px;color:#6b7780">{{ k.age }}</span>
-                    <span style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#9aa3a9;font-weight:800">×</span>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+              <sc-for list="{{ g2 }}" as="g" hint-placeholder-count="7">
+                <div onDragOver="{{ g.dov }}" onDrop="{{ g.drop }}" style="position:relative;border-radius:20px;background:{{ g.bg }};border:{{ g.tileBd }};padding:14px 16px;display:flex;flex-direction:column;gap:10px;opacity:{{ g.op }};box-shadow:{{ g.ring }}">
+                  <div style="display:flex;align-items:baseline;gap:8px"><span draggable="true" onDragStart="{{ g.ds }}" onDragEnd="{{ g.de }}" title="Trage ca să schimbi ordinea grupelor" style="align-self:center;padding:2px 4px;border-radius:6px;color:{{ g.fg }};opacity:.55;font-weight:800;letter-spacing:-2px;cursor:grab;user-select:none" style-hover="background:rgba(255,255,255,.7);opacity:1">⋮⋮</span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px">{{ g.name }}</span><sc-if value="{{ g.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ g.stBg }};color:{{ g.stFg }}">{{ g.status }}</span></sc-if><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ g.fg }}">{{ g.count }}<span style="font-size:14px;opacity:.6">{{ g.cap }}</span></span></div>
+                  <div style="height:5px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:{{ g.pct }}%;height:100%;background:{{ g.bar }}"></span></div>
+                  <span style="font-size:12px;font-weight:700;color:{{ g.eduCol }}">{{ g.edu }}<span style="color:#6b7780;font-weight:600"> · {{ g.ages }}</span></span>
+                  <sc-if value="{{ g.hasKids }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:5px">
+                    <sc-for list="{{ g.peek }}" as="k" hint-placeholder-count="9"><span style="display:flex;align-items:center;gap:5px;padding:2px 9px 2px 2px;border-radius:999px;background:#fff;font-size:12px;font-weight:700"><span style="width:20px;height:20px;border-radius:50%;background:{{ k.abg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">{{ k.ini }}</span>{{ k.short }}</span></sc-for>
+                    <sc-if value="{{ g.hasMore }}" hint-placeholder-val="{{ false }}"><span style="padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.6);font-size:12px;font-weight:800;color:{{ g.fg }}">{{ g.more }}</span></sc-if>
                   </div>
-                </sc-for>
-              </div>
-              <div style="position:relative;display:flex;flex-direction:column;gap:0">
-                <div style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:12px 12px 0 0;border:1.5px solid #ef8a1d;font-size:15px">⌕ <span>Bal</span><span style="width:1px;height:18px;background:#3a4750"></span></div>
-                <div style="border:1.5px solid #ef8a1d;border-top:0;border-radius:0 0 12px 12px;background:#fff;padding:6px;display:flex;flex-direction:column;box-shadow:0 12px 24px rgba(58,71,80,.1)">
-                  <sc-for list="{{ suggest }}" as="k" hint-placeholder-count="3">
-                    <div style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;background:{{ k.hl }}"><span style="width:30px;height:30px;border-radius:50%;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">{{ k.ini }}</span><span style="flex:1;font-size:14px;font-weight:700">{{ k.name }}</span><span style="font-size:12px;color:#6b7780">{{ k.age }} · fără grupă</span><span style="font-size:13px;font-weight:800;color:#a34f00">+ Adaugă</span></div>
-                  </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ g.empty }}" hint-placeholder-val="{{ false }}"><div style="height:62px;border-radius:14px;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-weight:800;color:{{ g.fg }};font-size:14px">Plasează aici</div></sc-if>
+                  <sc-if value="{{ g.drag }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:120px;top:92px;width:250px;display:flex;align-items:center;gap:8px;padding:6px 10px 6px 6px;border-radius:12px;background:#fff;box-shadow:0 18px 36px rgba(58,71,80,.22);transform:rotate(-3deg);border:2px solid #ef8a1d"><span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;font-size:12px">⋮⋮</span><span style="width:26px;height:26px;border-radius:50%;background:#f1ece2;color:#6b7780;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">{{ dragKid.ini }}</span><span style="flex:1;font-size:13px;font-weight:700">{{ dragKid.name }}</span><span style="font-size:12px;color:#6b7780">{{ dragKid.age }}</span></div></sc-if>
                 </div>
-              </div>
-              <div style="display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid #f3eee5"><span style="font-size:13px;font-weight:800;color:#b0284f;padding-top:12px">Șterge grupa Mars</span></div>
+              </sc-for>
             </div>
-            </sc-if>
-            <sc-if value="{{ soareOpen }}" hint-placeholder-val="{{ false }}">
-            <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;padding:24px 26px;display:flex;flex-direction:column;gap:18px">
-              <div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:#3f9a6b"></span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Editează grupa Soare</span><span onClick="{{ toggleSoare }}" style="padding:6px 12px;border-radius:999px;border:1.5px solid #ede7dc;font-size:13px;font-weight:800;cursor:pointer">▴ Restrânge</span></div>
-              <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:12px;align-items:end">
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Nume grupă<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">Soare</span></label>
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Educator<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#9aa3a9;font-weight:600">Alege educatorul</span></label>
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Capacitate<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">10</span></label>
-                <span style="padding:12px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span>
-              </div>
-              <div style="padding:28px;border-radius:18px;border:2px dashed #a8d8be;background:#f3faf6;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Niciun copil în grupă</span><span style="font-size:14px;color:#6b7780">Caută mai jos sau adaugă din cei 92 fără grupă.</span></div>
-              <div style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#9aa3a9">⌕ Caută copil…</div>
-              <div style="display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid #f3eee5"><span style="font-size:13px;font-weight:800;color:#b0284f;padding-top:12px">Șterge grupa Soare</span></div>
-            </div>
-            </sc-if>
           </div>
         </main>
       </div>
     </div>
 
-    <div id="3b" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">3b</span><span style="font-size:16px;font-weight:700">Grupe → vizualizare Tablă (drag &amp; drop)</span></div>
-      <div style="width:1440px;height:1100px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+    <div id="4a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">4a</span><span style="font-size:16px;font-weight:700">Grupe → Carduri, 7 grupe</span></div>
+      <div style="width:1440px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
         <dc-import name="Sidebar" variant="a" active="grupe" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
-        <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+        <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Organizare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Grupe</h2></div>
-            <span style="font-size:14px;color:#6b7780">7 copii în grupe · 92 fără grupă</span>
-            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#3a" style="padding:7px 14px;color:#6b7780;text-decoration:none">Carduri</a><a href="#3b" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Tablă</a></div>
-            <a href="Grupe.dc.html#3a" style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);text-decoration:none">+ Grupă nouă</a>
+            <span style="font-size:14px;color:#6b7780">7 grupe · 77 copii în grupe · <b style="color:#a34f00">22 fără grupă</b></span>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#4b" style="padding:7px 14px;color:#6b7780;text-decoration:none">Tablă</a><a href="#4a" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750;text-decoration:none">Carduri</a></div>
+            <a href="#4c" style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);text-decoration:none">+ Grupă nouă</a>
           </header>
-          <div style="display:flex;align-items:center;gap:8px;padding:12px 40px;border-bottom:1px solid #ede7dc">
-            <div style="width:280px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕ Caută copil</div>
-            <span style="padding:6px 14px;border-radius:999px;background:#3a4750;color:#fff;font-size:13px;font-weight:800">Doar activi</span>
-            <span style="font-size:13px;color:#6b7780;margin-left:8px">„−” restrânge o grupă, „⤢” o deschide</span>
-            <span onClick="{{ collapseAll }}" style="margin-left:auto;padding:6px 14px;border-radius:999px;background:#f4f1ea;font-size:13px;font-weight:800;cursor:pointer">Restrânge tot</span>
-            <span onClick="{{ expandAll }}" style="padding:6px 14px;border-radius:999px;background:#f4f1ea;font-size:13px;font-weight:800;cursor:pointer">Deschide tot</span>
-          </div>
-          <div style="flex:1;min-height:0;padding:24px 40px 32px;display:flex;flex-direction:column">
-          <div style="flex:1;min-height:0;display:flex;gap:16px">
-            <sc-for list="{{ cols }}" as="c" hint-placeholder-count="3">
-              <sc-if value="{{ c.collapsed }}" hint-placeholder-val="{{ false }}">
-                <div onClick="{{ c.toggle }}" style="width:84px;flex-shrink:0;border-radius:22px;background:{{ c.bg }};padding:14px 0;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer">
-                  <span style="width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:{{ c.fg }}">⤢</span>
-                  <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:{{ c.fg }}">{{ c.count }}</span>
-                  <div style="width:6px;height:80px;border-radius:99px;background:#fff;display:flex;align-items:flex-end;overflow:hidden"><span style="width:100%;height:{{ c.pct }}%;background:{{ c.bar }}"></span></div>
-                  <span style="writing-mode:vertical-rl;transform:rotate(180deg);font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">{{ c.name }}</span>
-                  <div style="display:flex;flex-direction:column;align-items:center;margin-top:4px">
-                    <sc-for list="{{ c.peek }}" as="k" hint-placeholder-count="4"><span style="width:30px;height:30px;margin-bottom:-8px;border-radius:50%;border:2px solid {{ c.bg }};background:#fff;color:{{ c.fg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">{{ k.ini }}</span></sc-for>
-                  </div>
+          <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:20px">
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ g2 }}" as="g" hint-placeholder-count="7">
+                <div onClick="{{ g.pick }}" draggable="true" onDragStart="{{ g.ds }}" onDragOver="{{ g.dov }}" onDrop="{{ g.drop }}" onDragEnd="{{ g.de }}" style="border-radius:18px;padding:14px 16px;background:{{ g.bg }};border:2px solid {{ g.bd }};display:flex;flex-direction:column;gap:8px;cursor:pointer;opacity:{{ g.op }};box-shadow:{{ g.ring }}">
+                  <div style="display:flex;align-items:baseline;gap:8px"><span title="Trage ca să schimbi ordinea grupelor" style="align-self:center;color:{{ g.fg }};opacity:.55;font-weight:800;letter-spacing:-2px;cursor:grab;user-select:none">⋮⋮</span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;line-height:1.1">{{ g.name }}</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:{{ g.fg }}">{{ g.count }}<span style="font-size:15px;opacity:.6">{{ g.cap }}</span></span></div>
+                  <div style="height:6px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:{{ g.pct }}%;height:100%;background:{{ g.bar }};border-radius:99px"></span></div>
+                  <div style="display:flex;align-items:center;gap:8px;min-height:24px"><span style="flex:1;min-width:0;font-size:13px;color:{{ g.eduCol }};font-weight:700">{{ g.edu }}<span style="color:#6b7780;font-weight:600"> · {{ g.ages }}</span></span><sc-if value="{{ g.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ g.stBg }};color:{{ g.stFg }}">{{ g.status }}</span></sc-if></div>
                 </div>
-              </sc-if>
-              <sc-if value="{{ c.open }}" hint-placeholder-val="{{ true }}">
-                <div style="position:relative;flex:1;min-width:0;border-radius:22px;background:{{ c.bg }};padding:16px;display:flex;flex-direction:column;gap:10px;overflow:{{ c.ov }}">
-                  <div style="display:flex;flex-direction:column;gap:8px;padding:4px 4px 6px">
-                    <div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">{{ c.name }}</span><span style="font-weight:800;color:{{ c.fg }}">{{ c.count }}</span><span onClick="{{ c.toggle }}" style="width:28px;height:28px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;color:{{ c.fg }};cursor:pointer">−</span></div>
-                    <sc-if value="{{ c.hasCap }}"><div style="height:6px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:{{ c.pct }}%;height:100%;background:{{ c.bar }}"></span></div></sc-if>
-                    <sc-if value="{{ c.edu }}"><span style="font-size:12px;color:{{ c.fg }};font-weight:700">{{ c.edu }}</span></sc-if>
+              </sc-for>
+            </div>
+            <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:{{ s2bar }}"></span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Editează grupa {{ s2name }}</span><span style="font-size:13px;color:#6b7780">Vârste: <b>{{ s2ages }}</b></span></div>
+              <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:12px;align-items:end">
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Nume grupă<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">{{ s2name }}</span></label>
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Educator<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:{{ s2eduCol }};font-weight:600">{{ s2edu }}</span></label>
+                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Capacitate<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">{{ s2cap }}</span></label>
+                <span style="padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Copii în grupă · {{ s2count }}</span><div style="margin-left:auto;width:320px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#9aa3a9">⌕ Adaugă copil fără grupă…</div></div>
+              <sc-if value="{{ s2has }}" hint-placeholder-val="{{ true }}">
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+                <sc-for list="{{ s2kids }}" as="k" hint-placeholder-count="14">
+                  <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 6px 6px;border-radius:12px;background:#fffaf0;border:1px solid #f1e8d6">
+                    <span style="width:28px;height:28px;flex-shrink:0;border-radius:50%;background:{{ k.abg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">{{ k.ini }}</span>
+                    <span style="flex:1;min-width:0;font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ k.name }}</span><span style="font-size:12px;color:#6b7780">{{ k.age }}</span><span style="color:#9aa3a9;font-weight:800">×</span>
                   </div>
-                  <sc-for list="{{ c.kids }}" as="k" hint-placeholder-count="6">
-                    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#fff;box-shadow:0 1px 2px rgba(58,71,80,.06)"><span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px">⋮⋮</span><span style="width:32px;height:32px;border-radius:50%;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">{{ k.ini }}</span><span style="flex:1;font-size:14px;font-weight:700">{{ k.name }}</span><span style="font-size:12px;color:#6b7780">{{ k.age }}</span></div>
-                  </sc-for>
-                  <sc-if value="{{ c.empty }}"><div style="height:180px;border-radius:16px;border:2px dashed #7fc19c;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-weight:800;color:#2e6b4c;font-size:14px">Plasează aici</div></sc-if>
-                  <sc-if value="{{ c.drag }}"><div style="position:absolute;left:-40px;top:118px;width:300px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#fff;box-shadow:0 18px 36px rgba(58,71,80,.22);transform:rotate(-3deg);border:2px solid #ef8a1d"><span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px">⋮⋮</span><span style="width:32px;height:32px;border-radius:50%;background:#fce9ef;color:#b0284f;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">AM</span><span style="flex:1;font-size:14px;font-weight:700">Avram Maria</span><span style="font-size:12px;color:#6b7780">3 ani</span></div></sc-if>
-                </div>
+                </sc-for>
+              </div>
               </sc-if>
-            </sc-for>
-          </div>
+              <sc-if value="{{ s2empty }}" hint-placeholder-val="{{ false }}"><div style="padding:24px;border-radius:16px;border:2px dashed #e0d5c2;text-align:center;font-size:14px;color:#6b7780"><b style="color:#3a4750">Niciun copil în grupă.</b> Caută mai sus sau trage-i din Tablă.</div></sc-if>
+              <div style="display:flex;justify-content:flex-end;border-top:1px solid #f3eee5;padding-top:12px"><span style="font-size:13px;font-weight:800;color:#b0284f">Șterge grupa {{ s2name }}</span></div>
+            </div>
           </div>
         </main>
       </div>
+    </div>
+
+
+    <div id="4c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">4c</span><span style="font-size:16px;font-weight:700">„+ Grupă nouă” → panou lateral (din ambele moduri)</span></div>
+      <div style="position:relative;width:1440px;height:900px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <dc-import name="Sidebar" variant="a" active="grupe" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+        <main style="flex:1;padding:14px 40px;border-bottom:1px solid #ede7dc;align-self:flex-start"><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Grupe</h2></main>
+        <div style="position:absolute;inset:0;background:rgba(58,71,80,.35)"></div>
+        <aside style="position:absolute;top:0;right:0;bottom:0;width:520px;background:#fff;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(58,71,80,.2)">
+          <div style="display:flex;align-items:center;gap:12px;padding:24px 30px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">Grupă nouă</span><a href="#4b" style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-weight:800;color:#3a4750;text-decoration:none">×</a></div>
+          <div style="flex:1;overflow:hidden;padding:22px 30px;display:flex;flex-direction:column;gap:22px">
+            <div style="border-radius:20px;background:{{ ngBg }};padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:baseline;gap:8px"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ ngTitleCol }}">{{ ngTitle }}</span><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;color:{{ ngFg }}">Goală</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ ngFg }}">0<span style="font-size:14px;opacity:.6">/{{ ngCap }}</span></span></div>
+              <div style="height:5px;border-radius:99px;background:#fff"></div>
+              <span style="font-size:12px;font-weight:700;color:#5b666e">{{ ngEdu }}<span style="font-weight:600;color:#6b7780"> · {{ ngAges }}</span></span>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Nume grupă
+              <input value="{{ ngName }}" onChange="{{ ngSetName }}" placeholder="ex. Ursuleți" style="padding:11px 14px;border-radius:12px;border:1.5px solid #ef8a1d;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input>
+            </label>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:700">Culoare
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <sc-for list="{{ ngTones }}" as="t" hint-placeholder-count="8"><span onClick="{{ t.pick }}" title="{{ t.used }}" style="width:34px;height:34px;border-radius:12px;background:{{ t.bg }};box-shadow:{{ t.ring }};display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;box-sizing:border-box;cursor:pointer"><span style="width:16px;height:4px;border-radius:99px;background:{{ t.bar }}"></span></span></sc-for>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:#6b7780">Implicit e prima culoare liberă. Poți alege și una folosită deja.</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Capacitate
+                <div style="display:flex;align-items:center;align-self:flex-start;border:1px solid #c9c4ba;border-radius:12px"><span onClick="{{ ngCapLess }}" style="width:40px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">−</span><span style="width:40px;text-align:center;font-size:15px;font-weight:800">{{ ngCap }}</span><span onClick="{{ ngCapMore }}" style="width:40px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">+</span></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Vârstă <span style="display:contents;color:#9aa3a9;font-weight:600">(pentru sugestii)</span>
+                <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800">
+                  <div style="display:flex;align-items:center;border:1px solid #c9c4ba;border-radius:12px"><span onClick="{{ ngA0Less }}" style="width:28px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">−</span><span style="width:18px;text-align:center">{{ ngA0 }}</span><span onClick="{{ ngA0More }}" style="width:28px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">+</span></div>–
+                  <div style="display:flex;align-items:center;border:1px solid #c9c4ba;border-radius:12px"><span onClick="{{ ngA1Less }}" style="width:28px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">−</span><span style="width:18px;text-align:center">{{ ngA1 }}</span><span onClick="{{ ngA1More }}" style="width:28px;height:42px;display:flex;align-items:center;justify-content:center;color:#6b7780;cursor:pointer;user-select:none">+</span></div>ani
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Educator principal<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;display:flex;justify-content:space-between">{{ ngEdu }}<span style="color:#9aa3a9">▾</span></span></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Asistent <span style="display:contents;color:#9aa3a9;font-weight:600">(opțional)</span><span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;color:#9aa3a9;display:flex;justify-content:space-between">Alege din Personal<span>▾</span></span></label>
+            </div>
+            <span style="font-size:12px;color:#6b7780">Grupa nouă apare <b style="color:#3a4750">prima</b>, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu „⋮⋮”.</span>
+          </div>
+          <div style="padding:18px 30px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;color:#6b7780">{{ ngFit }} · îi poți adăuga după salvare.</span><a href="#4b" style="padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px;color:#3a4750;text-decoration:none">Anulează</a><span style="padding:11px 22px;border-radius:999px;background:{{ ngBtnBg }};box-shadow:{{ ngBtnShadow }};color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;white-space:nowrap">Creează grupa</span></div>
+        </aside>
+      </div>
+      <div style="font-size:13px;color:#6b7780;max-width:1440px;text-wrap:pretty">Același panou lateral ca la „Copil nou” (15a), mai îngust. Cardul de sus e previzualizarea grupei: se schimbă pe loc după nume, culoare, capacitate și educator. Doar numele e obligatoriu. După „Creează grupa”, grupa apare prima în Tablă, lângă „Fără grupă”, cu „Plasează aici”, iar toastul „Grupa X a fost creată · Anulează” stă 6 s. Educatorii se aleg din Personal (rol Educator); până la modulul Personal, câmp text.</div>
     </div>
 
   </div>
 </section>
+
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  renderVals() {
-    const av = [['#fcead3', '#a34f00'], ['#e7f4ec', '#2e6b4c'], ['#fdf3d2', '#7a5d00'], ['#fce9ef', '#b0284f']];
-    const mk = (arr) => arr.map(([name, age], i) => ({ name, age, ini: name.split(' ').map(s => s[0]).join(''), bg: av[(i + 1) % 4][0], fg: av[(i + 1) % 4][1] }));
-    const mars = mk([['Coceva Alisa', '4a 2l'], ['Colesnicenco Cristian', '5a 1l'], ['Comerzan Gloria', '3a 8l'], ['Conea Timur', '6a 9l'], ['Coscodan Deea', '2a 5l'], ['Cotlau Ratmir', '4a 11l'], ['Cujba Ovidiu', '5a 6l']]);
-    const unassigned = mk([['Bagnyuk Timur', '4 ani'], ['Balan Ilinca', '3 ani'], ['Balanuta Vera', '5 ani'], ['Botica Maxim', '4 ani'], ['Chitac Matteo', '3 ani'], ['Jidobina Polina', '5 ani'], ['Lucinschi Ilinca', '2 ani'], ['Muradu Letizia', '4 ani'], ['Panteliciuc Victor', '6 ani']]);
-    const suggest = mk([['Balan Ilinca', '3 ani'], ['Balanuta Vera', '5 ani'], ['Bagnyuk Timur', '4 ani']]).map((k, i) => ({ ...k, hl: i === 0 ? '#fcead3' : 'transparent' }));
-    const col = this.state?.col ?? { none: false, mars: true, soare: false };
-    const set = (k, v) => this.setState({ col: { ...col, [k]: v } });
+  v2() {
+    const F = ['Alisa','Cristian','Gloria','Timur','Deea','Ratmir','Ovidiu','Ilinca','Vera','Maxim','Matteo','Polina','Letizia','Victor','Sofia','Daniel','Eva','Luca','Mia','Andrei','Ana','Mihai','Emma','David','Iris','Tudor','Clara','Nicolas','Daria','Artur','Zoe'];
+    const L = ['Coceva','Colesnicenco','Comerzan','Conea','Coscodan','Cotlau','Cujba','Balan','Balanuta','Botica','Chitac','Jidobina','Lucinschi','Muradu','Panteliciuc','Rusu','Ciobanu','Munteanu','Popa','Lungu','Ursu','Cebotari','Sârbu','Turcanu','Guțu','Roșca','Moraru','Grosu','Cazacu','Bivol','Donică'];
+    const T = { or: ['#fcead3','#a34f00','#ef8a1d'], gr: ['#e7f4ec','#2e6b4c','#3f9a6b'], ye: ['#fdf3d2','#7a5d00','#d9a400'], pk: ['#fce9ef','#b0284f','#d9577c'], bl: ['#e4eef6','#2c5a80','#4a86b8'], li: ['#eee8f6','#5b3f86','#8a6bc0'], te: ['#dff1f0','#1f6464','#3a9c9c'] };
+    let n = 0;
+    const kid = (a0, a1, tone) => { n++; const f = F[(n * 11 + 3) % 31], l = L[(n * 7) % 31]; const y = a0 + (n % (a1 - a0 + 1)); return { name: l + ' ' + f, short: f + ' ' + l[0] + '.', ini: l[0] + f[0], age: y + 'a ' + (n * 5 % 12) + 'l', bg: '#fff', fg: tone[1], abg: tone[0] }; };
     const defs = [
-      { key: 'none', name: 'Fără grupă', count: '92', bg: '#f4f1ea', fg: '#6b7780', bar: '#9aa3a9', pct: 100, hasCap: false, edu: '', kids: unassigned },
-      { key: 'mars', name: 'Mars', count: '7/10', bg: '#fcead3', fg: '#a34f00', bar: '#ef8a1d', pct: 70, hasCap: true, edu: 'Educator Ala · 2a 5l – 6a 9l', kids: mars },
-      { key: 'soare', name: 'Soare', count: '0/10', bg: '#e7f4ec', fg: '#2e6b4c', bar: '#3f9a6b', pct: 0, hasCap: true, edu: '+ Setează educator', kids: [], empty: true, drag: true }
+      ['albinute', 'Albinuțe', 'ye', 11, 14, 'Maria', 2, 3],
+      ['buburuze', 'Buburuze', 'pk', 0, 12, '', 2, 3],
+      ['fluturasi', 'Fluturași', 'te', 9, 14, 'Olga', 3, 4],
+      ['soare', 'Soare', 'gr', 15, 15, 'Natalia', 4, 5],
+      ['luna', 'Luna', 'bl', 12, 16, 'Elena', 4, 5],
+      ['mars', 'Mars', 'or', 14, 16, 'Ala', 5, 6],
+      ['stelele', 'Stelele', 'li', 16, 15, 'Tatiana', 6, 7]
     ];
-    const cols = defs.map(d => ({ ...d, collapsed: !!col[d.key], open: !col[d.key], ov: d.drag ? 'visible' : 'hidden', peek: d.kids.slice(0, 4), toggle: () => set(d.key, !col[d.key]) }));
-    const og = this.state?.og === undefined ? 'mars' : this.state.og;
-    const tg = k => () => this.setState({ og: og === k ? null : k });
-    const cardVals = {
-      marsOpen: og === 'mars', soareOpen: og === 'soare', toggleMars: tg('mars'), toggleSoare: tg('soare'),
-      marsBd: og === 'mars' ? '#ef8a1d' : 'transparent', soareBd: og === 'soare' ? '#3f9a6b' : 'transparent',
-      marsLbl: og === 'mars' ? '▴ Restrânge' : '▾ Deschide', soareLbl: og === 'soare' ? '▴ Restrânge' : '▾ Deschide'
+    const sel = this.state?.sel2 ?? 'mars';
+    const groups = defs.map(([key, name, t, c, cap, edu, a0, a1]) => {
+      const tone = T[t];
+      const kids = Array.from({ length: c }, () => kid(a0, a1, tone));
+      const over = c > cap, full = c === cap, empty = c === 0;
+      const status = over ? 'Peste cu ' + (c - cap) : full ? 'Plină' : empty ? 'Goală' : '';
+      return {
+        key, name, kids, count: c, cap: '/' + cap, capN: cap, bg: tone[0], fg: tone[1], bar: over ? '#b0284f' : tone[2],
+        pct: Math.min(100, Math.round(c / cap * 100)), ages: empty ? '—' : a0 + '–' + a1 + ' ani',
+        edu: edu || 'Fără educator', eduSet: !!edu, eduCol: edu ? '#5b666e' : '#b0284f',
+        status, hasStatus: !!status, stBg: over ? '#b0284f' : '#fff', stFg: over ? '#fff' : tone[1],
+        bd: key === sel ? tone[2] : 'transparent', pick: () => this.setState({ sel2: key }),
+        peek: kids.slice(0, 9), more: c > 9 ? '+' + (c - 9) : '', hasMore: c > 9, empty, hasKids: !empty,
+        drag: key === 'buburuze', tileBd: key === 'buburuze' ? '2px dashed ' + tone[2] : '2px solid transparent'
+      };
+    });
+    const order = this.state?.order2 ?? groups.map(g => g.key);
+    const dragG = this.state?.dragG ?? null, overG = this.state?.overG ?? null;
+    groups.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+    groups.forEach(g => {
+      g.ds = e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', g.key); this.setState({ dragG: g.key }); };
+      g.dov = e => { if (!dragG) return; e.preventDefault(); if (overG !== g.key) this.setState({ overG: g.key }); };
+      g.drop = e => { e.preventDefault(); if (!dragG || dragG === g.key) return this.setState({ dragG: null, overG: null }); const o = order.filter(k => k !== dragG); o.splice(o.indexOf(g.key) + (order.indexOf(dragG) < order.indexOf(g.key) ? 1 : 0), 0, dragG); this.setState({ order2: o, dragG: null, overG: null }); };
+      g.de = () => this.setState({ dragG: null, overG: null });
+      g.op = dragG === g.key ? '.4' : '1';
+      g.ring = overG === g.key && dragG !== g.key ? '0 0 0 3px #3a4750' : 'none';
+    });
+    const pool = Array.from({ length: 22 }, (_, i) => ({ ...kid(2, 6, T.or), bg: '#fffaf0', fg: '#6b7780', abg: '#f1ece2', op: i === 0 ? '.35' : '1' }));
+    const s = groups.find(g => g.key === sel);
+    const ng = this.state?.ng ?? { name: '', tone: 'cr', cap: 14, a0: 3, a1: 4, edu: 'Olga Rusu', asist: '', pos: 'end' };
+    const setNg = p => this.setState(st => ({ ng: { ...(st.ng ?? ng), ...p } }));
+    const TT = { ...T, cr: ['#fbe6dc', '#9a3f1c', '#e0714a'] };
+    const usedBy = Object.fromEntries(defs.map(d => [d[2], d[1]]));
+    const ngTones = Object.entries(TT).map(([k, t]) => ({ bg: t[0], bar: t[2], ring: ng.tone === k ? '0 0 0 3px ' + t[2] : '0 0 0 1px ' + t[2], used: usedBy[k] ? 'folosită de ' + usedBy[k] : 'liberă', pick: () => setNg({ tone: k }) }));
+    const nt = TT[ng.tone];
+    const fit = pool.filter((_, i) => i % 3 === 0).length;
+    const ngOk = ng.name.trim().length > 0;
+    const ngVals = {
+      ngName: ng.name, ngSetName: e => setNg({ name: e.target.value }), ngTitle: ng.name.trim() || 'Grupă nouă', ngTitleCol: ng.name.trim() ? '#3a4750' : '#9aa3a9',
+      ngTones, ngBg: nt[0], ngFg: nt[1], ngBar: nt[2], ngCap: ng.cap, ngCapLess: () => setNg({ cap: Math.max(1, ng.cap - 1) }), ngCapMore: () => setNg({ cap: Math.min(40, ng.cap + 1) }),
+      ngAges: ng.a0 + '–' + ng.a1 + ' ani', ngA0: ng.a0, ngA1: ng.a1,
+      ngA0Less: () => setNg({ a0: Math.max(1, ng.a0 - 1) }), ngA0More: () => setNg({ a0: Math.min(ng.a1, ng.a0 + 1) }), ngA1Less: () => setNg({ a1: Math.max(ng.a0, ng.a1 - 1) }), ngA1More: () => setNg({ a1: Math.min(7, ng.a1 + 1) }),
+      ngEdu: ng.edu, ngFit: fit + ' copii fără grupă au ' + ng.a0 + '–' + ng.a1 + ' ani',
+      ngBtnBg: ngOk ? '#ef8a1d' : '#c9c4ba', ngBtnShadow: ngOk ? '0 4px 10px rgba(239,138,29,.28)' : 'none', ngErr: !ngOk
     };
-    const all = v => () => this.setState({ col: { none: v, mars: v, soare: v } });
-    return { mars, unassigned, suggest, stack: mars.slice(0, 5), cols, collapseAll: all(true), expandAll: all(false), ...cardVals };
+    return {
+      ...ngVals, g2: groups, pool2: pool, dragKid: pool[0], orderChanged: !!this.state?.order2, resetOrder: () => this.setState({ order2: null }),
+      s2name: s.name, s2edu: s.eduSet ? s.edu : 'Alege educatorul', s2eduCol: s.eduSet ? '#3a4750' : '#9aa3a9', s2cap: s.capN, s2count: s.count,
+      s2ages: s.ages, s2kids: s.kids, s2bar: s.bar, s2empty: s.empty, s2has: s.hasKids
+    };
+  }
+  renderVals() {
+    return this.v2();
   }
 }
 </script>

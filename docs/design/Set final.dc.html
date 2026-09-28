@@ -12,7 +12,7 @@
   <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
     <img src="web/assets/startica-logo.svg" alt="Startica" style="height:52px"></img>
     <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:280px"><h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1">Set final · stadiu</h1><span style="font-size:15px;color:#6b7780;text-wrap:pretty">Totul pe module, în ordinea din meniul lateral. Pentru fiecare ecran: unde e designul, ce specificație are pentru Claude Code și dacă există deja în cod (master-v2).</span></div>
-    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 27.09.2026, 22:35 (sync)</span>
+    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 28.09.2026, 09:45 (master-v2) · design la zi 28.09.2026</span>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
@@ -93,8 +93,8 @@ class Component extends DCLogic {
       { label: 'Comune (toate ecranele)', marker: '#9aa3a9', items: [
         it('Meniu lateral', 'versiunea v2.0.0', [L('a', 'Sidebar', 'Sidebar.dc.html')], '00 · 17', 'ok', 'Logo singur sus (46 px); versiunea lângă „Backup și setări”; selectorul de filială'),
         it('Antet compact, bara de filtre, culori grupe', 'Topbar, FilterPills, groupTone', [L('2a', 'exemplu în Copii', 'Copii.dc.html#2a')], '00', 'ok', 'Făcut: FilterPills, groupTone, useTopbarTitle, MonthStepper, RowMenu, SelectionBar. Lipsesc: Button și SearchInput comune'),
-        it('Formulare și stări', 'panouri laterale, confirmări, liste goale', [L('15a–15c', 'formulare', 'Formulare.dc.html#15a'), L('15d–15f', 'stări', 'Formulare.dc.html#15d')], '13', 'partial', 'Făcut: RowMenu, SelectionBar, ConfirmDeleteDialog „Scrie ȘTERGE”, toast Anulează în Achitări. Lipsește: toast la arhivare în Vizite'),
-        it('Încărcare', 'pornire, între pagini, prea lent', [L('21a', 'pornire', 'Incarcare.dc.html#21a'), L('21b', 'între pagini', 'Incarcare.dc.html#21b'), L('21c', 'prea lent', 'Incarcare.dc.html#21c')], '21', 'missing', 'Splash cu pași, bară sus + schelet gri (după 300 ms), ecran după 15 s'),
+        it('Formulare și stări', 'panouri laterale, confirmări, liste goale', [L('15a–15c', 'formulare', 'Formulare.dc.html#15a'), L('15d–15f', 'stări', 'Formulare.dc.html#15d'), L('15g', 'scroll subțire', 'Formulare.dc.html#15g')], '13', 'partial', 'Făcut: RowMenu, SelectionBar, ConfirmDeleteDialog „Scrie ȘTERGE”, toast Anulează în Achitări. Lipsesc: toast la arhivare în Vizite, ScrollArea (15g), dropdown filială prin portal'),
+        it('Încărcare', 'pornire, între pagini, prea lent', [L('21a', 'pornire', 'Incarcare.dc.html#21a'), L('21b', 'între pagini', 'Incarcare.dc.html#21b'), L('21c', 'prea lent', 'Incarcare.dc.html#21c')], '21', 'ok', 'Făcut: splash, schelet, ecran după 15 s. De verificat vizual'),
         it('Ecrane mai mici', 'doar 900–1279 px', [L('17a', 'Dashboard', 'Responsive.dc.html#17a'), L('17b', 'meniu deschis', 'Responsive.dc.html#17b')], 'README', 'missing', 'Sidebar overlay cu ☰')
       ] },
       { label: 'Principal', marker: '#f9d257', items: [
@@ -102,21 +102,22 @@ class Component extends DCLogic {
         it('Copii', 'listă', [L('2a', 'listă', 'Copii.dc.html#2a')], '02', 'ok', 'Făcut: FilterPills Grupă + Plată, groupTone pe avatare și badge, RowMenu, SelectionBar. De verificat vizual'),
         it('Fișa copilului', '', [L('2b', 'fișa', 'Copii.dc.html#2b'), L('12d', 'sume în €', 'Planuri si curs.dc.html#12d')], '09 · 16', 'ok', 'Rest în €, plan, plătitori reținuți'),
         it('Zile de naștere', 'pagină în Copii', [L('2c', 'calendar', 'Copii.dc.html#2c')], '01', 'ok', 'Făcut după spec: pastile, antet, max 2 + „+N copii”, zile trecute, weekend, click → fișa. De verificat vizual'),
-        it('Grupe', 'Carduri / Tablă', [L('3a', 'carduri', 'Grupe.dc.html#3a'), L('3b', 'tablă', 'Grupe.dc.html#3b')], '03', 'ok', 'Făcut: Carduri/Tablă, groupTone unificat în ambele moduri. De verificat vizual'),
+        it('Grupe', 'Tablă / Carduri · v2 pentru 7+ grupe', [L('4b', 'tablă · implicit', 'Grupe.dc.html#4b'), L('4a', 'carduri', 'Grupe.dc.html#4a'), L('4c', 'grupă nouă', 'Grupe.dc.html#4c')], '03 v2', 'partial', 'În cod e varianta veche (3a/3b). De refăcut după 03 v2: Tabla implicită, pool fixat + tile-uri 2 col, carduri compacte 4 col, „+ Grupă nouă” în antet, 7 tonuri'),
         it('Vizite', '', [L('4a', 'calendar + tabel', 'Vizite.dc.html#4a')], '04', 'ok', 'Făcut: tabel, FilterPills Statut, meniu ⋯ (RowMenu). De verificat vizual'),
-        it('Personal', 'Echipa / Pontaj / Salarii · nou', [L('23a', 'echipa', 'Personal.dc.html#23a'), L('23b', 'pontaj', 'Personal.dc.html#23b'), L('23c', 'salarii', 'Personal.dc.html#23c'), L('23d', 'PIN', 'Personal.dc.html#23d')], '—', 'missing', 'Tot: tabel staff, pontaj pe excepții, salarii fix/pe zile/bazin, plata → Cheltuieli, PIN administrator'),
-        it('Bazin', 'Săptămâna / Luna · nou', [L('22a', 'săptămâna', 'Bazin.dc.html#22a'), L('22b', 'programare', 'Bazin.dc.html#22b'), L('22c', 'luna + antrenor', 'Bazin.dc.html#22c'), L('22d', 'setări', 'Bazin.dc.html#22d')], '—', 'missing', 'Tot: programări recurente, prezența la bazin, rând „Bazin” în obligația lunii, salariul antrenorului în Cheltuieli'),
-        it('Prezența', 'Ziua / Luna · nou', [L('18a', 'ziua', 'Prezenta.dc.html#18a'), L('18b', 'luna', 'Prezenta.dc.html#18b')], '19', 'missing', 'Tot: tabel attendance, pagina, motivul la Motivat, tipărirea lunii')
+        it('Personal', 'Echipa / Pontaj / Salarii · nou', [L('23a', 'echipa', 'Personal.dc.html#23a'), L('23b', 'pontaj', 'Personal.dc.html#23b'), L('23c', 'salarii', 'Personal.dc.html#23c'), L('23d', 'PIN', 'Personal.dc.html#23d')], '24', 'ok', 'Făcut: echipa, pontaj + tipărire, salarii, avansuri, concedii, PIN, echipa pe grupă. De verificat vizual'),
+        it('Bazin', 'Săptămâna / Luna · nou', [L('22a', 'săptămâna', 'Bazin.dc.html#22a'), L('22b', 'programare', 'Bazin.dc.html#22b'), L('22c', 'luna + antrenor', 'Bazin.dc.html#22c'), L('22d', 'setări', 'Bazin.dc.html#22d')], '23', 'partial', 'Plan scris, eticheta de bon. Lipsește ecranul: programări recurente, prezența la bazin, rândul „Bazin” în obligație, salariul antrenorului'),
+        it('Prezența', 'Ziua / Luna · nou', [L('18a', 'ziua', 'Prezenta.dc.html#18a'), L('18b', 'luna', 'Prezenta.dc.html#18b')], '19', 'partial', 'Făcut: Ziua, Luna, motivul. Bug: „Toată grupa prezentă” suprascrie Absent/Motivat. Lipsesc: anulare + istoric, indicator de salvare'),
+        it('Foaia săptămânii', 'A4 orizontal, câte una pe grupă · nou', [L('18c', 'fereastra', 'Prezenta.dc.html#18c'), L('18d', 'foaia', 'Prezenta.dc.html#18d')], '26', 'missing', 'Tot: butonul din Prezența, fereastra, ruta /prezenta/foi, 16 rânduri, fără date de contact')
       ] },
       { label: 'Contabilitate', marker: '#a8d8be', items: [
         it('Planuri în EUR și curs BNM', 'regula de calcul', [L('12a–12g', 'toate', 'Planuri si curs.dc.html')], '16', 'partial', 'Făcut: backend, fila Curs valutar (12a), achitarea în lei → € (12b). Lipsesc: monedă pe taxă (12g), sume în € în fișă/Situația, pastila curs; cursul cu 4 zecimale, fxRateSource'),
         it('Achitări', 'Tabel / Pe luni', [L('5a', 'tabel', 'Achitari.dc.html#5a'), L('5b', 'pe luni', 'Achitari.dc.html#5b')], '05', 'ok', 'Făcut: FilterPills Metodă + Grupă, coloana Plătitor, carduri pe metode. Lipsește: Tipărește confirmarea (cu 16b)'),
         it('Achitare nouă', 'panou lateral', [L('15b', 'formular', 'Formulare.dc.html#15b'), L('12b', 'lei → €', 'Planuri si curs.dc.html#12b')], '13 · 16', 'ok', 'Făcut: lei → € la cursul zilei, curs manual pe plată, repartizare în €. Lipsește fxRateSource, titlul „Achitare nouă”'),
         it('Cheltuieli', 'Tabel / Pe zile', [L('6a', 'tabel', 'Cheltuieli.dc.html#6a'), L('6b', 'pe zile', 'Cheltuieli.dc.html#6b'), L('15c', 'formular', 'Formulare.dc.html#15c')], '06', 'ok', 'Făcut: FilterPills Categorie + Metodă, câmpul method, antet compact'),
-        it('Situația plăților', 'Lună / An școlar', [L('7a', 'lună', 'Situatia.dc.html#7a'), L('7b', 'an școlar', 'Situatia.dc.html#7b'), L('12c', 'sume în €', 'Planuri si curs.dc.html#12c')], '07 · 16', 'partial', 'Făcut: pastilele Grupa. Plan scris pentru carduri, An școlar, hartă (punctul 10)'),
-        it('Notificare SMS', 'din Situația plăților', [L('7c', 'un părinte', 'Situatia.dc.html#7c'), L('7e', 'personalizat', 'Situatia.dc.html#7e'), L('7d', 'toți', 'Situatia.dc.html#7d')], '07 · 14', 'missing', 'Spec aprobat, plan P1 scris (21 taskuri). Cod neînceput'),
+        it('Situația plăților', 'Lună / An școlar', [L('7a', 'lună', 'Situatia.dc.html#7a'), L('7b', 'an școlar', 'Situatia.dc.html#7b'), L('12c', 'sume în €', 'Planuri si curs.dc.html#12c')], '07 · 16', 'ok', 'Făcut: carduri, An școlar, pastilele Grupa, sume în €. De verificat vizual'),
+        it('Notificare SMS', 'din Situația plăților', [L('7c', 'un părinte', 'Situatia.dc.html#7c'), L('7e', 'personalizat', 'Situatia.dc.html#7e'), L('7d', 'toți', 'Situatia.dc.html#7d')], '07 · 14', 'ok', 'Făcut P1: un părinte, personalizat, toți, confirmarea. De verificat vizual'),
         it('De notificat', '', [L('8a', 'coadă', 'De notificat.dc.html#8a')], '10', 'ok', 'Rând activ, previzualizare'),
-        it('Raport contabil', 'Lună / Trimestru / An · nou', [L('19a', 'luna', 'Raport contabil.dc.html#19a'), L('19b', 'export', 'Raport contabil.dc.html#19b')], '20', 'missing', 'Tot: pagina, export .xlsx cu 3 foi + PDF, rândurile EUR cu cursul salvat pe achitare')
+        it('Raport contabil', 'Lună / Trimestru / An · nou', [L('19a', 'luna', 'Raport contabil.dc.html#19a'), L('19b', 'export', 'Raport contabil.dc.html#19b')], '20', 'ok', 'Făcut: pagina, totaluri, EUR cu curs salvat. De corectat: „Total lună / trimestru / an”. Selectorul de filială din export după Faza 6')
       ] },
       { label: 'De rezolvat', marker: '#f3a6be', items: [
         it('Taxe și grupe', '', [L('9a', 'tabel', 'De rezolvat.dc.html#9a'), L('12g', 'plan + taxă €', 'Planuri si curs.dc.html#12g')], '11 · 16', 'partial', 'Coloanele Plan și Taxă lunară €'),
@@ -129,15 +130,15 @@ class Component extends DCLogic {
         it('Backup și setări', 'file: Backup · Import și export · Grădinița · Planuri și curs', [L('10c', 'backup + import', 'Administrare.dc.html#10c'), L('16a', 'grădinița', 'Tiparire.dc.html#16a'), L('12a', 'planuri și curs', 'Planuri si curs.dc.html#12a')], '12 · 16', 'partial', 'Filele Grădinița și Planuri și curs; Import CSV mutat aici')
       ] },
       { label: 'Filiale', marker: '#3f9a6b', items: [
-        it('Două filiale', 'selector în meniul lateral', [L('13a', 'selector', 'Filiale.dc.html#13a'), L('13b', 'nesalvat', 'Filiale.dc.html#13b'), L('13c', 'administrare', 'Filiale.dc.html#13c')], '17', 'missing', 'Date separate pe filială, selectorul, fila Filiale'),
-        it('Sincronizare', 'server comun, lucru offline, conflicte', [L('14a', 'stări meniu', 'Sincronizare.dc.html#14a'), L('14b', 'setări', 'Sincronizare.dc.html#14b'), L('14c', 'conflicte', 'Sincronizare.dc.html#14c')], '18', 'missing', 'Server, coada locală, conectare prin cod, conflicte')
+        it('Două filiale', 'selector în meniul lateral', [L('13a', 'selector', 'Filiale.dc.html#13a'), L('13b', 'nesalvat', 'Filiale.dc.html#13b'), L('13c', 'administrare', 'Filiale.dc.html#13c')], '17', 'ok', 'Făcut: baze separate, selector, dialog nesalvat, fila Filiale, „Ambele” în raport. De corectat: dropdown-ul prin portal (FEEDBACK 2a)'),
+        it('Sincronizare', 'server comun, lucru offline, conflicte', [L('14a', 'stări meniu', 'Sincronizare.dc.html#14a'), L('14b', 'setări', 'Sincronizare.dc.html#14b'), L('14c', 'conflicte', 'Sincronizare.dc.html#14c')], '18', 'partial', 'Făcut: sync-server, outbox, conflicte, cardul din meniu. De verificat vizual: setări 14b și conflicte 14c')
       ] },
       { label: 'Prima pornire', marker: '#f9d257', items: [
         it('Expert de pornire', '5 pași · nou', [L('20a', 'grădinița', 'Prima pornire.dc.html#20a'), L('20b', 'import', 'Prima pornire.dc.html#20b'), L('20c', 'gata', 'Prima pornire.dc.html#20c')], '22', 'missing', 'Tot: rută /bun-venit când baza e goală, pașii refolosesc ecranele din Setări')
       ] },
       { label: 'Documente tipărite', marker: '#ef8a1d', items: [
-        it('Confirmare de plată', 'A5 sau A4 în două părți', [L('16b', 'A5', 'Tiparire.dc.html#16b'), L('16g', 'A4 1/3 + 2/3 · ales', 'Tiparire.dc.html#16g'), L('12e', 'sume lei + €', 'Planuri si curs.dc.html#12e')], '15 · 16', 'missing', 'Ruta /achitari/:id/confirmare, numerotare'),
-        it('Situația tipărită', 'A4 orizontal', [L('16c', 'raport', 'Tiparire.dc.html#16c')], '15', 'missing', 'StatusPrint.tsx + @media print')
+        it('Confirmare de plată', 'A5 sau A4 în două părți', [L('16b', 'A5', 'Tiparire.dc.html#16b'), L('16g', 'A4 1/3 + 2/3 · ales', 'Tiparire.dc.html#16g'), L('12e', 'sume lei + €', 'Planuri si curs.dc.html#12e')], '15 · 16', 'ok', 'Făcut: A4 în două părți (16g), ruta confirmării. De verificat vizual'),
+        it('Situația tipărită', 'A4 orizontal', [L('16c', 'raport', 'Tiparire.dc.html#16c')], '15', 'ok', 'Făcut: StatusPrint + opțiuni de tipărire (fără „Pagina N din M”)')
       ] }
     ];
     const f = this.state.f;

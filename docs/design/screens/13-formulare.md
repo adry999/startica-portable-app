@@ -45,3 +45,17 @@ Trei variante:
 | Eroare | fundal `--pink-soft`, border `--pink`, text `--pink-ink`, CTA „Încearcă din nou” |
 
 Starea vine din `data-state` existent în `SaveStatusCard`.
+
+## 15g — Scroll subțire (`ScrollArea`)
+Referință: `Formulare.dc.html#15g`. Implementarea completă (CSS + logică) e în `FEEDBACK.md` → „Meniul lateral” → 2.
+| Stare | Thumb | Pistă |
+|---|---|---|
+| Repaus | invizibil (opacity 0, dispare după 800 ms) | — |
+| Hover / focus pe zonă | 3 px, `#e0d5c2` | transparentă |
+| Hover pe bară | 5 px, `#c9c4ba` | `rgba(58,71,80,.04)` |
+| Tragere | 5 px, `#9aa3a9` | `rgba(58,71,80,.06)` |
+Bara se desenează peste conținut, la 2 px de margine, cu 6 px sus și jos, capete rotunde și lungime minimă de 32 px. Cât timp mai e conținut dedesubt, jos apare o umbră albă de 48 px.
+
+- [ ] Grosimea vizibilă e 3 px (5 px la hover), identică în Chrome și Firefox
+- [ ] Conținutul nu se mișcă când apare bara
+- [ ] Fără overflow, bara nu apare deloc
