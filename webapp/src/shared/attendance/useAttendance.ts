@@ -13,8 +13,14 @@ export interface AttendanceData {
   /** Aplică imediat în `entries`, trimite un singur POST după 400 ms cu ultima schimbare per copil·zi. */
   mark: (changes: AttendanceChange[]) => void;
   saving: boolean;
-  /** Mesajul ultimului POST eșuat; pagina îl arată în toast. Se golește la următorul POST reușit. */
+  /** Mesajul ultimului POST eșuat. Se golește la următorul POST reușit sau la `retry` reușit. */
   saveError: string;
+  /** Ora ultimei salvări reușite (ISO), pentru indicatorul „Salvat · ora”. Gol înainte de prima salvare. */
+  savedAt: string;
+  /** Câte schimbări din ultimul lot eșuat așteaptă reîncercare — 0 dacă nu există eroare. */
+  unsavedCount: number;
+  /** Retrimite lotul eșuat (buton „Încearcă din nou”). Nu face nimic dacă nu există un eșec în așteptare. */
+  retry: () => void;
   reload: () => Promise<void>;
 }
 
@@ -39,10 +45,14 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
   const [failureMessage, setFailureMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [savedAt, setSavedAt] = useState('');
+  const [unsavedCount, setUnsavedCount] = useState(0);
 
   // Refs, nu state: lotul în așteptare și temporizatorul nu trebuie să redeseneze pagina.
   const pendingRef = useRef<Map<string, AttendanceChange>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Lotul ultimului POST eșuat — „Încearcă din nou” îl retrimite identic.
+  const lastFailedRef = useRef<AttendanceChange[]>([]);
   // M11: DayStepper poate schimba `query` înainte ca GET-ul precedent să răspundă — un token de
   // cerere ignoră răspunsul vechi dacă sosește după unul mai nou (nu doar la eroare, ci și la succes).
   const requestIdRef = useRef(0);
@@ -73,9 +83,7 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(query)]);
 
-  async function flush() {
-    const changes = Array.from(pendingRef.current.values());
-    pendingRef.current = new Map();
+  async function flush(changes: AttendanceChange[]) {
     if (changes.length === 0) return;
     setSaving(true);
     try {
@@ -90,8 +98,13 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
         return next;
       });
       setSaveError('');
+      setSavedAt(new Date().toISOString());
+      lastFailedRef.current = [];
+      setUnsavedCount(0);
     } catch (error) {
       setSaveError((error as Error).message);
+      lastFailedRef.current = changes;
+      setUnsavedCount(changes.length);
       // Ecranul revine la starea reală a serverului: un lot eșuat poate fi parțial aplicat local.
       await load();
     } finally {
@@ -117,20 +130,30 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
       return next;
     });
     for (const change of changes) pendingRef.current.set(attendanceKey(change.childId, change.date), change);
+    setUnsavedCount(pendingRef.current.size);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      void flush();
+      const batch = Array.from(pendingRef.current.values());
+      pendingRef.current = new Map();
+      void flush(batch);
     }, DEBOUNCE_MS);
+  }
+
+  function retry() {
+    if (lastFailedRef.current.length === 0) return;
+    const batch = lastFailedRef.current;
+    lastFailedRef.current = [];
+    void flush(batch);
   }
 
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       // Cererea supraviețuiește demontării — navigarea nu trebuie să piardă un clic recent.
-      if (pendingRef.current.size > 0) void flush();
+      if (pendingRef.current.size > 0) void flush(Array.from(pendingRef.current.values()));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { status, failureMessage, entries, mark, saving, saveError, reload: load };
+  return { status, failureMessage, entries, mark, saving, saveError, savedAt, unsavedCount, retry, reload: load };
 }

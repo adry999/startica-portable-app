@@ -311,4 +311,57 @@ describe('AttendancePage · Ziua', () => {
 
     printSpy.mockRestore();
   });
+
+  it('indicatorul de salvare arată „Salvat · ora” după un marcaj reușit', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ }));
+    await waitForDebounce();
+
+    expect(screen.getByText(/^Salvat · \d{2}:\d{2}$/)).toBeInTheDocument();
+  });
+
+  it('un marcaj eșuat arată „Nesalvat” + „Încearcă din nou”, care retrimite lotul', async () => {
+    let postCalls = 0;
+    const posted: PostedBatch[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === `/api/attendance?date=${TODAY}`) return jsonResponse({ entries: [] });
+        if (path === '/api/attendance' && init?.method === 'POST') {
+          postCalls++;
+          const body = JSON.parse(String(init.body ?? '{}')) as PostedBatch;
+          posted.push(body);
+          if (postCalls === 1) return jsonResponse({ error: 'Cerere respinsă.' }, false, 400);
+          return jsonResponse({
+            ok: true,
+            saved: body.changes.map(change => ({ ...change, reason: change.reason ?? '', updatedAt: '2026-09-27T09:00:00Z' })),
+            removed: [],
+          });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ }));
+    await waitForDebounce();
+
+    expect(screen.getByText('Nesalvat · 1 modificare')).toBeInTheDocument();
+    const retryButton = screen.getByRole('button', { name: 'Încearcă din nou' });
+
+    await user.click(retryButton);
+    await waitForDebounce();
+
+    expect(postCalls).toBe(2);
+    expect(screen.getByText(/^Salvat · \d{2}:\d{2}$/)).toBeInTheDocument();
+  });
 });

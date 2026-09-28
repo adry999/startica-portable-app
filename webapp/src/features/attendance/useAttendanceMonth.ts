@@ -18,7 +18,11 @@ export interface MonthRowView {
 export interface AttendanceMonthData {
   status: 'loading' | 'ready' | 'failed';
   failureMessage: string;
+  saving: boolean;
   saveError: string;
+  savedAt: string;
+  unsavedCount: number;
+  retry: () => void;
   dates: string[];
   dayNumbers: number[];
   offDays: boolean[];
@@ -91,7 +95,11 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
   return {
     status: attendance.status,
     failureMessage: attendance.failureMessage,
+    saving: attendance.saving,
     saveError: attendance.saveError,
+    savedAt: attendance.savedAt,
+    unsavedCount: attendance.unsavedCount,
+    retry: attendance.retry,
     dates,
     dayNumbers: dates.map(date => Number(date.slice(8, 10))),
     offDays: dates.map(date => !isWorkingDay(date)),

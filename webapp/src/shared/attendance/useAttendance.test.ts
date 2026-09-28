@@ -156,7 +156,55 @@ describe('useAttendance', () => {
     });
 
     expect(result.current.saveError).toBe('Cerere respinsă.');
+    expect(result.current.unsavedCount).toBe(1);
     expect(getCalls).toBe(2);
+  });
+
+  it('retry() retrimite lotul eșuat și golește saveError la succes', async () => {
+    let postCalls = 0;
+    const posted: { changes: unknown[] }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, options?: RequestInit) => {
+        if (path === '/api/attendance?date=2026-09-27') return jsonResponse({ entries: [] });
+        if (path === '/api/attendance' && options?.method === 'POST') {
+          postCalls++;
+          const body = JSON.parse(options.body as string) as { changes: unknown[] };
+          posted.push(body);
+          if (postCalls === 1) return jsonResponse({ error: 'Cerere respinsă.' }, false, 400);
+          return jsonResponse({
+            ok: true,
+            saved: body.changes.map(change => ({ ...(change as object), reason: '', updatedAt: '2026-09-27T09:00:00Z' })),
+            removed: [],
+          });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useAttendance({ date: '2026-09-27' }));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    vi.useFakeTimers();
+    act(() => {
+      result.current.mark([{ childId: 'c1', date: '2026-09-27', status: 'present' }]);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+    expect(result.current.saveError).toBe('Cerere respinsă.');
+    expect(result.current.unsavedCount).toBe(1);
+
+    await act(async () => {
+      result.current.retry();
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    expect(postCalls).toBe(2);
+    expect(posted[1].changes).toEqual([{ childId: 'c1', date: '2026-09-27', status: 'present' }]);
+    expect(result.current.saveError).toBe('');
+    expect(result.current.unsavedCount).toBe(0);
+    expect(result.current.savedAt).not.toBe('');
   });
 
   // M11: pași rapizi cu DayStepper pot porni o a doua cerere (GET) înainte ca prima să răspundă;

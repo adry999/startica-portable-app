@@ -32,7 +32,11 @@ export interface DaySectionView {
 export interface AttendanceDayData {
   status: 'loading' | 'ready' | 'failed';
   failureMessage: string;
+  saving: boolean;
   saveError: string;
+  savedAt: string;
+  unsavedCount: number;
+  retry: () => void;
   counts: { present: number; absent: number; excused: number; unmarked: number };
   sections: DaySectionView[];
   groups: Group[];
@@ -119,7 +123,11 @@ export function useAttendanceDay(date: string): AttendanceDayData {
   return {
     status: attendance.status,
     failureMessage: attendance.failureMessage,
+    saving: attendance.saving,
     saveError: attendance.saveError,
+    savedAt: attendance.savedAt,
+    unsavedCount: attendance.unsavedCount,
+    retry: attendance.retry,
     counts,
     sections,
     groups: records.groups,

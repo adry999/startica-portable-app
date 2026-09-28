@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Button, DayStepper, MonthStepper, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
+import { useState } from 'react';
+import { Button, DayStepper, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { shiftMonth } from '@shared/format/month-shift';
@@ -8,6 +8,7 @@ import { useAttendanceDay } from './useAttendanceDay';
 import { useAttendanceMonth } from './useAttendanceMonth';
 import { DayView } from './DayView';
 import { MonthView } from './MonthView';
+import { SaveIndicator } from './SaveIndicator';
 
 export interface AttendancePageProps {
   month: string;
@@ -22,13 +23,16 @@ export function AttendancePage({ month }: AttendancePageProps) {
   const [monthKey, setMonthKey] = useState(month);
   const dayData = useAttendanceDay(date);
   const monthData = useAttendanceMonth(monthKey);
-  const toast = useToast();
-
-  const saveError = mode === 'day' ? dayData.saveError : monthData.saveError;
-  useEffect(() => {
-    if (saveError) toast.show({ message: saveError });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saveError]);
+  const activeData = mode === 'day' ? dayData : monthData;
+  const saveIndicator = (
+    <SaveIndicator
+      saving={activeData.saving}
+      saveError={activeData.saveError}
+      savedAt={activeData.savedAt}
+      unsavedCount={activeData.unsavedCount}
+      onRetry={activeData.retry}
+    />
+  );
 
   const modeSwitch = (
     <SegmentedControl
@@ -45,6 +49,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
   useTopbarActions(
     mode === 'day' ? (
       <>
+        {saveIndicator}
         {modeSwitch}
         <DayStepper value={date} max={today()} onChange={setDate} />
         <Button onClick={dayData.markAllUnmarkedPresent} disabled={dayData.counts.unmarked === 0}>
@@ -53,6 +58,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
       </>
     ) : (
       <>
+        {saveIndicator}
         {modeSwitch}
         <MonthStepper
           value={monthKey}

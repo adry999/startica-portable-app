@@ -20,7 +20,11 @@ function buildData(overrides: Partial<AttendanceMonthData> = {}): AttendanceMont
   return {
     status: 'ready',
     failureMessage: '',
+    saving: false,
     saveError: '',
+    savedAt: '',
+    unsavedCount: 0,
+    retry: vi.fn(),
     dates: ['2026-09-15'],
     dayNumbers: [15],
     offDays: [false],
