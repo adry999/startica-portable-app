@@ -37,7 +37,7 @@ Titlul din antet rămâne „Copii” (`VIEW_TITLES`). În conținut, primul râ
 ```
 
 ## 4. Criterii de acceptare
-- [ ] Fișa e pagină (`/copii/:id`), nu dialog
-- [ ] Culoarea headerului vine din grupa copilului (`groupTone`)
-- [ ] „+ Plată” deschide formularul de achitare cu copilul precompletat
-- [ ] Plătitorii reținuți se pot șterge din fișă
+- [x] Fișa e pagină (`/copii/:id`), nu dialog
+- [x] Culoarea headerului vine din grupa copilului (`groupTone`)
+- [x] „+ Plată” deschide formularul de achitare cu copilul precompletat
+- [ ] Plătitorii reținuți se pot șterge din fișă — nu s-a construit (CF-2, decizie amânată în INTREBARI.md)
