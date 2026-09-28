@@ -125,7 +125,12 @@ test('un calculator nou cu filiala goală preia prima filială de pe server în 
   // trebuie să adopte filiala lui A, nu să o confunde cu a lui proprie.
   const b = harness(t, { name: '', color: 'orange', address: '', folder: null }, 'b-local-1');
   const localEmptyId = b.registry.list()[0].id;
-  const result = await b.service.connect({ serverUrl, code: undefined, setupKey: SETUP_KEY, deviceName: 'Calculator B' });
+  const result = await b.service.connect({
+    serverUrl,
+    code: undefined,
+    setupKey: SETUP_KEY,
+    deviceName: 'Calculator B',
+  });
 
   assert.deepEqual(result.uploaded, []);
   assert.equal(result.downloaded.length, 1);

@@ -45,8 +45,17 @@ test('writeLocalSnapshot scrie brut fiecare înregistrare și sync_state-ul ei, 
 
   writeLocalSnapshot(database, {
     records: {
-      children: [{ id: 'CHILD-1', revision: 1, payload: { id: 'CHILD-1', name: 'Ana' }, updatedAt: '2026-09-01T00:00:00.000Z' }],
-      groups: [{ id: 'GRP-1', revision: 3, payload: { id: 'GRP-1', name: 'Fluturași' }, updatedAt: '2026-09-02T00:00:00.000Z' }],
+      children: [
+        { id: 'CHILD-1', revision: 1, payload: { id: 'CHILD-1', name: 'Ana' }, updatedAt: '2026-09-01T00:00:00.000Z' },
+      ],
+      groups: [
+        {
+          id: 'GRP-1',
+          revision: 3,
+          payload: { id: 'GRP-1', name: 'Fluturași' },
+          updatedAt: '2026-09-02T00:00:00.000Z',
+        },
+      ],
     },
     headSeq: 42,
   });

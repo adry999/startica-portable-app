@@ -75,9 +75,7 @@ export function createSyncConnectService({
         continue;
       }
       if (isBranchEmpty(dirsOf(local).dataDir)) {
-        const unclaimed = serverBranches.find(
-          branch => !localIds.has(branch.id) && !claimedServerIds.has(branch.id),
-        );
+        const unclaimed = serverBranches.find(branch => !localIds.has(branch.id) && !claimedServerIds.has(branch.id));
         if (unclaimed) {
           claimedServerIds.add(unclaimed.id);
           const replaced = registry.replaceEmpty(local.id, unclaimed);
