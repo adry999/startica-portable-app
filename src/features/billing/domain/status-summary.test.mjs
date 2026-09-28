@@ -27,10 +27,11 @@ const payment = (overrides = {}) =>
     ...overrides,
   });
 
-test('toMdlToday: lei neschimbat, EUR la cel mai recent curs, 1:1 fără niciun curs', () => {
+test('toMdlToday: lei neschimbat, EUR la cel mai recent curs, null (nu 1:1) fără niciun curs', () => {
   assert.equal(toMdlToday(100, 'MDL', { '2026-09-01': 20 }), 100);
   assert.equal(toMdlToday(100, 'EUR', { '2026-08-01': 19, '2026-09-01': 20 }), 2000);
-  assert.equal(toMdlToday(100, 'EUR', {}), 100);
+  // m22: fără niciun curs, 1:1 arăta 100 € ca 100 lei — o eroare de ~20x mascată drept număr normal.
+  assert.equal(toMdlToday(100, 'EUR', {}), null);
 });
 
 test('summarizeMonthStatus: de încasat, încasat, restanțe și numărul copiilor cu taxă, pe toată luna', () => {
@@ -62,6 +63,17 @@ test('summarizeMonthStatus convertește copiii cu taxă EUR la cursul cel mai re
   });
   assert.equal(summary.expected, 2000);
   assert.equal(summary.overdue, 2000);
+});
+
+test('summarizeMonthStatus: un copil EUR fără niciun curs cunoscut nu intră 1:1 în sume, dar ridică hasMissingRate', () => {
+  const records = /** @type {any} */ ({
+    children: [child({ feeHistory: [{ from: '2026-01', amount: 100, currency: 'EUR' }] })],
+    payments: [],
+  });
+  const summary = summarizeMonthStatus(evaluateChildrenForMonth(records, '2026-09', '2026-09-27'), {});
+  assert.equal(summary.hasMissingRate, true);
+  assert.equal(summary.expected, 0);
+  assert.equal(summary.overdue, 0);
 });
 
 test('summarizeMonthStatus: bara Încasat se oprește la 100% când s-a plătit peste taxă', () => {
