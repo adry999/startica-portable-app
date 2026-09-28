@@ -105,7 +105,8 @@ describe('TimesheetView', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, options?: RequestInit) => {
-        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
+        if (path === '/api/session')
+          return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
         if (path === '/api/state')
           return jsonResponse({
             state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },

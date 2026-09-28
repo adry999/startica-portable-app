@@ -54,5 +54,15 @@ export function useBranches(): BranchesData {
     await load();
   }
 
-  return { ready: status === 'ready', status, failureMessage, activeBranchId, branches, reload: load, create, rename, setColor };
+  return {
+    ready: status === 'ready',
+    status,
+    failureMessage,
+    activeBranchId,
+    branches,
+    reload: load,
+    create,
+    rename,
+    setColor,
+  };
 }

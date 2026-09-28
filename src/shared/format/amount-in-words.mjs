@@ -108,9 +108,7 @@ function spellLei(lei) {
     words.push(countedNoun(millionsGroup, { singular: 'milion', plural: 'milioane', gender: 'm', pluralGender: 'f' }));
   if (thousandsGroup > 0) words.push(countedNoun(thousandsGroup, { singular: 'mie', plural: 'mii', gender: 'f' }));
   if (unitsGroup > 0)
-    words.push(
-      countedNoun(unitsGroup, { singular: 'leu', plural: 'lei', gender: 'm', standalone: unitsIsStandalone }),
-    );
+    words.push(countedNoun(unitsGroup, { singular: 'leu', plural: 'lei', gender: 'm', standalone: unitsIsStandalone }));
   // Multiplu exact de 1000 (sau de un milion): substantivul „lei” cade direct
   // pe ultimul cuvânt spus („mii”/„milioane”), care cere mereu „de”.
   else words.push('de lei');

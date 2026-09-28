@@ -18,7 +18,15 @@ export interface StatusPrintProps {
 }
 
 /** Situația plăților tipărită (16c) — vizibilă doar în @media print, vezi StatusPage.module.css. */
-export function StatusPrint({ month, asOf, filterLabel, rows, showPhone, orientation, kindergarten }: StatusPrintProps) {
+export function StatusPrint({
+  month,
+  asOf,
+  filterLabel,
+  rows,
+  showPhone,
+  orientation,
+  kindergarten,
+}: StatusPrintProps) {
   let expectedTotal = 0;
   let paidTotal = 0;
   let restTotal = 0;

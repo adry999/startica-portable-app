@@ -61,7 +61,9 @@ export function KindergartenSettings() {
   if (kindergarten.status === 'failed')
     return (
       <div className={backupStyles.panel}>
-        <p className={backupStyles.notice}>{kindergarten.failureMessage || 'Datele grădiniței nu au putut fi încărcate.'}</p>
+        <p className={backupStyles.notice}>
+          {kindergarten.failureMessage || 'Datele grădiniței nu au putut fi încărcate.'}
+        </p>
         <Button type="button" variant="outline" onClick={() => void kindergarten.reload()}>
           Încearcă din nou
         </Button>

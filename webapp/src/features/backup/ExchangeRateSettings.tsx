@@ -100,7 +100,9 @@ export function ExchangeRateSettings() {
   if (exchangeRates.status === 'failed')
     return (
       <div className={backupStyles.panel}>
-        <p className={backupStyles.notice}>{exchangeRates.failureMessage || 'Cursul valutar nu a putut fi încărcat.'}</p>
+        <p className={backupStyles.notice}>
+          {exchangeRates.failureMessage || 'Cursul valutar nu a putut fi încărcat.'}
+        </p>
         <Button type="button" variant="outline" onClick={() => void exchangeRates.reload()}>
           Încearcă din nou
         </Button>

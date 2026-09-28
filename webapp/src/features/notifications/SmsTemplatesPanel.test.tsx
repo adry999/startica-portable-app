@@ -213,7 +213,8 @@ describe('SmsTemplatesPanel', () => {
         if (path === '/api/sms-status') return jsonResponse(smsStatus);
         if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
-        if (path === '/api/sms-template-save') return { ok: false, status: 400, json: async () => ({ error: 'Numele șablonului e obligatoriu.' }) };
+        if (path === '/api/sms-template-save')
+          return { ok: false, status: 400, json: async () => ({ error: 'Numele șablonului e obligatoriu.' }) };
         throw new Error(`neașteptat: ${path}`);
       }),
     );
