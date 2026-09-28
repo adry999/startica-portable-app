@@ -7,6 +7,7 @@ import {
   FilterPills,
   LoadingState,
   MonthPicker,
+  SearchInput,
   SegmentedControl,
   SmsConfirmDialog,
   groupTone,
@@ -414,21 +415,21 @@ function MonthView({
       render: row =>
         NOTIFIABLE_LABELS.has(row.label) ? (
           <div className={styles.ctaCell}>
-            <button
-              type="button"
+            <Button
+              variant="outline"
               className={styles.ctaButton}
               disabled={!smsConfigured}
               title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
               onClick={() => onNotifyRow(row)}
             >
               Notifică
-            </button>
+            </Button>
             {isNotifiedToday(row.id) && <Badge tone="mint">Notificat azi</Badge>}
           </div>
         ) : (
-          <button type="button" className={styles.ctaButton} onClick={() => onOpenChild(row.id)}>
+          <Button variant="outline" className={styles.ctaButton} onClick={() => onOpenChild(row.id)}>
             Vezi fișa
-          </button>
+          </Button>
         ),
     },
   ];
@@ -485,13 +486,11 @@ function MonthView({
             onChange={data.setSegment}
             options={segmentOptions(data.segmentCounts)}
           />
-          <input
-            className={styles.search}
-            type="search"
-            placeholder="Caută copil"
-            aria-label="Caută copil"
+          <SearchInput
             value={data.search}
-            onChange={event => data.setSearch(event.target.value)}
+            onChange={data.setSearch}
+            placeholder="Caută copil"
+            ariaLabel="Caută copil"
           />
         </div>
 
@@ -561,15 +560,15 @@ function YearView({
             <small>{formatMoney(data.summary.unrecovered)} nerecuperați</small>
           </div>
           {data.summary.overdueChildren > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="outline"
               className={styles.ctaButton}
               disabled={!smsConfigured || data.recipients.length === 0}
               title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
               onClick={onNotifyYear}
             >
               Notifică
-            </button>
+            </Button>
           )}
         </Card>
         <Card tone="mint" className={styles.yearCard}>
@@ -592,13 +591,11 @@ function YearView({
 
       <Card className={styles.tableCard}>
         <div className={styles.toolbar}>
-          <input
-            className={styles.search}
-            type="search"
-            placeholder="Caută copil"
-            aria-label="Caută copil"
+          <SearchInput
             value={data.search}
-            onChange={event => data.setSearch(event.target.value)}
+            onChange={data.setSearch}
+            placeholder="Caută copil"
+            ariaLabel="Caută copil"
           />
         </div>
         <PaymentHeatmap rows={data.rows} monthLabels={data.monthLabels} currentMonth={data.currentMonth} />
