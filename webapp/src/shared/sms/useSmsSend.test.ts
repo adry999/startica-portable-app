@@ -44,13 +44,15 @@ describe('useSmsSend', () => {
     vi.useRealTimers();
   });
 
-  it('send trimite request-ul la /api/sms-send și expune ultimul rezultat', async () => {
+  it('send trimite request-ul la /api/sms-send cu un requestId generat și expune ultimul rezultat', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
         if (path === '/api/sms-send') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           expect(body.source).toBe('notify');
+          expect(typeof body.requestId).toBe('string');
+          expect(body.requestId.length).toBeGreaterThan(0);
           return jsonResponse(sentResult);
         }
         throw new Error(`neașteptat: ${path}`);
@@ -62,6 +64,59 @@ describe('useSmsSend', () => {
 
     expect(result.current.lastResult?.results).toHaveLength(1);
     expect(result.current.sending).toBe(false);
+  });
+
+  it('M10: o reluare a exact aceluiași lot după o eroare de rețea refolosește requestId-ul', async () => {
+    const requestIds: string[] = [];
+    let attempt = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path !== '/api/sms-send') throw new Error(`neașteptat: ${path}`);
+        attempt += 1;
+        const body = JSON.parse(String(init?.body ?? '{}'));
+        requestIds.push(body.requestId);
+        if (attempt === 1) throw new TypeError('fetch failed');
+        return jsonResponse(sentResult);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsSend());
+    const request = { source: 'notify' as const, month: '2026-09', templateId: null, messages: [] };
+    await act(async () => {
+      await expect(result.current.send(request)).rejects.toThrow();
+    });
+    await act(() => result.current.send(request));
+
+    expect(requestIds).toHaveLength(2);
+    expect(requestIds[0]).toBe(requestIds[1]);
+  });
+
+  it('M10: un lot cu conținut diferit după o eroare primește un requestId nou, nu-l reia pe cel vechi', async () => {
+    const requestIds: string[] = [];
+    let attempt = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path !== '/api/sms-send') throw new Error(`neașteptat: ${path}`);
+        attempt += 1;
+        const body = JSON.parse(String(init?.body ?? '{}'));
+        requestIds.push(body.requestId);
+        if (attempt === 1) throw new TypeError('fetch failed');
+        return jsonResponse(sentResult);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsSend());
+    await act(async () => {
+      await expect(
+        result.current.send({ source: 'notify', month: '2026-09', templateId: null, messages: [] }),
+      ).rejects.toThrow();
+    });
+    await act(() => result.current.send({ source: 'notify', month: '2026-08', templateId: null, messages: [] }));
+
+    expect(requestIds).toHaveLength(2);
+    expect(requestIds[0]).not.toBe(requestIds[1]);
   });
 
   it('programează exact o reîmprospătare a stărilor la 30s după un rezultat cu trimiteri', async () => {
