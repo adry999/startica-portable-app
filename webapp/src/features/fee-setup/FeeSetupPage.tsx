@@ -1,13 +1,22 @@
+import { useNavigate } from 'react-router-dom';
 import {
+  Badge,
   Button,
   Card,
   DataTable,
+  EmptyState,
   LoadingState,
+  RowMenu,
   SearchInput,
   SegmentedControl,
+  SelectionBar,
+  groupTone,
   useToast,
+  useTopbarActions,
   type DataTableColumn,
+  type PillTone,
 } from '@shared/ui';
+import { initials } from '@shared/format/initials';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -27,42 +36,96 @@ const CURRENCY_OPTIONS: { value: FeeCurrency; label: string }[] = [
 
 const FILTER_OPTIONS: { value: FeeSetupFilter; label: string }[] = [
   { value: 'missing', label: 'Doar fără taxă' },
-  { value: 'all', label: 'Toți copiii nearhivați' },
+  { value: 'all', label: 'Toți' },
 ];
+
+const AVATAR_TONE_CLASS: Record<PillTone, string> = {
+  orange: 'toneOrange',
+  mint: 'toneMint',
+  yellow: 'toneYellow',
+  pink: 'tonePink',
+  neutral: 'toneOrange',
+};
 
 export function FeeSetupPage() {
   const feeSetupData = useFeeSetup();
   const toast = useToast();
+  const navigate = useNavigate();
   const { rates } = useExchangeRates();
   const todaysRate = latestKnownRate(rates);
+
+  const completedCount = feeSetupData.totalCount - feeSetupData.missingCount;
+  const progressPct = feeSetupData.totalCount > 0 ? Math.round((completedCount / feeSetupData.totalCount) * 100) : 0;
+
+  useTopbarActions(
+    <div className={styles.headerProgress}>
+      <div className={styles.headerProgressRow}>
+        <span className={styles.headerProgressCount}>
+          {completedCount} din {feeSetupData.totalCount} completate
+        </span>
+        <span className={styles.headerProgressRemaining}>{feeSetupData.missingCount} rămase</span>
+      </div>
+      <div
+        className={styles.headerProgressBar}
+        role="progressbar"
+        aria-label="Progres completare taxe"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progressPct}
+      >
+        <span style={{ width: `${progressPct}%` }} />
+      </div>
+    </div>,
+  );
 
   if (feeSetupData.status === 'loading') return <LoadingState />;
   if (feeSetupData.status === 'failed')
     return <p className={styles.notice}>{feeSetupData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  async function handleSave() {
+  async function handleSaveRow(row: FeeSetupRowView) {
     try {
-      const { updatedCount } = await feeSetupData.save();
-      toast.show({ message: `${updatedCount} fișe completate. Verifică lista „De notificat”.` });
+      await feeSetupData.save([row.id]);
+      toast.show({ message: `${row.name}: fișă completată.` });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
   }
 
   const columns: DataTableColumn<FeeSetupRowView>[] = [
-    { key: 'contract', header: 'Contract', sortValue: row => row.contract, render: row => row.contract },
-    { key: 'name', header: 'Copil', sortValue: row => row.name, render: row => row.name },
     {
-      key: 'attendance',
-      header: 'Frecventare',
-      sortValue: row => row.attendanceLabel,
-      render: row => row.attendanceLabel,
+      key: 'name',
+      header: 'Copil',
+      sortValue: row => row.name,
+      render: row => (
+        <div className={styles.childCell}>
+          <span
+            className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, feeSetupData.groupOptions)]]}`}
+          >
+            {initials(row.name)}
+          </span>
+          <div>
+            <strong>{row.name}</strong>
+            <small>{row.ageLabel}</small>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'missing',
+      header: 'Lipsește',
+      render: row =>
+        row.missingLabel ? (
+          <Badge tone="pink">{row.missingLabel}</Badge>
+        ) : (
+          <span className={styles.noneMissing}>—</span>
+        ),
     },
     {
       key: 'group',
       header: 'Grupă',
       render: row => (
         <select
+          className={row.groupId ? undefined : styles.missing}
           value={row.groupId}
           onChange={event => feeSetupData.setGroupId(row.id, event.target.value)}
           aria-label={`Grupă pentru ${row.name}`}
@@ -102,6 +165,7 @@ export function FeeSetupPage() {
         return (
           <div className={styles.feeCell}>
             <input
+              className={row.fee === '' ? styles.missing : undefined}
               type="number"
               min={0}
               step="0.01"
@@ -120,152 +184,154 @@ export function FeeSetupPage() {
       },
     },
     {
-      key: 'from',
-      header: 'Din luna',
-      render: row => (
-        <input
-          type="month"
-          value={row.from}
-          onChange={event => feeSetupData.setFrom(row.id, event.target.value)}
-          aria-label={`Din luna pentru ${row.name}`}
-        />
-      ),
+      key: 'due',
+      header: 'Scadență',
+      render: row => <span className={styles.dueDay}>{row.dueDayLabel}</span>,
     },
     {
-      key: 'status',
-      header: 'Statut',
+      key: 'actions',
+      header: '',
+      align: 'end',
       render: row => (
-        <select
-          value={row.status}
-          onChange={event => feeSetupData.setStatus(row.id, event.target.value)}
-          aria-label={`Statut pentru ${row.name}`}
-        >
-          {row.statusOptions.map(status => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
+        <div className={styles.rowActions}>
+          <Button
+            variant={row.changed ? 'primary' : 'outline'}
+            disabled={!row.changed || feeSetupData.saving}
+            onClick={() => void handleSaveRow(row)}
+          >
+            Salvează
+          </Button>
+          <RowMenu
+            ariaLabel={`Statut pentru ${row.name}`}
+            items={row.statusOptions
+              .filter(status => status !== row.status)
+              .map(status => ({ label: `Marchează ${status}`, onClick: () => feeSetupData.setStatus(row.id, status) }))}
+          />
+        </div>
       ),
     },
   ];
 
+  const selectedCount = feeSetupData.selectedRowKeys.size;
+
   return (
     <>
-      <p className={styles.info}>
-        {feeSetupData.missingCount
-          ? `${feeSetupData.missingCount} copii fără taxă completată: nu pot fi evaluați și nu apar pe lista de notificat.`
-          : 'Toți copiii nearhivați au taxa completată.'}
-      </p>
-
-      <p className={styles.notice}>
-        Fără taxă și fără statut confirmat, aplicația nu poate spune dacă un copil a achitat, deci nu apare pe lista de
-        notificat. Completează aici, în masă. „Din luna” este luna din care se aplică; implicit luna începerii
-        frecventării, ca și lunile trecute să fie calculate corect. Se salvează într-o singură operațiune, cu backup
-        înainte și cu fiecare modificare trecută în Istoric.
-      </p>
-
-      <div className={styles.toolbar}>
-        <SearchInput
-          placeholder="Caută…"
-          value={feeSetupData.search}
-          onChange={feeSetupData.setSearch}
-          ariaLabel="Caută copil"
-        />
-        <SegmentedControl<FeeSetupFilter>
-          ariaLabel="Arată"
-          value={feeSetupData.filter}
-          onChange={feeSetupData.setFilter}
-          options={FILTER_OPTIONS}
-        />
+      <div className={styles.notice}>
+        {feeSetupData.missingCount > 0 ? (
+          <>
+            Fără taxă și grupă, achitările acestor copii nu pot fi calculate în{' '}
+            <button type="button" className={styles.noticeLink} onClick={() => navigate('/situatia-platilor')}>
+              Situația plăților
+            </button>
+            . Completează rândurile de mai jos sau selectează mai mulți copii și aplică aceleași valori.
+          </>
+        ) : (
+          'Toți copiii nearhivați au taxa completată.'
+        )}
       </div>
 
-      <BulkRow data={feeSetupData} />
-
       <Card className={styles.tableCard}>
+        <div className={styles.toolbar}>
+          <SearchInput
+            placeholder="Caută…"
+            value={feeSetupData.search}
+            onChange={feeSetupData.setSearch}
+            ariaLabel="Caută copil"
+          />
+          <SegmentedControl<FeeSetupFilter>
+            ariaLabel="Arată"
+            value={feeSetupData.filter}
+            onChange={feeSetupData.setFilter}
+            options={FILTER_OPTIONS}
+          />
+        </div>
+
+        {selectedCount > 0 && (
+          <SelectionBar
+            label={`${selectedCount} selectați`}
+            onCancel={() => feeSetupData.setSelectedRowKeys(new Set())}
+          >
+            <span className={styles.bulkLabel}>Aplică:</span>
+            <select
+              className={styles.bulkPill}
+              aria-label="Grupă de aplicat pe selecție"
+              value={feeSetupData.bulkGroupId}
+              onChange={event => feeSetupData.setBulkGroupId(event.target.value)}
+            >
+              <option value="">Grupă ▾</option>
+              {feeSetupData.groupOptions.map(group => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+            <input
+              className={styles.bulkPill}
+              type="number"
+              min={0}
+              step="0.01"
+              placeholder="Taxă"
+              aria-label="Taxă de aplicat pe selecție"
+              value={feeSetupData.bulkAmount}
+              onChange={event => feeSetupData.setBulkAmount(event.target.value)}
+            />
+            <select
+              className={styles.bulkPill}
+              aria-label="Monedă de aplicat pe selecție"
+              value={feeSetupData.bulkCurrency}
+              onChange={event => feeSetupData.setBulkCurrency(event.target.value as FeeCurrency | '')}
+            >
+              <option value="">Monedă ▾</option>
+              {CURRENCY_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Button size="md" onClick={() => applyBulk(feeSetupData, toast)}>
+              Aplică la {selectedCount}
+            </Button>
+          </SelectionBar>
+        )}
+
         <DataTable
+          bare
+          selectable
+          selectedRowKeys={feeSetupData.selectedRowKeys}
+          onSelectedRowKeysChange={feeSetupData.setSelectedRowKeys}
           columns={columns}
           rows={feeSetupData.rows}
           rowKey={row => row.id}
           pageSize={feeSetupData.rows.length || 1}
-          emptyState={<p>Nimic de completat pentru filtrul ales.</p>}
+          emptyState={
+            feeSetupData.filter === 'missing' ? (
+              <EmptyState
+                variant="resolved"
+                title="Totul e completat"
+                description="Toți copiii nearhivați au taxă și grupă."
+              />
+            ) : (
+              <EmptyState
+                variant="no-results"
+                title="Niciun copil"
+                activeFilters={feeSetupData.search ? [`Căutare „${feeSetupData.search}”`] : undefined}
+                onClearFilters={feeSetupData.search ? () => feeSetupData.setSearch('') : undefined}
+              />
+            )
+          }
         />
       </Card>
-
-      {feeSetupData.hasPendingEdits && (
-        <div className={styles.saveBar}>
-          <span>Ai completări nesalvate.</span>
-          <Button onClick={() => void handleSave()}>Salvează completările</Button>
-        </div>
-      )}
     </>
   );
 }
 
-function BulkRow({ data }: { data: FeeSetupData }) {
-  const toast = useToast();
-
-  function applyAll() {
-    if (!data.bulkAmount.trim() && !data.bulkCurrency && !data.bulkGroupId && !data.bulkStatus) {
-      toast.show({ message: 'Completează o taxă, o grupă sau un statut de aplicat.' });
-      return;
-    }
-    data.applyBulkToVisible();
-    toast.show({ message: 'Valorile au fost puse pe rândurile afișate. Verifică excepțiile, apoi salvează.' });
+function applyBulk(data: FeeSetupData, toast: ReturnType<typeof useToast>) {
+  if (!data.bulkAmount.trim() && !data.bulkCurrency && !data.bulkGroupId) {
+    toast.show({ message: 'Completează o taxă, o monedă sau o grupă de aplicat.' });
+    return;
   }
-
-  return (
-    <div className={styles.bulkRow}>
-      <label className={styles.bulkField}>
-        Taxă pentru toți
-        <input
-          type="number"
-          min={0}
-          step="0.01"
-          placeholder="2000"
-          value={data.bulkAmount}
-          onChange={event => data.setBulkAmount(event.target.value)}
-        />
-      </label>
-      <label className={styles.bulkField}>
-        Monedă pentru toți
-        <select
-          value={data.bulkCurrency}
-          onChange={event => data.setBulkCurrency(event.target.value as FeeCurrency | '')}
-        >
-          <option value="">Lasă neschimbată</option>
-          {CURRENCY_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={styles.bulkField}>
-        Grupă pentru toți
-        <select value={data.bulkGroupId} onChange={event => data.setBulkGroupId(event.target.value)}>
-          <option value="">Fără grupă</option>
-          {data.groupOptions.map(group => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={styles.bulkField}>
-        Statut pentru toți
-        <select value={data.bulkStatus} onChange={event => data.setBulkStatus(event.target.value)}>
-          <option value="">Lasă neschimbat</option>
-          {data.statusOptions.map(status => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-      </label>
-      <Button variant="ghost" onClick={applyAll}>
-        Aplică la rândurile afișate
-      </Button>
-    </div>
-  );
+  data.applyBulkToSelection();
+  toast.show({
+    message: 'Valorile au fost puse pe rândurile selectate. Verifică excepțiile, apoi salvează fiecare rând.',
+  });
 }

@@ -1,9 +1,15 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { FeeSetupPage } from './FeeSetupPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — progresul ajunge acolo, nu în corpul paginii (F-1). */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -16,6 +22,8 @@ const fixtureState = {
       name: 'Andrei Popescu',
       contractNumber: '10',
       attendanceDate: '2026-01-10',
+      birthDate: '2022-01-10',
+      dueDay: 26,
       groupId: null,
       status: 'Activ',
       statusHistory: [],
@@ -33,9 +41,14 @@ const fixtureState = {
 
 function renderPage() {
   return render(
-    <ToastProvider>
-      <FeeSetupPage />
-    </ToastProvider>,
+    <MemoryRouter>
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <FeeSetupPage />
+        </TopbarActionsProvider>
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -87,24 +100,26 @@ describe('FeeSetupPage', () => {
     }
   });
 
-  it('arată copilul fără taxă și numărul din antet', async () => {
+  it('arată copilul fără taxă și progresul în antet', async () => {
     await loadedSession();
     renderPage();
 
     expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
-    expect(screen.getByText(/1 copii fără taxă completată/)).toBeInTheDocument();
+    expect(screen.getByText('0 din 1 completate')).toBeInTheDocument();
+    expect(screen.getByText('1 rămase')).toBeInTheDocument();
   });
 
-  it('completarea taxei arată bara de salvare, iar salvarea o ascunde', async () => {
+  it('completarea taxei activează Salvează pe rând, iar salvarea o dezactivează', async () => {
     await loadedSession();
     renderPage();
     const user = userEvent.setup();
 
     const feeInput = screen.getByLabelText('Taxă lunară pentru Andrei Popescu');
     await user.type(feeInput, '1500');
-    expect(screen.getByText('Ai completări nesalvate.')).toBeInTheDocument();
+    const saveButton = screen.getByRole('button', { name: 'Salvează' });
+    expect(saveButton).toBeEnabled();
 
-    await user.click(screen.getByText('Salvează completările'));
-    expect(await screen.findByText(/fișe completate/)).toBeInTheDocument();
+    await user.click(saveButton);
+    expect(await screen.findByText(/fișă completată/)).toBeInTheDocument();
   });
 });

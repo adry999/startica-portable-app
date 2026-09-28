@@ -116,18 +116,29 @@ describe('useFeeSetup', () => {
     expect(result.current.hasPendingEdits).toBe(false);
   });
 
-  it('"Aplică la rândurile afișate" pune taxa și grupa pe toate rândurile vizibile', async () => {
+  it('bara de selecție aplică taxa și grupa doar pe rândurile selectate', async () => {
     await loadedSession();
     const { result } = renderHook(() => useFeeSetup());
 
+    act(() => result.current.setSelectedRowKeys(new Set(['c1'])));
     act(() => {
       result.current.setBulkAmount('1000');
       result.current.setBulkGroupId('g1');
     });
-    act(() => result.current.applyBulkToVisible());
+    act(() => result.current.applyBulkToSelection());
 
     expect(result.current.rows.find(row => row.id === 'c1')?.fee).toBe('1000');
     expect(result.current.rows.find(row => row.id === 'c1')?.groupId).toBe('g1');
+  });
+
+  it('bara de selecție nu aplică nimic fără rânduri selectate', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useFeeSetup());
+
+    act(() => result.current.setBulkAmount('1000'));
+    act(() => result.current.applyBulkToSelection());
+
+    expect(result.current.rows.find(row => row.id === 'c1')?.fee).toBe('');
   });
 
   it('save trimite doar rândurile schimbate la /api/children-setup', async () => {

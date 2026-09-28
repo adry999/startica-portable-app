@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { hasMissingFee, defaultSetupMonth } from '#features/fee-setup/domain/child-fee-setup.mjs';
 import { STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
-import { contractNumberOf } from '#shared/domain/record-labels.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
+import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -15,16 +15,18 @@ export type FeeCurrency = 'MDL' | 'EUR';
 
 export interface FeeSetupRowView {
   id: string;
-  contract: string;
   name: string;
-  attendanceLabel: string;
+  ageLabel: string;
+  /** Ce lipsește, gata de afișat în badge-ul „Lipsește” (ex. „Grupă, taxă”); gol dacă rândul e complet. */
+  missingLabel: string;
   fee: string;
   currency: FeeCurrency;
   groupId: string;
-  from: string;
+  dueDayLabel: string;
   status: string;
   /** Include statutul curent al fișei chiar dacă e „De verificat” (nu e o valoare editabilă, dar trebuie să rămână vizibil). */
   statusOptions: string[];
+  changed: boolean;
 }
 
 interface RowEdit {
@@ -32,7 +34,6 @@ interface RowEdit {
   currency?: FeeCurrency;
   groupId?: string;
   status?: string;
-  from?: string;
 }
 
 export interface GroupOption {
@@ -47,26 +48,28 @@ export interface FeeSetupData {
   groupOptions: GroupOption[];
   statusOptions: readonly string[];
   missingCount: number;
+  totalCount: number;
   search: string;
   setSearch: (value: string) => void;
   filter: FeeSetupFilter;
   setFilter: (value: FeeSetupFilter) => void;
+  selectedRowKeys: ReadonlySet<string>;
+  setSelectedRowKeys: (keys: ReadonlySet<string>) => void;
   bulkAmount: string;
   setBulkAmount: (value: string) => void;
   bulkCurrency: FeeCurrency | '';
   setBulkCurrency: (value: FeeCurrency | '') => void;
   bulkGroupId: string;
   setBulkGroupId: (value: string) => void;
-  bulkStatus: string;
-  setBulkStatus: (value: string) => void;
   setFee: (id: string, value: string) => void;
   setCurrency: (id: string, value: FeeCurrency) => void;
   setGroupId: (id: string, value: string) => void;
   setStatus: (id: string, value: string) => void;
-  setFrom: (id: string, value: string) => void;
-  applyBulkToVisible: () => void;
+  /** Pune taxa/moneda/grupa completate în bara de selecție pe rândurile selectate (nu salvează). */
+  applyBulkToSelection: () => void;
   hasPendingEdits: boolean;
-  save: () => Promise<{ updatedCount: number }>;
+  /** Fără `ids`, salvează toate rândurile modificate; cu `ids`, doar rândul/rândurile alese (Salvează de pe rând). */
+  save: (ids?: string[]) => Promise<{ updatedCount: number }>;
   saving: boolean;
 }
 
@@ -77,6 +80,14 @@ function currentFeeOf(child: Child): string {
 
 function currentCurrencyOf(child: Child): FeeCurrency {
   return child.feeHistory?.at(-1)?.currency ?? 'MDL';
+}
+
+function missingLabelOf(groupId: string, fee: string): string {
+  const parts: string[] = [];
+  if (!groupId) parts.push('grupă');
+  if (!fee) parts.push('taxă');
+  if (!parts.length) return '';
+  return parts.map((part, index) => (index === 0 ? `${part[0].toUpperCase()}${part.slice(1)}` : part)).join(', ');
 }
 
 /**
@@ -91,10 +102,10 @@ export function useFeeSetup(): FeeSetupData {
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FeeSetupFilter>('missing');
+  const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
   const [bulkAmount, setBulkAmount] = useState('');
   const [bulkCurrency, setBulkCurrency] = useState<FeeCurrency | ''>('');
   const [bulkGroupId, setBulkGroupId] = useState('');
-  const [bulkStatus, setBulkStatus] = useState('');
   const [edits, setEdits] = useState<Record<string, RowEdit>>({});
   const [saving, setSaving] = useState(false);
 
@@ -106,7 +117,6 @@ export function useFeeSetup(): FeeSetupData {
   const setCurrency = (id: string, value: FeeCurrency) => setField(id, 'currency', value);
   const setGroupId = (id: string, value: string) => setField(id, 'groupId', value);
   const setStatus = (id: string, value: string) => setField(id, 'status', value);
-  const setFrom = (id: string, value: string) => setField(id, 'from', value);
 
   if (!ready) {
     return {
@@ -116,24 +126,24 @@ export function useFeeSetup(): FeeSetupData {
       groupOptions: [],
       statusOptions: STATUS_HISTORY_VALUES,
       missingCount: 0,
+      totalCount: 0,
       search,
       setSearch,
       filter,
       setFilter,
+      selectedRowKeys,
+      setSelectedRowKeys,
       bulkAmount,
       setBulkAmount,
       bulkCurrency,
       setBulkCurrency,
       bulkGroupId,
       setBulkGroupId,
-      bulkStatus,
-      setBulkStatus,
       setFee,
       setCurrency,
       setGroupId,
       setStatus,
-      setFrom,
-      applyBulkToVisible: () => {},
+      applyBulkToSelection: () => {},
       hasPendingEdits: false,
       save: async () => ({ updatedCount: 0 }),
       saving: false,
@@ -144,34 +154,18 @@ export function useFeeSetup(): FeeSetupData {
   const groupOptions: GroupOption[] = [...records.groups]
     .sort((a: Group, b: Group) => a.name.localeCompare(b.name, 'ro'))
     .map(group => ({ id: group.id, name: group.name }));
-  const missingCount = records.children.filter(child => !child.archived && hasMissingFee(child)).length;
+  const activeChildren = records.children.filter((child: Child) => !child.archived);
+  const missingCount = activeChildren.filter(child => hasMissingFee(child)).length;
+  const totalCount = activeChildren.length;
 
   const normalizedSearch = normalizeSearchText(search);
-  const visibleChildren = records.children
+  const visibleChildren = activeChildren
     .filter(
       (child: Child) =>
-        !child.archived &&
         (filter === 'all' || hasMissingFee(child)) &&
         matchesRecordListSearch('children', child, records, normalizedSearch),
     )
     .sort((a: Child, b: Child) => a.name.localeCompare(b.name, 'ro'));
-
-  const rows: FeeSetupRowView[] = visibleChildren.map(child => {
-    const edit = edits[child.id];
-    const currentStatus = child.status || 'Activ';
-    return {
-      id: child.id,
-      contract: contractNumberOf(child),
-      name: child.name,
-      attendanceLabel: child.attendanceDate ?? '',
-      fee: edit?.fee ?? currentFeeOf(child),
-      currency: edit?.currency ?? currentCurrencyOf(child),
-      groupId: edit?.groupId ?? (child.groupId || ''),
-      from: edit?.from ?? defaultSetupMonth(child, todayStr),
-      status: edit?.status ?? currentStatus,
-      statusOptions: [...new Set([currentStatus, ...STATUS_HISTORY_VALUES])],
-    };
-  });
 
   function isRowChanged(id: string): boolean {
     const child = records.children.find(c => c.id === id);
@@ -187,26 +181,48 @@ export function useFeeSetup(): FeeSetupData {
     return feeChanged || currencyChanged || groupChanged || statusChanged;
   }
 
+  const rows: FeeSetupRowView[] = visibleChildren.map(child => {
+    const edit = edits[child.id];
+    const currentStatus = child.status || 'Activ';
+    const fee = edit?.fee ?? currentFeeOf(child);
+    const groupId = edit?.groupId ?? (child.groupId || '');
+    return {
+      id: child.id,
+      name: child.name,
+      ageLabel: formatAge(child.birthDate),
+      missingLabel: missingLabelOf(groupId, fee),
+      fee,
+      currency: edit?.currency ?? currentCurrencyOf(child),
+      groupId,
+      dueDayLabel: child.dueDay ? `ziua ${child.dueDay}` : '—',
+      status: edit?.status ?? currentStatus,
+      statusOptions: [...new Set([currentStatus, ...STATUS_HISTORY_VALUES])],
+      changed: isRowChanged(child.id),
+    };
+  });
+
   const hasPendingEdits = Object.keys(edits).some(isRowChanged);
 
-  function applyBulkToVisible() {
-    if (!bulkAmount.trim() && !bulkCurrency && !bulkGroupId && !bulkStatus) return;
+  function applyBulkToSelection() {
+    if (selectedRowKeys.size === 0) return;
+    if (!bulkAmount.trim() && !bulkCurrency && !bulkGroupId) return;
     setEdits(prev => {
       const next = { ...prev };
       for (const child of visibleChildren) {
+        if (!selectedRowKeys.has(child.id)) continue;
         next[child.id] = {
           ...next[child.id],
           ...(bulkAmount.trim() ? { fee: bulkAmount.trim() } : {}),
           ...(bulkCurrency ? { currency: bulkCurrency } : {}),
           ...(bulkGroupId ? { groupId: bulkGroupId } : {}),
-          ...(bulkStatus ? { status: bulkStatus } : {}),
         };
       }
       return next;
     });
   }
 
-  async function save(): Promise<{ updatedCount: number }> {
+  async function save(ids?: string[]): Promise<{ updatedCount: number }> {
+    const targetIds = ids ? new Set(ids) : null;
     const updates: {
       id: string;
       from: string;
@@ -216,9 +232,10 @@ export function useFeeSetup(): FeeSetupData {
       status?: string;
     }[] = [];
     for (const child of records.children) {
+      if (targetIds && !targetIds.has(child.id)) continue;
       if (!isRowChanged(child.id)) continue;
       const edit = edits[child.id] as RowEdit;
-      const from = edit.from ?? defaultSetupMonth(child, todayStr);
+      const from = defaultSetupMonth(child, todayStr);
       const update: (typeof updates)[number] = { id: child.id, from };
       const feeInitial = currentFeeOf(child);
       const feeValue = (edit.fee ?? feeInitial).trim();
@@ -232,7 +249,13 @@ export function useFeeSetup(): FeeSetupData {
     setSaving(true);
     try {
       await session.mutate('/api/children-setup', { updates });
-      setEdits({});
+      const savedIds = new Set(updates.map(update => update.id));
+      setEdits(prev => {
+        const next = { ...prev };
+        for (const id of savedIds) delete next[id];
+        return next;
+      });
+      setSelectedRowKeys(prev => new Set([...prev].filter(id => !savedIds.has(id))));
       return { updatedCount: updates.length };
     } finally {
       setSaving(false);
@@ -246,24 +269,24 @@ export function useFeeSetup(): FeeSetupData {
     groupOptions,
     statusOptions: STATUS_HISTORY_VALUES,
     missingCount,
+    totalCount,
     search,
     setSearch,
     filter,
     setFilter,
+    selectedRowKeys,
+    setSelectedRowKeys,
     bulkAmount,
     setBulkAmount,
     bulkCurrency,
     setBulkCurrency,
     bulkGroupId,
     setBulkGroupId,
-    bulkStatus,
-    setBulkStatus,
     setFee,
     setCurrency,
     setGroupId,
     setStatus,
-    setFrom,
-    applyBulkToVisible,
+    applyBulkToSelection,
     hasPendingEdits,
     save,
     saving,

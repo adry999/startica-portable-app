@@ -1,45 +1,53 @@
 .notice {
-  color: var(--subtle);
-  margin: 0 0 var(--space-16);
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: var(--yellow-soft);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.info {
-  margin: 0 0 var(--space-8);
-  font-weight: 700;
+.noticeLink {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 800;
+  color: var(--orange-ink);
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  margin-bottom: var(--space-12);
-  flex-wrap: wrap;
-}
-
-.bulkRow {
-  display: flex;
-  align-items: end;
-  gap: var(--space-12);
-  margin-bottom: var(--space-16);
-  flex-wrap: wrap;
-}
-
-.bulkField {
+.headerProgress {
+  width: 260px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--slate);
+  gap: 6px;
 }
 
-.bulkField input,
-.bulkField select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-10);
-  font: inherit;
+.headerProgressRow {
+  display: flex;
+  justify-content: space-between;
   font-size: 13px;
+}
+
+.headerProgressCount {
+  font-weight: 800;
+}
+
+.headerProgressRemaining {
+  color: var(--muted);
+}
+
+.headerProgressBar {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--sand);
+  overflow: hidden;
+}
+
+.headerProgressBar > span {
+  display: block;
+  height: 100%;
+  background: var(--orange);
 }
 
 .tableCard {
@@ -47,14 +55,108 @@
   overflow: hidden;
 }
 
-.tableCard select,
-.tableCard input {
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-14) var(--space-16);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.bulkLabel {
+  color: var(--white);
+  opacity: 0.75;
+}
+
+.bulkPill {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bulkPill option {
+  color: var(--slate);
+}
+
+/* Scopate la `table`, nu la tot `.tableCard` — altfel câștigă (specificitate) în fața pastilelor
+   din bara de selecție (`.bulkPill`), care stau tot în interiorul cardului tabelului. */
+.tableCard table select,
+.tableCard table input {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
   padding: var(--space-6) var(--space-8);
   font: inherit;
   font-size: 13px;
   width: 100%;
+}
+
+.missing {
+  border: 1.5px solid var(--pink) !important;
+}
+
+.missing::placeholder {
+  color: var(--subtle);
+}
+
+.childCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.childCell div {
+  display: flex;
+  flex-direction: column;
+}
+
+.childCell small {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.toneOrange {
+  background: var(--orange-soft);
+}
+
+.toneMint {
+  background: var(--mint-soft);
+}
+
+.toneYellow {
+  background: var(--yellow-soft);
+}
+
+.tonePink {
+  background: var(--pink-soft);
+}
+
+.noneMissing {
+  color: var(--subtle);
+}
+
+.dueDay {
+  color: var(--slate);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .feeCell {
@@ -68,16 +170,9 @@
   color: var(--muted);
 }
 
-.saveBar {
-  position: sticky;
-  bottom: 0;
+.rowActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-12);
-  background: var(--slate);
-  color: var(--white);
-  border-radius: var(--radius-md);
-  padding: var(--space-12) var(--space-16);
-  margin-top: var(--space-16);
+  justify-content: flex-end;
+  gap: var(--space-8);
 }
