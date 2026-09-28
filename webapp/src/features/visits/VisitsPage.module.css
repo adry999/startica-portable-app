@@ -4,18 +4,7 @@
 
 .dim {
   color: var(--subtle);
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-10) var(--space-18);
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 14px;
-  box-shadow: var(--shadow-button-primary);
+  font-size: 12px;
 }
 
 .arrowButton {
@@ -36,7 +25,6 @@
   align-items: center;
   gap: var(--space-10);
   flex-wrap: wrap;
-  margin-bottom: var(--space-16);
 }
 
 .funnelPill {
@@ -97,7 +85,6 @@
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: var(--space-16);
   align-items: start;
-  margin-bottom: var(--space-16);
 }
 
 .calendarCard {
@@ -116,13 +103,6 @@
   flex: 1;
   font-family: var(--font-heading);
   font-size: 20px;
-}
-
-.liveClock {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
 }
 
 .calendarGrid {
@@ -147,8 +127,8 @@
   align-items: flex-start;
   gap: 2px;
   min-height: 72px;
-  border: 1px solid var(--row-divider);
-  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  border-radius: var(--radius-input);
   background: var(--white);
   padding: var(--space-6);
   text-align: left;
@@ -170,8 +150,8 @@
 }
 
 .calendarCellSelected {
-  background: var(--cream);
-  border-color: var(--orange);
+  background: var(--yellow-soft);
+  border-color: var(--yellow);
 }
 
 .calendarChip {
@@ -350,11 +330,16 @@
   color: var(--orange-ink);
 }
 
+.detailActionsRight {
+  display: flex;
+  gap: var(--space-14);
+  margin-left: auto;
+}
+
 .detailLinkMuted {
   border: none;
   background: none;
   padding-top: var(--space-8);
-  margin-left: auto;
   font-size: 13px;
   font-weight: 800;
   color: var(--subtle);
@@ -417,36 +402,10 @@
 .tableHeadRow {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
-  padding: var(--space-16) var(--space-20);
+  gap: var(--space-10);
+  padding: 14px var(--space-16);
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
-}
-
-.searchWrap {
-  position: relative;
-  flex: 1;
-  min-width: 180px;
-  display: flex;
-  align-items: center;
-}
-
-.searchIcon {
-  position: absolute;
-  left: var(--space-12);
-  color: var(--subtle);
-  font-size: 14px;
-  pointer-events: none;
-}
-
-.search {
-  width: 100%;
-  box-sizing: border-box;
-  background: var(--cream);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-12) var(--space-8) 30px;
-  font-family: var(--font-body);
-  font-size: 13px;
 }
 
 .filterSelect {

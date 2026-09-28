@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Badge,
   Button,
@@ -8,6 +8,7 @@ import {
   FilterPills,
   LoadingState,
   RowMenu,
+  SearchInput,
   SearchSelect,
   SegmentedControl,
   useToast,
@@ -50,7 +51,7 @@ const STATUS_PILL_CLASS: Record<VisitStatus, keyof typeof styles> = {
   Renunțat: 'pillRenuntat',
 };
 
-const WEEKDAY_LABELS = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
+const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
 
 function monthLabel(monthKey: string): string {
   const [year, month] = monthKey.split('-');
@@ -70,25 +71,6 @@ function dayLabel(dateStr: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-/** Ceas viu — zi + oră curentă, afișat lângă calendar. */
-function LiveClock() {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  const dateLabel = now.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' });
-  const timeLabel = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-  return (
-    <span className={styles.liveClock}>
-      {dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} · {timeLabel}
-    </span>
-  );
-}
-
 /** Ecranul „Vizite" (2a din Operatiuni.dc.html): calendar + panou de detalii pentru ziua selectată, plus lista completă filtrabilă. */
 export interface VisitsPageProps {
   /** Presetează ziua selectată — venit din ?zi= (link „Vezi calendarul" de pe Dashboard). */
@@ -102,11 +84,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   const [enrollTarget, setEnrollTarget] = useState<Visit | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Visit | null>(null);
 
-  useTopbarActions(
-    <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
-      + Programează vizită
-    </button>,
-  );
+  useTopbarActions(<Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>);
 
   if (visitsData.status === 'loading') return <LoadingState />;
   if (visitsData.status === 'failed')
@@ -212,7 +190,12 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       render: row => (
         <div>
           <strong>{row.name}</strong>
-          {row.birthDate && <small className={styles.dim}> · {formatAge(row.birthDate)}</small>}
+          {row.birthDate && (
+            <>
+              <br />
+              <small className={styles.dim}>{formatAge(row.birthDate)}</small>
+            </>
+          )}
         </div>
       ),
     },
@@ -222,24 +205,29 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       render: row => (
         <div>
           <span>{row.parent}</span>
-          {row.phone && <small className={styles.dim}> · {row.phone}</small>}
+          {row.phone && (
+            <>
+              <br />
+              <small className={styles.dim}>{row.phone}</small>
+            </>
+          )}
         </div>
       ),
     },
     {
-      key: 'status',
-      header: 'Statut',
-      render: row => <Badge tone={STATUS_TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>,
-    },
-    {
       key: 'group',
-      header: 'Grupa dorită',
+      header: 'Grupă dorită',
       render: row => (row.desiredGroupId ? groupNameOf(row.desiredGroupId, visitsData.groups) : '—'),
     },
     {
       key: 'note',
       header: 'Notă',
       render: row => <span className={styles.dim}>{row.notes || '—'}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Statut',
+      render: row => <Badge tone={STATUS_TONE[row.status]}>{STATUS_LABEL[row.status]}</Badge>,
     },
     {
       key: 'actions',
@@ -311,8 +299,6 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             </button>
           </div>
 
-          <LiveClock />
-
           <div className={styles.calendarGrid}>
             {WEEKDAY_LABELS.map(label => (
               <div key={label} className={styles.calendarHeadCell}>
@@ -359,9 +345,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           {visitsData.selectedDate && selectedDayVisits.length === 0 && (
             <Card className={styles.detailEmpty}>
               <p>Nicio vizită programată în această zi.</p>
-              <button type="button" className={styles.btnPrimary} onClick={() => setFormTarget('new')}>
-                + Programează vizită
-              </button>
+              <Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>
             </Card>
           )}
 
@@ -423,9 +407,14 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                 <button type="button" className={styles.detailLink} onClick={() => setFormTarget(visit)}>
                   Editează
                 </button>
-                <button type="button" className={styles.detailLinkMuted} onClick={() => void toggleArchived(visit)}>
-                  {visit.archived ? 'Dezarhivează' : 'Arhivează'}
-                </button>
+                <span className={styles.detailActionsRight}>
+                  <button type="button" className={styles.detailLinkMuted} onClick={() => setFormTarget(visit)}>
+                    Reprogramează
+                  </button>
+                  <button type="button" className={styles.detailLinkMuted} onClick={() => void toggleArchived(visit)}>
+                    {visit.archived ? 'Dezarhivează' : 'Arhivează'}
+                  </button>
+                </span>
               </div>
             </Card>
           ))}
@@ -468,19 +457,12 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       <Card className={styles.tableCard}>
         <div className={styles.tableHeadRow}>
           <p className={styles.tableTitle}>Toate vizitele</p>
-          <span className={styles.searchWrap}>
-            <span className={styles.searchIcon} aria-hidden="true">
-              ⌕
-            </span>
-            <input
-              className={styles.search}
-              type="search"
-              placeholder="Caută copil, părinte sau telefon…"
-              value={visitsData.search}
-              onChange={event => visitsData.setSearch(event.target.value)}
-              aria-label="Caută vizită"
-            />
-          </span>
+          <SearchInput
+            value={visitsData.search}
+            onChange={visitsData.setSearch}
+            placeholder="Caută copil, părinte sau telefon…"
+            ariaLabel="Caută vizită"
+          />
           <SegmentedControl
             ariaLabel="Filtru rapid"
             value={quickFilter}
@@ -530,14 +512,11 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           columns={columns}
           rows={visitsData.rows}
           rowKey={row => row.id}
-          onRowClick={row => {
-            visitsData.setSelectedDate(row.date);
-            setFormTarget(row);
-          }}
+          onRowClick={row => visitsData.setSelectedDate(row.date)}
           rowClassName={row => (row.date === visitsData.selectedDate ? styles.selectedDayRow : undefined)}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
         />
-        <p className={styles.tableHint}>Click pe rând deschide toate detaliile vizitei.</p>
+        <p className={styles.tableHint}>Click pe rând deschide vizita în calendar.</p>
       </Card>
 
       <VisitFormDrawer
