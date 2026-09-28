@@ -22,11 +22,12 @@ export function assertAllowedRequest(request, port) {
  * @param {string} sessionToken
  */
 export function assertAuthorizedWrite(request, sessionToken) {
-  if (
-    request.headers['x-startica-token'] !== sessionToken ||
-    !request.headers['content-type']?.startsWith('application/json')
-  )
+  if (!request.headers['content-type']?.startsWith('application/json'))
     fail('Reîncarcă aplicația înainte de a salva.', 403);
+  // Tokenul e regenerat per context de filială (create-branch-context.mjs), nu doar la
+  // pornirea procesului: o nepotrivire înseamnă fie o filă rămasă pe o filială care nu
+  // mai e activă (A-1), fie aplicația repornită — în ambele cazuri reîncărcarea rezolvă.
+  if (request.headers['x-startica-token'] !== sessionToken) fail('Filiala s-a schimbat. Reîncarcă aplicația.', 403);
 }
 
 /** @param {import('node:http').IncomingMessage} request */

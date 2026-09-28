@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
@@ -65,7 +66,6 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   logFile: string | undefined,
  *   root: string,
  *   version: string,
- *   sessionToken: string,
  *   autoBackupIntervalMs: number,
  *   allowShutdown: boolean,
  *   fetch: typeof fetch,
@@ -86,7 +86,6 @@ export function createBranchContext({
   logFile,
   root,
   version,
-  sessionToken,
   autoBackupIntervalMs,
   allowShutdown,
   fetch: fetchImpl,
@@ -102,6 +101,12 @@ export function createBranchContext({
   // cer explicit; un context construit fără el (teste izolate de filială) nu o vede deloc.
   common,
 }) {
+  // Per context de filială (deschidere sau schimbare), nu per proces (A-1 din audit): un
+  // token unic la nivel de proces era valid pe orice filială, deci o filă rămasă deschisă
+  // pe filiala veche (alt tab, sau o rulare anterioară) putea scrie fără să știe în filiala
+  // devenită între timp activă. Regenerat de fiecare dată — inclusiv la revenirea pe aceeași
+  // filială — ca reîncărcarea să fie obligatorie, nu doar „dacă filiala chiar s-a schimbat”.
+  const sessionToken = randomUUID();
   const { db, dbFile } = openDatabase({ dataDir, backupDir });
   // A doua închidere (rută /api/shutdown și apoi app.close(), sau invers, ori
   // schimbarea filialei urmată de închiderea aplicației) ar arunca la o bază deja închisă.
@@ -160,6 +165,7 @@ export function createBranchContext({
       readSetting,
       writeSetting: settings.setSetting,
       attendanceRepository: syncAttendanceWriter,
+      backups,
       client: createSyncHttpClient({
         serverUrl: syncDeviceFile.serverUrl,
         token: syncDeviceFile.token,
@@ -174,7 +180,13 @@ export function createBranchContext({
 
   const { runRevisionTransaction, replaceAllRecords } = createRevisionTransaction({
     database: db,
-    recordRepository,
+    // Brut, nu împachetat: runRevisionTransaction îl folosește doar pentru citire
+    // (readEnvelope, currentRevision — identice pe raw și pe cel cu outbox), dar
+    // replaceAllRecords (restaurare/import) scrie prin el direct — altfel fiecare
+    // înregistrare „reapare” ca nouă după DELETE FROM records (raw.find nu mai
+    // găsește nimic), inundând outbox-ul cu toată evidența în loc de diferențe (C-2).
+    // changeSink de mai jos rămâne calea prin care diferențele reale ajung în outbox.
+    recordRepository: rawRecordRepository,
     backups,
     auditTrail: auditLogRepository,
     changeSink: syncChangeSink,
@@ -282,7 +294,12 @@ export function createBranchContext({
       fetch: fetchImpl ?? globalThis.fetch,
     }),
     ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
-    ...createKindergartenSettingsRoutes({ readSetting, writeSetting: settings.setSetting }),
+    ...createKindergartenSettingsRoutes({
+      readSetting,
+      writeSetting: settings.setSetting,
+      recordRepository,
+      auditTrail: auditLogRepository,
+    }),
     ...createReceiptNumberingRoutes({ receiptNumberingService }),
     ...syncRoutes.routes,
     ...branchRoutes,

@@ -28,9 +28,9 @@ export async function startTestApplication(t, options = {}) {
       rmSync(dir, { recursive: true, force: true });
   });
   const origin = `http://127.0.0.1:${app.server.address().port}`;
-  const token = (await (await fetch(origin + '/api/session')).json()).token;
+  let token = (await (await fetch(origin + '/api/session')).json()).token;
   const get = path => fetch(origin + path).then(response => response.json());
-  const post = async (path, body) => {
+  const rawPost = async (path, body) => {
     const response = await fetch(origin + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
@@ -38,6 +38,32 @@ export async function startTestApplication(t, options = {}) {
     });
     return { status: response.status, body: await response.json() };
   };
+  // Tokenul e per context de filială (create-application.mjs, A-1 din audit): după un
+  // /api/branches/select reușit (chiar din acest apel), tokenul de mai sus a devenit
+  // stale — exact ca o filă reală, care reîncarcă pagina și primește unul nou. O
+  // reîncercare o singură dată, cu tokenul reîmprospătat, ține testele existente
+  // valabile fără să ascundă cazul unei file rămase cu adevărat pe tokenul vechi
+  // (acela nu trece prin acest helper, ci prin fetch direct — vezi „filă rămasă…”).
+  const post = async (path, body) => {
+    const first = await rawPost(path, body);
+    // Doar 403-ul gărzii de token (mesajul din request-guards.mjs), nu orice 403 de
+    // business (PIN greșit, „General” neștergibil etc.) — altfel o reîncercare aici ar
+    // consuma o a doua încercare reală dintr-o limitare gen „PIN greșit de 5 ori”.
+    if (first.status !== 403 || !/Filiala s-a schimbat|Reîncarcă aplicația înainte de a salva/.test(first.body.error))
+      return first;
+    token = (await (await fetch(origin + '/api/session')).json()).token;
+    return rawPost(path, body);
+  };
   const postJson = (path, body) => post(path, body).then(result => result.body);
-  return { app, dir, origin, token, get, post, postJson };
+  return {
+    app,
+    dir,
+    origin,
+    get token() {
+      return token;
+    },
+    get,
+    post,
+    postJson,
+  };
 }

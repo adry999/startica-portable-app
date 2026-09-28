@@ -15,7 +15,28 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { normalizeRecord, emptyState } from '#shared/domain/record-schema.mjs';
+import { writeSyncDeviceFile } from '#features/sync/index.server.mjs';
 import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
+
+// Pe Windows, ștergerea folderului temporar imediat după close() poate lovi peste
+// un handle de fișier eliberat cu o mică întârziere (WAL/antivirus/încărcare de sistem
+// din alte procese) — nu o bază încă deschisă (close() de mai sus a returnat deja, deci
+// asta nu ține de corectitudinea fix-ului testat aici). O reîncercare scurtă rezolvă
+// cazul obișnuit; dacă persistă, doar avertizăm — un folder temporar rămas nu strică
+// verificarea de mai sus, care s-a încheiat deja cu succes la acel moment.
+/** @param {string} path */
+async function removeDirWithRetry(path) {
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EBUSY') throw error;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+  console.warn(`Folderul temporar ${path} nu a putut fi șters (EBUSY persistent) — ignorat.`);
+}
 
 const child = () =>
   normalizeRecord('children', {
@@ -216,6 +237,91 @@ test('Prima pornire creează filiale.json cu filiala principală pe folderele ve
     assert.deepEqual(registryAfterRestart, registryAfterFirstRun, 'o a doua pornire nu rescrie registrul existent');
   } finally {
     rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('importul unui instantaneu identic (calculator sincronizat) nu pune nimic în outbox, doar diferențele reale', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-import-outbox-'));
+  try {
+    writeSyncDeviceFile(join(dir, 'sync.json'), {
+      serverUrl: 'https://exemplu.invalid',
+      deviceId: 'DEV-1',
+      deviceName: 'Calculator test',
+      token: 'tok',
+      connectedAt: '2026-09-28T00:00:00.000Z',
+    });
+    const app = createApplication({
+      dataDir: join(dir, 'data'),
+      backupDir: join(dir, 'backups'),
+      home: dir,
+      autoBackupIntervalMs: 0,
+    });
+    await new Promise(done => app.server.listen(0, '127.0.0.1', done));
+    const url = `http://127.0.0.1:${app.server.address().port}`;
+    const token = (await (await fetch(url + '/api/session')).json()).token;
+    const post = async (path, body) => {
+      const response = await fetch(url + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Startica-Token': token },
+        body: JSON.stringify(body),
+      });
+      return { status: response.status, body: await response.json() };
+    };
+    // enqueue() coalesează pe (kind,record_id) cât timp rândul e încă „pending” (aceeași
+    // modificare retrimisă nu adaugă un rând nou) — deci un simplu COUNT(*) nu ar
+    // deosebi „nimic nou” de „totul reintrodus”. Marcăm rândurile ca „sent” între
+    // pași (ca după un push reușit), ca appearance rândurilor noi să fie vizibilă:
+    // câte rânduri PENDING apar după fiecare import, plecând mereu de la zero.
+    const markAllSent = () => app.db.exec("UPDATE sync_outbox SET status='sent' WHERE status='pending'");
+    const pendingCount = () => app.db.prepare("SELECT COUNT(*) AS n FROM sync_outbox WHERE status='pending'").get().n;
+
+    const initial = await fetch(url + '/api/state').then(r => r.json());
+    markAllSent();
+
+    const firstImport = await post('/api/import', {
+      state: { ...initial.state, children: [child()] },
+      confirm: 'IMPORT',
+      revision: initial.revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(firstImport.status, 200, firstImport.body.error);
+    assert.ok(
+      pendingCount() > 0,
+      'primul import (o filială nouă, deja diferită) trebuie să lase urme pending în outbox',
+    );
+
+    const currentState = firstImport.body.state;
+    markAllSent();
+    const identicalImport = await post('/api/import', {
+      state: currentState,
+      confirm: 'IMPORT',
+      revision: firstImport.body.revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(identicalImport.status, 200, identicalImport.body.error);
+    assert.equal(pendingCount(), 0, 'un instantaneu identic nu are voie să reintroducă toată evidența în outbox');
+
+    const changedState = {
+      ...currentState,
+      children: currentState.children.map(record => ({ ...record, phone: '999' })),
+    };
+    markAllSent();
+    const differingImport = await post('/api/import', {
+      state: changedState,
+      confirm: 'IMPORT',
+      revision: identicalImport.body.revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(differingImport.status, 200, differingImport.body.error);
+    assert.equal(
+      pendingCount(),
+      1,
+      'o singură înregistrare cu adevărat schimbată trebuie să lase o singură intrare nouă în outbox',
+    );
+
+    await app.close();
+  } finally {
+    await removeDirWithRetry(dir);
   }
 });
 

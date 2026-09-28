@@ -52,10 +52,6 @@ export function createApplication(options = {}) {
   const autoBackupIntervalMs = Number.isFinite(options.autoBackupIntervalMs)
     ? /** @type {number} */ (options.autoBackupIntervalMs)
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
-  // Tokenul de sesiune se schimbă la fiecare pornire a procesului, nu la fiecare
-  // schimbare de filială: o filă rămasă deschisă dintr-o rulare anterioară trebuie
-  // să reîncarce înainte să scrie, indiferent pe ce filială scrie.
-  const token = randomUUID();
   const registryFile = join(home, BRANCH_REGISTRY_FILE_NAME);
   const registry = createBranchRegistryStore({ file: registryFile, createId: randomUUID });
 
@@ -128,7 +124,6 @@ export function createApplication(options = {}) {
       logFile: options.logFile,
       root,
       version,
-      sessionToken: token,
       autoBackupIntervalMs,
       allowShutdown: !!options.allowShutdown,
       fetch: options.fetch ?? globalThis.fetch,

@@ -97,6 +97,35 @@ test('nicio dată a unei filiale nu apare în cealaltă', async t => {
   assert.equal((await get('/api/kindergarten')).name, 'Buiucani');
 });
 
+test('o filă rămasă pe tokenul filialei vechi primește 403 după o schimbare de filială, nu scrie în filiala nouă', async t => {
+  const bundle = await startTestApplication(t, { prefix: 'startica-branches-' });
+  const { get, post, origin } = bundle;
+
+  const staleTabToken = (await get('/api/session')).token;
+
+  const created = await post('/api/branches', { name: 'Botanica' });
+  assert.equal(created.status, 200);
+  const branchB = created.body.branch;
+  const selected = await post('/api/branches/select', { id: branchB.id });
+  assert.equal(selected.status, 200);
+
+  // Fila veche (tokenul de dinainte de comutare) încearcă să salveze pe filiala B, acum activă.
+  const staleWrite = await fetch(`${origin}/api/record`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Token': staleTabToken },
+    body: JSON.stringify({
+      record: child('ID-stale'),
+      type: 'children',
+      revision: 0,
+      mode: 'create',
+      requestId: randomUUID(),
+    }),
+  });
+  assert.equal(staleWrite.status, 403);
+  assert.match((await staleWrite.json()).error, /Filiala s-a schimbat|Reîncarcă aplicația/);
+  assert.deepEqual((await get('/api/state')).state.children, []);
+});
+
 test('selectarea aceleiași filiale e no-op', async t => {
   const bundle = await startTestApplication(t, { prefix: 'startica-branches-' });
   const session = await bundle.get('/api/session');
