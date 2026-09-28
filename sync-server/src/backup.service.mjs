@@ -33,19 +33,27 @@ export function runBackupCycle({ database, dataDir, keep, historyDays, now }) {
   renameSync(temp, target);
   pruneOldBackups(backupsDir, keep);
   const cutoff = new Date(now.getTime() - historyDays * 24 * 60 * 60 * 1000).toISOString();
-  const oldestDeleted = /** @type {{ maxSeq: number | null }} */ (
-    database.prepare('SELECT MAX(seq) AS maxSeq FROM changes WHERE received_at < ?').get(cutoff)
-  ).maxSeq;
+  // Pragul e per filială (D-4): calculat înainte de DELETE, ca o filială liniștită (fără
+  // rânduri mai vechi decât cutoff) să nu primească un prag ridicat de curățarea alteia —
+  // asta i-ar da 410 (resincronizare din snapshot, azi distructivă — vezi C-5) fără motiv.
+  const floorsByBranch = /** @type {{ branch_id: string, maxSeq: number | null }[]} */ (
+    database.prepare('SELECT branch_id, MAX(seq) AS maxSeq FROM changes WHERE received_at < ? GROUP BY branch_id').all(cutoff)
+  );
   database.prepare('DELETE FROM changes WHERE received_at < ?').run(cutoff);
-  // changes_floor_seq: totul până la această valoare a fost șters definitiv — pull()
-  // dă 410 (resincronizare din snapshot) unui cursor mai vechi decât ea.
-  if (oldestDeleted !== null) {
-    const currentFloor = Number(readMeta(database, 'changes_floor_seq') ?? 0);
-    setMeta(database, 'changes_floor_seq', String(Math.max(currentFloor, oldestDeleted)));
+  for (const { branch_id: branchId, maxSeq } of floorsByBranch) {
+    if (maxSeq === null) continue;
+    const key = branchFloorKey(branchId);
+    const currentFloor = Number(readMeta(database, key) ?? 0);
+    setMeta(database, key, String(Math.max(currentFloor, maxSeq)));
   }
   const lastBackupAt = now.toISOString();
   setMeta(database, 'lastBackupAt', lastBackupAt);
   return { backupFile: target, lastBackupAt };
+}
+
+/** Cheia meta a pragului 410 al unei filiale (D-4: pragul e per filială, nu global). @param {string} branchId */
+export function branchFloorKey(branchId) {
+  return `changes_floor_seq:${branchId}`;
 }
 
 /** @param {import('node:sqlite').DatabaseSync} database @param {string} key @param {string} value */
@@ -64,7 +72,7 @@ export function readMeta(database, key) {
 /**
  * Verifică o dată pe zi, la `hour`, dacă backupul de azi a rulat deja; e sigur să fie
  * apelată des (`checkOnce`, la fiecare 10 minute) — nu rulează decât o dată pe zi.
- * @param {{ database: import('node:sqlite').DatabaseSync, dataDir: string, hour: number, keep: number, historyDays: number, now?: () => Date, intervalMs?: number }} input
+ * @param {{ database: import('node:sqlite').DatabaseSync, dataDir: string, hour: number, keep: number, historyDays: number, now?: () => Date, intervalMs?: number, log?: (message: unknown) => void }} input
  */
 export function scheduleDailyBackup({
   database,
@@ -74,6 +82,7 @@ export function scheduleDailyBackup({
   historyDays,
   now = () => new Date(),
   intervalMs = CHECK_INTERVAL_MS,
+  log = console.error,
 }) {
   let lastRunDate = /** @type {string | null} */ (null);
 
@@ -83,8 +92,17 @@ export function scheduleDailyBackup({
     // UTC, nu ora locală a mașinii: serverul rulează pe un VPS, comportarea nu trebuie
     // să depindă de fusul orar al calculatorului pe care pornește procesul.
     if (currentNow.getUTCHours() !== hour || lastRunDate === today) return undefined;
-    lastRunDate = today;
-    return runBackupCycle({ database, dataDir, keep, historyDays, now: currentNow });
+    try {
+      const result = runBackupCycle({ database, dataDir, keep, historyDays, now: currentNow });
+      // Abia după succes (D-3): un disc plin la VACUUM INTO nu trebuie să blocheze
+      // reîncercarea în aceeași zi — altfel procesul cădea (uncaughtException) și, chiar
+      // dacă nu cădea, nu se mai reîncerca decât a doua zi.
+      lastRunDate = today;
+      return result;
+    } catch (error) {
+      log('Backupul zilnic a eșuat: ' + (/** @type {Error} */ (error).stack || error));
+      return undefined;
+    }
   }
 
   const timer = setInterval(checkOnce, intervalMs);

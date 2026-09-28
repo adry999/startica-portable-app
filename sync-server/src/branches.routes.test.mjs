@@ -16,14 +16,21 @@ function withRegisterRoute(overrides = {}) {
   );
 }
 
+/** @param {{ body: unknown, device: unknown }} input @returns {Parameters<import('./router.mjs').RouteDefinition['handle']>[0]} */
+function requestContext({ body, device }) {
+  return /** @type {any} */ ({ params: {}, body, device, url: new URL('http://localhost/'), clientIp: '127.0.0.1' });
+}
+
 test('POST /v1/branches acceptă culorile din paleta aplicației (D-1)', () => {
   const register = withRegisterRoute();
   for (const color of ['orange', 'mint', 'yellow', 'pink']) {
     const result = /** @type {{ branch: { color: string } }} */ (
-      register.handle({
-        body: { id: `branch-${color}`, name: 'Filiala', color, createdAt: '2026-09-27T08:00:00.000Z' },
-        device: { id: 'dev-a' },
-      })
+      register.handle(
+        requestContext({
+          body: { id: `branch-${color}`, name: 'Filiala', color, createdAt: '2026-09-27T08:00:00.000Z' },
+          device: { id: 'dev-a' },
+        }),
+      )
     );
     assert.equal(result.branch.color, color);
   }
@@ -33,10 +40,12 @@ test('POST /v1/branches refuză un cod hex (contractul vechi, incompatibil cu ap
   const register = withRegisterRoute();
   assert.throws(
     () =>
-      register.handle({
-        body: { id: 'branch-1', name: 'Filiala', color: '#f5a623', createdAt: '2026-09-27T08:00:00.000Z' },
-        device: { id: 'dev-a' },
-      }),
+      register.handle(
+        requestContext({
+          body: { id: 'branch-1', name: 'Filiala', color: '#f5a623', createdAt: '2026-09-27T08:00:00.000Z' },
+          device: { id: 'dev-a' },
+        }),
+      ),
     /** @param {Error & { status?: number }} error */ error => error.status === 400,
   );
 });
@@ -45,10 +54,12 @@ test('POST /v1/branches refuză o culoare necunoscută', () => {
   const register = withRegisterRoute();
   assert.throws(
     () =>
-      register.handle({
-        body: { id: 'branch-1', name: 'Filiala', color: 'violet', createdAt: '2026-09-27T08:00:00.000Z' },
-        device: { id: 'dev-a' },
-      }),
+      register.handle(
+        requestContext({
+          body: { id: 'branch-1', name: 'Filiala', color: 'violet', createdAt: '2026-09-27T08:00:00.000Z' },
+          device: { id: 'dev-a' },
+        }),
+      ),
     /** @param {Error & { status?: number }} error */ error => error.status === 400,
   );
 });

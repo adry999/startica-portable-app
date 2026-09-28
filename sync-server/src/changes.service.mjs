@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { fail } from './router.mjs';
 import { isLastWriterWins } from './change-policy.mjs';
-import { readMeta } from './backup.service.mjs';
+import { branchFloorKey, readMeta } from './backup.service.mjs';
 
 /** @typedef {{ branch_id: string, kind: string, id: string, revision: number, payload: string | null, updated_at: string, updated_by: string }} HeadRow */
 /** @typedef {{ seq: number, change_id: string, branch_id: string, kind: string, record_id: string, revision: number, payload: string | null, changed_at: string, received_at: string, device_id: string, result: string }} ChangeRow */
@@ -232,7 +232,9 @@ export function createChangesService({ database, devices }) {
    * @param {{ branchId: string, since: number, limit?: number }} input
    */
   function pull({ branchId, since, limit = 500 }) {
-    const floor = Number(readMeta(database, 'changes_floor_seq') ?? 0);
+    // Pragul e per filială (D-4): o filială fără istoric curățat nu primește 410 doar
+    // pentru că altă filială a trecut de SYNC_HISTORY_DAYS.
+    const floor = Number(readMeta(database, branchFloorKey(branchId)) ?? 0);
     if (since < floor) fail('cursor-expirat', 410);
     const rows = /** @type {ChangeRow[]} */ (
       database

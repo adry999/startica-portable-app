@@ -4,7 +4,7 @@ import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { openSyncDatabase } from './database.mjs';
-import { readMeta, runBackupCycle, scheduleDailyBackup } from './backup.service.mjs';
+import { branchFloorKey, readMeta, runBackupCycle, scheduleDailyBackup } from './backup.service.mjs';
 
 function withDatabase(t) {
   const dir = mkdtempSync(join(tmpdir(), 'sync-backup-test-'));
@@ -65,13 +65,60 @@ test('backupul zilnic rulează o dată, păstrează 14 fișiere și șterge isto
   assert.equal(fisiere.length, 14);
 });
 
-test('backupul reține în meta cel mai mare seq șters, ca reper pentru cursorul expirat (410)', t => {
+test('backupul reține în meta, per filială, cel mai mare seq șters — reper pentru cursorul expirat (410)', t => {
   const { dir, database } = withDatabase(t);
   insertChange(database, '2020-01-01T00:00:00.000Z');
   insertChange(database, '2020-01-02T00:00:00.000Z');
   insertChange(database, '2026-09-26T00:00:00.000Z');
   runBackupCycle({ database, dataDir: dir, keep: 14, historyDays: 365, now: new Date('2026-09-27T03:00:00.000Z') });
-  assert.equal(readMeta(database, 'changes_floor_seq'), '2');
+  assert.equal(readMeta(database, branchFloorKey('branch-1')), '2');
+});
+
+test('pragul e per filială (D-4): o filială fără istoric curățat nu primește pragul altei filiale', t => {
+  const { dir, database } = withDatabase(t);
+  insertChange(database, '2020-01-01T00:00:00.000Z'); // branch-1, curățat mai jos
+  database
+    .prepare(
+      'INSERT INTO changes(change_id,branch_id,kind,record_id,revision,payload,changed_at,received_at,device_id,result) VALUES (?,?,?,?,?,?,?,?,?,?)',
+    )
+    .run('change-branch-2', 'branch-2', 'children', 'ID-2', 1, '{}', '2026-09-26T00:00:00.000Z', '2026-09-26T00:00:00.000Z', 'dev-1', 'applied');
+  runBackupCycle({ database, dataDir: dir, keep: 14, historyDays: 365, now: new Date('2026-09-27T03:00:00.000Z') });
+  assert.ok(Number(readMeta(database, branchFloorKey('branch-1'))) > 0);
+  assert.equal(readMeta(database, branchFloorKey('branch-2')), undefined);
+});
+
+test('un runBackupCycle care aruncă (disc plin la VACUUM INTO) nu blochează reîncercarea în aceeași zi (D-3)', t => {
+  const { dir, database } = withDatabase(t);
+  let intaiAruncat = false;
+  const execOriginal = database.exec.bind(database);
+  database.exec = sql => {
+    if (!intaiAruncat && sql.startsWith('VACUUM INTO')) {
+      intaiAruncat = true;
+      throw new Error('disc plin');
+    }
+    return execOriginal(sql);
+  };
+  const erori = [];
+  let currentNow = new Date('2026-09-27T03:00:00.000Z');
+  const backup = scheduleDailyBackup({
+    database,
+    dataDir: dir,
+    hour: 3,
+    keep: 14,
+    historyDays: 365,
+    now: () => currentNow,
+    intervalMs: 999999999,
+    log: mesaj => erori.push(mesaj),
+  });
+  t.after(() => backup.stop());
+
+  assert.equal(backup.checkOnce(), undefined); // prima rulare eșuează
+  assert.equal(erori.length, 1);
+  assert.match(String(erori[0]), /disc plin/);
+
+  const aDoua = backup.checkOnce(); // reîncearcă, tot azi — nu s-a marcat ca „rulat” la eșec
+  assert.ok(aDoua);
+  assert.equal(erori.length, 1); // fără o a doua eroare
 });
 
 test('o oră diferită de cea configurată nu declanșează backupul', t => {

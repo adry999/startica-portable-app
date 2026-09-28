@@ -400,3 +400,31 @@ test('un cursor mai vechi decât istoricul păstrat dă 410', t => {
     /** @param {Error & { status?: number }} error */ error => error.status === 410,
   );
 });
+
+test('410 e per filială: curățarea istoricului lui branch-1 nu dă 410 unei filiale liniștite (D-4)', t => {
+  const { database, changes, dir } = withService(t);
+  changes.applyPush({
+    branchId: 'branch-1',
+    deviceId: 'dev-a',
+    now: new Date('2020-01-01T09:00:00.000Z'),
+    changes: [
+      {
+        changeId: randomUUID(),
+        kind: 'children',
+        recordId: 'ID-1',
+        baseRevision: 0,
+        payload: { id: 'ID-1' },
+        changedAt: '2020-01-01T09:00:00.000Z',
+      },
+    ],
+  });
+  database.prepare("UPDATE changes SET received_at='2020-01-01T09:00:00.000Z' WHERE branch_id='branch-1'").run();
+  runBackupCycle({ database, dataDir: dir, keep: 14, historyDays: 365, now: new Date('2026-09-27T03:00:00.000Z') });
+
+  assert.throws(
+    () => changes.pull({ branchId: 'branch-1', since: 0 }),
+    /** @param {Error & { status?: number }} error */ error => error.status === 410,
+  );
+  // branch-2 nu are nimic curățat: cursorul 0 trebuie să meargă normal, nu 410.
+  assert.doesNotThrow(() => changes.pull({ branchId: 'branch-2', since: 0 }));
+});
