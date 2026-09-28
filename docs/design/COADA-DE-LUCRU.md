@@ -56,4 +56,16 @@ Toate cele 4 puncte închise, `npm run check` + webapp typecheck/test verzi (137
 
 Extra rezolvat din FEEDBACK 28.09 în aceeași trecere (nu erau în Etapa 0, dar mecanice și mici): A5 indicator de salvare Prezența (`e2dc022`), A6 toast „Anulează” la arhivarea unei vizite (`072edb9`). A7 (monedă + pastilă curs) era deja DONE din 27.09, confirmat.
 
-**Următorul:** Modulul 1 — Dashboard (`Dashboard.dc.html`, `08-dashboard.md`). La început: listă scurtă ce lipsește față de (a)-(c), apoi delegă la subagent (cavecrew-builder/sonnet) cu spec complet, eu verific + commit.
+## Modulul 1 — Dashboard (URMATORUL-PAS.md) — DONE 2026-09-28
+
+Delegat unui subagent Sonnet (spec complet: 08-dashboard.md + AUDIT-UI 2.1 D-1…D-4), verificat pe disc (diff + tsc + vitest, nu doar raportul agentului) înainte de commit `8b248d1`.
+
+- **D-1:** DONE — CTA-ul „Necesită atenție” ascuns când `count===0 && !forceShow`.
+- **D-2:** DONE — un chip per copil la zilele de naștere (`flatMap`, nu grupat pe zi cu virgulă).
+- **D-3:** DONE — hex literali → tokeni (`--muted`, `--orange-bar-past`, `--sand`, `--neutral-softer`); primii 3 tokeni noi existau deja în `tokens.css` (altă sesiune concurentă); `--muted` (#6b7780) nu e o potrivire exactă pt. #5b666e original, dar e cea mai apropiată din scară — diferență imperceptibilă.
+- **D-4:** DONE — „+ Adaugă cheltuială” deschide direct formularul (`onNavigate('expenses', {nou:'1'})` + `useSearchParams` în `ExpensesPage`, curăță parametrul după deschidere).
+- **Extra (criteriul „KPI fără zecimale”):** `formatKpiMoney` local în `DashboardPage.tsx`, nu schimbă `formatMoney` global (folosit în ~30 de fișiere cu semnătură diferită).
+- Cele 4 criterii de acceptare din `08-dashboard.md` — toate bifate. `useDashboard.ts`/`useDashboard.test.ts` neatinse.
+- `npm run typecheck` + `vitest run` (137 fișiere, 730 teste) + `prettier --check` — toate verzi, verificat independent.
+
+**Următorul:** Modulul 2 — Copii (`Copii.dc.html`, spec-uri 01/02/09, audit C-1, C-2…). Delegat la subagent Sonnet cu spec complet, eu verific + commit.
