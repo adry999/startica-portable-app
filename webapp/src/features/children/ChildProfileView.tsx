@@ -65,15 +65,17 @@ export function ChildProfileView({
     }
   }
 
+  // C1: re-aruncată după toast, ca ChildFormDrawer să știe că salvarea a eșuat.
   async function submitChildEdit(values: ChildFormValues) {
+    const record = buildChildRecord(child, child.id, values);
     try {
-      const record = buildChildRecord(child, child.id, values);
       await session.mutate('/api/record', { type: 'children', mode: 'update', record });
-      setEditDrawerOpen(false);
-      toast.show({ message: 'Fișă actualizată.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      throw error;
     }
+    setEditDrawerOpen(false);
+    toast.show({ message: 'Fișă actualizată.' });
   }
 
   return (
