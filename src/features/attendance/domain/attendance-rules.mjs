@@ -35,7 +35,9 @@ export function nextAttendanceStatus(current) {
  */
 export function isChildEnrolledOn(child, date) {
   if (child.archived) return false;
-  const enrolledFrom = child.attendanceDate ?? child.contractDate ?? '';
+  // `||`, nu `??`: un formular gol trimite `attendanceDate: ''`, care nu e „lipsă” pentru
+  // `??` — ar ascunde `contractDate` și copilul ar apărea „înscris” de la începutul timpului.
+  const enrolledFrom = child.attendanceDate || child.contractDate || '';
   if (enrolledFrom > date) return false;
   if (child.withdrawalDate && child.withdrawalDate < date) return false;
   return true;

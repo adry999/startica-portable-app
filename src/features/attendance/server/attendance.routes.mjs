@@ -4,6 +4,7 @@ import {
   ATTENDANCE_STATUSES,
   MAX_CHANGES_PER_REQUEST,
   normalizeAttendanceChange,
+  isChildEnrolledOn,
 } from '../domain/attendance-rules.mjs';
 import { createAttendanceRepository } from './attendance.repository.mjs';
 
@@ -48,10 +49,12 @@ export function createAttendanceRoutes({
   function assertValidChange(change, todayStr) {
     const candidate = /** @type {{ childId?: unknown, date?: unknown, status?: unknown, reason?: unknown }} */ (change);
     if (!candidate || typeof candidate.childId !== 'string') fail('Copil invalid.');
-    if (!recordRepository.exists('children', /** @type {string} */ (candidate.childId)))
-      fail(`Copil inexistent: ${candidate.childId}.`);
+    const child = recordRepository.find('children', /** @type {string} */ (candidate.childId));
+    if (!child) fail(`Copil inexistent: ${candidate.childId}.`);
     if (typeof candidate.date !== 'string' || !dateOK(candidate.date)) fail('Zi invalidă.');
     if (candidate.date > todayStr) fail(FUTURE_DATE_MESSAGE);
+    if (!isChildEnrolledOn(child, candidate.date))
+      fail(`Copilul nu era înscris pe ${candidate.date}: ${candidate.childId}.`);
     if (candidate.status !== null && !ATTENDANCE_STATUSES.includes(/** @type {any} */ (candidate.status)))
       fail('Stare invalidă.');
     if (candidate.reason !== undefined && typeof candidate.reason !== 'string') fail('Motiv invalid.');

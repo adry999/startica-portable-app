@@ -29,6 +29,12 @@ test('un copil fără dată de frecventare și fără contract e considerat îns
   assert.equal(isChildEnrolledOn({}, '2026-09-27'), true);
 });
 
+test('attendanceDate gol (formular necompletat) nu ascunde contractDate', () => {
+  const child = { attendanceDate: '', contractDate: '2026-09-15' };
+  assert.equal(isChildEnrolledOn(child, '2026-09-01'), false);
+  assert.equal(isChildEnrolledOn(child, '2026-09-20'), true);
+});
+
 test('summarizeDay numără nemarcații ca diferența față de lista copiilor', () => {
   /** @type {[string, import('../attendance.types.d.mts').AttendanceEntry][]} */
   const pairs = [

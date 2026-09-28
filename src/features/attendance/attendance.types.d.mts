@@ -31,7 +31,7 @@ export type DayCellKind = AttendanceStatus | 'unmarked' | 'future' | 'off' | 'no
 
 export interface AttendanceRoutesDependencies {
   database: import('node:sqlite').DatabaseSync;
-  recordRepository: Pick<RecordRepository, 'exists' | 'readSnapshot'>;
+  recordRepository: Pick<RecordRepository, 'exists' | 'find' | 'readSnapshot'>;
   now?: () => Date;
   today?: () => string;
   /** Sincronizare (Faza 2): scris în aceeași tranzacție ca fiecare schimbare de prezență. */

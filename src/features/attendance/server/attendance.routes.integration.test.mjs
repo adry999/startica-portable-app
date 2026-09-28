@@ -124,6 +124,24 @@ test('o zi viitoare, un copil inexistent sau o stare necunoscută dau 400 și nu
   assert.equal(entries.entries.length, 0, 'niciuna dintre cereri nu a salvat vreo schimbare din lot');
 });
 
+test('un copil arhivat sau înscris după ziua marcată e refuzat (m15)', async t => {
+  const { get, post } = await startApplication(t);
+  await seedChildren(post);
+
+  const archivedChild = await post('/api/attendance', {
+    changes: [{ childId: 'CH-3', date: '2026-09-20', status: 'present' }],
+  });
+  assert.equal(archivedChild.status, 400);
+
+  const notYetEnrolled = await post('/api/attendance', {
+    changes: [{ childId: 'CH-4', date: '2026-09-20', status: 'present' }],
+  });
+  assert.equal(notYetEnrolled.status, 400);
+
+  const entries = await get('/api/attendance?date=2026-09-20');
+  assert.equal(entries.entries.length, 0, 'niciuna dintre cereri nu a salvat vreo schimbare');
+});
+
 test('GET pe lună cu groupId întoarce doar copiii grupei, cu childId doar copilul, cu groupId=none copiii fără grupă', async t => {
   const { get, post } = await startApplication(t);
   await seedChildren(post);
