@@ -2,27 +2,29 @@ import { useEffect, useState } from 'react';
 import { Button, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { Staff } from '@shared/personal/personal.types';
+import type { Staff, Candidate } from '@shared/personal/personal.types';
 import { TeamView } from './TeamView';
 import { TimesheetView } from './TimesheetView';
 import { LeavesView } from './LeavesView';
 import { SalariesView } from './SalariesView';
+import { CandidatesTab } from './CandidatesTab';
 import styles from './PersonalPage.module.css';
 
-export type PersonalTab = 'echipa' | 'pontaj' | 'concedii' | 'salarii';
+export type PersonalTab = 'echipa' | 'pontaj' | 'concedii' | 'salarii' | 'candidati';
 
 const TAB_OPTIONS: { value: PersonalTab; label: string }[] = [
   { value: 'echipa', label: 'Echipa' },
   { value: 'pontaj', label: 'Pontaj' },
   { value: 'concedii', label: 'Concedii' },
   { value: 'salarii', label: 'Salarii' },
+  { value: 'candidati', label: 'Candidați' },
 ];
 
 export interface PersonalPageProps {
   month: string;
 }
 
-/** „Personal” (24) — Echipa (23a), Pontaj (23b), Concedii (23f), Salarii (23c, PIN). */
+/** „Personal” (24) — Echipa (23a), Pontaj (23b), Concedii (23f), Salarii (23c, PIN), Candidați (23l). */
 export function PersonalPage({ month }: PersonalPageProps) {
   const [tab, setTab] = usePersistedState<PersonalTab>('view.personal', 'echipa');
   const navigate = useNavigate();
@@ -34,6 +36,7 @@ export function PersonalPage({ month }: PersonalPageProps) {
   // din dialog, în TimesheetView, nu la clicul din antet (M5: nu mai tipărește peste dialog).
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [staffFormTarget, setStaffFormTarget] = useState<Staff | 'new' | null>(null);
+  const [candidateFormTarget, setCandidateFormTarget] = useState<Candidate | 'new' | null>(null);
 
   // „Vezi cu PIN →” din fișa angajatului (23j) trece direct pe fila Salarii.
   useEffect(() => {
@@ -54,6 +57,7 @@ export function PersonalPage({ month }: PersonalPageProps) {
     <div className={styles.headerActions}>
       <SegmentedControl ariaLabel="Filă Personal" value={tab} onChange={setTab} options={TAB_OPTIONS} />
       {tab === 'echipa' && <Button onClick={() => setStaffFormTarget('new')}>+ Angajat</Button>}
+      {tab === 'candidati' && <Button onClick={() => setCandidateFormTarget('new')}>+ Candidat</Button>}
       {tab === 'pontaj' && (
         <>
           <MonthStepper value={pontajMonth} onPrev={() => shiftPontajMonth(-1)} onNext={() => shiftPontajMonth(1)} />
@@ -75,6 +79,15 @@ export function PersonalPage({ month }: PersonalPageProps) {
     );
   if (tab === 'concedii') return <LeavesView />;
   if (tab === 'salarii') return <SalariesView />;
+  if (tab === 'candidati')
+    return (
+      <CandidatesTab
+        formTarget={candidateFormTarget}
+        onNew={() => setCandidateFormTarget('new')}
+        onOpenRow={candidate => setCandidateFormTarget(candidate)}
+        onCloseForm={() => setCandidateFormTarget(null)}
+      />
+    );
   return (
     <TeamView
       onOpenStaff={id => navigate(`/personal/${id}`)}

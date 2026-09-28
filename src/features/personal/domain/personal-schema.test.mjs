@@ -92,3 +92,40 @@ test('isStaffInBranch și worksAtAllBranches filtrează pe filiala activă', () 
   assert.equal(worksAtAllBranches(staff, ['bu', 'bo']), false);
   assert.equal(worksAtAllBranches(both, ['bu', 'bo']), true);
 });
+
+test('normalizePersonalRecord validează un candidat (23l) — nume obligatoriu, vârstă opțională', () => {
+  assert.throws(
+    () =>
+      normalizePersonalRecord('candidates', {
+        id: 'CAN-1',
+        name: '',
+        createdAt: '2026-09-28T10:00:00.000Z',
+        updatedAt: '2026-09-28T10:00:00.000Z',
+      }),
+    /Nume/,
+  );
+  assert.throws(
+    () =>
+      normalizePersonalRecord('candidates', {
+        id: 'CAN-1',
+        name: 'Ana',
+        age: -1,
+        createdAt: '2026-09-28T10:00:00.000Z',
+        updatedAt: '2026-09-28T10:00:00.000Z',
+      }),
+    /Vârsta/,
+  );
+  const candidate = normalizePersonalRecord('candidates', {
+    id: 'CAN-1',
+    name: '  Ana Popescu  ',
+    position: 'Educator',
+    createdAt: '2026-09-28T10:00:00.000Z',
+    updatedAt: '2026-09-28T10:00:00.000Z',
+  });
+  assert.equal(candidate.name, 'Ana Popescu');
+  assert.equal(candidate.age, null);
+  assert.equal(candidate.experience, '');
+  assert.equal(candidate.city, '');
+  assert.equal(candidate.phone, '');
+  assert.equal(candidate.notes, '');
+});
