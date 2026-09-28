@@ -139,7 +139,24 @@ Rulat concurent cu Modulul 6 (fișiere disjuncte). Verificat pe disc + tsc/vites
 
 **Toate cele 7 module din URMATORUL-PAS.md sunt acum închise.**
 
-## De discutat înainte de a continua (cerut explicit — nu pornesc nimic din astea fără OK)
-- Scroll custom (`ScrollArea`) peste tot, inclusiv `DataTable` — task mare, amânat cât timp mai multe module ating `DataTable.tsx` concurent.
-- Verificare vizuală ecrane sincronizare (rămasă din sesiunea de azi, neînceput).
-- Build + hash instaler final, după ce toate cele 7 module sunt închise.
+## ScrollArea peste tot — în lucru
+
+Delegat (`scrollarea-rollout`): 8 fișiere cu scroll nativ identificate (Topbar dropdown căutare, `/design-system` nav, GroupsBoard, PaymentDetailPanel, ReviewPage, `Drawer` — cel mai important, folosit de toate formularele —, `SearchSelect`, `SmsConfirmDialog`). `DataTable.tsx` neatins (nu are scroll intern azi, cerut explicit să nu-i schimb comportamentul).
+
+## Verificare sincronizare (18-sincronizare.md) — DONE 2026-09-28, cu o descoperire importantă
+
+**14a (cardul din sidebar):** DONE — există, cele 4 stări corecte. Bug real găsit și reparat: click pe card nu deschidea fila Sincronizare decât la Conflict/Revoked (celelalte 3 stări n-aveau handler deloc), contrar spec-ului („Click pe card deschide 14b”, necondiționat). Commit `038d512`.
+
+**14b (fila Sincronizare) și 14c (Conflicte) — LIPSESC COMPLET**, nu doar vizual incomplete:
+- `BackupPage.tsx` n-are filă „Sincronizare”; `goToSyncTab()` din `AppShell.tsx` scrie în `localStorage` o valoare pe care pagina o ignoră.
+- Ruta `/conflicte` nu-i înregistrată în `App.tsx` — click pe „Rezolvă” la un conflict te trimite silențios la Dashboard.
+- Backend-ul (`sync-server/` + `src/features/sync/`) e mult mai avansat decât UI-ul: Fazele 1-3 din planul de sincronizare (pairing, outbox, politică de conflict, backup zilnic) sunt construite. Lipsesc Task 9 (rute rezolvare conflicte), 11 (connect/reconciliere filiale — fără el, `sync.json` nu se scrie niciodată, motorul nu pornește în producție) și 12 (UI conectare).
+- **Important:** un audit separat, de azi (`docs/superpowers/specs/2026-09-28-audit-A-core-filiale-sync.md`), găsește 3 bug-uri critice + 11 majore în motorul deja scris (Fazele 1-3) — inclusiv **pierdere silențioasă de date** la un push în zbor (C-1) și coada de sincronizare inundată la restaurare (C-2). Astea ar trebui reparate înainte sau odată cu 14b/14c, altfel ecranele noi se construiesc pe un motor cu bug-uri de corupere documentate.
+- Estimare: **14c mediu**, **14b mare** — ambele depind de reparațiile din audit făcute întâi.
+- Criterii de acceptare din `18-sincronizare.md`: doar „cardul arată cele 4 stări” e verificabil azi; restul (conectare, offline→sync, conflict vizibil, deconectare) sunt netestabile end-to-end fără 14b.
+
+**Nu am construit 14b/14c** — e task mare, separat, cu bug-uri de reparat întâi; aștept decizia ta.
+
+## De discutat cu utilizatorul
+- **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
+- Build + hash instaler final, după ce confirmi că merge tot testat local.
