@@ -143,10 +143,10 @@ describe('ExpensesPage', () => {
     await act(() => session.result.current.load());
 
     renderPage();
-    const totalCard = screen.getByText('Total lună').closest('div')!;
+    const totalCard = screen.getByText(/Total septembrie/).closest('div')!;
     expect(within(totalCard).getByText('3.450,00 lei')).toBeInTheDocument(); // 3000 + 450, active pe septembrie
     expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
-    expect(screen.queryByText('Chirie sediu')).not.toBeInTheDocument(); // arhivată, filtrul implicit e „Activi”
+    expect(screen.queryByText('Chirie sediu')).not.toBeInTheDocument(); // arhivată, filtrul implicit e „Nearhivate”
   });
 
   it('caută după descriere', async () => {
@@ -169,7 +169,7 @@ describe('ExpensesPage', () => {
     await userEvent.click(within(row).getByRole('button', { name: 'Arhivează' }));
 
     await waitFor(() => expect(screen.queryByText('Curent')).not.toBeInTheDocument());
-    const totalCard = screen.getByText('Total lună').closest('div')!;
+    const totalCard = screen.getByText(/Total septembrie/).closest('div')!;
     expect(within(totalCard).getByText('3.000,00 lei')).toBeInTheDocument();
   });
 
@@ -214,11 +214,15 @@ describe('ExpensesPage', () => {
     });
   });
 
-  it('adaugă o categorie nouă din formularul de sub filtre', async () => {
+  it('adaugă o categorie nouă din drawer-ul de categorii (meniul ⋯)', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     renderPage();
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText('Mai multe opțiuni'));
+    await user.click(screen.getByRole('button', { name: 'Administrează categorii' }));
+
     await userEvent.type(screen.getByLabelText('Categoria nouă'), 'Reparații');
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
@@ -231,6 +235,8 @@ describe('ExpensesPage', () => {
 
     renderPage();
     const user = userEvent.setup();
+    await user.click(screen.getByLabelText('Mai multe opțiuni'));
+    await user.click(screen.getByRole('button', { name: 'Administrează categorii' }));
 
     await user.click(screen.getByRole('button', { name: 'Chirie' }));
     const input = screen.getByLabelText('Redenumește Chirie');
@@ -246,6 +252,8 @@ describe('ExpensesPage', () => {
 
     renderPage();
     const user = userEvent.setup();
+    await user.click(screen.getByLabelText('Mai multe opțiuni'));
+    await user.click(screen.getByRole('button', { name: 'Administrează categorii' }));
     await user.click(screen.getByRole('button', { name: 'Șterge Chirie' }));
 
     const dialog = screen.getByRole('alertdialog', { name: 'Ștergere categorie' });
@@ -420,7 +428,8 @@ describe('ExpensesPage', () => {
     await user.click(within(activeRow).getByLabelText('Mai multe acțiuni'));
     expect(within(activeRow).getByRole('button', { name: 'Șterge definitiv' })).toBeDisabled();
 
-    await user.click(screen.getByRole('radio', { name: 'Arhivați · 1' }));
+    await user.click(screen.getByText('Nearhivate ▾'));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Arhivate' }));
     const archivedRow = screen.getByText('Chirie sediu').closest('tr')!;
     await user.click(within(archivedRow).getByLabelText('Mai multe acțiuni'));
     await user.click(within(archivedRow).getByRole('button', { name: 'Șterge definitiv' }));

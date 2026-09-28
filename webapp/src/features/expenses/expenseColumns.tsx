@@ -3,10 +3,11 @@ import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { categoryStyleFor } from './useExpenses';
 import type { Expense } from '@contracts/record-types.mjs';
+import styles from './ExpensesPage.module.css';
 
 // Aceleași tonuri ca la achitări (PaymentsPage.METHOD_TONE), doar cu valori lowercase.
 export const METHOD_TONE: Record<string, BadgeTone> = { cash: 'orange', card: 'yellow', transfer: 'mint' };
-const METHOD_LABEL: Record<string, string> = { cash: 'Cash', card: 'Card', transfer: 'Transfer' };
+export const METHOD_LABEL: Record<string, string> = { cash: 'Cash', card: 'Card', transfer: 'Transfer' };
 
 export interface ExpenseColumnsOptions {
   onEdit: (expense: Expense) => void;
@@ -25,7 +26,12 @@ export function buildExpenseColumns({
       key: 'description',
       header: 'Descriere/furnizor',
       sortValue: expense => expense.description,
-      render: expense => expense.description || '—',
+      render: expense => (
+        <div className={styles.descCell}>
+          <span className={styles.descPrimary}>{expense.description || '—'}</span>
+          {expense.notes && <span className={styles.descNotes}>{expense.notes}</span>}
+        </div>
+      ),
     },
     {
       key: 'category',
@@ -37,12 +43,13 @@ export function buildExpenseColumns({
       key: 'method',
       header: 'Metodă',
       sortValue: expense => expense.method ?? '',
-      render: expense =>
-        expense.method ? <Badge tone={METHOD_TONE[expense.method]}>{METHOD_LABEL[expense.method]}</Badge> : '—',
+      render: expense => (
+        <span className={styles.methodText}>{expense.method ? METHOD_LABEL[expense.method] : '—'}</span>
+      ),
     },
     {
       key: 'amount',
-      header: 'Suma',
+      header: 'Sumă',
       align: 'end',
       sortValue: expense => expense.amount,
       render: expense => <strong>{formatMoney(expense.amount)}</strong>,

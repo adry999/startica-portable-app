@@ -5,7 +5,10 @@ import {
   Card,
   ConfirmDeleteDialog,
   DataTable,
+  Drawer,
   LoadingState,
+  MonthStepper,
+  RowMenu,
   SegmentedControl,
   SelectionBar,
   useToast,
@@ -13,6 +16,7 @@ import {
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
+import { shiftMonth } from '@shared/format/month-shift';
 import { total } from '@domain/money.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -35,19 +39,21 @@ export interface ExpensesPageProps {
 type ViewMode = 'table' | 'daily';
 
 export function ExpensesPage({ month }: ExpensesPageProps) {
-  const expensesData = useExpenses(month);
+  // E-1: Cheltuieli are propria lună, independentă de MonthPicker-ul global (vizibil doar pe
+  // Dashboard) — altfel „Total lună” și tabelul ar rămâne blocate pe luna din Dashboard.
+  const [monthKey, setMonthKey] = useState(month);
+  const expensesData = useExpenses(monthKey);
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.expenses', 'table');
   const [search, setSearch] = useState('');
-  const [monthFrom, setMonthFrom] = useState('');
-  const [monthTo, setMonthTo] = useState('');
   const [category, setCategory] = useState('');
   const [method, setMethod] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
+  const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
 
   // „+ Adaugă cheltuială" de pe Dashboard trece direct la formular (08-dashboard.md #3), fără
   // să rămână în URL — altfel s-ar redeschide la orice re-render sau navigare înapoi.
@@ -69,22 +75,25 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     { kind: 'category'; id: string; name: string } | { kind: 'expense'; expense: Expense } | null
   >(null);
 
+  const monthExpenses = useMemo(
+    () => expensesData.expenses.filter(expense => expense.date.startsWith(monthKey)),
+    [expensesData.expenses, monthKey],
+  );
+
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
-    return expensesData.expenses.filter(
+    return monthExpenses.filter(
       expense =>
         (archiveFilter === 'all' || (archiveFilter === 'archived' ? expense.archived : !expense.archived)) &&
-        (!monthFrom || expense.date.slice(0, 7) >= monthFrom) &&
-        (!monthTo || expense.date.slice(0, 7) <= monthTo) &&
         (!category || expense.category === category) &&
         (!method || expense.method === method) &&
         matchesRecordListSearch('expenses', expense, expensesData.records, normalizedSearch),
     );
-  }, [expensesData.expenses, expensesData.records, search, monthFrom, monthTo, category, method, archiveFilter]);
+  }, [monthExpenses, expensesData.records, search, category, method, archiveFilter]);
 
   function exportFiltered() {
     downloadCsv(
-      `cheltuieli-${month}.csv`,
+      `cheltuieli-${monthKey}.csv`,
       ['Data', 'Categorie', 'Sumă', 'Descriere', 'Notițe'],
       filteredExpenses.map(expense => [
         formatDate(expense.date),
@@ -136,6 +145,17 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
+  async function quickAddExpense(input: ExpenseFormInput): Promise<boolean> {
+    try {
+      await expensesData.createExpense(input);
+      toast.show({ message: 'Cheltuială adăugată.' });
+      return true;
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+      return false;
+    }
+  }
+
   async function deleteExpenseForever(expense: Expense) {
     try {
       await expensesData.deleteExpense(expense.id);
@@ -178,7 +198,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
-  // Antetul e identic în Tabel și în Pe zile (06-cheltuieli.md #2) — comutator + Exportă + Cheltuială nouă.
+  // Antetul e identic în Tabel și în Pe zile (06-cheltuieli.md #2) — lună locală + comutator + Exportă + Cheltuială nouă.
   useTopbarActions(
     <div className={styles.headerActions}>
       <SegmentedControl
@@ -190,10 +210,21 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
           { value: 'daily', label: 'Pe zile' },
         ]}
       />
+      <MonthStepper
+        value={monthKey}
+        tone="white"
+        onPrev={() => setMonthKey(current => shiftMonth(current, -1))}
+        onNext={() => setMonthKey(current => shiftMonth(current, 1))}
+      />
       <Button variant="ghost" onClick={exportFiltered}>
         Exportă
       </Button>
       <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
+      <RowMenu
+        ariaLabel="Mai multe opțiuni"
+        trigger="⋯"
+        items={[{ label: 'Administrează categorii', onClick: () => setCategoryDrawerOpen(true) }]}
+      />
     </div>,
   );
 
@@ -201,8 +232,6 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   if (expensesData.status === 'failed')
     return <p className={styles.notice}>{expensesData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const activeTotal = expensesData.expenses.filter(expense => !expense.archived).length;
-  const archivedTotal = expensesData.expenses.filter(expense => expense.archived).length;
   const selectedTotal = total(filteredExpenses.filter(expense => selectedRowKeys.has(expense.id)));
 
   const columns = buildExpenseColumns({
@@ -213,38 +242,25 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   return (
     <>
-      <ExpensesSummaryCards monthTotal={expensesData.monthTotal} categorySummary={expensesData.categorySummary} />
+      <ExpensesSummaryCards
+        month={monthKey}
+        monthTotal={expensesData.monthTotal}
+        monthExpenseCount={expensesData.monthExpenseCount}
+        categorySummary={expensesData.categorySummary}
+      />
 
       <Card className={styles.tableCard}>
-        <ExpensesCategoryManager
-          categories={expensesData.categories}
-          onCreateCategory={expensesData.createCategory}
-          onRenameCategory={expensesData.renameCategory}
-          onRequestDelete={category => setDeleteTarget({ kind: 'category', id: category.id, name: category.name })}
-        />
-
         <ExpensesFilters
           search={search}
           onSearchChange={setSearch}
-          monthFrom={monthFrom}
-          onMonthFromChange={setMonthFrom}
-          monthTo={monthTo}
-          onMonthToChange={setMonthTo}
           archiveFilter={archiveFilter}
           onArchiveFilterChange={setArchiveFilter}
-          activeTotal={activeTotal}
-          archivedTotal={archivedTotal}
           category={category}
           onCategoryChange={setCategory}
           categoryNames={expensesData.categoryNames}
           method={method}
           onMethodChange={setMethod}
         />
-
-        <p className={styles.summaryText}>
-          <strong>{filteredExpenses.length}</strong> cheltuieli ·{' '}
-          <strong>{formatMoney(total(filteredExpenses))}</strong> total
-        </p>
 
         {selectedRowKeys.size > 0 && (
           <SelectionBar
@@ -262,17 +278,28 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         )}
 
         {viewMode === 'table' ? (
-          <DataTable
-            columns={columns}
-            rows={filteredExpenses}
-            rowKey={expense => expense.id}
-            selectable
-            selectedRowKeys={selectedRowKeys}
-            onSelectedRowKeysChange={setSelectedRowKeys}
-            emptyState={<p>Nu există înregistrări pentru filtrele alese.</p>}
-          />
+          <>
+            <DataTable
+              bare
+              columns={columns}
+              rows={filteredExpenses}
+              rowKey={expense => expense.id}
+              selectable
+              selectedRowKeys={selectedRowKeys}
+              onSelectedRowKeysChange={setSelectedRowKeys}
+              emptyState={<p>Nu există înregistrări pentru filtrele alese.</p>}
+            />
+            <p className={styles.summaryText}>
+              <span>{filteredExpenses.length} înregistrări</span>
+              <strong>Total {formatMoney(total(filteredExpenses))}</strong>
+            </p>
+          </>
         ) : (
-          <DailyExpensesView groups={dailyGroups} />
+          <DailyExpensesView
+            groups={dailyGroups}
+            categoryNames={expensesData.categoryNames}
+            onQuickAdd={quickAddExpense}
+          />
         )}
       </Card>
 
@@ -285,6 +312,21 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         onSubmit={submitExpenseForm}
         onClose={() => setFormTarget(null)}
       />
+
+      {/* E-3: administrarea categoriilor nu mai stă deasupra toolbar-ului — ascunsă în meniul ⋯ până e nevoie. */}
+      <Drawer
+        open={categoryDrawerOpen}
+        title="Categorii de cheltuieli"
+        width={480}
+        onClose={() => setCategoryDrawerOpen(false)}
+      >
+        <ExpensesCategoryManager
+          categories={expensesData.categories}
+          onCreateCategory={expensesData.createCategory}
+          onRenameCategory={expensesData.renameCategory}
+          onRequestDelete={category => setDeleteTarget({ kind: 'category', id: category.id, name: category.name })}
+        />
+      </Drawer>
 
       <ConfirmDeleteDialog
         open={deleteTarget !== null}

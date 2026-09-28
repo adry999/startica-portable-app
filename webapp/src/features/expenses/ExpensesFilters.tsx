@@ -1,21 +1,23 @@
-import { FilterPills, SearchInput, SegmentedControl } from '@shared/ui';
+import { useRef } from 'react';
+import { FilterPills, SearchInput } from '@shared/ui';
 import { categoryStyleFor } from './useExpenses';
 import { METHOD_TONE } from './expenseColumns';
 import styles from './ExpensesPage.module.css';
 
 export type ArchiveFilter = 'active' | 'archived' | 'all';
 
+const ARCHIVE_LABEL: Record<ArchiveFilter, string> = {
+  active: 'Nearhivate',
+  archived: 'Arhivate',
+  all: 'Toate',
+};
+const ARCHIVE_OPTIONS: ArchiveFilter[] = ['active', 'archived', 'all'];
+
 export interface ExpensesFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  monthFrom: string;
-  onMonthFromChange: (value: string) => void;
-  monthTo: string;
-  onMonthToChange: (value: string) => void;
   archiveFilter: ArchiveFilter;
   onArchiveFilterChange: (value: ArchiveFilter) => void;
-  activeTotal: number;
-  archivedTotal: number;
   category: string;
   onCategoryChange: (value: string) => void;
   categoryNames: string[];
@@ -23,17 +25,44 @@ export interface ExpensesFiltersProps {
   onMethodChange: (value: string) => void;
 }
 
+/** Dropdown „Nearhivate ▾" — 06-cheltuieli.md #3, E-5 (etichetele corecte, la feminin, pentru „cheltuieli"). */
+function ArchiveFilterDropdown({
+  value,
+  onChange,
+}: {
+  value: ArchiveFilter;
+  onChange: (value: ArchiveFilter) => void;
+}) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  return (
+    <details ref={detailsRef} className={styles.archiveDropdown}>
+      <summary>{ARCHIVE_LABEL[value]} ▾</summary>
+      <div className={styles.archiveDropdownPanel} role="menu">
+        {ARCHIVE_OPTIONS.map(option => (
+          <button
+            key={option}
+            type="button"
+            role="menuitemradio"
+            aria-checked={option === value}
+            onClick={() => {
+              onChange(option);
+              if (detailsRef.current) detailsRef.current.open = false;
+            }}
+          >
+            {ARCHIVE_LABEL[option]}
+          </button>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 export function ExpensesFilters({
   search,
   onSearchChange,
-  monthFrom,
-  onMonthFromChange,
-  monthTo,
-  onMonthToChange,
   archiveFilter,
   onArchiveFilterChange,
-  activeTotal,
-  archivedTotal,
   category,
   onCategoryChange,
   categoryNames,
@@ -44,35 +73,12 @@ export function ExpensesFilters({
     <>
       <div className={styles.toolbar}>
         <SearchInput
-          placeholder="Caută descriere sau categorie…"
+          placeholder="Caută furnizor sau descriere"
           value={search}
           onChange={onSearchChange}
           ariaLabel="Caută cheltuială"
         />
-        <input
-          className={styles.select}
-          type="month"
-          value={monthFrom}
-          onChange={event => onMonthFromChange(event.target.value)}
-          aria-label="De la luna"
-        />
-        <input
-          className={styles.select}
-          type="month"
-          value={monthTo}
-          onChange={event => onMonthToChange(event.target.value)}
-          aria-label="Până la luna"
-        />
-        <SegmentedControl
-          ariaLabel="Filtru arhivare"
-          value={archiveFilter}
-          onChange={onArchiveFilterChange}
-          options={[
-            { value: 'active', label: `Activi · ${activeTotal}` },
-            { value: 'archived', label: `Arhivați · ${archivedTotal}` },
-            { value: 'all', label: `Toți · ${activeTotal + archivedTotal}` },
-          ]}
-        />
+        <ArchiveFilterDropdown value={archiveFilter} onChange={onArchiveFilterChange} />
       </div>
 
       <FilterPills

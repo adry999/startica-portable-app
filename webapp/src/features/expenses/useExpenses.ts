@@ -38,6 +38,7 @@ export interface ExpensesData {
   categories: ExpenseCategory[];
   categoryNames: string[];
   monthTotal: number;
+  monthExpenseCount: number;
   categorySummary: CategorySummaryItem[];
   createCategory: (typed: string) => Promise<void>;
   renameCategory: (id: string, typed: string) => Promise<void>;
@@ -189,6 +190,7 @@ export function useExpenses(month: string): ExpensesData {
       categories: [],
       categoryNames: [],
       monthTotal: 0,
+      monthExpenseCount: 0,
       categorySummary: [],
       createCategory,
       renameCategory,
@@ -211,6 +213,7 @@ export function useExpenses(month: string): ExpensesData {
     categories,
     categoryNames: listExpenseCategoryNames(records),
     monthTotal: total(monthExpenses),
+    monthExpenseCount: monthExpenses.length,
     categorySummary: buildCategorySummary(monthExpenses),
     createCategory,
     renameCategory,
