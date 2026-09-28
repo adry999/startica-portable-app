@@ -17,7 +17,7 @@ function jsonResponse(body: unknown) {
 }
 
 const fixtureState = {
-  children: [{ id: 'c1', name: 'Andrei Popescu', groupId: null, archived: false, feeHistory: [], notes: '' }],
+  children: [{ id: 'c1', name: 'Andrei Popescu', groupId: null, archived: false, feeHistory: [], notes: [] }],
   payments: [],
   expenses: [],
   groups: [],

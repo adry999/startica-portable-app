@@ -159,6 +159,60 @@
   font-size: 12px;
 }
 
+/* Note (CF-4, 09-copii-fisa.md): cea mai recentă pe --yellow-soft, restul pe --neutral-softer. */
+.noteRow {
+  margin: 0 0 var(--space-8);
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-softer);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.noteRow:last-child {
+  margin-bottom: 0;
+}
+
+.noteRecent {
+  background: var(--yellow-soft);
+}
+
+.noteDate {
+  font-weight: 700;
+  color: var(--muted);
+  margin-right: var(--space-6);
+}
+
+.noteForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.noteForm textarea {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+  resize: vertical;
+}
+
+/* Documente (CF-7, 09-copii-fisa.md): placeholder gol, nicio stocare reală încă. */
+.documentsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+  margin-bottom: var(--space-10);
+}
+
+.documentSlot {
+  aspect-ratio: 3 / 4;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--neutral-softer);
+}
+
 .groupRow {
   display: flex;
   align-items: center;

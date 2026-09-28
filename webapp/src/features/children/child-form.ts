@@ -26,7 +26,6 @@ export interface ChildFormValues {
   dueDay: string;
   feeHistoryText: string;
   statusHistoryText: string;
-  notes: string;
 }
 
 interface FeeHistoryEntry {
@@ -69,7 +68,6 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
     dueDay: String(child?.dueDay || 10),
     feeHistoryText: (child?.feeHistory ?? []).map(entry => `${entry.from} = ${entry.amount}`).join('\n'),
     statusHistoryText: (child?.statusHistory ?? []).map(entry => `${entry.from} = ${entry.status}`).join('\n'),
-    notes: child?.notes ?? '',
   };
 }
 
@@ -108,7 +106,6 @@ export function buildChildRecord(previous: Child | null, id: string, values: Chi
   const record: Partial<Child> & Record<string, unknown> = {
     ...previous,
     id: previous?.id ?? id,
-    notes: values.notes,
     name: values.name.trim(),
     parent: values.parent.trim(),
     phone: values.phone.trim(),
