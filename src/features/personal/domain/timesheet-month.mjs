@@ -38,7 +38,12 @@ export function workingDatesFor(staff, month) {
  * @returns {TimesheetMonthSummary}
  */
 export function summarizeTimesheetMonth({ staff, month, rows, todayStr, upTo }) {
-  const cells = monthDates(month).map(date => {
+  const monthDatesList = monthDates(month);
+  // Zilele lucrătoare ale lunii calendaristice întregi (M3): baza de împărțire a salariului
+  // fix pro-rata, independentă de intervalul activ al angajatului — un angajat intrat pe
+  // 15 primește proporția din toată luna, nu din cele câteva zile în care a fost activ.
+  const workingDaysInMonth = monthDatesList.filter(isWorkingDay).length;
+  const cells = monthDatesList.map(date => {
     if (date < staff.since || (staff.archivedAt && date > staff.archivedAt)) return cell(date, 'none');
     if (!isWorkingDay(date)) return cell(date, 'off');
     if (upTo === 'today' && date > todayStr) return cell(date, 'future');
@@ -60,5 +65,6 @@ export function summarizeTimesheetMonth({ staff, month, rows, todayStr, upTo }) 
     i: countOf('I'),
     fp: countOf('FP'),
     workingDays: counted.length,
+    workingDaysInMonth,
   };
 }

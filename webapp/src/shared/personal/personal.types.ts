@@ -141,6 +141,8 @@ export interface SalaryRow {
   advances: number;
   net: number | null;
   paid: { branchId: string; paidAt: string } | null;
+  /** Luna nu s-a încheiat — suma nu e definitivă (M4, audit B). */
+  estimated: boolean;
 }
 
 /** Un rând din `GET /api/personal/salaries/history?staffId=` — forma reală a lui `salaries.service.mjs#history`. */

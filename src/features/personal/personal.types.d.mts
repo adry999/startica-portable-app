@@ -106,7 +106,10 @@ export interface TimesheetMonthSummary {
   a: number;
   i: number;
   fp: number;
+  /** Zilele lucrătoare din perioada activă a angajatului (folosite pentru contoare). */
   workingDays: number;
+  /** Zilele lucrătoare ale întregii luni calendaristice — pentru salariul pro-rata (M3). */
+  workingDaysInMonth: number;
 }
 
 export interface LeaveDaysRemaining {

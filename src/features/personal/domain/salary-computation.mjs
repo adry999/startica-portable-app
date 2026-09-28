@@ -25,7 +25,7 @@ export function salaryEntryFor(salaries, staffId, month) {
  * injectat, `null` cât timp Bazin nu e construit sau luna nu e încă închisă).
  * @param {{
  *   salary: Pick<Salary, 'mode' | 'amount'>,
- *   timesheetRow: { a: number, i: number, fp: number, worked: number, workingDays: number },
+ *   timesheetRow: { a: number, i: number, fp: number, worked: number, workingDays: number, workingDaysInMonth: number },
  *   settings: { deductOnlyUnexcused: boolean },
  *   coachPay: { amount: number, rate: number, sessionsHeld: number, childrenPresent: number, mode: 'per_child' | 'per_session' } | null,
  * }} input
@@ -37,9 +37,16 @@ export function salaryForMonth({ salary, timesheetRow, settings, coachPay }) {
     const deductible = settings.deductOnlyUnexcused
       ? timesheetRow.a
       : timesheetRow.a + timesheetRow.i + timesheetRow.fp;
+    // M3 (decizie): pro-rata pe zilele lucrătoare ale întregii luni calendaristice, nu doar
+    // cele din intervalul activ — un angajat intrat sau ieșit în cursul lunii primește
+    // proporția din lună, nu salariul întreg pentru câteva zile lucrate.
+    const workingDaysInMonth = timesheetRow.workingDaysInMonth ?? timesheetRow.workingDays;
     const gross =
-      timesheetRow.workingDays > 0 ? round2(amount - (amount * deductible) / timesheetRow.workingDays) : amount;
-    const base = `${amount} lei / lună` + (deductible > 0 ? ` · ${deductible} zile absent` : '');
+      workingDaysInMonth > 0 ? round2((amount * (timesheetRow.workingDays - deductible)) / workingDaysInMonth) : 0;
+    let base = `${amount} lei / lună`;
+    if (timesheetRow.workingDays < workingDaysInMonth)
+      base += ` · ${timesheetRow.workingDays} din ${workingDaysInMonth} zile lucrătoare`;
+    if (deductible > 0) base += ` · ${deductible} zile absent`;
     return { gross, base, deductible };
   }
   if (mode === 'zi') {

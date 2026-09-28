@@ -15,6 +15,13 @@ type SalariesSubTab = 'lista' | 'avansuri';
 
 const METHODS = ['Cash', 'Card', 'Transfer'];
 
+/** Luna calendaristică precedentă lui `date` (YYYY-MM) — vezi comentariul de la `month` mai jos. */
+function previousMonth(date: string): string {
+  const year = Number(date.slice(0, 4));
+  const monthIndex = Number(date.slice(5, 7));
+  return monthIndex === 1 ? `${year - 1}-12` : `${year}-${String(monthIndex - 1).padStart(2, '0')}`;
+}
+
 /** Salarii (23c), în spatele PinGate (23d) — plata unui salariu = o cheltuială, minus avansurile lunii. */
 export function SalariesView() {
   return (
@@ -27,7 +34,11 @@ export function SalariesView() {
 function SalariesContent() {
   const personal = usePersonal();
   const toast = useToast();
-  const month = today().slice(0, 7);
+  // „Lista lunii” arată luna precedentă, deja încheiată — pay() refuză o lună care nu s-a
+  // încheiat (M4, audit B), și luna curentă nu ar avea niciodată ce plăti din acest ecran.
+  // Avansurile rămân legate de luna curentă (se dau în timpul ei, nu retroactiv).
+  const currentMonth = today().slice(0, 7);
+  const month = previousMonth(currentMonth);
   const salaries = useSalaries(month);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [method, setMethod] = useState(METHODS[0]);
@@ -193,7 +204,7 @@ function SalariesContent() {
       />
       <AdvanceFormDrawer
         staff={advanceStaffId ? (personal.staffById.get(advanceStaffId) ?? null) : null}
-        month={month}
+        month={currentMonth}
         onClose={() => setAdvanceStaffId(null)}
       />
       <SalaryHistoryDrawer

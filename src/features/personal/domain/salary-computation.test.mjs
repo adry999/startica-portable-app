@@ -2,7 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { salaryForMonth, salaryEntryFor } from './salary-computation.mjs';
 
-const row = (overrides = {}) => ({ a: 0, i: 0, fp: 0, worked: 20, workingDays: 22, ...overrides });
+const row = (overrides = {}) => ({
+  a: 0,
+  i: 0,
+  fp: 0,
+  worked: 20,
+  workingDays: 22,
+  workingDaysInMonth: 22,
+  ...overrides,
+});
 
 test('salariul fix scade doar pentru A când deductOnlyUnexcused e activ, și pentru A/I/FP altfel; concediul și boala nu scad', () => {
   const timesheetRow = row({ a: 1, i: 1, fp: 1, worked: 19, workingDays: 22 });
@@ -33,6 +41,20 @@ test('salariul fix scade doar pentru A când deductOnlyUnexcused e activ, și pe
   });
   assert.equal(noAbsence.gross, 4400);
   assert.equal(noAbsence.base, '4400 lei / lună');
+});
+
+test('salariul fix e pro-rata pentru un angajat intrat în cursul lunii (M3)', () => {
+  // Angajat de la 15: 12 zile lucrătoare active din 22 ale lunii, 2 zile absente nemotivat.
+  const timesheetRow = row({ a: 2, worked: 10, workingDays: 12, workingDaysInMonth: 22 });
+  const result = salaryForMonth({
+    salary: { mode: 'fix', amount: 4400 },
+    timesheetRow,
+    settings: { deductOnlyUnexcused: true },
+    coachPay: null,
+  });
+  assert.equal(result.gross, Math.round(((4400 * (12 - 2)) / 22) * 100) / 100);
+  assert.match(result.base, /12 din 22 zile lucrătoare/);
+  assert.match(result.base, /2 zile absent/);
 });
 
 test('salariul pe zile = tarif × zilele lucrate din toată luna', () => {

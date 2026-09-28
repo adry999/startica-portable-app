@@ -16,6 +16,8 @@ export interface SalariesData {
   failureMessage: string;
   rows: SalaryRow[];
   totals: SalariesTotals | null;
+  /** Luna cerută nu s-a încheiat — sumele sunt o estimare (M4, audit B). */
+  estimated: boolean;
   reload: () => Promise<void>;
   pay: (staffIds: string[], method: string) => Promise<{ paid: string[]; skipped: string[] }>;
   saveSalary: (salary: Omit<Salary, 'id'> & { staffId: string; mode: SalaryMode }) => Promise<void>;
@@ -30,6 +32,7 @@ export function useSalaries(month: string): SalariesData {
   const session = useAppSession();
   const [rows, setRows] = useState<SalaryRow[]>([]);
   const [totals, setTotals] = useState<SalariesTotals | null>(null);
+  const [estimated, setEstimated] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed' | 'locked'>('loading');
   const [failureMessage, setFailureMessage] = useState('');
 
@@ -39,9 +42,11 @@ export function useSalaries(month: string): SalariesData {
       const response = (await requestJson(`/api/personal/salaries?month=${month}`)) as {
         rows: SalaryRow[];
         totals: SalariesTotals;
+        estimated: boolean;
       };
       setRows(response.rows);
       setTotals(response.totals);
+      setEstimated(response.estimated);
       setStatus('ready');
     } catch (error) {
       if (isForbidden(error)) {
@@ -77,5 +82,5 @@ export function useSalaries(month: string): SalariesData {
     await load();
   }
 
-  return { status, failureMessage, rows, totals, reload: load, pay, saveSalary };
+  return { status, failureMessage, rows, totals, estimated, reload: load, pay, saveSalary };
 }

@@ -1,21 +1,36 @@
-import { randomUUID } from 'node:crypto';
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { sha256Hex } from '#core/server/persistence/content-digest.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
-import { normalizePersonalRecord } from '../domain/personal-schema.mjs';
+import { today as localToday, monthOK } from '#shared/domain/calendar-month.mjs';
+import { GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
+import { normalizePersonalRecord, isStaffInBranch } from '../domain/personal-schema.mjs';
 import { salaryForMonth, salaryEntryFor } from '../domain/salary-computation.mjs';
 import { summarizeTimesheetMonth, timesheetKey } from '../domain/timesheet-month.mjs';
 
-const EXPENSE_CATEGORY = 'Salarii';
+// m8: numele categoriei se citește după id fix (semințele din expense-category-seeding.mjs),
+// nu e un literal — dacă operatorul a redenumit sau șters „Salarii”, cheltuiala cade pe General
+// în loc să creeze o categorie-text orfană.
+const SALARY_CATEGORY_ID = 'CAT-salarii';
 
 /** @typedef {import('../personal.types.d.mts').Staff} Staff */
 /** @typedef {import('./personal.repository.mjs').PersonalRepository} PersonalRepository */
 
+/** @param {string} month YYYY-MM */
+function nextMonth(month) {
+  const year = Number(month.slice(0, 4));
+  const monthIndex = Number(month.slice(5, 7));
+  return monthIndex === 12 ? `${year + 1}-01` : `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+}
+
 /**
- * Salariile, avansurile și plata lor (decizia 6–7 din plan). Cele două fișiere (filiala
- * activă și baza comună) nu pot împărți o tranzacție: `runRevisionTransaction` al filialei
- * rulează primul, iar în interiorul lui — după salvarea cheltuielii — se scriu și rândurile
- * din `comun`. O scriere ruptă (foarte rar) lasă „De plătit” pe ecran în loc să ascundă bani:
- * „plătit” = rândul `salary_payments` ȘI cheltuiala lui, nearhivată.
+ * Salariile, avansurile și plata lor (decizia 6–7 din plan; audit B — C1, M1, M2, M4, M5, M11).
+ * Cele două fișiere (filiala activă și baza comună) nu pot împărți o tranzacție: `runRevisionTransaction`
+ * al filialei rulează primul, iar în interiorul lui, ca ULTIM pas, toate scrierile din `comun` ale
+ * lotului curent se fac într-o singură `personalRepository.kinds.transaction(...)`, atomic — fie
+ * toate, fie niciuna. Tot lotul e validat înainte de a deschide vreo tranzacție (rând calculat,
+ * net > 0, cheltuiala validă): o eroare pe un angajat refuză tot lotul, cu numele lui în mesaj, nu
+ * lasă alți angajați parțial plătiți. „Plătit” = rândul `salary_payments` ȘI cheltuiala lui,
+ * nearhivată — un `salary_payments` orfan (cheltuiala lipsă) se tratează ca neplătit și se rescrie.
  * @param {{
  *   personalRepository: PersonalRepository,
  *   branchId: string,
@@ -33,16 +48,61 @@ export function createSalariesService({
   runRevisionTransaction,
   auditTrail,
   readCoachPayForMonth = () => null,
-  today = () => new Date().toISOString().slice(0, 10),
+  today = localToday,
 }) {
-  /** @param {Staff} staff @param {string} month @param {import('../personal.types.d.mts').PersonalSettings} settings */
-  function rowForStaff(staff, month, settings) {
+  /** @returns {string} */
+  function expenseCategoryName() {
+    const category = recordRepository.find('categories', SALARY_CATEGORY_ID);
+    return category ? category.name : GENERAL_CATEGORY_NAME;
+  }
+
+  /**
+   * „Plătit” = rândul `salary_payments` ȘI cheltuiala lui existentă, nearhivată (C1 punctul 3) —
+   * altfel o scriere ruptă ar ascunde bani în loc să arate „De plătit”.
+   * @param {string} staffId @param {string} month @returns {import('../personal.types.d.mts').SalaryPayment | null}
+   */
+  function validPayment(staffId, month) {
+    const paymentId = personalRepository.salaryPaymentId(staffId, month, branchId);
+    const payment = personalRepository.kinds.find('salary_payments', paymentId);
+    if (!payment) return null;
+    const expense = recordRepository.find('expenses', payment.expenseId);
+    return expense && !expense.archived ? payment : null;
+  }
+
+  /**
+   * Un avans e „scăzut” doar dacă plata care l-a scăzut e ea însăși validă (C1) — altfel banii
+   * marcați scăzuți către o plată orfană nu ar mai apărea nicăieri (M11 / scenariul din raport).
+   * @param {import('../personal.types.d.mts').Advance} advance
+   */
+  function isAdvanceDeducted(advance) {
+    if (!advance.deductedAt || !advance.deductedBy) return false;
+    const payment = personalRepository.kinds.find('salary_payments', advance.deductedBy);
+    if (!payment) return false;
+    const expense = recordRepository.find('expenses', payment.expenseId);
+    return !!(expense && !expense.archived);
+  }
+
+  /** @param {string} month @param {string} staffId */
+  function undeductedAdvances(month, staffId) {
+    return personalRepository.advancesForMonth(month, [staffId]).filter(advance => !isAdvanceDeducted(advance));
+  }
+
+  /** @param {Staff} staff @param {string} month @param {import('../personal.types.d.mts').PersonalSettings} settings @param {string} todayStr */
+  function rowForStaff(staff, month, settings, todayStr) {
     const salary = salaryEntryFor(personalRepository.salariesForStaff(staff.id), staff.id, month);
     if (!salary) return null;
+    const monthHasEnded = month < todayStr.slice(0, 7);
     const rows = new Map(
       personalRepository.timesheetForMonth(month, [staff.id]).map(row => [timesheetKey(staff.id, row.date), row]),
     );
-    const timesheetRow = summarizeTimesheetMonth({ staff, month, rows, todayStr: today(), upTo: 'month' });
+    // M4: luna curentă (necheiată) se calculează doar până azi — restul lunii nu e „lucrat” încă.
+    const timesheetRow = summarizeTimesheetMonth({
+      staff,
+      month,
+      rows,
+      todayStr,
+      upTo: monthHasEnded ? 'month' : 'today',
+    });
     const coachPay =
       salary.mode === 'bazin'
         ? /** @type {{ amount: number, rate: number, sessionsHeld: number, childrenPresent: number, mode: 'per_child' | 'per_session' } | null} */ (
@@ -50,26 +110,49 @@ export function createSalariesService({
           )
         : null;
     const { gross, base, deductible } = salaryForMonth({ salary, timesheetRow, settings, coachPay });
-    const undeducted = personalRepository.advancesForMonth(month, [staff.id]).filter(advance => !advance.deductedAt);
-    const advancesTotal = undeducted.reduce((sum, advance) => sum + advance.amount, 0);
+    const payment = validPayment(staff.id, month);
+    if (payment) {
+      // M1: sursa de adevăr, o dată plătit, e plata efectivă — nu recalculul curent al
+      // avansurilor (care ar fi deja scăzute și ar arăta net = brut).
+      const advancesTotal = payment.advances.reduce((sum, advanceId) => {
+        const advance = personalRepository.kinds.find('advances', advanceId);
+        return sum + (advance ? advance.amount : 0);
+      }, 0);
+      return {
+        staff,
+        mode: salary.mode,
+        base,
+        gross,
+        advances: advancesTotal,
+        net: payment.amount,
+        paid: { branchId: payment.branchId, paidAt: payment.paidAt },
+        deductible,
+        estimated: false,
+      };
+    }
+    const advancesTotal = undeductedAdvances(month, staff.id).reduce((sum, advance) => sum + advance.amount, 0);
     const net = gross === null ? null : Math.max(0, Math.round((gross - advancesTotal) * 100) / 100);
-    const payment = personalRepository.kinds.find(
-      'salary_payments',
-      personalRepository.salaryPaymentId(staff.id, month, branchId),
-    );
-    const expense = payment ? recordRepository.find('expenses', payment.expenseId) : null;
-    const paid =
-      payment && expense && !expense.archived ? { branchId: payment.branchId, paidAt: payment.paidAt } : null;
-    return { staff, mode: salary.mode, base, gross, advances: advancesTotal, net, paid, deductible };
+    return {
+      staff,
+      mode: salary.mode,
+      base,
+      gross,
+      advances: advancesTotal,
+      net,
+      paid: null,
+      deductible,
+      estimated: !monthHasEnded,
+    };
   }
 
-  /** @param {string} month @returns {{ rows: ReturnType<typeof rowForStaff>[], totals: { gross: number, advances: number, net: number, paid: number } }} */
+  /** @param {string} month @returns {{ rows: ReturnType<typeof rowForStaff>[], totals: { gross: number, advances: number, net: number, paid: number }, estimated: boolean }} */
   function listMonth(month) {
     const settings = personalRepository.readSettings();
+    const todayStr = today();
     const rows = personalRepository
       .staffForBranch(branchId)
       .filter(staff => !staff.archivedAt)
-      .map(staff => rowForStaff(staff, month, settings))
+      .map(staff => rowForStaff(staff, month, settings, todayStr))
       .filter(row => row !== null);
     const totals = rows.reduce(
       (totals, row) => ({
@@ -80,25 +163,38 @@ export function createSalariesService({
       }),
       { gross: 0, advances: 0, net: 0, paid: 0 },
     );
-    return { rows, totals };
+    return { rows, totals, estimated: month >= todayStr.slice(0, 7) };
   }
 
-  /** @param {{ staffId: string, date: string, amount: number, method: string, month: string, revision: number, requestId: string }} input */
+  /**
+   * M11: un avans dat pentru o lună deja plătită nu se mai poate scădea din plata aceea (nu
+   * mai există) — se mută automat pe luna următoare, ca să fie scăzut la plata ei, niciodată
+   * pierdut și niciodată scăzut de două ori. Id determinist din `requestId` (m19): o reluare
+   * după o cădere de rețea găsește avansul deja scris, nu mai creează unul nou fantomă.
+   * @param {{ staffId: string, date: string, amount: number, method: string, month: string, revision: number, requestId: string }} input
+   */
   function giveAdvance({ staffId, date, amount, method, month, revision, requestId }) {
     const staff = personalRepository.kinds.find('staff', staffId);
     if (!staff) fail('Angajatul nu mai există.', 409);
-    const advanceId = `ADV-${randomUUID()}`;
+    if (!isStaffInBranch(staff, branchId)) fail(`${staff.name}: nu lucrează la filiala activă.`, 409);
+    const advanceMonth = validPayment(staffId, month) ? nextMonth(month) : month;
+    // m19: id determinist din `requestId` (lungime fixă, prin hash — requestId poate avea până
+    // la 100 de caractere) — o reluare după o cădere de rețea găsește avansul deja scris.
+    const advanceId = `ADV-${sha256Hex(requestId).slice(0, 32)}`;
     const expenseId = `EXP-avans-${advanceId}`;
     const envelope = runRevisionTransaction(
       { revision, requestId },
       { action: 'avans salariu', backupBefore: false },
       () => {
+        // m11 (24-personal:37): descrierea NU poartă numele — cheltuiala e vizibilă în
+        // Cheltuieli/Istoric fără PIN (decizia 7/8 din plan), dar identitatea angajatului
+        // rămâne în spatele cortinei; suma agregată de „Salarii” tot intră corect în conturi.
         const expense = normalizeRecord('expenses', {
           id: expenseId,
           date,
-          category: EXPENSE_CATEGORY,
+          category: expenseCategoryName(),
           method,
-          description: `Avans ${month} · ${staff.name}`,
+          description: `Avans ${advanceMonth}`,
           amount,
         });
         recordRepository.save('expenses', expense);
@@ -115,7 +211,7 @@ export function createSalariesService({
           date,
           amount,
           method,
-          month,
+          month: advanceMonth,
           expenseId,
           deductedAt: null,
           deductedBy: null,
@@ -123,7 +219,11 @@ export function createSalariesService({
         personalRepository.kinds.save('advances', advance);
       },
     );
-    return { ...envelope, advance: personalRepository.kinds.find('advances', advanceId) };
+    return {
+      ...envelope,
+      advance: personalRepository.kinds.find('advances', advanceId),
+      movedToNextMonth: advanceMonth !== month,
+    };
   }
 
   /** @param {{ id: string, revision: number, requestId: string }} input */
@@ -150,89 +250,113 @@ export function createSalariesService({
 
   /**
    * O plată = o cheltuială determinist `EXP-salariu-<staffId>-<month>` plus rândul
-   * `salary_payments` — a doua plată e no-op (`skipped`), la fel un `bazin` selectat (400).
+   * `salary_payments` — a doua plată e no-op (`skipped`). Tot lotul e calculat și validat
+   * ÎNAINTE de a deschide vreo tranzacție (C1); scrierile din `comun` ale lotului se fac
+   * o singură dată, ca ultim pas, într-o singură tranzacție atomică.
    * @param {{ staffIds: string[], month: string, method: string, date: string, revision: number, requestId: string }} input
    */
   function pay({ staffIds, month, method, date, revision, requestId }) {
     if (!Array.isArray(staffIds) || staffIds.length === 0) fail('Nu a fost selectat niciun angajat.');
+    if (!monthOK(month)) fail('Lună invalidă.');
+    const todayStr = today();
+    // M4: o lună care nu s-a încheiat nu se poate plăti — absențele ei nu sunt încă definitive.
+    if (month >= todayStr.slice(0, 7)) fail('Luna nu s-a încheiat.');
     const settings = personalRepository.readSettings();
     const staffList = staffIds.map(id => {
       const staff = personalRepository.kinds.find('staff', id);
       if (!staff) fail('Angajat inexistent.', 409);
+      // M5: un angajat al celeilalte filiale nu se poate plăti din filiala activă.
+      if (!isStaffInBranch(staff, branchId)) fail(`${staff.name}: nu lucrează la filiala activă.`, 409);
       return staff;
     });
-    const salaries = personalRepository.kinds.list('salaries');
+
+    const plans = [];
+    const alreadyPaid = [];
     for (const staff of staffList) {
-      const salary = salaryEntryFor(salaries, staff.id, month);
-      if (salary?.mode === 'bazin') fail(`${staff.name}: salariul se plătește din Bazin.`);
+      if (validPayment(staff.id, month)) {
+        alreadyPaid.push(staff.id);
+        continue;
+      }
+      const salary = salaryEntryFor(personalRepository.salariesForStaff(staff.id), staff.id, month);
+      if (!salary) fail(`${staff.name}: nu are salariu setat pentru ${month}.`);
+      if (salary.mode === 'bazin') fail(`${staff.name}: salariul se plătește din Bazin.`);
+      const row = rowForStaff(staff, month, settings, todayStr);
+      if (!row || row.gross === null || row.net === null)
+        fail(`${staff.name}: salariul nu poate fi calculat pentru ${month}.`);
+      // M2: avansurile pot acoperi tot salariul — nimic de plătit, dar mesajul trebuie să spună de ce.
+      if (row.net <= 0) fail(`${staff.name}: avansurile acoperă salariul — nimic de plătit.`);
+      const paymentId = personalRepository.salaryPaymentId(staff.id, month, branchId);
+      const expenseId = `EXP-salariu-${staff.id}-${month}`;
+      // m11 (24-personal:37): fără numele angajatului — vezi comentariul din giveAdvance.
+      const expense = normalizeRecord('expenses', {
+        id: expenseId,
+        date,
+        category: expenseCategoryName(),
+        method,
+        description: `Salariu ${month}`,
+        amount: row.net,
+      });
+      const undeducted = undeductedAdvances(month, staff.id);
+      const payment = normalizePersonalRecord('salary_payments', {
+        id: paymentId,
+        staffId: staff.id,
+        month,
+        branchId,
+        mode: row.mode,
+        amount: row.net,
+        advances: undeducted.map(advance => advance.id),
+        expenseId,
+        paidAt: new Date().toISOString(),
+      });
+      plans.push({ staff, expense, payment, undeducted });
     }
 
-    const paid = [];
-    const skipped = [];
     const envelope = runRevisionTransaction(
       { revision, requestId },
       { action: 'plată salarii', backupBefore: false },
       () => {
-        for (const staff of staffList) {
-          const paymentId = personalRepository.salaryPaymentId(staff.id, month, branchId);
-          if (personalRepository.kinds.find('salary_payments', paymentId)) {
-            skipped.push(staff.id);
-            continue;
-          }
-          const row = rowForStaff(staff, month, settings);
-          if (!row || row.net === null) {
-            skipped.push(staff.id);
-            continue;
-          }
-          const expenseId = `EXP-salariu-${staff.id}-${month}`;
-          const expense = normalizeRecord('expenses', {
-            id: expenseId,
-            date,
-            category: EXPENSE_CATEGORY,
-            method,
-            description: `Salariu ${month} · ${staff.name}`,
-            amount: row.net,
-          });
-          recordRepository.save('expenses', expense);
+        for (const plan of plans) {
+          recordRepository.save('expenses', plan.expense);
           auditTrail.recordChange({
             action: 'adăugare',
             recordType: 'expenses',
-            recordId: expense.id,
+            recordId: plan.expense.id,
             before: null,
-            after: expense,
+            after: plan.expense,
           });
-          const undeductedIds = personalRepository
-            .advancesForMonth(month, [staff.id])
-            .filter(advance => !advance.deductedAt)
-            .map(advance => advance.id);
-          for (const advanceId of undeductedIds) {
-            const advance = personalRepository.kinds.find('advances', advanceId);
-            personalRepository.kinds.save('advances', { ...advance, deductedAt: date, deductedBy: paymentId });
-          }
-          const payment = normalizePersonalRecord('salary_payments', {
-            id: paymentId,
-            staffId: staff.id,
-            month,
-            branchId,
-            mode: row.mode,
-            amount: row.net,
-            advances: undeductedIds,
-            expenseId,
-            paidAt: new Date().toISOString(),
-          });
-          personalRepository.kinds.save('salary_payments', payment);
+          // m11 (24-personal:37): suma nu intră în Istoric prin acțiunea dedicată Personal —
+          // doar prin cheltuiala generică (inevitabil, orice scriere de cheltuială e auditată
+          // integral); aici scriem un rezumat fără `amount`, ca dublura să nu adauge o a doua
+          // expunere a sumei în afara PIN-ului.
           auditTrail.recordChange({
             action: 'personal: plată salariu',
             recordType: null,
-            recordId: paymentId,
+            recordId: plan.payment.id,
             before: null,
-            after: payment,
+            after: { staffId: plan.payment.staffId, month: plan.payment.month, branchId: plan.payment.branchId },
           });
-          paid.push(staff.id);
         }
+        // Scrierile din `comun` ale întregului lot, atomic, ca ULTIM pas (C1) — fie toate
+        // avansurile și rândurile `salary_payments` se scriu, fie niciuna.
+        if (plans.length > 0)
+          personalRepository.kinds.transaction(() => {
+            for (const plan of plans) {
+              for (const advance of plan.undeducted)
+                personalRepository.kinds.save('advances', {
+                  ...advance,
+                  deductedAt: date,
+                  deductedBy: plan.payment.id,
+                });
+              personalRepository.kinds.save('salary_payments', plan.payment);
+            }
+          });
       },
     );
-    return { ...envelope, paid, skipped };
+    // m19: „paid” e lotul calculat înainte de tranzacție (determinist), nu variabile umplute
+    // în closure — pe o reluare idempotentă (`replayed: true`) lotul e deja gol (angajații
+    // arătau „plătit” încă la verificarea de mai sus), deci rezultatul rămâne corect fără să
+    // mai citească nimic din urmă.
+    return { ...envelope, paid: plans.map(plan => plan.staff.id), skipped: alreadyPaid };
   }
 
   /** @param {string} staffId */

@@ -48,3 +48,16 @@ test('workingDatesFor exclude zilele dinaintea angajării și de după arhivare'
   assert.ok(dates.includes('2026-09-10'));
   assert.ok(!dates.includes('2026-09-21'));
 });
+
+test('workingDaysInMonth ia toate zilele lucrătoare ale lunii, nu doar cele din intervalul activ (M3)', () => {
+  const midMonthStaff = { id: 'STF-1', since: '2026-09-15', archivedAt: null };
+  const summary = summarizeTimesheetMonth({
+    staff: midMonthStaff,
+    month: '2026-09',
+    rows: new Map(),
+    todayStr: '2026-09-30',
+    upTo: 'month',
+  });
+  assert.equal(summary.workingDaysInMonth, 22);
+  assert.ok(summary.workingDays < summary.workingDaysInMonth);
+});

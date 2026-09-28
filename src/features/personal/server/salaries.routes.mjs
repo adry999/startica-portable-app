@@ -1,9 +1,11 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { monthOK } from '#shared/domain/calendar-month.mjs';
+import { isStaffInBranch } from '../domain/personal-schema.mjs';
 import { createPinService } from './pin.service.mjs';
 import { createSalariesService } from './salaries.service.mjs';
 
 const YEAR_OK = /^\d{4}$/;
+const AUDIT_SALARY = 'personal: salariu';
 
 /**
  * Salariile, avansurile și PIN-ul (decizia 8 din plan): fiecare rută sub `/api/personal/salaries*`
@@ -40,6 +42,7 @@ export function createSalariesRoutes({
     auditTrail,
     readCoachPayForMonth,
   });
+  const branchStaffIds = () => personalRepository.staffForBranch(branchId).map(staff => staff.id);
 
   return [
     { method: 'GET', path: '/api/personal/pin', handle: () => pinService.status() },
@@ -70,10 +73,19 @@ export function createSalariesRoutes({
     {
       method: 'POST',
       path: '/api/personal/salaries',
-      /** @param {{ body: unknown }} request */
+      /** @param {{ body: { staffId?: string, id?: string } }} request */
       handle: ({ body }) => {
         pinService.assertUnlocked();
-        return { salary: personalRepository.saveSalary(body) };
+        // M5: cea mai sensibilă înregistrare a modulului — audit în Istoric, ca celelalte
+        // scrieri Personal, și verificare de filială (nu se setează salariul unui angajat
+        // care nu lucrează la filiala activă).
+        const staff = body?.staffId ? personalRepository.kinds.find('staff', body.staffId) : null;
+        if (!staff) fail('Angajatul nu mai există.', 409);
+        if (!isStaffInBranch(staff, branchId)) fail('Angajatul nu este la filiala activă.', 409);
+        const before = body?.id ? (personalRepository.kinds.find('salaries', body.id) ?? null) : null;
+        const salary = personalRepository.saveSalary(body);
+        auditTrail.recordChange({ action: AUDIT_SALARY, recordType: null, recordId: salary.id, before, after: salary });
+        return { salary };
       },
     },
     {
@@ -93,7 +105,8 @@ export function createSalariesRoutes({
         pinService.assertUnlocked();
         const year = url.searchParams.get('year');
         if (!year || !YEAR_OK.test(year)) fail('An invalid.');
-        return { advances: personalRepository.advancesForYear(year) };
+        // m9: doar avansurile angajaților filialei active, ca la echipă/pontaj/concedii.
+        return { advances: personalRepository.advancesForYear(year, branchStaffIds()) };
       },
     },
     {
@@ -119,6 +132,9 @@ export function createSalariesRoutes({
         pinService.assertUnlocked();
         const staffId = url.searchParams.get('staffId');
         if (!staffId) fail('Angajat invalid.');
+        // m9: nu se poate citi istoricul unui angajat al celeilalte filiale prin staffId direct.
+        const staff = personalRepository.kinds.find('staff', staffId);
+        if (!staff || !isStaffInBranch(staff, branchId)) fail('Angajat invalid.');
         return salariesService.history(staffId);
       },
     },
