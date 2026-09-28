@@ -100,8 +100,8 @@ describe('useBirthdays', () => {
     const { result } = renderHook(() => useBirthdays('2026-09'));
     // Sortate după nume: Mars, Soare — index 0 și 1.
     expect(result.current.groups).toEqual([
-      { id: 'g1', name: 'Mars', tone: 'orange' },
-      { id: 'g2', name: 'Soare', tone: 'mint' },
+      { id: 'g1', name: 'Mars', tone: 'yellow' },
+      { id: 'g2', name: 'Soare', tone: 'pink' },
     ]);
   });
 });

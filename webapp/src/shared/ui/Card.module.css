@@ -38,6 +38,22 @@
   background: var(--pink-soft);
 }
 
+.teal {
+  background: var(--teal-soft);
+}
+
+.blue {
+  background: var(--blue-soft);
+}
+
+.purple {
+  background: var(--purple-soft);
+}
+
+.coral {
+  background: var(--coral-soft);
+}
+
 /* Culoarea marginii diferă puțin în spec pe ecran (Dashboard #e6d9c4, Grupe #e0d5c2) —
    se folosește aici cea de pe Dashboard; diferența e minoră, nu justifică două tonuri. */
 .dashed {

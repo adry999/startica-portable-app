@@ -9,6 +9,10 @@ const CARD_TONE: Record<PillTone, CardTone> = {
   mint: 'mint',
   yellow: 'yellow',
   pink: 'pink',
+  teal: 'teal',
+  blue: 'blue',
+  purple: 'purple',
+  coral: 'coral',
   neutral: 'white',
 };
 

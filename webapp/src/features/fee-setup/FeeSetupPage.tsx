@@ -44,6 +44,10 @@ const AVATAR_TONE_CLASS: Record<PillTone, string> = {
   mint: 'toneMint',
   yellow: 'toneYellow',
   pink: 'tonePink',
+  teal: 'toneTeal',
+  blue: 'toneBlue',
+  purple: 'tonePurple',
+  coral: 'toneCoral',
   neutral: 'toneOrange',
 };
 

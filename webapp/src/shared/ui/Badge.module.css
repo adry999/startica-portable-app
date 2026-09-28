@@ -31,6 +31,26 @@
   color: var(--pink-ink);
 }
 
+.teal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.blue {
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.purple {
+  background: var(--purple-soft);
+  color: var(--purple-ink);
+}
+
+.coral {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+}
+
 .neutral {
   background: var(--neutral-soft);
   color: var(--subtle);

@@ -66,6 +66,22 @@
   color: var(--pink-ink);
 }
 
+.badge_teal {
+  color: var(--teal-ink);
+}
+
+.badge_blue {
+  color: var(--blue-ink);
+}
+
+.badge_purple {
+  color: var(--purple-ink);
+}
+
+.badge_coral {
+  color: var(--coral-ink);
+}
+
 .badge_neutral {
   color: var(--subtle);
 }

@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import styles from './FilterPills.module.css';
 
-export type PillTone = 'orange' | 'mint' | 'yellow' | 'pink' | 'neutral';
+export type PillTone = 'orange' | 'mint' | 'yellow' | 'pink' | 'teal' | 'blue' | 'purple' | 'coral' | 'neutral';
 
 export interface FilterPillGroup<T extends string> {
   label: string;
