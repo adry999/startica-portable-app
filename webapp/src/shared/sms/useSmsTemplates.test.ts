@@ -6,6 +6,15 @@ function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
+/** O promisiune controlată din exterior — pentru a decide manual ordinea în care „sosesc” două cereri. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 const defaultTemplate = {
   id: 't1',
   name: 'Reamintire restanță',
@@ -113,5 +122,40 @@ describe('useSmsTemplates', () => {
 
     await act(() => result.current.remove('t2'));
     expect(result.current.templates).toHaveLength(1);
+  });
+
+  // M11: `cancelled` din efectul de montare protejează doar `catch`-ul — un răspuns de succes sosit
+  // târziu (montare) putea suprascrie o reîmprospătare mai nouă (declanșată de save/remove).
+  it('un răspuns de la montare sosit după save() nu suprascrie lista reîmprospătată', async () => {
+    const mountDeferred = deferred<{ ok: boolean; status: number; json: () => Promise<unknown> }>();
+    let templatesCallCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/sms-templates') {
+          templatesCallCount += 1;
+          if (templatesCallCount === 1) return mountDeferred.promise; // cererea de la montare, lentă
+          return jsonResponse({ templates: [defaultTemplate, customTemplate] }); // reîmprospătarea din save(), rapidă
+        }
+        if (path === '/api/sms-template-save') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          return jsonResponse({ ok: true, template: { ...customTemplate, id: body.id ?? 't2' } });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsTemplates());
+    expect(result.current.status).toBe('loading');
+
+    await act(() => result.current.save({ name: 'Nou', body: 'Text', stripDiacritics: true, isDefault: false }));
+    expect(result.current.templates).toHaveLength(2);
+
+    await act(async () => {
+      mountDeferred.resolve(jsonResponse({ templates: [] })); // lista veche, goală
+      await Promise.resolve();
+    });
+
+    expect(result.current.templates).toHaveLength(2); // lista reîmprospătată de save() nu trebuie ștearsă
   });
 });

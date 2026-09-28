@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import type { SmsTemplateInputView, SmsTemplateView } from './sms-types';
 
@@ -26,27 +26,38 @@ export function useSmsTemplates(): SmsTemplatesData {
   const [usageCountById, setUsageCountById] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
+  // M11: save/remove cheamă refresh() peste cea de la montare — un token de cerere ignoră un
+  // răspuns vechi sosit după unul mai nou, nu doar la eroare (fostul `cancelled`).
+  const requestIdRef = useRef(0);
 
   async function refresh() {
+    const requestId = ++requestIdRef.current;
     const response = (await requestJson('/api/sms-templates')) as {
       templates: SmsTemplateView[];
       usageCountById?: Record<string, number>;
     };
-    setTemplates(response.templates);
-    setUsageCountById(response.usageCountById ?? {});
-    setStatus('ready');
+    if (requestId === requestIdRef.current) {
+      setTemplates(response.templates);
+      setUsageCountById(response.usageCountById ?? {});
+      setStatus('ready');
+    }
   }
 
   useEffect(() => {
-    let cancelled = false;
-    refresh().catch((error: Error) => {
-      if (cancelled) return;
-      setStatus('failed');
-      setFailureMessage(error.message);
-    });
-    return () => {
-      cancelled = true;
-    };
+    const requestId = ++requestIdRef.current;
+    requestJson('/api/sms-templates')
+      .then(response => {
+        if (requestId !== requestIdRef.current) return;
+        const page = response as { templates: SmsTemplateView[]; usageCountById?: Record<string, number> };
+        setTemplates(page.templates);
+        setUsageCountById(page.usageCountById ?? {});
+        setStatus('ready');
+      })
+      .catch((error: Error) => {
+        if (requestId !== requestIdRef.current) return;
+        setStatus('failed');
+        setFailureMessage(error.message);
+      });
   }, []);
 
   async function save(input: SmsTemplateInputView) {

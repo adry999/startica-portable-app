@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 
 export type TelegramScreenStatus = 'loading' | 'ready' | 'failed';
@@ -37,24 +37,33 @@ export function useTelegramStatus(): TelegramStatusData {
   const [connecting, setConnecting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  // M11: connect/sendTest/disconnect cheamă refreshStatus() peste cea de la montare — un token de
+  // cerere ignoră un răspuns vechi sosit după unul mai nou, nu doar la eroare (fostul `cancelled`).
+  const requestIdRef = useRef(0);
 
   async function refreshStatus() {
+    const requestId = ++requestIdRef.current;
     const response = (await requestJson('/api/telegram-status')) as TelegramStatusView;
-    setData(response);
-    setStatus('ready');
+    if (requestId === requestIdRef.current) {
+      setData(response);
+      setStatus('ready');
+    }
     return response;
   }
 
   useEffect(() => {
-    let cancelled = false;
-    refreshStatus().catch((error: Error) => {
-      if (cancelled) return;
-      setStatus('failed');
-      setFailureMessage(error.message);
-    });
-    return () => {
-      cancelled = true;
-    };
+    const requestId = ++requestIdRef.current;
+    requestJson('/api/telegram-status')
+      .then(response => {
+        if (requestId !== requestIdRef.current) return;
+        setData(response as TelegramStatusView);
+        setStatus('ready');
+      })
+      .catch((error: Error) => {
+        if (requestId !== requestIdRef.current) return;
+        setStatus('failed');
+        setFailureMessage(error.message);
+      });
   }, []);
 
   async function connect() {

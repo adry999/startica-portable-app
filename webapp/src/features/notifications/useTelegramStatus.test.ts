@@ -6,6 +6,15 @@ function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
+/** O promisiune controlată din exterior — pentru a decide manual ordinea în care „sosesc” două cereri. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 const unconfigured = {
   configured: false,
   connected: false,
@@ -99,5 +108,38 @@ describe('useTelegramStatus', () => {
 
     await act(() => result.current.disconnect());
     expect(result.current.data?.configured).toBe(false);
+  });
+
+  // M11: `cancelled` din efectul de montare protejează doar `catch`-ul — un răspuns de succes sosit
+  // târziu (montare) putea suprascrie o reîmprospătare mai nouă (declanșată de connect/disconnect).
+  it('un răspuns de la montare sosit după connect() nu suprascrie statusul reîmprospătat', async () => {
+    const mountDeferred = deferred<{ ok: boolean; status: number; json: () => Promise<unknown> }>();
+    let statusCallCount = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/telegram-status') {
+          statusCallCount += 1;
+          if (statusCallCount === 1) return mountDeferred.promise; // cererea de la montare, lentă
+          return jsonResponse(configured); // reîmprospătarea din connect(), rapidă
+        }
+        if (path === '/api/telegram-connect') return jsonResponse({ ok: true });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useTelegramStatus());
+    expect(result.current.status).toBe('loading');
+
+    act(() => result.current.setTokenInput('123:ABC'));
+    await act(() => result.current.connect());
+    expect(result.current.data?.configured).toBe(true);
+
+    await act(async () => {
+      mountDeferred.resolve(jsonResponse(unconfigured));
+      await Promise.resolve();
+    });
+
+    expect(result.current.data?.configured).toBe(true); // răspunsul vechi de la montare nu trebuie aplicat
   });
 });
