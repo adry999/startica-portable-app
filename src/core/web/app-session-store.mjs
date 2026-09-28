@@ -78,6 +78,9 @@ export function createAppSessionStore({
     // se completează abia după pasul de pornire de mai jos (21a).
     /** @type {{ configured: true, deviceName: string, serverUrl: string, connection?: 'online' | 'offline' | 'revoked' } | { configured: false, suggestedName: string } | null} */
     sync: null,
+    // Bazin (23, decizia 10): Sidebar ascunde rândul cât timp filiala activă nu l-a configurat.
+    /** @type {{ enabled: boolean }} */
+    pool: { enabled: false },
   };
 
   /** @param {any} result */
@@ -148,6 +151,7 @@ export function createAppSessionStore({
       state.branch = session.branch ?? null;
       state.branches = session.branches ?? [];
       state.sync = session.sync ?? null;
+      state.pool = session.pool ?? { enabled: false };
       state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
       state.startupTimings.databaseAt = Date.now();

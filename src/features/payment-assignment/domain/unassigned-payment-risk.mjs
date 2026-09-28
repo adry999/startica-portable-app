@@ -17,7 +17,7 @@ export function measureAssignmentRisk(records, month, asOf) {
   // Rulează la fiecare randare a aplicației — indexul evită O(copii×plăți).
   const index = paymentIndex(records.payments, asOf);
   const notified = records.children.filter(
-    c => !c.archived && obligation(c, month, records.payments, asOf, index).notify,
+    c => !c.archived && obligation(c, month, records.payments, records.charges, asOf, index).notify,
   ).length;
   return {
     unassigned: unassigned.length,

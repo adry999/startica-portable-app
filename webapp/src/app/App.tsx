@@ -11,6 +11,7 @@ import { DashboardPage, useDashboard } from '@features/dashboard';
 import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
 import { AttendancePage, WeeklySheetPrintPage } from '@features/attendance';
+import { PoolPage } from '@features/pool';
 import { VisitsPage } from '@features/visits';
 import { PersonalPage, StaffProfilePage } from '@features/personal';
 import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
@@ -120,6 +121,7 @@ export function App() {
         />
         <Route path="/prezenta" element={<AttendancePage month={month} />} />
         <Route path="/prezenta/foi" element={<WeeklySheetPrintPage />} />
+        <Route path="/bazin" element={<PoolPage month={month} />} />
         <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/personal" element={<PersonalPage month={month} />} />
         <Route path="/personal/:id" element={<StaffProfilePage />} />

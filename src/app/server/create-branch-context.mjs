@@ -21,7 +21,19 @@ import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
 import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
-import { createPersonalRoutes } from '#features/personal/index.server.mjs';
+import {
+  createPersonalRoutes,
+  createPersonalRepository,
+  createCoachPaymentWriter,
+  POOL_COACH_ROLE_ID,
+} from '#features/personal/index.server.mjs';
+import {
+  createPoolRepository,
+  createPoolRoutes,
+  coachPayForMonth,
+  parsePoolSettings,
+  POOL_SETTINGS_KEY,
+} from '#features/pool/index.server.mjs';
 import {
   createSyncOutboxRepository,
   createSyncStateRepository,
@@ -220,6 +232,36 @@ export function createBranchContext({
     recordRepository.readEnvelope
   );
 
+  // Bazin (Faza 5-6, 2026-09-27-personal-bazin.md): a doua instanță a depozitului Personal peste
+  // aceleași `common.kinds` (idempotentă — semințele se scriu o singură dată, dacă lipsesc), ca
+  // Pool să nu importe `#features/personal` (regula „niciun feature nu importă alt feature”) și
+  // totuși să plătească antrenorii prin aceeași logică (salary_payments + avansuri) ca Personal.
+  const personalRepositoryForPool = common ? createPersonalRepository(common) : null;
+  const listCoaches = () =>
+    personalRepositoryForPool
+      ? personalRepositoryForPool
+          .staffForBranch(branch.id)
+          .filter(staff => !staff.archivedAt && staff.roleId === POOL_COACH_ROLE_ID)
+      : [];
+  const coachPaymentWriter = personalRepositoryForPool
+    ? createCoachPaymentWriter({
+        personalRepository: personalRepositoryForPool,
+        branchId: branch.id,
+        recordRepository,
+        auditTrail: auditLogRepository,
+      })
+    : null;
+  const poolRepository = createPoolRepository(db);
+  // Portul citit de Personal (decizia 6): cardul de salariu și „Închide luna” calculează cu
+  // aceeași funcție, pe aceleași date — niciodată două formule pentru aceeași sumă.
+  const readCoachPayForMonth = (staffId, month) => {
+    const settings = parsePoolSettings(readSetting(POOL_SETTINGS_KEY));
+    if (!settings) return null;
+    const bookings = poolRepository.listBookings({ includeArchived: true });
+    const sessions = poolRepository.sessionsForMonth(month);
+    return coachPayForMonth({ coachId: staffId, bookings, sessions, month, settings, todayStr: today() });
+  };
+
   const routes = [
     ...createSessionRoutes({
       sessionToken,
@@ -232,6 +274,7 @@ export function createBranchContext({
       branch,
       listBranches,
       syncDevice,
+      poolEnabled: () => !!parsePoolSettings(readSetting(POOL_SETTINGS_KEY))?.enabled,
     }),
     ...createDiagnosticRoutes({
       version,
@@ -295,6 +338,22 @@ export function createBranchContext({
           auditTrail: auditLogRepository,
           recordRepository,
           runRevisionTransaction,
+          readCoachPayForMonth,
+        })
+      : []),
+    // Bazin (23): rute separate de Personal, ca niciun feature să nu importe altul — vezi
+    // `personalRepositoryForPool`/`coachPaymentWriter` de mai sus.
+    ...(coachPaymentWriter
+      ? createPoolRoutes({
+          poolRepository,
+          recordRepository,
+          runRevisionTransaction,
+          auditTrail: auditLogRepository,
+          readSetting,
+          writeSetting: settings.setSetting,
+          listCoaches,
+          payCoach: coachPaymentWriter.payCoach,
+          onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
         })
       : []),
     ...createNotificationSettingsRoutes({

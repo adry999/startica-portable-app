@@ -1,0 +1,103 @@
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-20);
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-16);
+}
+
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--subtle);
+  text-align: center;
+}
+
+.table {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: var(--space-20);
+}
+
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-size: 12px;
+  color: var(--muted);
+  padding: var(--space-12);
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.table td {
+  padding: var(--space-12);
+  font-size: 13px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.empty {
+  text-align: center;
+  color: var(--subtle);
+}
+
+.coaches {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-20);
+}
+
+.coachCard {
+  min-width: 220px;
+  padding: var(--space-16);
+}
+
+.coachCard h4 {
+  margin: 0 0 var(--space-4);
+}
+
+.coachCard p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.coachAmount {
+  font-weight: 800;
+  color: var(--slate) !important;
+  font-size: 18px;
+}
+
+.closeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
+.notice {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+
+.error {
+  color: var(--pink-ink);
+  font-size: 13px;
+  margin: 0;
+}

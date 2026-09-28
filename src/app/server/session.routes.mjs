@@ -15,6 +15,7 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
  *   branch: import('#core/server/branches/branch-registry.mjs').BranchEntry,
  *   listBranches: () => import('#core/server/branches/branch-registry.mjs').BranchEntry[],
  *   syncDevice?: { read: () => import('#features/sync/index.server.mjs').SyncDeviceFile | null },
+ *   poolEnabled?: () => boolean,
  * }} dependencies
  */
 export function createSessionRoutes({
@@ -33,6 +34,8 @@ export function createSessionRoutes({
   listBranches,
   // Neconfigurat implicit — un context construit fără el (teste izolate) vede sync: null.
   syncDevice = { read: () => null },
+  // Bazin (23, decizia 10): Sidebar ascunde „Bazin” cât timp filiala nu l-a configurat.
+  poolEnabled = () => false,
 }) {
   let closing = false;
   // Ecranul de pornire (21a) arată pasul „Sincronizez cu serverul comun” doar când
@@ -49,7 +52,14 @@ export function createSessionRoutes({
     {
       method: 'GET',
       path: '/api/session',
-      handle: () => ({ token: sessionToken, version, branch, branches: listBranches(), sync: syncSummary() }),
+      handle: () => ({
+        token: sessionToken,
+        version,
+        branch,
+        branches: listBranches(),
+        sync: syncSummary(),
+        pool: { enabled: poolEnabled() },
+      }),
     },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },
     {

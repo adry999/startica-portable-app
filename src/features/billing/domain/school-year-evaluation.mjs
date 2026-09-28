@@ -45,7 +45,7 @@ export function evaluateChildrenForSchoolYear(records, startYear, asOf = today()
     child,
     months: months.map(month => ({
       month,
-      obligation: obligation(child, month, records.payments, asOf, index, rates),
+      obligation: obligation(child, month, records.payments, records.charges, asOf, index, rates),
     })),
   }));
 }

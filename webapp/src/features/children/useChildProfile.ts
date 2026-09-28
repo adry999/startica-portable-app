@@ -76,7 +76,7 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     groupMemberCount,
     contractLabel: contractNumberOf(child),
     age: formatAge(child.birthDate),
-    obligation: obligation(child, month, records.payments, undefined, null, rates),
+    obligation: obligation(child, month, records.payments, records.charges, undefined, null, rates),
     feeEntry: feeEntryFor(child, month),
     payments,
   };

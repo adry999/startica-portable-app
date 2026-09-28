@@ -46,7 +46,7 @@ export function defaultPaymentFormValues(
 
   const date = payment?.date || today;
   const child = !payment && defaultChildId && records ? records.children.find(c => c.id === defaultChildId) : null;
-  const suggestedMonth = child && firstUnpaidMonth(child, records!.payments);
+  const suggestedMonth = child && firstUnpaidMonth(child, records!.payments, records!.charges);
   const defaultMonth = suggestedMonth || date.slice(0, 7);
   const allocations: AllocationRowValues[] =
     payment && payment.allocations?.length

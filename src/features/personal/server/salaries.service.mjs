@@ -375,3 +375,101 @@ export function createSalariesService({
 
   return { listMonth, giveAdvance, removeAdvance, pay, history };
 }
+
+/**
+ * Portul `payCoach` al Bazinului (decizia 6, 2026-09-27-personal-bazin.md): „Închide luna” scrie
+ * singură plata antrenorilor mod `bazin` — `pay()` de mai sus refuză explicit acest mod, pentru
+ * că suma vine din Pool (`coachPayForMonth`), nu din pontaj. Aceeași regulă de idempotență
+ * (`salary_payments` + cheltuiala ei nearhivată = plătit) și de avansuri (scăzute o singură dată).
+ * @param {{
+ *   personalRepository: PersonalRepository,
+ *   branchId: string,
+ *   recordRepository: import('#shared/contracts/persistence.mjs').RecordRepository,
+ *   auditTrail: import('#shared/contracts/audit-trail.mjs').AuditTrail,
+ * }} dependencies
+ */
+export function createCoachPaymentWriter({ personalRepository, branchId, recordRepository, auditTrail }) {
+  function expenseCategoryName() {
+    const category = recordRepository.find('categories', SALARY_CATEGORY_ID);
+    return category ? category.name : GENERAL_CATEGORY_NAME;
+  }
+  /** @param {string} staffId @param {string} month */
+  function validPayment(staffId, month) {
+    const paymentId = personalRepository.salaryPaymentId(staffId, month, branchId);
+    const payment = personalRepository.kinds.find('salary_payments', paymentId);
+    if (!payment) return null;
+    const expense = recordRepository.find('expenses', payment.expenseId);
+    return expense && !expense.archived ? payment : null;
+  }
+  /** @param {import('../personal.types.d.mts').Advance} advance */
+  function isAdvanceDeducted(advance) {
+    if (!advance.deductedAt || !advance.deductedBy) return false;
+    const payment = personalRepository.kinds.find('salary_payments', advance.deductedBy);
+    if (!payment) return false;
+    const expense = recordRepository.find('expenses', payment.expenseId);
+    return !!(expense && !expense.archived);
+  }
+  /** @param {string} month @param {string} staffId */
+  function undeductedAdvances(month, staffId) {
+    return personalRepository.advancesForMonth(month, [staffId]).filter(advance => !isAdvanceDeducted(advance));
+  }
+
+  /**
+   * Scrie plata antrenorului dacă nu e deja plătit — idempotent, apelabil de câte ori se
+   * reînchide luna. Fără cheltuială când suma netă e 0 (avansurile acoperă tot): nimic de plătit
+   * încă nu înseamnă „plătit", luna rămâne deschisă pentru acel antrenor la reînchidere.
+   * @param {{ staffId: string, month: string, gross: number, date: string, method: string }} input
+   * @returns {{ paid: boolean, expenseId?: string }}
+   */
+  function payCoach({ staffId, month, gross, date, method }) {
+    if (validPayment(staffId, month)) return { paid: false };
+    if (!(gross > 0)) return { paid: false };
+    const undeducted = undeductedAdvances(month, staffId);
+    const advancesTotal = undeducted.reduce((sum, advance) => sum + advance.amount, 0);
+    const net = Math.max(0, Math.round((gross - advancesTotal) * 100) / 100);
+    if (net <= 0) return { paid: false };
+    const paymentId = personalRepository.salaryPaymentId(staffId, month, branchId);
+    const expenseId = `EXP-bazin-${staffId}-${month}`;
+    const expense = normalizeRecord('expenses', {
+      id: expenseId,
+      date,
+      category: expenseCategoryName(),
+      method,
+      description: `Salariu bazin ${month}`,
+      amount: net,
+    });
+    recordRepository.save('expenses', expense);
+    auditTrail.recordChange({
+      action: 'adăugare',
+      recordType: 'expenses',
+      recordId: expense.id,
+      before: null,
+      after: expense,
+    });
+    auditTrail.recordChange({
+      action: 'personal: plată salariu',
+      recordType: null,
+      recordId: paymentId,
+      before: null,
+      after: { staffId, month, branchId },
+    });
+    personalRepository.kinds.transaction(() => {
+      for (const advance of undeducted)
+        personalRepository.kinds.save('advances', { ...advance, deductedAt: date, deductedBy: paymentId });
+      personalRepository.kinds.save('salary_payments', {
+        id: paymentId,
+        staffId,
+        month,
+        branchId,
+        mode: 'bazin',
+        amount: net,
+        advances: undeducted.map(advance => advance.id),
+        expenseId,
+        paidAt: new Date().toISOString(),
+      });
+    });
+    return { paid: true, expenseId };
+  }
+
+  return { payCoach };
+}

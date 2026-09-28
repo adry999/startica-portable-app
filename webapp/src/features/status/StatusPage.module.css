@@ -112,6 +112,13 @@
   font-weight: 800;
 }
 
+.extraCharge {
+  display: block;
+  font-size: 11px;
+  color: var(--subtle);
+  font-weight: 400;
+}
+
 .banner {
   margin: 14px 16px;
   padding: 12px 18px;

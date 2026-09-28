@@ -33,7 +33,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   assert.equal(response.ok, true, response.error);
 
   // Înainte: fără taxă și fără statut, nimic nu se poate calcula.
-  const before = obligation(response.state.children[0], '2026-09', [], '2026-09-30');
+  const before = obligation(response.state.children[0], '2026-09', [], [], '2026-09-30');
   assert.equal(before.label, 'De verificat');
   assert.equal(before.notify, false);
 
@@ -50,7 +50,7 @@ test('Completarea în masă face fișele evaluabile și e o singură operațiune
   response = await app.post('/api/children-setup', { updates, revision: response.revision, requestId: randomUUID() });
   assert.equal(response.ok, true, response.error);
 
-  const after = obligation(response.state.children[0], '2026-09', [], '2026-09-30');
+  const after = obligation(response.state.children[0], '2026-09', [], [], '2026-09-30');
   assert.equal(after.label, 'Restanță');
   assert.equal(after.notify, true);
   assert.equal(after.expected, 2000);

@@ -107,7 +107,7 @@ export function usePaymentReceipt(paymentId: string): PaymentReceiptData {
 
   const allocationRows: AllocationRow[] = child
     ? allocations(payment).map((allocation: PaymentAllocation) => {
-        const monthObligation = obligation(child, allocation.month, state.payments, asOf, null, rates);
+        const monthObligation = obligation(child, allocation.month, state.payments, state.charges, asOf, null, rates);
         return {
           month: allocation.month,
           label: `Taxă ${formatMonthName(allocation.month)}`,
@@ -125,7 +125,8 @@ export function usePaymentReceipt(paymentId: string): PaymentReceiptData {
       }));
 
   const lastMonth = allocationRows.at(-1)?.month;
-  const lastObligation = child && lastMonth ? obligation(child, lastMonth, state.payments, asOf, null, rates) : null;
+  const lastObligation =
+    child && lastMonth ? obligation(child, lastMonth, state.payments, state.charges, asOf, null, rates) : null;
   const restBox: RestBox | null =
     lastObligation && lastObligation.rest !== null && lastObligation.rest > 0
       ? { amount: lastObligation.rest, currency: lastObligation.currency, dueLabel: lastObligation.due }
@@ -145,7 +146,7 @@ export function usePaymentReceipt(paymentId: string): PaymentReceiptData {
   const yearStart = schoolYearStartOf(payment.date.slice(0, 7));
   const yearMonths: YearMonthCell[] = child
     ? schoolYearMonths(yearStart).map((month: string) => {
-        const monthObligation = obligation(child, month, state.payments, asOf, null, rates);
+        const monthObligation = obligation(child, month, state.payments, state.charges, asOf, null, rates);
         const kind: YearMonthCell['kind'] =
           monthObligation.expected && monthObligation.rest === 0
             ? 'paid'

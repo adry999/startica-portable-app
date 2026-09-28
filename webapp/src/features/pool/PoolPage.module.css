@@ -1,0 +1,28 @@
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.weekNav button {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.notConfigured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-40);
+  color: var(--muted);
+  text-align: center;
+}
