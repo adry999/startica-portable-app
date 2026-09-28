@@ -16,8 +16,12 @@ export const REVIEW_FILTERS = [
 ];
 const labels = Object.fromEntries(REVIEW_FILTERS);
 const normalize = value => String(value || '').toLocaleLowerCase('ro-RO');
+// `notes` e text liber pe Payment/Expense, dar o listă de {text,date} pe Child (CF-4) —
+// concatenarea directă ar da „[object Object]” pentru fișele de copii.
+const notesTextOf = record =>
+  Array.isArray(record?.notes) ? record.notes.map(note => note.text).join(' ') : record?.notes;
 function category(issue, record) {
-  const text = normalize(issue.reason + ' ' + record?.verification + ' ' + record?.notes + ' ' + record?.method);
+  const text = normalize(issue.reason + ' ' + record?.verification + ' ' + notesTextOf(record) + ' ' + record?.method);
   if (issue.type === 'children') return 'children';
   if (!record?.childId || text.includes('copil neasociat')) return 'unassigned';
   if (text.includes('posibil duplicat')) return 'duplicate';
@@ -105,7 +109,7 @@ export function filterReviewItems(center, filter = 'all', search = '') {
             record.sourceName,
             record.childName,
             record.verification,
-            record.notes,
+            notesTextOf(record),
             ...item.reasons,
           ].join(' '),
         ).includes(query))

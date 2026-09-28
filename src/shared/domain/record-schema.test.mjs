@@ -133,7 +133,7 @@ test('Normalizarea păstrează fiecare câmp real și elimină restul', () => {
       feeHistory: [{ from: '2024-12', amount: 2000 }],
       statusHistory: [{ from: '2024-12', status: 'Activ' }],
       dueDay: 14,
-      notes: 'observatii',
+      notes: [{ id: 'NOTE-1', text: 'observatii', date: '2024-12-02' }],
       verification: 'OK',
       archived: false,
       archivedAt: '',
@@ -626,4 +626,55 @@ test('grupa fără echipă are team gol, iar un rol sau o zi necunoscută sunt r
       }),
     /Zilele din echipa grupei/,
   );
+});
+
+test('copilul fără notes primește listă goală', () => {
+  assert.deepEqual(child().notes, []);
+});
+
+test('copilul acceptă o listă de note, sortată cu cea mai recentă primul rând', () => {
+  const normalized = normalizeRecord('children', {
+    ...child(),
+    notes: [
+      { id: 'NOTE-1', text: 'veche', date: '2026-01-01' },
+      { id: 'NOTE-2', text: 'nouă', date: '2026-09-01' },
+    ],
+  });
+  assert.deepEqual(normalized.notes, [
+    { id: 'NOTE-2', text: 'nouă', date: '2026-09-01' },
+    { id: 'NOTE-1', text: 'veche', date: '2026-01-01' },
+  ]);
+});
+
+test('o notă fără id primește unul generat', () => {
+  const normalized = normalizeRecord('children', { ...child(), notes: [{ text: 'fără id', date: '2026-09-01' }] });
+  assert.equal(normalized.notes.length, 1);
+  assert.ok(normalized.notes[0].id);
+  assert.equal(normalized.notes[0].text, 'fără id');
+});
+
+test('notes respinge un id repetat, un text gol sau o dată invalidă', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('children', {
+        ...child(),
+        notes: [
+          { id: 'NOTE-1', text: 'a', date: '2026-09-01' },
+          { id: 'NOTE-1', text: 'b', date: '2026-09-02' },
+        ],
+      }),
+    /Notă: id repetat/,
+  );
+  assert.throws(
+    () => normalizeRecord('children', { ...child(), notes: [{ id: 'NOTE-1', text: '', date: '2026-09-01' }] }),
+    /Text notă/,
+  );
+  assert.throws(
+    () => normalizeRecord('children', { ...child(), notes: [{ id: 'NOTE-1', text: 'a', date: 'nu e dată' }] }),
+    /Notă: dată invalidă/,
+  );
+});
+
+test('notes respinge o valoare care nu e listă (format vechi, text liber, netrecut prin migrare)', () => {
+  assert.throws(() => normalizeRecord('children', { ...child(), notes: 'text vechi' }), /Note: listă invalidă/);
 });

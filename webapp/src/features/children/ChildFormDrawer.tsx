@@ -314,11 +314,6 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
             Poți corecta explicit rândurile din istoric. Completează data începerii pentru calculul obligațiilor.
           </p>
         </fieldset>
-
-        <label className={styles.field}>
-          Observații
-          <textarea rows={3} value={values.notes} onChange={event => setField('notes', event.target.value)} />
-        </label>
       </form>
     </Drawer>
   );

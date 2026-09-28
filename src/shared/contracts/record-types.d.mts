@@ -10,6 +10,14 @@ export type EffectiveChildStatus = Exclude<ChildStatus, 'De verificat'>;
 
 export type Currency = 'MDL' | 'EUR';
 
+/** O notă din fișa copilului (CF-4, 09-copii-fisa.md) — listă, nu text liber, ca fiecare
+ * intrare să-și păstreze data la care a fost scrisă. */
+export interface ChildNote {
+  id: string;
+  text: string;
+  date: DateKey;
+}
+
 export interface Child {
   id: string;
   name: string;
@@ -30,7 +38,7 @@ export interface Child {
   fee: number | null;
   feeHistory: { from: MonthKey; amount: number; currency?: Currency }[];
   dueDay: number;
-  notes?: string;
+  notes?: ChildNote[];
   verification?: string;
   archived?: boolean;
   archivedAt?: string | null;

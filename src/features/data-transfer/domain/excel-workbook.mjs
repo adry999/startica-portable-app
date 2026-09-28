@@ -232,7 +232,9 @@ export function exportWorkbook(records, XLSX) {
       Scadenta: child.dueDay,
       Inceput: child.attendanceDate,
       Retragere: child.withdrawalDate,
-      Observatii: child.notes,
+      // notes e o listă {text,date} (CF-4) — aici doar text lizibil, nu JSON; reimportul
+      // copiilor nu citește această coloană (vine din foaia brută de tip/id/JSON).
+      Observatii: (child.notes ?? []).map(note => `${note.date}: ${note.text}`).join(' | '),
     })),
   );
   sheet(

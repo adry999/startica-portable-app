@@ -17,6 +17,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { normalizeRecord, emptyState } from '#shared/domain/record-schema.mjs';
 import { writeSyncDeviceFile } from '#features/sync/index.server.mjs';
 import { createApplication, startTestApplication, removeDirWithRetry } from '#test-support/start-test-application.mjs';
+import { applySchema } from '#core/server/database/schema.mjs';
+import { writeSettingValue } from '#core/server/settings/settings-repository.mjs';
 
 const child = () =>
   normalizeRecord('children', {
@@ -173,6 +175,33 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   if (
     resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-migration-') ||
     resolve(dir).startsWith(resolve(tmpdir()) + '/startica-migration-')
+  )
+    rmSync(dir, { recursive: true, force: true });
+});
+
+test('Migrarea 003 transformă notes text al unui copil într-o listă de note (CF-4)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-migration-notes-'));
+  mkdirSync(join(dir, 'data'));
+  const db = new DatabaseSync(join(dir, 'data/startica.db'));
+  applySchema(db);
+  writeSettingValue(db, 'schemaVersion', '2');
+  db.prepare('INSERT INTO records VALUES(?,?,?)').run(
+    'children',
+    'C1',
+    JSON.stringify({ ...child(), notes: '  observație veche  ' }),
+  );
+  db.close();
+
+  const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
+  const [migratedChild] = app.envelope().state.children;
+  assert.equal(migratedChild.notes.length, 1);
+  assert.equal(migratedChild.notes[0].text, 'observație veche');
+  assert.ok(migratedChild.notes[0].date);
+  assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
+  app.closeSync();
+  if (
+    resolve(dir).startsWith(resolve(tmpdir()) + '\\startica-migration-notes-') ||
+    resolve(dir).startsWith(resolve(tmpdir()) + '/startica-migration-notes-')
   )
     rmSync(dir, { recursive: true, force: true });
 });

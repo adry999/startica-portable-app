@@ -24,11 +24,12 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
 import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import type { Child, ChildNote, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
 
@@ -62,6 +63,8 @@ export function ChildProfileView({
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [changingGroup, setChangingGroup] = useState(false);
+  const [addingNote, setAddingNote] = useState(false);
+  const [noteText, setNoteText] = useState('');
 
   if (profileData.status === 'loading') return <LoadingState />;
   if (profileData.status === 'failed')
@@ -87,6 +90,23 @@ export function ChildProfileView({
       toast.show({ message: (error as Error).message });
     }
     setChangingGroup(false);
+  }
+
+  async function addNote() {
+    const text = noteText.trim();
+    if (!text) return;
+    const note: ChildNote = { id: `NOTE-${crypto.randomUUID()}`, text, date: today() };
+    try {
+      await session.mutate('/api/record', {
+        type: 'children',
+        mode: 'update',
+        record: { ...child, notes: [note, ...(child.notes ?? [])] } satisfies Child,
+      });
+      setNoteText('');
+      setAddingNote(false);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   // C1: re-aruncată după toast, ca ChildFormDrawer să știe că salvarea a eșuat.
@@ -117,7 +137,7 @@ export function ChildProfileView({
           ),
           badges: [
             { label: child.status, tone: 'mint' },
-            { label: profileData.groupName, tone: 'orange' },
+            { label: profileData.groupName, tone: heroTone },
           ],
           actions: (
             <>
@@ -174,10 +194,44 @@ export function ChildProfileView({
 
             <ProfileSection
               title="Note"
-              tone={child.notes ? 'yellow' : 'white'}
-              action={{ label: '+ Notă', onClick: () => setEditDrawerOpen(true) }}
+              action={{
+                label: addingNote ? 'Anulează' : '+ Notă',
+                onClick: () => {
+                  setAddingNote(!addingNote);
+                  setNoteText('');
+                },
+              }}
             >
-              <p>{child.notes || 'Nicio notă încă.'}</p>
+              {addingNote && (
+                <form
+                  className={styles.noteForm}
+                  onSubmit={event => {
+                    event.preventDefault();
+                    void addNote();
+                  }}
+                >
+                  <textarea
+                    rows={2}
+                    autoFocus
+                    value={noteText}
+                    onChange={event => setNoteText(event.target.value)}
+                    placeholder="Scrie o notă…"
+                  />
+                  <Button type="submit" disabled={!noteText.trim()}>
+                    Salvează
+                  </Button>
+                </form>
+              )}
+              {(child.notes ?? []).length === 0 ? (
+                <p>Nicio notă încă.</p>
+              ) : (
+                (child.notes ?? []).map((note, index) => (
+                  <p key={note.id} className={`${styles.noteRow} ${index === 0 ? styles.noteRecent : ''}`}>
+                    <span className={styles.noteDate}>{formatDate(note.date)}</span>
+                    {note.text}
+                  </p>
+                ))
+              )}
             </ProfileSection>
           </>
         }
@@ -227,6 +281,19 @@ export function ChildProfileView({
                 showEurColumns={isEurChild}
                 onPrint={paymentId => navigate(`/achitari/${paymentId}/confirmare`)}
               />
+            </ProfileSection>
+
+            {/* CF-7 (09-copii-fisa.md): nu există stocare de documente încă — placeholder gol,
+                „+ Încarcă” dezactivat, până se decide o funcție reală de upload. */}
+            <ProfileSection title="Documente">
+              <div className={styles.documentsGrid}>
+                <span className={styles.documentSlot} />
+                <span className={styles.documentSlot} />
+                <span className={styles.documentSlot} />
+              </div>
+              <Button variant="outline" disabled title="În curând">
+                + Încarcă
+              </Button>
             </ProfileSection>
 
             <ChildAttendanceSection childId={child.id} month={month} />

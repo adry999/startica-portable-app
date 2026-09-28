@@ -4,12 +4,13 @@ import { readSettingValue, writeSettingValue } from '../settings/settings-reposi
 import { sqlStringLiteral } from './sql-string-literal.mjs';
 import { migration as appStateToRecords } from './migrations/001-app-state-to-records.mjs';
 import { migration as groupsEntity } from './migrations/002-groups-entity.mjs';
+import { migration as childNotesList } from './migrations/003-child-notes-list.mjs';
 
 // Lista de migrări ale schemei. Fiecare rulează o singură dată, în ordine, cu
 // backup automat înainte și într-o tranzacție proprie. Adaugă una nouă la
 // finalul listei, cu numărul următor — nu modifica niciodată una deja lansată,
 // altfel o bază reală care a trecut deja prin ea ar rula-o din nou greșit.
-const MIGRATIONS = [appStateToRecords, groupsEntity];
+const MIGRATIONS = [appStateToRecords, groupsEntity, childNotesList];
 
 const hasTable = (database, name) =>
   !!database.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name);
