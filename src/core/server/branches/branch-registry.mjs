@@ -81,6 +81,8 @@ export function writeBranchRegistry(file, registry) {
  *   update: (id: string, patch: { name?: string, color?: string, address?: string }) => BranchEntry,
  *   setLastBranchId: (id: string) => void,
  *   ensure: (initialBranch: { name: string, color: string, address: string, folder: string | null }) => BranchRegistry,
+ *   adopt: (entry: { id: string, name: string, color: string, address: string, createdAt: string }, options?: { folder?: string | null }) => BranchEntry,
+ *   replaceEmpty: (oldId: string, entry: { id: string, name: string, color: string, address: string, createdAt: string }) => BranchEntry,
  * }} BranchRegistryStore
  */
 
@@ -164,6 +166,48 @@ export function createBranchRegistryStore({ file, now = () => new Date().toISOSt
     writeBranchRegistry(file, { ...registry, lastBranchId: id });
   }
 
+  // Sincronizare (Faza 5, Task 11): o filială văzută pe server dar necunoscută local
+  // trebuie adoptată cu ID-UL SERVERULUI (cheia (branch_id,kind,id) acolo e deja legată
+  // de el) — spre deosebire de `add`, care generează un id nou pentru o filială creată
+  // local. `folder: null` doar când chemarea o cere explicit (calculatorul nou, care
+  // preia filiala goală implicită în locul ei, cu folderele ei legacy).
+  /**
+   * @param {{ id: string, name: string, color: string, address: string, createdAt: string }} entry
+   * @param {{ folder?: string | null }} [options]
+   * @returns {BranchEntry}
+   */
+  function adopt(entry, { folder } = {}) {
+    const registry = load() ?? { version: REGISTRY_VERSION, lastBranchId: '', branches: [] };
+    /** @type {BranchEntry} */
+    const created = { ...entry, folder: folder === null ? null : uniqueFolder(entry.name) };
+    writeBranchRegistry(file, { ...registry, branches: [...registry.branches, created] });
+    return created;
+  }
+
+  // Calculatorul nou pornește cu o filială #1 goală (create-application.mjs, decizia 4
+  // din 2026-09-27-filiale.md); la connect, dacă serverul are deja o filială cu date pe
+  // care local n-o are, aia devine filiala #1 — păstrându-i folderul (de obicei null,
+  // legacy), ca datele descărcate să meargă direct în folderele vechi, nu într-un
+  // Filiale\<slug> nou, orfan.
+  /**
+   * @param {string} oldId
+   * @param {{ id: string, name: string, color: string, address: string, createdAt: string }} entry
+   * @returns {BranchEntry}
+   */
+  function replaceEmpty(oldId, entry) {
+    const registry = load();
+    const existing = registry?.branches.find(branch => branch.id === oldId);
+    if (!registry || !existing) throw new Error(`Filială inexistentă: ${oldId}.`);
+    /** @type {BranchEntry} */
+    const replaced = { ...entry, folder: existing.folder };
+    writeBranchRegistry(file, {
+      ...registry,
+      lastBranchId: registry.lastBranchId === oldId ? entry.id : registry.lastBranchId,
+      branches: registry.branches.map(branch => (branch.id === oldId ? replaced : branch)),
+    });
+    return replaced;
+  }
+
   // Marca existenței registrului: scrie o singură dată, la prima pornire fără
   // filiale.json. O a doua pornire (registrul deja există) nu îl mai schimbă,
   // altfel o filială #2 creată manual ar fi înlocuită.
@@ -182,5 +226,5 @@ export function createBranchRegistryStore({ file, now = () => new Date().toISOSt
     return registry;
   }
 
-  return { list, find, add, update, setLastBranchId, ensure };
+  return { list, find, add, update, setLastBranchId, ensure, adopt, replaceEmpty };
 }

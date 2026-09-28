@@ -125,6 +125,83 @@ test('update rescrie numele, culoarea sau adresa și refuză o filială inexiste
   assert.throws(() => store.update('id-inexistent', { color: 'mint' }), /inexistentă/);
 });
 
+test('adopt păstrează id-ul dat de server și calculează un folder unic', t => {
+  const file = tempRegistryFile(t);
+  let counter = 0;
+  const store = createBranchRegistryStore({
+    file,
+    now: () => '2026-09-27T00:00:00.000Z',
+    createId: () => `id-${++counter}`,
+  });
+  store.add({ name: 'Botanica' });
+
+  const adopted = store.adopt({
+    id: 'server-branch-1',
+    name: 'Ciocana',
+    color: 'mint',
+    address: 'Str. Ciocana',
+    createdAt: '2026-09-01T00:00:00.000Z',
+  });
+
+  assert.equal(adopted.id, 'server-branch-1', 'id-ul vine de la server, nu createId()');
+  assert.equal(adopted.folder, 'ciocana');
+  assert.equal(store.list().length, 2);
+  assert.ok(store.find('server-branch-1'));
+});
+
+test('adopt cu folder: null păstrează folderul null (calculator nou, filiala goală)', t => {
+  const file = tempRegistryFile(t);
+  const store = createBranchRegistryStore({ file, now: () => '2026-09-27T00:00:00.000Z', createId: () => 'x' });
+  store.ensure({ name: 'Filiala principală', color: 'orange', address: '', folder: null });
+
+  const adopted = store.adopt(
+    { id: 'server-branch-1', name: 'Ciocana', color: 'mint', address: '', createdAt: '2026-09-01T00:00:00.000Z' },
+    { folder: null },
+  );
+
+  assert.equal(adopted.folder, null);
+});
+
+test('replaceEmpty schimbă id-ul filialei goale existente, păstrându-i folderul', t => {
+  const file = tempRegistryFile(t);
+  const store = createBranchRegistryStore({ file, now: () => '2026-09-27T00:00:00.000Z', createId: () => 'x' });
+  const empty = store.ensure({ name: 'Filiala principală', color: 'orange', address: '', folder: null });
+  const emptyId = empty.branches[0].id;
+
+  const replaced = store.replaceEmpty(emptyId, {
+    id: 'server-branch-1',
+    name: 'Ciocana',
+    color: 'mint',
+    address: 'Str. Ciocana',
+    createdAt: '2026-09-01T00:00:00.000Z',
+  });
+
+  assert.equal(replaced.id, 'server-branch-1');
+  assert.equal(replaced.name, 'Ciocana');
+  assert.equal(replaced.folder, null, 'folderul vechi (legacy, null) se păstrează');
+  assert.equal(store.list().length, 1);
+  assert.equal(readBranchRegistry(file)?.lastBranchId, 'server-branch-1', 'lastBranchId urmează filiala redenumită');
+  assert.equal(store.find(emptyId), undefined);
+});
+
+test('replaceEmpty pe un id inexistent aruncă', t => {
+  const file = tempRegistryFile(t);
+  const store = createBranchRegistryStore({ file, now: () => '2026-09-27T00:00:00.000Z', createId: () => 'x' });
+  store.ensure({ name: 'Filiala principală', color: 'orange', address: '', folder: null });
+
+  assert.throws(
+    () =>
+      store.replaceEmpty('id-inexistent', {
+        id: 'server-branch-1',
+        name: 'Ciocana',
+        color: 'mint',
+        address: '',
+        createdAt: '2026-09-01T00:00:00.000Z',
+      }),
+    /inexistentă/,
+  );
+});
+
 test('setLastBranchId schimbă doar câmpul lastBranchId', t => {
   const file = tempRegistryFile(t);
   let counter = 0;
