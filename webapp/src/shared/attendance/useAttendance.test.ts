@@ -6,6 +6,15 @@ function jsonResponse(body: unknown, ok = true, status = 200) {
   return { ok, status, json: async () => body };
 }
 
+/** O promisiune controlată din exterior — pentru a decide manual ordinea în care „sosesc” două cereri. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe('useAttendance', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -148,6 +157,50 @@ describe('useAttendance', () => {
 
     expect(result.current.saveError).toBe('Cerere respinsă.');
     expect(getCalls).toBe(2);
+  });
+
+  // M11: pași rapizi cu DayStepper pot porni o a doua cerere (GET) înainte ca prima să răspundă;
+  // dacă răspunsul zilei vechi sosește ultimul, nu trebuie să suprascrie datele zilei noi afișate.
+  it('un răspuns întârziat al unei zile părăsite nu suprascrie ziua curentă (race la schimbarea query-ului)', async () => {
+    const day27 = deferred<{ ok: boolean; json: () => Promise<unknown> }>();
+    const day28 = deferred<{ ok: boolean; json: () => Promise<unknown> }>();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/attendance?date=2026-09-27') return day27.promise;
+        if (path === '/api/attendance?date=2026-09-28') return day28.promise;
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result, rerender } = renderHook(({ date }: { date: string }) => useAttendance({ date }), {
+      initialProps: { date: '2026-09-27' },
+    });
+    rerender({ date: '2026-09-28' }); // pas rapid, înainte ca cererea zilei 27 să răspundă
+
+    // Ziua nouă (28) răspunde prima.
+    await act(async () => {
+      day28.resolve(
+        jsonResponse({
+          entries: [{ childId: 'c2', date: '2026-09-28', status: 'present', reason: '', updatedAt: '' }],
+        }),
+      );
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    // Răspunsul vechi (27) sosește ultimul — nu trebuie să mai fie aplicat.
+    await act(async () => {
+      day27.resolve(
+        jsonResponse({
+          entries: [{ childId: 'c1', date: '2026-09-27', status: 'present', reason: '', updatedAt: '' }],
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    expect(result.current.entries.has('c2|2026-09-28')).toBe(true);
+    expect(result.current.entries.has('c1|2026-09-27')).toBe(false);
   });
 
   it('query null nu face nicio cerere', async () => {

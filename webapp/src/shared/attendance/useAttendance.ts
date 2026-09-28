@@ -43,8 +43,12 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
   // Refs, nu state: lotul în așteptare și temporizatorul nu trebuie să redeseneze pagina.
   const pendingRef = useRef<Map<string, AttendanceChange>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // M11: DayStepper poate schimba `query` înainte ca GET-ul precedent să răspundă — un token de
+  // cerere ignoră răspunsul vechi dacă sosește după unul mai nou (nu doar la eroare, ci și la succes).
+  const requestIdRef = useRef(0);
 
   async function load() {
+    const requestId = ++requestIdRef.current;
     if (!query) {
       setEntries(new Map());
       setStatus('ready');
@@ -53,9 +57,11 @@ export function useAttendance(query: AttendanceQuery | null): AttendanceData {
     setStatus('loading');
     try {
       const response = (await requestJson(`/api/attendance?${toQueryString(query)}`)) as { entries: AttendanceEntry[] };
+      if (requestId !== requestIdRef.current) return;
       setEntries(new Map(response.entries.map(entry => [attendanceKey(entry.childId, entry.date), entry])));
       setStatus('ready');
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       setFailureMessage((error as Error).message);
       setStatus('failed');
     }

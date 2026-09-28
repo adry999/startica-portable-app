@@ -6,6 +6,15 @@ function jsonResponse(body: unknown, ok = true, status = 200) {
   return { ok, status, json: async () => body };
 }
 
+/** O promisiune controlată din exterior — pentru a decide manual ordinea în care „sosesc” două cereri. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
 describe('useTimesheet', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -88,5 +97,39 @@ describe('useTimesheet', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(400);
     });
+  });
+
+  // M11: schimbarea rapidă a lunii poate porni un al doilea GET înainte ca primul să răspundă;
+  // dacă luna părăsită răspunde ultima, nu trebuie să suprascrie luna curentă afișată.
+  it('un răspuns întârziat al unei luni părăsite nu suprascrie luna curentă (race la schimbarea query-ului)', async () => {
+    const sep = deferred<{ ok: boolean; json: () => Promise<unknown> }>();
+    const oct = deferred<{ ok: boolean; json: () => Promise<unknown> }>();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/personal/timesheet?month=2026-09') return sep.promise;
+        if (path === '/api/personal/timesheet?month=2026-10') return oct.promise;
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result, rerender } = renderHook(({ month }: { month: string }) => useTimesheet(month), {
+      initialProps: { month: '2026-09' },
+    });
+    rerender({ month: '2026-10' }); // pas rapid, înainte ca cererea lunii 09 să răspundă
+
+    await act(async () => {
+      oct.resolve(jsonResponse({ rows: [{ id: 'TS-2', staffId: 'STF-1', date: '2026-10-07', code: 'CM' }] }));
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    await act(async () => {
+      sep.resolve(jsonResponse({ rows: [{ id: 'TS-1', staffId: 'STF-1', date: '2026-09-07', code: 'CO' }] }));
+      await Promise.resolve();
+    });
+
+    expect(result.current.rows.has('STF-1|2026-10-07')).toBe(true);
+    expect(result.current.rows.has('STF-1|2026-09-07')).toBe(false);
   });
 });

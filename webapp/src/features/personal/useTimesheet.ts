@@ -32,8 +32,12 @@ export function useTimesheet(month: string | null): TimesheetData {
 
   const pendingRef = useRef<Map<string, TimesheetChange>>(new Map());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // M11: schimbarea rapidă a lunii poate porni un GET înainte ca precedentul să răspundă — un
+  // token de cerere ignoră răspunsul vechi dacă sosește după unul mai nou.
+  const requestIdRef = useRef(0);
 
   async function load() {
+    const requestId = ++requestIdRef.current;
     if (!month) {
       setRows(new Map());
       setStatus('ready');
@@ -42,9 +46,11 @@ export function useTimesheet(month: string | null): TimesheetData {
     setStatus('loading');
     try {
       const response = (await requestJson(`/api/personal/timesheet?month=${month}`)) as { rows: TimesheetRow[] };
+      if (requestId !== requestIdRef.current) return;
       setRows(new Map(response.rows.map(row => [timesheetKey(row.staffId, row.date), row])));
       setStatus('ready');
     } catch (error) {
+      if (requestId !== requestIdRef.current) return;
       setFailureMessage((error as Error).message);
       setStatus('failed');
     }

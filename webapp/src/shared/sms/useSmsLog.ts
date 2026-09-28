@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { shiftDays, today as todayFn } from '@domain/calendar-month.mjs';
 import type { SmsLogEntryView, SmsLogPageView, SmsMonthlyBreakdownView } from './sms-types';
@@ -78,32 +78,40 @@ export function useSmsLog(): SmsLogData {
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
+  // M11: un token de cerere ignoră un răspuns vechi sosit după unul mai nou (mount + schimbare
+  // rapidă de perioadă se pot suprapune); `periodRef` ține perioada curentă pentru reîmprospătarea
+  // de la montare, care altfel ar reîncărca perioada capturată în closure la primul randare.
+  const requestIdRef = useRef(0);
+  const periodRef = useRef(period);
+  periodRef.current = period;
+
   const load = useCallback(async (periodDays: SmsLogPeriodDays) => {
-    const response = (await requestJson(`/api/sms-log?after=${afterParamFor(periodDays)}`)) as SmsLogPageView;
-    setPage(response);
-    setStatus('ready');
+    const requestId = ++requestIdRef.current;
+    try {
+      const response = (await requestJson(`/api/sms-log?after=${afterParamFor(periodDays)}`)) as SmsLogPageView;
+      if (requestId !== requestIdRef.current) return;
+      setPage(response);
+      setStatus('ready');
+    } catch (error) {
+      if (requestId !== requestIdRef.current) return;
+      setStatus('failed');
+      setFailureMessage((error as Error).message);
+    }
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
     setStatus('loading');
     setFailureMessage('');
-    load(period).catch((error: Error) => {
-      if (cancelled) return;
-      setStatus('failed');
-      setFailureMessage(error.message);
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+    void load(period);
+  }, [period, load]);
 
   useEffect(() => {
     // O singură reîmprospătare la deschiderea filei, nu la fiecare schimbare de perioadă —
-    // altfel operatorul interoghează sms.md doar pentru a schimba filtrul de zile.
+    // altfel operatorul interoghează sms.md doar pentru a schimba filtrul de zile. Citește
+    // `periodRef.current`, nu `period` din closure: dacă operatorul schimbă perioada înainte ca
+    // reîmprospătarea să răspundă, reîncărcarea ei trebuie să folosească perioada curentă.
     requestJson('/api/sms-refresh-statuses', {})
-      .then(() => load(period))
+      .then(() => load(periodRef.current))
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

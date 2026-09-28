@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { shiftDays, today as todayFn } from '@domain/calendar-month.mjs';
 import { useSmsLog } from './useSmsLog';
 
 function jsonResponse(body: unknown) {
@@ -48,6 +49,15 @@ const page = {
   stats: { sentThisMonth: 3, failedThisMonth: 1, segmentsThisMonth: 3, monthlyLimit: null },
   monthly: [{ month: '2026-09', sent: 2, segments: 2, failed: 1 }],
 };
+
+/** O promisiune controlată din exterior — pentru a decide manual când „răspunde” reîmprospătarea de stări. */
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(r => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
 
 function stubFetch(overrides: Record<string, unknown> = {}) {
   const calls: string[] = [];
@@ -127,5 +137,41 @@ describe('useSmsLog', () => {
 
     act(() => result.current.setPeriod(7));
     await waitFor(() => expect(calls.some(path => path.startsWith('/api/sms-log?after='))).toBe(true));
+  });
+
+  // M11: reîmprospătarea de stări de la montare (`sms-refresh-statuses` → load(period)) capturează
+  // `period` din closure-ul montării — dacă operatorul schimbă perioada înainte ca reîmprospătarea
+  // să răspundă, reîncărcarea ei ulterioară nu trebuie să rescrie perioada nou aleasă cu cea veche.
+  it('reîmprospătarea pornită la montare nu suprascrie perioada aleasă între timp', async () => {
+    const pageA = { entries: [{ ...entrySent, id: 10 }], stats: page.stats, monthly: page.monthly };
+    const pageB = { entries: [{ ...entrySent, id: 20 }], stats: page.stats, monthly: page.monthly };
+    const after30 = shiftDays(todayFn(), -30);
+    const after7 = shiftDays(todayFn(), -7);
+    const refreshDeferred = deferred<{ ok: boolean; status: number; json: () => Promise<unknown> }>();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/sms-refresh-statuses') return refreshDeferred.promise;
+        if (path === `/api/sms-log?after=${after30}`) return jsonResponse(pageA);
+        if (path === `/api/sms-log?after=${after7}`) return jsonResponse(pageB);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useSmsLog());
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+    expect(result.current.entries.map(entry => entry.id)).toEqual([10]); // pageA, perioada implicită (30)
+
+    act(() => result.current.setPeriod(7));
+    await waitFor(() => expect(result.current.entries.map(entry => entry.id)).toEqual([20])); // pageB
+
+    // Reîmprospătarea pornită la montare răspunde abia acum, cu perioada veche (30) din closure.
+    await act(async () => {
+      refreshDeferred.resolve(jsonResponse({ updated: 0, entries: [] }));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(result.current.entries.map(entry => entry.id)).toEqual([20]); // rămâne perioada aleasă
   });
 });
