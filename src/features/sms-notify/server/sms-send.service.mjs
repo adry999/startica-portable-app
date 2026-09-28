@@ -17,6 +17,10 @@ export const NOT_CONNECTED_MESSAGE = 'Conectează întâi sms.md din Notificări
 
 const AUDIT_ACTION = 'trimitere sms';
 const TERMINAL_STATUS_BY_NAME = { Undelivered: 'failed', Failed: 'failed' };
+// Ca la `requestId`-ul revizuit din core (revision-transaction.mjs), dar validat aici: sms_log
+// nu trece prin `runRevisionTransaction` (nu are revizie), deci lotul își ține propria idempotență.
+const BATCH_REQUEST_ID = /^[a-zA-Z0-9-]{8,100}$/;
+export const INVALID_REQUEST_ID_MESSAGE = 'Identificator de lot invalid.';
 
 /** @param {SmsSendMessage} message */
 function assertValidSendMessage(message) {
@@ -44,9 +48,66 @@ function pendingLogEntry(entry) {
  *   createdAt: string, childId: string | null, recipientName: string, childName: string, phone: string,
  *   text: string, templateId: string | null, templateName: string, month: string | null,
  *   source: import('../sms-notify.types.mjs').SmsSource, characters: number, segments: number,
- *   encoding: import('../sms-notify.types.mjs').SmsEncoding,
+ *   encoding: import('../sms-notify.types.mjs').SmsEncoding, batchId: string | null,
  * }} NewSmsLogEntryBase
  */
+
+// `providerError` ține „COD: mesaj” (vezi catch-ul din sendBatch); reconstrucția unei reluări
+// citește ambele înapoi din jurnal, fără să mai țină un rezultat separat pentru lot.
+/** @param {string} providerError @returns {{ code: string, message: string }} */
+function parseStoredFailure(providerError) {
+  const separatorIndex = providerError.indexOf(': ');
+  if (separatorIndex === -1) return { code: '', message: providerError };
+  return { code: providerError.slice(0, separatorIndex), message: providerError.slice(separatorIndex + 2) };
+}
+
+/** @param {import('../sms-notify.types.mjs').SmsLogEntry} row @returns {import('../sms-notify.types.mjs').SmsSendOutcome} */
+function outcomeFromRow(row) {
+  // `providerId` se scrie o singură dată, la trimiterea inițială reușită — indiferent ce a pățit
+  // livrarea mai târziu (status poate deveni 'delivered'/'unknown'/'failed' prin refreshDeliveryStatuses).
+  const sentSuccessfully = row.providerId != null;
+  return {
+    // Rândurile unui lot au mereu childId (validat de assertValidSendMessage înainte de insert);
+    // doar sendTest (fără lot) scrie childId null, deci tipul din SmsLogEntry îl lasă nullable.
+    childId: /** @type {string} */ (row.childId),
+    outcome: sentSuccessfully ? 'sent' : 'failed',
+    logId: row.id,
+    // Un rând failed ține segmentele/costul estimate înainte de trimitere (pentru diagnostic),
+    // dar rezultatul original nu le-a contorizat (mesajul n-a ajuns la operator) — la fel aici.
+    segments: sentSuccessfully ? row.segments : 0,
+    cost: sentSuccessfully ? row.cost : null,
+    error: sentSuccessfully ? '' : parseStoredFailure(row.providerError).message,
+  };
+}
+
+/**
+ * Reconstruiește rezultatul unui lot deja trimis, din rândurile lui din jurnal — pentru o reluare
+ * cu același `requestId` (M10). Mesajele fără rând (după stop) redevin `skipped`, cu același motiv.
+ * @param {import('../sms-notify.types.mjs').SmsLogEntry[]} rows
+ * @param {SmsSendMessage[]} messages
+ * @returns {SmsBatchResult}
+ */
+function reconstructBatchResult(rows, messages) {
+  const results = rows.map(outcomeFromRow);
+  let stopped = null;
+  if (rows.length < messages.length) {
+    const lastRow = rows[rows.length - 1];
+    const { code, message } = parseStoredFailure(lastRow.providerError);
+    stopped = { code, message };
+    for (let index = rows.length; index < messages.length; index += 1)
+      results.push({
+        childId: messages[index].childId,
+        outcome: 'skipped',
+        logId: null,
+        segments: 0,
+        cost: null,
+        error: message,
+      });
+  }
+  const failedCount = results.filter(result => result.outcome === 'failed').length;
+  const skippedCount = results.filter(result => result.outcome === 'skipped').length;
+  return { ok: failedCount === 0 && skippedCount === 0, results, stopped };
+}
 
 /**
  * @param {SmsSendServiceDependencies} dependencies
@@ -66,7 +127,14 @@ export function createSmsSendService({
   }
 
   /** @param {SmsSendRequest} request @returns {Promise<SmsBatchResult>} */
-  async function sendBatch({ source, month, templateId, messages }) {
+  async function sendBatch({ source, month, templateId, messages, requestId }) {
+    if (typeof requestId !== 'string' || !BATCH_REQUEST_ID.test(requestId)) fail(INVALID_REQUEST_ID_MESSAGE);
+    // Reluare (M10): un lot de zeci de mesaje durează minute (pauză între cereri), deci un timeout
+    // HTTP al clientului nu înseamnă că serverul n-a trimis nimic — un al doilea POST cu același
+    // `requestId` întoarce rezultatul memorat în jurnal, fără să mai cheme sms.md sau să audieze din nou.
+    const alreadySent = smsLogRepository.listByBatch(requestId);
+    if (alreadySent.length > 0) return reconstructBatchResult(alreadySent, messages);
+
     const config = readConfig();
     if (!config) fail(NOT_CONNECTED_MESSAGE);
     for (const message of messages) assertValidSendMessage(message);
@@ -120,6 +188,7 @@ export function createSmsSendService({
           templateName,
           month,
           source,
+          batchId: requestId,
           characters: local.characters,
           segments: local.segments,
           encoding: local.encoding,
@@ -203,6 +272,7 @@ export function createSmsSendService({
         templateName: '',
         month: null,
         source: 'test',
+        batchId: null,
         characters: local.characters,
         segments: local.segments,
         encoding: local.encoding,

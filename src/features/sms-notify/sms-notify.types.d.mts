@@ -6,7 +6,7 @@ export interface SmsConfig {
   token: string;
   /** Numele de expeditor aprobat în dashboard-ul sms.md, max 15 caractere. */
   sender: string;
-  /** null = fără limită (implicit); altfel 1..5000. Contor global pe instalare, nu per filială. */
+  /** null = fără limită (implicit); altfel 1..5000. Contor per filială — fiecare are propriul cont sms.md. */
   monthlyLimit: number | null;
 }
 
@@ -53,6 +53,8 @@ export interface SmsLogEntry {
   providerStatus: string;
   providerError: string;
   statusCheckedAt: string;
+  /** `requestId`-ul lotului care a scris rândul (M10); null pentru `sendTest`, care nu ține de un lot. */
+  batchId: string | null;
 }
 
 export type NewSmsLogEntry = Omit<SmsLogEntry, 'id'>;
@@ -147,6 +149,8 @@ export interface SmsSendRequest {
   month: string | null;
   templateId: string | null;
   messages: SmsSendMessage[];
+  /** Identificator generat de client, unul per lot; o reluare cu același id nu retrimite (M10). */
+  requestId: string;
 }
 
 export interface SmsSendOutcome {

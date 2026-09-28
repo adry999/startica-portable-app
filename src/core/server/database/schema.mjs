@@ -8,7 +8,7 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
   CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,digest TEXT NOT NULL,revision INTEGER NOT NULL);
   CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS sms_templates(id TEXT PRIMARY KEY,name TEXT NOT NULL,body TEXT NOT NULL,strip_diacritics INTEGER NOT NULL DEFAULT 1,is_default INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
-  CREATE TABLE IF NOT EXISTS sms_log(id INTEGER PRIMARY KEY,created_at TEXT NOT NULL,child_id TEXT,recipient_name TEXT NOT NULL,child_name TEXT NOT NULL,phone TEXT NOT NULL,text TEXT NOT NULL,template_id TEXT,template_name TEXT NOT NULL,month TEXT,source TEXT NOT NULL,characters INTEGER NOT NULL,segments INTEGER NOT NULL,encoding TEXT NOT NULL,cost TEXT,status TEXT NOT NULL,provider_id TEXT,provider_status TEXT NOT NULL DEFAULT '',provider_error TEXT NOT NULL DEFAULT '',status_checked_at TEXT NOT NULL DEFAULT '');
+  CREATE TABLE IF NOT EXISTS sms_log(id INTEGER PRIMARY KEY,created_at TEXT NOT NULL,child_id TEXT,recipient_name TEXT NOT NULL,child_name TEXT NOT NULL,phone TEXT NOT NULL,text TEXT NOT NULL,template_id TEXT,template_name TEXT NOT NULL,month TEXT,source TEXT NOT NULL,characters INTEGER NOT NULL,segments INTEGER NOT NULL,encoding TEXT NOT NULL,cost TEXT,status TEXT NOT NULL,provider_id TEXT,provider_status TEXT NOT NULL DEFAULT '',provider_error TEXT NOT NULL DEFAULT '',status_checked_at TEXT NOT NULL DEFAULT '',batch_id TEXT);
   CREATE INDEX IF NOT EXISTS sms_log_child_created ON sms_log(child_id,created_at);
   CREATE INDEX IF NOT EXISTS sms_log_status ON sms_log(status);
   CREATE TABLE IF NOT EXISTS attendance(child_id TEXT NOT NULL,date TEXT NOT NULL,status TEXT NOT NULL,reason TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,PRIMARY KEY(child_id,date));
@@ -21,4 +21,21 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
 /** @param {import('node:sqlite').DatabaseSync} database */
 export function applySchema(database) {
   database.exec(SCHEMA);
+  // SQLite nu are „ADD COLUMN IF NOT EXISTS": o bază creată înainte de acest câmp (idempotența
+  // loturilor SMS, M10) nu-l primește din CREATE TABLE IF NOT EXISTS, deci se adaugă aici,
+  // o singură dată; o bază nouă îl are deja, iar ALTER devine un no-op.
+  ensureColumn(database, 'sms_log', 'batch_id', 'TEXT');
+  database.exec('CREATE INDEX IF NOT EXISTS sms_log_batch ON sms_log(batch_id);');
+}
+
+/**
+ * @param {import('node:sqlite').DatabaseSync} database
+ * @param {string} table
+ * @param {string} column
+ * @param {string} type
+ */
+function ensureColumn(database, table, column, type) {
+  const columns = /** @type {{ name: string }[]} */ (database.prepare(`PRAGMA table_info(${table})`).all());
+  if (!columns.some(existingColumn => existingColumn.name === column))
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type};`);
 }

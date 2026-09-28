@@ -1,4 +1,4 @@
-import { shiftDays } from '#shared/domain/calendar-month.mjs';
+import { isoDateOf, shiftDays } from '#shared/domain/calendar-month.mjs';
 
 /** @typedef {import('../sms-notify.types.mjs').SmsLogEntry} SmsLogEntry */
 /** @typedef {import('../sms-notify.types.mjs').NewSmsLogEntry} NewSmsLogEntry */
@@ -30,6 +30,7 @@ const COLUMN_BY_FIELD = {
   providerStatus: 'provider_status',
   providerError: 'provider_error',
   statusCheckedAt: 'status_checked_at',
+  batchId: 'batch_id',
 };
 const FIELDS = Object.keys(COLUMN_BY_FIELD);
 const COLUMNS = FIELDS.map(field => COLUMN_BY_FIELD[field]).join(',');
@@ -48,6 +49,12 @@ function localMonthBounds(now) {
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   return [start.toISOString(), end.toISOString()];
 }
+
+// O dată calendaristică (fără oră) e mereu ora locală a instalării (Europe/Chisinau), nu UTC:
+// un literal ISO fără „Z"/offset e interpretat de Date ca oră locală, deci .toISOString() dă
+// exact instantul UTC al miezului nopții local — spre diferență de `${zi}T00:00:00.000Z`.
+/** @param {string} dateStr format YYYY-MM-DD @returns {string} */
+const localMidnightIso = dateStr => new Date(`${dateStr}T00:00:00`).toISOString();
 
 /** @param {import('node:sqlite').DatabaseSync} database */
 export function createSmsLogRepository(database) {
@@ -77,16 +84,10 @@ export function createSmsLogRepository(database) {
   const listSinceStatement = database.prepare(
     `SELECT id,${COLUMNS} FROM sms_log WHERE created_at>=? ORDER BY created_at DESC, rowid DESC`,
   );
-  // substr, nu strftime: created_at e mereu ISO 8601 (toISOString()), deci primele 7 caractere sunt 'YYYY-MM'.
-  // Alias `ym`, nu `month`: sms_log are deja o coloană reală `month` (luna facturată), iar SQLite
-  // rezolvă GROUP BY pe un nume ambiguu spre coloana reală, nu spre alias-ul din SELECT.
-  const monthlyBreakdownStatement = database.prepare(
-    `SELECT substr(created_at,1,7) AS ym,
-       SUM(CASE WHEN status!='failed' THEN 1 ELSE 0 END) AS sent,
-       SUM(CASE WHEN status!='failed' THEN segments ELSE 0 END) AS segmentsSum,
-       SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) AS failed
-     FROM sms_log GROUP BY ym ORDER BY ym DESC`,
-  );
+  // Gruparea pe lună se face în JS, nu în SQL: `created_at` e UTC, iar luna afișată e cea locală
+  // (Europe/Chisinau) — un `substr`/`strftime` pe coloană ar grupa greșit mesajele trimise în
+  // fereastra UTC↔local de 2-3h din jurul miezului nopții.
+  const monthlyBreakdownRowsStatement = database.prepare('SELECT created_at,status,segments FROM sms_log');
   const usageCountByTemplateStatement = database.prepare(
     `SELECT template_id,COUNT(*) AS count FROM sms_log
      WHERE template_id IS NOT NULL AND status!='failed' GROUP BY template_id`,
@@ -97,6 +98,7 @@ export function createSmsLogRepository(database) {
   const expireStatement = database.prepare(
     "UPDATE sms_log SET text='',phone='' WHERE created_at<? AND (text!='' OR phone!='')",
   );
+  const listByBatchStatement = database.prepare(`SELECT id,${COLUMNS} FROM sms_log WHERE batch_id=? ORDER BY id ASC`);
 
   /** @param {NewSmsLogEntry} entry @returns {number} */
   function insert(entry) {
@@ -169,12 +171,21 @@ export function createSmsLogRepository(database) {
 
   /** @returns {SmsMonthlyBreakdown[]} */
   function monthlyBreakdown() {
-    return /** @type {any[]} */ (monthlyBreakdownStatement.all()).map(row => ({
-      month: row.ym,
-      sent: Number(row.sent ?? 0),
-      segments: Number(row.segmentsSum ?? 0),
-      failed: Number(row.failed ?? 0),
-    }));
+    /** @type {Map<string, { sent: number, segments: number, failed: number }>} */
+    const totalsByMonth = new Map();
+    for (const row of /** @type {any[]} */ (monthlyBreakdownRowsStatement.all())) {
+      const month = isoDateOf(new Date(row.created_at)).slice(0, 7);
+      const totals = totalsByMonth.get(month) ?? { sent: 0, segments: 0, failed: 0 };
+      if (row.status === 'failed') totals.failed += 1;
+      else {
+        totals.sent += 1;
+        totals.segments += row.segments;
+      }
+      totalsByMonth.set(month, totals);
+    }
+    return [...totalsByMonth.entries()]
+      .sort(([monthA], [monthB]) => (monthA < monthB ? 1 : -1))
+      .map(([month, totals]) => ({ month, ...totals }));
   }
 
   /** @returns {Record<string, number>} */
@@ -195,9 +206,14 @@ export function createSmsLogRepository(database) {
   function expireOldEntries(todayStr) {
     // Cutoff-ul e ziua de dinaintea celei „exact retenția”, ca un rând vechi de exact
     // SMS_LOG_RETENTION_DAYS zile (indiferent de ora din zi) să pice sub „<”, nu deasupra lui.
-    const cutoff = `${shiftDays(todayStr, -(SMS_LOG_RETENTION_DAYS - 1))}T00:00:00.000Z`;
+    const cutoff = localMidnightIso(shiftDays(todayStr, -(SMS_LOG_RETENTION_DAYS - 1)));
     const { changes } = expireStatement.run(cutoff);
     return { expired: Number(changes) };
+  }
+
+  /** @param {string} batchId @returns {SmsLogEntry[]} */
+  function listByBatch(batchId) {
+    return listByBatchStatement.all(batchId).map(toEntry);
   }
 
   return {
@@ -210,6 +226,7 @@ export function createSmsLogRepository(database) {
     pendingDelivery,
     listSince,
     monthlyBreakdown,
+    listByBatch,
     usageCountByTemplate,
     markUnknownOlderThan,
     expireOldEntries,

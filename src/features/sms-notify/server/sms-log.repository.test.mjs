@@ -33,6 +33,7 @@ function entry(overrides = {}) {
     providerStatus: '',
     providerError: '',
     statusCheckedAt: '',
+    batchId: null,
     ...overrides,
   };
 }
@@ -167,6 +168,48 @@ test('usageCountByTemplate: numără doar non-failed, grupat pe templateId', t =
   repository.insert(entry({ templateId: 'TPL-b', status: 'sent' }));
   repository.insert(entry({ templateId: null, status: 'sent' }));
   assert.deepEqual(repository.usageCountByTemplate(), { 'TPL-a': 2, 'TPL-b': 1 });
+});
+
+test('monthlyBreakdown grupează pe luna locală (Europe/Chisinau), nu pe luna UTC a lui created_at', t => {
+  const previousTz = process.env.TZ;
+  process.env.TZ = 'Europe/Chisinau';
+  t.after(() => {
+    process.env.TZ = previousTz;
+  });
+  const { repository } = openRepository(t);
+  // 2026-02-01T00:30 local (EET, UTC+2) = 2026-01-31T22:30Z: luna UTC e ianuarie, luna locală e februarie.
+  repository.insert(entry({ createdAt: '2026-01-31T22:30:00.000Z', status: 'sent', segments: 2 }));
+  assert.deepEqual(repository.monthlyBreakdown(), [{ month: '2026-02', sent: 1, segments: 2, failed: 0 }]);
+});
+
+test('expireOldEntries: cutoff-ul e miezul nopții local, nu UTC — un rând scris puțin după nu se șterge', t => {
+  const previousTz = process.env.TZ;
+  process.env.TZ = 'Europe/Chisinau';
+  t.after(() => {
+    process.env.TZ = previousTz;
+  });
+  const { repository } = openRepository(t);
+  // 2025-09-28T00:00 local (EEST, UTC+3) = 2025-09-27T21:00Z: cutoff-ul UTC vechi ('...T00:00:00.000Z')
+  // ar fi tăiat 3h mai devreme, ștergând greșit un rând scris chiar după miezul nopții local.
+  const keptJustAfterLocalMidnight = repository.insert(entry({ createdAt: '2025-09-27T22:00:00.000Z' }));
+  assert.deepEqual(repository.expireOldEntries('2026-09-27'), { expired: 0 });
+  assert.notEqual(repository.find(keptJustAfterLocalMidnight)?.text, '');
+});
+
+test('listByBatch: doar rândurile lotului cerut, în ordinea inserării', t => {
+  const { repository } = openRepository(t);
+  const first = repository.insert(entry({ childId: 'c1', batchId: 'BATCH-1' }));
+  repository.insert(entry({ childId: 'c2', batchId: 'BATCH-altul' }));
+  const second = repository.insert(entry({ childId: 'c3', batchId: 'BATCH-1' }));
+  assert.deepEqual(
+    repository.listByBatch('BATCH-1').map(row => row.id),
+    [first, second],
+  );
+  assert.deepEqual(
+    repository.listByBatch('BATCH-altul').map(row => row.childId),
+    ['c2'],
+  );
+  assert.deepEqual(repository.listByBatch('BATCH-inexistent'), []);
 });
 
 test('expireOldEntries golește text/phone la exact 365 de zile; e idempotent', t => {

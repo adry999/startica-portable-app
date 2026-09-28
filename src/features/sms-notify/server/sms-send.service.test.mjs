@@ -45,6 +45,7 @@ function loggedEntry(overrides = {}) {
     providerStatus: 'Queued',
     providerError: '',
     statusCheckedAt: '',
+    batchId: null,
     ...overrides,
   };
 }
@@ -92,6 +93,7 @@ test('sendBatch: lot de 3 trimite în ordine, cu pauză între cereri, scrie jur
     source: 'notify',
     month: '2026-09',
     templateId: 'TPL-restanta',
+    requestId: 'req-lot-3-01',
     messages,
   });
 
@@ -132,7 +134,13 @@ test('sendBatch: eroare de destinatar (422 to) marchează rândul failed și lot
     smsResponses: { send: [undefined, SMS_RESPONSES.invalidTo, undefined] },
   });
   const messages = [message({ childId: 'c1' }), message({ childId: 'c2' }), message({ childId: 'c3' })];
-  const result = await sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages });
+  const result = await sendService.sendBatch({
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    requestId: 'req-eroare-destinatar-01',
+    messages,
+  });
 
   assert.equal(result.stopped, null);
   assert.equal(result.ok, false);
@@ -147,7 +155,13 @@ test('sendBatch: 402 la al doilea mesaj oprește lotul, al treilea e skipped fă
     smsResponses: { send: [undefined, SMS_RESPONSES.insufficientBalance] },
   });
   const messages = [message({ childId: 'c1' }), message({ childId: 'c2' }), message({ childId: 'c3' })];
-  const result = await sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages });
+  const result = await sendService.sendBatch({
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    requestId: 'req-402-01',
+    messages,
+  });
 
   assert.equal(result.stopped?.code, 'INSUFFICIENT_BALANCE');
   assert.equal(result.results[1].outcome, 'failed');
@@ -168,7 +182,13 @@ test('sendBatch: 429 la al doilea mesaj oprește lotul, fără pauză suplimenta
     smsResponses: { send: [undefined, SMS_RESPONSES.rateLimited] },
   });
   const messages = [message({ childId: 'c1' }), message({ childId: 'c2' }), message({ childId: 'c3' })];
-  const result = await sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages });
+  const result = await sendService.sendBatch({
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    requestId: 'req-429-01',
+    messages,
+  });
 
   assert.equal(result.stopped?.code, 'RATE_LIMIT_EXCEEDED');
   assert.deepEqual(sleepCalls, [1000]);
@@ -180,7 +200,14 @@ test('sendBatch: peste limita lunară respinge cu 400, fără niciun apel de re�
   const messages = [message({ childId: 'c1' }), message({ childId: 'c2' })];
 
   await assert.rejects(
-    () => sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages }),
+    () =>
+      sendService.sendBatch({
+        source: 'notify',
+        month: '2026-09',
+        templateId: null,
+        requestId: 'req-limita-lunara-01',
+        messages,
+      }),
     error => {
       assert.equal(/** @type {any} */ (error).status, 400);
       assert.match(/** @type {Error} */ (error).message, /Limita lunară de 2 SMS/);
@@ -199,7 +226,14 @@ test('sendBatch: sold sms.md insuficient respinge cu 400, fără trimitere', asy
   const messages = [message({ childId: 'c1', text: 'aa' }), message({ childId: 'c2', text: 'bb' })];
 
   await assert.rejects(
-    () => sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages }),
+    () =>
+      sendService.sendBatch({
+        source: 'notify',
+        month: '2026-09',
+        templateId: null,
+        requestId: 'req-sold-insuficient-01',
+        messages,
+      }),
     error => {
       assert.match(/** @type {Error} */ (error).message, /Sold sms.md insuficient/);
       return true;
@@ -217,7 +251,13 @@ test('sendBatch: eșecul GET balance (rețea) nu blochează lotul', async t => {
     },
   });
   const messages = [message({ childId: 'c1' }), message({ childId: 'c2' })];
-  const result = await sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages });
+  const result = await sendService.sendBatch({
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    requestId: 'req-balance-network-01',
+    messages,
+  });
 
   assert.equal(result.ok, true);
   assert.equal(sendCallsOf(calls).length, 2);
@@ -230,6 +270,7 @@ test('sendBatch: telefon nenormalizabil respinge lotul cu 400, fără apel', asy
       source: 'notify',
       month: '2026-09',
       templateId: null,
+      requestId: 'req-telefon-invalid-01',
       messages: [message({ phone: '123' })],
     }),
   );
@@ -243,6 +284,7 @@ test('sendBatch: text peste 800 de caractere respinge lotul cu 400, fără apel'
       source: 'notify',
       month: '2026-09',
       templateId: null,
+      requestId: 'req-text-lung-01',
       messages: [message({ text: 'x'.repeat(801) })],
     }),
   );
@@ -256,6 +298,7 @@ test('sendBatch: childId gol respinge lotul cu 400, fără apel', async t => {
       source: 'notify',
       month: '2026-09',
       templateId: null,
+      requestId: 'req-childid-gol-01',
       messages: [message({ childId: '' })],
     }),
   );
@@ -265,13 +308,80 @@ test('sendBatch: childId gol respinge lotul cu 400, fără apel', async t => {
 test('sendBatch: fără configurare respinge cu 400 și mesajul de neconectat', async t => {
   const { sendService } = createDeps(t, { connected: false });
   await assert.rejects(
-    () => sendService.sendBatch({ source: 'notify', month: '2026-09', templateId: null, messages: [message()] }),
+    () =>
+      sendService.sendBatch({
+        source: 'notify',
+        month: '2026-09',
+        templateId: null,
+        requestId: 'req-neconectat-01',
+        messages: [message()],
+      }),
     error => {
       assert.equal(/** @type {any} */ (error).status, 400);
       assert.equal(/** @type {Error} */ (error).message, NOT_CONNECTED_MESSAGE);
       return true;
     },
   );
+});
+
+test('sendBatch: requestId lipsă sau invalid respinge cu 400, fără apel', async t => {
+  const { calls, sendService } = createDeps(t);
+  await assert.rejects(() =>
+    // Cast: testăm exact cazul JS-valid/TS-invalid — un apelant care omite requestId-ul obligatoriu.
+    sendService.sendBatch(
+      /** @type {any} */ ({ source: 'notify', month: '2026-09', templateId: null, messages: [message()] }),
+    ),
+  );
+  await assert.rejects(() =>
+    sendService.sendBatch({
+      source: 'notify',
+      month: '2026-09',
+      templateId: null,
+      requestId: 'scurt',
+      messages: [message()],
+    }),
+  );
+  assert.equal(calls.length, 0);
+});
+
+test('sendBatch: reluare cu același requestId nu retrimite — întoarce rezultatul memorat, un singur apel', async t => {
+  const { smsLogRepository, calls, sendService } = createDeps(t);
+  const messages = [message({ childId: 'c1' }), message({ childId: 'c2' })];
+  /** @type {import('../sms-notify.types.mjs').SmsSendRequest} */
+  const request = { source: 'notify', month: '2026-09', templateId: null, requestId: 'req-reluare-01', messages };
+
+  const first = await sendService.sendBatch(request);
+  const second = await sendService.sendBatch(request);
+
+  assert.equal(sendCallsOf(calls).length, 2);
+  assert.deepEqual(second, first);
+  assert.equal(smsLogRepository.monthlyStats(new Date(NOW)).sentThisMonth, 2);
+});
+
+test('sendBatch: reluare după un lot oprit (402) reconstruiește sent+failed+skipped, fără apel nou', async t => {
+  const { calls, sendService } = createDeps(t, {
+    smsResponses: { send: [undefined, SMS_RESPONSES.insufficientBalance] },
+  });
+  const messages = [message({ childId: 'c1' }), message({ childId: 'c2' }), message({ childId: 'c3' })];
+  /** @type {import('../sms-notify.types.mjs').SmsSendRequest} */
+  const request = {
+    source: 'notify',
+    month: '2026-09',
+    templateId: null,
+    requestId: 'req-reluare-402-01',
+    messages,
+  };
+
+  const first = await sendService.sendBatch(request);
+  const callsAfterFirst = sendCallsOf(calls).length;
+  const second = await sendService.sendBatch(request);
+
+  assert.deepEqual(second, first);
+  assert.equal(second.results[0].outcome, 'sent');
+  assert.equal(second.results[1].outcome, 'failed');
+  assert.equal(second.results[2].outcome, 'skipped');
+  assert.equal(second.stopped?.code, 'INSUFFICIENT_BALANCE');
+  assert.equal(sendCallsOf(calls).length, callsAfterFirst);
 });
 
 test('sendTest: trimite mesajul fix și scrie un rând cu source test, childId null, recipientName Test', async t => {

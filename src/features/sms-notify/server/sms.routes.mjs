@@ -20,6 +20,7 @@ const TOKEN_WHITESPACE_MESSAGE = 'Tokenul sms.md nu poate conține spații.';
 const INVALID_SENDER_MESSAGE = 'Expeditorul trebuie să aibă între 1 și 15 caractere.';
 const INVALID_MONTHLY_LIMIT_MESSAGE = 'Limita lunară trebuie să fie un număr întreg între 1 și 5000, sau necompletată.';
 const DEFAULT_TEMPLATE_DELETE_MESSAGE = 'Șablonul implicit nu se poate șterge. Alege alt implicit mai întâi.';
+const DEFAULT_TEMPLATE_UNSET_MESSAGE = 'Alege alt șablon implicit mai întâi.';
 const INVALID_AFTER_MESSAGE = 'Data „după” trebuie să fie în formatul AAAA-LL-ZZ.';
 const LOG_DEFAULT_PERIOD_DAYS = 30;
 
@@ -197,8 +198,10 @@ export function createSmsRoutes({
     if (!dateOK(afterDate)) fail(INVALID_AFTER_MESSAGE);
     const stats = smsLogRepository.monthlyStats(now());
     const config = readSmsConfig(dataDirectory);
+    // Miezul nopții local (Europe/Chisinau), nu UTC: un literal fără „Z" e citit de Date ca oră
+    // locală, deci .toISOString() dă instantul UTC corect — altfel cutoff-ul era decalat 2-3h.
     return {
-      entries: smsLogRepository.listSince(`${afterDate}T00:00:00.000Z`),
+      entries: smsLogRepository.listSince(new Date(`${afterDate}T00:00:00`).toISOString()),
       stats: { ...stats, monthlyLimit: config?.monthlyLimit ?? null },
       monthly: smsLogRepository.monthlyBreakdown(),
     };
@@ -209,6 +212,9 @@ export function createSmsRoutes({
     assertValidTemplateInput({ name, body });
     const before = id ? smsTemplateRepository.find(id) : null;
     if (id && !before) fail(`Șablon inexistent: ${id}.`, 409);
+    // Simetric cu garda de la ștergere: fără el, „de-bifarea” implicitului lasă tabelul fără
+    // niciun șablon implicit (M9) — webapp cade pe `defaultTemplate: null`.
+    if (before?.isDefault && !isDefault) fail(DEFAULT_TEMPLATE_UNSET_MESSAGE);
     const template = smsTemplateRepository.save({
       id,
       name,
