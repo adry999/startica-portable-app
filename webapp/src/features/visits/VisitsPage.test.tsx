@@ -227,6 +227,27 @@ describe('VisitsPage', () => {
     expect(within(row).getByRole('button', { name: 'Șterge' })).toBeDisabled();
   });
 
+  it('„Arhivează" din meniul rândului arată un toast cu „Anulează", care dezarhivează la loc', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr') as HTMLElement;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Arhivează' }));
+
+    expect(await screen.findByText('Vizită arhivată.')).toBeInTheDocument();
+    const undoButton = screen.getByRole('button', { name: 'Anulează' });
+
+    await user.click(undoButton);
+
+    // Dezarhivată la loc — rândul reapare în tabelul implicit (nearhivate).
+    await within(screen.getByRole('table')).findByText('Andrei Popescu');
+  });
+
   it('„Arhivate" arată doar vizitele arhivate, nu și pe cele active', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

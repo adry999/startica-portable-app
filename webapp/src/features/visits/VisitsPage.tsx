@@ -115,8 +115,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   }
 
   async function toggleArchived(visit: Visit) {
+    const nextArchived = !visit.archived;
     try {
-      await visitsData.setArchived(visit, !visit.archived);
+      await visitsData.setArchived(visit, nextArchived);
+      if (nextArchived) {
+        toast.show({
+          message: 'Vizită arhivată.',
+          actionLabel: 'Anulează',
+          onAction: () => {
+            visitsData.setArchived(visit, false).catch(error => toast.show({ message: (error as Error).message }));
+          },
+        });
+      }
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
