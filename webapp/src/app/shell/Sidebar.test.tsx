@@ -107,4 +107,23 @@ describe('Sidebar', () => {
     const attendanceIndex = labels.findIndex(label => label?.includes('Prezența'));
     expect(attendanceIndex).toBe(groupsIndex + 1);
   });
+
+  it('rândul Conflicte apare doar cu contor mai mare ca zero', () => {
+    const { rerender } = render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    expect(screen.queryByText('Conflicte')).not.toBeInTheDocument();
+
+    rerender(
+      <Sidebar
+        activeView="dashboard"
+        onNavigate={() => {}}
+        counts={{ conflicts: 2 }}
+        version="v1.6.3"
+        saveStatus={saveStatus}
+      />,
+    );
+    expect(screen.getByText('Conflicte')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
 });
