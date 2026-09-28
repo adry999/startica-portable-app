@@ -33,6 +33,10 @@ export function ChildFormDrawer({ target, groups, onSubmit, onClose }: ChildForm
     try {
       await onSubmit(values);
       return true;
+    } catch {
+      // C1: save() nu are voie să arunce mai departe — onSubmit re-aruncă după ce a arătat
+      // toast-ul de eroare (ChildrenPage.submitChildForm); aici doar convertim în „nesalvat”.
+      return false;
     } finally {
       setSubmitting(false);
     }

@@ -102,14 +102,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
-  async function submitExpenseForm(input: ExpenseFormInput) {
+  // C1: întoarce succesul real, nu doar dacă cererea a pornit — „Salvează și schimbă” din
+  // useBranchSwitch schimbă filiala doar când save() (deci și funcția asta) întoarce true.
+  async function submitExpenseForm(input: ExpenseFormInput): Promise<boolean> {
     try {
       if (formTarget && formTarget !== 'new') await expensesData.updateExpense(formTarget, input);
       else await expensesData.createExpense(input);
       setFormTarget(null);
       toast.show({ message: formTarget !== 'new' && formTarget ? 'Cheltuială actualizată.' : 'Cheltuială adăugată.' });
+      return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     }
   }
 
@@ -138,10 +142,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       toast.show({
         message: `${targets.length} ${noun} ${verb}`,
         actionLabel: 'Anulează',
-        onAction: () => {
-          void Promise.all(targets.map(expense => expensesData.setExpenseArchived(expense, !targetArchived)));
-        },
+        onAction: () => void undoArchiveSelected(targets, !targetArchived),
       });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  // M1: secvențial, nu Promise.all — session.mutate refuză o mutație pornită cât alta e
+  // „pending”, deci un Promise.all lasă doar prima anulare să reușească.
+  async function undoArchiveSelected(targets: Expense[], archived: boolean) {
+    try {
+      for (const expense of targets) await expensesData.setExpenseArchived(expense, archived);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -245,8 +257,10 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         )}
       </Card>
 
+      {/* C2: 'closed' distinct de 'new' — altfel a doua „+ Cheltuială nouă” reia instanța
+          (și valorile) primei, în loc să pornească de la un formular gol. */}
       <ExpenseFormDrawer
-        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        key={formTarget === null ? 'closed' : formTarget === 'new' ? 'new' : formTarget.id}
         target={formTarget}
         categoryNames={expensesData.categoryNames}
         onSubmit={submitExpenseForm}

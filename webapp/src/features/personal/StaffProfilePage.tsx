@@ -207,7 +207,14 @@ export function StaffProfilePage() {
         </div>
       </div>
 
-      <StaffFormDrawer target={editOpen ? staff : null} onClose={() => setEditOpen(false)} />
+      {/* C2: fără key, drawer-ul rămâne montat cu target=null de la prima randare —
+          defaultValues(null) nu se mai recalculează la „Editează fișa”, iar formularul
+          apare gol (data angajării devine azi la salvare). */}
+      <StaffFormDrawer
+        key={editOpen ? staff.id : 'closed'}
+        target={editOpen ? staff : null}
+        onClose={() => setEditOpen(false)}
+      />
 
       <ConfirmDeleteDialog
         open={archiveConfirmOpen}

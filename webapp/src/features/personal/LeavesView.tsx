@@ -96,7 +96,10 @@ export function LeavesView() {
         })}
       </Card>
 
+      {/* C2: 'closed' distinct de 'new' — altfel a doua „+ Concediu” reia instanța (și
+          valorile) primei, în loc să pornească de la un formular gol. */}
       <LeaveFormDrawer
+        key={drawerTarget === null ? 'closed' : 'new'}
         open={drawerTarget !== null}
         staff={activeStaff}
         onClose={() => setDrawerTarget(null)}

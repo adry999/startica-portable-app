@@ -100,14 +100,16 @@ export function PaymentsPage({
         ? (paymentsData.records.payments.find(p => p.id === formTargetId) ?? null)
         : null;
 
-  async function submitPaymentForm(values: PaymentFormValues) {
+  // C1: întoarce succesul real, nu doar dacă cererea a pornit — „Salvează și schimbă” din
+  // useBranchSwitch schimbă filiala doar când save() (deci și funcția asta) întoarce true.
+  async function submitPaymentForm(values: PaymentFormValues): Promise<boolean> {
     try {
       const previous = formTarget && formTarget !== 'new' ? formTarget : null;
       if (previous) {
         await paymentsData.updatePayment(previous, values);
         onCloseForm();
         toast.show({ message: 'Achitare actualizată.' });
-        return;
+        return true;
       }
       const saved = await paymentsData.createPayment(values, () =>
         window.confirm(
@@ -118,8 +120,10 @@ export function PaymentsPage({
         onCloseForm();
         toast.show({ message: 'Achitare adăugată.' });
       }
+      return saved;
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      return false;
     }
   }
 
@@ -164,8 +168,11 @@ export function PaymentsPage({
         <MonthsView rows={paymentsData.rows} onEdit={onOpenEdit} />
       )}
 
+      {/* C2: 'closed' e distinct de 'new' — la fiecare redeschidere „+ Achitare nouă” trece
+          prin 'closed' (target null), deci instanța se remontează și useState pleacă de la
+          valorile implicite, nu de la ultima achitare salvată. */}
       <PaymentFormDrawer
-        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        key={formTarget === null ? 'closed' : formTarget === 'new' ? 'new' : formTarget.id}
         target={formTarget}
         records={paymentsData.records}
         onSubmit={submitPaymentForm}
@@ -276,10 +283,18 @@ function TableView({
       toast.show({
         message: `${targets.length} achitări arhivate.`,
         actionLabel: 'Anulează',
-        onAction: () => {
-          void Promise.all(targets.map(row => data.unarchivePayment(row.id)));
-        },
+        onAction: () => void undoArchiveMany(targets),
       });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  // M1: secvențial, nu Promise.all — session.mutate refuză o mutație pornită cât alta e
+  // „pending”, deci un Promise.all lasă doar prima dezarhivare să reușească.
+  async function undoArchiveMany(targets: PaymentRowView[]) {
+    try {
+      for (const row of targets) await data.unarchivePayment(row.id);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }

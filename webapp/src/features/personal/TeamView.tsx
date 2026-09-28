@@ -205,7 +205,13 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
         ))}
       </Card>
 
-      <StaffFormDrawer target={staffFormTarget} onClose={onCloseStaffForm} />
+      {/* C2: 'closed' distinct de 'new' — altfel a doua „+ Angajat” reia instanța (și
+          valorile) primei, în loc să pornească de la un formular gol. */}
+      <StaffFormDrawer
+        key={staffFormTarget === null ? 'closed' : staffFormTarget === 'new' ? 'new' : staffFormTarget.id}
+        target={staffFormTarget}
+        onClose={onCloseStaffForm}
+      />
       <RolesDrawer open={rolesOpen} onClose={() => setRolesOpen(false)} />
     </div>
   );

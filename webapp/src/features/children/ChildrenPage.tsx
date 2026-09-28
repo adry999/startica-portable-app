@@ -97,18 +97,24 @@ function ChildrenListView({
       toast.show({
         message: `${targets.length} ${targets.length === 1 ? 'copil arhivat' : 'copii arhivați'}`,
         actionLabel: 'Anulează',
-        onAction: () => {
-          void Promise.all(
-            targets.map(row =>
-              session.mutate('/api/record', {
-                type: 'children',
-                mode: 'update',
-                record: { ...row.child, archived: false, archivedAt: null },
-              }),
-            ),
-          );
-        },
+        onAction: () => void undoArchiveSelected(targets),
       });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  // M1: secvențial, nu Promise.all — session.mutate refuză o mutație pornită cât alta e
+  // „pending”, deci un Promise.all lasă doar primul copil dezarhivat.
+  async function undoArchiveSelected(targets: ChildRow[]) {
+    try {
+      for (const row of targets) {
+        await session.mutate('/api/record', {
+          type: 'children',
+          mode: 'update',
+          record: { ...row.child, archived: false, archivedAt: null },
+        });
+      }
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -187,20 +193,23 @@ function ChildrenListView({
     }
   }
 
+  // C1: mutația eșuată trebuie să ajungă înapoi la ChildFormDrawer (re-aruncată, după toast),
+  // altfel handleSubmit crede că a salvat și „Salvează și schimbă” ar comuta filiala degeaba.
   async function submitChildForm(values: ChildFormValues) {
+    const previous = formTarget && formTarget !== 'new' ? formTarget : null;
+    const record = buildChildRecord(previous, `ID-${crypto.randomUUID()}`, values);
     try {
-      const previous = formTarget && formTarget !== 'new' ? formTarget : null;
-      const record = buildChildRecord(previous, `ID-${crypto.randomUUID()}`, values);
       await session.mutate('/api/record', {
         type: 'children',
         mode: previous ? 'update' : 'create',
         record,
       });
-      setFormTarget(null);
-      toast.show({ message: previous ? 'Fișă actualizată.' : 'Copil adăugat.' });
     } catch (error) {
       toast.show({ message: (error as Error).message });
+      throw error;
     }
+    setFormTarget(null);
+    toast.show({ message: previous ? 'Fișă actualizată.' : 'Copil adăugat.' });
   }
 
   async function deleteChildForever(row: ChildRow) {
@@ -279,8 +288,10 @@ function ChildrenListView({
         />
       </div>
 
+      {/* C2: 'closed' distinct de 'new' — altfel a doua „+ Adaugă copil” reia instanța
+          (și valorile) primei, în loc să pornească de la un formular gol. */}
       <ChildFormDrawer
-        key={formTarget === 'new' || formTarget === null ? 'new' : formTarget.id}
+        key={formTarget === null ? 'closed' : formTarget === 'new' ? 'new' : formTarget.id}
         target={formTarget}
         groups={childrenData.groups}
         onSubmit={submitChildForm}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge, Button, Card, LoadingState, RowMenu, SegmentedControl, useToast } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -24,14 +24,19 @@ function previousMonth(date: string): string {
 
 /** Salarii (23c), în spatele PinGate (23d) — plata unui salariu = o cheltuială, minus avansurile lunii. */
 export function SalariesView() {
+  // M8: PinGate ține deblocarea în starea lui locală (usePinStatus), separată de sesiunea
+  // serverului — dacă PIN-ul expiră acolo (după 10 min), PinGate tot arată conținutul. Un
+  // 403 pe /api/personal/salaries (status 'locked') remontează PinGate cu o cheie nouă, ca
+  // să-și reîmprospăteze starea de deblocare de la server.
+  const [pinGateKey, setPinGateKey] = useState(0);
   return (
-    <PinGate>
-      <SalariesContent />
+    <PinGate key={pinGateKey}>
+      <SalariesContent onLocked={() => setPinGateKey(key => key + 1)} />
     </PinGate>
   );
 }
 
-function SalariesContent() {
+function SalariesContent({ onLocked }: { onLocked: () => void }) {
   const personal = usePersonal();
   const toast = useToast();
   // „Lista lunii” arată luna precedentă, deja încheiată — pay() refuză o lună care nu s-a
@@ -48,7 +53,13 @@ function SalariesContent() {
   const [historyStaffId, setHistoryStaffId] = useState<string | null>(null);
   const [subTab, setSubTab] = useState<SalariesSubTab>('lista');
 
+  useEffect(() => {
+    if (salaries.status === 'locked') onLocked();
+  }, [salaries.status, onLocked]);
+
   if (personal.status === 'loading' || salaries.status === 'loading') return <LoadingState />;
+  // M8: 'locked' e tranzitoriu — efectul de mai sus tocmai a cerut remontarea PinGate-ului.
+  if (salaries.status === 'locked') return <LoadingState />;
   if (salaries.status === 'failed') return <p className={styles.notice}>{salaries.failureMessage}</p>;
 
   if (subTab === 'avansuri') {
@@ -195,7 +206,10 @@ function SalariesContent() {
         })}
       </Card>
 
+      {/* C2: key={staff?.id ?? 'closed'} — fără el, suma/modul angajatului anterior rămân în
+          formular la deschiderea pentru un alt angajat (bani). */}
       <SalaryFormDrawer
+        key={`salary-${salaryFormStaffId ?? 'closed'}`}
         staff={salaryFormStaffId ? (personal.staffById.get(salaryFormStaffId) ?? null) : null}
         onClose={() => setSalaryFormStaffId(null)}
         onSubmit={async input => {
@@ -203,9 +217,11 @@ function SalariesContent() {
         }}
       />
       <AdvanceFormDrawer
+        key={`advance-${advanceStaffId ?? 'closed'}`}
         staff={advanceStaffId ? (personal.staffById.get(advanceStaffId) ?? null) : null}
         month={currentMonth}
         onClose={() => setAdvanceStaffId(null)}
+        onSaved={salaries.reload}
       />
       <SalaryHistoryDrawer
         staff={historyStaffId ? (personal.staffById.get(historyStaffId) ?? null) : null}

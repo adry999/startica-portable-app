@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -39,9 +39,15 @@ const fixturePersonalState = {
 };
 
 let postedPay: unknown[] = [];
+let postedAdvances: unknown[] = [];
+// M8: al doilea răspuns la /api/personal/salaries?month= trebuie să reflecte avansul dat —
+// altfel testul de reîncărcare automată ar trece și fără fix.
+let salariesLoadCount = 0;
 
 function stubFetch() {
   postedPay = [];
+  postedAdvances = [];
+  salariesLoadCount = 0;
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
@@ -55,7 +61,9 @@ function stubFetch() {
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       if (path === '/api/personal/pin') return jsonResponse({ configured: true, unlocked: true });
-      if (path.startsWith('/api/personal/salaries?month='))
+      if (path.startsWith('/api/personal/salaries?month=')) {
+        salariesLoadCount += 1;
+        const advances = salariesLoadCount >= 2 ? 500 : 0;
         return jsonResponse({
           rows: [
             {
@@ -63,8 +71,8 @@ function stubFetch() {
               mode: 'fix',
               base: '10000 lei / lună',
               gross: 10000,
-              advances: 0,
-              net: 10000,
+              advances,
+              net: 10000 - advances,
               paid: null,
             },
             {
@@ -77,12 +85,18 @@ function stubFetch() {
               paid: null,
             },
           ],
-          totals: { gross: 11200, advances: 0, net: 11200, paid: 0 },
+          totals: { gross: 11200, advances, net: 11200 - advances, paid: 0 },
         });
+      }
       if (path === '/api/personal/salaries/pay' && options?.method === 'POST') {
         const body = JSON.parse(options.body as string);
         postedPay.push(body);
         return jsonResponse({ paid: body.staffIds, skipped: [] });
+      }
+      if (path === '/api/personal/advances' && options?.method === 'POST') {
+        const body = JSON.parse(options.body as string);
+        postedAdvances.push(body);
+        return jsonResponse({ advance: { id: 'ADV-1', ...body.advance } });
       }
       throw new Error(`neașteptat: ${path}`);
     }),
@@ -132,5 +146,41 @@ describe('SalariesView', () => {
     expect(await screen.findByText(/plătite/)).toBeInTheDocument();
     expect(postedPay).toHaveLength(1);
     expect(postedPay[0]).toMatchObject({ staffIds: ['STF-1'], method: 'Card' });
+  });
+
+  it('după un avans dat, lista se reîncarcă automat și cardul „Avansuri” se actualizează (M8)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <SalariesView />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    // „Avansuri” apare de 3 ori (fila din SegmentedControl, cardul de total, coloana din tabel)
+    // — cardul de total e primul <span>, celelalte două nu sunt <div class="card">.
+    const advancesCard = screen.getAllByText('Avansuri', { selector: 'span' })[0].closest('div')!;
+    expect(within(advancesCard).getByText('0,00 lei')).toBeInTheDocument();
+
+    const row = screen.getByText('Ana Popescu').closest('div')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: 'Avans' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Avans: Ana Popescu' });
+    await userEvent.type(within(dialog).getByLabelText('Sumă (lei)'), '500');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Avansul a fost înregistrat.')).toBeInTheDocument();
+    expect(postedAdvances).toHaveLength(1);
+    // M8: fără onSaved={salaries.reload}, cardul ar fi rămas la 0,00 lei — al doilea răspuns
+    // mocat (500) nu ar mai fi fost cerut deloc. Reinterogăm DOM-ul la fiecare încercare —
+    // load() trece prin 'loading' (LoadingState înlocuiește tot ecranul), deci `advancesCard`
+    // de mai sus devine un nod desprins de document după reîncărcare.
+    await waitFor(() => {
+      const card = screen.getAllByText('Avansuri', { selector: 'span' })[0].closest('div')!;
+      expect(within(card).getByText('500,00 lei')).toBeInTheDocument();
+    });
   });
 });

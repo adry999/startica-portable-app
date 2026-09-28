@@ -15,7 +15,8 @@ export function ExpenseFormDrawer({
 }: {
   target: Expense | 'new' | null;
   categoryNames: string[];
-  onSubmit: (input: ExpenseFormInput) => void;
+  /** C1: întoarce succesul real al salvării (true doar după mutate reușit) — vezi save() mai jos. */
+  onSubmit: (input: ExpenseFormInput) => Promise<boolean>;
   onClose: () => void;
 }) {
   const editing = target !== null && target !== 'new' ? target : null;
@@ -27,12 +28,21 @@ export function ExpenseFormDrawer({
   const [notes, setNotes] = useState(editing?.notes || '');
   // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
   const initialValuesRef = useRef({ date, amount, category, method, description, notes });
+  // M12: fără gardă de dublu-clic, două clicuri rapide pe Salvează porneau a doua mutație cât
+  // prima era încă „pending” → toast de eroare tehnic, deși prima salvare reușea.
+  const [submitting, setSubmitting] = useState(false);
 
-  // onSubmit e sincron (fire-and-forget, vezi ExpensesPage.submitExpenseForm) — nu are ce să
-  // întoarcă „succes”; se folosește pentru save() din dirty-forms (13b) și pentru form/footer.
-  function submitForm(): Promise<boolean> {
-    onSubmit({ date, amount, category, method, description, notes });
-    return Promise.resolve(true);
+  // C1: se așteaptă mutația (nu mai e fire-and-forget) și se întoarce succesul ei real —
+  // altfel save() din dirty-forms (13b) și garda „Salvează și schimbă” a filialei ar crede
+  // că s-a salvat înainte ca mutația să fi pornit măcar.
+  async function submitForm(): Promise<boolean> {
+    if (submitting) return false;
+    setSubmitting(true);
+    try {
+      return await onSubmit({ date, amount, category, method, description, notes });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function handleSubmit(event: FormEvent) {
@@ -50,9 +60,13 @@ export function ExpenseFormDrawer({
       title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
       width={520}
       onClose={onClose}
-      footer={<Button onClick={() => void submitForm()}>Salvează</Button>}
+      footer={
+        <Button type="submit" form="expense-form-drawer" disabled={submitting}>
+          Salvează
+        </Button>
+      }
     >
-      <form className={styles.editorForm} onSubmit={handleSubmit}>
+      <form id="expense-form-drawer" className={styles.editorForm} onSubmit={handleSubmit}>
         <label className={styles.editorField}>
           Data cheltuielii
           <input type="date" required value={date} onChange={event => setDate(event.target.value)} />

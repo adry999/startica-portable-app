@@ -9,12 +9,15 @@ export interface AdvanceFormDrawerProps {
   staff: Staff | null;
   month: string;
   onClose: () => void;
+  /** M8: SalariesView nu reîncărca lista după un avans — coloanele „Avansuri”/„Net” rămâneau
+   * vechi până la o remontare întâmplătoare. */
+  onSaved?: () => void;
 }
 
 const METHODS = ['Cash', 'Card', 'Transfer'];
 
 /** Avans (23c ⋯) — devine cheltuială din ziua dării; scăzut o singură dată, la plata salariului. */
-export function AdvanceFormDrawer({ staff, month, onClose }: AdvanceFormDrawerProps) {
+export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFormDrawerProps) {
   const session = useAppSession();
   const toast = useToast();
   const [amount, setAmount] = useState('');
@@ -32,6 +35,7 @@ export function AdvanceFormDrawer({ staff, month, onClose }: AdvanceFormDrawerPr
         advance: { staffId: staff.id, date, amount: Number(amount), method, month },
       });
       toast.show({ message: 'Avansul a fost înregistrat.' });
+      onSaved?.();
       onClose();
     } catch (error) {
       toast.show({ message: (error as Error).message });

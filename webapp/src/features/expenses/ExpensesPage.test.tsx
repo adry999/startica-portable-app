@@ -55,7 +55,13 @@ function renderPage() {
 }
 
 describe('ExpensesPage', () => {
+  // Mutabil, resetat la fiecare test — altfel un al doilea /api/record pentru „expenses” din
+  // aceeași interacțiune (ex. arhivarea secvențială a mai multor rânduri, M1) ar porni mereu
+  // de la fixtureState-ul static și ar anula modificarea primului apel.
+  let currentExpenses = fixtureState.expenses;
+
   beforeEach(() => {
+    currentExpenses = fixtureState.expenses;
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -66,13 +72,11 @@ describe('ExpensesPage', () => {
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           if (body.type === 'expenses') {
-            const updated = {
-              ...fixtureState,
-              expenses:
-                body.mode === 'create'
-                  ? [...fixtureState.expenses, body.record]
-                  : fixtureState.expenses.map(e => (e.id === body.record.id ? body.record : e)),
-            };
+            currentExpenses =
+              body.mode === 'create'
+                ? [...currentExpenses, body.record]
+                : currentExpenses.map(e => (e.id === body.record.id ? body.record : e));
+            const updated = { ...fixtureState, expenses: currentExpenses };
             return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
           }
           if (body.type === 'categories') {
@@ -180,6 +184,33 @@ describe('ExpensesPage', () => {
     expect(await screen.findByText('1 cheltuială arhivată')).toBeInTheDocument();
   });
 
+  it('„Anulează” după arhivarea mai multor cheltuieli le dezarhivează pe toate, nu doar prima (M1)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const row1 = screen.getByText('Salariu septembrie').closest('tr')!;
+    const row2 = screen.getByText('Curent').closest('tr')!;
+    await user.click(within(row1).getByRole('checkbox'));
+    await user.click(within(row2).getByRole('checkbox'));
+
+    await user.click(screen.getByRole('button', { name: 'Arhivează selectate' }));
+    expect(await screen.findByText('2 cheltuieli arhivate')).toBeInTheDocument();
+    expect(screen.queryByText('Salariu septembrie')).not.toBeInTheDocument();
+    expect(screen.queryByText('Curent')).not.toBeInTheDocument();
+
+    // Undo-ul era Promise.all: session.mutate refuză o a doua mutație pornită cât prima e
+    // „pending”, deci doar prima cheltuială se dezarhiva. Secvențial, ambele trebuie să revină.
+    await user.click(screen.getByRole('button', { name: 'Anulează' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
+      expect(screen.getByText('Curent')).toBeInTheDocument();
+    });
+  });
+
   it('adaugă o categorie nouă din formularul de sub filtre', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
@@ -252,6 +283,98 @@ describe('ExpensesPage', () => {
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o cheltuială');
     await expect(dirtyForm.save()).resolves.toBe(true);
+  });
+
+  it('save() din formularul de cheltuială întoarce false când mutația pică (C1)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.type(screen.getByLabelText('Suma'), '250');
+
+    const [dirtyForm] = readDirtyForms();
+
+    // Simulăm eșecul mutației (ex. 409 „Verifică operațiunea anterioară”) — înainte de C1,
+    // ExpenseFormDrawer.submitForm întorcea true fără să aștepte deloc mutația, deci
+    // „Salvează și schimbă” din useBranchSwitch ar fi schimbat filiala cu formularul pierdut.
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => ({
+      ok: false,
+      status: 409,
+      json: async () => ({ error: 'Verifică operațiunea anterioară cu „Reîncarcă”.' }),
+    }));
+
+    await expect(dirtyForm.save()).resolves.toBe(false);
+    // Formularul rămâne nesalvat — nu s-a închis, nu s-a golit registrul dirty-forms.
+    expect(readDirtyForms()).toHaveLength(1);
+    expect(await screen.findByText('Verifică operațiunea anterioară cu „Reîncarcă”.')).toBeInTheDocument();
+  });
+
+  it('a doua deschidere a formularului „Cheltuială nouă” e goală, nu precompletată cu prima (C2)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.type(screen.getByLabelText('Suma'), '250');
+    await user.type(screen.getByLabelText('Descriere'), 'Detergenți');
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+
+    expect((screen.getByLabelText('Suma') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Descriere') as HTMLInputElement).value).toBe('');
+    expect(readDirtyForms()).toEqual([]);
+  });
+
+  it('dublu-clic rapid pe Salvează la o cheltuială nouă pornește o singură mutație (M12)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.type(screen.getByLabelText('Suma'), '250');
+    await user.type(screen.getByLabelText('Descriere'), 'Detergenți');
+
+    let resolveRecord!: (value: unknown) => void;
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          resolveRecord = resolve;
+        }),
+    );
+
+    const saveButton = screen.getByRole('button', { name: 'Salvează' });
+    await user.click(saveButton);
+    await user.click(saveButton);
+    resolveRecord(
+      jsonResponse({
+        ...fixtureState,
+        expenses: [
+          ...fixtureState.expenses,
+          {
+            id: 'e4',
+            date: '2026-09-20',
+            category: 'General',
+            description: 'Detergenți',
+            amount: 250,
+            archived: false,
+          },
+        ],
+      }),
+    );
+
+    expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
+
+    const recordCalls = (fetch as ReturnType<typeof vi.fn>).mock.calls.filter(([path]) => path === '/api/record');
+    expect(recordCalls).toHaveLength(1);
   });
 
   it('editează o cheltuială existentă din meniul rândului', async () => {

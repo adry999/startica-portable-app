@@ -17,7 +17,9 @@ export interface PaymentFormDrawerProps {
   records: RecordsSnapshot;
   /** Copil presetat la creare (ex. „+ Plată" din fișa copilului) — rămâne editabil în formular. */
   defaultChildId?: string;
-  onSubmit: (values: PaymentFormValues) => Promise<void>;
+  /** C1: întoarce succesul real al salvării (true doar după mutate reușit) — save() din
+   * dirty-forms (13b) și garda „Salvează și schimbă” a filialei se bazează pe asta. */
+  onSubmit: (values: PaymentFormValues) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -131,8 +133,11 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
             amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
           }
         : values;
-      await onSubmit(finalValues);
-      return true;
+      return await onSubmit(finalValues);
+    } catch {
+      // C1: save() nu are voie să arunce mai departe — useBranchSwitch/dirty-forms se
+      // bazează pe un boolean, altfel o respingere neprinsă ar bloca „Salvează și schimbă”.
+      return false;
     } finally {
       setSubmitting(false);
     }

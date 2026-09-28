@@ -37,7 +37,7 @@ const records = {
 } as unknown as RecordsSnapshot;
 
 function renderDrawer() {
-  const onSubmit = vi.fn().mockResolvedValue(undefined);
+  const onSubmit = vi.fn().mockResolvedValue(true);
   const onClose = vi.fn();
   render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={onClose} />);
   return { onSubmit, onClose };
@@ -152,7 +152,7 @@ describe('PaymentFormDrawer', () => {
       <PaymentFormDrawer
         target={payment}
         records={records}
-        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onSubmit={vi.fn().mockResolvedValue(true)}
         onClose={vi.fn()}
       />,
     );
@@ -162,10 +162,10 @@ describe('PaymentFormDrawer', () => {
   });
 
   it('apelează onSubmit o singură dată la dublu-click rapid pe Salvează', async () => {
-    let resolveSubmit!: () => void;
+    let resolveSubmit!: (value: boolean) => void;
     const onSubmit = vi.fn(
       () =>
-        new Promise<void>(resolve => {
+        new Promise<boolean>(resolve => {
           resolveSubmit = resolve;
         }),
     );
@@ -177,7 +177,7 @@ describe('PaymentFormDrawer', () => {
 
     await user.click(saveButton);
     await user.click(saveButton);
-    resolveSubmit();
+    resolveSubmit(true);
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
@@ -188,7 +188,7 @@ describe('PaymentFormDrawer', () => {
         target="new"
         records={records}
         defaultChildId="c1"
-        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onSubmit={vi.fn().mockResolvedValue(true)}
         onClose={vi.fn()}
       />,
     );
@@ -299,6 +299,17 @@ describe('PaymentFormDrawer', () => {
 
     await expect(dirtyForm.save()).resolves.toBe(true);
     expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('save() întoarce false când mutația pică (C1) — „Salvează și schimbă” nu are voie să schimbe filiala', async () => {
+    const onSubmit = vi.fn().mockRejectedValue(new Error('Verifică operațiunea anterioară.'));
+    render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText('Cash'), '500');
+    const [dirtyForm] = readDirtyForms();
+
+    await expect(dirtyForm.save()).resolves.toBe(false);
   });
 
   it('formularul nu e nesalvat cât timp drawer-ul e închis (target null)', () => {
