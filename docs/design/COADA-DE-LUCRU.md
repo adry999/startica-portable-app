@@ -78,6 +78,18 @@ Delegat unui subagent Sonnet (spec: 02/09-copii*.md + AUDIT-UI 2.2/2.3). Verific
 - **CF-2 (Date personale, Plătitori reținuți), CF-7 (Documente):** BLOCAT/SKIP — lipsesc din modelul de date, întrebare în `INTREBARI.md`.
 - **CF-4 (Note):** PARȚIAL — buton „+ Notă” adăugat; lista cu dată per notă rămâne blocată (`Child.notes` e un singur string, nu o listă) — aceeași categorie ca CF-2, de reluat cu decizia de schemă.
 
-**Următorul:** Modulul 3 — Grupe v2 (`03-grupe.md`, înlocuiește G-1…G-16 din audit) — în lucru, rulează concurent cu ce precede (fișiere disjuncte din `features/groups/`, plus `record-types.d.mts`/`tokens.css` comune). Delegat la subagent Sonnet cu arhitectura deja decisă (câmpuri `order`/`tone` pe `Group`, fără endpoint nou — `/api/record` existent, DnD nativ existent din `GroupsBoard.tsx`), eu verific + commit la final.
+## Modulul 3 — Grupe v2 (`03-grupe.md`, înlocuiește G-1…G-16 din audit) — DONE 2026-09-28
 
-**După Modulul 3:** Modulul 4 — Personal (`Personal.dc.html`, `24-personal.md`).
+Rulat concurent cu Modulul 2 (fișiere disjuncte `features/groups/*` vs `features/children/*`); arhitectura deciso de mine înainte de delegare (câmpuri `order`/`tone`/`ageMinYears`/`ageMaxYears` pe `Group`, fără endpoint nou — `/api/record` existent, DnD nativ extins din `GroupsBoard.tsx`). Verificat pe disc (diff pe fișierele cheie: `useAttendanceDay.ts`, `record-schema.mjs`, `record-types.d.mts`, `group-order.ts`) + `tsc`/`vitest run` (137/744 verde) + `node --test record-schema.test.mjs` (41/41) + `npm test` rădăcină (1048/1050, 2 skip) + `prettier --check`, toate independent de raportul agentului. Commit `97c1017` (+ fixup formatare `ba95ab2` pt. fișiere din Modulul 2 prinse abia la verificarea comună).
+
+- **Tablă implicit, „+ Grupă nouă” în antet ambele moduri, fără card punctat:** DONE.
+- **`GroupTile`/`GroupCardCompact` (noi):** DONE — pastile de stare, max 9 copii+„+N”, editor mereu deschis.
+- **Panoul „Fără grupă”:** DONE — sticky, ordonat după data nașterii.
+- **Reordonare (DnD):** DONE — tip nou `application/x-group-id` distinct de copii, persistă prin `/api/record` (nu mai localStorage).
+- **Drawer 4c „Grupă nouă”:** DONE — preview live, 8 tonuri, capacitate, vârstă opțională, unicitate nume, `order=0` la creare.
+- **`useAttendanceDay`:** sortare după `group.order` (nu atinge `markGroupPresent`).
+- **Backend:** `Group.order/tone/ageMinYears/ageMaxYears` validate în `record-schema.mjs`.
+- **De revizuit — decizie de arhitectură a agentului:** `groupBoardTone.ts` e un sistem de 8 tonuri LOCAL modulului groups, nu extinde `@shared/ui/group-tone.ts` (4-5 tonuri, folosit în children/attendance/payments/status/fee-setup). Funcționează, dar cele două sisteme de culori coexistă — de unificat quando se atinge și restul ecranelor cu >4 grupe.
+- **Neatins (best-effort, cum s-a indicat):** ordinea grupelor nu s-a propagat în `FilterPills` din Copii/Achitări/Situația plăților — rămân pe ordinea veche (alfabetică/id) acolo.
+
+**Următorul:** Modulul 4 — Personal (`Personal.dc.html`, `24-personal.md`) — verifică și legătura cu `GroupTeamCard` (echipa pe grupă), neatinsă de Modulul 3.
