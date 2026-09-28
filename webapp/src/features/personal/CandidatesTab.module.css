@@ -1,0 +1,28 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notice {
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.phone {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.notes {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  color: var(--muted);
+}

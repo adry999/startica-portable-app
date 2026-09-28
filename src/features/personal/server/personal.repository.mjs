@@ -200,7 +200,7 @@ export function createPersonalRepository(common) {
     const existing = mode === 'update' ? kinds.find('candidates', /** @type {any} */ (input)?.id) : null;
     if (mode === 'update' && !existing) fail('Candidatul nu mai există.', 409);
     const normalized = normalizePersonalRecord('candidates', {
-      ...input,
+      .../** @type {object} */ (input),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
