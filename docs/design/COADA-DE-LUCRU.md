@@ -250,6 +250,14 @@ Verificat prin semnale (prezența modulului/rutei/componentei), nu calitate cod 
   - Task 12 din plan (sincronizarea propriu-zisă a `pool_bookings`/`pool_sessions`/`pool_closings`/`charges`/kind-urile Personal către `sync-server`) — nefăcut, e o bucată separată, nu mică.
   - README.md al feature-ului `pool` — adăugat de mine (lipsea din commit-ul crew-ului).
 
+## 23-bazin.md — cele 3 bucăți rămase (Task 8/11/12), închise separat, în worktree izolat
+
+- **Task 12 — sincronizarea `pool_bookings`/`pool_sessions`/`pool_closings`.** Aceleași porturi ca la `attendance`: `createPoolRepository` primește `onChange`, scrie outbox-ul la fiecare programare/marcaj/închidere; `createSyncPoolWriter` (writer brut, fără tranzacție proprie — motorul de sync o deschide deja) aplică modificările trase de pe alte calculatoare; `applySnapshotEntry`/`change-applier` extinse cu cele 3 kind-uri noi; `sync-server/src/change-policy.mjs` (`KINDS`) sincronizat manual, verificat de `tests/sync-shared-constants.test.mjs`. **Nu** include setul „comun"/Personal — explicit în afara scopului acestei bucăți. Bug prins înainte să ruleze: `saveClosing` nu-și deschide propria tranzacție (ar fi dat „cannot start a transaction within a transaction", fiindcă e apelat din tranzacția deja deschisă a închiderii lunii). Commit `7db2543`.
+- **Task 8 — foaia „Bazin" lizibilă din exportul Excel.** `exportWorkbook()` adaugă un sheet nou (ID, ID_copil, Copil, Luna, Descriere, Sumă, Data) peste `charges` — pur informativ, la reimport nu se citește după nume de sheet, deci nu dublează nimic. Commit `1c5b3cc`.
+- **Task 11 — bonul de 58 mm al Bazinului.** `GET /api/pool/month` întoarce acum `bookings`+`sessions` per copil; `PoolSettings` capătă `itemsNote` (ce aduce copilul, afișat pe bon; formular în Backup și setări → Bazin); `MonthView` are un meniu ⋯ cu „Bon 58 mm" → `/bazin/bon/:childId?month=`; `PoolReceiptLabel` (componentă pură, pregătită de mai demult) mutat din `features/payments` în `features/pool`, unde aparține de fapt; `PoolReceiptPage` e ruta reală (`usePoolMonth`+`usePoolSettings`+`useAppSession`, calculează zilele lunii cu `expandBooking` și punctează ședințele anulate), cu același toolbar de tipar 58 mm ca la achitări. Commit `f0d40af`.
+- Toate 3: `npm run check` (root) + `cd webapp && npm run typecheck && npm test` verzi (1102 teste root, 819 teste webapp), verificate după fiecare bucată în parte, nu doar la final.
+- Cu asta, tot ce era listat ca „rămas, nefăcut" la Bazin (Task 8/11/12) e închis. Rămân doar: Fișa copilului (CF-1…10, model de date nou) și build+hash-ul instalatorului final — în afara scopului acestei bucăți.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
 - Build + hash instaler final, după ce confirmi că merge tot testat local.
