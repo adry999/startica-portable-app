@@ -102,7 +102,12 @@ export function ScrollArea({ children, className }: ScrollAreaProps) {
         {children}
       </div>
       {thumb && (
-        <div ref={barRef} className={`${styles.bar} ${dragging ? styles.dragging : ''}`} aria-hidden="true" onPointerDown={onTrackPointerDown}>
+        <div
+          ref={barRef}
+          className={`${styles.bar} ${dragging ? styles.dragging : ''}`}
+          aria-hidden="true"
+          onPointerDown={onTrackPointerDown}
+        >
           <div
             className={styles.thumb}
             style={{ height: thumb.height, top: thumb.top }}

@@ -342,7 +342,11 @@ describe('AttendancePage · Ziua', () => {
           if (postCalls === 1) return jsonResponse({ error: 'Cerere respinsă.' }, false, 400);
           return jsonResponse({
             ok: true,
-            saved: body.changes.map(change => ({ ...change, reason: change.reason ?? '', updatedAt: '2026-09-27T09:00:00Z' })),
+            saved: body.changes.map(change => ({
+              ...change,
+              reason: change.reason ?? '',
+              updatedAt: '2026-09-27T09:00:00Z',
+            })),
             removed: [],
           });
         }
