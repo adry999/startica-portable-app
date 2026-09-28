@@ -44,7 +44,9 @@ export function DevicesList({ devices, onRevoke }: DevicesListProps) {
                 {device.os}
                 {branch ? ` · deschide de obicei Filiala ${branch}` : ''}
               </span>
-              <span className={styles.status}>{offlineDays > 0 ? `Offline de ${offlineDays} zile` : 'Sincronizat'}</span>
+              <span className={styles.status}>
+                {offlineDays > 0 ? `Offline de ${offlineDays} zile` : 'Sincronizat'}
+              </span>
             </div>
             {!device.me && (
               <Button variant="ghost" className={styles.revoke} onClick={() => setPendingRevoke(device)}>

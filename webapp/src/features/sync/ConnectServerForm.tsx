@@ -14,7 +14,13 @@ export interface ConnectServerFormProps {
 type Mode = 'code' | 'setupKey';
 
 /** Neconfigurat (14b) — formularul de conectare, cu cele două moduri din spec (22). */
-export function ConnectServerForm({ suggestedName, connecting, onConnect, onConnected, onError }: ConnectServerFormProps) {
+export function ConnectServerForm({
+  suggestedName,
+  connecting,
+  onConnect,
+  onConnected,
+  onError,
+}: ConnectServerFormProps) {
   const [mode, setMode] = useState<Mode>('code');
   const [serverUrl, setServerUrl] = useState('');
   const [code, setCode] = useState('');

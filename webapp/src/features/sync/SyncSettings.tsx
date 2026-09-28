@@ -72,7 +72,11 @@ export function SyncSettings() {
   return (
     <div className={styles.layout}>
       <div className={styles.main}>
-        <Card className={offline ? `${backupStyles.panel} ${styles.serverCardOffline}` : `${backupStyles.panel} ${styles.serverCard}`}>
+        <Card
+          className={
+            offline ? `${backupStyles.panel} ${styles.serverCardOffline}` : `${backupStyles.panel} ${styles.serverCard}`
+          }
+        >
           <h3 className={backupStyles.panelTitle}>Server</h3>
           <p className={styles.status}>
             {status.connection === 'revoked'
@@ -104,11 +108,7 @@ export function SyncSettings() {
               + Conectează un calculator
             </Button>
           </div>
-          {!sync.devicesReady ? (
-            <LoadingState />
-          ) : (
-            <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />
-          )}
+          {!sync.devicesReady ? <LoadingState /> : <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />}
         </Card>
 
         <Card className={backupStyles.panel}>
