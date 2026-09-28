@@ -164,8 +164,8 @@ try {
   // Versiunea afișată în sidebar trebuie să fie cea servită de /api/session, nu o valoare fixă.
   assert.equal(await evaluate("document.querySelector('aside small')?.textContent"), session.version);
 
-  // Meniul lateral: 16 ecrane, exact unul marcat curent (Dashboard, la încărcare).
-  assert.equal(await evaluate("document.querySelectorAll('aside nav button').length"), 16);
+  // Meniul lateral: 17 ecrane, exact unul marcat curent (Dashboard, la încărcare).
+  assert.equal(await evaluate("document.querySelectorAll('aside nav button').length"), 17);
   assert.equal(await evaluate("document.querySelectorAll('aside nav button[aria-current=page]').length"), 1);
   assert.equal(
     await evaluate("document.querySelector('aside nav button[aria-current=page]')?.children[1]?.textContent"),
