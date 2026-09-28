@@ -20,3 +20,77 @@
   font: inherit;
   font-size: 13px;
 }
+
+.row {
+  display: flex;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+}
+
+.row .field {
+  flex: 1;
+  min-width: 120px;
+}
+
+.swatchRow {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.swatchActive {
+  box-shadow: 0 0 0 2px var(--slate);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.stepper input {
+  width: 60px;
+  text-align: center;
+}
+
+.stepper button {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font-weight: 800;
+}
+
+.orderNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.footerNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.footerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-10);
+}

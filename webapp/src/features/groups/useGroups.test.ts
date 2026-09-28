@@ -8,13 +8,14 @@ function jsonResponse(body: unknown) {
 }
 
 // Fixtură: o grupă plină (2/2), una goală (0/5) și una fără capacitate setată
-// (1/—), plus un copil nearhivat fără grupă.
+// (1/—), plus doi copii nearhivați fără grupă cu vârste diferite.
 const fixtureState = {
   children: [
     { id: 'c1', name: 'Andrei Popescu', groupId: 'g1', birthDate: '2020-09-24', archived: false },
     { id: 'c2', name: 'Maria Ionescu', groupId: 'g1', birthDate: '2019-01-15', archived: false },
     { id: 'c3', name: 'Bianca Stan', groupId: 'g3', birthDate: '2021-05-01', archived: false },
     { id: 'c4', name: 'Vlad Marin', groupId: null, birthDate: '2020-01-01', archived: false },
+    { id: 'c6', name: 'Sofia Ilie', groupId: null, birthDate: '2022-06-01', archived: false },
     { id: 'c5', name: 'Arhivat Vechi', groupId: 'g1', birthDate: '2018-01-01', archived: true },
   ],
   payments: [],
@@ -34,6 +35,13 @@ async function loadedSession() {
   return session;
 }
 
+function recordCallsTo(type: string) {
+  return (fetch as ReturnType<typeof vi.fn>).mock.calls
+    .filter(([path]) => path === '/api/record')
+    .map(([, options]) => JSON.parse((options as RequestInit).body as string))
+    .filter(body => body.type === type);
+}
+
 describe('useGroups', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -44,6 +52,8 @@ describe('useGroups', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/record')
+          return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -59,7 +69,7 @@ describe('useGroups', () => {
     expect(result.current.status).toBe('loading');
   });
 
-  it('randează grupele sortate alfabetic, cu ocupare și copii arhivați excluși', async () => {
+  it('randează grupele sortate alfabetic (fallback, fără `order`), cu ocupare, ton și stare', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
@@ -70,24 +80,30 @@ describe('useGroups', () => {
     expect(fluturasi.occupancyLabel).toBe('2/2');
     expect(fluturasi.memberCount).toBe(2);
     expect(fluturasi.overCapacity).toBe(false);
+    expect(fluturasi.capacityState).toBe('full');
+    expect(fluturasi.tone).toBe('yellow');
 
-    const steluteFara = result.current.groups[1];
-    expect(steluteFara.occupancyLabel).toBe('1/—');
-    expect(steluteFara.occupancyPercent).toBe(0);
+    const stelute = result.current.groups[1];
+    expect(stelute.occupancyLabel).toBe('1/—');
+    expect(stelute.occupancyPercent).toBe(0);
+    expect(stelute.capacityState).toBeNull();
 
     const ursuleti = result.current.groups[2];
     expect(ursuleti.occupancyLabel).toBe('0/5');
     expect(ursuleti.memberCount).toBe(0);
     expect(ursuleti.ageRangeLabel).toBe('—');
     expect(ursuleti.members).toEqual([]);
+    expect(ursuleti.capacityState).toBe('empty');
+    // 3 grupe fără `order`/`tone` explicit → tonuri distincte din poziția alfabetică.
+    expect(new Set(result.current.groups.map(g => g.tone)).size).toBe(3);
   });
 
-  it('listează doar copiii nearhivați fără grupă în unassignedChildren', async () => {
+  it('listează doar copiii nearhivați fără grupă, ordonați după vârstă (cei mai mici întâi)', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    expect(result.current.unassignedChildren).toHaveLength(1);
-    expect(result.current.unassignedChildren[0]).toMatchObject({ id: 'c4', name: 'Vlad Marin' });
+    expect(result.current.unassignedChildren.map(child => child.id)).toEqual(['c6', 'c4']);
+    expect(result.current.unassignedChildren[0]).toMatchObject({ id: 'c6', name: 'Sofia Ilie' });
     expect(result.current.unassignedChildren[0].ageLabel).toBeTruthy();
   });
 
@@ -105,21 +121,22 @@ describe('useGroups', () => {
     expect(result.current.openGroupId).toBeNull();
   });
 
-  it('createGroup trimite mutația de creare cu id GRP- generat', async () => {
+  it('createGroup trimite mutația de creare cu id GRP- generat, order 0 și tone, apoi întoarce id-ul', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
-      const body = JSON.parse(options.body as string);
-      expect(body.type).toBe('groups');
-      expect(body.mode).toBe('create');
-      expect(body.record.name).toBe('Pinguini');
-      expect(body.record.capacity).toBe(8);
-      expect(body.record.id).toMatch(/^GRP-/);
-      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    let newId = '';
+    await act(async () => {
+      newId = await result.current.createGroup('Pinguini', '8', { tone: 'teal' });
     });
 
-    await act(() => result.current.createGroup('Pinguini', '8'));
+    expect(newId).toMatch(/^GRP-/);
+    const [createCall] = recordCallsTo('groups').filter(body => body.mode === 'create');
+    expect(createCall.record.name).toBe('Pinguini');
+    expect(createCall.record.capacity).toBe(8);
+    expect(createCall.record.order).toBe(0);
+    expect(createCall.record.tone).toBe('teal');
+    expect(createCall.record.id).toBe(newId);
   });
 
   it('createGroup respinge un nume gol fără să trimită cererea', async () => {
@@ -129,34 +146,47 @@ describe('useGroups', () => {
     await expect(result.current.createGroup('   ', '')).rejects.toThrow('Completează numele grupei.');
   });
 
+  it('createGroup respinge un nume deja folosit în filială', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useGroups());
+
+    await expect(result.current.createGroup('fluturași', '8')).rejects.toThrow('Există deja o grupă fluturași.');
+  });
+
+  it('createGroup pune grupa nouă prima (order 0) și coboară restul grupelor cu o poziție', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useGroups());
+
+    await act(async () => {
+      await result.current.createGroup('Pinguini', '8');
+    });
+
+    const updates = recordCallsTo('groups').filter(body => body.mode === 'update');
+    const orderById = Object.fromEntries(updates.map(body => [body.record.id, body.record.order]));
+    // Ordinea alfabetică de fallback era Fluturași(g1), Steluțe(g3), Ursuleți(g2) → 1,2,3.
+    expect(orderById).toEqual({ g1: 1, g3: 2, g2: 3 });
+  });
+
   it('assignChild trimite actualizarea copilului cu noul groupId', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
-      const body = JSON.parse(options.body as string);
-      expect(body.type).toBe('children');
-      expect(body.mode).toBe('update');
-      expect(body.record.id).toBe('c4');
-      expect(body.record.groupId).toBe('g2');
-      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
-    });
-
     await act(() => result.current.assignChild('g2', 'c4'));
+
+    const [body] = recordCallsTo('children');
+    expect(body.record.id).toBe('c4');
+    expect(body.record.groupId).toBe('g2');
   });
 
   it('removeChild golește groupId-ul copilului', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
-      const body = JSON.parse(options.body as string);
-      expect(body.record.id).toBe('c1');
-      expect(body.record.groupId).toBeNull();
-      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
-    });
-
     await act(() => result.current.removeChild('c1'));
+
+    const [body] = recordCallsTo('children');
+    expect(body.record.id).toBe('c1');
+    expect(body.record.groupId).toBeNull();
   });
 
   it('deleteGroup cheamă /api/group-delete și închide editorul dacă era deschis', async () => {
@@ -175,34 +205,43 @@ describe('useGroups', () => {
     expect(result.current.openGroupId).toBeNull();
   });
 
-  it('reorderGroups mută grupa trasă pe poziția țintei și persistă ordinea', async () => {
+  it('reorderGroups persistă `order` 0..N-1 pentru grupele a căror poziție s-a schimbat', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    act(() => result.current.reorderGroups('g2', 'g1'));
+    await act(async () => {
+      await result.current.reorderGroups('g2', 'g1');
+    });
 
-    expect(result.current.groups.map(g => g.name)).toEqual(['Ursuleți', 'Fluturași', 'Steluțe']);
-    expect(JSON.parse(localStorage.getItem('groups.order') ?? 'null')).toEqual(['g2', 'g1', 'g3']);
+    // Fallback alfabetic: Fluturași(g1)=0, Steluțe(g3)=1, Ursuleți(g2)=2 → după mutarea lui
+    // g2 înaintea lui g1: g2=0, g1=1, g3=2.
+    const updates = recordCallsTo('groups').filter(body => body.mode === 'update');
+    const orderById = Object.fromEntries(updates.map(body => [body.record.id, body.record.order]));
+    expect(orderById).toEqual({ g2: 0, g1: 1, g3: 2 });
   });
 
-  it('ignoră id-urile șterse/inexistente salvate în localStorage și păstrează ordinea alfabetică pentru cele nesortate', async () => {
-    localStorage.setItem('groups.order', JSON.stringify(['g2', 'gX-deleted', 'g1']));
+  it('reorderGroups nu face nimic când id-urile sunt identice sau inexistente', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    expect(result.current.groups.map(g => g.name)).toEqual(['Ursuleți', 'Fluturași', 'Steluțe']);
+    await act(() => result.current.reorderGroups('g1', 'g1'));
+    await act(() => result.current.reorderGroups('g1', 'inexistent'));
+
+    expect(recordCallsTo('groups')).toEqual([]);
   });
 
-  it('reorderGroups nu face nimic când id-urile sunt identice sau țin de o coloană inexistentă', async () => {
+  it('moveGroup mută grupa cu o poziție și persistă doar grupele afectate', async () => {
     await loadedSession();
     const { result } = renderHook(() => useGroups());
 
-    act(() => result.current.reorderGroups('g1', 'g1'));
-    expect(result.current.groups.map(g => g.name)).toEqual(['Fluturași', 'Steluțe', 'Ursuleți']);
-    expect(localStorage.getItem('groups.order')).toBeNull();
+    await act(async () => {
+      await result.current.moveGroup('g1', 1);
+    });
 
-    act(() => result.current.reorderGroups('g1', 'none'));
-    expect(result.current.groups.map(g => g.name)).toEqual(['Fluturași', 'Steluțe', 'Ursuleți']);
-    expect(localStorage.getItem('groups.order')).toBeNull();
+    // Fluturași(g1) trece peste Steluțe(g3): g3=0, g1=1, g2=2 (nicio grupă nu avea `order`
+    // explicit, deci toate trei se scriu — „migrarea” lazy de la prima reordonare).
+    const updates = recordCallsTo('groups').filter(body => body.mode === 'update');
+    const orderById = Object.fromEntries(updates.map(body => [body.record.id, body.record.order]));
+    expect(orderById).toEqual({ g3: 0, g1: 1, g2: 2 });
   });
 });

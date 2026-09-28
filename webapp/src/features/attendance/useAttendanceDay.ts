@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { groupTone, type PillTone } from '@shared/ui';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { useAttendance } from '@shared/attendance';
 import { initials as initialsOf } from '@shared/format/initials';
 import {
@@ -70,13 +71,10 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     bySection.set(key, list);
   }
 
-  const sectionKeys = [...bySection.keys()]
-    .filter(key => key !== 'none')
-    .sort((a, b) => {
-      const groupA = records.groups.find(group => group.id === a)?.name ?? '';
-      const groupB = records.groups.find(group => group.id === b)?.name ?? '';
-      return groupA.localeCompare(groupB, 'ro');
-    });
+  // Aceeași ordine peste tot (03-grupe.md §3b): grupele din Tablă/Carduri determină ordinea aici.
+  const sectionKeys = sortByGroupOrder(records.groups)
+    .map(group => group.id)
+    .filter(id => bySection.has(id));
   if (bySection.has('none')) sectionKeys.push('none');
 
   const filteredKeys = groupFilter ? sectionKeys.filter(key => key === groupFilter) : sectionKeys;

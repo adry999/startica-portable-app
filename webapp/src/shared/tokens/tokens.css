@@ -83,6 +83,24 @@
   /* Dashboard: bara „lună trecută” din progresul de completare a taxelor. */
   --orange-bar-past: #f6c98f;
 
+  /* Tonurile grupelor (03-grupe.md §3/§5b.2) — fundal/text/bară per ton, 8 în total.
+     galben/roz/verde/portocaliu refolosesc tokenii de bază de mai sus (bara galben/roz/verde e nouă). */
+  --yellow-bar: #d9a400;
+  --pink-bar: #d9577c;
+  --mint-bar: #3f9a6b;
+  --teal-soft: #dff1f0;
+  --teal-ink: #1f6464;
+  --teal-bar: #3a9c9c;
+  --blue-soft: #e4eef6;
+  --blue-ink: #2c5a80;
+  --blue-bar: #4a86b8;
+  --purple-soft: #eee8f6;
+  --purple-ink: #5b3f86;
+  --purple-bar: #8a6bc0;
+  --coral-soft: #fbe6dc;
+  --coral-ink: #9a3f1c;
+  --coral-bar: #e0714a;
+
   /* Tipografie. */
   --font-heading: 'Baloo 2', Arial, sans-serif;
   --font-body: Nunito, Arial, sans-serif;

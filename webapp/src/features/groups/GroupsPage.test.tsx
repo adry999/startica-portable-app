@@ -7,7 +7,7 @@ import { readDirtyForms } from '@shared/state/dirty-forms';
 import { reloadPersonal } from '@shared/personal/usePersonal';
 import { GroupsPage } from './GroupsPage';
 
-/** Randează slot-ul de antet ca Topbar-ul real — butonul „+ Grupă nouă" ajunge acolo, nu în pagină. */
+/** Randează slot-ul de antet ca Topbar-ul real — comutatorul Tablă/Carduri și „+ Grupă nouă" ajung acolo. */
 function TopbarActionsSlot() {
   return <>{useTopbarActionsSlot()}</>;
 }
@@ -69,10 +69,14 @@ async function loadedSession() {
   await act(() => reloadPersonal());
 }
 
+async function switchToCards() {
+  await userEvent.click(screen.getByRole('radio', { name: 'Carduri' }));
+}
+
 describe('GroupsPage', () => {
   beforeEach(() => {
-    // Testul „doar în modul Tablă” schimbă view-ul persistat — fără curățare, testele
-    // care rulează după el ar porni tot în Tablă (usePersistedState citește localStorage).
+    // usePersistedState citește localStorage — fără curățare, testul care schimbă modul
+    // ar „scurge” alegerea către testele care rulează după el.
     localStorage.clear();
     vi.stubGlobal(
       'fetch',
@@ -105,37 +109,40 @@ describe('GroupsPage', () => {
     }
   });
 
-  it('randează grupele ca titluri de card cu ocupare', async () => {
-    await loadedSession();
-    renderPage();
-
-    expect(screen.getByText('Fluturași')).toBeInTheDocument();
-    expect(screen.getByText('2/2')).toBeInTheDocument();
-    expect(screen.getByText('Ursuleți')).toBeInTheDocument();
-    expect(screen.getByText('0/5')).toBeInTheDocument();
-    expect(screen.getByText('+ Grupă nouă')).toBeInTheDocument();
-    expect(screen.getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
-  });
-
-  it('„+ Grupă nouă” stă în antet doar în modul Tablă, nu în Carduri', async () => {
+  it('pornește în Tablă și arată statistica din antet, cu „N fără grupă” evidențiat', async () => {
     await loadedSession();
     renderPage();
 
     const topbarSlot = screen.getByTestId('topbar-slot');
-    expect(within(topbarSlot).queryByRole('button', { name: '+ Grupă nouă' })).not.toBeInTheDocument();
-    expect(within(topbarSlot).getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
-
-    await userEvent.click(within(topbarSlot).getByRole('radio', { name: 'Tablă' }));
-
-    expect(within(topbarSlot).getByRole('button', { name: '+ Grupă nouă' })).toBeInTheDocument();
-    expect(within(topbarSlot).getByText('2 copii în grupe · 1 fără grupă')).toBeInTheDocument();
+    expect(within(topbarSlot).getByRole('radio', { name: 'Tablă', checked: true })).toBeInTheDocument();
+    expect(
+      within(topbarSlot).getByText(
+        (_, element) => element?.textContent === '2 grupe · 2 copii în grupe · 1 fără grupă',
+      ),
+    ).toBeInTheDocument();
+    // Tablă implicit: panoul „Fără grupă” și tile-urile grupelor sunt vizibile.
+    expect(screen.getByText('Fără grupă')).toBeInTheDocument();
+    expect(screen.getByText('Fluturași')).toBeInTheDocument();
   });
 
-  it('un singur editor e deschis o dată, la click pe card', async () => {
+  it('„+ Grupă nouă” e prezent în antet în ambele moduri, fără cardul punctat din grilă', async () => {
     await loadedSession();
     renderPage();
 
-    await userEvent.click(screen.getByText('Fluturași'));
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    expect(within(topbarSlot).getByRole('button', { name: '+ Grupă nouă' })).toBeInTheDocument();
+
+    await switchToCards();
+
+    expect(within(topbarSlot).getByRole('button', { name: '+ Grupă nouă' })).toBeInTheDocument();
+    expect(screen.queryByText('Grupă nouă', { selector: 'span' })).not.toBeInTheDocument();
+  });
+
+  it('un singur editor e deschis o dată, la click pe un card din Carduri', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
     expect(screen.getByText(/^Copii în grupă · 2/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('Ursuleți'));
@@ -148,8 +155,8 @@ describe('GroupsPage', () => {
   it('editorul grupei devine „nesalvat" după modificarea educatorului (13b)', async () => {
     await loadedSession();
     renderPage();
+    await switchToCards();
 
-    await userEvent.click(screen.getByText('Fluturași'));
     expect(readDirtyForms()).toEqual([]);
 
     await userEvent.type(screen.getByLabelText('Educator'), ' Popescu');
@@ -158,35 +165,36 @@ describe('GroupsPage', () => {
     expect(dirtyForm.label).toBe('o grupă');
   });
 
-  it('creează o grupă nouă din cardul punctat', async () => {
+  it('creează o grupă nouă din antet și o selectează automat', async () => {
     await loadedSession();
     renderPage();
 
-    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
-      const body = JSON.parse(options.body as string);
-      expect(body.record.name).toBe('Pinguini');
-      expect(body.record.capacity).toBe(6);
-      return jsonResponse({
-        state: {
-          ...fixtureState,
-          groups: [...fixtureState.groups, { id: body.record.id, name: 'Pinguini', capacity: 6, educator: '' }],
-        },
-        revision: 2,
-        updatedAt: '2026-09-23T10:05:00Z',
-      });
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path === '/api/record') {
+        const body = JSON.parse((options!.body as string) ?? '{}');
+        const nextState =
+          body.mode === 'create' && body.type === 'groups'
+            ? { ...fixtureState, groups: [...fixtureState.groups, body.record] }
+            : fixtureState;
+        return jsonResponse({ state: nextState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+      }
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      throw new Error(`neașteptat: ${path}`);
     });
 
     await userEvent.click(screen.getByRole('button', { name: '+ Grupă nouă' }));
     await userEvent.type(screen.getByLabelText('Nume grupă'), 'Pinguini');
-    await userEvent.type(screen.getByLabelText('Capacitate'), '6');
-    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Creează grupa' }));
 
-    expect(await screen.findByText('Grupă creată.')).toBeInTheDocument();
+    expect(await screen.findByText('Grupa Pinguini a fost creată')).toBeInTheDocument();
   });
 
-  it('atribuie un copil fără grupă din editor', async () => {
+  it('atribuie un copil fără grupă din editor (Carduri)', async () => {
     await loadedSession();
     renderPage();
+    await switchToCards();
 
     await userEvent.click(screen.getByText('Ursuleți'));
 
@@ -208,8 +216,8 @@ describe('GroupsPage', () => {
   it('echipa grupei (23i) apare în editorul grupei și se salvează cu Group.team', async () => {
     await loadedSession();
     renderPage();
+    await switchToCards();
 
-    await userEvent.click(screen.getByText('Fluturași'));
     const teamCard = screen.getByText('Echipa grupei').parentElement!;
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
@@ -233,8 +241,8 @@ describe('GroupsPage', () => {
   it('echipa grupei devine „nesalvată" după adăugarea unui membru, înainte de Salvează (13b)', async () => {
     await loadedSession();
     renderPage();
+    await switchToCards();
 
-    await userEvent.click(screen.getByText('Fluturași'));
     const teamCard = screen.getByText('Echipa grupei').parentElement!;
     expect(readDirtyForms()).toEqual([]);
 
@@ -246,7 +254,7 @@ describe('GroupsPage', () => {
     expect(dirtyForm).toBeDefined();
   });
 
-  it('cere navigarea la stickerele grupei din meniul ⋯, fără să deschidă editorul', async () => {
+  it('cere navigarea la stickerele grupei din meniul ⋯ al tile-ului din Tablă, fără să deschidă editorul', async () => {
     await loadedSession();
     const onOpenGroupStickers = vi.fn();
     renderPage(onOpenGroupStickers);

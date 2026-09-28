@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
-import { formatAge } from '#shared/format/date-format.mjs';
+import { formatAge, ageInYears } from '#shared/format/date-format.mjs';
 import { initials } from '@shared/format/initials';
+import { sortByGroupOrder } from '@shared/format/group-order';
+import { boardTone, type BoardTone } from './groupBoardTone';
 import type { Child, Group, GroupTeamMember, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type GroupsStatus = 'loading' | 'ready' | 'failed';
+
+export type GroupCapacityState = 'over' | 'full' | 'empty' | null;
 
 export interface GroupMemberView {
   id: string;
@@ -21,7 +25,13 @@ export interface GroupCardView {
   occupancyLabel: string;
   occupancyPercent: number;
   overCapacity: boolean;
+  overCapacityBy: number;
+  capacityState: GroupCapacityState;
   ageRangeLabel: string;
+  ageMinYears: number | null;
+  ageMaxYears: number | null;
+  tone: BoardTone;
+  order: number;
   avatarInitials: string[];
   extraMemberCount: number;
   members: GroupMemberView[];
@@ -33,6 +43,13 @@ export interface UnassignedChild {
   id: string;
   name: string;
   ageLabel: string;
+  birthDate: string | null;
+}
+
+export interface NewGroupInput {
+  tone?: string;
+  ageMinRaw?: string;
+  ageMaxRaw?: string;
 }
 
 export interface GroupsData {
@@ -43,40 +60,14 @@ export interface GroupsData {
   openGroupId: string | null;
   busy: boolean;
   toggleGroup: (id: string) => void;
-  createGroup: (name: string, capacityRaw: string) => Promise<void>;
+  createGroup: (name: string, capacityRaw: string, options?: NewGroupInput) => Promise<string>;
   updateGroup: (id: string, name: string, capacityRaw: string, educator: string) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
   assignChild: (groupId: string, childId: string) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
-  reorderGroups: (draggedId: string, targetId: string) => void;
+  reorderGroups: (draggedId: string, targetId: string) => Promise<void>;
+  moveGroup: (groupId: string, direction: -1 | 1) => Promise<void>;
   saveTeam: (groupId: string, team: GroupTeamMember[]) => Promise<void>;
-}
-
-const GROUP_ORDER_KEY = 'groups.order';
-
-function readGroupOrder(): string[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem(GROUP_ORDER_KEY) ?? '[]');
-    return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeGroupOrder(order: string[]) {
-  try {
-    localStorage.setItem(GROUP_ORDER_KEY, JSON.stringify(order));
-  } catch {
-    // Stocare indisponibilă — ordinea rămâne doar în memorie pentru sesiunea curentă.
-  }
-}
-
-function orderGroups(groups: Group[], order: string[]): Group[] {
-  const byId = new Map(groups.map(group => [group.id, group]));
-  const ordered = order.map(id => byId.get(id)).filter((group): group is Group => group !== undefined);
-  const known = new Set(ordered.map(group => group.id));
-  const rest = groups.filter(group => !known.has(group.id)).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
-  return [...ordered, ...rest];
 }
 
 function parseCapacity(capacityRaw: string): number | null {
@@ -84,12 +75,32 @@ function parseCapacity(capacityRaw: string): number | null {
   return trimmed ? Number(trimmed) : null;
 }
 
-function buildGroupCard(group: Group, activeChildren: Child[], allChildren: Child[]): GroupCardView {
+function parseAgeYears(raw: string | undefined): number | undefined {
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  const value = Number(trimmed);
+  return Number.isFinite(value) ? value : undefined;
+}
+
+function buildGroupCard(
+  group: Group,
+  allGroups: Group[],
+  activeChildren: Child[],
+  allChildren: Child[],
+): GroupCardView {
   const members = activeChildren
     .filter(child => child.groupId === group.id)
     .sort((a, b) => a.name.localeCompare(b.name, 'ro'));
   const memberCount = members.length;
   const overCapacity = group.capacity != null && memberCount > group.capacity;
+  const capacityState: GroupCapacityState =
+    group.capacity != null && overCapacity
+      ? 'over'
+      : group.capacity != null && memberCount === group.capacity && group.capacity > 0
+        ? 'full'
+        : memberCount === 0
+          ? 'empty'
+          : null;
   const occupancyLabel = `${memberCount}/${group.capacity ?? '—'}`;
   const occupancyPercent = group.capacity ? Math.min(100, (memberCount / group.capacity) * 100) : 0;
   const birthDates = members
@@ -113,7 +124,13 @@ function buildGroupCard(group: Group, activeChildren: Child[], allChildren: Chil
     occupancyLabel,
     occupancyPercent,
     overCapacity,
+    overCapacityBy: overCapacity ? memberCount - (group.capacity as number) : 0,
+    capacityState,
     ageRangeLabel,
+    ageMinYears: group.ageMinYears ?? null,
+    ageMaxYears: group.ageMaxYears ?? null,
+    tone: boardTone(group, allGroups),
+    order: 0, // suprascris mai jos, după sortare — vezi useGroups
     avatarInitials: members.slice(0, 5).map(child => initials(child.name)),
     extraMemberCount: Math.max(0, memberCount - 5),
     members: members.map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) })),
@@ -128,34 +145,78 @@ export function useGroups(): GroupsData {
   const { state, ready, loading, saveError, busy: mutationInFlight, pending } = session.state;
   const records = state as RecordsSnapshot;
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
-  const [groupOrder, setGroupOrder] = useState<string[]>(readGroupOrder);
   const busy = mutationInFlight || Boolean(pending);
 
-  function reorderGroups(draggedId: string, targetId: string) {
-    if (draggedId === targetId) return;
-    const currentOrder = orderGroups(records.groups, groupOrder).map(group => group.id);
-    const fromIndex = currentOrder.indexOf(draggedId);
-    const toIndex = currentOrder.indexOf(targetId);
+  /** Persistă ordinea 0..N-1 pentru grupele a căror poziție efectivă s-a schimbat față de `next`
+   * (inclusiv „migrarea” lazy a celor fără `order` explicit, la prima reordonare). */
+  async function persistOrder(next: Group[]) {
+    for (let index = 0; index < next.length; index++) {
+      const group = next[index];
+      if (group.order !== index) {
+        await session.mutate('/api/record', { type: 'groups', mode: 'update', record: { ...group, order: index } });
+      }
+    }
+  }
+
+  async function reorderGroups(draggedId: string, targetId: string) {
+    if (draggedId === targetId || busy) return;
+    const current = sortByGroupOrder(records.groups);
+    const fromIndex = current.findIndex(group => group.id === draggedId);
+    const toIndex = current.findIndex(group => group.id === targetId);
     if (fromIndex === -1 || toIndex === -1) return;
-    const nextOrder = [...currentOrder];
-    nextOrder.splice(fromIndex, 1);
-    nextOrder.splice(toIndex, 0, draggedId);
-    setGroupOrder(nextOrder);
-    writeGroupOrder(nextOrder);
+    const next = [...current];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    await persistOrder(next);
+  }
+
+  async function moveGroup(groupId: string, direction: -1 | 1) {
+    if (busy) return;
+    const current = sortByGroupOrder(records.groups);
+    const index = current.findIndex(group => group.id === groupId);
+    const targetIndex = index + direction;
+    if (index === -1 || targetIndex < 0 || targetIndex >= current.length) return;
+    const next = [...current];
+    const [moved] = next.splice(index, 1);
+    next.splice(targetIndex, 0, moved);
+    await persistOrder(next);
   }
 
   function toggleGroup(id: string) {
     setOpenGroupId(current => (current === id ? null : id));
   }
 
-  async function createGroup(name: string, capacityRaw: string) {
+  async function createGroup(name: string, capacityRaw: string, options: NewGroupInput = {}) {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Completează numele grupei.');
+    if (records.groups.some(group => group.name.toLocaleLowerCase('ro-RO') === trimmed.toLocaleLowerCase('ro-RO')))
+      throw new Error(`Există deja o grupă ${trimmed}.`);
+    const ageMinYears = parseAgeYears(options.ageMinRaw);
+    const ageMaxYears = parseAgeYears(options.ageMaxRaw);
+    // Grupa nouă apare prima (§5b.6) — restul grupelor coboară cu o poziție.
+    const existing = sortByGroupOrder(records.groups);
+    const id = `GRP-${crypto.randomUUID()}`;
     await session.mutate('/api/record', {
       type: 'groups',
       mode: 'create',
-      record: { id: `GRP-${crypto.randomUUID()}`, name: trimmed, capacity: parseCapacity(capacityRaw) },
+      record: {
+        id,
+        name: trimmed,
+        capacity: parseCapacity(capacityRaw),
+        order: 0,
+        ...(options.tone ? { tone: options.tone } : {}),
+        ...(ageMinYears !== undefined ? { ageMinYears } : {}),
+        ...(ageMaxYears !== undefined ? { ageMaxYears } : {}),
+      },
     });
+    for (let index = 0; index < existing.length; index++) {
+      const group = existing[index];
+      const nextOrder = index + 1;
+      if (group.order !== nextOrder) {
+        await session.mutate('/api/record', { type: 'groups', mode: 'update', record: { ...group, order: nextOrder } });
+      }
+    }
+    return id;
   }
 
   async function updateGroup(id: string, name: string, capacityRaw: string, educator: string) {
@@ -197,15 +258,24 @@ export function useGroups(): GroupsData {
   const { groups, unassignedChildren } = useMemo(() => {
     if (!ready) return { groups: [] as GroupCardView[], unassignedChildren: [] as UnassignedChild[] };
     const activeChildren = records.children.filter(child => !child.archived);
-    const groups = orderGroups(records.groups, groupOrder).map(group =>
-      buildGroupCard(group, activeChildren, records.children),
-    );
+    const ordered = sortByGroupOrder(records.groups);
+    const groups = ordered.map((group, index) => ({
+      ...buildGroupCard(group, records.groups, activeChildren, records.children),
+      order: index,
+    }));
+    // Fără grupă e mereu prima (§4) — ordonată după data nașterii, cei mai mici (cei mai
+    // recent născuți) primii.
     const unassignedChildren = activeChildren
       .filter(child => !child.groupId)
-      .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-      .map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) }));
+      .sort((a, b) => (b.birthDate ?? '').localeCompare(a.birthDate ?? ''))
+      .map(child => ({
+        id: child.id,
+        name: child.name,
+        ageLabel: formatAge(child.birthDate),
+        birthDate: child.birthDate ?? null,
+      }));
     return { groups, unassignedChildren };
-  }, [ready, records.children, records.groups, groupOrder]);
+  }, [ready, records.children, records.groups]);
 
   if (!ready) {
     return {
@@ -222,6 +292,7 @@ export function useGroups(): GroupsData {
       assignChild,
       removeChild,
       reorderGroups,
+      moveGroup,
       saveTeam,
     };
   }
@@ -240,6 +311,9 @@ export function useGroups(): GroupsData {
     assignChild,
     removeChild,
     reorderGroups,
+    moveGroup,
     saveTeam,
   };
 }
+
+export { ageInYears };

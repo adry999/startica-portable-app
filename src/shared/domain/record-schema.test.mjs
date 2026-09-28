@@ -584,6 +584,27 @@ test('grupa acceptă un singur principal în echipă', () => {
   assert.deepEqual(group.team[1].days, [1, 3, 5]);
 });
 
+test('grupa acceptă order, tone și interval de vârstă (03-grupe.md v2)', () => {
+  const group = normalizeRecord('groups', {
+    id: 'GRP-1',
+    name: 'Grupa mare',
+    order: 2,
+    tone: 'teal',
+    ageMinYears: 3,
+    ageMaxYears: 5,
+  });
+  assert.equal(group.order, 2);
+  assert.equal(group.tone, 'teal');
+  assert.equal(group.ageMinYears, 3);
+  assert.equal(group.ageMaxYears, 5);
+
+  assert.throws(() => normalizeRecord('groups', { id: 'GRP-1', name: 'Grupa mare', order: -1 }), /Ordinea grupei/);
+  assert.throws(
+    () => normalizeRecord('groups', { id: 'GRP-1', name: 'Grupa mare', ageMinYears: 6, ageMaxYears: 3 }),
+    /vârsta minimă/i,
+  );
+});
+
 test('grupa fără echipă are team gol, iar un rol sau o zi necunoscută sunt respinse', () => {
   const group = normalizeRecord('groups', { id: 'GRP-1', name: 'Grupa mare' });
   assert.deepEqual(group.team, []);

@@ -133,7 +133,7 @@ const FIELDS = {
     'archived',
     'archivedAt',
   ]),
-  groups: new Set(['id', 'name', 'capacity', 'educator', 'team']),
+  groups: new Set(['id', 'name', 'capacity', 'educator', 'team', 'order', 'tone', 'ageMinYears', 'ageMaxYears']),
   categories: new Set(['id', 'name']),
   visits: new Set([
     'id',
@@ -288,6 +288,20 @@ export function normalizeRecord(type, input) {
       record.team.filter(member => member.role === 'principal').length <= 1,
       'Grupa poate avea un singur membru principal.',
     );
+    if (record.order !== undefined)
+      requireThat(
+        Number.isInteger(record.order) && record.order >= 0 && record.order <= 100000,
+        'Ordinea grupei este invalidă.',
+      );
+    if (record.tone !== undefined) text(record.tone, 'Culoarea grupei');
+    for (const field of ['ageMinYears', 'ageMaxYears'])
+      if (record[field] !== undefined)
+        requireThat(
+          Number.isInteger(record[field]) && record[field] >= 0 && record[field] <= 18,
+          `${field}: vârstă invalidă.`,
+        );
+    if (record.ageMinYears !== undefined && record.ageMaxYears !== undefined)
+      requireThat(record.ageMinYears <= record.ageMaxYears, 'Vârsta minimă nu poate fi mai mare decât cea maximă.');
   } else if (type === 'categories') {
     text(record.name, 'Nume categorie', true);
     record.name = record.name.trim();

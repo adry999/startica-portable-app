@@ -109,6 +109,13 @@ export interface Group {
   educator?: string;
   /** Personal 24 — un singur „principal”; staff-ul trăiește în baza comună, nu aici. */
   team?: GroupTeamMember[];
+  /** Poziția grupei în Tablă/Carduri (03-grupe.md §3b). Lipsă = ordinea alfabetică curentă (fallback la citire). */
+  order?: number;
+  /** Una din cele 8 chei de ton din 03-grupe.md §3/§5b.2. Lipsă = calculată din poziția alfabetică (fallback). */
+  tone?: string;
+  /** Vârstă țintă în ani (03-grupe.md §5b.4), opțională — folosită pentru sugestii de copii. */
+  ageMinYears?: number;
+  ageMaxYears?: number;
 }
 
 export interface ExpenseCategory {

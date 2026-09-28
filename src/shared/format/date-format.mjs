@@ -50,3 +50,15 @@ export const formatAge = v => {
   const yearsLabel = `${years} ${years === 1 ? 'an' : 'ani'}`;
   return rest === 0 ? yearsLabel : `${yearsLabel} ${rest} luni`;
 };
+
+/** Vârsta în ani întregi (rotunjită în jos) — pentru filtrare/sugestii pe interval, nu afișare. */
+export const ageInYears = v => {
+  if (!v) return null;
+  const birth = new Date(v + 'T12:00:00'),
+    now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (beforeBirthday) years--;
+  return years < 0 ? null : years;
+};

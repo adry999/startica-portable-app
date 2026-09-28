@@ -14,142 +14,48 @@
   white-space: nowrap;
 }
 
-.newGroupCard {
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
-}
-
-.newGroupLabel {
-  font-family: var(--font-heading);
+.headerStatStrong {
   font-weight: 800;
-  font-size: 20px;
-  color: var(--slate);
+  color: var(--orange-ink);
 }
 
-.editorSlot {
-  grid-column: 1 / -1;
+.cardsLayout {
+  padding: 24px var(--space-40) 40px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-18);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-12);
 }
 
-.tileOpen {
-  outline: 2px solid var(--slate);
-  outline-offset: -2px;
-}
-
-.tileMenu {
-  position: absolute;
-  top: var(--space-14);
-  right: var(--space-14);
-  z-index: 1;
-}
-
-.tileToggle {
-  display: block;
-  width: 100%;
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.tileHead {
+.editor {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-8);
+  flex-direction: column;
+  gap: var(--space-16);
 }
 
-.tileName {
+.editorHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.editorTitle {
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 18px;
 }
 
-.tilePill {
-  flex: none;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: var(--radius-pill);
-  padding: 2px var(--space-8);
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.tileOccupancy {
-  display: block;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 20px;
-  margin: var(--space-4) 0;
-}
-
-.occupancyBar {
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.6);
-  overflow: hidden;
-  margin-bottom: var(--space-8);
-}
-
-.occupancyBar span {
-  display: block;
-  height: 100%;
-  background: var(--slate);
-}
-
-.tileMeta {
-  margin: 0 0 var(--space-10);
+.editorAges {
   font-size: 13px;
-}
-
-.avatarStack {
-  display: flex;
-  align-items: center;
-}
-
-.avatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 10px;
-  margin-right: -7px;
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
-}
-
-.avatarExtra {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--neutral-soft);
   color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 9px;
-  margin-left: var(--space-4);
-}
-
-.editor {
-  margin-top: var(--space-16);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
+  white-space: nowrap;
 }
 
 .editorRow {
@@ -177,11 +83,23 @@
   min-width: 160px;
 }
 
+.editorSubtitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  flex-wrap: wrap;
+}
+
 .editorSubtitle {
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 16px;
+}
+
+.addSearch {
+  margin-left: auto;
+  width: 320px;
 }
 
 .emptyMembers {
@@ -195,27 +113,46 @@
 
 .memberGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-8) var(--space-16);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-8);
 }
 
 .memberRow {
   display: flex;
   align-items: center;
-  gap: var(--space-10);
-  background: var(--neutral-softer);
-  border-radius: var(--radius-md);
-  padding: var(--space-8) var(--space-10);
+  gap: var(--space-8);
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: var(--space-6) var(--space-8);
+  height: 40px;
+}
+
+.avatar {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 11px;
 }
 
 .memberName {
   flex: 1;
+  min-width: 0;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .memberAge {
   font-size: 12px;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .removeButton {
@@ -226,11 +163,6 @@
   color: var(--muted);
   line-height: 1;
   padding: 0 var(--space-4);
-}
-
-.addRow {
-  display: flex;
-  gap: var(--space-10);
 }
 
 .deleteRow {
