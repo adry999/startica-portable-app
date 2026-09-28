@@ -122,6 +122,14 @@
   --space-24: 24px;
   --space-28: 28px;
   --space-40: 40px;
+
+  /* Scara de z-index (FEEDBACK.md 28.09, 2a) — popover-urile portalate (BranchSelector) o folosesc;
+     restul (Drawer, Toast, dialogurile) rămân pe valorile lor proprii, migrare separată. */
+  --z-sticky: 10;
+  --z-drawer: 100;
+  --z-popover: 200;
+  --z-toast: 300;
+  --z-dialog: 400;
 }
 
 /* Reset minim, oglinda web/styles/base.css: aceleași fonturi aplicate global, nu doar disponibile ca variabile. */
