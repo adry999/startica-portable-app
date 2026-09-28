@@ -52,6 +52,7 @@ test('milioane: neutrul se comportă ca masculin la singular („un milion”)',
 });
 
 test('compusul terminat în 1, cu grup de mii/milioane înaintea unităţilor, e „unu”/„una” invariabil, nu articol de singular', () => {
+  /** @type {[number, string][]} */
   const cases = [
     [1, 'un leu'],
     [2, 'doi lei'],
