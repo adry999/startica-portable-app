@@ -11,6 +11,7 @@ export { createSyncHttpClient, SyncNetworkError, SyncRevokedError, SyncHttpError
 export { createChangeApplier, createSyncAttendanceWriter, SyncApplyError } from './server/change-applier.mjs';
 export { createSyncEngine } from './server/sync-engine.service.mjs';
 export { createSyncRoutes } from './server/sync.routes.mjs';
+export { createSyncConflictsRoutes } from './server/sync-conflicts.routes.mjs';
 export { deriveSyncMode, SYNC_MODES } from './domain/sync-status.mjs';
 
 // Reexport de tip, pentru consumatorii din afara feature-ului (create-application.mjs,

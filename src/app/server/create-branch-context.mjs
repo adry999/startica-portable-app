@@ -32,6 +32,7 @@ import {
   createSyncHttpClient,
   createSyncEngine,
   createSyncRoutes,
+  createSyncConflictsRoutes,
 } from '#features/sync/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
@@ -192,6 +193,19 @@ export function createBranchContext({
     changeSink: syncChangeSink,
   });
 
+  // Task 9 (14c): rute separate de sync.routes.mjs, ca să nu-l încarce — folosesc
+  // aceleași depozite, rezolvarea trece prin runRevisionTransaction ca orice altă
+  // scriere (idempotență + verificare de revizie).
+  const syncConflictsRoutes = createSyncConflictsRoutes({
+    conflicts: syncConflictsRepository,
+    outbox: syncOutboxRepository,
+    syncState: syncStateRepository,
+    rawRecordRepository,
+    auditTrail: auditLogRepository,
+    runRevisionTransaction,
+    getEngine: () => syncEngine,
+  });
+
   const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
   const paymentAssignmentService = createPaymentAssignmentService(recordWriteDependencies);
   const receiptNumberingService = createReceiptNumberingService({
@@ -303,6 +317,7 @@ export function createBranchContext({
     }),
     ...createReceiptNumberingRoutes({ receiptNumberingService }),
     ...syncRoutes.routes,
+    ...syncConflictsRoutes,
     ...branchRoutes,
   ];
 
