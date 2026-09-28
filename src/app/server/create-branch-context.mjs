@@ -400,6 +400,10 @@ export function createBranchContext({
     /** @param {string} [todayStr] */
     expireSmsLog: (todayStr = today()) => createSmsLogRepository(db).expireOldEntries(todayStr),
     refreshExchangeRateIfMissing,
+    // A-2: un flux SSE (/api/sync/events) rămas deschis ține conexiunea vie la infinit —
+    // server.close(callback) din create-application.mjs așteaptă tocmai închiderea ei, deci
+    // trebuie terminată explicit ÎNAINTE de acel apel, nu în interiorul callback-ului lui.
+    closeStreams: () => syncRoutes.close(),
     close: () => {
       backups.cancelScheduledBackup();
       syncEngine?.stop();

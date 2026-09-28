@@ -6,6 +6,22 @@ import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
 
+// Vezi create-application.integration.test.mjs: pe Windows, ștergerea imediat după
+// close() poate lovi peste un handle eliberat cu o mică întârziere.
+/** @param {string} path */
+async function removeDirWithRetry(path) {
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EBUSY') throw error;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+  console.warn(`Folderul temporar ${path} nu a putut fi șters (EBUSY persistent) — ignorat.`);
+}
+
 test('/api/session întoarce un token de sesiune', async t => {
   const app = await startTestApplication(t, { prefix: 'startica-session-' });
   assert.ok(app.token && app.token.length > 0);
@@ -70,6 +86,35 @@ test('Oprire desktop autentificată, cu backup final și închiderea bazei', asy
       resolve(dir).startsWith(resolve(tmpdir()) + '/startica-shutdown-')
     )
       rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('app.close() se termină cu un flux SSE (/api/sync/events) deschis, fără blocaj', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-sse-close-'));
+  const app = createApplication({
+    dataDir: join(dir, 'data'),
+    backupDir: join(dir, 'backups'),
+    home: dir,
+    autoBackupIntervalMs: 0,
+  });
+  await new Promise(done => app.server.listen(0, '127.0.0.1', done));
+  const url = `http://127.0.0.1:${app.server.address().port}`;
+  try {
+    // Ruta există și fără sync.json (configured:false) — deschisă și nu se citește, exact
+    // ca un EventSource al webapp-ului rămas deschis într-o filă la închiderea aplicației.
+    const stream = await fetch(url + '/api/sync/events');
+    assert.equal(stream.status, 200);
+
+    await Promise.race([
+      app.close(),
+      new Promise((_resolve, reject) =>
+        setTimeout(() => reject(new Error('BLOCAT: app.close() nu s-a terminat')), 3000),
+      ),
+    ]);
+    assert.equal(app.server.listening, false);
+    await stream.body?.cancel().catch(() => {});
+  } finally {
+    await removeDirWithRetry(dir);
   }
 });
 

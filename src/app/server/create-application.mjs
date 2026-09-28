@@ -83,6 +83,10 @@ export function createApplication(options = {}) {
   }
 
   function shutdownServer() {
+    // A-2: un flux SSE deschis (/api/sync/events) ține o conexiune vie la infinit —
+    // server.close(callback) nu ajunge niciodată la callback dacă nu terminăm fluxurile
+    // (response.end() — închidere cooperantă, nu o rupere forțată de soclu) înainte.
+    active.closeStreams();
     server.close(() => {
       active.close();
       common.close();
@@ -263,6 +267,9 @@ export function createApplication(options = {}) {
     close: () =>
       /** @type {Promise<void>} */ (
         new Promise(resolveClose => {
+          // Aceeași cursă ca în shutdownServer: fără closeStreams() înainte, un flux SSE
+          // deschis ar bloca la infinit callback-ul lui server.close() de mai jos.
+          active.closeStreams();
           server.close(() => {
             active.close();
             common.close();
