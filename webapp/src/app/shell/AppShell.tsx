@@ -42,6 +42,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   const syncStatus = syncCard
     ? {
         ...syncCard,
+        // „Click pe card deschide 14b” (spec §14a) — valabil indiferent de stare; acțiunea
+        // specifică (Rezolvă / Reconectează) rămâne un target separat, mai precis.
+        onCardClick: goToSyncTab,
         onAction:
           syncCard.mode === 'conflict'
             ? () => navigate('/conflicte')

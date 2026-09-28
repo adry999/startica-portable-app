@@ -6,6 +6,15 @@
   padding: var(--space-12);
 }
 
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
 .row {
   display: flex;
   align-items: center;

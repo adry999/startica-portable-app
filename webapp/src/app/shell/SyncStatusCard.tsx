@@ -8,6 +8,8 @@ export interface SyncStatusCardProps {
   /** Prezent doar la conflict (Rezolvă) și revoked (Reconectează din Backup și setări). */
   actionLabel?: string;
   onAction?: () => void;
+  /** „Click pe card deschide 14b” (18-sincronizare.md §14a) — indiferent de stare. */
+  onCardClick?: () => void;
 }
 
 // „revoked” arată exact ca „offline” (decizia din 2026-09-27-sincronizare.md, Task 8:
@@ -21,10 +23,30 @@ const MODE_CLASS: Record<SyncCardMode, string | undefined> = {
 };
 
 /** Înlocuiește SaveStatusCard în sidebar (14a) când sincronizarea e configurată. */
-export function SyncStatusCard({ mode, label, detail, actionLabel, onAction }: SyncStatusCardProps) {
+export function SyncStatusCard({ mode, label, detail, actionLabel, onAction, onCardClick }: SyncStatusCardProps) {
   const modeClass = MODE_CLASS[mode];
+  const hasOwnAction = !!(actionLabel && onAction);
+  // Cardul devine el însuși un buton (rol + tastatură) doar când nu conține deja un
+  // buton propriu (Rezolvă/Reconectează) — un rol interactiv nu se cuibărește în altul.
+  const cardIsInteractive = !!onCardClick && !hasOwnAction;
   return (
-    <div className={modeClass ? `${styles.card} ${modeClass}` : styles.card} data-state={mode} role="status">
+    <div
+      className={[styles.card, onCardClick ? styles.clickable : '', modeClass ?? ''].filter(Boolean).join(' ')}
+      data-state={mode}
+      role={cardIsInteractive ? 'button' : 'status'}
+      tabIndex={cardIsInteractive ? 0 : undefined}
+      onClick={onCardClick}
+      onKeyDown={
+        cardIsInteractive
+          ? event => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onCardClick?.();
+              }
+            }
+          : undefined
+      }
+    >
       <div className={styles.row}>
         <span className={styles.dot} aria-hidden="true" />
         <strong className={styles.label}>{label}</strong>
@@ -33,7 +55,14 @@ export function SyncStatusCard({ mode, label, detail, actionLabel, onAction }: S
         <div className={styles.detailRow}>
           <small>{detail}</small>
           {actionLabel && onAction && (
-            <button type="button" className={styles.action} onClick={onAction}>
+            <button
+              type="button"
+              className={styles.action}
+              onClick={event => {
+                event.stopPropagation();
+                onAction();
+              }}
+            >
               {actionLabel}
             </button>
           )}

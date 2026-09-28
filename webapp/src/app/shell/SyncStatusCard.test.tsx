@@ -33,4 +33,36 @@ describe('SyncStatusCard', () => {
     expect(screen.getByText('3 modificări salvate local.')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
+
+  it('click pe card deschide 14b, indiferent de stare', async () => {
+    const onCardClick = vi.fn();
+    render(
+      <SyncStatusCard
+        mode="synced"
+        label="Sincronizat · 12:06"
+        detail="Toate calculatoarele au aceleași date"
+        onCardClick={onCardClick}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: /Sincronizat/ }));
+    expect(onCardClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('click pe linkul Rezolvă nu declanșează și click pe card', async () => {
+    const onAction = vi.fn();
+    const onCardClick = vi.fn();
+    render(
+      <SyncStatusCard
+        mode="conflict"
+        label="2 conflicte"
+        detail="Aceleași date modificate pe alt calculator."
+        actionLabel="Rezolvă"
+        onAction={onAction}
+        onCardClick={onCardClick}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Rezolvă' }));
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(onCardClick).not.toHaveBeenCalled();
+  });
 });
