@@ -1,4 +1,5 @@
 import { useAppSession } from '@shared/api/session';
+import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { obligation, feeEntryFor } from '#shared/domain/tuition-obligation.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
@@ -37,13 +38,14 @@ const NOT_FOUND: ChildProfileData = {
 export function useChildProfile(childId: string, month: string): ChildProfileData {
   const session = useAppSession();
   const { rates } = useExchangeRates();
-  const { state, ready, loading, saveError } = session.state;
+  const { state, ready } = session.state;
+  const { status, failureMessage } = useSessionStatus(session.state);
 
   if (!ready) {
     return {
       ...NOT_FOUND,
-      status: loading || !saveError ? 'loading' : 'failed',
-      failureMessage: saveError,
+      status,
+      failureMessage,
     };
   }
 

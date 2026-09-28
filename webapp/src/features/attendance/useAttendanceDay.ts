@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { groupTone, type PillTone } from '@shared/ui';
 import { useAttendance } from '@shared/attendance';
+import { initials as initialsOf } from '@shared/format/initials';
 import {
   attendanceKey,
   isChildEnrolledOn,
@@ -41,16 +42,6 @@ export interface AttendanceDayData {
   setReason: (childId: string, reason: string) => void;
   markGroupPresent: (sectionKey: string) => void;
   markAllUnmarkedPresent: () => void;
-}
-
-/** Numele copilului se rupe pe cuvinte — @features/children nu poate fi importat (o graniță de feature). */
-function initialsOf(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('');
 }
 
 /** Orchestrarea ecranului Ziua (18a): tabel de secțiuni per grupă + acțiuni de marcaj, fără logică de randare. */

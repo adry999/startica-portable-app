@@ -1,6 +1,7 @@
 import { useMemo, useState, type DragEvent } from 'react';
 import { groupTone, useToast, type PillTone } from '@shared/ui';
-import { initials, type GroupsData } from './useGroups';
+import { initials } from '@shared/format/initials';
+import type { GroupsData } from './useGroups';
 import styles from './GroupsBoard.module.css';
 
 const TONE_COLUMN_CLASS: Record<PillTone, string> = {

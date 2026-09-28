@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
+import { shiftMonth } from '@shared/format/month-shift';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { buildMonthGrid, type MonthGridDay } from '#shared/domain/month-grid.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
@@ -46,13 +47,6 @@ export interface VisitsData {
   setArchived: (visit: Visit, archived: boolean) => Promise<void>;
   deleteForever: (id: string) => Promise<void>;
   enrollChild: (visit: Visit, overrides: { fee: string; groupId: string; attendanceDate: string }) => Promise<string>;
-}
-
-function shiftMonth(monthKey: string, delta: number): string {
-  const year = Number(monthKey.slice(0, 4));
-  const month = Number(monthKey.slice(5, 7)) - 1;
-  const d = new Date(year, month + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export function useVisits(initialDate?: string): VisitsData {

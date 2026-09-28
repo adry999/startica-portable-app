@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, LoadingState, SegmentedControl } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
 import type { ViewKey } from '@shared/view-key';
@@ -299,11 +300,3 @@ function AttentionRow({
   );
 }
 
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('');
-}

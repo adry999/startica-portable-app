@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { groupTone, type PillTone } from '@shared/ui';
+import { shiftMonth } from '@shared/format/month-shift';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { buildBirthdayMonth } from '#features/children/index.web.mjs';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -52,13 +53,6 @@ export interface BirthdaysData {
   list: BirthdayListEntry[];
   count: number;
   groups: BirthdaysGroupOption[];
-}
-
-function shiftMonth(monthKey: string, delta: number): string {
-  const year = Number(monthKey.slice(0, 4));
-  const month = Number(monthKey.slice(5, 7)) - 1;
-  const d = new Date(year, month + delta, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 /** Ecranul „Zile de naștere" (Copii → Zile de naștere): calendar lunar propriu (nu se sincronizează cu

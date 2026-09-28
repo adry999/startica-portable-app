@@ -1,4 +1,5 @@
 import { Badge, RowMenu, groupTone, type DataTableColumn, type PillTone } from '@shared/ui';
+import { initials } from '@shared/format/initials';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ChildRow } from './useChildren';
 import styles from './ChildrenPage.module.css';
@@ -10,15 +11,6 @@ const AVATAR_TONE_CLASS: Record<PillTone, string> = {
   pink: 'tonePink',
   neutral: 'toneOrange',
 };
-
-export function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('');
-}
 
 export interface ChildrenColumnsOptions {
   groups: Group[];

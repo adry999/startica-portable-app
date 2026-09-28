@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, DayStepper, MonthStepper, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { shiftMonth } from '@shared/format/month-shift';
 import { exportAttendanceMonth } from './attendance-export';
 import { useAttendanceDay } from './useAttendanceDay';
 import { useAttendanceMonth } from './useAttendanceMonth';
@@ -10,13 +11,6 @@ import { MonthView } from './MonthView';
 
 export interface AttendancePageProps {
   month: string;
-}
-
-/** monthKey 'YYYY-MM' + delta luni. */
-function shiftMonth(monthKey: string, delta: number): string {
-  const [year, month] = monthKey.split('-').map(Number);
-  const date = new Date(year, month - 1 + delta, 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
 const CURRENT_MONTH = today().slice(0, 7);

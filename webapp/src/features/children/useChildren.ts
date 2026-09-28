@@ -1,4 +1,5 @@
 import { useAppSession } from '@shared/api/session';
+import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { buildReviewCenter } from '#features/review-center/index.web.mjs';
@@ -78,12 +79,13 @@ const EMPTY_SUMMARY: ChildrenSummary = { activeCount: 0, occupiedGroupsCount: 0,
 export function useChildren(month: string): ChildrenData {
   const session = useAppSession();
   const { rates } = useExchangeRates();
-  const { state, ready, loading, saveError } = session.state;
+  const { state, ready } = session.state;
+  const { status, failureMessage } = useSessionStatus(session.state);
 
   if (!ready) {
     return {
-      status: loading || !saveError ? 'loading' : 'failed',
-      failureMessage: saveError,
+      status,
+      failureMessage,
       rows: [],
       groups: [],
       summary: EMPTY_SUMMARY,

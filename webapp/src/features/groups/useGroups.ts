@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { formatAge } from '#shared/format/date-format.mjs';
+import { initials } from '@shared/format/initials';
 import type { Child, Group, GroupTeamMember, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type GroupsStatus = 'loading' | 'ready' | 'failed';
@@ -76,15 +77,6 @@ function orderGroups(groups: Group[], order: string[]): Group[] {
   const known = new Set(ordered.map(group => group.id));
   const rest = groups.filter(group => !known.has(group.id)).sort((a, b) => a.name.localeCompare(b.name, 'ro'));
   return [...ordered, ...rest];
-}
-
-export function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(part => part[0]?.toUpperCase())
-    .join('');
 }
 
 function parseCapacity(capacityRaw: string): number | null {

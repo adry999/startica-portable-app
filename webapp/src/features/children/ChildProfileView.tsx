@@ -12,7 +12,7 @@ import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import { initials } from './childrenColumns';
+import { initials } from '@shared/format/initials';
 import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';

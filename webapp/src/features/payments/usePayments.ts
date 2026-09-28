@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
+import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { total } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { childNameOf } from '#shared/domain/record-labels.mjs';
@@ -111,7 +112,8 @@ function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
  */
 export function usePayments(initialChildId = ''): PaymentsData {
   const session = useAppSession();
-  const { state, ready, loading, saveError } = session.state;
+  const { state, ready } = session.state;
+  const { status, failureMessage } = useSessionStatus(session.state);
   const records = state as RecordsSnapshot;
 
   const [search, setSearch] = useState('');
@@ -196,8 +198,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
 
   if (!ready) {
     return {
-      status: loading || !saveError ? 'loading' : 'failed',
-      failureMessage: saveError,
+      status,
+      failureMessage,
       records,
       rows: [],
       summary: EMPTY_SUMMARY,

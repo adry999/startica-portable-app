@@ -9,8 +9,10 @@ import {
   SearchInput,
   SearchSelect,
   SegmentedControl,
+  Toggle,
   type FilterPillGroup,
 } from '@shared/ui';
+import { shiftMonth } from '@shared/format/month-shift';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import { DEMO_DAY, DEMO_GROUPS, DEMO_MAX_DAY, DEMO_MONTH, DEMO_SEARCH_SELECT_OPTIONS } from '../fixtures';
@@ -28,6 +30,8 @@ export function ButoaneInputSection() {
   const [month, setMonth] = useState(DEMO_MONTH);
   const [stepperMonth, setStepperMonth] = useState(DEMO_MONTH);
   const [day, setDay] = useState(DEMO_DAY);
+  const [toggleOn, setToggleOn] = useState(true);
+  const [toggleOff, setToggleOff] = useState(false);
 
   const filterGroups: FilterPillGroup<string>[] = [
     {
@@ -138,6 +142,20 @@ export function ButoaneInputSection() {
       </ComponentShowcase>
 
       <ComponentShowcase
+        name="Toggle"
+        importLine="import { Toggle } from '@shared/ui';"
+        reference="12-administrare.md §10b (comutatoare Canale) · vizual în Administrare.dc.html#10b"
+      >
+        <DemoRow label="control">
+          <Toggle checked={toggleOn} onChange={setToggleOn} ariaLabel="Restanțe" />
+          <Toggle checked={toggleOff} onChange={setToggleOff} ariaLabel="Probleme la backup" />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <Toggle checked={true} onChange={() => {}} ariaLabel="Comutator dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
         name="FilterPills"
         importLine="import { FilterPills, groupTone } from '@shared/ui';"
         reference="00-comun.md §B, §C · vizual în Copii.dc.html#2a"
@@ -198,12 +216,4 @@ export function ButoaneInputSection() {
       </ComponentShowcase>
     </div>
   );
-}
-
-function shiftMonth(value: string, offset: number): string {
-  const [year, month] = value.split('-').map(Number);
-  const zeroBased = month - 1 + offset;
-  const nextYear = year + Math.floor(zeroBased / 12);
-  const nextMonth = ((zeroBased % 12) + 12) % 12;
-  return `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}`;
 }
