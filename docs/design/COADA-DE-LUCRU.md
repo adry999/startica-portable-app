@@ -235,6 +235,21 @@ Verificat prin semnale (prezența modulului/rutei/componentei), nu calitate cod 
 
 **FM-1 și FM-2 închise. Toată coada cerută azi (0.5–0.9, S.1–S.5, FM-1–2) e integrată pe `master-v2`, comisă local, nepushată.**
 
+## 23-bazin.md — modulul Bazin
+
+- **Backend + frontend de bază (Task 8-10, plan `2026-09-27-personal-bazin.md`):** DONE — `pool_settings`/`pool_bookings`/`pool_sessions`/`pool_closings` (tabele proprii per filială, decizia 11), `charges` ca record kind nou peste `obligation()` (decizia 4 — cei 7 apelanți actualizați). Rutele `/api/pool/*` (settings, week, bookings cu verificare `seatsPerSlot`, sessions, month, close-month idempotent — decizia 5). Antrenorii vin din Personal prin porturi (`listCoaches`/`payCoach`), fără ca `pool` să importe `#features/personal` (regula de graniță). Webapp: `PoolPage` (22a săptămâna/luna), `BookingDrawer` (22b), tab Bazin în Backup și setări (22d), Sidebar/nav/rute (ascuns cât timp `poolSettings.enabled` e fals), liniile Bazin în Situația plăților și fișa copilului. Toate cele 4 criterii de acceptare din spec au test dedicat și trec (capacitate, idempotență, formula antrenorului identică pe card/închidere, setări per filială).
+- **3 bug-uri reale găsite la verificare, în afara a ce raportase crew-ul (comis niciodată — 41 fișiere needitate, verificate de mine diff cu diff înainte de commit):**
+  1. `validateState()` respingea orice `/api/import`/restaurare/export Excel fără `charges` — spărgea real fluxul de import Excel din Backup, nu doar teste vechi. Fix: lipsă = listă goală, ca la orice tip anterior.
+  2. `sync-server/src/change-policy.mjs` (`RECORD_KINDS`) nu primise `charges` — desincronizat de `#shared/domain/record-schema.mjs`, prins de `tests/sync-shared-constants.test.mjs`.
+  3. `create-branch-context.mjs` importa direct fișiere private din `pool/domain/*` (în loc de `index.server.mjs`); `pool-closing.service.test.mjs` importa `#features/personal` direct — mutat în `src/app/server/pool-closing.integration.test.mjs` (compunerea reală pool+personal aparține rădăcinii de compunere, nicio feature nu importă altă feature).
+  4. (colateral, nelegat de Bazin) `useChildren.test.ts` calcula scadențele față de `today()` real cu un comentariu „azi 2026-09-23" ca presupunere — a picat exact azi când data reală a trecut de scadența c2. Fixat cu `vi.setSystemTime`.
+- `npm run check` (root, 1085 teste) + webapp typecheck/test (149 fișiere, 812 teste) verzi, verificate de mine după merge pe `master-v2`, nu doar din raportul crew-ului. Commit `15fb0f1`, merge `d381e68`, fix ceas `597bef0`.
+- **Rămas, nefăcut (nu blochează criteriile de acceptare):**
+  - Task 11 rest: bonul de 58 mm al Bazinului (`PoolReceiptPage`, mutarea `PoolReceiptLabel` din `payments/` în `pool/`) — liniile Bazin în Situația/fișă/confirmare SUNT gata, doar bonul separat lipsește.
+  - Foaia „Bazin" din exportul Excel (sheet-ul citibil childName/month/label/amount) — datele brute chiar apar deja în sheet-ul generic de tip/id/JSON, doar varianta lizibilă lipsește.
+  - Task 12 din plan (sincronizarea propriu-zisă a `pool_bookings`/`pool_sessions`/`pool_closings`/`charges`/kind-urile Personal către `sync-server`) — nefăcut, e o bucată separată, nu mică.
+  - README.md al feature-ului `pool` — adăugat de mine (lipsea din commit-ul crew-ului).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
 - Build + hash instaler final, după ce confirmi că merge tot testat local.
