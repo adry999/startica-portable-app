@@ -19,6 +19,42 @@ function assertValidChange(change) {
     fail('Modificare invalidă în lotul trimis.', 400);
 }
 
+/** @param {unknown} entry */
+function assertValidSnapshotEntry(entry) {
+  const candidate = /** @type {Record<string, unknown> | null} */ (entry);
+  if (
+    !candidate ||
+    !KINDS.includes(/** @type {string} */ (candidate.kind)) ||
+    typeof candidate.id !== 'string' ||
+    !candidate.id ||
+    typeof candidate.updatedAt !== 'string'
+  )
+    fail('Înregistrare invalidă în instantaneu.', 400);
+}
+
+// D-8: „since”/„limit” vin din query string, deci sunt text nevalidat. Un „since” care nu
+// e un întreg (NaN inclus) ar scrie 'NaN' în sync.json al clientului și l-ar bloca pentru
+// totdeauna; un „limit” negativ ar întoarce tot istoricul într-un singur răspuns.
+const INTEGER_PATTERN = /^\d+$/;
+const MAX_PULL_LIMIT = 500;
+
+/** @param {URL} url */
+function readSinceParam(url) {
+  const raw = url.searchParams.get('since') ?? '0';
+  if (!INTEGER_PATTERN.test(raw)) fail('Parametrul „since” trebuie să fie un număr întreg, minim 0.', 400);
+  return Number(raw);
+}
+
+/** @param {URL} url */
+function readLimitParam(url) {
+  const raw = url.searchParams.get('limit');
+  if (raw === null) return DEFAULT_PULL_LIMIT;
+  const limit = Number(raw);
+  if (!INTEGER_PATTERN.test(raw) || limit < 1 || limit > MAX_PULL_LIMIT)
+    fail(`Parametrul „limit” trebuie să fie între 1 și ${MAX_PULL_LIMIT}.`, 400);
+  return limit;
+}
+
 /**
  * @param {{
  *   changesService: ReturnType<typeof import('./changes.service.mjs').createChangesService>,
@@ -52,8 +88,8 @@ export function createChangesRoutes({ changesService, branches, devices, events,
   /** @param {{ params: Record<string, string>, url: URL }} context */
   function pull({ params, url }) {
     ensureBranchExists(params.id);
-    const since = Number(url.searchParams.get('since') ?? '0');
-    const limit = Number(url.searchParams.get('limit') ?? String(DEFAULT_PULL_LIMIT));
+    const since = readSinceParam(url);
+    const limit = readLimitParam(url);
     return changesService.pull({ branchId: params.id, since, limit });
   }
 
@@ -62,6 +98,7 @@ export function createChangesRoutes({ changesService, branches, devices, events,
     ensureBranchExists(params.id);
     const payload = /** @type {{ entries?: unknown[] }} */ (body ?? {});
     if (!Array.isArray(payload.entries)) fail('Corpul trebuie să conțină „entries”.', 400);
+    payload.entries.forEach(assertValidSnapshotEntry);
     const entries = /** @type {{ kind: string, id: string, payload: unknown, updatedAt: string }[]} */ (
       payload.entries
     );
