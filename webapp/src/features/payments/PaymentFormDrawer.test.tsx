@@ -43,6 +43,23 @@ function renderDrawer() {
   return { onSubmit, onClose };
 }
 
+function saveButton() {
+  return screen.getByRole('button', { name: /^Salvează/ });
+}
+
+function sumInput() {
+  return screen.getByLabelText('Sumă') as HTMLInputElement;
+}
+
+async function pickChild(user: ReturnType<typeof userEvent.setup>, name: string) {
+  await user.click(screen.getByRole('button', { name: 'Copil' }));
+  await user.click(screen.getByRole('option', { name }));
+}
+
+async function goManual(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Repartizează manual' }));
+}
+
 describe('PaymentFormDrawer', () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -63,28 +80,47 @@ describe('PaymentFormDrawer', () => {
     vi.unstubAllGlobals();
   });
 
-  it('suma totală se calculează automat din metodele completate', async () => {
-    renderDrawer();
+  it('suma introdusă în câmpul Sumă e totalul folosit la repartizare și trimitere', async () => {
+    const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText('Cash'), '500');
-    await user.type(screen.getByLabelText('Card'), '300');
+    await user.type(sumInput(), '500');
+    expect(sumInput().value).toBe('500');
 
-    expect((screen.getByLabelText('Total achitare (calculat automat)') as HTMLInputElement).value).toBe('800.00');
+    await user.click(saveButton());
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ tenders: expect.objectContaining({ Cash: '500' }) }),
+    );
   });
 
-  it('rândul unic de repartizare urmărește suma totală până e editat manual', async () => {
+  it('schimbarea metodei mută suma pe metoda nouă, fără să o dubleze', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await user.type(sumInput(), '500');
+    await user.click(screen.getByRole('radio', { name: 'Card' }));
+    expect(sumInput().value).toBe('500');
+
+    await user.click(saveButton());
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.tenders.Card).toBe('500');
+    expect(submitted.tenders.Cash).toBe('');
+  });
+
+  it('rândul unic de repartizare urmărește suma până e editat manual', async () => {
     renderDrawer();
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText('Cash'), '500');
+    await user.type(sumInput(), '500');
+    await goManual(user);
 
     const allocationAmount = document.querySelector('input[type="number"][min="0.01"]') as HTMLInputElement;
     expect(allocationAmount.value).toBe('500.00');
 
     await user.clear(allocationAmount);
     await user.type(allocationAmount, '100');
-    await user.type(screen.getByLabelText('Card'), '200');
+    await user.clear(sumInput());
+    await user.type(sumInput(), '700');
 
     // Suma repartizării nu se mai actualizează automat după editarea manuală.
     expect(allocationAmount.value).toBe('100');
@@ -94,7 +130,8 @@ describe('PaymentFormDrawer', () => {
     renderDrawer();
     const user = userEvent.setup();
 
-    const dateInput = screen.getByLabelText('Data încasării') as HTMLInputElement;
+    await goManual(user);
+    const dateInput = screen.getByLabelText('Data') as HTMLInputElement;
     const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
     const initialMonth = monthInput.value;
 
@@ -109,8 +146,9 @@ describe('PaymentFormDrawer', () => {
     renderDrawer();
     const user = userEvent.setup();
 
+    await pickChild(user, 'Andrei Popescu');
+    await goManual(user);
     const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c1');
 
     expect(monthInput.value).toBe('2026-01');
   });
@@ -119,6 +157,7 @@ describe('PaymentFormDrawer', () => {
     renderDrawer();
     const user = userEvent.setup();
 
+    await goManual(user);
     await user.click(screen.getByRole('button', { name: '+ Lună' }));
     expect(document.querySelectorAll('input[type="month"]')).toHaveLength(2);
   });
@@ -127,16 +166,16 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c2');
-    await user.type(screen.getByLabelText('Cash'), '500');
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await pickChild(user, 'Maria Ionescu');
+    await user.type(sumInput(), '500');
+    await user.click(saveButton());
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({ childId: 'c2', tenders: expect.objectContaining({ Cash: '500' }) }),
     );
   });
 
-  it('la editare, o repartizare parțială (avans) nu este suprascrisă automat la deschidere', () => {
+  it('la editare, o repartizare parțială (avans) nu este suprascrisă automat la deschidere', async () => {
     const payment = {
       id: 'p1',
       childId: 'c1',
@@ -156,6 +195,8 @@ describe('PaymentFormDrawer', () => {
         onClose={vi.fn()}
       />,
     );
+    const user = userEvent.setup();
+    await goManual(user);
 
     const allocationAmount = document.querySelector('input[type="number"][min="0.01"]') as HTMLInputElement;
     expect(allocationAmount.value).toBe('600');
@@ -172,17 +213,17 @@ describe('PaymentFormDrawer', () => {
     render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText('Cash'), '500');
-    const saveButton = screen.getByRole('button', { name: 'Salvează' });
+    await user.type(sumInput(), '500');
+    const button = saveButton();
 
-    await user.click(saveButton);
-    await user.click(saveButton);
+    await user.click(button);
+    await user.click(button);
     resolveSubmit(true);
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it('defaultChildId la o plată nouă propune luna cea mai veche neachitată a copilului', () => {
+  it('defaultChildId la o plată nouă propune luna cea mai veche neachitată a copilului', async () => {
     render(
       <PaymentFormDrawer
         target="new"
@@ -192,6 +233,8 @@ describe('PaymentFormDrawer', () => {
         onClose={vi.fn()}
       />,
     );
+    const user = userEvent.setup();
+    await goManual(user);
 
     const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
     expect(monthInput.value).toBe('2026-01');
@@ -201,6 +244,7 @@ describe('PaymentFormDrawer', () => {
     renderDrawer();
     const user = userEvent.setup();
 
+    await goManual(user);
     await user.click(screen.getByRole('button', { name: '+ Lună' }));
     const amountInputs = () =>
       Array.from(document.querySelectorAll('input[type="number"][min="0.01"]')) as HTMLInputElement[];
@@ -219,9 +263,9 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c1');
-    await user.type(screen.getByLabelText('Cash'), '500');
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await pickChild(user, 'Andrei Popescu');
+    await user.type(sumInput(), '500');
+    await user.click(saveButton());
 
     expect(screen.queryByLabelText('Curs EUR')).toBeNull();
     const submitted = onSubmit.mock.calls[0][0];
@@ -234,13 +278,13 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
-    await user.type(screen.getByLabelText('Cash'), '1000');
+    await pickChild(user, 'Elena Rusu');
+    await user.type(sumInput(), '1000');
 
     expect(screen.getByText('= 51,28 €')).toBeInTheDocument();
     expect(screen.getByLabelText('Curs EUR')).toHaveAttribute('placeholder', String(KNOWN_RATE));
 
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await user.click(saveButton());
 
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.fxRate).toBe(KNOWN_RATE);
@@ -252,11 +296,11 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
-    await user.type(screen.getByLabelText('Cash'), '1000');
+    await pickChild(user, 'Elena Rusu');
+    await user.type(sumInput(), '1000');
     await user.type(screen.getByLabelText('Curs EUR'), '20');
 
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await user.click(saveButton());
 
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.fxRate).toBe(20);
@@ -276,13 +320,13 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.selectOptions(screen.getByLabelText('Copil'), 'c3');
-    await user.type(screen.getByLabelText('Cash'), '1000');
+    await pickChild(user, 'Elena Rusu');
+    await user.type(sumInput(), '1000');
 
     expect(screen.getByText('Niciun curs cunoscut pentru această dată — completează manual')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Salvează' })).toBeDisabled();
+    expect(saveButton()).toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await user.click(saveButton());
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -292,7 +336,7 @@ describe('PaymentFormDrawer', () => {
 
     expect(readDirtyForms()).toEqual([]);
 
-    await user.type(screen.getByLabelText('Cash'), '500');
+    await user.type(sumInput(), '500');
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o achitare');
@@ -306,7 +350,7 @@ describe('PaymentFormDrawer', () => {
     render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
     const user = userEvent.setup();
 
-    await user.type(screen.getByLabelText('Cash'), '500');
+    await user.type(sumInput(), '500');
     const [dirtyForm] = readDirtyForms();
 
     await expect(dirtyForm.save()).resolves.toBe(false);
@@ -315,5 +359,19 @@ describe('PaymentFormDrawer', () => {
   it('formularul nu e nesalvat cât timp drawer-ul e închis (target null)', () => {
     render(<PaymentFormDrawer target={null} records={records} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(readDirtyForms()).toEqual([]);
+  });
+
+  it('scurtăturile de lună precompletează suma din taxa copilului', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await pickChild(user, 'Andrei Popescu');
+    await user.click(screen.getByRole('button', { name: '2 luni · 3.000' }));
+
+    expect(sumInput().value).toBe('3000');
+
+    await user.click(saveButton());
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.tenders.Cash).toBe('3000');
   });
 });
