@@ -62,3 +62,4 @@ Pentru ca Claude Code să găsească singur spec-urile, copiază `CLAUDE-md-snip
 ## Adăugate 28.09.2026
 - `03-grupe.md` — **rescris (v2)** pentru 7+ grupe: Tabla implicită, „+ Grupă nouă” în antet (4a, 4b). Varianta 3a/3b a fost scoasă.
 - `26-foaie-saptamana.md` — foaia de prezență pe săptămână, A4 orizontal, câte una pe grupă (18c, 18d)
+- `27-componente-comune.md` — PersonCell, DataTable.groupBy, ListToolbar, ProfileLayout: Copii și Personal folosesc aceleași piese

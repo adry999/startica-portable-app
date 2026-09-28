@@ -52,7 +52,8 @@ galben `#fdf3d2/#7a5d00/#d9a400` · roz `#fce9ef/#b0284f/#d9577c` · turcoaz `#d
 ```
 - **Fără grupă** e fixat la stânga (`position:sticky; top:0`), ordonat după data nașterii, cei mai mici primii.
 - **GroupTile:** radius 20, padding `14px 16px`, gap 10, fundalul tonului. Sus: nume (Baloo 19), pastila de stare, apoi „14/16” (Baloo 19; „/16” la opacitate .6). Dedesubt: bară de 5px, apoi „Educator · 5–6 ani” (12px).
-- **Copiii din tile** sunt pastile: fundal alb, radius 999, padding `2px 9px 2px 2px`, avatar de 20px și text „Prenume N.” (12px, 700). Se arată **primii 9**, apoi pastila „+N”, pe care un clic deschide grupa în Carduri.
+- **Copiii din tile** sunt pastile: fundal alb, radius 999, padding `2px 9px 2px 2px`, avatar de 20px și text „Prenume N.” (12px, 700). Se arată **primii 9**, apoi pastila „+N”.
+- **Editare din Tablă → Carduri:** Tabla nu are editor propriu. Pe tile, pastila „Editează” (după nume; fundal `rgba(255,255,255,.75)`, text în tonul grupei), un clic pe numele grupei sau pe „+N” fac `setView('cards')` + `setSelId(g.id)` și derulează sus. Editorul se deschide cu grupa aleasă, iar alegerea modului se salvează ca de obicei. În URL: `/grupe?mod=carduri&grupa=<id>`, ca înapoi în browser să revină în Tablă.
 - **Grupa goală** are zona „Plasează aici”: înălțime 62px, fundal `rgba(255,255,255,.55)`, radius 14.
 - **Drag & drop:** din pool pe tile, sau dintr-o pastilă pe alt tile. Tile-ul peste care se trage primește `border:2px dashed <bara tonului>`. Pe drop se apelează funcția existentă de mutare din `useGroups`. Pe o grupă plină sau peste capacitate, drop-ul e permis, iar pastila de stare se actualizează.
 - Butoanele „Restrânge / Deschide tot” și coloanele restrânse din 3b **se scot**.
@@ -79,18 +80,33 @@ Același `Drawer` ca la „Copil nou” (15a): antet „Grupă nouă” + ×, co
 2. **Nume grupă** (obligatoriu; focus automat; placeholder „ex. Ursuleți”). Un nume care există deja în filială dă eroarea „Există deja o grupă X”.
 3. **Culoare:** 8 pătrate de 34px (cele 7 tonuri din §3 + coral `#fbe6dc/#9a3f1c/#e0714a`). Implicit e primul ton nefolosit; tooltipul arată „folosită de Mars” sau „liberă”. Se salvează ca `group.tone`, iar `groupTone` îl folosește înainte de calculul din id.
 4. **Capacitate** (stepper, implicit 14) și **Vârstă** min–max în ani (opțional; folosită pentru sugestiile de copii și în Formulare 15a, „se potrivește în grupele”).
-5. **Educator principal** și **Asistent** (opțional): select din Personal, cu rolul Educator. Până la modulul 24 rămâne câmpul text `group.educator`.
+5. **Echipa grupei** (principal · asistenți · înlocuitori) — aceeași componentă ca în Carduri (§5), fără zile. Vezi §5c.
 6. **Fără alegerea locului:** grupa nouă primește automat `order` = prima poziție (celelalte coboară cu 1), ca să fie lângă „Fără grupă” și copiii să se poată trage direct în ea. În panou apare doar nota: „Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu „⋮⋮”.”
 - **Subsol:** „N copii fără grupă au X–Y ani · îi poți adăuga după salvare.” · [Anulează] · [Creează grupa]. Butonul e gri până se completează numele. Enter salvează, Esc închide.
 - **După salvare:** panoul se închide, iar grupa apare **prima**, cu „Plasează aici”; în Carduri devine grupa selectată. Toast „Grupa X a fost creată · Anulează” (6 s).
 
+## 5c. Echipa grupei — `GroupTeamPicker` (în 4a și 4c)
+Înlocuiește câmpul text „Educator” și refolosește `group.team` (`GroupTeamMember[]`) din `GroupTeamCard`. `GroupTeamCard` devine `GroupTeamPicker`, cu aceeași logică și un aspect nou:
+- **Trei blocuri, câte unul pe rol:** Principal (pastilă portocalie, „unul singur”) · Asistent (mint) · Înlocuitor (neutru, „când lipsește cineva”). În 4a stau pe 3 coloane, în panoul 4c unul sub altul.
+- **Membru:** avatar 26px în tonul rolului, nume, funcția (din Personal), pastila galbenă de concediu dacă e cazul („Concediu până pe 3 oct”, din `leaves`) și × (scoate). În 4a mai are un rând de zile L Ma Mi J V; implicit toate sunt active, iar un clic comută o zi.
+- **Gol:** „Fără educator principal” (roșu `#b0284f`) · „Niciun asistent” / „Niciun înlocuitor” (gri).
+- **Adăugare:** „+ Alege” / „+ Asistent” / „+ Înlocuitor” deschide, în același bloc, un panou cu `SearchInput` „Caută în Personal…” și lista angajaților activi care nu sunt deja în echipă.
+  - Ordinea: întâi educatorii și asistenții, apoi cei liberi, apoi alfabetic.
+  - Fiecare rând arată în dreapta unde lucrează deja: „Liberă” (verde) sau „Mars · principal” (portocaliu dacă e principal în altă parte, altfel gri). E permis, doar vizibil.
+  - Jos: link „Lipsește cineva? Personal → + Angajat”.
+- **Principal:** când e completat, butonul devine „Schimbă”, iar persoana aleasă îl înlocuiește pe cel vechi (nu mai există eroarea „are deja un principal”).
+- **Salvare:** în 4a, cu butonul „Salvează” al editorului (`useDirtyForm` rămâne); în 4c, odată cu „Creează grupa”. Tile-ul și cardul arată numele principalului sau, dacă lipsește, „Fără educator”.
+- **Migrare:** `group.educator` (text) se potrivește după nume cu `staff`. Dacă nu se găsește, rămâne afișat gri „(din fișa veche) Nume” până se alege cineva.
+
 ## 6. Criterii de acceptare
+- [ ] Echipa se alege din Personal în 4a și 4c; principalul e unic și „Schimbă” îl înlocuiește; lista arată unde lucrează deja fiecare
 - [ ] „+ Grupă nouă” deschide panoul 4c; doar numele e obligatoriu; previzualizarea se actualizează pe loc
 - [ ] La prima deschidere apare Tabla; alegerea se păstrează după reîncărcare
 - [ ] „+ Grupă nouă” e în antet în ambele moduri; nu mai există cardul punctat
 - [ ] 7 grupe încap fără scroll orizontal la 1440px (Tablă 2 coloane, Carduri 4 coloane)
 - [ ] Pastilele Plină / Peste cu N / Goală și „Fără educator” apar corect
 - [ ] Tile-ul arată maximum 9 copii + „+N”
+- [ ] „Editează”, numele sau „+N” din Tablă deschid Carduri cu grupa selectată; înapoi în browser revine în Tablă
 - [ ] Drag & drop din „Fără grupă” pe un tile mută copilul și actualizează numerele din antet
 - [ ] `groupTone` dă 7 tonuri distincte
 - [ ] Ordinea grupelor se schimbă prin tragere (mânerul din Tablă, cardul din Carduri), se păstrează după reîncărcare și se vede la fel în filtre, Prezența și foile tipărite

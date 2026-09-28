@@ -12,7 +12,7 @@
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
     <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Grupe</h1>
-    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un singur ecran cu comutatorul „Tablă | Carduri” în antet și „+ Grupă nouă” lângă el, în ambele moduri. Ordinea grupelor e a voastră: trage de „⋮⋮” (în Tablă) sau de tot cardul (în Carduri) ca s-o schimbi; ordinea se salvează și e aceeași peste tot în aplicație (filtre, Prezența, foi tipărite). Încearcă aici. „+ Grupă nouă” deschide panoul lateral <a href="#4c">4c</a>. La deschidere apare Tabla (<a href="#4b">4b</a>); comutatorul e „Tablă | Carduri”. <a href="#4a">4a</a>: carduri compacte în grilă de 4 (două rânduri), editorul grupei alese dedesubt; stările Plină, Peste capacitate, Goală și Fără educator se văd direct pe card. <a href="#4b">4b</a>: coloanele nu mai încap, așa că tabla devine „Fără grupă” fixat la stânga și grupele ca ținte de plasare în grilă de 2; fiecare arată primii 9 copii, restul „+N”.</p>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un singur ecran cu comutatorul „Tablă | Carduri” în antet și „+ Grupă nouă” lângă el, în ambele moduri. Ordinea grupelor e a voastră: trage de „⋮⋮” (în Tablă) sau de tot cardul (în Carduri) ca s-o schimbi; ordinea se salvează și e aceeași peste tot în aplicație (filtre, Prezența, foi tipărite). Încearcă aici. În Tablă, „Editează”, numele grupei sau „+N” trec în Carduri cu grupa deja aleasă. „+ Grupă nouă” deschide panoul lateral <a href="#4c">4c</a>. La deschidere apare Tabla (<a href="#4b">4b</a>); comutatorul e „Tablă | Carduri”. <a href="#4a">4a</a>: carduri compacte în grilă de 4 (două rânduri), editorul grupei alese dedesubt; stările Plină, Peste capacitate, Goală și Fără educator se văd direct pe card. <a href="#4b">4b</a>: coloanele nu mai încap, așa că tabla devine „Fără grupă” fixat la stânga și grupele ca ținte de plasare în grilă de 2; fiecare arată primii 9 copii, restul „+N”.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
@@ -39,13 +39,13 @@
             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
               <sc-for list="{{ g2 }}" as="g" hint-placeholder-count="7">
                 <div onDragOver="{{ g.dov }}" onDrop="{{ g.drop }}" style="position:relative;border-radius:20px;background:{{ g.bg }};border:{{ g.tileBd }};padding:14px 16px;display:flex;flex-direction:column;gap:10px;opacity:{{ g.op }};box-shadow:{{ g.ring }}">
-                  <div style="display:flex;align-items:baseline;gap:8px"><span draggable="true" onDragStart="{{ g.ds }}" onDragEnd="{{ g.de }}" title="Trage ca să schimbi ordinea grupelor" style="align-self:center;padding:2px 4px;border-radius:6px;color:{{ g.fg }};opacity:.55;font-weight:800;letter-spacing:-2px;cursor:grab;user-select:none" style-hover="background:rgba(255,255,255,.7);opacity:1">⋮⋮</span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px">{{ g.name }}</span><sc-if value="{{ g.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ g.stBg }};color:{{ g.stFg }}">{{ g.status }}</span></sc-if><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ g.fg }}">{{ g.count }}<span style="font-size:14px;opacity:.6">{{ g.cap }}</span></span></div>
+                  <div style="display:flex;align-items:baseline;gap:8px"><span draggable="true" onDragStart="{{ g.ds }}" onDragEnd="{{ g.de }}" title="Trage ca să schimbi ordinea grupelor" style="align-self:center;padding:2px 4px;border-radius:6px;color:{{ g.fg }};opacity:.55;font-weight:800;letter-spacing:-2px;cursor:grab;user-select:none" style-hover="background:rgba(255,255,255,.7);opacity:1">⋮⋮</span><span onClick="{{ g.edit }}" title="Deschide în Carduri pentru editare" style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;cursor:pointer" style-hover="text-decoration:underline">{{ g.name }}</span><span onClick="{{ g.edit }}" title="Editează grupa" style="align-self:center;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.75);font-size:12px;font-weight:800;color:{{ g.fg }};cursor:pointer" style-hover="background:#fff">Editează</span><sc-if value="{{ g.hasStatus }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ g.stBg }};color:{{ g.stFg }}">{{ g.status }}</span></sc-if><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ g.fg }}">{{ g.count }}<span style="font-size:14px;opacity:.6">{{ g.cap }}</span></span></div>
                   <div style="height:5px;border-radius:99px;background:#fff;overflow:hidden"><span style="display:block;width:{{ g.pct }}%;height:100%;background:{{ g.bar }}"></span></div>
                   <span style="font-size:12px;font-weight:700;color:{{ g.eduCol }}">{{ g.edu }}<span style="color:#6b7780;font-weight:600"> · {{ g.ages }}</span></span>
                   <sc-if value="{{ g.hasKids }}" hint-placeholder-val="{{ true }}">
                   <div style="display:flex;flex-wrap:wrap;gap:5px">
                     <sc-for list="{{ g.peek }}" as="k" hint-placeholder-count="9"><span style="display:flex;align-items:center;gap:5px;padding:2px 9px 2px 2px;border-radius:999px;background:#fff;font-size:12px;font-weight:700"><span style="width:20px;height:20px;border-radius:50%;background:{{ k.abg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">{{ k.ini }}</span>{{ k.short }}</span></sc-for>
-                    <sc-if value="{{ g.hasMore }}" hint-placeholder-val="{{ false }}"><span style="padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.6);font-size:12px;font-weight:800;color:{{ g.fg }}">{{ g.more }}</span></sc-if>
+                    <sc-if value="{{ g.hasMore }}" hint-placeholder-val="{{ false }}"><span onClick="{{ g.edit }}" title="Vezi toți copiii în Carduri" style="padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.6);font-size:12px;font-weight:800;color:{{ g.fg }};cursor:pointer">{{ g.more }}</span></sc-if>
                   </div>
                   </sc-if>
                   <sc-if value="{{ g.empty }}" hint-placeholder-val="{{ false }}"><div style="height:62px;border-radius:14px;background:rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;font-weight:800;color:{{ g.fg }};font-size:14px">Plasează aici</div></sc-if>
@@ -81,11 +81,38 @@
             </div>
             <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;padding:22px 24px;display:flex;flex-direction:column;gap:18px">
               <div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:{{ s2bar }}"></span><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px">Editează grupa {{ s2name }}</span><span style="font-size:13px;color:#6b7780">Vârste: <b>{{ s2ages }}</b></span></div>
-              <div style="display:grid;grid-template-columns:2fr 2fr 1fr auto;gap:12px;align-items:end">
+              <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:12px;align-items:end">
                 <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Nume grupă<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">{{ s2name }}</span></label>
-                <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Educator<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:{{ s2eduCol }};font-weight:600">{{ s2edu }}</span></label>
                 <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#6b7780">Capacitate<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;color:#3a4750;font-weight:600">{{ s2cap }}</span></label>
                 <span style="padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Echipa grupei · {{ edT.size }}</span><span style="font-size:12px;color:#6b7780">din Personal · zilele marcate = când lucrează în grupă</span></div>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:start">
+                  <sc-for list="{{ edT.roles }}" as="r" hint-placeholder-count="3">
+                    <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;background:#fffaf0;border:1px solid #f1e8d6">
+                      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.label }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.hint }}</span><span onClick="{{ r.add }}" style="margin-left:auto;font-size:13px;font-weight:800;color:#a34f00;cursor:pointer;white-space:nowrap">{{ r.addLbl }}</span></div>
+                      <sc-for list="{{ r.members }}" as="m" hint-placeholder-count="1">
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:#fff;border-radius:12px;border:1px solid #ede7dc">
+                          <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:26px;height:26px;flex-shrink:0;border-radius:50%;background:{{ r.bg }};color:{{ r.fg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">{{ m.ini }}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><b style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.name }}</b><span style="font-size:11px;color:#6b7780">{{ m.fn }}</span></span><span onClick="{{ m.remove }}" title="Scoate din grupă" style="color:#9aa3a9;font-weight:800;cursor:pointer;padding:2px 4px">×</span></div>
+                          <sc-if value="{{ m.hasLeave }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#fdf3d2;color:#7a5d00">{{ m.leave }}</span></sc-if>
+                          <div style="display:flex;gap:3px"><sc-for list="{{ m.days }}" as="d" hint-placeholder-count="5"><span onClick="{{ d.toggle }}" style="flex:1;text-align:center;padding:3px 0;border-radius:7px;border:1px solid {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};font-size:11px;font-weight:800;cursor:pointer;user-select:none">{{ d.l }}</span></sc-for></div>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ r.empty }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:700;color:{{ r.emptyCol }}">{{ r.emptyLbl }}</span></sc-if>
+                      <sc-if value="{{ r.picking }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:#fff;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 10px 24px rgba(58,71,80,.12)">
+                          <input value="{{ edT.q }}" onChange="{{ edT.setQ }}" placeholder="Caută în Personal…" style="padding:8px 10px;border-radius:10px;border:1px solid #c9c4ba;font:600 13px Nunito,sans-serif;color:#3a4750;outline:none"></input>
+                          <div style="max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px">
+                            <sc-for list="{{ r.cands }}" as="c" hint-placeholder-count="5"><div onClick="{{ c.pick }}" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;cursor:pointer" style-hover="background:#fffaf0"><span style="width:24px;height:24px;flex-shrink:0;border-radius:50%;background:#f1ece2;color:#6b7780;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">{{ c.ini }}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><b style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</b><span style="font-size:11px;color:#6b7780">{{ c.fn }}</span></span><span style="font-size:11px;font-weight:800;color:{{ c.wCol }};text-align:right;max-width:45%">{{ c.w }}</span></div></sc-for>
+                            <sc-if value="{{ r.none }}" hint-placeholder-val="{{ false }}"><span style="padding:8px;font-size:12px;color:#6b7780">Nimeni nu se potrivește.</span></sc-if>
+                          </div>
+                          <a href="Personal.dc.html#23a" style="padding:4px 8px 2px;font-size:12px;font-weight:700;color:#6b7780;text-decoration:none">Lipsește cineva? Personal → + Angajat</a>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
               </div>
               <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Copii în grupă · {{ s2count }}</span><div style="margin-left:auto;width:320px;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:14px;color:#9aa3a9">⌕ Adaugă copil fără grupă…</div></div>
               <sc-if value="{{ s2has }}" hint-placeholder-val="{{ true }}">
@@ -115,7 +142,7 @@
         <div style="position:absolute;inset:0;background:rgba(58,71,80,.35)"></div>
         <aside style="position:absolute;top:0;right:0;bottom:0;width:520px;background:#fff;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(58,71,80,.2)">
           <div style="display:flex;align-items:center;gap:12px;padding:24px 30px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">Grupă nouă</span><a href="#4b" style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-weight:800;color:#3a4750;text-decoration:none">×</a></div>
-          <div style="flex:1;overflow:hidden;padding:22px 30px;display:flex;flex-direction:column;gap:22px">
+          <div style="flex:1;overflow:auto;padding:22px 30px;display:flex;flex-direction:column;gap:22px">
             <div style="border-radius:20px;background:{{ ngBg }};padding:14px 16px;display:flex;flex-direction:column;gap:10px">
               <div style="display:flex;align-items:baseline;gap:8px"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ ngTitleCol }}">{{ ngTitle }}</span><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;color:{{ ngFg }}">Goală</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ ngFg }}">0<span style="font-size:14px;opacity:.6">/{{ ngCap }}</span></span></div>
               <div style="height:5px;border-radius:99px;background:#fff"></div>
@@ -141,16 +168,31 @@
                 </div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Educator principal<span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;display:flex;justify-content:space-between">{{ ngEdu }}<span style="color:#9aa3a9">▾</span></span></label>
-              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Asistent <span style="display:contents;color:#9aa3a9;font-weight:600">(opțional)</span><span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;color:#9aa3a9;display:flex;justify-content:space-between">Alege din Personal<span>▾</span></span></label>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:700">Echipa grupei<span style="font-weight:600;color:#9aa3a9">(opțional, din Personal)</span></div>
+              <sc-for list="{{ ngT.roles }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;background:#fffaf0;border:1px solid #f1e8d6">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.label }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.hint }}</span><span onClick="{{ r.add }}" style="margin-left:auto;font-size:13px;font-weight:800;color:#a34f00;cursor:pointer;white-space:nowrap">{{ r.addLbl }}</span></div>
+                  <sc-for list="{{ r.members }}" as="m" hint-placeholder-count="0">
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff;border-radius:12px;border:1px solid #ede7dc"><span style="width:26px;height:26px;flex-shrink:0;border-radius:50%;background:{{ r.bg }};color:{{ r.fg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">{{ m.ini }}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><b style="font-size:13px">{{ m.name }}</b><span style="font-size:11px;color:#6b7780">{{ m.fn }}</span></span><sc-if value="{{ m.hasLeave }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#fdf3d2;color:#7a5d00">{{ m.leave }}</span></sc-if><span onClick="{{ m.remove }}" style="color:#9aa3a9;font-weight:800;cursor:pointer;padding:2px 4px">×</span></div>
+                  </sc-for>
+                  <sc-if value="{{ r.picking }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:6px;padding:8px;background:#fff;border-radius:12px;border:1.5px solid #ef8a1d">
+                      <input value="{{ ngT.q }}" onChange="{{ ngT.setQ }}" placeholder="Caută în Personal…" style="padding:8px 10px;border-radius:10px;border:1px solid #c9c4ba;font:600 13px Nunito,sans-serif;color:#3a4750;outline:none"></input>
+                      <div style="max-height:200px;overflow:auto;display:flex;flex-direction:column;gap:2px">
+                        <sc-for list="{{ r.cands }}" as="c" hint-placeholder-count="5"><div onClick="{{ c.pick }}" style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px;cursor:pointer" style-hover="background:#fffaf0"><span style="width:24px;height:24px;flex-shrink:0;border-radius:50%;background:#f1ece2;color:#6b7780;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800">{{ c.ini }}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><b style="font-size:13px">{{ c.name }}</b><span style="font-size:11px;color:#6b7780">{{ c.fn }}</span></span><span style="font-size:11px;font-weight:800;color:{{ c.wCol }};text-align:right;max-width:45%">{{ c.w }}</span></div></sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
             </div>
             <span style="font-size:12px;color:#6b7780">Grupa nouă apare <b style="color:#3a4750">prima</b>, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu „⋮⋮”.</span>
           </div>
           <div style="padding:18px 30px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:13px;color:#6b7780">{{ ngFit }} · îi poți adăuga după salvare.</span><a href="#4b" style="padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px;color:#3a4750;text-decoration:none">Anulează</a><span style="padding:11px 22px;border-radius:999px;background:{{ ngBtnBg }};box-shadow:{{ ngBtnShadow }};color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;white-space:nowrap">Creează grupa</span></div>
         </aside>
       </div>
-      <div style="font-size:13px;color:#6b7780;max-width:1440px;text-wrap:pretty">Același panou lateral ca la „Copil nou” (15a), mai îngust. Cardul de sus e previzualizarea grupei: se schimbă pe loc după nume, culoare, capacitate și educator. Doar numele e obligatoriu. După „Creează grupa”, grupa apare prima în Tablă, lângă „Fără grupă”, cu „Plasează aici”, iar toastul „Grupa X a fost creată · Anulează” stă 6 s. Educatorii se aleg din Personal (rol Educator); până la modulul Personal, câmp text.</div>
+      <div style="font-size:13px;color:#6b7780;max-width:1440px;text-wrap:pretty">Același panou lateral ca la „Copil nou” (15a), mai îngust. Cardul de sus e previzualizarea grupei: se schimbă pe loc după nume, culoare, capacitate și educator. Doar numele e obligatoriu. După „Creează grupa”, grupa apare prima în Tablă, lângă „Fără grupă”, cu „Plasează aici”, iar toastul „Grupa X a fost creată · Anulează” stă 6 s. Echipa se alege din Personal, pe roluri: un principal, oricâți asistenți și înlocuitori. Lista arată întâi educatorii liberi, iar pentru ceilalți scrie unde lucrează deja („Mars · principal”). Aceeași echipă se editează și în Carduri (<a href="#4a">4a</a>), cu zilele în care lucrează fiecare.</div>
     </div>
 
   </div>
@@ -159,6 +201,39 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
+  staffData() {
+    const S = [['ala','Ala Ursu','Educator'],['doina','Doina Popa','Asistent educator'],['maria','Maria Cazacu','Educator'],['irina','Irina Bivol','Asistent educator'],['olga','Olga Rusu','Educator'],['lilia','Lilia Guțu','Asistent educator'],['natalia','Natalia Lungu','Educator'],['ana','Ana Moraru','Asistent educator'],['elena','Elena Sârbu','Educator'],['vera','Vera Popa','Asistent educator'],['tatiana','Tatiana Roșca','Educator'],['mariana','Mariana Cebotari','Asistent educator'],['cristina','Cristina Botnaru','Educator'],['svetlana','Svetlana Ceban','Asistent educator'],['andrei','Andrei Grosu','Antrenor bazin'],['ion','Ion Popa','Bucătar']].map(([id, name, fn]) => ({ id, name, fn, edu: /Educator|Asistent/.test(fn), ini: name.split(' ').map(w => w[0]).join('') }));
+    const SM = Object.fromEntries(S.map(s => [s.id, s]));
+    const all5 = [1, 2, 3, 4, 5];
+    const P = (id, days) => ({ id, role: 'principal', days: days ?? all5 }), A = (id, days) => ({ id, role: 'asistent', days: days ?? all5 }), I = (id, days) => ({ id, role: 'inlocuitor', days: days ?? all5 });
+    const teams = this.state?.teams ?? { albinute: [P('maria'), A('irina')], buburuze: [], fluturasi: [P('olga'), A('lilia')], soare: [P('natalia'), A('ana')], luna: [P('elena'), A('vera')], mars: [P('ala'), A('doina'), I('cristina', [3, 5])], stelele: [P('tatiana'), A('mariana')] };
+    return { S, SM, teams, leave: { olga: 'Concediu până pe 3 oct' } };
+  }
+  teamVals(ctx, team, setTeam, groupKey, names) {
+    const { S, SM, teams, leave } = this.staffData();
+    const pk = this.state?.pick, q = (this.state?.pq ?? '').trim().toLowerCase();
+    const DL = ['L', 'Ma', 'Mi', 'J', 'V'];
+    const ROLES = [['principal', 'Principal', '#fcead3', '#a34f00', 'unul singur', '+ Alege', 'Fără educator principal', '#b0284f'], ['asistent', 'Asistent', '#e7f4ec', '#2e6b4c', '', '+ Asistent', 'Niciun asistent', '#9aa3a9'], ['inlocuitor', 'Înlocuitor', '#f1ece2', '#5b666e', 'când lipsește cineva', '+ Înlocuitor', 'Niciun înlocuitor', '#9aa3a9']];
+    const RL = { principal: 'principal', asistent: 'asistent', inlocuitor: 'înlocuitor' };
+    const where = id => Object.entries(teams).filter(([k]) => k !== groupKey).flatMap(([k, t]) => t.filter(m => m.id === id).map(m => names[k] + ' · ' + RL[m.role]));
+    const roles = ROLES.map(([role, label, bg, fg, hint, addLbl, emptyLbl, emptyCol]) => {
+      const picking = !!pk && pk.ctx === ctx && pk.role === role;
+      const members = team.filter(m => m.role === role).map(m => {
+        const s = SM[m.id];
+        return { name: s.name, ini: s.ini, fn: s.fn, leave: leave[m.id] ?? '', hasLeave: !!leave[m.id], allDays: m.days.length === 5,
+          days: DL.map((l, i) => { const on = m.days.includes(i + 1); return { l, bg: on ? '#3a4750' : '#fff', fg: on ? '#fff' : '#9aa3a9', bd: on ? '#3a4750' : '#e0d5c2', toggle: () => setTeam(team.map(x => x === m ? { ...x, days: on ? x.days.filter(d => d !== i + 1) : [...x.days, i + 1].sort() } : x)) }; }),
+          remove: () => setTeam(team.filter(x => x !== m)) };
+      });
+      const cands = !picking ? [] : S.filter(s => !team.some(m => m.id === s.id)).filter(s => !q || (s.name + ' ' + s.fn).toLowerCase().includes(q)).map(s => { const w = where(s.id); return { ...s, w: w.length ? w.join(', ') : 'Liberă', wCol: w.length ? (w.some(x => x.endsWith('principal')) ? '#a34f00' : '#6b7780') : '#2e6b4c', hasLeave: !!leave[s.id], leave: leave[s.id] ?? '', free: !w.length,
+        pick: () => { setTeam([...(role === 'principal' ? team.filter(m => m.role !== 'principal') : team), { id: s.id, role, days: [1, 2, 3, 4, 5] }]); this.setState({ pick: null, pq: '' }); } }; })
+        .sort((a, b) => (b.edu - a.edu) || (b.free - a.free) || a.name.localeCompare(b.name, 'ro'));
+      return { label, bg, fg, hint, members, picking, cands, none: picking && !cands.length, empty: !members.length && !picking, emptyLbl, emptyCol,
+        addLbl: picking ? 'Închide' : role === 'principal' && members.length ? 'Schimbă' : addLbl,
+        add: () => this.setState({ pick: picking ? null : { ctx, role }, pq: '' }) };
+    });
+    const pr = team.find(m => m.role === 'principal');
+    return { roles, q: this.state?.pq ?? '', setQ: e => this.setState({ pq: e.target.value }), principal: pr ? SM[pr.id].name : '', size: team.length + (team.length === 1 ? ' persoană' : ' persoane') };
+  }
   v2() {
     const F = ['Alisa','Cristian','Gloria','Timur','Deea','Ratmir','Ovidiu','Ilinca','Vera','Maxim','Matteo','Polina','Letizia','Victor','Sofia','Daniel','Eva','Luca','Mia','Andrei','Ana','Mihai','Emma','David','Iris','Tudor','Clara','Nicolas','Daria','Artur','Zoe'];
     const L = ['Coceva','Colesnicenco','Comerzan','Conea','Coscodan','Cotlau','Cujba','Balan','Balanuta','Botica','Chitac','Jidobina','Lucinschi','Muradu','Panteliciuc','Rusu','Ciobanu','Munteanu','Popa','Lungu','Ursu','Cebotari','Sârbu','Turcanu','Guțu','Roșca','Moraru','Grosu','Cazacu','Bivol','Donică'];
@@ -175,7 +250,12 @@ class Component extends DCLogic {
       ['stelele', 'Stelele', 'li', 16, 15, 'Tatiana', 6, 7]
     ];
     const sel = this.state?.sel2 ?? 'mars';
-    const groups = defs.map(([key, name, t, c, cap, edu, a0, a1]) => {
+    const { SM, teams } = this.staffData();
+    const names = Object.fromEntries(defs.map(d => [d[0], d[1]]));
+    const setTeamOf = key => nt => this.setState(st => ({ teams: { ...(st.teams ?? teams), [key]: nt } }));
+    const groups = defs.map(([key, name, t, c, cap, edu0, a0, a1]) => {
+      const pr = (teams[key] ?? []).find(m => m.role === 'principal');
+      const edu = pr ? SM[pr.id].name : '';
       const tone = T[t];
       const kids = Array.from({ length: c }, () => kid(a0, a1, tone));
       const over = c > cap, full = c === cap, empty = c === 0;
@@ -198,6 +278,7 @@ class Component extends DCLogic {
       g.dov = e => { if (!dragG) return; e.preventDefault(); if (overG !== g.key) this.setState({ overG: g.key }); };
       g.drop = e => { e.preventDefault(); if (!dragG || dragG === g.key) return this.setState({ dragG: null, overG: null }); const o = order.filter(k => k !== dragG); o.splice(o.indexOf(g.key) + (order.indexOf(dragG) < order.indexOf(g.key) ? 1 : 0), 0, dragG); this.setState({ order2: o, dragG: null, overG: null }); };
       g.de = () => this.setState({ dragG: null, overG: null });
+      g.edit = () => { this.setState({ sel2: g.key }); const el = document.getElementById('4a'); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 24, behavior: 'smooth' }); };
       g.op = dragG === g.key ? '.4' : '1';
       g.ring = overG === g.key && dragG !== g.key ? '0 0 0 3px #3a4750' : 'none';
     });
@@ -216,8 +297,10 @@ class Component extends DCLogic {
       ngTones, ngBg: nt[0], ngFg: nt[1], ngBar: nt[2], ngCap: ng.cap, ngCapLess: () => setNg({ cap: Math.max(1, ng.cap - 1) }), ngCapMore: () => setNg({ cap: Math.min(40, ng.cap + 1) }),
       ngAges: ng.a0 + '–' + ng.a1 + ' ani', ngA0: ng.a0, ngA1: ng.a1,
       ngA0Less: () => setNg({ a0: Math.max(1, ng.a0 - 1) }), ngA0More: () => setNg({ a0: Math.min(ng.a1, ng.a0 + 1) }), ngA1Less: () => setNg({ a1: Math.max(ng.a0, ng.a1 - 1) }), ngA1More: () => setNg({ a1: Math.min(7, ng.a1 + 1) }),
-      ngEdu: ng.edu, ngFit: fit + ' copii fără grupă au ' + ng.a0 + '–' + ng.a1 + ' ani',
-      ngBtnBg: ngOk ? '#ef8a1d' : '#c9c4ba', ngBtnShadow: ngOk ? '0 4px 10px rgba(239,138,29,.28)' : 'none', ngErr: !ngOk
+      ngT: this.teamVals('ng', this.state?.ngTeam ?? [], nt => this.setState({ ngTeam: nt }), null, names),
+      edT: this.teamVals('ed', teams[sel] ?? [], setTeamOf(sel), sel, names),
+      ngEdu: (() => { const p = (this.state?.ngTeam ?? []).find(m => m.role === 'principal'); return p ? SM[p.id].name : 'Fără educator'; })(), ngFit: fit + ' copii fără grupă au ' + ng.a0 + '–' + ng.a1 + ' ani',
+      ngBtnBg: ngOk ? '#ef8a1d' : '#c9c4ba', ngBtnShadow: 'none', ngErr: !ngOk
     };
     return {
       ...ngVals, g2: groups, pool2: pool, dragKid: pool[0], orderChanged: !!this.state?.order2, resetOrder: () => this.setState({ order2: null }),

@@ -85,5 +85,22 @@ Codul e încă pe 3a/3b (carduri de 4 coloane cu editor inline, cardul punctat, 
 ## Ordinea
 1 → 2 → 3 → 4 → 5, apoi batch-urile din `AUDIT-UI-2026-09-28.md` (T-1…T-6 întâi, pentru că schimbă antetul pe toate ecranele). `npm run check` + webapp typecheck + test după fiecare.
 
+## 6. Aspect: aplicația pare mai mare decât designul (28.09)
+**Ce am verificat:** măsurile din cod sunt aceleeași ca în design (meniul 248px, itemul de meniu 14px cu padding 8/12, butonul de antet 15px cu padding 8/18, antetul 12px 40px, fonturile Nunito + Baloo 2 incluse local). Diferența vine din cum se vede: designul e privit pe pânză micșorat (~60–70%), iar aplicația rulează la 100%, de obicei pe un laptop cu scalarea Windows la 125% (un ecran 1920px devine 1536px CSS). Totul iese cu ~25% mai mare decât în captură.
+
+**Fix: „Mărimea interfeței”, per calculator**
+- Administrare → Backup și setări → Grădinița → rând nou „Mărimea interfeței”: `SegmentedControl` **Compact 90% · Normal 100% · Mare 110%**. Implicit e **Compact**, apropiat de cum arată designul.
+- Se salvează în `localStorage` (`ui.scale`), nu în bază: e o preferință a calculatorului, nu a grădiniței, și nu se sincronizează.
+- Implementare: `document.documentElement.style.zoom = scale` la pornire (înainte de primul render, în `main.tsx`) și la schimbare. `zoom` e suportat în Chrome/Edge, unde rulează aplicația. `@media print` resetează la `zoom: 1`, ca tipăriturile A4 să nu se schimbe.
+- Ctrl+− / Ctrl+0 din browser rămân și ele; setarea doar alege un implicit bun.
+- Verificare: la 90%, pe 1536px CSS, meniul are ~223px vizibili și conținutul are 1290px. Grupe v2 (tabla în 2 coloane) și tabelele trebuie să încapă fără scroll orizontal.
+- **Pentru comparație:** deschide `.dc.html`-ul la 100% (butonul de zoom al pânzei → 100%), nu „potrivit în ecran”.
+
+## 7. Umbra pe butoane (28.09)
+Umbra portocalie (`--shadow-button-primary`) se pune **doar pe butonul principal din antet** („+ Adaugă copil”, „+ Plată”, „+ Grupă nouă”…), ca să iasă în evidență acțiunea paginii.
+- `Button.module.css`: `.primary { box-shadow: none; }`; umbra rămâne doar pe `.primary.header` (`--shadow-button-header`).
+- Fără umbră: „Salvează”, „Creează”, „Tipărește”, „Trimite” și „Confirmă” din `Drawer`, dialoguri, editoare inline și carduri de setări.
+- Verifică cu `grep -rn "shadow-button-primary" webapp/src`: trebuie să rămână doar în `Button.module.css`.
+
 ---
 _Istoric: feedback-ul din 27.09 (Prezența, Raport contabil) e marcat DONE în `COADA-DE-LUCRU.md`._

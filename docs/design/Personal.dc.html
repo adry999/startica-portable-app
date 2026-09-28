@@ -8,7 +8,74 @@
 <body>
 <x-dc>
 <helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
-<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+<section style="padding:64px 72px 32px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1.05">Personal → Candidați</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">A cincea filă din Personal (<a href="#23l">23l</a>): o listă simplă cu oameni pe care îi poți suna când ai nevoie, pentru angajare, înlocuiri, vară sau colaborări. Fiecare persoană are nume, poziție, vârstă, experiență, unde locuiește, telefon și notițe. Există doar căutare, fără filtre sau etape. Clic pe rând sau „+ Candidat” deschide panoul lateral. Poți încerca aici.</p>
+  </div>
+  <div id="23l" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">23l</span><span style="font-size:16px;font-weight:700">Candidați · listă + panou de editare</span></div>
+    <div style="position:relative;width:1440px;height:1100px;display:flex;align-items:stretch;background:#fffaf0;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+      <dc-import name="Sidebar" variant="a" active="personal" hint-size="248px,100%" style="display:flex;align-self:stretch"></dc-import>
+      <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+        <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
+          <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
+          <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;color:#6b7780">Echipa</a><a href="#23b" style="padding:7px 14px;color:#6b7780">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a><a href="#23l" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Candidați</a></div>
+          <span onClick="{{ cNew }}" style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);white-space:nowrap;cursor:pointer">+ Candidat</span>
+        </header>
+        <div style="padding:20px 40px 32px;display:flex;flex-direction:column;gap:14px;min-height:0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="width:360px;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:14px;color:#9aa3a9">⌕<input value="{{ cQ }}" onChange="{{ cSetQ }}" placeholder="Caută nume, poziție, telefon…" style="flex:1;border:none;outline:none;background:none;font:600 14px Nunito,sans-serif;color:#3a4750"></input></label>
+            <span style="font-size:14px;color:#6b7780">{{ cShown }}</span>
+            <span style="margin-left:auto;font-size:14px;color:#6b7780">{{ cCount }}</span>
+          </div>
+          <div style="background:#fff;border:1px solid #ede7dc;border-radius:20px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 60px minmax(0,1.3fr) minmax(0,1.1fr) 120px minmax(0,1.6fr);gap:14px;padding:11px 20px;border-bottom:1px solid #ede7dc;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9"><span>Nume, prenume</span><span>Poziție</span><span>Vârstă</span><span>Experiență</span><span>Unde locuiește</span><span>Telefon</span><span>Notițe</span></div>
+            <sc-for list="{{ cList }}" as="c" hint-placeholder-count="8">
+              <div onClick="{{ c.open }}" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 60px minmax(0,1.3fr) minmax(0,1.1fr) 120px minmax(0,1.6fr);gap:14px;align-items:center;padding:10px 20px;border-bottom:1px solid #f3eee5;font-size:14px;cursor:pointer" style-hover="background:#fffaf0">
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:30px;height:30px;flex-shrink:0;border-radius:50%;background:#f1ece2;color:#6b7780;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">{{ c.ini }}</span><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</b></span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.pos }}</span>
+                <span style="color:#6b7780">{{ c.age }}</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5b666e">{{ c.exp }}</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5b666e">{{ c.city }}</span>
+                <span style="font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums">{{ c.phone }}</span>
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.noteCol }}">{{ c.noteShow }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ cNone }}" hint-placeholder-val="{{ false }}"><div style="padding:36px;text-align:center;font-size:14px;color:#6b7780">Nimeni nu se potrivește căutării.</div></sc-if>
+          </div>
+        </div>
+      </main>
+      <sc-if value="{{ cOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ cClose }}" style="position:absolute;inset:0;background:rgba(58,71,80,.35)"></div>
+        <aside style="position:absolute;top:0;right:0;bottom:0;width:480px;background:#fff;display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(58,71,80,.2)">
+          <div style="display:flex;align-items:center;gap:12px;padding:22px 28px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cTitle }}</span><span onClick="{{ cClose }}" style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer">×</span></div>
+          <div style="flex:1;overflow:auto;padding:22px 28px;display:flex;flex-direction:column;gap:16px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Nume, prenume<input value="{{ cf.name }}" onChange="{{ cUp.name }}" placeholder="ex. Rusu Mariana" style="padding:11px 14px;border-radius:12px;border:1.5px solid #ef8a1d;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Poziție<input value="{{ cf.pos }}" onChange="{{ cUp.pos }}" placeholder="ex. Educator" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Vârstă<input value="{{ cf.age }}" onChange="{{ cUp.age }}" inputMode="numeric" placeholder="ani" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Experiență<input value="{{ cf.exp }}" onChange="{{ cUp.exp }}" placeholder="ex. 5 ani, grădinița nr. 12" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Unde locuiește<input value="{{ cf.city }}" onChange="{{ cUp.city }}" placeholder="ex. Chișinău, Botanica" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+              <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Telefon<input value="{{ cf.phone }}" onChange="{{ cUp.phone }}" inputMode="tel" placeholder="0XX XXX XXX" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px Nunito,sans-serif;color:#3a4750;outline:none"></input></label>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Notițe<textarea value="{{ cf.note }}" onChange="{{ cUp.note }}" rows="5" placeholder="Când poate începe, ce program vrea, impresia de la discuție…" style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font:600 15px/1.45 Nunito,sans-serif;color:#3a4750;outline:none;resize:vertical"></textarea></label>
+          </div>
+          <div style="padding:16px 28px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px">
+            <sc-if value="{{ cEdit }}" hint-placeholder-val="{{ false }}"><span onClick="{{ cDel }}" style="font-size:13px;font-weight:800;color:#b0284f;cursor:pointer">Șterge</span></sc-if>
+            <span style="flex:1"></span>
+            <span onClick="{{ cClose }}" style="padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px;cursor:pointer">Anulează</span>
+            <span onClick="{{ cSave }}" style="padding:11px 22px;border-radius:999px;background:{{ cSaveBg }};color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;cursor:pointer">Salvează</span>
+          </div>
+        </aside>
+      </sc-if>
+    </div>
+    <div style="font-size:13px;color:#6b7780;max-width:1440px;text-wrap:pretty">Doar numele e obligatoriu. Ordinea e alfabetică. Lista e comună pentru ambele filiale și nu apare nicăieri altundeva în aplicație. „Șterge” cere confirmare („Scrie ȘTERGE”, ca peste tot).</div>
+  </div>
+</section>
+<section style="padding:32px 72px 96px;display:flex;flex-direction:column;gap:32px">
   <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
     <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Grupe.dc.html">Grupe</a><a href="Bazin.dc.html#22c">Bazin</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Raport contabil.dc.html">Raport contabil</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Personal</h1>
@@ -23,7 +90,7 @@
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
-            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Echipa</a><a href="#23b" style="padding:7px 14px;color:#6b7780">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Echipa</a><a href="#23b" style="padding:7px 14px;color:#6b7780">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a><a href="#23l" style="padding:7px 14px;color:#6b7780">Candidați</a></div>
             <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28);white-space:nowrap">+ Angajat</span>
           </header>
           <div style="padding:24px 40px 40px;display:flex;flex-direction:column;gap:16px">
@@ -114,7 +181,7 @@
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Evidență</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Personal</h2></div>
-            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;color:#6b7780">Echipa</a><a href="#23b" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><a href="#23a" style="padding:7px 14px;color:#6b7780">Echipa</a><a href="#23b" style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Pontaj</a><a href="#23f" style="padding:7px 14px;color:#6b7780">Concedii</a><a href="#23d" style="padding:7px 14px;color:#6b7780">Salarii · admin</a><a href="#23l" style="padding:7px 14px;color:#6b7780">Candidați</a></div>
             <div style="display:flex;align-items:center;gap:4px;padding:3px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-size:14px;font-weight:800"><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">‹</span><span style="padding:0 6px;white-space:nowrap">Septembrie 2026</span><span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#6b7780">›</span></div>
             <span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Tipărește</span>
           </header>
@@ -331,6 +398,35 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { role: 'all', sel: 0, pt: {}, sort: 'dept', pdept: 'all' };
+  cand() {
+    const base = this.state.cands ?? [
+      { name: 'Rusu Mariana', pos: 'Educator', age: '34', exp: '8 ani, grădinița nr. 12', city: 'Chișinău, Botanica', phone: '069 214 870', note: 'Poate începe din noiembrie. Preferă grupa mică.' },
+      { name: 'Ciobanu Elena', pos: 'Asistent educator', age: '27', exp: '2 ani', city: 'Chișinău, Ciocana', phone: '078 552 031', note: 'Disponibilă pentru înlocuiri, dimineața.' },
+      { name: 'Popa Ion', pos: 'Bucătar', age: '45', exp: '15 ani, cantină școlară', city: 'Durlești', phone: '079 330 118', note: '' },
+      { name: 'Lungu Diana', pos: 'Logoped', age: '31', exp: '5 ani, cabinet privat', city: 'Chișinău, Centru', phone: '069 871 402', note: 'Colaborare 2 zile pe săptămână.' },
+      { name: 'Moraru Victoria', pos: 'Menajeră', age: '52', exp: '10 ani', city: 'Chișinău, Buiucani', phone: '060 115 774', note: 'Doar tura de după-amiază.' },
+      { name: 'Grosu Andrei', pos: 'Antrenor bazin', age: '29', exp: '6 ani, club sportiv', city: 'Chișinău, Rîșcani', phone: '078 410 256', note: 'Liber marți și joi.' },
+      { name: 'Sârbu Ana', pos: 'Educator', age: '23', exp: 'Fără, absolventă 2026', city: 'Stăuceni', phone: '069 902 337', note: 'Bună impresie la interviu. Pentru vară.' },
+      { name: 'Cazacu Olga', pos: 'Asistent educator', age: '38', exp: '4 ani', city: 'Chișinău, Telecentru', phone: '068 774 590', note: '' }
+    ];
+    const q = (this.state.cq ?? '').trim().toLowerCase();
+    const list = base.map((c, i) => ({ ...c, i })).filter(c => !q || [c.name, c.pos, c.city, c.phone, c.note].join(' ').toLowerCase().includes(q));
+    const f = this.state.cform;
+    const upd = k => e => this.setState(s => ({ cform: { ...s.cform, [k]: e.target.value } }));
+    const blank = { name: '', pos: '', age: '', exp: '', city: '', phone: '', note: '' };
+    return {
+      cList: list.map(c => ({ ...c, noteShow: c.note || '—', noteCol: c.note ? '#3a4750' : '#c9c4ba', ini: c.name.split(' ').map(w => w[0]).join('').slice(0, 2), open: () => this.setState({ cform: { ...base[c.i], idx: c.i } }) })),
+      cCount: base.length + (base.length === 1 ? ' persoană' : ' persoane'), cShown: q ? list.length + ' din ' + base.length : '',
+      cQ: this.state.cq ?? '', cSetQ: e => this.setState({ cq: e.target.value }), cNone: list.length === 0,
+      cNew: () => this.setState({ cform: { ...blank, idx: -1 } }),
+      cOpen: !!f, cTitle: f && f.idx >= 0 ? f.name || 'Candidat' : 'Candidat nou', cEdit: !!f && f.idx >= 0,
+      cf: f ?? blank, cUp: { name: upd('name'), pos: upd('pos'), age: upd('age'), exp: upd('exp'), city: upd('city'), phone: upd('phone'), note: upd('note') },
+      cClose: () => this.setState({ cform: null }),
+      cCanSave: !!(f && f.name.trim()), cSaveBg: f && f.name.trim() ? '#ef8a1d' : '#c9c4ba',
+      cSave: () => { if (!f || !f.name.trim()) return; const { idx, ...row } = f; const nb = [...base]; if (idx >= 0) nb[idx] = row; else nb.unshift(row); nb.sort((a, b) => a.name.localeCompare(b.name, 'ro')); this.setState({ cands: nb, cform: null }); },
+      cDel: () => { if (!f || f.idx < 0) return; this.setState({ cands: base.filter((_, i) => i !== f.idx), cform: null }); }
+    };
+  }
   renderVals() {
     const G = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'], Luna: ['#fdf3d2', '#7a5d00'], Stele: ['#fce9ef', '#b0284f'] };
     const R = { dir: 'Director', adm: 'Administrator', edu: 'Educator', asis: 'Asistent educator', men: 'Menajeră', buc: 'Bucătar', antr: 'Antrenor bazin' };
@@ -410,7 +506,7 @@ class Component extends DCLogic {
     const pd = this.state.pdept;
     const ptPills = [['all', 'Toți'], ['adm', 'Administrație'], ['edu', 'Educatori'], ['buc', 'Bucătărie'], ['alt', 'Altele']].map(([k, label]) => { const o = roleOpts.find(x => x[0] === k); return { label, bg: pd === k ? '#3a4750' : o[2], fg: pd === k ? '#fff' : o[3], pick: () => this.setState({ pdept: k }) }; });
     const ptSections = DL.filter(([k]) => pd === 'all' || pd === k).map(([k, label, c]) => { const rows = pontaj.filter(r => r.dept === k); return { label, c, n: rows.length + (rows.length === 1 ? ' angajat' : ' angajați'), rows }; }).filter(x => x.rows.length);
-    return { ptPills, ptSections, printDays, printRows, selGroups, selDots, selLeaves, heads, teamLine, months, leaves, advances, histBars, histRows, teamGroups, roleList, sections, sel, teamStats, rolePills, days, pontaj, salaries, payTotal: f(tot), advTotal: f(adv), paidTotal: f(paid), restTotal: f(rest), pinDots };
+    return { ...this.cand(), ptPills, ptSections, printDays, printRows, selGroups, selDots, selLeaves, heads, teamLine, months, leaves, advances, histBars, histRows, teamGroups, roleList, sections, sel, teamStats, rolePills, days, pontaj, salaries, payTotal: f(tot), advTotal: f(adv), paidTotal: f(paid), restTotal: f(rest), pinDots };
   }
 }
 </script>
