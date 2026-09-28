@@ -338,8 +338,8 @@ describe('ChildrenPage', () => {
     expect(screen.getByRole('dialog', { name: 'Adaugă: copil' })).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nume copil'), 'Radu Ionescu');
-    await user.type(screen.getByLabelText('Părinte 1'), 'Vasile Ionescu');
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await user.type(screen.getAllByLabelText('Nume')[0], 'Vasile Ionescu');
+    await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
     expect(await screen.findByText('Copil adăugat.')).toBeInTheDocument();
     expect(screen.getByText('Radu Ionescu')).toBeInTheDocument();
@@ -361,7 +361,7 @@ describe('ChildrenPage', () => {
     expect(nameInput.value).toBe('Andrei Popescu');
     await user.clear(nameInput);
     await user.type(nameInput, 'Andrei Popescu-Ilie');
-    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+    await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
     expect(await screen.findByText('Fișă actualizată.')).toBeInTheDocument();
   });
