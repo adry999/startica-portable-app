@@ -136,7 +136,8 @@ export function createPersonalRoutes({
     const input = /** @type {{ id?: string, staffId?: string }} */ (body?.leave);
     // La fel ca pontajul (:109): fără verificare, un staffId inexistent sau al celeilalte
     // filiale scria rânduri de pontaj orfane (m10).
-    if (!branchStaffIds().includes(input?.staffId)) fail('Angajat inexistent în filiala activă.');
+    if (typeof input?.staffId !== 'string' || !branchStaffIds().includes(input.staffId))
+      fail('Angajat inexistent în filiala activă.');
     const before = input?.id ? repository.kinds.find('leaves', input.id) : null;
     const leave = leavesService.saveLeave(input);
     auditTrail.recordChange({ action: AUDIT_LEAVE, recordType: null, recordId: leave.id, before, after: leave });
