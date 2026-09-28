@@ -27,6 +27,11 @@ export function diffFields(kind, local, remote) {
   return fields.map(field => {
     const localValue = redactedLocal ? redactedLocal[field] : undefined;
     const remoteValue = redactedRemote ? redactedRemote[field] : undefined;
-    return { field, local: localValue, remote: remoteValue, differs: JSON.stringify(localValue) !== JSON.stringify(remoteValue) };
+    return {
+      field,
+      local: localValue,
+      remote: remoteValue,
+      differs: JSON.stringify(localValue) !== JSON.stringify(remoteValue),
+    };
   });
 }
