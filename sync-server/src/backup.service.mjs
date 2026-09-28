@@ -37,7 +37,9 @@ export function runBackupCycle({ database, dataDir, keep, historyDays, now }) {
   // rânduri mai vechi decât cutoff) să nu primească un prag ridicat de curățarea alteia —
   // asta i-ar da 410 (resincronizare din snapshot, azi distructivă — vezi C-5) fără motiv.
   const floorsByBranch = /** @type {{ branch_id: string, maxSeq: number | null }[]} */ (
-    database.prepare('SELECT branch_id, MAX(seq) AS maxSeq FROM changes WHERE received_at < ? GROUP BY branch_id').all(cutoff)
+    database
+      .prepare('SELECT branch_id, MAX(seq) AS maxSeq FROM changes WHERE received_at < ? GROUP BY branch_id')
+      .all(cutoff)
   );
   database.prepare('DELETE FROM changes WHERE received_at < ?').run(cutoff);
   for (const { branch_id: branchId, maxSeq } of floorsByBranch) {
@@ -100,7 +102,7 @@ export function scheduleDailyBackup({
       lastRunDate = today;
       return result;
     } catch (error) {
-      log('Backupul zilnic a eșuat: ' + (/** @type {Error} */ (error).stack || error));
+      log('Backupul zilnic a eșuat: ' + (error instanceof Error ? error.stack || error.message : String(error)));
       return undefined;
     }
   }

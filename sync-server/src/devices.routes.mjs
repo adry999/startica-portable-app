@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { fail } from './router.mjs';
 import { createToken, hashToken } from './auth.mjs';
 
@@ -21,6 +22,18 @@ function readRequiredText(value, maxLength) {
  * }} dependencies
  */
 export function createDevicesRoutes({ devices, pairing, config, pairingRateLimiter, createId, now }) {
+  /**
+   * Comparație în timp constant (D-7): `!==` pe două șiruri scurge, prin timpul de
+   * execuție, câte caractere de la început se potrivesc — util unui atacator care
+   * încearcă să ghicească cheia de instalare, chiar dacă limitatorul de rată reduce riscul.
+   * @param {unknown} candidate
+   */
+  function setupKeyMatches(candidate) {
+    if (!config.setupKey || typeof candidate !== 'string') return false;
+    // sha256 hex are lungime fixă (64), deci timingSafeEqual nu aruncă din cauza lungimii.
+    return timingSafeEqual(Buffer.from(hashToken(config.setupKey)), Buffer.from(hashToken(candidate)));
+  }
+
   /** @param {{ code?: string, setupKey?: string, name?: string, os?: string, clientIp: string }} body */
   function pair({ code, setupKey, name, os, clientIp }) {
     if (!pairingRateLimiter.consume(clientIp)) fail('Prea multe încercări. Așteaptă câteva minute.', 429);
@@ -31,7 +44,7 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
     let createdBy = null;
     if (setupKey !== undefined) {
       const noDevicesYet = devices.countActive() === 0;
-      if (!config.setupKey || setupKey !== config.setupKey || !(noDevicesYet || config.setupKeyAlways))
+      if (!setupKeyMatches(setupKey) || !(noDevicesYet || config.setupKeyAlways))
         fail('Cheia de instalare nu este acceptată.', 403);
     } else if (code !== undefined) {
       const result = pairing.consumeCode({ code, now: now() });

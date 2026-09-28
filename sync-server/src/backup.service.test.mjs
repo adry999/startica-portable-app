@@ -81,7 +81,18 @@ test('pragul e per filială (D-4): o filială fără istoric curățat nu prime�
     .prepare(
       'INSERT INTO changes(change_id,branch_id,kind,record_id,revision,payload,changed_at,received_at,device_id,result) VALUES (?,?,?,?,?,?,?,?,?,?)',
     )
-    .run('change-branch-2', 'branch-2', 'children', 'ID-2', 1, '{}', '2026-09-26T00:00:00.000Z', '2026-09-26T00:00:00.000Z', 'dev-1', 'applied');
+    .run(
+      'change-branch-2',
+      'branch-2',
+      'children',
+      'ID-2',
+      1,
+      '{}',
+      '2026-09-26T00:00:00.000Z',
+      '2026-09-26T00:00:00.000Z',
+      'dev-1',
+      'applied',
+    );
   runBackupCycle({ database, dataDir: dir, keep: 14, historyDays: 365, now: new Date('2026-09-27T03:00:00.000Z') });
   assert.ok(Number(readMeta(database, branchFloorKey('branch-1'))) > 0);
   assert.equal(readMeta(database, branchFloorKey('branch-2')), undefined);

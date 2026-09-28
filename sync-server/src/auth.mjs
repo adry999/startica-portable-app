@@ -30,7 +30,12 @@ const DEFAULT_MAX_KEYS = 10000;
  * adresa la fiecare cerere (prin `X-Forwarded-For`, dacă `trustProxy` e activat greșit).
  * @param {{ limit?: number, windowMs?: number, sweepIntervalMs?: number, maxKeys?: number }} [options]
  */
-export function createRateLimiter({ limit = 5, windowMs = 600000, sweepIntervalMs = windowMs, maxKeys = DEFAULT_MAX_KEYS } = {}) {
+export function createRateLimiter({
+  limit = 5,
+  windowMs = 600000,
+  sweepIntervalMs = windowMs,
+  maxKeys = DEFAULT_MAX_KEYS,
+} = {}) {
   /** @type {Map<string, number[]>} */
   const hitsByKey = new Map();
 
