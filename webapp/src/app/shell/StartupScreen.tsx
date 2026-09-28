@@ -32,7 +32,7 @@ function useStartupSteps() {
   // Pasul de sincronizare (18-sincronizare.md) apare doar când sync.json există —
   // o instalare neconfigurată vede exact pașii de astăzi, fără nicio linie nouă.
   const syncConfigured = !!session.state.sync?.configured;
-  const syncOffline = session.state.sync?.connection === 'offline';
+  const syncOffline = session.state.sync?.configured && session.state.sync.connection === 'offline';
   const syncLabel = syncOffline ? 'Fără internet — lucrezi cu datele locale' : 'Sincronizez cu serverul comun';
   const lastKnownAt = syncConfigured ? syncAt : databaseAt;
 

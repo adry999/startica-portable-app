@@ -9,11 +9,12 @@ import { ExcelImportDialog } from './ExcelImportDialog';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
 import { KindergartenSettings } from './KindergartenSettings';
 import { BranchesSettings } from './BranchesSettings';
+import { SyncSettings } from '../sync/SyncSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches';
+type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync';
 
 export function BackupPage() {
   const session = useAppSession();
@@ -92,6 +93,7 @@ export function BackupPage() {
             { value: 'curs', label: 'Planuri și curs' },
             { value: 'kindergarten', label: 'Grădinița' },
             { value: 'branches', label: 'Filiale' },
+            { value: 'sync', label: 'Sincronizare' },
           ]}
         />
         {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare aici, în antetul filei. */}
@@ -104,6 +106,8 @@ export function BackupPage() {
         <KindergartenSettings />
       ) : viewMode === 'branches' ? (
         <BranchesSettings />
+      ) : viewMode === 'sync' ? (
+        <SyncSettings />
       ) : (
         <>
           <Card className={styles.panel}>

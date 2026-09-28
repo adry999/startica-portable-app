@@ -1,3 +1,4 @@
+import os from 'node:os';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { sendResponse } from '#core/server/http/json-response.mjs';
 import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
@@ -39,7 +40,10 @@ export function createSessionRoutes({
   // ca sesiunea să știe imediat dacă are rost să mai ceară acel status.
   function syncSummary() {
     const device = syncDevice.read();
-    return device ? { configured: true, deviceName: device.deviceName, serverUrl: device.serverUrl } : null;
+    if (device) return { configured: true, deviceName: device.deviceName, serverUrl: device.serverUrl };
+    // Task 12 (fila Sincronizare): numele dispozitivului la conectare vine prefil de aici,
+    // ca utilizatorul să nu tasteze numele calculatorului de la zero.
+    return { configured: false, suggestedName: os.hostname() };
   }
   return [
     {
