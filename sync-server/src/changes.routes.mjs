@@ -112,8 +112,8 @@ export function createChangesRoutes({ changesService, branches, devices, events,
     return changesService.readSnapshot({ branchId: params.id });
   }
 
-  /** @param {{ params: Record<string, string>, response: import('node:http').ServerResponse }} context */
-  function streamEvents({ params, response }) {
+  /** @param {{ params: Record<string, string>, response: import('node:http').ServerResponse, device: unknown }} context */
+  function streamEvents({ params, response, device }) {
     ensureBranchExists(params.id);
     // Connection: close — nu o socket ținută vie pentru refolosire: o dată terminat
     // fluxul (oprirea serverului sau schimbarea filialei), soclul se închide imediat,
@@ -127,7 +127,8 @@ export function createChangesRoutes({ changesService, branches, devices, events,
     // primul write(); fără flushHeaders(), clientul ar aștepta degeaba până la primul
     // heartbeat (25 s) ca să vadă statusul 200.
     response.flushHeaders();
-    const unsubscribe = events.subscribe(params.id, response);
+    const deviceId = /** @type {{ id: string }} */ (device).id;
+    const unsubscribe = events.subscribe(params.id, deviceId, response);
     const heartbeat = setInterval(() => response.write(': ping\n\n'), HEARTBEAT_MS);
     heartbeat.unref?.();
     response.on('close', () => {
