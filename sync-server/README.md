@@ -25,7 +25,7 @@ Configurare exclusiv prin variabile de mediu (niciuna nu e obligatorie, în afar
 | `SYNC_BACKUP_HOUR`        | `3`                                       | Ora UTC la care rulează `VACUUM INTO` zilnic.                        |
 | `SYNC_BACKUP_KEEP`        | `14`                                      | Câte fișiere de backup se păstrează.                                |
 | `SYNC_HISTORY_DAYS`       | `365`                                     | Cât ține istoricul `changes`; mai vechi → 410 (resincronizare din snapshot). |
-| `SYNC_TRUST_PROXY`        | `0`                                       | `1` = are încredere în `X-Forwarded-For` (doar în spatele Caddy-ului propriu). |
+| `SYNC_TRUST_PROXY`        | `0`                                       | `1` = are încredere doar în **ultimul salt** al `X-Forwarded-For` — cel adăugat chiar de Caddy-ul propriu; primul salt (ales de client) nu e niciodată de încredere, ca să nu poată ocoli limitatorul de rată. |
 
 Exemplu, pornire de dezvoltare cu prima cheie de instalare:
 
@@ -110,4 +110,12 @@ conflict la o revizie depășită (nimic scris, capul rămâne cel de pe server,
 parchează modificarea); restul (`payments`, `expenses`, `attendance`, `sms_templates`,
 `settings`) sunt „ultima modificare câștigă” (`changedAt` mai mare), cealaltă devine
 `superseded`. Un `changeId` reluat (retry de rețea) întoarce rezultatul memorat, fără să
-scrie a doua oară.
+scrie a doua oară — inclusiv pentru `superseded`, care întoarce și `head`.
+
+Culoarea filialei e una dintre `orange`, `mint`, `yellow`, `pink` (paleta din
+`src/shared/domain/branch.mjs`), nu un cod hex.
+
+## Jurnal
+
+Fiecare cerere HTTP e jurnalizată pe o linie: metodă, cale, status, id de dispozitiv
+(dacă e autentificată). Niciodată corpul cererii sau token-ul — sunt date despre copii.
