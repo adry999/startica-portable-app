@@ -279,6 +279,47 @@ describe('ExpensesPage', () => {
     expect(screen.getByText('Detergenți')).toBeInTheDocument();
   });
 
+  it('categoria se alege dintr-un chip, nu dintr-un câmp de text (FM-2)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    const dialog = within(screen.getByRole('dialog'));
+    const chip = dialog.getByRole('radio', { name: 'Chirie' });
+    expect(chip).toHaveAttribute('aria-checked', 'false');
+
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-checked', 'true');
+
+    await user.type(screen.getByLabelText('Suma'), '80');
+    await user.click(dialog.getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
+    expect(currentExpenses.at(-1)?.category).toBe('Chirie');
+  });
+
+  it('„Salvează și adaugă alta” salvează, golește suma și descrierea, Drawer-ul rămâne deschis (FM-2)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.type(screen.getByLabelText('Suma'), '120');
+    await user.type(screen.getByLabelText('Descriere'), 'Prima');
+    await user.click(screen.getByRole('button', { name: 'Salvează și adaugă alta' }));
+
+    expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Adaugă: cheltuială' })).toBeInTheDocument(); // Drawer rămâne deschis
+    expect(screen.getByLabelText('Suma')).toHaveValue(null);
+    expect(screen.getByLabelText('Descriere')).toHaveValue('');
+    expect(currentExpenses.some(e => e.description === 'Prima')).toBe(true);
+  });
+
   it('?nou=1 în URL deschide direct formularul „Cheltuială nouă” (08-dashboard.md #3)', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

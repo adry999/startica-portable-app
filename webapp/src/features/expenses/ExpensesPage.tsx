@@ -310,6 +310,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         target={formTarget}
         categoryNames={expensesData.categoryNames}
         onSubmit={submitExpenseForm}
+        onSubmitAndAddAnother={quickAddExpense}
         onClose={() => setFormTarget(null)}
       />
 

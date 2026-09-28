@@ -33,6 +33,55 @@
   gap: var(--space-12);
 }
 
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footerRight {
+  display: flex;
+  gap: var(--space-8);
+}
+
+/* FM-2 (15c): suma cheltuielii, randată mare, ca un KPI. */
+.amountField {
+  gap: var(--space-8);
+}
+
+.amountInput {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 40px;
+  border: none !important;
+  padding: 0 !important;
+  color: var(--slate);
+}
+
+.categoryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-4);
+}
+
+.categoryChip {
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--space-4) var(--space-12);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--neutral-soft);
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.categoryChip[data-selected] {
+  border-color: var(--chip-color);
+}
+
 .btnGhostSmall {
   border: 1px solid var(--input-border);
   background: none;
