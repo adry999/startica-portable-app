@@ -150,16 +150,16 @@ describe('GroupsPage', () => {
     expect(screen.queryByText(/^Copii în grupă · 2/)).not.toBeInTheDocument();
   });
 
-  // 13b (m10): editarea numelui/educatorului/capacității în editorul grupei trebuie înregistrată
-  // ca formular nesalvat, altfel operatorul pierde modificările la un „Salvează și schimbă” de filială.
-  it('editorul grupei devine „nesalvat" după modificarea educatorului (13b)', async () => {
+  // 13b (m10): editarea numelui/capacității în editorul grupei trebuie înregistrată ca formular
+  // nesalvat, altfel operatorul pierde modificările la un „Salvează și schimbă” de filială.
+  it('editorul grupei devine „nesalvat" după modificarea numelui (13b)', async () => {
     await loadedSession();
     renderPage();
     await switchToCards();
 
     expect(readDirtyForms()).toEqual([]);
 
-    await userEvent.type(screen.getByLabelText('Educator'), ' Popescu');
+    await userEvent.type(screen.getByLabelText('Nume grupă'), ' Popescu');
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o grupă');
@@ -207,50 +207,55 @@ describe('GroupsPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Copil fără grupă' }));
     await userEvent.click(screen.getByText('Vlad Marin'));
-    // Primul „+ Adaugă” e cel al copiilor fără grupă; al doilea e cel al Echipei grupei (23i).
-    await userEvent.click(screen.getAllByRole('button', { name: '+ Adaugă' })[0]);
+    await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();
   });
 
-  it('echipa grupei (23i) apare în editorul grupei și se salvează cu Group.team', async () => {
+  it('echipa grupei (§5c) apare în editorul grupei și se salvează cu Group.team la „Salvează” (4a)', async () => {
     await loadedSession();
     renderPage();
     await switchToCards();
 
-    const teamCard = screen.getByText('Echipa grupei').parentElement!;
+    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
 
-    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
-      const body = JSON.parse(options.body as string);
-      expect(body.type).toBe('groups');
-      expect(body.record.id).toBe('g1');
-      expect(body.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
-      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    const calls: unknown[] = [];
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path === '/api/record') {
+        const body = JSON.parse((options!.body as string) ?? '{}');
+        calls.push(body);
+        return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+      }
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      throw new Error(`neașteptat: ${path}`);
     });
 
-    const staffSelect = within(teamCard).getAllByRole('combobox')[0];
-    await userEvent.selectOptions(staffSelect, 'STF-1');
-    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Adaugă' }));
-    await userEvent.click(within(teamCard).getByRole('button', { name: 'Salvează echipa' }));
+    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Asistent' }));
+    await userEvent.click(within(teamCard).getByRole('button', { name: /Ana Popescu/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
 
-    expect(await screen.findByText('Echipa grupei a fost salvată.')).toBeInTheDocument();
+    expect(await screen.findByText('Grupă actualizată.')).toBeInTheDocument();
+    // onSave face updateGroup, apoi saveTeam — ultimul apel e cel cu echipa nouă.
+    const lastCall = calls.at(-1) as { type: string; record: { id: string; team: unknown } };
+    expect(lastCall.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
   });
 
-  // 13b (m10): adăugarea unui membru în echipa grupei, înainte de „Salvează echipa”, trebuie
-  // înregistrată ca formular nesalvat.
+  // 13b (m10): adăugarea unui membru în echipa grupei, înainte de „Salvează”, trebuie
+  // înregistrată ca formular nesalvat (combinat cu numele/capacitatea).
   it('echipa grupei devine „nesalvată" după adăugarea unui membru, înainte de Salvează (13b)', async () => {
     await loadedSession();
     renderPage();
     await switchToCards();
 
-    const teamCard = screen.getByText('Echipa grupei').parentElement!;
+    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
     expect(readDirtyForms()).toEqual([]);
 
-    const staffSelect = within(teamCard).getAllByRole('combobox')[0];
-    await userEvent.selectOptions(staffSelect, 'STF-1');
-    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Adaugă' }));
+    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Asistent' }));
+    await userEvent.click(within(teamCard).getByRole('button', { name: /Ana Popescu/ }));
 
-    const dirtyForm = readDirtyForms().find(form => form.label === 'o echipă de grupă');
+    const dirtyForm = readDirtyForms().find(form => form.label === 'o grupă');
     expect(dirtyForm).toBeDefined();
   });
 

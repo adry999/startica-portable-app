@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { Button, Drawer } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { ageInYears } from '#shared/format/date-format.mjs';
+import type { Staff, Leave } from '@shared/personal/personal.types';
+import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import { GroupTile } from './GroupTile';
+import { GroupTeamPicker } from './GroupTeamPicker';
 import { BOARD_TONE_COLORS, BOARD_TONE_PALETTE, firstUnusedTone, type BoardTone } from './groupBoardTone';
 import type { GroupCardView, UnassignedChild } from './useGroups';
 import styles from './GroupFormDrawer.module.css';
@@ -11,7 +14,17 @@ export interface GroupFormDrawerProps {
   open: boolean;
   groups: GroupCardView[];
   unassignedChildren: UnassignedChild[];
-  onSubmit: (name: string, capacityRaw: string, tone: string, ageMinRaw: string, ageMaxRaw: string) => Promise<void>;
+  staff: Staff[];
+  roleName: (roleId: string) => string;
+  leaves: Leave[];
+  onSubmit: (
+    name: string,
+    capacityRaw: string,
+    tone: string,
+    ageMinRaw: string,
+    ageMaxRaw: string,
+    team: GroupTeamMember[],
+  ) => Promise<void>;
   onClose: () => void;
 }
 
@@ -29,12 +42,22 @@ const TONE_LABEL: Record<BoardTone, string> = {
 };
 
 /** Drawer 4c „Grupă nouă” (03-grupe.md §5b) — previzualizare live + culoare + capacitate + vârstă. */
-export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, onClose }: GroupFormDrawerProps) {
+export function GroupFormDrawer({
+  open,
+  groups,
+  unassignedChildren,
+  staff,
+  roleName,
+  leaves,
+  onSubmit,
+  onClose,
+}: GroupFormDrawerProps) {
   const [name, setName] = useState('');
   const [capacityRaw, setCapacityRaw] = useState(String(DEFAULT_CAPACITY));
   const [tone, setTone] = useState<BoardTone>(() => firstUnusedTone(groups));
   const [ageMinRaw, setAgeMinRaw] = useState('');
   const [ageMaxRaw, setAgeMaxRaw] = useState('');
+  const [team, setTeam] = useState<GroupTeamMember[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -44,6 +67,7 @@ export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, on
       setTone(firstUnusedTone(groups));
       setAgeMinRaw('');
       setAgeMaxRaw('');
+      setTeam([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -52,7 +76,7 @@ export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, on
     if (submitting) return false;
     setSubmitting(true);
     try {
-      await onSubmit(name, capacityRaw, tone, ageMinRaw, ageMaxRaw);
+      await onSubmit(name, capacityRaw, tone, ageMinRaw, ageMaxRaw, team);
       return true;
     } finally {
       setSubmitting(false);
@@ -60,7 +84,12 @@ export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, on
   }
 
   const dirty =
-    open && (name !== '' || capacityRaw !== String(DEFAULT_CAPACITY) || ageMinRaw !== '' || ageMaxRaw !== '');
+    open &&
+    (name !== '' ||
+      capacityRaw !== String(DEFAULT_CAPACITY) ||
+      ageMinRaw !== '' ||
+      ageMaxRaw !== '' ||
+      team.length > 0);
   useDirtyForm(dirty ? { label: 'o grupă', save: handleSubmit } : null);
 
   const capacity = Number(capacityRaw) || DEFAULT_CAPACITY;
@@ -72,6 +101,7 @@ export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, on
     id: '__preview__',
     name: name.trim() || 'Grupă nouă',
     educator: '',
+    educatorIsLegacy: false,
     capacity,
     memberCount: 0,
     occupancyLabel: `0/${capacity}`,
@@ -224,6 +254,17 @@ export function GroupFormDrawer({ open, groups, unassignedChildren, onSubmit, on
             />
           </label>
         </div>
+
+        <GroupTeamPicker
+          currentGroupId={null}
+          team={team}
+          onChange={setTeam}
+          staff={staff}
+          roleName={roleName}
+          allGroups={groups.map(group => ({ id: group.id, name: group.name, team: group.team }))}
+          leaves={leaves}
+          showDays={false}
+        />
 
         <p className={styles.orderNote}>
           Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu „⋮⋮”.

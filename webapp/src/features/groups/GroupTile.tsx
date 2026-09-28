@@ -17,6 +17,8 @@ export interface GroupTileProps {
   onDropGroup: (draggedGroupId: string) => void;
   onMove: (direction: -1 | 1) => void;
   onExpandOverflow?: () => void;
+  /** „Editează”, numele grupei sau „+N” duc toate în Carduri, cu grupa selectată (03-grupe.md §4). */
+  onEdit?: () => void;
   onOpenStickers?: () => void;
 }
 
@@ -37,6 +39,7 @@ export function GroupTile({
   onDropGroup,
   onMove,
   onExpandOverflow,
+  onEdit,
   onOpenStickers,
 }: GroupTileProps) {
   const colors = BOARD_TONE_COLORS[group.tone];
@@ -89,7 +92,24 @@ export function GroupTile({
         >
           ⋮⋮
         </button>
-        <p className={styles.name}>{group.name}</p>
+        {onEdit ? (
+          <button type="button" className={styles.name} onClick={onEdit}>
+            {group.name}
+          </button>
+        ) : (
+          <p className={styles.name}>{group.name}</p>
+        )}
+        {onEdit && (
+          <button
+            type="button"
+            className={styles.editButton}
+            style={{ color: colors.ink }}
+            onClick={onEdit}
+            aria-label={`Editează grupa ${group.name}`}
+          >
+            Editează
+          </button>
+        )}
         {pillLabel && (
           <span
             className={styles.pill}
@@ -117,8 +137,16 @@ export function GroupTile({
         )}
       </div>
       <p className={styles.meta}>
-        {group.educator ? group.educator : <span className={styles.noEducator}>Fără educator</span>} ·{' '}
-        {group.ageRangeLabel}
+        {group.educator ? (
+          group.educatorIsLegacy ? (
+            <span className={styles.legacyEducator}>(din fișa veche) {group.educator}</span>
+          ) : (
+            group.educator
+          )
+        ) : (
+          <span className={styles.noEducator}>Fără educator</span>
+        )}{' '}
+        · {group.ageRangeLabel}
       </p>
       {group.memberCount === 0 ? (
         <div className={styles.placeholder}>Plasează aici</div>

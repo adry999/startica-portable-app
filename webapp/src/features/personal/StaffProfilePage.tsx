@@ -9,7 +9,7 @@ import { bothBranchesLabel, birthdayTag, initials } from '@shared/personal/staff
 import { summarizeTimesheetMonth } from '@shared/personal/timesheet-rules';
 import { leaveDaysRemaining } from '@shared/personal/leave-days';
 import { useTimesheet } from './useTimesheet';
-import { useLeaves } from './useLeaves';
+import { useLeaves } from '@shared/personal/useLeaves';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import type { Group, GroupTeamMember } from '@contracts/record-types.mjs';
 import styles from './StaffProfilePage.module.css';
