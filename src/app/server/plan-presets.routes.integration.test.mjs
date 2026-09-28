@@ -52,6 +52,21 @@ test('POST /api/plan-presets respinge un preț nepozitiv, fără să salveze nim
   assert.deepEqual(await get('/api/plan-presets'), []);
 });
 
+test('POST /api/plan-presets respinge un preț peste plafon sau cu mai mult de doi zecimali (m24)', async t => {
+  const { post, get } = await startTestApplication(t);
+
+  const tooLarge = await post('/api/plan-presets', [{ id: 'PLAN-1', name: 'Plan', priceEur: 100000001 }]);
+  assert.equal(tooLarge.status, 400);
+
+  const tooManyDecimals = await post('/api/plan-presets', [{ id: 'PLAN-1', name: 'Plan', priceEur: 120.129 }]);
+  assert.equal(tooManyDecimals.status, 400);
+
+  assert.deepEqual(await get('/api/plan-presets'), []);
+
+  const ok = await post('/api/plan-presets', [{ id: 'PLAN-1', name: 'Plan', priceEur: 120.5 }]);
+  assert.equal(ok.status, 200);
+});
+
 test('POST /api/plan-presets respinge id-uri repetate, fără să salveze nimic', async t => {
   const { post, get } = await startTestApplication(t);
 

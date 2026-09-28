@@ -1,4 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { requireAmount } from '#shared/domain/record-schema.mjs';
 
 /** @typedef {{ id: string, name: string, priceEur: number, hours?: string, description?: string }} PlanPreset */
 
@@ -61,7 +62,8 @@ function validatePresets(input) {
     const name = typeof preset.name === 'string' ? preset.name.trim() : '';
     if (!name || name.length > MAX_NAME_LENGTH) fail('Numele presetării este invalid sau prea lung.');
     const priceEur = Number(preset.priceEur);
-    if (!Number.isFinite(priceEur) || priceEur <= 0) fail('Prețul în euro trebuie să fie un număr pozitiv.');
+    // m24: fără plafon și fără rotunjire la ban, un preț uriaș sau cu reziduu binar trecea nefiltrat.
+    requireAmount(priceEur, 'Prețul în euro');
     const hours = readOptionalText(preset.hours, MAX_HOURS_LENGTH, 'Orarul');
     const description = readOptionalText(preset.description, MAX_DESCRIPTION_LENGTH, 'Descrierea');
     return {
