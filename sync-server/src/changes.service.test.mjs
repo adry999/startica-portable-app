@@ -212,6 +212,53 @@ test('o achitare editată pe două calculatoare: câștigă ultima modificare, c
   assert.deepEqual(superseded.head.payload, { id: 'PAY-1', amount: 150 });
 });
 
+test('reluarea unui changeId cu rezultat superseded întoarce și head, nu doar statusul (D-2)', t => {
+  const { changes } = withService(t);
+  changes.applyPush({
+    branchId: 'branch-1',
+    deviceId: 'dev-a',
+    now: new Date('2026-09-27T09:00:00.000Z'),
+    changes: [
+      {
+        changeId: randomUUID(),
+        kind: 'payments',
+        recordId: 'PAY-1',
+        baseRevision: 0,
+        payload: { id: 'PAY-1', amount: 100 },
+        changedAt: '2026-09-27T09:00:00.000Z',
+      },
+    ],
+  });
+
+  const changeIdVechi = randomUUID();
+  const trimiteModificareaVeche = () =>
+    changes.applyPush({
+      branchId: 'branch-1',
+      deviceId: 'dev-b',
+      now: new Date('2026-09-27T08:00:00.000Z'),
+      changes: [
+        {
+          changeId: changeIdVechi,
+          kind: 'payments',
+          recordId: 'PAY-1',
+          baseRevision: 0,
+          payload: { id: 'PAY-1', amount: 80 },
+          changedAt: '2026-09-27T08:00:00.000Z', // mai vechi decât ce e deja pe server
+        },
+      ],
+    });
+
+  const primul = trimiteModificareaVeche();
+  assert.equal(primul.results[0].status, 'superseded');
+  assert.ok(primul.results[0].head);
+
+  // răspunsul s-a pierdut pe rețea; clientul retrimite același changeId.
+  const reluat = trimiteModificareaVeche();
+  assert.equal(reluat.results[0].status, 'superseded');
+  assert.ok(reluat.results[0].head, 'trebuie să întoarcă head, altfel rândul rămâne pending la nesfârșit');
+  assert.deepEqual(reluat.results[0].head.payload, { id: 'PAY-1', amount: 100 });
+});
+
 test('un changeId reluat întoarce rezultatul memorat fără a scrie a doua oară', t => {
   const { changes } = withService(t);
   const changeId = randomUUID();

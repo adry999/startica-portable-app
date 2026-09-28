@@ -95,12 +95,14 @@ export function createChangesService({ database, devices }) {
     const prior = findStoredChange(change.changeId);
     if (prior) {
       // Reluare (retry de rețea): nu se mai scrie nimic, se întoarce ce s-a decis prima dată.
-      if (prior.result === 'conflict') {
+      // `head` trebuie inclus și pentru „superseded” (D-2) — fără el, clientul nu poate
+      // decide dacă șterge rândul din outbox, și rămâne „pending” la nesfârșit.
+      if (prior.result === 'conflict' || prior.result === 'superseded') {
         const head = findHeadRow(branchId, prior.kind, prior.record_id);
         return {
           changeId: change.changeId,
-          status: 'conflict',
-          revision: head?.revision ?? 0,
+          status: prior.result,
+          revision: head?.revision ?? prior.revision,
           head: head ? toHeadView(head) : undefined,
         };
       }
