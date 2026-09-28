@@ -37,6 +37,10 @@ const GROUP_SQUARE_TONE_CLASS: Record<PillTone, string> = {
   mint: 'groupSquareMint',
   yellow: 'groupSquareYellow',
   pink: 'groupSquarePink',
+  teal: 'groupSquareTeal',
+  blue: 'groupSquareBlue',
+  purple: 'groupSquarePurple',
+  coral: 'groupSquareCoral',
   neutral: 'groupSquare',
 };
 

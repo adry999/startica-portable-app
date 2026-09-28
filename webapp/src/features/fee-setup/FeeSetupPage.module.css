@@ -149,6 +149,22 @@
   background: var(--pink-soft);
 }
 
+.toneTeal {
+  background: var(--teal-soft);
+}
+
+.toneBlue {
+  background: var(--blue-soft);
+}
+
+.tonePurple {
+  background: var(--purple-soft);
+}
+
+.toneCoral {
+  background: var(--coral-soft);
+}
+
 .noneMissing {
   color: var(--subtle);
 }

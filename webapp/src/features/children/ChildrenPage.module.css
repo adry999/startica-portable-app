@@ -211,3 +211,23 @@
   background: var(--pink-soft);
   color: var(--pink-ink);
 }
+
+.groupSquareTeal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.groupSquareBlue {
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.groupSquarePurple {
+  background: var(--purple-soft);
+  color: var(--purple-ink);
+}
+
+.groupSquareCoral {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+}
