@@ -60,6 +60,10 @@ const store = createAppSessionStore({
     if (isError) console.error(message);
   },
   renderSaveStatus: notify,
+  // A-1: un 403 la scriere înseamnă tokenul filialei active s-a schimbat sub fila asta
+  // (altă filă a comutat filiala, sau aplicația a repornit) — reîncărcarea e singura
+  // cale sigură să vezi datele reale ale contextului curent, nu un token nou peste UI vechi.
+  reload: () => window.location.reload(),
 });
 
 export interface AppSession {

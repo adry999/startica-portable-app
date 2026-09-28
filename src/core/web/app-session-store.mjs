@@ -12,6 +12,7 @@ import { DomainEvent } from '#shared/contracts/domain-events.mjs';
  *   showNotice: (text: string, isError?: boolean) => void,
  *   renderSaveStatus: () => void,
  *   createRequestId?: () => string,
+ *   reload?: () => void,
  * }} dependencies
  */
 export function createAppSessionStore({
@@ -22,6 +23,9 @@ export function createAppSessionStore({
   showNotice,
   renderSaveStatus,
   createRequestId = () => crypto.randomUUID(),
+  // Fără efect implicit (teste care nu dau `window`): apelantul din browser
+  // (webapp/src/shared/api/session.ts) leagă window.location.reload.
+  reload = () => {},
 }) {
   const renderers = { render: renderRecords, health: renderHealth };
   /** @param {{ render: () => void, health: () => void }} newRenderers */
@@ -113,7 +117,11 @@ export function createAppSessionStore({
       // este în aer, deci nu are rost reluată. Fără status, pending rămâne.
       if (failure.status) {
         state.pending = null;
-        if (failure.status === 403) state.token = (await requestJson('/api/session')).token;
+        // 403 la scriere înseamnă tokenul de sesiune nu mai e valid pentru contextul
+        // activ (filiala s-a schimbat dintr-o altă filă, sau aplicația a repornit) —
+        // A-1: reîncărcarea, nu o simplă reîmprospătare de token, ca fila să vadă
+        // datele reale ale contextului curent, nu pe cele vechi cu un token nou.
+        if (failure.status === 403) reload();
       }
       showNotice(failure.message, true);
       throw failure;

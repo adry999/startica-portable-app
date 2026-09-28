@@ -10,6 +10,7 @@ function createHarness(requestJson) {
   const noticeMessages = [];
   const renderCalls = { records: 0, health: 0 };
   const publishedEvents = [];
+  const reloadCalls = [];
   let requestIdCounter = 0;
 
   const eventBus = createDomainEventBus({ eventNames: DOMAIN_EVENT_NAMES, onListenerError: () => {} });
@@ -26,9 +27,10 @@ function createHarness(requestJson) {
     showNotice: (text, isError = false) => noticeMessages.push({ text, isError }),
     renderSaveStatus: () => {},
     createRequestId: () => `REQUEST-ID-${++requestIdCounter}`,
+    reload: () => reloadCalls.push(true),
   });
 
-  return { store, calls, noticeMessages, renderCalls, publishedEvents };
+  return { store, calls, noticeMessages, renderCalls, publishedEvents, reloadCalls };
 }
 
 const successfulState = { state: { children: [] }, revision: 7, updatedAt: '2026-09-13T10:00:00.000Z' };
@@ -149,22 +151,19 @@ test('refuzul serverului golește operațiunea pending', async () => {
   assert.equal(store.state.pending, null);
 });
 
-test('un refuz 403 reîmprospătează tokenul de sesiune', async () => {
-  let recordAttempts = 0;
-  const { store } = createHarness(async path => {
-    if (path === '/api/session') return { token: recordAttempts === 0 ? 'TOKEN-1' : 'TOKEN-2' };
+test('un refuz 403 reîncarcă aplicația (A-1: tokenul nu mai e valid pentru contextul activ)', async () => {
+  const { store, reloadCalls } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1' };
     if (path === '/api/state') return successfulState;
     if (path === '/api/health') return {};
-    if (path === '/api/record') {
-      recordAttempts++;
-      throw Object.assign(new Error('Token expirat.'), { status: 403 });
-    }
+    if (path === '/api/record')
+      throw Object.assign(new Error('Filiala s-a schimbat. Reîncarcă aplicația.'), { status: 403 });
     throw new Error(`cale neașteptată: ${path}`);
   });
   await store.load();
 
   await assert.rejects(() => store.mutate('/api/record', { name: 'Ana' }));
-  assert.equal(store.state.token, 'TOKEN-2');
+  assert.equal(reloadCalls.length, 1);
   assert.equal(store.state.pending, null);
 });
 

@@ -51,15 +51,27 @@ describe('useAppSession', () => {
     expect(result.current.state.state).toEqual({ children: [{ id: 'c1' }] });
   });
 
-  it('reîmprospătează tokenul după un 403 la mutație', async () => {
+  it('reîncarcă pagina după un 403 la mutație (A-1: filiala s-a schimbat sub filă)', async () => {
     const { result } = renderHook(() => useAppSession());
     await act(() => result.current.load());
 
-    (fetch as ReturnType<typeof vi.fn>)
-      .mockImplementationOnce(async () => ({ ok: false, status: 403, json: async () => ({ error: 'Token expirat' }) }))
-      .mockImplementationOnce(async () => jsonResponse({ token: 'tok-2', version: '1.6.3' }));
+    const reloadSpy = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, reload: reloadSpy },
+      configurable: true,
+      writable: true,
+    });
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => ({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: 'Filiala s-a schimbat. Reîncarcă aplicația.' }),
+    }));
 
     await expect(result.current.mutate('/api/children/create', { name: 'Andrei' })).rejects.toThrow();
-    await waitFor(() => expect(result.current.state.token).toBe('tok-2'));
+    await waitFor(() => expect(reloadSpy).toHaveBeenCalledTimes(1));
+
+    Object.defineProperty(window, 'location', { value: originalLocation, configurable: true, writable: true });
   });
 });
