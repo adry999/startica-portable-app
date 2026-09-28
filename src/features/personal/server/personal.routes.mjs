@@ -1,5 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { monthOK } from '#shared/domain/calendar-month.mjs';
+import { dateOK, monthOK } from '#shared/domain/calendar-month.mjs';
 import { createPersonalRepository } from './personal.repository.mjs';
 import { createLeavesService } from './leaves.service.mjs';
 import { createSalariesRoutes } from './salaries.routes.mjs';
@@ -73,12 +73,18 @@ export function createPersonalRoutes({
     return { staff };
   }
 
+  // O acțiune de arhivare cere explicit o dată validă: fără ea, `normalizePersonalRecord`
+  // pune `archivedAt ??= null` și angajatul se dez-arhivează în tăcere (m4). Dez-arhivarea
+  // e o acțiune separată, prin `POST /api/personal/staff` cu `archivedAt: null` explicit.
   /** @param {{ body: { id?: string, archivedAt?: string } }} request */
   function handleArchiveStaff({ body }) {
     const id = body?.id;
     if (typeof id !== 'string') fail('Angajat invalid.');
+    const archivedAt = body?.archivedAt;
+    if (typeof archivedAt !== 'string' || !dateOK(archivedAt)) fail('Data încetării este invalidă.');
     const before = repository.kinds.find('staff', id);
-    const staff = repository.archiveStaff(id, /** @type {string} */ (body?.archivedAt));
+    if (before && archivedAt < before.since) fail('Data încetării nu poate fi înainte de angajare.');
+    const staff = repository.archiveStaff(id, archivedAt);
     auditTrail.recordChange({ action: AUDIT_STAFF, recordType: null, recordId: id, before, after: staff });
     return { staff };
   }
@@ -127,7 +133,10 @@ export function createPersonalRoutes({
       auditTrail.recordChange({ action: AUDIT_LEAVE, recordType: null, recordId: id, before, after: null });
       return { leave: removed };
     }
-    const input = /** @type {{ id?: string }} */ (body?.leave);
+    const input = /** @type {{ id?: string, staffId?: string }} */ (body?.leave);
+    // La fel ca pontajul (:109): fără verificare, un staffId inexistent sau al celeilalte
+    // filiale scria rânduri de pontaj orfane (m10).
+    if (!branchStaffIds().includes(input?.staffId)) fail('Angajat inexistent în filiala activă.');
     const before = input?.id ? repository.kinds.find('leaves', input.id) : null;
     const leave = leavesService.saveLeave(input);
     auditTrail.recordChange({ action: AUDIT_LEAVE, recordType: null, recordId: leave.id, before, after: leave });

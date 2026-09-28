@@ -24,7 +24,9 @@ filiale — un `departments`/`roles`/`staff`/`timesheet`/`leaves`/`salaries`/`ad
 | `workingDatesFor(staff, month)`, `summarizeTimesheetMonth({ staff, month, rows, todayStr, upTo })` | grila pontajului 23b/23k |
 | `leaveWorkingDays`, `leaveDaysRemaining`, `timesheetRowsForLeave`, `overlappingLeavesInGroup` | concediile 23f |
 
-Rutele (`GET/POST /api/personal/*`) și repository-ul SQLite se adaugă în Task 3 al planului.
+Rutele (`GET/POST /api/personal/*`, `createPersonalRoutes` din `server/personal.routes.mjs`) și
+repository-ul comun (`server/personal.repository.mjs`, `server/leaves.service.mjs`,
+`server/salaries.routes.mjs`) sunt implementate.
 
 ## Dependențe
 

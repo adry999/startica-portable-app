@@ -132,6 +132,13 @@ export function normalizePersonalRecord(kind, input) {
     );
     record.phone ??= '';
     text(record.phone, 'Telefon');
+    record.birth ??= '';
+    text(record.birth, 'Data nașterii');
+    if (record.birth) requireThat(dateOK(record.birth), 'Data nașterii este invalidă.');
+    record.idnp ??= '';
+    text(record.idnp, 'IDNP');
+    record.address ??= '';
+    text(record.address, 'Adresa');
     record.notes ??= [];
     requireThat(Array.isArray(record.notes) && record.notes.length <= 1000, 'Notele sunt invalide.');
     for (const note of record.notes) {

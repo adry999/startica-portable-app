@@ -27,6 +27,17 @@ test('normalizePersonalRecord refuză un rol fără departament și un angajat f
   assert.equal(staff.archivedAt, null);
 });
 
+test('normalizePersonalRecord validează data nașterii, IDNP și adresa angajatului', () => {
+  const base = { id: 'STF-1', name: 'Ana', roleId: 'ROL-1', branchIds: ['bu'], since: '2026-01-01' };
+  assert.throws(() => normalizePersonalRecord('staff', { ...base, birth: '2026-13-40' }), /nașterii/);
+  assert.throws(() => normalizePersonalRecord('staff', { ...base, idnp: 12345 }), /IDNP/);
+  assert.throws(() => normalizePersonalRecord('staff', { ...base, address: ['nu e text'] }), /Adresa/);
+  const staff = normalizePersonalRecord('staff', { ...base, birth: '1990-05-20', idnp: '2000000000000', address: 'Str. X' });
+  assert.equal(staff.birth, '1990-05-20');
+  assert.equal(staff.idnp, '2000000000000');
+  assert.equal(staff.address, 'Str. X');
+});
+
 test('normalizePersonalRecord respinge id-uri cu prefixul greșit', () => {
   assert.throws(() => normalizePersonalRecord('departments', { id: 'ROL-1', name: 'Educatori' }), /ID invalid/);
   assert.doesNotThrow(() => normalizePersonalRecord('departments', { id: 'DEP-1', name: 'Educatori' }));

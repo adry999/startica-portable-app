@@ -26,15 +26,18 @@ export function leaveWorkingDays(leave) {
  * @returns {LeaveDaysRemaining}
  */
 export function leaveDaysRemaining({ staffId, year, leaves, annualLeaveDays }) {
-  const ofStaffThisYearCO = leaves.filter(
-    leave => leave.staffId === staffId && leave.type === 'CO' && leave.from.slice(0, 4) === year,
+  // Un CO poate traversa anul (ex. 28.12–08.01): se numără doar zilele care cad efectiv
+  // în `year`, nu tot concediul atribuit anului lui `from` — altfel anul vechi consumă
+  // zile din concediul unui an în care angajatul nu a fost de fapt plecat.
+  const ofStaffCO = leaves.filter(
+    leave =>
+      leave.staffId === staffId &&
+      leave.type === 'CO' &&
+      (leave.from.slice(0, 4) === year || leave.to.slice(0, 4) === year),
   );
-  const used = ofStaffThisYearCO
-    .filter(leave => !leave.planned)
-    .reduce((sum, leave) => sum + leaveWorkingDays(leave).length, 0);
-  const planned = ofStaffThisYearCO
-    .filter(leave => leave.planned)
-    .reduce((sum, leave) => sum + leaveWorkingDays(leave).length, 0);
+  const daysInYear = leave => leaveWorkingDays(leave).filter(date => date.slice(0, 4) === year).length;
+  const used = ofStaffCO.filter(leave => !leave.planned).reduce((sum, leave) => sum + daysInYear(leave), 0);
+  const planned = ofStaffCO.filter(leave => leave.planned).reduce((sum, leave) => sum + daysInYear(leave), 0);
   return { used, planned, remaining: annualLeaveDays - used - planned };
 }
 

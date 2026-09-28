@@ -35,6 +35,14 @@ test('un concediu planificat scade din zilele rămase la fel ca unul deja luat',
   assert.equal(remaining.remaining, 28 - remaining.used - remaining.planned);
 });
 
+test('un CO care traversează anul consumă doar zilele lucrătoare din anul cerut, nu tot concediul', () => {
+  const leave = fixtureLeave({ from: '2026-12-28', to: '2027-01-08' }); // 4 zile în 2026, 3 în 2027
+  const remaining2026 = leaveDaysRemaining({ staffId: 'STF-1', year: '2026', leaves: [leave], annualLeaveDays: 28 });
+  assert.equal(remaining2026.used, 4);
+  const remaining2027 = leaveDaysRemaining({ staffId: 'STF-1', year: '2027', leaves: [leave], annualLeaveDays: 28 });
+  assert.equal(remaining2027.used, 3);
+});
+
 test('timesheetRowsForLeave scrie codul concediului pe fiecare zi lucrătoare a perioadei', () => {
   const leave = fixtureLeave({ from: '2026-09-07', to: '2026-09-11', type: 'CM' });
   const rows = timesheetRowsForLeave(leave);

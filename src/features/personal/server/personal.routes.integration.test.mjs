@@ -91,6 +91,49 @@ test('pontajul acceptă schimbări de tură, iar state-ul personalului nu conți
   assert.equal(JSON.stringify(state).includes('amount'), false);
 });
 
+test('staff-archive fără o dată validă e refuzat, nu dez-arhivează în tăcere (m4)', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-archive-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId) });
+
+  const missingDate = await post('/api/personal/staff-archive', { id: 'STF-1' });
+  assert.equal(missingDate.status, 400);
+
+  const invalidDate = await post('/api/personal/staff-archive', { id: 'STF-1', archivedAt: '2026-13-40' });
+  assert.equal(invalidDate.status, 400);
+
+  const beforeHire = await post('/api/personal/staff-archive', { id: 'STF-1', archivedAt: '2025-12-31' });
+  assert.equal(beforeHire.status, 400);
+
+  const state = await get('/api/personal/state');
+  assert.equal(state.staff[0].archivedAt, null, 'angajatul rămâne activ după cereri refuzate');
+
+  const ok = await post('/api/personal/staff-archive', { id: 'STF-1', archivedAt: '2026-09-27' });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.staff.archivedAt, '2026-09-27');
+});
+
+test('un concediu pentru un angajat inexistent sau din altă filială e refuzat (m10)', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-leave-branch-' });
+  const created = await post('/api/branches', { name: 'Botanica' });
+  const branchB = created.body.branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchB, { id: 'STF-B' }) });
+
+  const unknownStaff = await post('/api/personal/leaves', {
+    leave: { id: 'LV-1', staffId: 'STF-inexistent', from: '2026-09-07', to: '2026-09-11', type: 'CO', planned: false },
+  });
+  assert.equal(unknownStaff.status, 400);
+
+  // suntem încă pe filiala A; STF-B e al filialei B
+  const otherBranchStaff = await post('/api/personal/leaves', {
+    leave: { id: 'LV-2', staffId: 'STF-B', from: '2026-09-07', to: '2026-09-11', type: 'CO', planned: false },
+  });
+  assert.equal(otherBranchStaff.status, 400);
+
+  const timesheet = await get('/api/personal/timesheet?month=2026-09');
+  assert.deepEqual(timesheet.rows, [], 'niciun rând orfan nu a fost scris');
+});
+
 test('o funcție cu angajați nu se poate șterge din 23e; angajat inexistent la pontaj e refuzat', async t => {
   const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-roles-' });
   const branchId = (await get('/api/session')).branch.id;
