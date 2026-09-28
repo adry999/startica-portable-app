@@ -1,5 +1,6 @@
 import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
@@ -43,14 +44,16 @@ const fixtureState = {
   visits: [],
 };
 
-function renderPage() {
+function renderPage(initialPath = '/cheltuieli') {
   return render(
-    <ToastProvider>
-      <TopbarActionsProvider>
-        <TopbarActionsSlot />
-        <ExpensesPage month="2026-09" />
-      </TopbarActionsProvider>
-    </ToastProvider>,
+    <MemoryRouter initialEntries={[initialPath]}>
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <ExpensesPage month="2026-09" />
+        </TopbarActionsProvider>
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -266,6 +269,15 @@ describe('ExpensesPage', () => {
 
     expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
     expect(screen.getByText('Detergenți')).toBeInTheDocument();
+  });
+
+  it('?nou=1 în URL deschide direct formularul „Cheltuială nouă” (08-dashboard.md #3)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage('/cheltuieli?nou=1');
+
+    expect(await screen.findByLabelText('Suma')).toBeInTheDocument();
   });
 
   it('formularul de cheltuială devine „nesalvat” după prima modificare (13b)', async () => {

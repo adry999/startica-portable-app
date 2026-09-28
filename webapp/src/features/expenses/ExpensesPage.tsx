@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Button,
   Card,
@@ -36,6 +37,7 @@ type ViewMode = 'table' | 'daily';
 export function ExpensesPage({ month }: ExpensesPageProps) {
   const expensesData = useExpenses(month);
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.expenses', 'table');
   const [search, setSearch] = useState('');
@@ -46,6 +48,23 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
+
+  // „+ Adaugă cheltuială" de pe Dashboard trece direct la formular (08-dashboard.md #3), fără
+  // să rămână în URL — altfel s-ar redeschide la orice re-render sau navigare înapoi.
+  useEffect(() => {
+    if (searchParams.get('nou') !== '1') return;
+    setFormTarget('new');
+    setSearchParams(
+      params => {
+        const next = new URLSearchParams(params);
+        next.delete('nou');
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'category'; id: string; name: string } | { kind: 'expense'; expense: Expense } | null
   >(null);

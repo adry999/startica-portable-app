@@ -72,7 +72,7 @@
   display: flex;
   gap: 14px;
   font-size: 12px;
-  color: #5b666e;
+  color: var(--muted);
 }
 
 .legendItem {
@@ -231,11 +231,11 @@
 }
 
 .barPast {
-  background: #f6c98f;
+  background: var(--orange-bar-past);
 }
 
 .barEmpty {
-  background: #f1ece2;
+  background: var(--sand);
 }
 
 .barActive {
@@ -316,7 +316,7 @@
 }
 
 .attentionRowClear {
-  background: #f7f4ee;
+  background: var(--neutral-softer);
   color: var(--subtle);
 }
 
@@ -527,7 +527,7 @@
 }
 
 .calendarCellPast {
-  background: #f7f4ee;
+  background: var(--neutral-softer);
   opacity: 0.7;
 }
 

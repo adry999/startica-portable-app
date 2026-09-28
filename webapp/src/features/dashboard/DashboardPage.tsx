@@ -45,6 +45,10 @@ const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
 const formatCompactMoney = (value: number) =>
   new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 }).format(value);
 
+// KPI-urile Dashboard-ului vor sume fără zecimale (08-dashboard.md #4), spre deosebire de
+// formatMoney folosit peste tot altundeva — nu schimbăm formatMoney global pentru un singur ecran.
+const formatKpiMoney = (value: number) => `${formatCompactMoney(value)} lei`;
+
 function fullMonthLabel(month: string): string {
   const [year, monthIndex] = month.split('-');
   const name = MONTH_NAMES[Number(monthIndex) - 1] ?? monthIndex;
@@ -80,7 +84,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
       <div className={styles.kpiRow}>
         <Card tone="orange" decorative="lg" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelIncome}`}>Încasări</p>
-          <strong className={styles.kpiValue}>{formatMoney(dashboardData.income)}</strong>
+          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.income)}</strong>
           <div className={styles.methodBar}>
             {Object.entries(dashboardData.byMethod)
               .filter(([method, value]) => METHOD_BAR_CLASS[method] && value > 0)
@@ -106,21 +110,21 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
         <Card tone="mint" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelExpense}`}>Cheltuieli</p>
-          <strong className={styles.kpiValue}>{formatMoney(dashboardData.expense)}</strong>
-          <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses')}>
+          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.expense)}</strong>
+          <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses', { nou: '1' })}>
             + Adaugă cheltuială
           </button>
         </Card>
 
         <Card tone="yellow" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelNet}`}>Diferență</p>
-          <strong className={styles.kpiValue}>{formatMoney(dashboardData.net)}</strong>
+          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.net)}</strong>
           <small className={styles.netHint}>încasări − cheltuieli</small>
         </Card>
 
         <Card tone="dashed" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelAdvance}`}>Avansuri nerepartizate</p>
-          <strong className={styles.kpiValue}>{formatMoney(dashboardData.advance)}</strong>
+          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.advance)}</strong>
           <span className={styles.pillNeutral}>Toate lunile, până azi</span>
         </Card>
       </div>
@@ -257,14 +261,17 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               {dashboardData.birthdayWeeks
                 .flat()
                 .filter((cell: { inMonth: boolean; names: unknown[] }) => cell.inMonth && cell.names.length > 0)
-                .map(cell => {
+                .flatMap(cell => {
                   const upcoming = cell.date >= todayFn();
-                  return (
-                    <div key={cell.date} className={upcoming ? styles.calendarCellUpcoming : styles.calendarCellPast}>
+                  return cell.names.map((child: { name: string }, index: number) => (
+                    <div
+                      key={`${cell.date}-${index}`}
+                      className={upcoming ? styles.calendarCellUpcoming : styles.calendarCellPast}
+                    >
                       <strong>{cell.day}</strong>
-                      <span>{cell.names.map((n: { name: string }) => n.name).join(', ')}</span>
+                      <span>{child.name}</span>
                     </div>
-                  );
+                  ));
                 })}
             </div>
           </div>
@@ -289,13 +296,15 @@ function AttentionRow({
         <strong>{item.title}</strong>
         <small>{item.detail}</small>
       </div>
-      <button
-        type="button"
-        className={styles.attentionAction}
-        onClick={() => onNavigate(item.view as ViewKey, item.params)}
-      >
-        {item.action} →
-      </button>
+      {!clear && (
+        <button
+          type="button"
+          className={styles.attentionAction}
+          onClick={() => onNavigate(item.view as ViewKey, item.params)}
+        >
+          {item.action} →
+        </button>
+      )}
     </article>
   );
 }

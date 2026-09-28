@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -83,17 +83,77 @@ describe('DashboardPage', () => {
 
     renderDashboard({ month: '2026-09', onNavigate: () => {} });
     expect(screen.getByText('Încasări', { selector: 'p' })).toBeInTheDocument();
-    // Venit, diferență (egale, fără cheltuieli în fixtură) și legenda pe metodă arată aceeași sumă.
-    expect(screen.getAllByText(/1\.500,00 lei/).length).toBeGreaterThanOrEqual(2);
+    // Venit și diferență (egale, fără cheltuieli în fixtură) — KPI-urile sunt fără zecimale.
+    expect(screen.getAllByText('1.500 lei').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('navighează la ecranul cheltuielilor din link-ul cardului', async () => {
+  it('navighează la formularul de cheltuială nouă din link-ul cardului', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
     const onNavigate = vi.fn();
 
     renderDashboard({ month: '2026-09', onNavigate });
     await userEvent.click(screen.getByRole('button', { name: '+ Adaugă cheltuială' }));
-    expect(onNavigate).toHaveBeenCalledWith('expenses');
+    expect(onNavigate).toHaveBeenCalledWith('expenses', { nou: '1' });
+  });
+
+  it('ascunde CTA-ul unui rând „Necesită atenție" fără elemente', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
+
+    const clearRow = screen.getByText('Achitări neasociate').closest('article');
+    expect(clearRow).not.toBeNull();
+    expect(within(clearRow as HTMLElement).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('arată un chip separat pentru fiecare copil cu ziua de naștere în aceeași zi', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-09-05T12:00:00'));
+    try {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string) => {
+          if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+          if (path === '/api/state')
+            return jsonResponse({
+              state: {
+                ...fixtureState,
+                children: [
+                  { ...fixtureState.children[0], birthDate: '2015-09-27' },
+                  {
+                    id: 'c2',
+                    name: 'Maria Ionescu',
+                    status: 'Activ',
+                    groupId: null,
+                    parent: '',
+                    phone: '',
+                    fee: 1500,
+                    feeHistory: [],
+                    dueDay: 10,
+                    birthDate: '2016-09-27',
+                    archived: false,
+                  },
+                ],
+              },
+              revision: 1,
+              updatedAt: '2026-09-23T10:00:00Z',
+            });
+          if (path === '/api/health') return jsonResponse({});
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      renderDashboard({ month: '2026-09', onNavigate: () => {} });
+
+      expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
+      expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
