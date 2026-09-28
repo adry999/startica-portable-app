@@ -129,9 +129,17 @@ Rulat concurent cu Modulul 6 (fișiere disjuncte). Verificat pe disc + tsc/vites
 - **Toate criteriile de acceptare:** confirmate.
 - **De revizuit — decizii ale agentului:** „Bon zi” rămas ghost lângă Exportă (nu era în spec); Perioadă/Nearhivate rămân `<input type=month>`+`SegmentedControl` în toolbar, nu dropdown-uri noi (nu există o componentă `Dropdown` în `shared/ui`); Export = CSV simplu, nu `ReportExportDrawer`.
 
-**Următorul:** Modulul 7 — Situația plăților (`Situatia.dc.html`, `Tiparire.dc.html#16c`, spec-uri 07/15 + 12c sume în €).
+## Modulul 7 — Situația plăților (`07-situatia.md`) — DONE 2026-09-28
 
-## După Modulul 7 — de discutat înainte de a continua (cerut explicit)
+**Deja rezolvat** — o sesiune paralelă a comis `fcce50d` („aliniază Situația plăților la spec: CTA, căutare, spațiere") exact între momentul în care s-a scris auditul și cel în care a ajuns agentul meu la el. S-2 (`Button variant="outline"`) și S-3 (`SearchInput`) — confirmate deja în cod, working tree curat, niciun commit nou necesar.
+
+- Toate cele 3 criterii de acceptare din `07-situatia.md` — confirmate (antet compact identic, `FilterPills` pt. grupă, Notifică/Notifică toți → dialogurile SMS #7c/#7d, deja implementate de o sesiune anterioară, nu doar butoane goale).
+- „12c" (sume în valută pe coloane, `formatMoney(row.expected, row.currency)` etc.) — confirmat funcțional.
+- S-1, S-4, S-5, S-6 — neatinse, [decizie] fără răspuns clar.
+
+**Toate cele 7 module din URMATORUL-PAS.md sunt acum închise.**
+
+## De discutat înainte de a continua (cerut explicit — nu pornesc nimic din astea fără OK)
 - Scroll custom (`ScrollArea`) peste tot, inclusiv `DataTable` — task mare, amânat cât timp mai multe module ating `DataTable.tsx` concurent.
 - Verificare vizuală ecrane sincronizare (rămasă din sesiunea de azi, neînceput).
 - Build + hash instaler final, după ce toate cele 7 module sunt închise.
