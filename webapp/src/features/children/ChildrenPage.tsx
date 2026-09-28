@@ -326,6 +326,7 @@ function ChildrenListView({
         key={formTarget === null ? 'closed' : formTarget === 'new' ? 'new' : formTarget.id}
         target={formTarget}
         groups={childrenData.groups}
+        allChildren={childrenData.rows}
         onSubmit={submitChildForm}
         onClose={() => setFormTarget(null)}
       />
