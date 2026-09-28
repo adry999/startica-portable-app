@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { useChildren } from './useChildren';
 
@@ -129,6 +129,12 @@ const fixtureState = {
 
 describe('useChildren', () => {
   beforeEach(() => {
+    // Scadențele fixturii sunt calculate relativ la 2026-09-23 (vezi comentariul de mai sus) —
+    // fără ceas fixat, testul trece azi și pică singur când data reală depășește o scadență.
+    // Doar Date e fixat — setTimeout rămâne real, altfel flushExchangeRates() de mai jos
+    // (care așteaptă un setTimeout adevărat) ar bloca testul la nesfârșit.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string) => {
@@ -141,6 +147,10 @@ describe('useChildren', () => {
         throw new Error(`neașteptat: ${path}`);
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // useExchangeRates își pornește fetch-ul într-un efect, fără o promisiune expusă de urmărit direct.
