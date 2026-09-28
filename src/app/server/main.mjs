@@ -91,6 +91,8 @@ export function startServer() {
       // singur eroarea (vezi create-branch-context.mjs), la fel la pornirea
       // procesului ca și după o schimbare de filială din selector.
       app.runStartupSweeps();
+      // Motorul de sincronizare (Faza 3): no-op pe o instalare fără sync.json.
+      app.startSync();
     }, 0);
   });
   // Lansatorul folosește existența fișierului ca să afle dacă instanța găsită mai este vie.

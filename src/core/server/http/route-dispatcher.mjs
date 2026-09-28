@@ -27,7 +27,13 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
         const getHandler = getRoutes.get(path);
         // await pe o valoare simplă e un no-op: rutele existente rămân sincrone,
         // Telegram (§4) e prima care așteaptă un apel de rețea înainte de răspuns.
-        if (getHandler) return sendResponse(response, await getHandler({ url, response }));
+        // RESPONSE_SENT: un flux SSE (sincronizare, Faza 3) își scrie singur antetele
+        // și răspunsul, exact ca ruta POST /api/shutdown — nu mai are ce trimite aici.
+        if (getHandler) {
+          const result = await getHandler({ url, response });
+          if (result !== RESPONSE_SENT) sendResponse(response, result);
+          return;
+        }
         // Ruta API înregistrată are întâietate; restul cade pe fișierele din build
         // (sau pe index.html — SPA fără router propriu). /api/* nu ajunge niciodată
         // aici din greșeală ca index.html: o cale API neînregistrată rămâne 404.

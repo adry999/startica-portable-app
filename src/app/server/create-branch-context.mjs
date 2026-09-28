@@ -27,6 +27,10 @@ import {
   createSyncConflictsRepository,
   createOutboxRecordingRepository,
   createChangeSink,
+  createSyncAttendanceWriter,
+  createSyncHttpClient,
+  createSyncEngine,
+  createSyncRoutes,
 } from '#features/sync/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
@@ -70,7 +74,7 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   scheduleFile: string,
  *   forbiddenFolders: () => string[],
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
- *   syncDevice?: { read: () => unknown, write: (device: any) => void, clear: () => void },
+ *   syncDevice?: import('#features/sync/index.server.mjs').SyncDeviceRepository,
  *   common?: import('./create-common-context.mjs').CommonContext,
  * }} options
  */
@@ -134,6 +138,40 @@ export function createBranchContext({
   const recordRepository = createOutboxRecordingRepository(rawRecordRepository, syncOutboxRepository, isSyncEnabled);
   const syncChangeSink = createChangeSink({ outbox: syncOutboxRepository, isEnabled: isSyncEnabled });
 
+  // Motorul de sincronizare (Faza 3): construit doar dacă acest calculator e conectat
+  // (sync.json existent la deschiderea filialei) — o instalare neconfigurată nu are
+  // niciun motor, deci nu pornește niciun timer și nu face nicio cerere de rețea
+  // (constrângere obligatorie a planului). Reconectarea (Faza 5) reconstruiește
+  // contextul filialei, ca un motor nou să se construiască cu noul sync.json.
+  const syncAttendanceWriter = createSyncAttendanceWriter(db);
+  /** @type {ReturnType<typeof createSyncEngine> | null} */
+  let syncEngine = null;
+  const syncRoutes = createSyncRoutes({ syncDevice, getEngine: () => syncEngine });
+  const syncDeviceFile = syncDevice.read();
+  if (syncDeviceFile) {
+    syncEngine = createSyncEngine({
+      database: db,
+      branch,
+      rawRecordRepository,
+      outbox: syncOutboxRepository,
+      syncState: syncStateRepository,
+      conflicts: syncConflictsRepository,
+      auditTrail: auditLogRepository,
+      readSetting,
+      writeSetting: settings.setSetting,
+      attendanceRepository: syncAttendanceWriter,
+      client: createSyncHttpClient({
+        serverUrl: syncDeviceFile.serverUrl,
+        token: syncDeviceFile.token,
+        fetch: fetchImpl ?? globalThis.fetch,
+      }),
+      deviceId: syncDeviceFile.deviceId,
+      deviceName: syncDeviceFile.deviceName,
+      onStatus: syncRoutes.onStatus,
+      onRecordsChanged: syncRoutes.onRecordsChanged,
+    });
+  }
+
   const { runRevisionTransaction, replaceAllRecords } = createRevisionTransaction({
     database: db,
     recordRepository,
@@ -166,6 +204,7 @@ export function createBranchContext({
       shutdown,
       branch,
       listBranches,
+      syncDevice,
     }),
     ...createDiagnosticRoutes({
       version,
@@ -245,6 +284,7 @@ export function createBranchContext({
     ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
     ...createKindergartenSettingsRoutes({ readSetting, writeSetting: settings.setSetting }),
     ...createReceiptNumberingRoutes({ receiptNumberingService }),
+    ...syncRoutes.routes,
     ...branchRoutes,
   ];
 
@@ -326,9 +366,14 @@ export function createBranchContext({
       state: syncStateRepository,
       conflicts: syncConflictsRepository,
       rawRecordRepository,
+      engine: syncEngine,
     },
     dispatchRequest,
     runStartupSweeps,
+    // Apelat separat de runStartupSweeps (create-application.mjs, main.mjs): pornirea
+    // motorului face cereri de rețea, deci nu trebuie să întârzie sweep-urile locale.
+    // Fără motor (instalare neconfigurată) e un no-op.
+    startSync: () => syncEngine?.start(),
     envelope: recordRepository.readEnvelope,
     backup: backups.backup,
     safeBackup: backups.safeBackup,
@@ -340,6 +385,8 @@ export function createBranchContext({
     refreshExchangeRateIfMissing,
     close: () => {
       backups.cancelScheduledBackup();
+      syncEngine?.stop();
+      syncRoutes.close();
       closeDatabase();
     },
   };

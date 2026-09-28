@@ -214,6 +214,7 @@ export function createApplication(options = {}) {
       setTimeout(() => {
         previous.close();
         next.runStartupSweeps();
+        next.startSync();
       }, 0);
       return next.branch;
     } finally {
@@ -248,6 +249,11 @@ export function createApplication(options = {}) {
     expireSmsLog: todayStr => active.expireSmsLog(todayStr),
     refreshExchangeRateIfMissing: () => active.refreshExchangeRateIfMissing(),
     runStartupSweeps: () => active.runStartupSweeps(),
+    // Pornirea motorului de sincronizare al filialei active (Faza 3) — separată de
+    // runStartupSweeps() pentru că lansatorul (main.mjs) o apelă tot amânat, dar
+    // aceleași teste care nu pornesc niciun server real trebuie să poată porni
+    // aplicația fără să declanșeze cereri de rețea neintenționat.
+    startSync: () => active.startSync(),
     envelope: () => active.envelope(),
     activeBranch,
     selectBranch,

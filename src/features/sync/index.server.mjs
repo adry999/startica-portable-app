@@ -8,4 +8,13 @@ export {
   writeSyncDeviceFile,
 } from './server/sync-device.repository.mjs';
 export { createSyncHttpClient, SyncNetworkError, SyncRevokedError, SyncHttpError } from './server/sync-http-client.mjs';
+export { createChangeApplier, createSyncAttendanceWriter, SyncApplyError } from './server/change-applier.mjs';
+export { createSyncEngine } from './server/sync-engine.service.mjs';
+export { createSyncRoutes } from './server/sync.routes.mjs';
 export { deriveSyncMode, SYNC_MODES } from './domain/sync-status.mjs';
+
+// Reexport de tip, pentru consumatorii din afara feature-ului (create-application.mjs,
+// create-branch-context.mjs, session.routes.mjs): index.server.mjs e singura cale
+// publică, `sync.types.d.mts` e privat (tests/architecture/import-boundaries.test.mjs).
+/** @typedef {import('./sync.types.d.mts').SyncDeviceFile} SyncDeviceFile */
+/** @typedef {import('./sync.types.d.mts').SyncDeviceRepository} SyncDeviceRepository */

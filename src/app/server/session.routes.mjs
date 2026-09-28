@@ -12,6 +12,7 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
  *   shutdown: () => void,
  *   branch: import('#core/server/branches/branch-registry.mjs').BranchEntry,
  *   listBranches: () => import('#core/server/branches/branch-registry.mjs').BranchEntry[],
+ *   syncDevice?: { read: () => import('#features/sync/index.server.mjs').SyncDeviceFile | null },
  * }} dependencies
  */
 export function createSessionRoutes({
@@ -23,13 +24,22 @@ export function createSessionRoutes({
   shutdown,
   branch,
   listBranches,
+  // Neconfigurat implicit — un context construit fără el (teste izolate) vede sync: null.
+  syncDevice = { read: () => null },
 }) {
   let closing = false;
+  // Ecranul de pornire (21a) arată pasul „Sincronizez cu serverul comun” doar când
+  // sync.json există; adresa și numele de dispozitiv vin de aici, nu din /api/sync/status,
+  // ca sesiunea să știe imediat dacă are rost să mai ceară acel status.
+  function syncSummary() {
+    const device = syncDevice.read();
+    return device ? { configured: true, deviceName: device.deviceName, serverUrl: device.serverUrl } : null;
+  }
   return [
     {
       method: 'GET',
       path: '/api/session',
-      handle: () => ({ token: sessionToken, version, branch, branches: listBranches() }),
+      handle: () => ({ token: sessionToken, version, branch, branches: listBranches(), sync: syncSummary() }),
     },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },
     {

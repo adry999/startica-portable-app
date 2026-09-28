@@ -1,6 +1,6 @@
 # sync
 
-Sincronizarea datelor între calculatoarele aceleiași grădinițe, prin serverul mic de reconciliere din `sync-server/` (`18-sincronizare.md`). Acest README descrie doar ce e construit până acum — **Fazele 1-2** ale `docs/superpowers/plans/2026-09-27-sincronizare.md`: tabelele de sincronizare din baza fiecărei filiale, capturarea coadei de modificări (outbox), identitatea de dispozitiv și clientul HTTP. Motorul de sincronizare, rutele locale, cardul din meniu și ecranul de conflicte sunt Fazele 3+, nu sunt construite încă.
+Sincronizarea datelor între calculatoarele aceleiași grădinițe, prin serverul mic de reconciliere din `sync-server/` (`18-sincronizare.md`). Acest README descrie ce e construit până acum — **Fazele 1-3** ale `docs/superpowers/plans/2026-09-27-sincronizare.md`: tabelele de sincronizare din baza fiecărei filiale, capturarea coadei de modificări (outbox), identitatea de dispozitiv, clientul HTTP și motorul de sincronizare (push/pull/apply/status/timere). Rutele locale (`/api/sync/*`), cardul din meniu (14a) și ecranul de conflicte (14c) sunt Faza 3 continuată / Faza 4+, vezi `src/app/server/` și `webapp/`.
 
 Modul **independent**: nu depinde de alt feature. `attendance` primește un hook opțional (`onChange`) ca să scrie în outbox fără să importe acest feature.
 
@@ -17,6 +17,9 @@ Modul **independent**: nu depinde de alt feature. `attendance` primește un hook
 | `createChangeSink({ outbox, isEnabled })` | portul `ChangeSink` (injectat în `runRevisionTransaction` și în modulele cu depozit propriu) |
 | `createSyncDeviceRepository(file)` | citește o dată `sync.json`, expune `read`/`write`/`clear` |
 | `createSyncHttpClient({ serverUrl, token, fetch })` | clientul către `sync-server/`: pair, status, branches, changes, snapshot, events |
+| `createChangeApplier({ rawRecordRepository, attendanceRepository, syncState, auditTrail })` | aplică o modificare primită de pe server (pull sau capul după un push „superseded”) prin depozitul brut, niciodată prin cel cu outbox |
+| `createSyncAttendanceWriter(database)` | scrie prezența primită de pe server direct pe `attendance`, fără tranzacție proprie și fără `onChange` |
+| `createSyncEngine({ ... })` | motorul unei filiale: `start/stop/syncNow/status/noteLocalChange` — push, pull, aplicare, backoff la offline, oprire la 401 |
 | `deriveSyncMode(status)` | starea pură a cardului 14a (`{ mode }`), din obiectul de stare al motorului |
 
 ## Dependențe
@@ -55,7 +58,12 @@ sync/
     ├── sync-device.repository.mjs
     ├── sync-device.repository.test.mjs
     ├── sync-http-client.mjs
-    └── sync-http-client.test.mjs
+    ├── sync-http-client.test.mjs
+    ├── change-applier.mjs             # createChangeApplier + createSyncAttendanceWriter
+    ├── change-applier.test.mjs
+    ├── sync-engine.service.mjs        # createSyncEngine — push, pull, apply, status, timere
+    ├── sync-engine.service.test.mjs
+    └── sync-engine.service.integration.test.mjs   # împotriva sync-server/ real, pe port 0
 ```
 
 ## Decizii
@@ -65,6 +73,9 @@ sync/
 - **`isEnabled()` = `sync.json` există.** O instalare neconectată nu scrie niciun rând în outbox și nu pornește niciun timer — comportament identic cu astăzi. Primul upload e un snapshot (Faza 5), nu outbox-ul.
 - **`sync.json` corupt oprește pornirea**, cu același tratament ca `filiale.json`: nu se poate reconstrui în tăcere fără să rișcăm un token deja emis de server.
 - **Clientul HTTP refuză `http://` spre orice adresă care nu e loopback** — datele sunt ale copiilor; `https://` e obligatoriu în afara dezvoltării locale.
+- **Modificările primite de pe server (pull, sau capul după un push „superseded”/conflict rezolvat) se aplică mereu prin depozitul brut** (`change-applier.mjs`), niciodată prin `createOutboxRecordingRepository` — altfel o modificare venită de pe alt calculator s-ar întoarce în propria coadă de trimis. Prezența primită de pe server nu trece prin `attendance.repository.mjs` (acel depozit își gestionează singur `BEGIN IMMEDIATE` per lot, ceea ce nu se poate imbrica în tranzacția motorului) — `createSyncAttendanceWriter` scrie direct pe tabel.
+- **Motorul serializează `syncNow()`**: un al doilea apel cât timp unul rulează deja doar marchează „mai rulează o dată”, nu pornește un al doilea ciclu în paralel. O eroare de rețea trece în `offline` cu backoff (5 s → 60 s, dublat la fiecare eșec); un 401 trece în `revoked` și oprește toate timerele (SSE, polling, backoff) — Faza 5 reconstruiește motorul la reconectare.
+- **`start()`/`stop()` sunt singurele care pornesc timere reale** (polling, SSE); `syncNow()` apelat direct (rute locale, teste) nu programează niciun backoff dacă motorul nu a fost pornit — evită timere „fantomă” într-un motor construit dar niciodată pornit.
 
 ## Teste
 
