@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,12 @@ import { createSettingsRepository } from '#core/server/settings/settings-reposit
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
 import { branchDirectories, commonDirectories } from '#core/server/branches/branch-layout.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
-import { createSyncDeviceRepository } from '#features/sync/index.server.mjs';
+import {
+  createSyncDeviceRepository,
+  createSyncHttpClient,
+  createSyncConnectService,
+  createSyncConnectRoutes,
+} from '#features/sync/index.server.mjs';
 import { createBranchContext } from './create-branch-context.mjs';
 import { createCommonContext } from './create-common-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
@@ -99,20 +104,46 @@ export function createApplication(options = {}) {
     return active.branch;
   }
 
+  // Task 11: conectarea unui calculator (pairing, reconciliere filiale, urcare/descărcare
+  // snapshot). `createHttpClient`/`reopenActiveBranch` sunt referite aici înainte de a fi
+  // definite mai jos — funcții „function”, deci hoist-uite, la fel ca `openBranchContext`.
+  const connectService = createSyncConnectService({
+    registry,
+    home,
+    legacy,
+    syncDevice,
+    deleteSyncDeviceFile: () => {
+      try {
+        unlinkSync(join(home, SYNC_DEVICE_FILE_NAME));
+      } catch {
+        // Lipsa fișierului (deconectare repetată, sau unul care n-a existat) nu e o eroare.
+      }
+    },
+    createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch }),
+    now: () => new Date(),
+    platform: () => process.platform,
+    reopenActiveBranch: () => reopenActiveBranch(),
+  });
+
   // Rutele filialelor sunt construite o singură dată, nu per filială: ele nu
   // țin de o filială anume — citesc/scriu registrul și comută `active` din
   // afara oricărui context (funcțiile de mai jos sunt „function” — hoist-uite,
   // deci pot fi referite aici înainte de a fi apelate mai jos în cod).
-  const branchRoutes = /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (
-    createBranchRoutes({
+  const branchRoutes = /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ ([
+    ...createBranchRoutes({
       registry,
       home,
       legacy,
       activeBranch,
       selectBranch,
       auditTrail: () => active.auditLogRepository,
-    })
-  );
+    }),
+    ...createSyncConnectRoutes({
+      syncDevice,
+      createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch }),
+      connectService,
+    }),
+  ]);
 
   /** @param {BranchEntry} branch */
   function openBranchContext(branch) {
@@ -237,6 +268,39 @@ export function createApplication(options = {}) {
     } finally {
       switching = false;
     }
+  }
+
+  // Task 11: după connect/disconnect, filiala activă trebuie recreată — connect scrie
+  // sync.json (motorul pornește abia acum) sau, dacă filiala activă era cea goală
+  // înlocuită (replaceEmpty), id-ul ei s-a schimbat. Potrivirea se face după `folder`
+  // (stabil la replaceEmpty), nu după `id` (poate fi tocmai cel schimbat) — la fel ca un
+  // `selectBranch`, dar declanșat din interior, nu dintr-o cerere HTTP cu un id anume.
+  function reopenActiveBranch() {
+    const target =
+      registry.list().find(branch => branch.folder === active.branch.folder) ??
+      registry.find(active.branch.id) ??
+      registry.list()[0];
+    if (!target) return;
+    let next;
+    try {
+      next = openBranchContext(target);
+    } catch (error) {
+      console.error(/** @type {Error} */ (error).stack);
+      return;
+    }
+    const previous = active;
+    active = next;
+    setTimeout(() => {
+      try {
+        previous.close();
+      } catch (error) {
+        const failure = /** @type {Error} */ (error);
+        console.error('Închiderea filialei anterioare a eșuat: ' + (failure.stack || failure));
+      } finally {
+        next.runStartupSweeps();
+        next.startSync();
+      }
+    }, 0);
   }
 
   return {

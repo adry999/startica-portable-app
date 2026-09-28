@@ -12,6 +12,9 @@ export { createChangeApplier, createSyncAttendanceWriter, SyncApplyError } from 
 export { createSyncEngine } from './server/sync-engine.service.mjs';
 export { createSyncRoutes } from './server/sync.routes.mjs';
 export { createSyncConflictsRoutes } from './server/sync-conflicts.routes.mjs';
+export { readLocalSnapshot, writeLocalSnapshot } from './server/snapshot-io.mjs';
+export { createSyncConnectService } from './server/sync-connect.service.mjs';
+export { createSyncConnectRoutes } from './server/sync-connect.routes.mjs';
 export { deriveSyncMode, SYNC_MODES } from './domain/sync-status.mjs';
 
 // Reexport de tip, pentru consumatorii din afara feature-ului (create-application.mjs,
