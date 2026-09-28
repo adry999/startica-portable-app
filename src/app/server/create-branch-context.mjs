@@ -243,7 +243,7 @@ export function createBranchContext({
       findRecordIssues,
     }),
     ...createGroupsRoutes(recordWriteDependencies),
-    ...createExpenseCategoriesRoutes(recordWriteDependencies),
+    ...createExpenseCategoriesRoutes({ ...recordWriteDependencies, rawRecordRepository, database: db }),
     ...createFeeSetupRoutes(recordWriteDependencies),
     ...createBackupRoutes({
       backupService: backups,

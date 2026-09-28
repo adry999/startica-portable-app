@@ -54,7 +54,7 @@ export function upgradeSnapshot(input) {
   // să depindă de faptul că filiala a fost deja deschisă o dată după actualizare.
   const defaultSeeds = missingDefaultCategorySeeds(snapshot);
   for (const seed of defaultSeeds) snapshot.categories.push(seed);
-  const migratedSeeds = missingExpenseOnlyCategorySeeds(snapshot, () => `CAT-${crypto.randomUUID()}`);
+  const migratedSeeds = missingExpenseOnlyCategorySeeds(snapshot);
   for (const seed of migratedSeeds) snapshot.categories.push(seed);
   if (defaultSeeds.length)
     notes.push(`Categorii implicite completate: ${defaultSeeds.length} (inclusiv „General”, dacă lipsea).`);

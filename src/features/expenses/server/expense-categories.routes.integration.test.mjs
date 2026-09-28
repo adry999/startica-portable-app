@@ -1,9 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { validateState } from '#shared/domain/record-schema.mjs';
-import { GENERAL_CATEGORY_ID, GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
-import { startTestApplication } from '#test-support/start-test-application.mjs';
+import {
+  GENERAL_CATEGORY_ID,
+  GENERAL_CATEGORY_NAME,
+  DEFAULT_EXPENSE_CATEGORY_SEEDS,
+} from '#shared/domain/expense-categories.mjs';
+import { createApplication, startTestApplication, removeDirWithRetry } from '#test-support/start-test-application.mjs';
+
+// Fără import din #features/sync (o feature nu importă altă feature, nici în teste —
+// vezi tests/architecture/import-boundaries.test.mjs): fișierul sync.json e scris
+// direct, cu exact forma pe care o citește sync-device.repository.mjs.
+/** @param {string} file */
+function writeTestSyncDeviceFile(file) {
+  writeFileSync(
+    file,
+    JSON.stringify({
+      version: 1,
+      serverUrl: 'https://exemplu.invalid',
+      deviceId: 'DEV-1',
+      deviceName: 'Calculator test',
+      token: 'tok',
+      connectedAt: '2026-09-28T00:00:00.000Z',
+    }),
+  );
+}
 
 async function startApplication(t) {
   return startTestApplication(t, { prefix: 'startica-expense-categories-' });
@@ -197,4 +222,79 @@ test('/api/category-rename este refuzat cu 409 pentru o categorie inexistentă',
 
   assert.equal(renamed.status, 409);
   assert.match(renamed.body.error, /nu mai există/i);
+});
+
+test('semințele categoriilor implicite nu ajung în outbox pe un calculator sincronizat de la o filială nouă (B-1)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-expense-categories-sync-'));
+  try {
+    writeTestSyncDeviceFile(join(dir, 'sync.json'));
+    const app = createApplication({
+      dataDir: join(dir, 'data'),
+      backupDir: join(dir, 'backups'),
+      home: dir,
+      autoBackupIntervalMs: 0,
+    });
+    // Semințele rulează sincron la construcția rutelor (înainte de listen) — exact
+    // scenariul „snapshot-ul serverului nu s-a descărcat încă” din audit (B-1).
+    const categories = app.envelope().state.categories;
+    assert.equal(categories.length, DEFAULT_EXPENSE_CATEGORY_SEEDS.length);
+    const pendingOutbox = app.db.prepare("SELECT COUNT(*) AS n FROM sync_outbox WHERE status='pending'").get().n;
+    assert.equal(
+      pendingOutbox,
+      0,
+      'cele 8 categorii implicite (id fix) nu au voie să pornească drept conflicte la prima sincronizare',
+    );
+    app.closeSync();
+  } finally {
+    await removeDirWithRetry(dir);
+  }
+});
+
+test('ștergerea unei categorii mută la General și cheltuielile al căror nume diferă doar prin diacritice/majuscule (m6)', async t => {
+  const app = await startApplication(t);
+  await createRecord(app, 'categories', { id: 'CAT-bucatarie', name: 'Bucătărie' });
+  await createRecord(app, 'expenses', {
+    id: 'EXP-1',
+    date: '2026-09-01',
+    category: 'bucatarie',
+    description: 'import vechi, fără diacritice',
+    amount: 40,
+  });
+  const { revision } = await app.get('/api/state');
+
+  const deleted = await app.post('/api/category-delete', { id: 'CAT-bucatarie', revision, requestId: randomUUID() });
+
+  assert.equal(deleted.status, 200, deleted.body.error);
+  assert.equal(
+    deleted.body.state.expenses.find(expense => expense.id === 'EXP-1').category,
+    GENERAL_CATEGORY_NAME,
+    'cheltuiala cu nume fără diacritice trebuia mutată la General odată cu ștergerea categoriei',
+  );
+});
+
+test('redenumirea unei categorii propagă noul nume și la cheltuielile al căror nume diferă doar prin diacritice/majuscule (m6)', async t => {
+  const app = await startApplication(t);
+  await createRecord(app, 'categories', { id: 'CAT-bucatarie', name: 'Bucătărie' });
+  await createRecord(app, 'expenses', {
+    id: 'EXP-1',
+    date: '2026-09-01',
+    category: 'BUCATARIE',
+    description: 'import vechi, majuscule fără diacritice',
+    amount: 40,
+  });
+  const { revision } = await app.get('/api/state');
+
+  const renamed = await app.post('/api/category-rename', {
+    id: 'CAT-bucatarie',
+    name: 'Bucătărie și curățenie',
+    revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(renamed.status, 200, renamed.body.error);
+  assert.equal(
+    renamed.body.state.expenses.find(expense => expense.id === 'EXP-1').category,
+    'Bucătărie și curățenie',
+    'cheltuiala cu nume fără diacritice/majuscule trebuia să primească noul nume la redenumire',
+  );
 });

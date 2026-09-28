@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { missingDefaultCategorySeeds, missingExpenseOnlyCategorySeeds } from '#shared/domain/expense-categories.mjs';
 
 /**
@@ -11,15 +10,26 @@ import { missingDefaultCategorySeeds, missingExpenseOnlyCategorySeeds } from '#s
  *    (perioada în care categoria era doar text) se completează de fiecare dată, ca nimic să
  *    nu rămână „în aer”, chiar dacă apare mai târziu (import, restaurare).
  *
- * Scrie direct pe `recordRepository`, fără `runRevisionTransaction`: rulează sincron la
- * construcția rutelor, înainte ca vreun client să citească starea filialei, deci nu are
- * cine să vadă o revizie „în urmă”; iar semințele implicite au id fix, ca două calculatoare
- * care le seamănă independent să scrie exact aceeași înregistrare.
- * @param {import('#shared/contracts/persistence.mjs').RecordRepository} recordRepository
+ * Scrie prin depozitul BRUT (fără outbox), într-o singură tranzacție (B-1 din audit): rulează
+ * sincron la construcția rutelor, înainte ca vreun client să citească starea filialei sau ca
+ * snapshot-ul serverului să fi ajuns pe acest calculator (Faza 5) — trecerea prin depozitul cu
+ * outbox ar pune cele 8 categorii implicite (id fix, identice pe orice calculator) în outbox ca
+ * modificări proprii, deci conflicte false la prima sincronizare a unui calculator nou.
+ * @param {{
+ *   database: import('node:sqlite').DatabaseSync,
+ *   recordRepository: import('#shared/contracts/persistence.mjs').RecordRepository,
+ * }} dependencies
  */
-export function seedExpenseCategories(recordRepository) {
-  for (const seed of missingDefaultCategorySeeds(recordRepository.readSnapshot()))
-    recordRepository.save('categories', seed);
-  for (const seed of missingExpenseOnlyCategorySeeds(recordRepository.readSnapshot(), () => `CAT-${randomUUID()}`))
-    recordRepository.save('categories', seed);
+export function seedExpenseCategories({ database, recordRepository }) {
+  database.exec('BEGIN IMMEDIATE');
+  try {
+    for (const seed of missingDefaultCategorySeeds(recordRepository.readSnapshot()))
+      recordRepository.save('categories', seed);
+    for (const seed of missingExpenseOnlyCategorySeeds(recordRepository.readSnapshot()))
+      recordRepository.save('categories', seed);
+    database.exec('COMMIT');
+  } catch (error) {
+    database.exec('ROLLBACK');
+    throw error;
+  }
 }

@@ -29,7 +29,21 @@ export const DEFAULT_EXPENSE_CATEGORY_SEEDS = [
   { id: GENERAL_CATEGORY_ID, name: GENERAL_CATEGORY_NAME },
 ];
 
-const comparable = name => stripDiacritics(name).toLocaleLowerCase('ro-RO');
+// Exportat (m6 din audit): ștergerea/redenumirea unei categorii (expense-categories.routes.mjs)
+// trebuie să găsească cheltuielile cu același nume, cu diacritice/majuscule diferite (import,
+// date vechi) — nu doar potrivirea exactă de string.
+export const comparable = name => stripDiacritics(name).toLocaleLowerCase('ro-RO');
+
+// Slug determinist pentru id-ul categoriilor „orfane” (nume folosit doar pe o cheltuială,
+// fără categorie proprie) — vezi missingExpenseOnlyCategorySeeds. Fără diacritice, litere
+// mici, separator „-”, ca branchSlug din #shared/domain/branch.mjs.
+function categorySlug(name) {
+  const base = stripDiacritics(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return base || 'categorie';
+}
 
 /**
  * Semințele implicite lipsă — active doar cât timp „General” nu există încă, adică o
@@ -52,20 +66,20 @@ export function missingDefaultCategorySeeds(records) {
  * corespunzătoare (perioada în care categoria era doar text pe cheltuială) — ca nimic
  * să nu rămână „în aer”. Se recalculează de fiecare dată (nu doar o dată), fiindcă o
  * cheltuială cu un nume nou de categorie poate apărea oricând (import, restaurare).
- * Id nou, generat de apelant: nu e o sămânță partajată între calculatoare, deci nu are
- * nevoie de determinism.
+ * Id determinist din nume (B-2 din audit): două calculatoare cu aceeași cheltuială
+ * „orfană” (import, aceleași date vechi) trebuie să producă aceeași înregistrare, nu
+ * una cu id aleator fiecare — altfel sincronizarea le-ar trata ca un conflict fals.
  * @param {RecordsSnapshot} records
- * @param {() => string} generateId
  * @returns {ExpenseCategory[]}
  */
-export function missingExpenseOnlyCategorySeeds(records, generateId) {
+export function missingExpenseOnlyCategorySeeds(records) {
   const known = new Set(records.categories.map(category => comparable(category.name)));
   const migratedFromExpenses = [];
   for (const expense of records.expenses) {
     const name = String(expense.category || '').trim();
     if (!name || known.has(comparable(name))) continue;
     known.add(comparable(name));
-    migratedFromExpenses.push({ id: generateId(), name });
+    migratedFromExpenses.push({ id: `CAT-${categorySlug(name)}`, name });
   }
   return migratedFromExpenses;
 }

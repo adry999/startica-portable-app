@@ -17,6 +17,9 @@ export interface ExpenseCategoriesRoutesDependencies {
   recordRepository: RecordRepository;
   auditTrail: AuditTrail;
   runRevisionTransaction: RunRevisionTransaction;
+  // Pentru semințe (B-1 din audit): scriu brut, fără outbox — vezi expense-category-seeding.mjs.
+  rawRecordRepository: RecordRepository;
+  database: import('node:sqlite').DatabaseSync;
 }
 
 export interface ExpenseCategoriesControllerElements {

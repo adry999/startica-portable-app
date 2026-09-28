@@ -42,8 +42,8 @@ test('missingExpenseOnlyCategorySeeds creează o categorie pentru un nume folosi
     categories: DEFAULT_EXPENSE_CATEGORY_SEEDS,
     expenses: [{ id: 'EXP-1', date: '2026-01-01', category: 'Rechizite școlare', description: '', amount: 10 }],
   };
-  const seeds = missingExpenseOnlyCategorySeeds(records, () => 'CAT-GENERATED');
-  assert.deepEqual(seeds, [{ id: 'CAT-GENERATED', name: 'Rechizite școlare' }]);
+  const seeds = missingExpenseOnlyCategorySeeds(records);
+  assert.deepEqual(seeds, [{ id: 'CAT-rechizite-scolare', name: 'Rechizite școlare' }]);
 });
 
 test('missingExpenseOnlyCategorySeeds nu duplică un nume de cheltuială care se potrivește fără diacritice cu o categorie existentă', () => {
@@ -52,7 +52,7 @@ test('missingExpenseOnlyCategorySeeds nu duplică un nume de cheltuială care se
     categories: DEFAULT_EXPENSE_CATEGORY_SEEDS,
     expenses: [{ id: 'EXP-1', date: '2026-01-01', category: 'utilitati', description: '', amount: 10 }],
   };
-  const seeds = missingExpenseOnlyCategorySeeds(records, () => 'CAT-GENERATED');
+  const seeds = missingExpenseOnlyCategorySeeds(records);
   assert.deepEqual(seeds, []);
 });
 
@@ -62,8 +62,17 @@ test('missingExpenseOnlyCategorySeeds nu creează nimic dacă toate numele chelt
     categories: DEFAULT_EXPENSE_CATEGORY_SEEDS,
     expenses: [{ id: 'EXP-1', date: '2026-01-01', category: 'Chirie', description: '', amount: 10 }],
   };
-  assert.deepEqual(
-    missingExpenseOnlyCategorySeeds(records, () => 'GENERATED-ID'),
-    [],
-  );
+  assert.deepEqual(missingExpenseOnlyCategorySeeds(records), []);
+});
+
+test('missingExpenseOnlyCategorySeeds dă același id determinist pe două calculatoare independente (B-2)', () => {
+  const records = {
+    ...emptyRecords(),
+    categories: DEFAULT_EXPENSE_CATEGORY_SEEDS,
+    expenses: [{ id: 'EXP-1', date: '2026-01-01', category: 'Excursie tabără', description: '', amount: 10 }],
+  };
+  const computerA = missingExpenseOnlyCategorySeeds(structuredClone(records));
+  const computerB = missingExpenseOnlyCategorySeeds(structuredClone(records));
+  assert.deepEqual(computerA, computerB);
+  assert.equal(computerA[0].id, 'CAT-excursie-tabara');
 });

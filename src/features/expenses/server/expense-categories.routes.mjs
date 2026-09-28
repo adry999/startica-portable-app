@@ -1,6 +1,6 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { assertUniqueName } from '#shared/domain/record-integrity.mjs';
-import { GENERAL_CATEGORY_ID, GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
+import { GENERAL_CATEGORY_ID, GENERAL_CATEGORY_NAME, comparable } from '#shared/domain/expense-categories.mjs';
 import { seedExpenseCategories } from './expense-category-seeding.mjs';
 
 /** @typedef {import('../expenses.types.mjs').ExpenseCategoriesRoutesDependencies} ExpenseCategoriesRoutesDependencies */
@@ -21,14 +21,26 @@ const GENERAL_UNRENAMEABLE_MESSAGE =
   'Categoria „General” nu poate fi redenumită — rămâne destinația cheltuielilor fără categorie.';
 
 /** @param {ExpenseCategoriesRoutesDependencies} dependencies */
-export function createExpenseCategoriesRoutes({ recordRepository, auditTrail, runRevisionTransaction }) {
+export function createExpenseCategoriesRoutes({
+  recordRepository,
+  auditTrail,
+  runRevisionTransaction,
+  rawRecordRepository,
+  database,
+}) {
   // Semințele (întrebarea „toate categoriile trebuie să fie reale”): scrise sincron la
   // construcția rutelor, la fel ca semințele Personal 24 — vezi expense-category-seeding.mjs.
-  seedExpenseCategories(recordRepository);
+  // Depozitul brut, nu cel cu outbox (B-1) — vezi comentariul din expense-category-seeding.mjs.
+  seedExpenseCategories({ database, recordRepository: rawRecordRepository });
 
+  // Comparație fără diacritice/majuscule (m6 din audit): o cheltuială importată cu
+  // „bucatarie” (date vechi, fără diacritice) trebuie găsită la ștergerea/redenumirea
+  // categoriei „Bucătărie”, altfel rămâne cu numele vechi — invizibilă sub noua
+  // categorie și re-însămânțată ca duplicat la următoarea pornire (missingExpenseOnlyCategorySeeds).
   /** @param {string} categoryName */
   function expensesUsingCategory(categoryName) {
-    return recordRepository.readSnapshot().expenses.filter(expense => expense.category === categoryName);
+    const target = comparable(categoryName);
+    return recordRepository.readSnapshot().expenses.filter(expense => comparable(expense.category) === target);
   }
 
   return [
