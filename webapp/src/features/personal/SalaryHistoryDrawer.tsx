@@ -30,7 +30,12 @@ export function SalaryHistoryDrawer({ staff, onClose }: SalaryHistoryDrawerProps
   const maxAmount = Math.max(1, ...months.map(month => month.payment?.amount ?? 0));
 
   return (
-    <Drawer open={staff !== null} title={staff ? `Istoric salariu: ${staff.name}` : 'Istoric salariu'} width={480} onClose={onClose}>
+    <Drawer
+      open={staff !== null}
+      title={staff ? `Istoric salariu: ${staff.name}` : 'Istoric salariu'}
+      width={480}
+      onClose={onClose}
+    >
       {status === 'loading' && <LoadingState />}
       {status === 'failed' && <p className={styles.notice}>Istoricul nu a putut fi încărcat.</p>}
       {status === 'ready' && (
@@ -38,7 +43,10 @@ export function SalaryHistoryDrawer({ staff, onClose }: SalaryHistoryDrawerProps
           <div className={styles.bars}>
             {months.map(month => (
               <div key={month.month} className={styles.barColumn}>
-                <div className={styles.bar} style={{ height: `${((month.payment?.amount ?? 0) / maxAmount) * 100}%` }} />
+                <div
+                  className={styles.bar}
+                  style={{ height: `${((month.payment?.amount ?? 0) / maxAmount) * 100}%` }}
+                />
                 <span>{month.month.slice(5, 7)}</span>
               </div>
             ))}

@@ -25,7 +25,14 @@ export interface EmptyStateProps {
  * Cele trei stări de listă goală din 13-formulare.md §15e — se dă drept `DataTable.emptyState`
  * (sau randată direct, pentru liste care nu sunt un `DataTable`).
  */
-export function EmptyState({ variant = 'no-results', title, description, activeFilters, onClearFilters, action }: EmptyStateProps) {
+export function EmptyState({
+  variant = 'no-results',
+  title,
+  description,
+  activeFilters,
+  onClearFilters,
+  action,
+}: EmptyStateProps) {
   if (variant === 'resolved') {
     return (
       <div className={styles.resolved}>

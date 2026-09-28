@@ -14,8 +14,26 @@ const fixturePersonalState = {
   departments: [{ id: 'DEP-1', name: 'Educatori', order: 1 }],
   roles: [{ id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 }],
   staff: [
-    { id: 'STF-1', name: 'Ana Popescu', roleId: 'ROL-1', branchIds: ['bu'], phone: '', since: '2020-01-01', archivedAt: null, notes: [] },
-    { id: 'STF-2', name: 'Ion Antrenor', roleId: 'ROL-1', branchIds: ['bu'], phone: '', since: '2020-01-01', archivedAt: null, notes: [] },
+    {
+      id: 'STF-1',
+      name: 'Ana Popescu',
+      roleId: 'ROL-1',
+      branchIds: ['bu'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
+    {
+      id: 'STF-2',
+      name: 'Ion Antrenor',
+      roleId: 'ROL-1',
+      branchIds: ['bu'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
   ],
   settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
 };
@@ -40,8 +58,24 @@ function stubFetch() {
       if (path.startsWith('/api/personal/salaries?month='))
         return jsonResponse({
           rows: [
-            { staff: { id: 'STF-1', name: 'Ana Popescu' }, mode: 'fix', base: '10000 lei / lună', gross: 10000, advances: 0, net: 10000, paid: null },
-            { staff: { id: 'STF-2', name: 'Ion Antrenor' }, mode: 'bazin', base: 'de închis în Bazin', gross: 1200, advances: 0, net: 1200, paid: null },
+            {
+              staff: { id: 'STF-1', name: 'Ana Popescu' },
+              mode: 'fix',
+              base: '10000 lei / lună',
+              gross: 10000,
+              advances: 0,
+              net: 10000,
+              paid: null,
+            },
+            {
+              staff: { id: 'STF-2', name: 'Ion Antrenor' },
+              mode: 'bazin',
+              base: 'de închis în Bazin',
+              gross: 1200,
+              advances: 0,
+              net: 1200,
+              paid: null,
+            },
           ],
           totals: { gross: 11200, advances: 0, net: 11200, paid: 0 },
         });

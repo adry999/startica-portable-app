@@ -16,7 +16,13 @@ import {
   type DataTableColumn,
   type SmsRecipientView,
 } from '@shared/ui';
-import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsRecipientRow, type SmsSendResultView } from '@shared/sms';
+import {
+  useSmsLastNotified,
+  useSmsSend,
+  useSmsStatus,
+  type SmsRecipientRow,
+  type SmsSendResultView,
+} from '@shared/sms';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import type { ViewKey } from '@shared/view-key';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -46,7 +52,12 @@ type PlannedSmsMessage = ReturnType<typeof planSmsBatch>['messages'][number];
 function fallbackSmsText(recipient: SmsRecipientRow, month: string): string {
   return renderSmsTemplate(
     DEFAULT_SMS_TEMPLATE_BODY,
-    smsVariablesFor({ child: recipient.child, parentName: recipient.child.parent, obligation: recipient.obligation, month }),
+    smsVariablesFor({
+      child: recipient.child,
+      parentName: recipient.child.parent,
+      obligation: recipient.obligation,
+      month,
+    }),
   );
 }
 
@@ -169,7 +180,9 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     month,
   });
   const monthPlannedByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message]));
-  const monthRecipientByChildId = new Map(statusData.notifiableRecipients.map(recipient => [recipient.child.id, recipient]));
+  const monthRecipientByChildId = new Map(
+    statusData.notifiableRecipients.map(recipient => [recipient.child.id, recipient]),
+  );
   const monthNameByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message.recipientName]));
 
   // Lot An școlar: fiecare copil cu sold > 0 are propria lună reprezentativă (cea mai veche restanță
@@ -508,7 +521,11 @@ function MonthView({
               {summary.overdueChildren} {summary.overdueChildren === 1 ? 'restanțier' : 'restanțieri'}
             </strong>
             <span>Trimite o notificare tuturor părinților cu restanță</span>
-            <Button disabled={!smsConfigured} title={smsConfigured ? undefined : SMS_DISABLED_TITLE} onClick={onNotifyAll}>
+            <Button
+              disabled={!smsConfigured}
+              title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+              onClick={onNotifyAll}
+            >
               Notifică toți
             </Button>
           </div>

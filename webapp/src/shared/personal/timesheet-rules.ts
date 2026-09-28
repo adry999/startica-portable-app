@@ -54,8 +54,7 @@ export function summarizeTimesheetMonth({
   upTo: 'today' | 'month';
 }): TimesheetMonthSummary {
   const cells = monthDates(month).map(date => {
-    if (date < staff.since || (staff.archivedAt && date > staff.archivedAt))
-      return { date, kind: 'none' as const };
+    if (date < staff.since || (staff.archivedAt && date > staff.archivedAt)) return { date, kind: 'none' as const };
     if (!isWorkingDay(date)) return { date, kind: 'off' as const };
     if (upTo === 'today' && date > todayStr) return { date, kind: 'future' as const };
     const row = rows.get(timesheetKey(staff.id, date));

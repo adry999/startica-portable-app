@@ -9,7 +9,15 @@ import type { Group, GroupTeamMember } from '@contracts/record-types.mjs';
 const staff: Staff[] = [
   { id: 'STF-1', name: 'Ana Popescu', roleId: 'ROL-1', branchIds: ['bu'], phone: '', since: '2020-01-01', notes: [] },
   { id: 'STF-2', name: 'Bogdan Rusu', roleId: 'ROL-2', branchIds: ['bu'], phone: '', since: '2020-01-01', notes: [] },
-  { id: 'STF-3', name: 'Carmen Ionescu', roleId: 'ROL-2', branchIds: ['bu'], phone: '', since: '2020-01-01', notes: [] },
+  {
+    id: 'STF-3',
+    name: 'Carmen Ionescu',
+    roleId: 'ROL-2',
+    branchIds: ['bu'],
+    phone: '',
+    since: '2020-01-01',
+    notes: [],
+  },
 ];
 
 const team: GroupTeamMember[] = [

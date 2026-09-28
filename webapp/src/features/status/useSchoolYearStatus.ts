@@ -148,7 +148,8 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
     .flatMap(row => {
       const evaluation = yearEvaluations.find(entry => entry.child.id === row.child.id);
       const overdueMonth = evaluation?.months.find(
-        ({ obligation }) => obligation.expected !== null && obligation.rest !== null && obligation.rest > 0 && todayStr > obligation.due,
+        ({ obligation }) =>
+          obligation.expected !== null && obligation.rest !== null && obligation.rest > 0 && todayStr > obligation.due,
       );
       return overdueMonth ? [{ child: row.child, obligation: overdueMonth.obligation, month: overdueMonth.month }] : [];
     });

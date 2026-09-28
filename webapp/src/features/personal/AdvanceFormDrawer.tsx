@@ -62,7 +62,14 @@ export function AdvanceFormDrawer({ staff, month, onClose }: AdvanceFormDrawerPr
       >
         <label className={styles.field}>
           Sumă (lei)
-          <input required type="number" min={0} step="0.01" value={amount} onChange={event => setAmount(event.target.value)} />
+          <input
+            required
+            type="number"
+            min={0}
+            step="0.01"
+            value={amount}
+            onChange={event => setAmount(event.target.value)}
+          />
         </label>
         <label className={styles.field}>
           Data

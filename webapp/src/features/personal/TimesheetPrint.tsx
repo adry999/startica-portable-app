@@ -101,8 +101,8 @@ export function TimesheetPrint({ month, staff, rows, roleName }: TimesheetPrintP
           {pageIndex === pages.length - 1 && (
             <>
               <p className={styles.printLegend}>
-                Legendă: 8 = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î = învoire,
-                FP = fără plată.
+                Legendă: 8 = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î = învoire, FP = fără
+                plată.
               </p>
               <div className={styles.printSignatures}>
                 <span>Director: __________________</span>

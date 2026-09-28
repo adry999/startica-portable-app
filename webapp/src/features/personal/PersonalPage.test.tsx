@@ -19,7 +19,16 @@ const fixturePersonalState = {
   departments: [{ id: 'DEP-1', name: 'Educatori', order: 1 }],
   roles: [{ id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 }],
   staff: [
-    { id: 'STF-1', name: 'Ana Popescu', roleId: 'ROL-1', branchIds: ['bu'], phone: '', since: '2020-01-01', archivedAt: null, notes: [] },
+    {
+      id: 'STF-1',
+      name: 'Ana Popescu',
+      roleId: 'ROL-1',
+      branchIds: ['bu'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
   ],
   settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
 };

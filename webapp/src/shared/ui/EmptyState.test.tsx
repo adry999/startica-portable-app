@@ -24,13 +24,7 @@ describe('EmptyState', () => {
   });
 
   it('randează varianta resolved cu textul în tonul mint', () => {
-    render(
-      <EmptyState
-        variant="resolved"
-        title="Totul e rezolvat"
-        description="Nicio achitare fără copil asociat."
-      />,
-    );
+    render(<EmptyState variant="resolved" title="Totul e rezolvat" description="Nicio achitare fără copil asociat." />);
     expect(screen.getByText('Totul e rezolvat')).toBeInTheDocument();
     expect(screen.getByText('Nicio achitare fără copil asociat.')).toBeInTheDocument();
   });

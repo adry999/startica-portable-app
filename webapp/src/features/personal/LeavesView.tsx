@@ -62,7 +62,10 @@ export function LeavesView() {
         </div>
         {activeStaff.map(person => {
           const staffLeaves = leavesData.leaves.filter(leave => leave.staffId === person.id);
-          const remaining = leaveDaysRemaining({ leaves: staffLeaves, annualLeaveDays: personal.settings.annualLeaveDays });
+          const remaining = leaveDaysRemaining({
+            leaves: staffLeaves,
+            annualLeaveDays: personal.settings.annualLeaveDays,
+          });
           const touchedByMonth = new Map<number, Leave>();
           for (const leave of staffLeaves) for (const month of monthsTouched(leave)) touchedByMonth.set(month, leave);
 

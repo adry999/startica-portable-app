@@ -133,7 +133,8 @@ export function StaffProfilePage() {
             {staffGroups.length === 0 && <p className={styles.notice}>Fără grupă asignată.</p>}
             {staffGroups.map(({ group, entry }) => (
               <p key={group.id}>
-                {group.name} · {entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor'}
+                {group.name} ·{' '}
+                {entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor'}
               </p>
             ))}
           </Card>
@@ -181,14 +182,9 @@ export function StaffProfilePage() {
             <p className={styles.sectionTitle}>Pontajul lunii</p>
             <div className={styles.dotsRow}>
               {timesheetSummary.cells.map(cell => (
-                <span
-                  key={cell.date}
-                  className={styles.dot}
-                  title={cell.date}
-                  data-kind={cell.kind || 'worked'}
-                >
+                <span key={cell.date} className={styles.dot} title={cell.date} data-kind={cell.kind || 'worked'}>
                   {cell.kind && cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future'
-                    ? TIMESHEET_CELL_LABEL[cell.kind] ?? ''
+                    ? (TIMESHEET_CELL_LABEL[cell.kind] ?? '')
                     : ''}
                 </span>
               ))}

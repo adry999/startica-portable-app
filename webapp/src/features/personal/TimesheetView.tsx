@@ -43,7 +43,9 @@ export function TimesheetView({ month, printOptions, onPrintOptionsChange }: Tim
 
   const departmentsSorted = [...personal.departments].sort((a, b) => a.order - b.order);
   const departmentTones: PillTone[] = ['orange', 'mint', 'yellow', 'pink'];
-  const departmentTone = new Map(departmentsSorted.map((department, index) => [department.id, departmentTones[index % departmentTones.length]]));
+  const departmentTone = new Map(
+    departmentsSorted.map((department, index) => [department.id, departmentTones[index % departmentTones.length]]),
+  );
 
   const todayStr = today();
   const summaries = filteredStaff.map(person => ({
@@ -107,11 +109,7 @@ export function TimesheetView({ month, printOptions, onPrintOptionsChange }: Tim
                     onClick={
                       clickable
                         ? () =>
-                            cellClick(
-                              staff.id,
-                              cell.date,
-                              timesheet.rows.get(timesheetKey(staff.id, cell.date))?.code,
-                            )
+                            cellClick(staff.id, cell.date, timesheet.rows.get(timesheetKey(staff.id, cell.date))?.code)
                         : undefined
                     }
                     role={clickable ? 'button' : undefined}
@@ -173,4 +171,3 @@ export function TimesheetView({ month, printOptions, onPrintOptionsChange }: Tim
     </div>
   );
 }
-

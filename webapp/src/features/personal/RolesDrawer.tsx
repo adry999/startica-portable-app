@@ -36,10 +36,7 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
   function addDepartment() {
     const name = newDepartmentName.trim();
     if (!name) return;
-    setDepartments(previous => [
-      ...previous,
-      { id: `DEP-${crypto.randomUUID()}`, name, order: previous.length },
-    ]);
+    setDepartments(previous => [...previous, { id: `DEP-${crypto.randomUUID()}`, name, order: previous.length }]);
     setNewDepartmentName('');
   }
 
@@ -54,7 +51,9 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
   }
 
   function renameDepartment(id: string, name: string) {
-    setDepartments(previous => previous.map(department => (department.id === id ? { ...department, name } : department)));
+    setDepartments(previous =>
+      previous.map(department => (department.id === id ? { ...department, name } : department)),
+    );
   }
 
   function renameRole(id: string, name: string) {
@@ -109,7 +108,10 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
           .map(department => (
             <div key={department.id} className={styles.departmentGroup}>
               <div className={styles.departmentRow}>
-                <input value={department.name} onChange={event => renameDepartment(department.id, event.target.value)} />
+                <input
+                  value={department.name}
+                  onChange={event => renameDepartment(department.id, event.target.value)}
+                />
                 <button type="button" className={styles.removeButton} onClick={() => removeDepartment(department.id)}>
                   Șterge
                 </button>
@@ -154,7 +156,11 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
               </option>
             ))}
           </select>
-          <input placeholder="Funcție nouă" value={newRoleName} onChange={event => setNewRoleName(event.target.value)} />
+          <input
+            placeholder="Funcție nouă"
+            value={newRoleName}
+            onChange={event => setNewRoleName(event.target.value)}
+          />
           <button type="button" onClick={addRole}>
             + Adaugă
           </button>

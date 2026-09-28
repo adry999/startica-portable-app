@@ -27,7 +27,12 @@ function stubFetch() {
     'fetch',
     vi.fn(async (path: string) => {
       if (path === '/api/session')
-        return jsonResponse({ token: 'tok', version: '1.6.3', branch: { id: 'bu', name: 'Buiucani', color: '' }, branches: [] });
+        return jsonResponse({
+          token: 'tok',
+          version: '1.6.3',
+          branch: { id: 'bu', name: 'Buiucani', color: '' },
+          branches: [],
+        });
       if (path === '/api/state')
         return jsonResponse({
           state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },

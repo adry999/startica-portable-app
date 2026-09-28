@@ -29,8 +29,13 @@ describe('summarizeTimesheetMonth', () => {
 
   it('contoarele ecranului se opresc azi, cele de tipar și salariu iau toată luna', () => {
     const rows = new Map<string, TimesheetRow>();
-    const todayCount = summarizeTimesheetMonth({ staff, month: '2020-02', rows, todayStr: '2020-02-10', upTo: 'today' })
-      .workingDays;
+    const todayCount = summarizeTimesheetMonth({
+      staff,
+      month: '2020-02',
+      rows,
+      todayStr: '2020-02-10',
+      upTo: 'today',
+    }).workingDays;
     const monthCount = summarizeTimesheetMonth({
       staff,
       month: '2020-02',

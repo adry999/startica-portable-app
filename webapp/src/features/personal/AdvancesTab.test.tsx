@@ -13,7 +13,16 @@ const fixturePersonalState = {
   departments: [{ id: 'DEP-1', name: 'Educatori', order: 1 }],
   roles: [{ id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 }],
   staff: [
-    { id: 'STF-1', name: 'Ana Popescu', roleId: 'ROL-1', branchIds: ['bu'], phone: '', since: '2020-01-01', archivedAt: null, notes: [] },
+    {
+      id: 'STF-1',
+      name: 'Ana Popescu',
+      roleId: 'ROL-1',
+      branchIds: ['bu'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
   ],
   settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
 };
@@ -34,8 +43,24 @@ function stubFetch() {
       if (path.startsWith('/api/personal/advances'))
         return jsonResponse({
           advances: [
-            { id: 'ADV-1', staffId: 'STF-1', date: '2026-09-05', amount: 500, method: 'Cash', month: '2026-09', deductedAt: '2026-09-30' },
-            { id: 'ADV-2', staffId: 'STF-1', date: '2026-09-10', amount: 300, method: 'Cash', month: '2026-09', deductedAt: null },
+            {
+              id: 'ADV-1',
+              staffId: 'STF-1',
+              date: '2026-09-05',
+              amount: 500,
+              method: 'Cash',
+              month: '2026-09',
+              deductedAt: '2026-09-30',
+            },
+            {
+              id: 'ADV-2',
+              staffId: 'STF-1',
+              date: '2026-09-10',
+              amount: 300,
+              method: 'Cash',
+              month: '2026-09',
+              deductedAt: null,
+            },
           ],
         });
       throw new Error(`neașteptat: ${path}`);

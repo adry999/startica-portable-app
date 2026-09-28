@@ -43,7 +43,12 @@ test('smsVariablesFor completează toate cele 7 variabile', () => {
 
 test('smsVariablesFor formatează taxa/rest/achitat în moneda obligației, nu implicit în lei', () => {
   const eurObligation = { expected: 100, paid: 40, rest: 60, due: '2026-09-10', currency: 'EUR' };
-  const variables = smsVariablesFor({ child: child(), parentName: 'Maria', obligation: eurObligation, month: '2026-09' });
+  const variables = smsVariablesFor({
+    child: child(),
+    parentName: 'Maria',
+    obligation: eurObligation,
+    month: '2026-09',
+  });
   assert.equal(variables.taxa, '100,00 €');
   assert.equal(variables.rest, '60,00 €');
   assert.equal(variables.achitat, '40,00 €');

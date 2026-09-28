@@ -219,7 +219,16 @@ interface GroupEditorProps {
   onRemove: (childId: string) => Promise<void>;
 }
 
-function GroupEditor({ group, unassignedChildren, staff, onSaveTeam, onSave, onDelete, onAssign, onRemove }: GroupEditorProps) {
+function GroupEditor({
+  group,
+  unassignedChildren,
+  staff,
+  onSaveTeam,
+  onSave,
+  onDelete,
+  onAssign,
+  onRemove,
+}: GroupEditorProps) {
   const [name, setName] = useState(group.name);
   const [capacityRaw, setCapacityRaw] = useState(group.capacity != null ? String(group.capacity) : '');
   const [educator, setEducator] = useState(group.educator);

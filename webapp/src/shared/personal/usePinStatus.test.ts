@@ -39,7 +39,8 @@ describe('usePinStatus', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, options?: RequestInit) => {
-        if (path === '/api/personal/pin' && !options?.method) return jsonResponse({ configured: true, unlocked: false });
+        if (path === '/api/personal/pin' && !options?.method)
+          return jsonResponse({ configured: true, unlocked: false });
         if (path === '/api/personal/pin/unlock')
           return jsonResponse({ error: 'Prea multe încercări. Așteaptă 60 s.' }, false, 429);
         throw new Error(`neașteptat: ${path}`);

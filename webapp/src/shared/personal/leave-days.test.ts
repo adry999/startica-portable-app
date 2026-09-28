@@ -33,7 +33,15 @@ describe('leaveDaysRemaining', () => {
 });
 
 describe('overlappingLeavesInGroup', () => {
-  const groups = [{ id: 'GRP-1', team: [{ staffId: 'STF-1', role: 'principal' as const }, { staffId: 'STF-2', role: 'asistent' as const }] }];
+  const groups = [
+    {
+      id: 'GRP-1',
+      team: [
+        { staffId: 'STF-1', role: 'principal' as const },
+        { staffId: 'STF-2', role: 'asistent' as const },
+      ],
+    },
+  ];
 
   it('două concedii suprapuse în aceeași grupă sunt raportate o singură dată', () => {
     const leaves: Leave[] = [

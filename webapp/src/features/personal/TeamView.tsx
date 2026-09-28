@@ -25,7 +25,8 @@ function groupAndRoleLabel(staffId: string, groups: Group[]): string {
   for (const group of groups) {
     const entry = group.team?.find(member => member.staffId === staffId);
     if (entry) {
-      const roleLabel = entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor';
+      const roleLabel =
+        entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor';
       return `${group.name} · ${roleLabel}`;
     }
   }
@@ -68,7 +69,9 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
 
   const departmentTone = useMemo(() => {
     const sorted = [...personal.departments].sort((a, b) => a.order - b.order);
-    return new Map(sorted.map((department, index) => [department.id, DEPARTMENT_TONES[index % DEPARTMENT_TONES.length]]));
+    return new Map(
+      sorted.map((department, index) => [department.id, DEPARTMENT_TONES[index % DEPARTMENT_TONES.length]]),
+    );
   }, [personal.departments]);
 
   const activeStaff = personal.staff.filter(person => !person.archivedAt);
@@ -186,7 +189,11 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
                   <span>{personal.roleName(person.roleId)}</span>
                   <span>{groupAndRoleLabel(person.id, groups)}</span>
                   <span>
-                    <Badge tone={todayCodes.get(person.id) === 'CO' || todayCodes.get(person.id) === 'CM' ? 'yellow' : 'mint'}>
+                    <Badge
+                      tone={
+                        todayCodes.get(person.id) === 'CO' || todayCodes.get(person.id) === 'CM' ? 'yellow' : 'mint'
+                      }
+                    >
                       {todayBadgeLabel(todayCodes.get(person.id) as TimesheetRow['code'])}
                     </Badge>
                   </span>
