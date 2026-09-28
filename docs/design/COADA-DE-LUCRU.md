@@ -68,4 +68,16 @@ Delegat unui subagent Sonnet (spec complet: 08-dashboard.md + AUDIT-UI 2.1 D-1�
 - Cele 4 criterii de acceptare din `08-dashboard.md` — toate bifate. `useDashboard.ts`/`useDashboard.test.ts` neatinse.
 - `npm run typecheck` + `vitest run` (137 fișiere, 730 teste) + `prettier --check` — toate verzi, verificat independent.
 
-**Următorul:** Modulul 2 — Copii (`Copii.dc.html`, spec-uri 01/02/09, audit C-1, C-2…). Delegat la subagent Sonnet cu spec complet, eu verific + commit.
+## Modulul 2 — Copii, listă + fișă (URMATORUL-PAS.md) — DONE 2026-09-28
+
+Delegat unui subagent Sonnet (spec: 02/09-copii*.md + AUDIT-UI 2.2/2.3). Verificat pe disc — rulat concurent cu Modulul 3, izolat prin `git add` doar pe fișierele proprii (fără `git stash`, blocat de sandbox pe fișiere active ale altei sesiuni); scop de teste `children/` + `RowMenu` (53/53 verde) în loc de tsc pe tot arborele, ca să nu prind erorile tranzitorii ale Modulului 3 încă în lucru. Commit `fd6a128`.
+
+- **C-1…C-3, C-5…C-10:** DONE — bordură toolbar, căutare pe părinte/telefon, „Toți” fără număr, badge „Fără grupă”, „ziua N”, antet „Plată <lună>”, `EmptyState` + filtre active, „Mută în grupă” ca `RowMenu` (prop nou `trigger`, backward-compatible), reset paginare pe `key`.
+- **C-4, C-11:** SKIP — [decizie], neschimbate.
+- **CF-1, CF-3, CF-5, CF-6, CF-8, CF-9, CF-10:** DONE — hero în tonul grupei, card Grupă cu `SearchSelect` inline, sold/taxă cu al treilea rând, „Tipărește confirmarea” ca `RowMenu`, titlu 18px, `--muted`, „Născut”.
+- **CF-2 (Date personale, Plătitori reținuți), CF-7 (Documente):** BLOCAT/SKIP — lipsesc din modelul de date, întrebare în `INTREBARI.md`.
+- **CF-4 (Note):** PARȚIAL — buton „+ Notă” adăugat; lista cu dată per notă rămâne blocată (`Child.notes` e un singur string, nu o listă) — aceeași categorie ca CF-2, de reluat cu decizia de schemă.
+
+**Următorul:** Modulul 3 — Grupe v2 (`03-grupe.md`, înlocuiește G-1…G-16 din audit) — în lucru, rulează concurent cu ce precede (fișiere disjuncte din `features/groups/`, plus `record-types.d.mts`/`tokens.css` comune). Delegat la subagent Sonnet cu arhitectura deja decisă (câmpuri `order`/`tone` pe `Group`, fără endpoint nou — `/api/record` existent, DnD nativ existent din `GroupsBoard.tsx`), eu verific + commit la final.
+
+**După Modulul 3:** Modulul 4 — Personal (`Personal.dc.html`, `24-personal.md`).
