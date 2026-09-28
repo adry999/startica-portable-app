@@ -109,7 +109,7 @@ test('events trimite status și records-changed după un pull', async t => {
   });
   await post(serverOrigin, '/v1/branches', {
     token: pairA.body.token,
-    body: { id: branchId, name: 'Filiala', color: '#f5a623', address: '', createdAt: new Date().toISOString() },
+    body: { id: branchId, name: 'Filiala', color: 'orange', address: '', createdAt: new Date().toISOString() },
   });
   writeFileSync(
     join(home, 'sync.json'),

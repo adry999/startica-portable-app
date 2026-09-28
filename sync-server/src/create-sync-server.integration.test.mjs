@@ -63,7 +63,7 @@ test('serverul pornit pe port 0 acceptă pair → push → pull între două tok
     body: {
       id: 'branch-1',
       name: 'Filiala principală',
-      color: '#f5a623',
+      color: 'orange',
       address: 'Str. 1',
       createdAt: '2026-09-27T08:00:00.000Z',
     },
@@ -118,7 +118,7 @@ test('SSE trimite un eveniment după un push', async t => {
     body: {
       id: 'branch-1',
       name: 'Filiala principală',
-      color: '#f5a623',
+      color: 'orange',
       address: 'Str. 1',
       createdAt: '2026-09-27T08:00:00.000Z',
     },

@@ -1,7 +1,7 @@
 import { fail } from './router.mjs';
+import { BRANCH_COLORS } from './change-policy.mjs';
 
 const NAME_MAX_LENGTH = 120;
-const COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
 
 /** @param {unknown} value @param {number} maxLength */
 function readRequiredText(value, maxLength) {
@@ -31,7 +31,7 @@ export function createBranchesRoutes({ branches, devices, now }) {
     const id = readRequiredText(body?.id, NAME_MAX_LENGTH);
     const name = readRequiredText(body?.name, NAME_MAX_LENGTH);
     const address = typeof body?.address === 'string' ? body.address.trim() : '';
-    const color = typeof body?.color === 'string' && COLOR_PATTERN.test(body.color) ? body.color : undefined;
+    const color = typeof body?.color === 'string' && BRANCH_COLORS.includes(body.color) ? body.color : undefined;
     const createdAt = readRequiredText(body?.createdAt, 40);
     if (!id || !name || !color || !createdAt) fail('Filiala trebuie să aibă id, nume, culoare și dată de creare.', 400);
 

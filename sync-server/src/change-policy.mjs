@@ -4,6 +4,10 @@
 export const RECORD_KINDS = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits'];
 export const SENSITIVE_FIELDS = { visits: ['healthNotes'], children: ['healthNotes'] };
 
+// Copie a paletei din #shared/domain/branch.mjs (D-1 din audit): aplicația trimite unul
+// din aceste nume, nu un cod hex — serverul respingea orice culoare reală înainte de fix.
+export const BRANCH_COLORS = ['orange', 'mint', 'yellow', 'pink'];
+
 // Tipurile sincronizate în total: fișele (RECORD_KINDS) + prezența + șabloanele SMS +
 // setările sincronizate (Faza 6 le tratează efectiv; aici numele de tip e deja rezervat).
 export const KINDS = [...RECORD_KINDS, 'attendance', 'sms_templates', 'settings'];
