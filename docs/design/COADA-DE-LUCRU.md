@@ -44,3 +44,16 @@ Te oprești doar dacă:
 - **Design system:** DONE 2026-09-27 — `/design-system` (doar dev) + build static pentru Vercel (`npm run build:design-system`, rădăcina `webapp`); nepublicat încă.
 - **Faza 6 — filialele:** DONE 2026-09-27 — plan `docs/superpowers/plans/2026-09-27-filiale.md`; câte o bază + folder de backup pe filială, registru `filiale.json`, instalarea existentă = filiala 1 (fără mutări), selector în meniu, dialog pentru formular nesalvat, fila Filiale, „Ambele” în exportul Raportului contabil, Telegram pe filiale.
 - **După 12–15:** Faza 6 — filialele (`17-filiale.md`), apoi sincronizarea (`18-sincronizare.md`), confirmat de utilizator 2026-09-27. La filiale se revin deciziile provizorii din `INTREBARI.md` (selectorul de filială din exportul Raportului contabil, pasul „Sincronizez” de la pornire).
+
+## Etapa 0 — baza comună (URMATORUL-PAS.md, sync 28.09 11:06) — DONE 2026-09-28
+
+Toate cele 4 puncte închise, `npm run check` + webapp typecheck/test verzi (137 fișiere, 727 teste) după fiecare:
+
+- **0.1 Shell/z-index:** DONE — scara `--z-sticky/--z-drawer/--z-popover/--z-toast/--z-dialog` în `tokens.css`; `.sidebar` (sticky) + `BranchSelector` (portal), `Drawer`, `Toast`, `RowMenu`, `ConfirmDeleteDialog`, `SmsConfirmDialog`, `MonthPicker`, `SearchSelect` migrate pe variabile, înlocuind valorile ad-hoc (900/1000/1/20/500). Commit-uri `e9d3647`, `757c7f9`.
+- **0.2 ScrollArea:** DONE — componentă nouă `shared/ui/ScrollArea` (bară 3px/5px hover, pistă invizibilă, tragere, umbră de continuare), pusă în `.nav` din meniul lateral. Doar sidebar-ul acum — dropdown filială/Drawer/RowMenu/tabele rămân cu scroll nativ, adoptare separată la nevoie. Commit `f772742`.
+- **0.3 Antet comun T-1…T-6:** verificat — deja aliniat la `00-comun.md` A (Topbar.tsx/css, nav-items.ts, AppShell.module.css au deja valorile din spec; auditul descria o stare de cod mai veche). Niciun commit necesar.
+- **0.4 Bug Prezența:** DONE — `markGroupPresent` folosește `changesToMarkUnmarkedPresent` (doar nemarcații), buton dezactivat la 0 nemarcați, text „Nemarcații (N) → prezenți”. Commit `c7cab97`.
+
+Extra rezolvat din FEEDBACK 28.09 în aceeași trecere (nu erau în Etapa 0, dar mecanice și mici): A5 indicator de salvare Prezența (`e2dc022`), A6 toast „Anulează” la arhivarea unei vizite (`072edb9`). A7 (monedă + pastilă curs) era deja DONE din 27.09, confirmat.
+
+**Următorul:** Modulul 1 — Dashboard (`Dashboard.dc.html`, `08-dashboard.md`). La început: listă scurtă ce lipsește față de (a)-(c), apoi delegă la subagent (cavecrew-builder/sonnet) cu spec complet, eu verific + commit.
