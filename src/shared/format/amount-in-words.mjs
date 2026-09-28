@@ -68,22 +68,27 @@ function spellChunkCompound(n, gender) {
 }
 
 /**
- * Atașează substantivul la un număr (1-999): decide articolul „un”/„o” pentru
- * cazul special „…01” (rest 1, inclusiv 1 însuși), altfel decide „de” + plural.
+ * Atașează substantivul la un număr (1-999): articolul „un”/„o” e corect doar
+ * când numărul e chiar 1 (izolat) — „un leu”, „o mie”. Orice alt compus care
+ * se termină în 1 (101, 21, sau grupul unităților dintr-un total mai mare,
+ * ca 1001) foloseşte forma invariabilă „unu”/„una” + pluralul, fără „de” sub
+ * 20 (cf. „o sută unu dalmațieni”, nu „o sută un dalmațian”).
  * `pluralGender` diferă de `gender` doar la neutru („milion”): articolul de
  * la singular e masculin („un milion”), dar cifra de la plural se comportă
  * ca la feminin („două milioane”).
+ * `standalone` e fals doar pentru grupul unităţilor (leu/ban) când există un
+ * grup de mii/milioane înaintea lui — acolo „1” nu mai e numărul întreg, ci
+ * doar cifra finală a unui compus, deci nu poate lua articolul de singular.
  * @param {number} n
- * @param {{ singular: string, plural: string, gender: 'm' | 'f', pluralGender?: 'm' | 'f' }} noun
+ * @param {{ singular: string, plural: string, gender: 'm' | 'f', pluralGender?: 'm' | 'f', standalone?: boolean }} noun
  */
-function countedNoun(n, { singular, plural, gender, pluralGender = gender }) {
+function countedNoun(n, { singular, plural, gender, pluralGender = gender, standalone = true }) {
   if (n === 0) return '';
-  const remainder = n % 100;
-  if (remainder === 1) {
-    const prefix = spellHundredsPrefix(Math.floor(n / 100));
+  if (n === 1 && standalone) {
     const article = gender === 'f' ? 'o' : 'un';
-    return [prefix, `${article} ${singular}`].filter(Boolean).join(' ');
+    return `${article} ${singular}`;
   }
+  const remainder = n % 100;
   const words = spellChunkCompound(n, pluralGender);
   const needsDe = remainder === 0 || remainder >= 20;
   return needsDe ? `${words} de ${plural}` : `${words} ${plural}`;
@@ -95,11 +100,17 @@ function spellLei(lei) {
   const millionsGroup = Math.floor(lei / 1_000_000);
   const thousandsGroup = Math.floor((lei % 1_000_000) / 1000);
   const unitsGroup = lei % 1000;
+  // Grupul unităţilor nu e „standalone” dacă mii/milioane sunt nenule: 1001 e „o mie unu
+  // lei”, nu „o mie un leu” — cifra 1 e doar finalul compusului, nu tot numărul.
+  const unitsIsStandalone = millionsGroup === 0 && thousandsGroup === 0;
   const words = [];
   if (millionsGroup > 0)
     words.push(countedNoun(millionsGroup, { singular: 'milion', plural: 'milioane', gender: 'm', pluralGender: 'f' }));
   if (thousandsGroup > 0) words.push(countedNoun(thousandsGroup, { singular: 'mie', plural: 'mii', gender: 'f' }));
-  if (unitsGroup > 0) words.push(countedNoun(unitsGroup, { singular: 'leu', plural: 'lei', gender: 'm' }));
+  if (unitsGroup > 0)
+    words.push(
+      countedNoun(unitsGroup, { singular: 'leu', plural: 'lei', gender: 'm', standalone: unitsIsStandalone }),
+    );
   // Multiplu exact de 1000 (sau de un milion): substantivul „lei” cade direct
   // pe ultimul cuvânt spus („mii”/„milioane”), care cere mereu „de”.
   else words.push('de lei');

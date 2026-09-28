@@ -28,7 +28,7 @@ test('de la 20: mereu „de” + plural, inclusiv pentru compusul „…și unu�
 
 test('sute: „o sută”/„n sute”, cu „de” doar când rotund sau ≥20 rămășiță', () => {
   assert.equal(amountInWordsRo(100), 'o sută de lei');
-  assert.equal(amountInWordsRo(101), 'o sută un leu');
+  assert.equal(amountInWordsRo(101), 'o sută unu lei');
   assert.equal(amountInWordsRo(102), 'o sută doi lei');
   assert.equal(amountInWordsRo(112), 'o sută doisprezece lei');
   assert.equal(amountInWordsRo(120), 'o sută douăzeci de lei');
@@ -49,6 +49,24 @@ test('mii: „mie” e feminin — „o mie”, „două mii”, „douăzeci ș
 test('milioane: neutrul se comportă ca masculin la singular („un milion”)', () => {
   assert.equal(amountInWordsRo(1000000), 'un milion de lei');
   assert.equal(amountInWordsRo(2000000), 'două milioane de lei');
+});
+
+test('compusul terminat în 1, cu grup de mii/milioane înaintea unităţilor, e „unu”/„una” invariabil, nu articol de singular', () => {
+  const cases = [
+    [1, 'un leu'],
+    [2, 'doi lei'],
+    [12, 'doisprezece lei'],
+    [21, 'douăzeci și unu de lei'],
+    [22, 'douăzeci și doi de lei'],
+    [101, 'o sută unu lei'],
+    [1000, 'o mie de lei'],
+    [1001, 'o mie unu lei'],
+    [2000, 'două mii de lei'],
+    [21001, 'douăzeci și una de mii unu lei'],
+    [1000000, 'un milion de lei'],
+    [2000001, 'două milioane unu lei'],
+  ];
+  for (const [amount, expected] of cases) assert.equal(amountInWordsRo(amount), expected, `${amount} lei`);
 });
 
 test('bani: aceleași reguli, substantiv „ban”/„bani”', () => {

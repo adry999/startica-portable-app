@@ -21,29 +21,47 @@ export function orthodoxEaster(year) {
 const holidaysCache = new Map();
 
 /**
- * Codul muncii al R. Moldova, art. 111. Fără zilele locale de hram (o setare ulterioară).
+ * Zilele fixe (lună-zi), necorelate cu Paștele — Codul muncii al R. Moldova, art. 111.
+ * Fără zilele locale de hram (o setare ulterioară).
+ *
+ * 26 decembrie e NEVERIFICATĂ: planul care a introdus modulul
+ * (`docs/superpowers/plans/2026-09-27-prezenta.md`, Task 1) citează art. 111 cu doar 25
+ * decembrie, fără „a doua zi de Crăciun”; nu am găsit aici o sursă autoritară care să
+ * confirme sau să infirme intrarea. Păstrată neschimbată din codul existent (audit
+ * 2026-09-28, constatarea m2) — de confirmat separat, nu se ghicește într-un batch de fix-uri.
+ * @type {{ month: number, day: number, name: string }[]}
+ */
+const FIXED_HOLIDAYS_MD = [
+  { month: 1, day: 1, name: 'Anul Nou' },
+  { month: 1, day: 7, name: 'Crăciunul (stil vechi)' },
+  { month: 1, day: 8, name: 'Crăciunul (stil vechi)' },
+  { month: 3, day: 8, name: 'Ziua internațională a femeii' },
+  { month: 5, day: 1, name: 'Ziua internațională a muncii' },
+  { month: 5, day: 9, name: 'Ziua Victoriei / Ziua Europei' },
+  { month: 6, day: 1, name: 'Ziua Ocrotirii Copilului' },
+  { month: 8, day: 27, name: 'Ziua Independenței' },
+  { month: 8, day: 31, name: 'Ziua Limbii Române' },
+  { month: 12, day: 25, name: 'Crăciunul' },
+  { month: 12, day: 26, name: 'Crăciunul (a doua zi)' }, // nesigur, vezi comentariul de mai sus
+];
+
+/**
  * @param {number} year
  * @returns {{ date: string, name: string }[]}
  */
 export function legalHolidaysMd(year) {
   if (holidaysCache.has(year)) return holidaysCache.get(year);
   const easterSunday = orthodoxEaster(year);
-  const holidays = [
-    { date: `${year}-01-01`, name: 'Anul Nou' },
-    { date: `${year}-01-07`, name: 'Crăciunul (stil vechi)' },
-    { date: `${year}-01-08`, name: 'Crăciunul (stil vechi)' },
-    { date: `${year}-03-08`, name: 'Ziua internațională a femeii' },
+  const fixed = FIXED_HOLIDAYS_MD.map(({ month, day, name }) => ({
+    date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+    name,
+  }));
+  const easterRelated = [
     { date: easterSunday, name: 'Paștele' },
     { date: shiftDays(easterSunday, 1), name: 'Paștele (a doua zi)' },
     { date: shiftDays(easterSunday, 8), name: 'Paștele Blajinilor' },
-    { date: `${year}-05-01`, name: 'Ziua internațională a muncii' },
-    { date: `${year}-05-09`, name: 'Ziua Victoriei / Ziua Europei' },
-    { date: `${year}-06-01`, name: 'Ziua Ocrotirii Copilului' },
-    { date: `${year}-08-27`, name: 'Ziua Independenței' },
-    { date: `${year}-08-31`, name: 'Ziua Limbii Române' },
-    { date: `${year}-12-25`, name: 'Crăciunul' },
-    { date: `${year}-12-26`, name: 'Crăciunul (a doua zi)' },
-  ].sort((left, right) => (left.date < right.date ? -1 : 1));
+  ];
+  const holidays = [...fixed, ...easterRelated].sort((left, right) => (left.date < right.date ? -1 : 1));
   holidaysCache.set(year, holidays);
   return holidays;
 }
