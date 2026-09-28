@@ -1,4 +1,4 @@
-import { bnmRatesPageUrl } from '#shared/domain/exchange-rates.mjs';
+import { BNM_HOME_URL } from '#shared/domain/exchange-rates.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import styles from './BnmRateLink.module.css';
 
@@ -8,13 +8,13 @@ export interface BnmRateLinkProps {
   className?: string;
 }
 
-/** Iconiță lângă un curs afișat: deschide pagina oficială BNM a zilei, pentru verificare. */
+/** Iconiță lângă un curs afișat: deschide bnm.md, pentru verificare. */
 export function BnmRateLink({ date, className }: BnmRateLinkProps) {
   const label = `Verifică pe bnm.md cursul din ${formatDate(date)}`;
   return (
     <a
       className={className ? `${styles.link} ${className}` : styles.link}
-      href={bnmRatesPageUrl(date)}
+      href={BNM_HOME_URL}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}

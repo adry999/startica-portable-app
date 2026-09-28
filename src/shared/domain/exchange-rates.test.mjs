@@ -11,7 +11,7 @@ import {
   convertAmount,
   parseBnmEurRate,
   bnmDateParam,
-  bnmRatesPageUrl,
+  BNM_HOME_URL,
 } from './exchange-rates.mjs';
 
 test('clampExchangeRates păstrează doar chei dată-validă cu valori numerice pozitive', () => {
@@ -119,9 +119,6 @@ test('latestKnownRateDate întoarce ziua celui mai recent curs, undefined pe har
   assert.equal(latestKnownRateDate({}), undefined);
 });
 
-test('bnmRatesPageUrl duce la pagina publică BNM a zilei, în formatul de dată al BNM', () => {
-  assert.equal(
-    bnmRatesPageUrl('2026-09-05'),
-    'https://www.bnm.md/ro/official_exchange_rates?get_xml=1&date=05.09.2026',
-  );
+test('linkul de verificare BNM duce pe prima pagină bnm.md', () => {
+  assert.equal(BNM_HOME_URL, 'https://www.bnm.md/');
 });
