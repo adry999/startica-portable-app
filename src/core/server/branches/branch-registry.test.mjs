@@ -40,6 +40,34 @@ test('registrul lipsă dă null, cel corupt aruncă cu mesaj, cel valid se cite�
   assert.deepEqual(readBranchRegistry(file), registry);
 });
 
+test('un registru cu branches: [] este tratat ca corupt, nu ca „fără filiale”', t => {
+  const file = tempRegistryFile(t);
+  writeFileSync(file, JSON.stringify({ version: 1, lastBranchId: '', branches: [] }));
+  assert.throws(() => readBranchRegistry(file), /structură necunoscută/);
+});
+
+test('un folder cu separator de cale sau „..” face registrul corupt', t => {
+  const file = tempRegistryFile(t);
+  const entry = {
+    id: 'branch-1',
+    name: 'Buiucani',
+    color: 'orange',
+    address: '',
+    createdAt: '2026-09-27T00:00:00.000Z',
+  };
+  writeFileSync(
+    file,
+    JSON.stringify({ version: 1, lastBranchId: 'branch-1', branches: [{ ...entry, folder: '../etc' }] }),
+  );
+  assert.throws(() => readBranchRegistry(file), /structură necunoscută/);
+
+  writeFileSync(
+    file,
+    JSON.stringify({ version: 1, lastBranchId: 'branch-1', branches: [{ ...entry, folder: 'a\\b' }] }),
+  );
+  assert.throws(() => readBranchRegistry(file), /structură necunoscută/);
+});
+
 test('add creează slug-ul din nume și adaugă -2 la coliziune', t => {
   const file = tempRegistryFile(t);
   let counter = 0;

@@ -21,8 +21,16 @@ function looksLikeBranchEntry(value) {
     typeof candidate.color === 'string' &&
     typeof candidate.address === 'string' &&
     typeof candidate.createdAt === 'string' &&
-    (candidate.folder === null || typeof candidate.folder === 'string')
+    looksLikeSafeFolder(candidate.folder)
   );
+}
+
+// `folder` alimentează direct o cale de fișier (branch-layout.mjs); un separator sau
+// „..” aici ar fi o traversare de cale dintr-un filiale.json manipulat manual — de
+// încredere azi doar pentru că singurul scriitor e branchSlug (limitat la a-z0-9-).
+/** @param {unknown} folder */
+function looksLikeSafeFolder(folder) {
+  return folder === null || (typeof folder === 'string' && folder.length > 0 && !/[\\/]|\.\./.test(folder));
 }
 
 // Distinct de readJsonFile (care întoarce null și doar loghează pe JSON corupt):
@@ -48,6 +56,9 @@ export function readBranchRegistry(file) {
     candidate.version !== REGISTRY_VERSION ||
     typeof candidate.lastBranchId !== 'string' ||
     !Array.isArray(candidate.branches) ||
+    // O listă goală ar face createApplication să deschidă `openBranchContext(undefined)`
+    // (TypeError) — un registru fără nicio filială e la fel de corupt ca unul fără structură.
+    candidate.branches.length === 0 ||
     !candidate.branches.every(looksLikeBranchEntry)
   )
     throw new Error('Registrul filialelor (filiale.json) este corupt: structură necunoscută.');

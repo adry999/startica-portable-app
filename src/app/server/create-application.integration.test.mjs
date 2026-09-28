@@ -219,6 +219,19 @@ test('Prima pornire creează filiale.json cu filiala principală pe folderele ve
   }
 });
 
+test('Un registru cu branches: [] oprește pornirea cu mesaj, fără TypeError', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-branch-empty-'));
+  try {
+    writeFileSync(join(dir, 'filiale.json'), JSON.stringify({ version: 1, lastBranchId: '', branches: [] }));
+    assert.throws(
+      () => createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir }),
+      /Registrul filialelor \(filiale\.json\) este corupt/,
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('Un registru corupt oprește pornirea cu mesaj', () => {
   const dir = mkdtempSync(join(tmpdir(), 'startica-branch-corrupt-'));
   try {
