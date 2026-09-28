@@ -4,23 +4,7 @@ import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
-
-// Vezi create-application.integration.test.mjs: pe Windows, ștergerea imediat după
-// close() poate lovi peste un handle eliberat cu o mică întârziere.
-/** @param {string} path */
-async function removeDirWithRetry(path) {
-  for (let attempt = 1; attempt <= 15; attempt++) {
-    try {
-      rmSync(path, { recursive: true, force: true });
-      return;
-    } catch (error) {
-      if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EBUSY') throw error;
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-  }
-  console.warn(`Folderul temporar ${path} nu a putut fi șters (EBUSY persistent) — ignorat.`);
-}
+import { createApplication, startTestApplication, removeDirWithRetry } from '#test-support/start-test-application.mjs';
 
 test('/api/session întoarce un token de sesiune', async t => {
   const app = await startTestApplication(t, { prefix: 'startica-session-' });

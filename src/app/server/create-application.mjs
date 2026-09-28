@@ -207,13 +207,31 @@ export function createApplication(options = {}) {
         console.error(/** @type {Error} */ (error).stack);
         fail(`Filiala „${target.name}” nu s-a putut deschide: ${/** @type {Error} */ (error).message}`, 500);
       }
+      // A-3: scrierea registrului înainte de a comuta `active` — un eșec aici (disc plin,
+      // filiale.json.tmp blocat) înseamnă filiala nu s-a schimbat, nu „s-a schimbat, dar
+      // răspunsul a picat”. Contextul nou deschis nu are voie să rămână agățat (db, timere).
+      try {
+        registry.setLastBranchId(id);
+      } catch (error) {
+        next.close();
+        console.error(/** @type {Error} */ (error).stack);
+        fail(`Filiala nu s-a putut selecta: ${/** @type {Error} */ (error).message}`, 500);
+      }
       const previous = active;
       active = next;
-      registry.setLastBranchId(id);
       setTimeout(() => {
-        previous.close();
-        next.runStartupSweeps();
-        next.startSync();
+        // Un eșec aici (bază coruptă, timer blocat) nu are voie să devină uncaughtException
+        // (main.mjs ar închide tot procesul) — filiala nouă e deja activă, sweep-urile și
+        // sincronizarea ei trebuie să pornească oricum, chiar dacă închiderea celei vechi eșuează.
+        try {
+          previous.close();
+        } catch (error) {
+          const failure = /** @type {Error} */ (error);
+          console.error('Închiderea filialei anterioare a eșuat: ' + (failure.stack || failure));
+        } finally {
+          next.runStartupSweeps();
+          next.startSync();
+        }
       }, 0);
       return next.branch;
     } finally {

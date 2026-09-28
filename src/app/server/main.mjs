@@ -37,7 +37,9 @@ export function startServer() {
       console.error('Excepție netratată: ' + (failure?.stack || failure));
       const result = app?.safeBackup('eroare');
       if (result?.warning) console.error(result.warning);
-      app?.db.close();
+      // closeSync(), nu doar app.db.close() (A-5): acela ocolește garda databaseClosed
+      // și lasă Comun\ (Personal) deschisă — a doua bază, nu doar cea a filialei active.
+      app?.closeSync();
       if (portFile) removeFileIfPresent(portFile);
     } finally {
       process.exit(1);
@@ -62,7 +64,8 @@ export function startServer() {
         ? `Startica este deja pornită. Deschide http://127.0.0.1:${environment.port}`
         : failure.message,
     );
-    app.db.close();
+    // closeSync(), nu doar app.db.close() (A-5) — vezi mai sus.
+    app.closeSync();
     process.exitCode = 1;
   });
   app.server.listen(environment.port, '127.0.0.1', () => {

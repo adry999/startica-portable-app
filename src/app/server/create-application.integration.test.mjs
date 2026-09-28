@@ -16,27 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { normalizeRecord, emptyState } from '#shared/domain/record-schema.mjs';
 import { writeSyncDeviceFile } from '#features/sync/index.server.mjs';
-import { createApplication, startTestApplication } from '#test-support/start-test-application.mjs';
-
-// Pe Windows, ștergerea folderului temporar imediat după close() poate lovi peste
-// un handle de fișier eliberat cu o mică întârziere (WAL/antivirus/încărcare de sistem
-// din alte procese) — nu o bază încă deschisă (close() de mai sus a returnat deja, deci
-// asta nu ține de corectitudinea fix-ului testat aici). O reîncercare scurtă rezolvă
-// cazul obișnuit; dacă persistă, doar avertizăm — un folder temporar rămas nu strică
-// verificarea de mai sus, care s-a încheiat deja cu succes la acel moment.
-/** @param {string} path */
-async function removeDirWithRetry(path) {
-  for (let attempt = 1; attempt <= 15; attempt++) {
-    try {
-      rmSync(path, { recursive: true, force: true });
-      return;
-    } catch (error) {
-      if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EBUSY') throw error;
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-  }
-  console.warn(`Folderul temporar ${path} nu a putut fi șters (EBUSY persistent) — ignorat.`);
-}
+import { createApplication, startTestApplication, removeDirWithRetry } from '#test-support/start-test-application.mjs';
 
 const child = () =>
   normalizeRecord('children', {

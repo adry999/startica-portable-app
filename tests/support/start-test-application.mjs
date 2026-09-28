@@ -5,6 +5,23 @@ import { createApplication } from '#app/server/create-application.mjs';
 
 export { createApplication };
 
+// Pe Windows, sub sarcină mare (mai multe procese node concurente), ștergerea
+// folderului temporar imediat după close() poate lovi peste un handle eliberat cu o
+// mică întârziere — nu o bază încă deschisă (close() de mai sus a returnat deja).
+/** @param {string} path */
+export async function removeDirWithRetry(path) {
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (/** @type {NodeJS.ErrnoException} */ (error).code !== 'EBUSY') throw error;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+  console.warn(`Folderul temporar ${path} nu a putut fi șters (EBUSY persistent) — ignorat.`);
+}
+
 export async function startTestApplication(t, options = {}) {
   // fetch explicit, cu implicit globalThis.fetch: testele Telegram (§4) dau un
   // fetch fals aici; create-application.mjs îl leagă la createTelegramService.
@@ -24,8 +41,7 @@ export async function startTestApplication(t, options = {}) {
   t.after(async () => {
     await app.close();
     // Nu ștergem decât folderul temporar creat mai sus, nu orice altă cale.
-    if (dirname(resolve(dir)) === resolve(tmpdir()) && basename(dir).startsWith(prefix))
-      rmSync(dir, { recursive: true, force: true });
+    if (dirname(resolve(dir)) === resolve(tmpdir()) && basename(dir).startsWith(prefix)) await removeDirWithRetry(dir);
   });
   const origin = `http://127.0.0.1:${app.server.address().port}`;
   let token = (await (await fetch(origin + '/api/session')).json()).token;

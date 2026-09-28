@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -153,6 +153,30 @@ test('o filială cu baza coruptă nu se deschide, iar cea curentă rămâne acti
   const session = await bundle.get('/api/session');
   assert.notEqual(session.branch.id, branchB.id, 'filiala curentă trebuie să rămână cea de dinainte');
   assert.equal((await bundle.get('/api/state')).revision, 0, 'filiala curentă rămâne funcțională după eșec');
+});
+
+test('un eșec la scrierea filiale.json (setLastBranchId) nu comută filiala activă și nu lasă contextul nou deschis', async t => {
+  const bundle = await startTestApplication(t, { prefix: 'startica-branches-' });
+  const { get, post, dir } = bundle;
+  const branchAId = (await get('/api/session')).branch.id;
+  const branchB = (await post('/api/branches', { name: 'Botanica' })).body.branch;
+
+  // writeJsonFileAtomically scrie întâi filiale.json.tmp: transformat în director,
+  // scrierea (nu citirea) eșuează (EISDIR) — exact fereastra dintre deschiderea
+  // reușită a noii filiale și comutarea lui `active` (A-3).
+  const registryTmp = join(dir, 'filiale.json.tmp');
+  mkdirSync(registryTmp);
+
+  const selected = await post('/api/branches/select', { id: branchB.id });
+  assert.equal(selected.status, 500);
+
+  const session = await get('/api/session');
+  assert.equal(session.branch.id, branchAId, 'filiala activă rămâne cea veche când scrierea registrului eșuează');
+  assert.equal((await get('/api/state')).revision, 0, 'filiala activă continuă să funcționeze normal');
+
+  rmSync(registryTmp, { recursive: true, force: true });
+  const retried = await post('/api/branches/select', { id: branchB.id });
+  assert.equal(retried.status, 200, 'după ce scrierea redevine posibilă, comutarea reușește normal');
 });
 
 test('ultima filială deschisă e reținută și se deschide la repornire', async () => {
