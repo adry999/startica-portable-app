@@ -6,6 +6,25 @@
   color: var(--white);
   font-size: 13px;
   padding: var(--space-10) var(--space-20);
+  overflow: hidden;
+  /* Bara e inline în flux (02-copii-lista.md) — fără tranziție, apariția ei împinge tabelul
+     de dedesubt instant, ca un „salt”. Animăm intrarea ca împingerea să fie lină. */
+  animation: selectionBarIn 160ms ease-out;
+}
+
+@keyframes selectionBarIn {
+  from {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 48px;
+    padding-top: var(--space-10);
+    padding-bottom: var(--space-10);
+    opacity: 1;
+  }
 }
 
 .bar button {

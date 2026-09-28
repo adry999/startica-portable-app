@@ -171,6 +171,15 @@ h3 {
   line-height: 1.15;
 }
 
+button,
+input,
+select,
+textarea {
+  /* Browserele nu moștenesc font-family pe controale native — fără asta, toate butoanele
+     (inclusiv Button.module.css, care nu-l setează explicit) arătau cu fontul de sistem. */
+  font-family: inherit;
+}
+
 button {
   cursor: pointer;
   color: inherit;
