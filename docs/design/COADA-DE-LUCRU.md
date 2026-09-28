@@ -119,6 +119,19 @@ Rulat concurent cu Modulul 5 (fișiere disjuncte `features/expenses/*` vs `featu
 - **E-3, E-10 [decizie]:** aplicate — categorii mutate în Drawer din RowMenu; descriere pe 2 rânduri cu `notes`.
 - **Toate criteriile de acceptare:** confirmate. Integrarea `?nou=1` din Modulul 1 — verificată, funcțională.
 
-**Următorul:** Modulul 7 — Situația plăților (după ce se închide Modulul 5).
+## Modulul 5 — Achitări, Tabel + ecran nou Pe luni (`05-achitari.md`) — DONE 2026-09-28
 
-**Următorul:** Modulul 5 — Achitări (`Achitari.dc.html`, `Tiparire.dc.html#16g`, spec-uri 05/15).
+Rulat concurent cu Modulul 6 (fișiere disjuncte). Verificat pe disc + tsc/vitest pe tot arborele (137/751 verde, +7 teste noi) + prettier. Commit `7b11f1a` (+ `0fa75fa` fix separat scrollbar-gutter, prins la aceeași verificare).
+
+- **P-1:** deja corect, neatins. **P-3…P-10, P-13:** DONE — `Button` peste tot, carduri de sumă cu contoare independente de filtru, toolbar+`FilterPills` în card, „Neasociată →” link, `RowMenu` reordonat, `SelectionBar` plutitoare (prop nou `floating`, backward-compatible), `EmptyState`.
+- **P-11:** SKIP — decizie anterioară (27.09), `window.confirm` la dublură rămâne (nu e ștergere).
+- **P-12 (ecran nou „Pe luni”):** DONE — `PaymentsByMonth.tsx` + `PaymentDetailPanel.tsx`, stare partajată cu Tabel prin `usePayments`; panoul deschide `PaymentFormDrawer` la Salvează (nu editare inline, ca să nu dubleze logica de alocare); asocierea rămâne doar în `/asociere-achitari`.
+- **Toate criteriile de acceptare:** confirmate.
+- **De revizuit — decizii ale agentului:** „Bon zi” rămas ghost lângă Exportă (nu era în spec); Perioadă/Nearhivate rămân `<input type=month>`+`SegmentedControl` în toolbar, nu dropdown-uri noi (nu există o componentă `Dropdown` în `shared/ui`); Export = CSV simplu, nu `ReportExportDrawer`.
+
+**Următorul:** Modulul 7 — Situația plăților (`Situatia.dc.html`, `Tiparire.dc.html#16c`, spec-uri 07/15 + 12c sume în €).
+
+## După Modulul 7 — de discutat înainte de a continua (cerut explicit)
+- Scroll custom (`ScrollArea`) peste tot, inclusiv `DataTable` — task mare, amânat cât timp mai multe module ating `DataTable.tsx` concurent.
+- Verificare vizuală ecrane sincronizare (rămasă din sesiunea de azi, neînceput).
+- Build + hash instaler final, după ce toate cele 7 module sunt închise.
