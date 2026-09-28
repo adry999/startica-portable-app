@@ -17,6 +17,7 @@ export const VIEW_PATHS: Record<ViewKey, string> = {
   fees: '/taxe-si-grupe',
   review: '/de-verificat',
   assign: '/asociere-achitari',
+  conflicts: '/conflicte',
   audit: '/istoric',
   notifications: '/notificari',
   settings: '/backup-si-setari',

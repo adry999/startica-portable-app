@@ -13,6 +13,7 @@ export type ViewKey =
   | 'fees'
   | 'review'
   | 'assign'
+  | 'conflicts'
   | 'audit'
   | 'notifications'
   | 'settings';

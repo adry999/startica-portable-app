@@ -21,6 +21,8 @@ import { ReportPage } from '@features/report';
 import { FeeSetupPage, useFeeSetup } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
+import { ConflictsPage } from '@features/conflicts';
+import { useSyncStatus } from '@features/sync/useSyncStatus';
 import { AuditLogPage } from '@features/audit-log';
 import { NotificationsPage } from '@features/notifications';
 import { BackupPage } from '@features/backup';
@@ -95,12 +97,14 @@ export function App() {
   // (attentionItems) și pe Taxe și grupe (missingCount) — nicio logică nouă.
   const dashboard = useDashboard(month);
   const feeSetup = useFeeSetup();
+  const syncStatus = useSyncStatus();
   const counts: Partial<Record<ViewKey, number>> = {
     fees: feeSetup.missingCount,
     review: dashboard.attentionItems.find(item => item.view === 'review')?.count ?? 0,
     assign: dashboard.attentionItems.find(item => item.view === 'assign')?.count ?? 0,
     notify: dashboard.attentionItems.find(item => item.view === 'notify')?.count ?? 0,
     visits: dashboard.attentionItems.find(item => item.view === 'visits')?.count ?? 0,
+    conflicts: syncStatus.conflicts,
   };
 
   return (
@@ -150,6 +154,7 @@ export function App() {
         <Route path="/taxe-si-grupe" element={<FeeSetupPage />} />
         <Route path="/asociere-achitari" element={<AssignPage month={month} />} />
         <Route path="/de-verificat" element={<ReviewPage onNavigate={onNavigate} />} />
+        <Route path="/conflicte" element={<ConflictsPage />} />
         <Route path="/istoric" element={<AuditLogPage />} />
         <Route path="/notificari" element={<NotificationsPage />} />
         <Route path="/backup-si-setari" element={<BackupPage />} />

@@ -58,6 +58,9 @@ export function Sidebar({
               {group.title && <p className={styles.navGroupTitle}>{group.title}</p>}
               {group.items.map(item => {
                 const count = counts[item.view];
+                // „Conflicte” e singurul rând care dispare la 0, nu doar fără insignă
+                // (18-sincronizare.md §14c) — restul rândurilor din De rezolvat rămân vizibile.
+                if (item.view === 'conflicts' && !count) return null;
                 const active = item.view === activeView;
                 return (
                   <button
