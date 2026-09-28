@@ -2,50 +2,101 @@
   color: var(--subtle);
 }
 
-.listCard {
-  display: flex;
-  flex-direction: column;
-}
-
-.entry {
-  padding: var(--space-12) var(--space-16);
-  border-bottom: 1px solid var(--row-divider);
+.error {
+  margin: 0;
+  color: var(--raspberry);
   font-size: 13px;
 }
 
-.entry:last-of-type {
+/* Antet (00-comun A): căutarea nu se întinde ca într-un toolbar de listă — lățime fixă 280px. */
+.topbarSearch {
+  display: flex;
+  flex: 0 0 280px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  max-width: 980px;
+}
+
+.dayGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.dayTitle {
+  margin: 0;
+  padding-left: var(--space-6);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.dayCard {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-16);
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.row:last-child {
   border-bottom: none;
 }
 
-.entry summary {
-  cursor: pointer;
-  font-weight: 700;
+.time {
+  flex: none;
+  width: 46px;
+  padding-top: 2px;
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.badgeSlot {
+  flex: none;
+  width: 88px;
+  padding-top: 1px;
+  display: flex;
+  justify-content: center;
+}
+
+.rowBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.recordLabel {
+  font-weight: 800;
+  font-size: 14px;
 }
 
 .diff {
-  margin: var(--space-8) 0 0;
-  padding: var(--space-10);
-  background: var(--neutral-softer);
-  border-radius: var(--radius-sm);
-  font-family: monospace;
-  font-size: 12px;
-  white-space: pre-wrap;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.diff del {
+  color: var(--subtle);
+  text-decoration: line-through;
+}
+
+.diffField {
+  color: var(--subtle);
 }
 
 .loadMore {
   align-self: center;
-  margin: var(--space-16);
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-20);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
-}
-
-.error {
-  margin: 0 var(--space-16) var(--space-16);
-  color: var(--raspberry);
-  font-size: 13px;
 }

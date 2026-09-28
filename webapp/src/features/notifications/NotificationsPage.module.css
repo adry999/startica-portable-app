@@ -13,13 +13,64 @@
 .panelTitle {
   margin: 0 0 var(--space-12);
   font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+/* Telegram (10b): card mint cu cerc decorativ — vezi Card tone="mint" decorative. */
+.telegramCard {
+  margin-bottom: var(--space-16);
+  gap: var(--space-8);
+}
+
+.telegramEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mint-ink);
+}
+
+.telegramTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.telegramText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.telegramWarning {
+  margin: 0;
+  font-size: 13px;
+  color: var(--raspberry);
+}
+
+.telegramActions {
+  display: flex;
+  gap: var(--space-10);
+  margin-top: var(--space-4);
+}
+
+/* „Deconectează” — text roșu, fără bordură (00-comun descrie doar 4 variante de Button;
+   aici se suprascrie local, ca în StatusPage.ctaButton). */
+.disconnectButton {
+  border: none;
+  background: none;
+  color: var(--raspberry);
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  margin-top: var(--space-12);
+  margin-top: var(--space-4);
   max-width: 420px;
 }
 
@@ -46,6 +97,78 @@
   color: var(--subtle);
 }
 
+/* Lista de comutatoare (N-3): rând alb, nume/descriere · programare · Toggle 46×26. */
+.toggleList {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  padding: var(--space-16) 0;
+  border-bottom: 1px solid var(--row-divider);
+  flex-wrap: wrap;
+}
+
+.toggleRow:last-child {
+  border-bottom: none;
+}
+
+.toggleInfo {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggleName {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.toggleDescription {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.toggleDetail {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.detailField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.detailField input,
+.detailField select {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: var(--space-6) var(--space-8);
+  font: inherit;
+  font-size: 13px;
+  width: 90px;
+}
+
+/* Reutilizată de SmsProviderCard/SmsTemplatesPanel (checkbox + etichetă) — nu redenumi fără să
+   actualizezi și acolo (css-modules.test.ts verifică fiecare `notificationsStyles.*` folosit). */
+.toggleField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Reutilizată de SmsProviderCard (rândul de butoane Salvează/Test/Deconectează). */
 .toolbar {
   display: flex;
   gap: var(--space-12);
@@ -72,30 +195,18 @@
   border-bottom: none;
 }
 
-.toggleField {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-weight: 700;
-  font-size: 14px;
+/* N-4 [decizie]: „Nimic de semnalat”, ora rezumatului și memento-urile Windows nu apar în
+   artboard — rămân funcționale, dar pliate, ca lista principală de comutatoare să respecte spec-ul. */
+.details {
+  margin-top: var(--space-16);
 }
 
-.detailField {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
+.detailsSummary {
+  cursor: pointer;
+  font-weight: 800;
   font-size: 13px;
   color: var(--slate);
-}
-
-.detailField input,
-.detailField select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
-  font: inherit;
-  font-size: 13px;
-  width: 90px;
+  padding: var(--space-8) 0;
 }
 
 .fieldset {

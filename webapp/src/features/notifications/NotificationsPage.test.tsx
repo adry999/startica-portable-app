@@ -2,8 +2,13 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { NotificationsPage } from './NotificationsPage';
+
+/** Randează slot-ul de antet ca Topbar-ul real — comutatorul de file și „Trimite un mesaj de test” ajung acolo. */
+function TopbarActionsSlot() {
+  return <>{useTopbarActionsSlot()}</>;
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -16,6 +21,17 @@ const unconfigured = {
   botUsername: '',
   lastRun: '',
   lastSuccess: '',
+  lastError: '',
+  stale: false,
+};
+
+const configured = {
+  configured: true,
+  connected: true,
+  chatName: 'Grădinița',
+  botUsername: 'StarticaBot',
+  lastRun: '2026-09-23T08:00:00.000Z',
+  lastSuccess: '2026-09-23T08:00:00.000Z',
   lastError: '',
   stale: false,
 };
@@ -38,7 +54,10 @@ function renderPage() {
   return render(
     <MemoryRouter>
       <ToastProvider>
-        <NotificationsPage />
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <NotificationsPage />
+        </TopbarActionsProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
@@ -196,5 +215,63 @@ describe('NotificationsPage', () => {
 
     await user.click(screen.getByText('Schimbă'));
     expect(screen.getByLabelText('Cheie API')).toBeInTheDocument();
+  });
+
+  it('„Trimite un mesaj de test” apare doar cât Telegram e conectat, în antet', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/telegram-status') return jsonResponse(unconfigured);
+        if (path === '/api/notification-settings') return jsonResponse(preferences);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderPage();
+    await screen.findByText('Conectează');
+    expect(screen.queryByText('Trimite un mesaj de test')).not.toBeInTheDocument();
+  });
+
+  it('cardul Telegram conectat arată contul curent, cu „Schimbă contul” care redeschide formularul', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/telegram-status') return jsonResponse(configured);
+        if (path === '/api/notification-settings') return jsonResponse(preferences);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    expect(await screen.findByText('Conectat la @StarticaBot')).toBeInTheDocument();
+    expect(await screen.findByText('Trimite un mesaj de test')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Token-ul botului')).not.toBeInTheDocument();
+
+    await user.click(screen.getByText('Schimbă contul'));
+    expect(screen.getByLabelText('Token-ul botului')).toBeInTheDocument();
+  });
+
+  it('comutatorul „Restanțe” trimite preferința oprită', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/telegram-status') return jsonResponse(unconfigured);
+        if (path === '/api/notification-settings' && !init?.body) return jsonResponse(preferences);
+        if (path === '/api/notification-settings') return jsonResponse({ ...preferences, overdueEnabled: false });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Conectează');
+    await user.click(screen.getByRole('switch', { name: 'Restanțe' }));
+
+    expect(await screen.findByText('Salvează preferințele')).toBeInTheDocument();
+    await user.click(screen.getByText('Salvează preferințele'));
+    expect(await screen.findByText('Preferințele au fost salvate.')).toBeInTheDocument();
   });
 });

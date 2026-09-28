@@ -4,6 +4,7 @@ export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Card, type CardProps, type CardTone } from './Card';
 export { SearchInput, type SearchInputProps } from './SearchInput';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
+export { Toggle, type ToggleProps } from './Toggle';
 export { Drawer, type DrawerProps } from './Drawer';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';

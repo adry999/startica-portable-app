@@ -1,0 +1,30 @@
+.track {
+  flex: none;
+  width: 46px;
+  height: 26px;
+  padding: 3px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.track.on {
+  background: var(--orange);
+  justify-content: flex-end;
+}
+
+.track:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}

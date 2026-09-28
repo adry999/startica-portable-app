@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import type { RecordType } from '@contracts/record-types.mjs';
 import { listChangedFields } from '#features/audit-log/domain/audit-change-diff.mjs';
-import { formatDateTime } from '#shared/format/date-format.mjs';
 import type { AuditEntry, AuditPage } from '#features/audit-log/audit-log.types.d.mts';
 
 export type AuditLogStatus = 'loading' | 'ready' | 'empty' | 'failed';
+
+/** Aceleași tonuri ca `BadgeTone` din shared/ui — hook-ul nu importă componenta, doar forma. */
+export type AuditActionTone = 'orange' | 'mint' | 'yellow' | 'pink' | 'neutral';
 
 export interface AuditChangeView {
   field: string;
@@ -14,8 +17,14 @@ export interface AuditChangeView {
 
 export interface AuditRowView {
   id: number;
-  occurredAtLabel: string;
-  action: string;
+  /** Cheie de grupare pe zi calendaristică locală (nu ISO), stabilă indiferent de fus. */
+  dayKey: string;
+  /** „Azi · 26 septembrie” / „Ieri · …” / „26 septembrie” (12-administrare.md §10a). */
+  dayLabel: string;
+  timeLabel: string;
+  recordType: RecordType | null;
+  actionLabel: string;
+  actionTone: AuditActionTone;
   recordLabel: string;
   changes: AuditChangeView[];
 }
@@ -29,11 +38,48 @@ export interface AuditLogData {
   loadMore: () => void;
 }
 
+/**
+ * Cele 5 etichete din spec (12-administrare.md §10a). Acțiunile din server sunt texte libere
+ * (`adăugare`, `arhivare`, `asociere achitare`, `ștergere avans`, `import-istoric`, `plată salarii`…),
+ * nu un enum — [decizie]: orice acțiune care nu se potrivește clar cade pe „Modificat” (yellow),
+ * cea mai neutră dintre cele cinci.
+ */
+function describeAuditAction(action: string): { label: string; tone: AuditActionTone } {
+  const normalized = action.toLowerCase();
+  if (normalized.includes('ștergere')) return { label: 'Șters', tone: 'pink' };
+  if (normalized.includes('arhivare')) return { label: 'Arhivat', tone: 'neutral' };
+  if (normalized.includes('asociere')) return { label: 'Asociat', tone: 'orange' };
+  if (normalized.includes('adăugare') || normalized.includes('import')) return { label: 'Creat', tone: 'mint' };
+  return { label: 'Modificat', tone: 'yellow' };
+}
+
+function startOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+function dayKeyOf(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function dayLabelOf(date: Date): string {
+  const label = date.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' });
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+  if (diffDays === 0) return `Azi · ${label}`;
+  if (diffDays === 1) return `Ieri · ${label}`;
+  return label;
+}
+
 function toRow(entry: AuditEntry): AuditRowView {
+  const { label: actionLabel, tone: actionTone } = describeAuditAction(entry.action);
+  const occurredAt = new Date(entry.occurredAt);
   return {
     id: entry.id,
-    occurredAtLabel: formatDateTime(entry.occurredAt),
-    action: entry.action,
+    dayKey: dayKeyOf(occurredAt),
+    dayLabel: dayLabelOf(occurredAt),
+    timeLabel: occurredAt.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
+    recordType: entry.recordType,
+    actionLabel,
+    actionTone,
     recordLabel: entry.recordId ?? 'Setări',
     changes: listChangedFields(entry.before, entry.after).map(change => ({
       field: change.field,
@@ -46,6 +92,7 @@ function toRow(entry: AuditEntry): AuditRowView {
 /**
  * Încărcare pe pagini (`/api/audit`), cu `beforeEntryId` pentru continuare.
  * Fără sesiunea de records — istoricul vine direct din API, nu din `useAppSession()`.
+ * Gruparea pe zile și filtrarea (căutare + tip) se fac în `AuditLogPage`, pe rândurile deja încărcate.
  */
 export function useAuditLog(): AuditLogData {
   const [rows, setRows] = useState<AuditRowView[]>([]);
