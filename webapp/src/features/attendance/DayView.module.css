@@ -43,6 +43,12 @@
   color: var(--yellow-ink);
 }
 
+.trailing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-16);
+}
+
 .legend {
   display: inline-flex;
   align-items: center;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
+import { Badge, Button, Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { ChildTile } from './ChildTile';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
@@ -8,10 +8,14 @@ import styles from './DayView.module.css';
 
 export interface DayViewProps {
   data: AttendanceDayData;
+  /** Deschide fereastra „Foi de prezență pe săptămână” (26-foaie-saptamana.md §3). */
+  onOpenWeeklySheet: () => void;
+  /** Lunea, butonul e principal (portocaliu plin); în celelalte zile, contur portocaliu. */
+  weeklySheetIsMonday: boolean;
 }
 
 /** Ecranul Ziua (18a): 4 carduri, filtru de grupă, o secțiune de plăci per grupă. */
-export function DayView({ data }: DayViewProps) {
+export function DayView({ data, onOpenWeeklySheet, weeklySheetIsMonday }: DayViewProps) {
   const [excuseTarget, setExcuseTarget] = useState<string | null>(null);
 
   if (data.status === 'loading') return <LoadingState />;
@@ -57,10 +61,19 @@ export function DayView({ data }: DayViewProps) {
       <FilterPills
         groups={[{ label: 'Grupa', value: data.groupFilter, onChange: data.setGroupFilter, options: groupOptions }]}
         trailing={
-          <span className={styles.legend}>
-            <AttendanceDot kind="present" size="sm" /> Prezent
-            <AttendanceDot kind="absent" size="sm" /> Absent
-            <AttendanceDot kind="excused" size="sm" /> Motivat
+          <span className={styles.trailing}>
+            <span className={styles.legend}>
+              <AttendanceDot kind="present" size="sm" /> Prezent
+              <AttendanceDot kind="absent" size="sm" /> Absent
+              <AttendanceDot kind="excused" size="sm" /> Motivat
+            </span>
+            <Button
+              variant={weeklySheetIsMonday ? 'primary' : 'outline'}
+              style={weeklySheetIsMonday ? undefined : { borderColor: 'var(--orange)', color: 'var(--orange-ink)' }}
+              onClick={onOpenWeeklySheet}
+            >
+              Foi pe săptămână
+            </Button>
           </span>
         }
       />

@@ -9,6 +9,12 @@ import { useAttendanceMonth } from './useAttendanceMonth';
 import { DayView } from './DayView';
 import { MonthView } from './MonthView';
 import { SaveIndicator } from './SaveIndicator';
+import { WeeklySheetDialog } from './WeeklySheetDialog';
+
+/** Butonul „Foi pe săptămână” e principal doar lunea (26-foaie-saptamana.md §3). */
+function isMonday(dateIso: string): boolean {
+  return new Date(`${dateIso}T12:00:00`).getDay() === 1;
+}
 
 export interface AttendancePageProps {
   month: string;
@@ -21,6 +27,11 @@ export function AttendancePage({ month }: AttendancePageProps) {
   const [mode, setMode] = usePersistedState<'day' | 'month'>('view.attendance', 'day');
   const [date, setDate] = useState(() => today());
   const [monthKey, setMonthKey] = useState(month);
+  const [weeklySheetOpen, setWeeklySheetOpen] = useState(false);
+  const isCurrentMonday = isMonday(today());
+  const weeklySheetButtonStyle = isCurrentMonday
+    ? undefined
+    : { borderColor: 'var(--orange)', color: 'var(--orange-ink)' };
   const dayData = useAttendanceDay(date);
   const monthData = useAttendanceMonth(monthKey);
   const activeData = mode === 'day' ? dayData : monthData;
@@ -65,6 +76,14 @@ export function AttendancePage({ month }: AttendancePageProps) {
           onPrev={() => setMonthKey(shiftMonth(monthKey, -1))}
           onNext={() => setMonthKey(current => (current >= CURRENT_MONTH ? current : shiftMonth(current, 1)))}
         />
+        <Button
+          variant={isCurrentMonday ? 'primary' : 'outline'}
+          size="header"
+          style={weeklySheetButtonStyle}
+          onClick={() => setWeeklySheetOpen(true)}
+        >
+          Foi pe săptămână
+        </Button>
         <Button variant="ghost" onClick={() => window.print()}>
           Tipărește luna
         </Button>
@@ -79,7 +98,18 @@ export function AttendancePage({ month }: AttendancePageProps) {
     ),
   );
 
-  if (mode === 'month') return <MonthView month={monthKey} data={monthData} />;
-
-  return <DayView data={dayData} />;
+  return (
+    <>
+      {mode === 'month' ? (
+        <MonthView month={monthKey} data={monthData} />
+      ) : (
+        <DayView
+          data={dayData}
+          onOpenWeeklySheet={() => setWeeklySheetOpen(true)}
+          weeklySheetIsMonday={isCurrentMonday}
+        />
+      )}
+      {weeklySheetOpen && <WeeklySheetDialog onClose={() => setWeeklySheetOpen(false)} />}
+    </>
+  );
 }
