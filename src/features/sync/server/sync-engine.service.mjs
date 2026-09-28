@@ -97,6 +97,8 @@ export function createSyncEngine({
   // Pornit implicit „oprit”: start() e singurul care programează timere/SSE, ca un motor
   // construit dar niciodată pornit (instalare neconfigurată) să nu facă nimic.
   let stopped = true;
+  // Doar stop() îl setează: motorul nepornit (teste, syncNow manual) nu e „oprit sub ciclu”.
+  let halted = false;
   let backoffMs = INITIAL_BACKOFF_MS;
   // O eroare de aplicare (fișă nerecunoscută) oprește doar pull-ul, nu push-ul — o
   // reluare completă vine abia la următoarea pornire a motorului (decizia din plan).
@@ -342,6 +344,8 @@ export function createSyncEngine({
 
   async function cycle() {
     await pushOnce();
+    // Oprit în timpul push-ului (schimbare de filială, închidere): baza poate fi deja închisă.
+    if (halted) return;
     await pullOnce();
   }
 
@@ -383,13 +387,14 @@ export function createSyncEngine({
           lastSyncedAt = now().toISOString();
           backoffMs = INITIAL_BACKOFF_MS;
         } catch (error) {
-          handleError(error);
+          // După stop() baza filialei e închisă sub ciclul în zbor — eroarea e așteptată, nu de raportat.
+          if (!halted) handleError(error);
         }
-      } while (runAgain);
+      } while (runAgain && !halted);
     } finally {
       running = false;
       pushing = false;
-      notify();
+      if (!halted) notify();
     }
   }
 
@@ -419,6 +424,7 @@ export function createSyncEngine({
   function start() {
     if (!stopped) return;
     stopped = false;
+    halted = false;
     pullPaused = false;
     backoffMs = INITIAL_BACKOFF_MS;
     void syncNow();
@@ -432,6 +438,7 @@ export function createSyncEngine({
   }
 
   function stop() {
+    halted = true;
     stopped = true;
     stopTimers();
   }
