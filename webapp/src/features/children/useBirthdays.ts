@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { groupTone, type PillTone } from '@shared/ui';
 import { shiftMonth } from '@shared/format/month-shift';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { buildBirthdayMonth } from '#features/children/index.web.mjs';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -96,9 +97,11 @@ export function useBirthdays(initialMonth: string): BirthdaysData {
     };
   }
 
-  const groups: BirthdaysGroupOption[] = [...records.groups]
-    .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-    .map(g => ({ id: g.id, name: g.name, tone: groupTone(g.id, records.groups) }));
+  const groups: BirthdaysGroupOption[] = sortByGroupOrder(records.groups).map(g => ({
+    id: g.id,
+    name: g.name,
+    tone: groupTone(g.id, records.groups),
+  }));
 
   const { weeks: allWeeks, list: allList } = buildBirthdayMonth(records.children, month, todayValue);
   const matchesGroup = (entry: { groupId: string | null }) => group === 'all' || entry.groupId === group;

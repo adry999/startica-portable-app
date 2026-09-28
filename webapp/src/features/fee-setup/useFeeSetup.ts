@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { hasMissingFee, defaultSetupMonth } from '#features/fee-setup/domain/child-fee-setup.mjs';
 import { STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
-import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type FeeSetupStatus = 'loading' | 'ready' | 'failed';
 export type FeeSetupFilter = 'missing' | 'all';
@@ -151,9 +152,10 @@ export function useFeeSetup(): FeeSetupData {
   }
 
   const records = state as RecordsSnapshot;
-  const groupOptions: GroupOption[] = [...records.groups]
-    .sort((a: Group, b: Group) => a.name.localeCompare(b.name, 'ro'))
-    .map(group => ({ id: group.id, name: group.name }));
+  const groupOptions: GroupOption[] = sortByGroupOrder(records.groups).map(group => ({
+    id: group.id,
+    name: group.name,
+  }));
   const activeChildren = records.children.filter((child: Child) => !child.archived);
   const missingCount = activeChildren.filter(child => hasMissingFee(child)).length;
   const totalCount = activeChildren.length;

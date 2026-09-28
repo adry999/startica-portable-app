@@ -1,6 +1,7 @@
 import { useAppSession } from '@shared/api/session';
 import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { buildReviewCenter } from '#features/review-center/index.web.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
@@ -128,7 +129,7 @@ export function useChildren(month: string): ChildrenData {
     status: 'ready',
     failureMessage: '',
     rows,
-    groups: records.groups,
+    groups: sortByGroupOrder(records.groups),
     summary: { activeCount, occupiedGroupsCount, incompleteCount },
     activeTotal: nonArchived.length,
     archivedTotal: records.children.filter((child: Child) => child.archived).length,

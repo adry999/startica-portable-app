@@ -1,6 +1,7 @@
 import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useAttendance } from '@shared/attendance';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { today } from '@domain/calendar-month.mjs';
 import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
 import { attendanceKey, monthDates, nextAttendanceStatus, summarizeMonth } from '#features/attendance/index.web.mjs';
@@ -44,7 +45,7 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
   const records = session.state.state as RecordsSnapshot;
   const [groupId, setGroupId] = usePersistedState<string>('attendance.group', '');
 
-  const sortedGroups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  const sortedGroups = sortByGroupOrder(records.groups);
   const hasUnassignedChildren = records.children.some(child => !child.archived && child.groupId === null);
   // Grupa implicită e prima după nume; dacă alegerea salvată nu mai există, se recalculează la fel.
   const isValidChoice = groupId === 'none' ? hasUnassignedChildren : sortedGroups.some(group => group.id === groupId);

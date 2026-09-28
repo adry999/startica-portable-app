@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { useSessionStatus } from '@shared/api/useSessionStatus';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { total } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { childNameOf } from '#shared/domain/record-labels.mjs';
@@ -260,7 +261,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
 
   const rows = filteredPayments.map(payment => buildRow(payment, records));
   const byMethod = summarizePaymentsByMethod(paymentsForSummary);
-  const groups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  const groups = sortByGroupOrder(records.groups);
 
   return {
     status: 'ready',

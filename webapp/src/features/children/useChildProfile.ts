@@ -1,6 +1,7 @@
 import { useAppSession } from '@shared/api/session';
 import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { obligation, feeEntryFor } from '#shared/domain/tuition-obligation.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
@@ -69,7 +70,7 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     status: 'ready',
     failureMessage: '',
     child,
-    groups: records.groups,
+    groups: sortByGroupOrder(records.groups),
     groupName: groupNameOf(child.groupId, records.groups) || 'nealocată',
     group,
     groupMemberCount,

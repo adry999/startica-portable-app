@@ -128,7 +128,7 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     retry: attendance.retry,
     counts,
     sections,
-    groups: records.groups,
+    groups: sortByGroupOrder(records.groups),
     groupFilter,
     setGroupFilter,
     cycle,

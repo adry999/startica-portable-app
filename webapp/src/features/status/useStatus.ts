@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { evaluateChildrenForMonth, summarizeMonthStatus } from '#features/billing/index.web.mjs';
 import { hasMissingFee } from '#features/fee-setup/index.web.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
@@ -167,7 +168,7 @@ export function useStatus(month: string): StatusData {
     .sort(byLabelThenName)
     .map(toRowView);
   const allRows: StatusRowView[] = [...evaluations].sort(byLabelThenName).map(toRowView);
-  const groups = [...records.groups].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  const groups = sortByGroupOrder(records.groups);
   // Neafectate de filtre, la fel ca summary — planul SMS trebuie să acopere exact ce arată bannerul/CTA-urile.
   const notifiableRecipients: SmsRecipientRow[] = evaluations.filter(({ obligation }) =>
     NOTIFIABLE_LABELS.has(obligation.label),
