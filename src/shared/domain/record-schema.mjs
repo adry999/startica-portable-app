@@ -1,7 +1,10 @@
 import { monthOK, dateOK } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 
-export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits'];
+export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits', 'charges'];
+// Tipurile de taxă suplimentară dintr-un `charges` (decizia 4, 2026-09-27-personal-bazin.md) — azi
+// doar Bazin; un al doilea modul cu taxe suplimentare adaugă aici, nu inventează alt kind.
+export const CHARGE_KINDS = ['bazin'];
 // Stări reale, folosite de obligation() și acceptate în statusHistory.
 export const STATUS_HISTORY_VALUES = ['Activ', 'Suspendat', 'Retras'];
 // Statutul unei fișe. „De verificat” marchează o fișă importată a cărei
@@ -15,7 +18,7 @@ export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Î
 // staff-ul e comun (baza „comun”), grupa e a filialei — de-aia trăiește pe `records`, nu ca kind separat.
 export const GROUP_TEAM_ROLES = ['principal', 'asistent', 'inlocuitor'];
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
-/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[] }} */
+/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[] }} */
 export const emptyState = () => ({
   children: [],
   payments: [],
@@ -23,6 +26,7 @@ export const emptyState = () => ({
   groups: [],
   categories: [],
   visits: [],
+  charges: [],
 });
 // Câmpurile per tip care duc date medicale în clar: excluse din export
 // (stripSensitiveFields) și redactate în istoric (redactSensitiveFields). O
@@ -158,6 +162,10 @@ const FIELDS = {
     'archived',
     'archivedAt',
   ]),
+  // O taxă suplimentară a lunii (azi doar Bazin — decizia 4, 2026-09-27-personal-bazin.md), linie
+  // separată în obligation(), nu o mutație a copilului: id determinist per (childId, month, kind)
+  // scris de modulul care o generează (ex. Pool la „Închide luna”), idempotent la reînchidere.
+  charges: new Set(['id', 'childId', 'month', 'kind', 'label', 'amount', 'currency', 'date']),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -355,6 +363,17 @@ export function normalizeRecord(type, input) {
     text(record.childId, 'ID copil');
     if (record.status === 'Înscris') requireThat(!!record.childId, 'Vizita înscrisă trebuie să aibă un copil asociat.');
     else requireThat(!record.childId, 'Doar o vizită înscrisă poate avea un copil asociat.');
+  } else if (type === 'charges') {
+    requireThat(dateOK(record.date), 'Data taxei este invalidă.');
+    requireAmount(record.amount, 'Suma');
+    text(record.childId, 'ID copil', true);
+    requireThat(/^[A-Za-z0-9_-]{1,100}$/.test(record.childId), 'ID copil invalid.');
+    requireThat(monthOK(record.month), 'Lună invalidă.');
+    text(record.kind, 'Tip taxă', true);
+    requireThat(CHARGE_KINDS.includes(record.kind), `Tip taxă necunoscut: folosește ${CHARGE_KINDS.join(', ')}.`);
+    text(record.label, 'Etichetă', true);
+    record.currency ??= 'MDL';
+    requireThat(CURRENCIES.includes(record.currency), 'Monedă necunoscută.');
   } else {
     requireThat(dateOK(record.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && record.tenders !== undefined) {
@@ -430,9 +449,13 @@ export function normalizeRecord(type, input) {
 export function validateState(input) {
   const state = emptyState();
   for (const type of TYPES) {
-    requireThat(Array.isArray(input?.[type]) && input[type].length <= 100000, `Lista ${type} este invalidă.`);
+    // Lipsă = listă goală, nu eroare: un export Excel sau un backup dinainte ca acest tip să
+    // existe (ex. `charges`, adăugat de Bazin) nu trebuie să blocheze reimportul — la fel cum
+    // upgradeSnapshot() tratează deja un tip lipsă.
+    const list = input?.[type] ?? [];
+    requireThat(Array.isArray(list) && list.length <= 100000, `Lista ${type} este invalidă.`);
     const seen = new Set();
-    state[type] = input[type].map(rawRecord => {
+    state[type] = list.map(rawRecord => {
       const normalized = normalizeRecord(type, rawRecord);
       requireThat(!seen.has(normalized.id), `ID repetat: ${normalized.id}`);
       seen.add(normalized.id);
@@ -458,5 +481,7 @@ export function validateState(input) {
       !visit.desiredGroupId || groupIds.has(visit.desiredGroupId),
       `Vizita ${visit.id}: grupa ${visit.desiredGroupId} nu există.`,
     );
+  for (const charge of state.charges)
+    requireThat(ids.has(charge.childId), `Taxa ${charge.id}: copilul ${charge.childId} nu există.`);
   return state;
 }

@@ -95,7 +95,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
       const next = { ...previous, childId };
       if (previous.allocations.length !== 1 || previous.allocations[0].month !== syncedMonthRef.current) return next;
       const child = records.children.find((c: Child) => c.id === childId);
-      const suggested = child && firstUnpaidMonth(child, records.payments);
+      const suggested = child && firstUnpaidMonth(child, records.payments, records.charges);
       if (!suggested || suggested === syncedMonthRef.current) return next;
       syncedMonthRef.current = suggested;
       return { ...next, allocations: [{ ...previous.allocations[0], month: suggested }] };

@@ -44,8 +44,11 @@ export function feeEntryFor(child, month) {
 }
 // `index` este opțional: dacă lipsește, se calculează pe loc, ca apelurile
 // izolate (un singur copil, o singură lună) să rămână simple.
+// `charges` (decizia 4, 2026-09-27-personal-bazin.md) e lista completă a taxelor suplimentare
+// (ex. Bazin) — parametru obligatoriu, înaintea lui asOf, ca niciun apelant să nu-l uite în
+// tăcere (o valoare lipsă ar arăta sume greșite fără nicio eroare).
 /** @param {Map<string, Map<string, {amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string}[]>> | null} [index] */
-export function obligation(child, month, payments, asOf = today(), index = null, rates = {}) {
+export function obligation(child, month, payments, charges, asOf = today(), index = null, rates = {}) {
   const start = child.attendanceDate?.slice(0, 7),
     end = child.withdrawalDate?.slice(0, 7);
   const history = [...(child.statusHistory || [])]
@@ -66,8 +69,10 @@ export function obligation(child, month, payments, asOf = today(), index = null,
             .map(a => ({ amount: a.amount, currency: allocationCurrency(p), date: p.date })),
         );
   const paid = sumEntriesInCurrency(paidEntries, feeCurrency, rates);
-  const unknown = (!inactive && (!start || !status || fee === null)) || paid === null;
-  const expected = unknown ? null : inactive ? 0 : fee;
+  const childCharges = (charges || []).filter(c => c.childId === child.id && c.month === month);
+  const chargesTotal = childCharges.length ? sumEntriesInCurrency(childCharges, feeCurrency, rates) : 0;
+  const unknown = (!inactive && (!start || !status || fee === null)) || paid === null || chargesTotal === null;
+  const expected = unknown ? null : inactive ? 0 : Math.round(((fee ?? 0) + chargesTotal) * 100) / 100;
   const rest = expected === null ? null : Math.max(0, cents(expected) - cents(paid)) / 100;
   const credit = expected === null ? null : Math.max(0, cents(paid) - cents(expected)) / 100;
   const [year, m] = month.split('-').map(Number);
@@ -92,20 +97,27 @@ export function obligation(child, month, payments, asOf = today(), index = null,
             : asOf >= noticeFrom
               ? 'Scadent în curând'
               : 'Nescadent';
-  return { expected, paid, rest, credit, due, label, notify, daysToDue, currency: feeCurrency };
+  // lines: taxa lunii + fiecare taxă suplimentară (Bazin ș.a.), fiecare cu propria monedă —
+  // Situația plăților/fișa/confirmarea le arată separat, nu convertite/adunate (18-sincronizare
+  // arată doar suma cunoscută pe fișă; conversia din chargesTotal e doar pentru rest/expected).
+  const lines =
+    unknown || inactive
+      ? []
+      : [{ kind: /** @type {'fee'} */ ('fee'), amount: fee, currency: feeCurrency }, ...childCharges];
+  return { expected, paid, rest, credit, due, label, notify, daysToDue, currency: feeCurrency, feeAmount: fee, lines };
 }
 // Prima lună cu obligație reală neachitată (nu „De verificat” sau „Fără
 // obligație”) — încasarea sosește adesea într-o lună pt. taxa lunii
 // anterioare, deci implicit propunem luna care chiar mai trebuie plătită,
 // nu luna în care a intrat cash-ul.
-export function firstUnpaidMonth(child, payments, asOf = today()) {
+export function firstUnpaidMonth(child, payments, charges = [], asOf = today()) {
   const start = child.attendanceDate?.slice(0, 7);
   if (!start) return null;
   const limit = asOf.slice(0, 7);
   let month = start;
   // 120 de luni (10 ani): peste durata obișnuită de frecventare a unei grădinițe.
   for (let i = 0; i < 120 && month <= limit; i++) {
-    if ((obligation(child, month, payments, asOf).rest ?? 0) > 0) return month;
+    if ((obligation(child, month, payments, charges, asOf).rest ?? 0) > 0) return month;
     const [y, m] = month.split('-').map(Number);
     month = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
   }

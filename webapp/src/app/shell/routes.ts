@@ -7,6 +7,7 @@ export const VIEW_PATHS: Record<ViewKey, string> = {
   children: '/copii',
   groups: '/grupe',
   attendance: '/prezenta',
+  pool: '/bazin',
   visits: '/vizite',
   personal: '/personal',
   payments: '/achitari',

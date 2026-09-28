@@ -193,6 +193,11 @@ export function ChildProfileView({
                     isEurChild && todaysRate
                       ? ` · ≈ ${formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi`
                       : ''
+                  }${
+                    childObligation.lines
+                      .filter(line => line.kind !== 'fee')
+                      .map(line => ` · ${line.label}`)
+                      .join('') || ''
                   }`
                 : 'La zi'
             }

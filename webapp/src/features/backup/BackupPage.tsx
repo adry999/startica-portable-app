@@ -10,11 +10,12 @@ import { ExchangeRateSettings } from './ExchangeRateSettings';
 import { KindergartenSettings } from './KindergartenSettings';
 import { BranchesSettings } from './BranchesSettings';
 import { SyncSettings } from './SyncSettings';
+import { PoolSettings } from './PoolSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync';
+type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync' | 'pool';
 
 export function BackupPage() {
   const session = useAppSession();
@@ -94,6 +95,7 @@ export function BackupPage() {
             { value: 'kindergarten', label: 'Grădinița' },
             { value: 'branches', label: 'Filiale' },
             { value: 'sync', label: 'Sincronizare' },
+            { value: 'pool', label: 'Bazin' },
           ]}
         />
         {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare aici, în antetul filei. */}
@@ -108,6 +110,8 @@ export function BackupPage() {
         <BranchesSettings />
       ) : viewMode === 'sync' ? (
         <SyncSettings />
+      ) : viewMode === 'pool' ? (
+        <PoolSettings />
       ) : (
         <>
           <Card className={styles.panel}>

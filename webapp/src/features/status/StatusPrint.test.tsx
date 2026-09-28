@@ -19,6 +19,7 @@ const rows: StatusRowView[] = [
     rest: 0,
     due: '2026-09-06',
     label: 'Plătit',
+    extraCharges: [],
   },
   {
     id: 'c2',
@@ -34,6 +35,7 @@ const rows: StatusRowView[] = [
     rest: 1200,
     due: '2026-09-05',
     label: 'Restanță',
+    extraCharges: [],
   },
 ];
 

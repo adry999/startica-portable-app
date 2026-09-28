@@ -28,6 +28,8 @@ export interface StatusRowView {
   rest: number | null;
   due: string;
   label: string;
+  /** Taxele suplimentare ale lunii (Bazin ș.a.) — linie separată sub „Taxă”, deja incluse în expected/rest. */
+  extraCharges: { label: string; amount: number; currency: Currency }[];
 }
 
 export interface MonthStatusSummary {
@@ -157,6 +159,9 @@ export function useStatus(month: string): StatusData {
     rest: obligation.rest,
     due: obligation.due,
     label: obligation.label,
+    extraCharges: obligation.lines
+      .filter(line => line.kind !== 'fee')
+      .map(line => ({ label: line.label, amount: line.amount, currency: line.currency as Currency })),
   });
   const rows: StatusRowView[] = evaluations
     .filter(

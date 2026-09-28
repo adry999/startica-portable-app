@@ -3,6 +3,7 @@ export type ViewKey =
   | 'children'
   | 'groups'
   | 'attendance'
+  | 'pool'
   | 'visits'
   | 'personal'
   | 'payments'

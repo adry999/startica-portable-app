@@ -22,6 +22,6 @@ export function evaluateChildrenForMonth(records, month, asOf = today(), rates =
   const index = paymentIndex(records.payments, asOf);
   return records.children.map(child => ({
     child,
-    obligation: obligation(child, month, records.payments, asOf, index, rates),
+    obligation: obligation(child, month, records.payments, records.charges, asOf, index, rates),
   }));
 }

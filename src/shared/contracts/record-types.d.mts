@@ -1,4 +1,4 @@
-export type RecordType = 'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits';
+export type RecordType = 'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits' | 'charges';
 
 /** YYYY-MM */
 export type MonthKey = string;
@@ -162,6 +162,19 @@ export interface Visit {
   archivedAt?: string | null;
 }
 
+/** O taxă suplimentară a lunii (Bazin 23) — linie separată în obligation(), nu o mutație a copilului. */
+export interface Charge {
+  id: string;
+  childId: string;
+  month: MonthKey;
+  kind: 'bazin';
+  /** Text gata de afișat, scris de modulul care generează taxa (ex. „Bazin august: 6 × 150 lei”). */
+  label: string;
+  amount: number;
+  currency: Currency;
+  date: DateKey;
+}
+
 export interface RecordsSnapshot {
   children: Child[];
   payments: Payment[];
@@ -169,6 +182,8 @@ export interface RecordsSnapshot {
   groups: Group[];
   categories: ExpenseCategory[];
   visits: Visit[];
+  /** Opțional în tipul TS (fixturile vechi de test nu-l declară); serverul îl trimite mereu ca listă reală. */
+  charges?: Charge[];
 }
 
 export interface RecordByType {
@@ -178,4 +193,5 @@ export interface RecordByType {
   groups: Group;
   categories: ExpenseCategory;
   visits: Visit;
+  charges: Charge;
 }

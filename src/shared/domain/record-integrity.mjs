@@ -19,6 +19,7 @@ export function assertRecordReferencesExist(type, record, recordExists) {
     throw new Error('Copilul asociat nu există.');
   if (type === 'visits' && record.desiredGroupId && !recordExists('groups', record.desiredGroupId))
     throw new Error('Grupa dorită nu există.');
+  if (type === 'charges' && !recordExists('children', record.childId)) throw new Error('Copilul asociat nu există.');
 }
 
 /**

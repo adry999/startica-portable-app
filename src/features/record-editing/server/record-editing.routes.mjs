@@ -68,6 +68,11 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
         recordRepository.readSnapshot().visits.some(visit => visit.childId === request.id && !visit.archived)
       )
         fail('Arhivează mai întâi vizita care l-a înscris, altfel ar rămâne fără copil valid.');
+      if (
+        request.type === 'children' &&
+        (recordRepository.readSnapshot().charges ?? []).some(charge => charge.childId === request.id)
+      )
+        fail('Copilul are taxe de bazin înregistrate — nu poate fi șters.');
       recordRepository.remove(request.type, request.id);
       auditTrail.recordChange({
         action: DELETE_ACTION,

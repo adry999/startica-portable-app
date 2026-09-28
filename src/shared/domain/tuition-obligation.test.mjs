@@ -43,7 +43,7 @@ test('Scadența vine din data contractului, iar orice obligație cunoscută neac
   assert.equal(dueDayFor({ dueDay: 10 }), 10, 'Fără contract se folosește dueDay.');
   assert.equal(dueDayFor({}), 10, 'Fără nimic, ziua implicită.');
 
-  const at = day => obligation(child, '2026-09', [], day);
+  const at = day => obligation(child, '2026-09', [], [], day);
   assert.equal(at('2026-09-14').due, '2026-09-14');
   // Orice rest neachitat apare pe listă din prima zi a lunii; doar eticheta
   // arată apropierea de scadență, iar restanțele rămân evidențiate separat
@@ -61,7 +61,7 @@ test('Scadența vine din data contractului, iar orice obligație cunoscută neac
   assert.equal(at('2026-09-15').daysToDue, -1);
 
   // Luna scurtă: contract pe 31, februarie are 28.
-  assert.equal(obligation({ ...child, contractDate: '2024-01-31' }, '2027-02', [], '2027-02-01').due, '2027-02-28');
+  assert.equal(obligation({ ...child, contractDate: '2024-01-31' }, '2027-02', [], [], '2027-02-01').due, '2027-02-28');
 
   // Achitat integral => nu se notifică, oricât de târziu ar fi.
   const paid = [
@@ -73,8 +73,8 @@ test('Scadența vine din data contractului, iar orice obligație cunoscută neac
       allocations: [{ month: '2026-09', amount: 2000 }],
     }),
   ];
-  assert.equal(obligation(child, '2026-09', paid, '2026-09-30').notify, false);
-  assert.equal(obligation(child, '2026-09', paid, '2026-09-30').label, 'Plătit');
+  assert.equal(obligation(child, '2026-09', paid, [], '2026-09-30').notify, false);
+  assert.equal(obligation(child, '2026-09', paid, [], '2026-09-30').label, 'Plătit');
 
   // Fără elementele care definesc obligația, fișa se verifică manual și nu
   // generează notificări bazate pe presupuneri.
@@ -83,18 +83,24 @@ test('Scadența vine din data contractului, iar orice obligație cunoscută neac
     { ...child, attendanceDate: '' },
     { ...child, status: 'De verificat', statusHistory: [] },
   ]) {
-    const result = obligation(incomplete, '2026-09', [], '2026-09-30');
+    const result = obligation(incomplete, '2026-09', [], [], '2026-09-30');
     assert.equal(result.label, 'De verificat');
     assert.equal(result.notify, false);
   }
 
   // Taxa zero este o obligație cunoscută, achitată integral prin definiție.
-  const zeroFee = obligation({ ...child, feeHistory: [{ from: '2024-12', amount: 0 }] }, '2026-09', [], '2026-09-30');
+  const zeroFee = obligation(
+    { ...child, feeHistory: [{ from: '2024-12', amount: 0 }] },
+    '2026-09',
+    [],
+    [],
+    '2026-09-30',
+  );
   assert.equal(zeroFee.label, 'Plătit');
   assert.equal(zeroFee.notify, false);
   // Retras => fără obligație.
   assert.equal(
-    obligation({ ...child, statusHistory: [{ from: '2026-08', status: 'Retras' }] }, '2026-09', [], '2026-09-30')
+    obligation({ ...child, statusHistory: [{ from: '2026-08', status: 'Retras' }] }, '2026-09', [], [], '2026-09-30')
       .notify,
     false,
   );
@@ -103,24 +109,28 @@ test('Scadența vine din data contractului, iar orice obligație cunoscută neac
 test('Încasări după data reală, repartizări, avans, scadență și taxe istorice', () => {
   const childRecord = child(),
     paymentRecord = payment();
-  assert.equal(obligation(childRecord, '2026-09', [paymentRecord], '2026-09-08').paid, 2000);
-  assert.equal(obligation(childRecord, '2026-10', [paymentRecord], '2026-09-08').paid, 500);
+  assert.equal(obligation(childRecord, '2026-09', [paymentRecord], [], '2026-09-08').paid, 2000);
+  assert.equal(obligation(childRecord, '2026-10', [paymentRecord], [], '2026-09-08').paid, 500);
   // Scadența acestei fișe este ziua 10 (fără dată de contract, se ia dueDay).
-  assert.equal(obligation(childRecord, '2026-09', [], '2026-09-06').label, 'Nescadent');
-  assert.equal(obligation(childRecord, '2026-09', [], '2026-09-08').label, 'Scadent în curând');
-  assert.equal(obligation(childRecord, '2026-09', [], '2026-09-11').label, 'Restanță');
+  assert.equal(obligation(childRecord, '2026-09', [], [], '2026-09-06').label, 'Nescadent');
+  assert.equal(obligation(childRecord, '2026-09', [], [], '2026-09-08').label, 'Scadent în curând');
+  assert.equal(obligation(childRecord, '2026-09', [], [], '2026-09-11').label, 'Restanță');
   childRecord.feeHistory.push({ from: '2026-10', amount: 2500 });
-  assert.equal(obligation(childRecord, '2026-09', []).expected, 2000);
-  assert.equal(obligation(childRecord, '2026-10', []).expected, 2500);
-  assert.equal(obligation({ ...childRecord, feeHistory: [] }, '2026-09', []).expected, null);
-  assert.equal(obligation({ ...childRecord, attendanceDate: '' }, '2026-09', []).label, 'De verificat');
+  assert.equal(obligation(childRecord, '2026-09', [], []).expected, 2000);
+  assert.equal(obligation(childRecord, '2026-10', [], []).expected, 2500);
+  assert.equal(obligation({ ...childRecord, feeHistory: [] }, '2026-09', [], []).expected, null);
+  assert.equal(obligation({ ...childRecord, attendanceDate: '' }, '2026-09', [], []).label, 'De verificat');
   assert.equal(
-    obligation({ ...childRecord, statusHistory: [{ from: '2026-09', status: 'Suspendat' }] }, '2026-09', []).expected,
+    obligation({ ...childRecord, statusHistory: [{ from: '2026-09', status: 'Suspendat' }] }, '2026-09', [], [])
+      .expected,
     0,
   );
-  assert.equal(obligation({ ...childRecord, withdrawalDate: '2026-09-20' }, '2026-10', []).expected, 0);
-  assert.equal(obligation({ ...childRecord, dueDay: 31 }, '2027-02', []).due, '2027-02-28');
-  assert.equal(obligation(childRecord, '2026-09', [{ ...paymentRecord, date: '2026-10-01' }], '2026-09-08').paid, 0);
+  assert.equal(obligation({ ...childRecord, withdrawalDate: '2026-09-20' }, '2026-10', [], []).expected, 0);
+  assert.equal(obligation({ ...childRecord, dueDay: 31 }, '2027-02', [], []).due, '2027-02-28');
+  assert.equal(
+    obligation(childRecord, '2026-09', [{ ...paymentRecord, date: '2026-10-01' }], [], '2026-09-08').paid,
+    0,
+  );
 });
 
 test('obligation: taxă EUR, achitare EUR — fără conversie, scade direct', () => {
@@ -141,7 +151,7 @@ test('obligation: taxă EUR, achitare EUR — fără conversie, scade direct', (
     allocations: [{ month: '2026-09', amount: 300 }],
   });
 
-  const result = obligation(eurChild, '2026-09', [eurPayment], '2026-09-30');
+  const result = obligation(eurChild, '2026-09', [eurPayment], [], '2026-09-30');
 
   assert.equal(result.expected, 500);
   assert.equal(result.paid, 300);
@@ -157,7 +167,7 @@ test('obligation: câmpul currency reflectă moneda taxei lunii, MDL implicit pe
     attendanceDate: '2026-09-01',
     feeHistory: [{ from: '2026-09', amount: 2000 }],
   });
-  assert.equal(obligation(mdlChild, '2026-09', [], '2026-09-30').currency, 'MDL');
+  assert.equal(obligation(mdlChild, '2026-09', [], [], '2026-09-30').currency, 'MDL');
 });
 
 test('obligation: moneda urmează intrarea din feeHistory valabilă în luna cerută, nu pe cea mai nouă', () => {
@@ -171,8 +181,8 @@ test('obligation: moneda urmează intrarea din feeHistory valabilă în luna cer
       { from: '2026-09', amount: 100, currency: 'EUR' },
     ],
   });
-  assert.equal(obligation(switchedChild, '2026-08', [], '2026-09-30').currency, 'MDL');
-  assert.equal(obligation(switchedChild, '2026-09', [], '2026-09-30').currency, 'EUR');
+  assert.equal(obligation(switchedChild, '2026-08', [], [], '2026-09-30').currency, 'MDL');
+  assert.equal(obligation(switchedChild, '2026-09', [], [], '2026-09-30').currency, 'EUR');
 });
 
 test('obligation: taxă EUR, achitare MDL — convertește MDL în EUR cu cursul zilei achitării', () => {
@@ -194,7 +204,7 @@ test('obligation: taxă EUR, achitare MDL — convertește MDL în EUR cu cursul
   });
   const rates = { '2026-09-10': 20.1352 };
 
-  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+  const result = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', null, rates);
 
   assert.equal(result.expected, 500);
   assert.equal(result.paid, 100);
@@ -221,7 +231,7 @@ test('obligation: conversie folosește cursul zilei achitării, nu al zilei "asO
   // Curs diferit la data plății față de curs "azi" — trebuie folosit cel de la 09-05.
   const rates = { '2026-09-05': 20, '2026-09-30': 25 };
 
-  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+  const result = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', null, rates);
 
   assert.equal(result.paid, 50); // 1000 / 20, nu 1000 / 25
 });
@@ -244,7 +254,7 @@ test('obligation: fără niciun curs cunoscut pentru o conversie necesară, obli
     allocations: [{ month: '2026-09', amount: 1000 }],
   });
 
-  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, {});
+  const result = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', null, {});
 
   assert.equal(result.expected, null);
   assert.equal(result.paid, null);
@@ -271,7 +281,7 @@ test('obligation: copil retras înainte de lună, dar cu o plată neconvertibil�
     allocations: [{ month: '2026-09', amount: 1000 }],
   });
 
-  const result = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, {});
+  const result = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', null, {});
 
   assert.equal(result.expected, null);
   assert.equal(result.paid, null);
@@ -300,8 +310,8 @@ test('obligation cu index (calea rapidă) dă același rezultat ca fără index,
   const rates = { '2026-09-10': 20.1352 };
   const index = paymentIndex([mdlPayment], '2026-09-30');
 
-  const withIndex = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', index, rates);
-  const withoutIndex = obligation(eurChild, '2026-09', [mdlPayment], '2026-09-30', null, rates);
+  const withIndex = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', index, rates);
+  const withoutIndex = obligation(eurChild, '2026-09', [mdlPayment], [], '2026-09-30', null, rates);
 
   assert.equal(withIndex.paid, withoutIndex.paid);
   assert.equal(withIndex.paid, 100);
@@ -324,7 +334,7 @@ test('obligation: fișă existentă fără currency (date vechi) se comportă ca
     allocations: [{ month: '2026-09', amount: 2000 }],
   });
 
-  const result = obligation(legacyChild, '2026-09', [legacyPayment], '2026-09-30');
+  const result = obligation(legacyChild, '2026-09', [legacyPayment], [], '2026-09-30');
 
   assert.equal(result.expected, 2000);
   assert.equal(result.paid, 2000);
@@ -355,7 +365,7 @@ test('obligation: plată cu curs manual pe achitare — paid este suma îngheţa
   // Tabelul de cursuri are cu totul altă valoare pentru aceeași zi — nu trebuie folosită.
   const rates = { '2026-09-10': 25 };
 
-  const result = obligation(eurChild, '2026-09', [manualPayment], '2026-09-30', null, rates);
+  const result = obligation(eurChild, '2026-09', [manualPayment], [], '2026-09-30', null, rates);
 
   assert.equal(result.paid, 150);
   assert.equal(result.rest, 350);
@@ -384,7 +394,7 @@ test('obligation: cursul corectat ulterior în tabel nu modifică retroactiv o p
   // Cursul din 12a a fost corectat retroactiv, la o valoare diferită.
   const correctedRates = { '2026-09-10': 22 };
 
-  const result = obligation(eurChild, '2026-09', [frozenPayment], '2026-09-30', null, correctedRates);
+  const result = obligation(eurChild, '2026-09', [frozenPayment], [], '2026-09-30', null, correctedRates);
 
   assert.equal(result.paid, 148.99);
 });
@@ -409,7 +419,7 @@ test('obligation: fără curs în tabel pentru ziua plății, o plată cu amount
     allocations: [{ month: '2026-09', amount: 100 }],
   });
 
-  const result = obligation(eurChild, '2026-09', [frozenPayment], '2026-09-30', null, {});
+  const result = obligation(eurChild, '2026-09', [frozenPayment], [], '2026-09-30', null, {});
 
   assert.equal(result.paid, 100);
   assert.equal(result.rest, 400);
@@ -437,7 +447,7 @@ test('firstUnpaidMonth pentru un copil cu taxă EUR nu sare lunile plătite par�
     allocations: [{ month: '2026-09', amount: 100 }],
   });
 
-  assert.equal(firstUnpaidMonth(eurChild, [partialPayment], '2026-09-30'), '2026-08');
+  assert.equal(firstUnpaidMonth(eurChild, [partialPayment], [], '2026-09-30'), '2026-08');
 });
 
 test('firstUnpaidMonth pentru un copil cu taxă EUR: luna plătită integral cu o plată îngheţată e sărită corect', () => {
@@ -460,7 +470,7 @@ test('firstUnpaidMonth pentru un copil cu taxă EUR: luna plătită integral cu 
     allocations: [{ month: '2026-09', amount: 500 }],
   });
 
-  assert.equal(firstUnpaidMonth(eurChild, [fullPayment], '2026-10-05'), '2026-10');
+  assert.equal(firstUnpaidMonth(eurChild, [fullPayment], [], '2026-10-05'), '2026-10');
 });
 
 test('firstUnpaidMonth caută până la 120 de luni, pentru o frecventare de peste 5 ani', () => {
@@ -477,5 +487,63 @@ test('firstUnpaidMonth caută până la 120 de luni, pentru o frecventare de pes
       { from: unpaidFrom, amount: 2000 },
     ],
   });
-  assert.equal(firstUnpaidMonth(longChild, [], '2025-06-20'), unpaidFrom);
+  assert.equal(firstUnpaidMonth(longChild, [], [], '2025-06-20'), unpaidFrom);
+});
+
+test('o taxă de bazin se adaugă la obligația lunii ca linie separată și intră în rest', () => {
+  const mdlChild = normalizeRecord('children', {
+    id: 'C-BAZIN',
+    name: 'Maria',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  const bazinCharge = normalizeRecord('charges', {
+    id: 'CHG-bazin-C-BAZIN-2026-09',
+    childId: 'C-BAZIN',
+    month: '2026-09',
+    kind: 'bazin',
+    label: 'Bazin septembrie: 6 × 150 lei',
+    amount: 900,
+    date: '2026-09-30',
+  });
+
+  const result = obligation(mdlChild, '2026-09', [], [bazinCharge], '2026-09-30');
+
+  assert.equal(result.expected, 2900);
+  assert.equal(result.rest, 2900);
+  assert.equal(result.feeAmount, 2000);
+  assert.deepEqual(result.lines, [{ kind: 'fee', amount: 2000, currency: 'MDL' }, bazinCharge]);
+
+  // O taxă a altei luni sau a altui copil nu se amestecă.
+  const otherMonth = obligation(mdlChild, '2026-10', [], [bazinCharge], '2026-10-30');
+  assert.equal(otherMonth.expected, 2000);
+});
+
+test('taxa de bazin în lei se convertește în euro la cursul zilei închiderii pentru un copil cu taxă EUR', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-BAZIN-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const bazinCharge = normalizeRecord('charges', {
+    id: 'CHG-bazin-C-BAZIN-EUR-2026-09',
+    childId: 'C-BAZIN-EUR',
+    month: '2026-09',
+    kind: 'bazin',
+    label: 'Bazin septembrie: 1 × 201.35 lei',
+    amount: 201.35,
+    currency: 'MDL',
+    date: '2026-09-28',
+  });
+  // Cursul zilei închiderii (28), nu al lui asOf (30) — la fel ca achitările.
+  const rates = { '2026-09-28': 20.135, '2026-09-30': 25 };
+
+  const result = obligation(eurChild, '2026-09', [], [bazinCharge], '2026-09-30', null, rates);
+
+  assert.equal(result.currency, 'EUR');
+  assert.equal(result.expected, 510);
+  assert.equal(result.rest, 510);
 });

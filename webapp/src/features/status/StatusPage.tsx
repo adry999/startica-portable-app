@@ -382,7 +382,16 @@ function MonthView({
       header: 'Taxă',
       align: 'end',
       sortValue: row => row.expected ?? -1,
-      render: row => formatMoney(row.expected, row.currency),
+      render: row => (
+        <>
+          {formatMoney(row.expected, row.currency)}
+          {row.extraCharges.map(charge => (
+            <span key={charge.label} className={styles.extraCharge}>
+              incl. {charge.label}
+            </span>
+          ))}
+        </>
+      ),
     },
     {
       key: 'paid',

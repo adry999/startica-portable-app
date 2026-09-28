@@ -49,7 +49,7 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
   assert.equal(r.ok, true, r.error);
 
   // Neasociată => copilul apare ca restanțier deși banii au intrat.
-  assert.equal(obligation(r.state.children[0], '2026-09', r.state.payments, '2026-09-30').notify, true);
+  assert.equal(obligation(r.state.children[0], '2026-09', r.state.payments, [], '2026-09-30').notify, true);
 
   r = await app.post('/api/payments-assign', {
     assignments: [{ id: 'PAY-1', childId: 'CSV-1' }],
@@ -59,7 +59,7 @@ test('Asocierea în masă leagă achitările și nu suprascrie una deja atribuit
   assert.equal(r.ok, true, r.error);
   assert.equal(r.state.payments.find(p => p.id === 'PAY-1').childId, 'CSV-1');
   assert.equal(
-    obligation(r.state.children[0], '2026-09', r.state.payments, '2026-09-30').notify,
+    obligation(r.state.children[0], '2026-09', r.state.payments, [], '2026-09-30').notify,
     false,
     'După asociere, copilul nu mai este pe lista de notificat.',
   );

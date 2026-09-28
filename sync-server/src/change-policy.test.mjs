@@ -15,6 +15,7 @@ test('KINDS conține toate tipurile de fișe plus prezența, șabloanele SMS și
     'groups',
     'categories',
     'visits',
+    'charges',
     'attendance',
     'sms_templates',
     'settings',

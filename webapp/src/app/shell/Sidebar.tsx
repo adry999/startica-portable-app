@@ -19,6 +19,8 @@ export interface SidebarProps {
   branches?: BranchSelectorBranch[];
   onSwitchBranch?: (branchId: string) => void;
   onManageBranches?: () => void;
+  /** Bazin (23, decizia 10): rândul dispare cât timp filiala activă nu l-a configurat. */
+  poolEnabled?: boolean;
 }
 
 /** Meniul lateral, varianta „a" (albă) — vezi README-ul redesign-ului, secțiunea Sidebar. */
@@ -33,6 +35,7 @@ export function Sidebar({
   branches,
   onSwitchBranch,
   onManageBranches,
+  poolEnabled = false,
 }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
@@ -61,6 +64,7 @@ export function Sidebar({
                 // „Conflicte” e singurul rând care dispare la 0, nu doar fără insignă
                 // (18-sincronizare.md §14c) — restul rândurilor din De rezolvat rămân vizibile.
                 if (item.view === 'conflicts' && !count) return null;
+                if (item.view === 'pool' && !poolEnabled) return null;
                 const active = item.view === activeView;
                 return (
                   <button

@@ -37,6 +37,24 @@ describe('Sidebar', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
+  it('Bazin apare în meniu doar când filiala folosește bazinul', () => {
+    const { rerender } = render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    expect(screen.queryByRole('button', { name: 'Bazin' })).not.toBeInTheDocument();
+    rerender(
+      <Sidebar
+        activeView="dashboard"
+        onNavigate={() => {}}
+        counts={{}}
+        version="v1.6.3"
+        saveStatus={saveStatus}
+        poolEnabled
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Bazin' })).toBeInTheDocument();
+  });
+
   it('afișează versiunea', () => {
     render(
       <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,

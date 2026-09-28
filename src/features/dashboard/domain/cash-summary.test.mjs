@@ -124,7 +124,7 @@ test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () =>
   const summary = summarizeCashForMonth(records, '2026-09');
   assert.equal(summary.income, 1500.3);
   assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });
-  assert.equal(obligation(child, '2026-09', [payment], '2026-09-08').paid, 1500);
+  assert.equal(obligation(child, '2026-09', [payment], [], '2026-09-08').paid, 1500);
   assert.equal(
     summarizeCashForMonth(asAny({ ...records, payments: [{ ...payment, archived: true }] }), '2026-09').income,
     0,

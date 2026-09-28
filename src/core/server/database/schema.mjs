@@ -16,7 +16,12 @@ const SCHEMA = `CREATE TABLE IF NOT EXISTS records(kind TEXT NOT NULL,id TEXT NO
   CREATE TABLE IF NOT EXISTS sync_state(kind TEXT NOT NULL,id TEXT NOT NULL,server_revision INTEGER NOT NULL,updated_at TEXT NOT NULL,updated_by_device TEXT NOT NULL,updated_by_name TEXT NOT NULL DEFAULT '',PRIMARY KEY(kind,id));
   CREATE TABLE IF NOT EXISTS sync_outbox(seq INTEGER PRIMARY KEY AUTOINCREMENT,change_id TEXT NOT NULL UNIQUE,kind TEXT NOT NULL,record_id TEXT NOT NULL,base_revision INTEGER NOT NULL,payload TEXT,created_at TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending');
   CREATE UNIQUE INDEX IF NOT EXISTS sync_outbox_record ON sync_outbox(kind,record_id) WHERE status='pending';
-  CREATE TABLE IF NOT EXISTS sync_conflicts(id TEXT PRIMARY KEY,kind TEXT NOT NULL,record_id TEXT NOT NULL,local_payload TEXT,local_updated_at TEXT NOT NULL,remote_payload TEXT,remote_revision INTEGER NOT NULL,remote_updated_at TEXT NOT NULL,remote_device_id TEXT NOT NULL,remote_device_name TEXT NOT NULL,created_at TEXT NOT NULL,outbox_seq INTEGER);`;
+  CREATE TABLE IF NOT EXISTS sync_conflicts(id TEXT PRIMARY KEY,kind TEXT NOT NULL,record_id TEXT NOT NULL,local_payload TEXT,local_updated_at TEXT NOT NULL,remote_payload TEXT,remote_revision INTEGER NOT NULL,remote_updated_at TEXT NOT NULL,remote_device_id TEXT NOT NULL,remote_device_name TEXT NOT NULL,created_at TEXT NOT NULL,outbox_seq INTEGER);
+  CREATE TABLE IF NOT EXISTS pool_bookings(id TEXT PRIMARY KEY,child_id TEXT NOT NULL,coach_id TEXT NOT NULL,weekday INTEGER NOT NULL,time TEXT NOT NULL,start_date TEXT NOT NULL,end_date TEXT,archived_at TEXT,updated_at TEXT NOT NULL);
+  CREATE INDEX IF NOT EXISTS pool_bookings_slot ON pool_bookings(weekday,time);
+  CREATE TABLE IF NOT EXISTS pool_sessions(booking_id TEXT NOT NULL,date TEXT NOT NULL,status TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(booking_id,date));
+  CREATE INDEX IF NOT EXISTS pool_sessions_date ON pool_sessions(date);
+  CREATE TABLE IF NOT EXISTS pool_closings(month TEXT PRIMARY KEY,closed_at TEXT NOT NULL);`;
 
 /** @param {import('node:sqlite').DatabaseSync} database */
 export function applySchema(database) {
