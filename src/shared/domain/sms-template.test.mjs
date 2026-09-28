@@ -42,6 +42,7 @@ test('smsVariablesFor completează toate cele 7 variabile', () => {
 });
 
 test('smsVariablesFor formatează taxa/rest/achitat în moneda obligației, nu implicit în lei', () => {
+  /** @type {import('./sms-template.mjs').SmsObligation} */
   const eurObligation = { expected: 100, paid: 40, rest: 60, due: '2026-09-10', currency: 'EUR' };
   const variables = smsVariablesFor({
     child: child(),
