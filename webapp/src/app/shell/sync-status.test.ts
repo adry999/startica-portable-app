@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { deriveSyncStatus } from './sync-status';
-import type { SyncStatus } from '@features/sync/useSyncStatus';
+import type { SyncStatus } from '@shared/api/useSyncStatus';
 import type { SessionStateForSaveStatus } from './save-status';
 
 const BASE_SYNC: SyncStatus = {

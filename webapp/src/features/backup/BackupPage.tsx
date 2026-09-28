@@ -9,7 +9,7 @@ import { ExcelImportDialog } from './ExcelImportDialog';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
 import { KindergartenSettings } from './KindergartenSettings';
 import { BranchesSettings } from './BranchesSettings';
-import { SyncSettings } from '../sync/SyncSettings';
+import { SyncSettings } from './SyncSettings';
 import styles from './BackupPage.module.css';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };

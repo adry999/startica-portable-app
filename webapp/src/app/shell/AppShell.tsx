@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
-import { useSyncStatus } from '@features/sync/useSyncStatus';
+import { useSyncStatus } from '@shared/api/useSyncStatus';
 import { TopbarActionsProvider } from '@shared/ui';
 import { Sidebar } from './Sidebar';
 import { StartupScreen } from './StartupScreen';

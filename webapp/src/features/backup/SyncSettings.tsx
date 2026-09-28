@@ -5,8 +5,8 @@ import { ConnectServerForm } from './ConnectServerForm';
 import { PairingCodeCard } from './PairingCodeCard';
 import { DevicesList } from './DevicesList';
 import { useSyncSettings, type PairingCode } from './useSyncSettings';
-import { useSyncStatus } from './useSyncStatus';
-import backupStyles from '../backup/BackupPage.module.css';
+import { useSyncStatus } from '@shared/api/useSyncStatus';
+import backupStyles from './BackupPage.module.css';
 import styles from './SyncSettings.module.css';
 
 /** Fila „Sincronizare” (14b) din Backup și setări — vezi 18-sincronizare.md, Sincronizare.dc.html#14b. */

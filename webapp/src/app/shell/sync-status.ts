@@ -1,4 +1,4 @@
-import type { SyncStatus } from '@features/sync/useSyncStatus';
+import type { SyncStatus } from '@shared/api/useSyncStatus';
 import type { SessionStateForSaveStatus } from './save-status';
 
 export type SyncCardMode = 'synced' | 'syncing' | 'offline' | 'conflict' | 'revoked';

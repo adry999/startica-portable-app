@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Button, SegmentedControl } from '@shared/ui';
-import backupStyles from '../backup/BackupPage.module.css';
+import backupStyles from './BackupPage.module.css';
 import type { ConnectInput, ConnectResult } from './useSyncSettings';
 
 export interface ConnectServerFormProps {

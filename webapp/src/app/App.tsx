@@ -22,7 +22,7 @@ import { FeeSetupPage, useFeeSetup } from '@features/fee-setup';
 import { AssignPage } from '@features/assign';
 import { ReviewPage } from '@features/review';
 import { ConflictsPage } from '@features/conflicts';
-import { useSyncStatus } from '@features/sync/useSyncStatus';
+import { useSyncStatus } from '@shared/api/useSyncStatus';
 import { AuditLogPage } from '@features/audit-log';
 import { NotificationsPage } from '@features/notifications';
 import { BackupPage } from '@features/backup';
