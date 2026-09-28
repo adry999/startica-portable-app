@@ -3,7 +3,7 @@ import { Badge, Button, Card, LoadingState } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { leaveDaysRemaining } from '@shared/personal/leave-days';
-import { useLeaves } from './useLeaves';
+import { useLeaves } from '@shared/personal/useLeaves';
 import { LeaveFormDrawer } from './LeaveFormDrawer';
 import type { Leave } from '@shared/personal/personal.types';
 import styles from './LeavesView.module.css';

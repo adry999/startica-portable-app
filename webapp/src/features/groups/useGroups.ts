@@ -20,6 +20,8 @@ export interface GroupCardView {
   id: string;
   name: string;
   educator: string;
+  /** `educator` vine din `group.educator` (text vechi) fără să se fi potrivit cu principalul din `team`. */
+  educatorIsLegacy: boolean;
   capacity: number | null;
   memberCount: number;
   occupancyLabel: string;
@@ -119,6 +121,7 @@ function buildGroupCard(
     id: group.id,
     name: group.name,
     educator: group.educator ?? '',
+    educatorIsLegacy: false,
     capacity: group.capacity,
     memberCount,
     occupancyLabel,

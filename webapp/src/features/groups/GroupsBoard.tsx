@@ -111,6 +111,7 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
             }}
             onMove={direction => void groupsData.moveGroup(group.id, direction)}
             onExpandOverflow={onExpandGroupInCards ? () => onExpandGroupInCards(group.id) : undefined}
+            onEdit={onExpandGroupInCards ? () => onExpandGroupInCards(group.id) : undefined}
             onOpenStickers={onOpenGroupStickers ? () => onOpenGroupStickers(group.id) : undefined}
           />
         ))}

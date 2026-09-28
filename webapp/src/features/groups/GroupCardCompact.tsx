@@ -90,8 +90,16 @@ export function GroupCardCompact({
       </div>
       <div className={styles.metaRow}>
         <span className={styles.meta}>
-          {group.educator ? group.educator : <span className={styles.noEducator}>Fără educator</span>} ·{' '}
-          {group.ageRangeLabel}
+          {group.educator ? (
+            group.educatorIsLegacy ? (
+              <span className={styles.legacyEducator}>(din fișa veche) {group.educator}</span>
+            ) : (
+              group.educator
+            )
+          ) : (
+            <span className={styles.noEducator}>Fără educator</span>
+          )}{' '}
+          · {group.ageRangeLabel}
         </span>
         {pillLabel && (
           <span

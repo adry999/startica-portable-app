@@ -38,12 +38,28 @@
   flex: 1;
   min-width: 0;
   margin: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 19px;
+  color: currentColor;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.editButton {
+  flex: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-8);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .pill {
@@ -87,6 +103,11 @@
 
 .noEducator {
   color: var(--pink-ink);
+}
+
+.legacyEducator {
+  opacity: 0.6;
+  font-style: italic;
 }
 
 .childRow {

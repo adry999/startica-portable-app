@@ -12,14 +12,27 @@ import {
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { usePersonal } from '@shared/personal/usePersonal';
-import type { Staff } from '@shared/personal/personal.types';
+import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
+import { useLeaves } from '@shared/personal/useLeaves';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
 import { GroupCardCompact } from './GroupCardCompact';
 import { GroupFormDrawer } from './GroupFormDrawer';
-import { GroupTeamCard } from './GroupTeamCard';
+import { GroupTeamPicker } from './GroupTeamPicker';
 import styles from './GroupsPage.module.css';
+
+/** Numele afișat al educatorului: principalul din `team`, cu revenire la textul vechi `educator`. */
+function withComputedEducator(group: GroupCardView, staffById: Map<string, Staff>): GroupCardView {
+  const principal = group.team.find(member => member.role === 'principal');
+  const principalName = principal ? staffById.get(principal.staffId)?.name : undefined;
+  const legacyName = group.educator.trim() || undefined;
+  return {
+    ...group,
+    educator: principalName ?? legacyName ?? '',
+    educatorIsLegacy: !principalName && Boolean(legacyName),
+  };
+}
 
 type ViewMode = 'cards' | 'board';
 const VIEW_OPTIONS = [
@@ -51,7 +64,10 @@ export interface GroupsPageProps {
 export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const groupsData = useGroups();
   const personal = usePersonal();
+  const leavesData = useLeaves(String(new Date().getFullYear()));
   const toast = useToast();
+  const staffById = new Map(personal.staff.map(person => [person.id, person]));
+  const displayGroups = groupsData.groups.map(group => withComputedEducator(group, staffById));
   const [viewMode, setViewMode] = usePersistedState<ViewMode>(VIEW_KEY, initialViewMode());
   const [formOpen, setFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GroupCardView | null>(null);
@@ -88,10 +104,18 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
     }
   }
 
-  async function submitNewGroup(name: string, capacityRaw: string, tone: string, ageMinRaw: string, ageMaxRaw: string) {
+  async function submitNewGroup(
+    name: string,
+    capacityRaw: string,
+    tone: string,
+    ageMinRaw: string,
+    ageMaxRaw: string,
+    team: GroupTeamMember[],
+  ) {
     try {
       const trimmedName = name.trim();
       const newId = await groupsData.createGroup(name, capacityRaw, { tone, ageMinRaw, ageMaxRaw });
+      if (team.length > 0) await groupsData.saveTeam(newId, team);
       setFormOpen(false);
       setSelectedId(newId);
       toast.show({
@@ -119,13 +143,16 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
         open={formOpen}
         groups={groupsData.groups}
         unassignedChildren={groupsData.unassignedChildren}
+        staff={personal.staff}
+        roleName={personal.roleName}
+        leaves={leavesData.leaves}
         onSubmit={submitNewGroup}
         onClose={() => setFormOpen(false)}
       />
 
       {viewMode === 'board' ? (
         <GroupsBoard
-          data={groupsData}
+          data={{ ...groupsData, groups: displayGroups }}
           onOpenGroupStickers={onOpenGroupStickers}
           onExpandGroupInCards={groupId => {
             setSelectedId(groupId);
@@ -135,7 +162,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
       ) : (
         <div className={styles.cardsLayout}>
           <div className={styles.grid}>
-            {groupsData.groups.map(group => (
+            {displayGroups.map(group => (
               <GroupCardCompact
                 key={group.id}
                 group={group}
@@ -159,10 +186,13 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               group={selectedGroup}
               unassignedChildren={groupsData.unassignedChildren}
               staff={personal.staff}
-              onSaveTeam={team => groupsData.saveTeam(selectedGroup.id, team)}
-              onSave={async (name, capacityRaw, educator) => {
+              roleName={personal.roleName}
+              allGroups={groupsData.groups}
+              leaves={leavesData.leaves}
+              onSave={async (name, capacityRaw, team) => {
                 try {
-                  await groupsData.updateGroup(selectedGroup.id, name, capacityRaw, educator);
+                  await groupsData.updateGroup(selectedGroup.id, name, capacityRaw, selectedGroup.educator);
+                  await groupsData.saveTeam(selectedGroup.id, team);
                   toast.show({ message: 'Grupă actualizată.' });
                 } catch (error) {
                   toast.show({ message: (error as Error).message });
@@ -208,8 +238,10 @@ interface GroupEditorProps {
   group: GroupCardView;
   unassignedChildren: UnassignedChild[];
   staff: Staff[];
-  onSaveTeam: (team: GroupTeamMember[]) => Promise<void>;
-  onSave: (name: string, capacityRaw: string, educator: string) => Promise<void>;
+  roleName: (roleId: string) => string;
+  allGroups: GroupCardView[];
+  leaves: Leave[];
+  onSave: (name: string, capacityRaw: string, team: GroupTeamMember[]) => Promise<void>;
   onDelete: () => void;
   onAssign: (childId: string) => Promise<void>;
   onRemove: (childId: string) => Promise<void>;
@@ -220,7 +252,9 @@ function GroupEditor({
   group,
   unassignedChildren,
   staff,
-  onSaveTeam,
+  roleName,
+  allGroups,
+  leaves,
   onSave,
   onDelete,
   onAssign,
@@ -228,11 +262,11 @@ function GroupEditor({
 }: GroupEditorProps) {
   const [name, setName] = useState(group.name);
   const [capacityRaw, setCapacityRaw] = useState(group.capacity != null ? String(group.capacity) : '');
-  const [educator, setEducator] = useState(group.educator);
+  const [team, setTeam] = useState<GroupTeamMember[]>(group.team);
   const [selectedChildId, setSelectedChildId] = useState('');
 
   async function save(): Promise<boolean> {
-    await onSave(name, capacityRaw, educator);
+    await onSave(name, capacityRaw, team);
     return true;
   }
 
@@ -241,11 +275,11 @@ function GroupEditor({
     await save();
   }
 
-  // 13b: nesalvat înseamnă că numele/educatorul/capacitatea diferă de ultima stare confirmată a grupei.
+  // 13b: nesalvat înseamnă că numele/capacitatea/echipa diferă de ultima stare confirmată a grupei.
   const dirty =
     name !== group.name ||
     capacityRaw !== (group.capacity != null ? String(group.capacity) : '') ||
-    educator !== group.educator;
+    JSON.stringify(team) !== JSON.stringify(group.team);
   useDirtyForm(dirty ? { label: 'o grupă', save } : null);
 
   async function handleAssign() {
@@ -265,10 +299,6 @@ function GroupEditor({
         <label className={styles.field}>
           Nume
           <input value={name} onChange={event => setName(event.target.value)} aria-label="Nume grupă" />
-        </label>
-        <label className={styles.field}>
-          Educator
-          <input value={educator} onChange={event => setEducator(event.target.value)} aria-label="Educator" />
         </label>
         <label className={styles.field}>
           Capacitate
@@ -324,10 +354,15 @@ function GroupEditor({
         </div>
       )}
 
-      <GroupTeamCard
-        group={{ id: group.id, name: group.name, capacity: group.capacity, team: group.team }}
+      <GroupTeamPicker
+        currentGroupId={group.id}
+        team={team}
+        onChange={setTeam}
         staff={staff}
-        onSave={onSaveTeam}
+        roleName={roleName}
+        allGroups={allGroups}
+        leaves={leaves}
+        showDays
       />
 
       <div className={styles.deleteRow}>

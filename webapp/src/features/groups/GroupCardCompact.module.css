@@ -93,6 +93,11 @@
   color: var(--pink-ink);
 }
 
+.legacyEducator {
+  opacity: 0.6;
+  font-style: italic;
+}
+
 .pill {
   flex: none;
   background: rgba(255, 255, 255, 0.7);
