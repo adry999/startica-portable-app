@@ -67,6 +67,7 @@ describe('TimesheetPrint', () => {
         rows={rows}
         roleName={() => 'Educator'}
         kindergarten={{ displayName: 'Grădinița Startica' } as never}
+        display="hours"
       />,
     );
 

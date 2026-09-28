@@ -61,6 +61,16 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
   const dayCount = summaries[0]?.summary.cells.length ?? 0;
   const gridTemplateColumns = `190px repeat(${dayCount}, minmax(0, 1fr)) 44px 36px 36px`;
 
+  // Grupat pe departamente, ca 23a (24-personal.md #23b).
+  const groupedByDepartment = departmentsSorted
+    .map(department => ({
+      department,
+      rows: summaries
+        .filter(({ staff }) => personal.roleDepartmentId(staff.roleId) === department.id)
+        .sort((a, b) => a.staff.name.localeCompare(b.staff.name, 'ro')),
+    }))
+    .filter(group => group.rows.length > 0);
+
   function cellClick(staffId: string, date: string, currentCode: TimesheetCode | '' | undefined) {
     const next = nextTimesheetCode((currentCode as TimesheetCode) || null);
     timesheet.mark([{ staffId, date, code: next }]);
@@ -102,33 +112,50 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
           <div className={styles.headCell}>CO</div>
           <div className={styles.headCell}>A</div>
 
-          {summaries.map(({ staff, summary }) => (
-            <Fragment key={staff.id}>
-              <div className={styles.nameCell}>{staff.name}</div>
-              {summary.cells.map(cell => {
-                const clickable = cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future';
-                return (
-                  <div
-                    key={cell.date}
-                    className={styles.cell}
-                    data-kind={cell.kind || 'worked'}
-                    onClick={
-                      clickable
-                        ? () =>
-                            cellClick(staff.id, cell.date, timesheet.rows.get(timesheetKey(staff.id, cell.date))?.code)
-                        : undefined
-                    }
-                    role={clickable ? 'button' : undefined}
-                    tabIndex={clickable ? 0 : undefined}
-                    aria-label={`${staff.name}: ${cell.date}`}
-                  >
-                    {cell.kind && CELL_LABEL[cell.kind] ? CELL_LABEL[cell.kind] : ''}
-                  </div>
-                );
-              })}
-              <div className={styles.totalCell}>{summary.worked}</div>
-              <div className={styles.totalCell}>{summary.co}</div>
-              <div className={styles.totalCell}>{summary.a}</div>
+          {groupedByDepartment.map(({ department, rows }) => (
+            <Fragment key={department.id}>
+              <div className={styles.departmentHead} style={{ gridColumn: '1 / -1' }}>
+                <span
+                  className={styles.departmentSquare}
+                  style={{ background: `var(--${departmentTone.get(department.id)}-soft, var(--neutral-soft))` }}
+                  aria-hidden
+                />
+                <strong>{department.name}</strong>
+                <span className={styles.departmentCount}>{rows.length}</span>
+              </div>
+              {rows.map(({ staff, summary }) => (
+                <Fragment key={staff.id}>
+                  <div className={styles.nameCell}>{staff.name}</div>
+                  {summary.cells.map(cell => {
+                    const clickable = cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future';
+                    return (
+                      <div
+                        key={cell.date}
+                        className={styles.cell}
+                        data-kind={cell.kind || 'worked'}
+                        onClick={
+                          clickable
+                            ? () =>
+                                cellClick(
+                                  staff.id,
+                                  cell.date,
+                                  timesheet.rows.get(timesheetKey(staff.id, cell.date))?.code,
+                                )
+                            : undefined
+                        }
+                        role={clickable ? 'button' : undefined}
+                        tabIndex={clickable ? 0 : undefined}
+                        aria-label={`${staff.name}: ${cell.date}`}
+                      >
+                        {cell.kind && CELL_LABEL[cell.kind] ? CELL_LABEL[cell.kind] : ''}
+                      </div>
+                    );
+                  })}
+                  <div className={styles.totalCell}>{summary.worked}</div>
+                  <div className={styles.totalCell}>{summary.co}</div>
+                  <div className={styles.totalCell}>{summary.a}</div>
+                </Fragment>
+              ))}
             </Fragment>
           ))}
         </div>
@@ -176,6 +203,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
           rows={timesheet.rows}
           roleName={personal.roleName}
           kindergarten={kindergarten.settings}
+          display={printOptions.display}
         />
       )}
     </div>

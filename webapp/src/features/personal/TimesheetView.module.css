@@ -19,6 +19,27 @@
   align-items: center;
 }
 
+.departmentHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-8);
+  background: var(--cream);
+  font-size: 13px;
+}
+
+.departmentSquare {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.departmentCount {
+  color: var(--subtle);
+  font-weight: 800;
+}
+
 .headCell {
   padding: var(--space-8);
   font-size: 11px;

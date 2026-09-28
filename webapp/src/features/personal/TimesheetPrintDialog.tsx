@@ -4,10 +4,12 @@ import type { Department, Staff } from '@shared/personal/personal.types';
 import styles from './TimesheetPrintDialog.module.css';
 
 export type TimesheetPrintScope = 'all' | 'department' | 'staff';
+export type TimesheetPrintDisplay = 'hours' | 'present';
 
 export interface TimesheetPrintOptions {
   scope: TimesheetPrintScope;
   targetId?: string;
+  display: TimesheetPrintDisplay;
 }
 
 export interface TimesheetPrintDialogProps {
@@ -22,6 +24,7 @@ export interface TimesheetPrintDialogProps {
 export function TimesheetPrintDialog({ open, departments, staff, onCancel, onConfirm }: TimesheetPrintDialogProps) {
   const [scope, setScope] = useState<TimesheetPrintScope>('all');
   const [targetId, setTargetId] = useState('');
+  const [display, setDisplay] = useState<TimesheetPrintDisplay>('hours');
 
   if (!open) return null;
 
@@ -79,11 +82,33 @@ export function TimesheetPrintDialog({ open, departments, staff, onCancel, onCon
           </select>
         )}
 
+        <fieldset className={styles.field}>
+          <legend>Cum arăt zilele?</legend>
+          <label>
+            <input
+              type="radio"
+              name="ts-print-display"
+              checked={display === 'hours'}
+              onChange={() => setDisplay('hours')}
+            />
+            Ore lucrate („8”)
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="ts-print-display"
+              checked={display === 'present'}
+              onChange={() => setDisplay('present')}
+            />
+            Prezență („P”)
+          </label>
+        </fieldset>
+
         <div className={styles.actions}>
           <Button variant="white" onClick={onCancel}>
             Anulează
           </Button>
-          <Button onClick={() => onConfirm({ scope, targetId: targetId || undefined })}>Tipărește</Button>
+          <Button onClick={() => onConfirm({ scope, targetId: targetId || undefined, display })}>Tipărește</Button>
         </div>
       </div>
     </div>

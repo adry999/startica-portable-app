@@ -14,6 +14,8 @@ export interface TimesheetPrintProps {
   /** Vine de la TimesheetView, care ține hook-ul montat de la intrarea pe filă (M4) — TimesheetPrint
    * nu mai cere singur /api/kindergarten, ca să nu tipărească cu antetul generic înainte de răspuns. */
   kindergarten: KindergartenSettings | null;
+  /** „Cum arăt zilele” din dialogul de tipărire (23k): ore lucrate „8” sau prezență „P”. */
+  display: 'hours' | 'present';
 }
 
 const ROWS_PER_PAGE = 14;
@@ -26,7 +28,8 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 /** Pontaj tipărit (23k) — A4 orizontal, alb-negru; peste 14 rânduri, antetul se repetă pe pagina următoare. */
-export function TimesheetPrint({ month, staff, rows, roleName, kindergarten }: TimesheetPrintProps) {
+export function TimesheetPrint({ month, staff, rows, roleName, kindergarten, display }: TimesheetPrintProps) {
+  const workedLabel = display === 'present' ? 'P' : '8';
   const session = useAppSession();
   const todayStr = today();
 
@@ -87,7 +90,7 @@ export function TimesheetPrint({ month, staff, rows, roleName, kindergarten }: T
                   </td>
                   {summary.cells.map(cell => (
                     <td key={cell.date} className={styles.printDayCol}>
-                      {cell.kind === '' ? '8' : cell.kind === 'off' || cell.kind === 'none' ? '' : cell.kind}
+                      {cell.kind === '' ? workedLabel : cell.kind === 'off' || cell.kind === 'none' ? '' : cell.kind}
                     </td>
                   ))}
                   <td>{summary.worked}</td>
@@ -103,8 +106,8 @@ export function TimesheetPrint({ month, staff, rows, roleName, kindergarten }: T
           {pageIndex === pages.length - 1 && (
             <>
               <p className={styles.printLegend}>
-                Legendă: 8 = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î = învoire, FP = fără
-                plată.
+                Legendă: {workedLabel} = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î =
+                învoire, FP = fără plată.
               </p>
               <div className={styles.printSignatures}>
                 <span>Director: __________________</span>
