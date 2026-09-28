@@ -1,4 +1,5 @@
 import { TYPES, emptyState } from './record-schema.mjs';
+import { missingDefaultCategorySeeds, missingExpenseOnlyCategorySeeds } from './expense-categories.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 
@@ -45,6 +46,21 @@ export function upgradeSnapshot(input) {
   if (convertedChildren)
     notes.push(
       `Format vechi, actualizat: ${createdGroups} ${createdGroups === 1 ? 'grupă creată' : 'grupe create'} din câmpul text al copiilor.`,
+    );
+
+  // Un import sau o restaurare poate readuce un instantaneu fără categoriile implicite
+  // (backup vechi, dinainte ca ele să fie înregistrări reale) sau cu cheltuieli a căror
+  // categorie era doar text — completate aici, ca nimic să nu rămână „în aer” și fără
+  // să depindă de faptul că filiala a fost deja deschisă o dată după actualizare.
+  const defaultSeeds = missingDefaultCategorySeeds(snapshot);
+  for (const seed of defaultSeeds) snapshot.categories.push(seed);
+  const migratedSeeds = missingExpenseOnlyCategorySeeds(snapshot, () => `CAT-${crypto.randomUUID()}`);
+  for (const seed of migratedSeeds) snapshot.categories.push(seed);
+  if (defaultSeeds.length)
+    notes.push(`Categorii implicite completate: ${defaultSeeds.length} (inclusiv „General”, dacă lipsea).`);
+  if (migratedSeeds.length)
+    notes.push(
+      `Categorii create din cheltuieli fără categorie proprie: ${migratedSeeds.length} (${migratedSeeds.map(seed => seed.name).join(', ')}).`,
     );
 
   return { snapshot, notes };

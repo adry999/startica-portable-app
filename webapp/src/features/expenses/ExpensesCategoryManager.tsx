@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useToast } from '@shared/ui';
+import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseCategory } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
 
@@ -87,14 +88,17 @@ export function ExpensesCategoryManager({
                 >
                   {category.name}
                 </button>
-                <button
-                  type="button"
-                  aria-label={`Șterge ${category.name}`}
-                  title="Șterge categoria"
-                  onClick={() => onRequestDelete(category)}
-                >
-                  ×
-                </button>
+                {/* „General” e permanentă — destinația cheltuielilor rămase fără categorie — deci nu se poate șterge. */}
+                {category.id !== GENERAL_CATEGORY_ID && (
+                  <button
+                    type="button"
+                    aria-label={`Șterge ${category.name}`}
+                    title="Șterge categoria"
+                    onClick={() => onRequestDelete(category)}
+                  >
+                    ×
+                  </button>
+                )}
               </span>
             ),
           )

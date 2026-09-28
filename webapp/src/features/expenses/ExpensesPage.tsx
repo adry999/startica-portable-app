@@ -17,7 +17,7 @@ import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
-import { useExpenses, type ExpenseFormInput } from './useExpenses';
+import { useExpenses, categoryDeleteDescription, type ExpenseFormInput } from './useExpenses';
 import { ExpenseFormDrawer } from './ExpenseFormDrawer';
 import { ExpensesSummaryCards } from './ExpensesSummaryCards';
 import { ExpensesCategoryManager } from './ExpensesCategoryManager';
@@ -258,7 +258,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         title={deleteTarget?.kind === 'category' ? 'Ștergere categorie' : 'Ștergere definitivă'}
         description={
           deleteTarget?.kind === 'category'
-            ? `Ștergi categoria „${deleteTarget.name}”? Cheltuielile care o folosesc deja nu se modifică.`
+            ? categoryDeleteDescription(deleteTarget.name, expensesData.expenses)
             : deleteTarget?.kind === 'expense'
               ? `Ștergi definitiv cheltuiala ${deleteTarget.expense.id}? Nu poate fi anulată, spre deosebire de arhivare.`
               : ''

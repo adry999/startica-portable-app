@@ -135,6 +135,15 @@ test('buildAccountingReport: cheltuielile se grupează pe cele 5 categorii uzual
   assert.equal(report.byCategory.find(entry => entry.category === 'Altele')?.amount, 100);
 });
 
+test('buildAccountingReport: cheltuielile mutate la „General” (categorie ștearsă) cad la bucket-ul „Altele”', () => {
+  const period = reportPeriodBounds('month', '2026-08');
+  const data = records({ expenses: [expense({ id: 'EXP-1', category: 'General', amount: 100 })] });
+
+  const report = buildAccountingReport(data, period);
+
+  assert.equal(report.byCategory.find(entry => entry.category === 'Altele')?.amount, 100);
+});
+
 test('buildAccountingReport: lista EUR ține doar achitările cu fxRate salvat, cu suma EUR neschimbată de cursul de azi', () => {
   const period = reportPeriodBounds('month', '2026-08');
   const data = records({

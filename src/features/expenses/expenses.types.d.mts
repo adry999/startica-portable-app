@@ -7,6 +7,12 @@ export interface CategoryDeleteRequest extends RevisionRequest {
   id: string;
 }
 
+/** /api/category-rename: redenumire atomică, cu propagare la cheltuielile categoriei. */
+export interface CategoryRenameRequest extends RevisionRequest {
+  id: string;
+  name: string;
+}
+
 export interface ExpenseCategoriesRoutesDependencies {
   recordRepository: RecordRepository;
   auditTrail: AuditTrail;

@@ -1,15 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_EXPENSE_CATEGORIES, listExpenseCategoryNames } from './expense-category-names.mjs';
+import { listExpenseCategoryNames } from './expense-category-names.mjs';
 
 const emptyRecords = () => ({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] });
 
-test('fără categorii sau cheltuieli proprii, întoarce doar sugestiile implicite, sortate ro', () => {
-  const expected = [...DEFAULT_EXPENSE_CATEGORIES].sort((a, b) => a.localeCompare(b, 'ro'));
-  assert.deepEqual(listExpenseCategoryNames(emptyRecords()), expected);
+test('fără categorii sau cheltuieli, listExpenseCategoryNames întoarce o listă vidă', () => {
+  assert.deepEqual(listExpenseCategoryNames(emptyRecords()), []);
 });
 
-test('adaugă categoriile create de operator, fără duplicate față de sugestiile implicite', () => {
+test('listExpenseCategoryNames adaugă categoriile create de operator, fără duplicate', () => {
   const records = {
     ...emptyRecords(),
     categories: [
@@ -22,7 +21,7 @@ test('adaugă categoriile create de operator, fără duplicate față de sugesti
   assert.equal(names.filter(name => name === 'Altele').length, 1);
 });
 
-test('adaugă numele de categorie folosite deja de cheltuieli, deduplicate', () => {
+test('listExpenseCategoryNames adaugă numele de categorie folosite deja de cheltuieli, deduplicate', () => {
   const records = {
     ...emptyRecords(),
     expenses: [
@@ -35,7 +34,7 @@ test('adaugă numele de categorie folosite deja de cheltuieli, deduplicate', () 
   assert.equal(names.filter(name => name === 'Transport').length, 1);
 });
 
-test('rezultatul este sortat cu localeCompare ro', () => {
+test('listExpenseCategoryNames e sortat cu localeCompare ro', () => {
   const records = {
     ...emptyRecords(),
     categories: [

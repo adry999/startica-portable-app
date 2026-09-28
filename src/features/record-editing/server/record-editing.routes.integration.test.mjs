@@ -84,6 +84,24 @@ test('actualizează o înregistrare existentă', async t => {
   assert.equal(updated.body.state.children[0].name, 'Ana Maria');
 });
 
+test('refuză redenumirea unei categorii prin /api/record generic (doar /api/category-rename propagă la cheltuieli)', async t => {
+  const app = await startApplication(t);
+  const category = { id: 'CAT-1', name: 'Chirie' };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [], groups: [], categories: [category], visits: [] }, 0),
+  );
+  const renamed = await app.post('/api/record', {
+    type: 'categories',
+    mode: 'update',
+    record: { ...category, name: 'Chirie sediu' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(renamed.status, 400);
+  assert.match(renamed.body.error, /category-rename|ecranul Cheltuieli/i);
+});
+
 test('refuză setarea statutului Înscris pe o vizită direct prin /api/record (doar /api/visits-enrol poate)', async t => {
   const app = await startApplication(t);
   const visit = {

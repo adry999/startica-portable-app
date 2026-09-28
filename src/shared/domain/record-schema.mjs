@@ -401,7 +401,9 @@ export function normalizeRecord(type, input) {
       requireThat(allocated <= cents(record.amount), 'Repartizările depășesc suma plății.');
       record.month = record.allocations.length === 1 ? record.allocations[0].month : '';
     } else {
-      record.category ||= 'Altele';
+      // General e categoria de rezervă (nu Altele, deletabilă ca oricare alta) — vezi
+      // #shared/domain/expense-categories.mjs.
+      record.category ||= 'General';
       record.description ??= '';
       // Fără implicit: cheltuielile vechi, fără metodă, trebuie să rămână așa
       // la re-salvare — implicitul 'cash' e doar în formularul de creare (UI).

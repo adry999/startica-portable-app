@@ -64,6 +64,7 @@ expenses/web/expense-editor-fields.mjs    # expenseEditorFields
 - **`notes` rămâne generic.** Dialogul adaugă textarea „Observații” după `markup()`-ul specific tipului.
 - **Integritatea referențială și unicitatea numelui sunt pure**, în `#shared/domain/record-integrity.mjs` — nu în rută — ca să fie testabile fără server sau bază de date.
 - **Contractul HTTP al `/api/record` și `/api/record-delete` rămâne neschimbat** la migrare (aceleași mesaje, aceleași coduri de stare, același ordine a verificărilor).
+- **`/api/record` refuză `mode: 'update'` pentru `categories`.** Redenumirea unei categorii trebuie să propage noul nume la cheltuielile care o folosesc (fără FK) — doar `/api/category-rename` (feature `expenses`) face asta, în aceeași tranzacție. Fără acest refuz ar exista o a doua cale de redenumire, care ar lăsa cheltuielile cu numele vechi.
 
 ## Compunere
 

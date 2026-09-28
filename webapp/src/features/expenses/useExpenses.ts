@@ -4,6 +4,7 @@ import { normalizeRecord } from '@domain/record-schema.mjs';
 import { stripDiacritics } from '#shared/format/text-search.mjs';
 import { listExpenseCategoryNames } from '#features/expenses/domain/expense-category-names.mjs';
 import { canonicalCategoryName } from '#features/expenses/domain/canonical-category-name.mjs';
+import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { BadgeTone } from '@shared/ui';
 import type { Expense, ExpenseCategory, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -69,6 +70,17 @@ function comparable(name: string): string {
   return stripDiacritics(name).toLocaleLowerCase('ro-RO');
 }
 
+/** Textul dialogului „Scrie ȘTERGE” pentru o categorie — spune câte cheltuieli
+ * (arhivate sau nu — serverul le mută pe toate) ajung la „General”, ca operatorul
+ * să știe dinainte, nu doar după ștergere. */
+export function categoryDeleteDescription(categoryName: string, expenses: Expense[]): string {
+  const count = expenses.filter(expense => expense.category === categoryName).length;
+  if (count === 0) return `Ștergi categoria „${categoryName}”? Nicio cheltuială nu o folosește.`;
+  const noun = count === 1 ? 'cheltuială' : 'cheltuieli';
+  const verb = count === 1 ? 'va fi mutată' : 'vor fi mutate';
+  return `Ștergi categoria „${categoryName}”? ${count} ${noun} ${verb} la „General”.`;
+}
+
 /** Un singur loc pentru maparea categorie → culoare/tonă, folosit atât de Badge-urile din tabel cât și de bara/legenda de categorii. */
 export function categoryStyleFor(categoryName: string): CategoryStyle {
   const key = comparable(categoryName);
@@ -117,22 +129,20 @@ export function useExpenses(month: string): ExpensesData {
   }
 
   async function renameCategory(id: string, typed: string) {
+    if (id === GENERAL_CATEGORY_ID) throw new Error('Categoria „General” nu poate fi redenumită.');
     const category = records.categories.find(c => c.id === id);
     if (!category) throw new Error('Categoria nu mai există.');
     const name = canonicalCategoryName(typed, records);
     if (!name) throw new Error('Completează numele categoriei.');
     if (name === category.name) return;
     if (records.categories.some(c => c.id !== id && c.name === name)) throw new Error('Categoria există deja.');
-    await session.mutate('/api/record', { type: 'categories', mode: 'update', record: { ...category, name } });
-    // Categoria e doar o etichetă text pentru cheltuieli (fără FK) — redenumirea
-    // trebuie propagată manual la cheltuielile care încă țin numele vechi.
-    const affected = records.expenses.filter(expense => expense.category === category.name);
-    for (const expense of affected) {
-      await session.mutate('/api/record', { type: 'expenses', mode: 'update', record: { ...expense, category: name } });
-    }
+    // Server-ul propagă noul nume la cheltuielile categoriei, în aceeași tranzacție
+    // (vezi /api/category-rename) — categoria e doar o etichetă text, fără FK.
+    await session.mutate('/api/category-rename', { id, name });
   }
 
   async function deleteCategory(id: string) {
+    if (id === GENERAL_CATEGORY_ID) throw new Error('Categoria „General” nu poate fi ștearsă.');
     await session.mutate('/api/category-delete', { id });
   }
 

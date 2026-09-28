@@ -145,7 +145,7 @@ describe('useExpenses', () => {
     await expect(result.current.createCategory('chirie')).rejects.toThrow('Categoria există deja.');
   });
 
-  it('renameCategory actualizează categoria și toate cheltuielile care îi purtau numele', async () => {
+  it('renameCategory trimite o singură cerere atomică la /api/category-rename (serverul propagă la cheltuieli)', async () => {
     await loadedSession();
     const { result } = renderHook(() => useExpenses('2026-09'));
 
@@ -158,23 +158,21 @@ describe('useExpenses', () => {
 
     await act(() => result.current.renameCategory('cat2', 'Salarii educatoare'));
 
-    expect(calls[0]).toEqual({
-      path: '/api/record',
-      body: expect.objectContaining({
-        type: 'categories',
-        mode: 'update',
-        record: expect.objectContaining({ id: 'cat2', name: 'Salarii educatoare' }),
-      }),
-    });
-    // e1 și e5 aveau category: 'Salarii' — e5 e arhivată, dar redenumirea se propagă oricum.
-    const expenseUpdates = calls.slice(1).map(call => call.body.record as { id: string; category: string });
-    expect(expenseUpdates).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'e1', category: 'Salarii educatoare' }),
-        expect.objectContaining({ id: 'e5', category: 'Salarii educatoare' }),
-      ]),
+    expect(calls).toEqual([
+      { path: '/api/category-rename', body: expect.objectContaining({ id: 'cat2', name: 'Salarii educatoare' }) },
+    ]);
+  });
+
+  it('renameCategory respinge redenumirea categoriei General', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockClear();
+
+    await expect(result.current.renameCategory('CAT-general', 'Altceva')).rejects.toThrow(
+      'Categoria „General” nu poate fi redenumită.',
     );
-    expect(expenseUpdates).toHaveLength(2);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('renameCategory nu trimite nicio cerere când numele rămâne neschimbat', async () => {
@@ -214,6 +212,18 @@ describe('useExpenses', () => {
     });
 
     await act(() => result.current.deleteCategory('cat1'));
+  });
+
+  it('deleteCategory respinge ștergerea categoriei General fără să trimită cererea', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useExpenses('2026-09'));
+    const fetchMock = fetch as ReturnType<typeof vi.fn>;
+    fetchMock.mockClear();
+
+    await expect(result.current.deleteCategory('CAT-general')).rejects.toThrow(
+      'Categoria „General” nu poate fi ștearsă.',
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('setExpenseArchived arhivează cu archivedAt setat și dezarhivează cu archivedAt null', async () => {

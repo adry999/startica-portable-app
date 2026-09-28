@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { Button, Drawer } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
+import { GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseFormInput } from './useExpenses';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
@@ -20,7 +21,7 @@ export function ExpenseFormDrawer({
   const editing = target !== null && target !== 'new' ? target : null;
   const [date, setDate] = useState(editing?.date || today());
   const [amount, setAmount] = useState(editing?.amount !== undefined ? String(editing.amount) : '');
-  const [category, setCategory] = useState(editing?.category || 'Altele');
+  const [category, setCategory] = useState(editing?.category || GENERAL_CATEGORY_NAME);
   const [method, setMethod] = useState(editing?.method || (editing ? '' : 'cash'));
   const [description, setDescription] = useState(editing?.description || '');
   const [notes, setNotes] = useState(editing?.notes || '');

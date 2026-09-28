@@ -22,6 +22,12 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
       if (!['create', 'update'].includes(request.mode)) fail('Mod de salvare invalid.');
       if (request.mode === 'create' && existing) fail('ID deja folosit.', 409);
       if (request.mode === 'update' && !existing) fail('Înregistrarea nu mai există.', 409);
+      // Redenumirea unei categorii trebuie să propage noul nume la cheltuielile care o
+      // folosesc deja (fără FK) — doar /api/category-rename face asta, în aceeași tranzacție.
+      if (request.type === 'categories' && request.mode === 'update')
+        fail(
+          'Redenumirea unei categorii se face din ecranul Cheltuieli, ca cheltuielile care o folosesc să se actualizeze.',
+        );
       // Statutul Înscris se obține doar prin /api/visits-enrol (creează și fișa copilului
       // în același pas) — altfel /api/record ar putea lega o vizită de un copil arbitrar,
       // fără nicio fișă creată cu adevărat pentru ea.

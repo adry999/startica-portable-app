@@ -92,6 +92,18 @@ describe('ExpensesPage', () => {
           const updated = { ...fixtureState, categories: fixtureState.categories.filter(c => c.id !== body.id) };
           return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
         }
+        if (path === '/api/category-rename') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const renamedCategory = fixtureState.categories.find(c => c.id === body.id);
+          const updated = {
+            ...fixtureState,
+            categories: fixtureState.categories.map(c => (c.id === body.id ? { ...c, name: body.name } : c)),
+            expenses: fixtureState.expenses.map(e =>
+              renamedCategory && e.category === renamedCategory.name ? { ...e, category: body.name } : e,
+            ),
+          };
+          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+        }
         if (path === '/api/record-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           const updated = { ...fixtureState, expenses: fixtureState.expenses.filter(e => e.id !== body.id) };

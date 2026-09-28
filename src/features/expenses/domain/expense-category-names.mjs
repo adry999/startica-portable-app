@@ -1,22 +1,20 @@
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 
-// Sugestii de bază pt. categoria de cheltuieli — nu o listă închisă, clientul
-// poate scrie oricând una nouă (vezi expense-categories.controller.mjs).
-export const DEFAULT_EXPENSE_CATEGORIES = [
-  'Chirie',
-  'Utilități',
-  'Salarii',
-  'Materiale educaționale',
-  'Alimente',
-  'Reparații și întreținere',
-  'Altele',
-];
+// Semințele și „General” trăiesc în shared/domain (nu aici), ca upgradeSnapshot() (import,
+// restaurare) să le poată aplica fără să încalce granița „shared nu importă features”.
+export {
+  GENERAL_CATEGORY_ID,
+  GENERAL_CATEGORY_NAME,
+  DEFAULT_EXPENSE_CATEGORY_SEEDS,
+} from '#shared/domain/expense-categories.mjs';
 
-/** @param {RecordsSnapshot} records */
+/** Categoriile cunoscute — din înregistrări, plus cele folosite doar pe cheltuieli (date
+ * vechi, dintre seedări), ca formularul să le poată propune înainte ca migrarea să ruleze.
+ * @param {RecordsSnapshot} records
+ */
 export function listExpenseCategoryNames(records) {
   return [
     ...new Set([
-      ...DEFAULT_EXPENSE_CATEGORIES,
       ...records.categories.map(category => category.name),
       ...records.expenses.map(expense => expense.category).filter(Boolean),
     ]),

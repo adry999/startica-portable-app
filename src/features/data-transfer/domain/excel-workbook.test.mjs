@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { normalizeRecord, validateState, emptyState } from '#shared/domain/record-schema.mjs';
+import { upgradeSnapshot } from '#shared/domain/record-snapshot-upgrade.mjs';
 import { readWorkbook, exportWorkbook, mapV5ChildStatus } from './excel-workbook.mjs';
 
 const require = createRequire(import.meta.url);
@@ -69,10 +70,19 @@ test('Export/reimport complet prin fișier XLSX în memorie', () => {
   const result = readWorkbook(XLSX.read(bytes, { type: 'buffer' }), XLSX, findRecordIssues);
   assert.deepEqual(result.errors, []);
   assert.ok(result.state);
-  assert.deepEqual(result.state, validateState(state));
+  // Fără sheet „Categorii” în Excel, categoriile vin doar din upgradeSnapshot (semințele
+  // implicite + „Test”, migrată din categoria text a cheltuielii) — aceeași cale ca
+  // buildImportReport, nu o listă goală ca la validateState(state) direct. Categoria
+  // migrată are id generat aleator, diferit de fiecare dată — comparat separat, după nume.
+  const expected = validateState(upgradeSnapshot(state).snapshot);
+  assert.deepEqual({ ...result.state, categories: undefined }, { ...expected, categories: undefined });
+  assert.deepEqual(
+    result.state.categories.map(category => category.name).sort(),
+    expected.categories.map(category => category.name).sort(),
+  );
   const zero = readWorkbook(exportWorkbook(emptyState(), XLSX), XLSX, findRecordIssues);
   assert.ok(zero.state);
-  assert.deepEqual(zero.state, emptyState());
+  assert.deepEqual(zero.state, validateState(upgradeSnapshot(emptyState()).snapshot));
 });
 
 test('Importul refuză exporturi necunoscute în loc să importe liste goale', () => {
@@ -149,7 +159,8 @@ test('Doi părinți și achitarea mixtă trec prin export și import', () => {
     }),
     back = readWorkbook(wb, XLSX, findRecordIssues);
   assert.deepEqual(back.errors, []);
-  assert.deepEqual(back.state, state);
+  // Fără sheet „Categorii”, categoriile vin doar din upgradeSnapshot (semințele implicite).
+  assert.deepEqual(back.state, validateState(upgradeSnapshot(state).snapshot));
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Copii)[0].Telefon_2, '+373456');
   assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Achitari)[0].Card, 500.2);
 });
