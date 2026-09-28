@@ -72,10 +72,11 @@ export function createAppSessionStore({
     // pașii lui vin din aceste evenimente, nu dintr-un timer separat.
     /** @type {{ startedAt: number | null, serverAt: number | null, databaseAt: number | null, syncAt: number | null }} */
     startupTimings: { startedAt: null, serverAt: null, databaseAt: null, syncAt: null },
-    // Sincronizare (18-sincronizare.md): null pe o instalare fără sync.json — cardul
-    // din sidebar rămâne „Salvat · ora” exact ca astăzi, fără nicio cerere suplimentară.
-    // `connection` se completează abia după pasul de pornire de mai jos (21a).
-    /** @type {{ configured: boolean, deviceName: string, serverUrl: string, connection?: 'online' | 'offline' | 'revoked' } | null} */
+    // Sincronizare (18-sincronizare.md): `configured:false` pe o instalare fără sync.json —
+    // cardul din sidebar rămâne „Salvat · ora” exact ca astăzi, fără nicio cerere
+    // suplimentară; `suggestedName` prefilă formularul de conectare (14b/22). `connection`
+    // se completează abia după pasul de pornire de mai jos (21a).
+    /** @type {{ configured: true, deviceName: string, serverUrl: string, connection?: 'online' | 'offline' | 'revoked' } | { configured: false, suggestedName: string } | null} */
     sync: null,
   };
 
@@ -153,7 +154,7 @@ export function createAppSessionStore({
       state.health = await requestJson('/api/health');
       // Pasul „Sincronizez cu serverul comun” (21a) — doar când e configurat; nu
       // blochează pornirea, fără internet e un răspuns valid al rutei locale.
-      if (state.sync) {
+      if (state.sync?.configured) {
         try {
           const syncStatus = await requestJson('/api/sync/status');
           state.sync = { ...state.sync, connection: syncStatus.connection };
