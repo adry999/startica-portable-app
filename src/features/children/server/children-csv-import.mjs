@@ -1,4 +1,4 @@
-import { dateOK } from '#shared/domain/calendar-month.mjs';
+import { dateOK, today } from '#shared/domain/calendar-month.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
@@ -183,7 +183,9 @@ export function previewChildrenCsvImport(text, existing = []) {
       if (!get('parent')) warnings.push('Părinte lipsă.');
       if (get('parent') && key(get('parent')) === key(name))
         warnings.push('Câmpul Părinte coincide cu numele copilului; verifică rubrica din contract.');
-      const notes = [
+      // notes (CF-4, 09-copii-fisa.md) e o listă, nu text liber — provenanța importului
+      // și avertizările devin o singură notă, ca înainte de listă.
+      const noteText = [
         'Import copii CSV; contract nr. ' + contractNumber,
         get('contractLabel') ? 'Rubrica părinte / contract din sursă: ' + get('contractLabel') : '',
         get('drafted') ? 'Data întocmirii din sursă: ' + get('drafted') : '',
@@ -191,6 +193,7 @@ export function previewChildrenCsvImport(text, existing = []) {
       ]
         .filter(Boolean)
         .join('\n');
+      const notes = noteText ? [{ id: `NOTE-CSV-${contractNumber}`, text: noteText, date: today() }] : [];
       const record = normalizeRecord('children', {
         id: 'CSV-' + contractNumber,
         contractNumber,

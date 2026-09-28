@@ -55,7 +55,12 @@ const visit = () =>
 test('Export/reimport complet prin fișier XLSX în memorie', () => {
   const state = {
     children: [
-      { ...child(), notes: 'Observații', extra: 'câmp păstrat', statusHistory: [{ from: '2026-09', status: 'Activ' }] },
+      {
+        ...child(),
+        notes: [{ id: 'NOTE-1', text: 'Observații', date: '2026-09-01' }],
+        extra: 'câmp păstrat',
+        statusHistory: [{ from: '2026-09', status: 'Activ' }],
+      },
     ],
     payments: [{ ...payment(), archived: true, original: 'sursă', notes: 'a'.repeat(35000) }],
     expenses: [normalizeRecord('expenses', { id: 'EXP-test', date: '2026-09-08', amount: 10.25, category: 'Test' })],
