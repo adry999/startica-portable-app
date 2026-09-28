@@ -134,7 +134,9 @@ describe('ChildFormDrawer', () => {
   });
 
   it('15a: arată grupele compatibile cu vârsta calculată din data nașterii', async () => {
-    const groups: Group[] = [{ id: 'G-1', name: 'Fluturași', capacity: null, ageMinYears: 3, ageMaxYears: 4, order: 1 }];
+    const groups: Group[] = [
+      { id: 'G-1', name: 'Fluturași', capacity: null, ageMinYears: 3, ageMaxYears: 4, order: 1 },
+    ];
     render(<ChildFormDrawer target="new" groups={groups} onSubmit={vi.fn()} onClose={vi.fn()} />);
 
     expect(screen.queryByText('Grupe compatibile cu vârsta')).not.toBeInTheDocument();

@@ -282,7 +282,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                   onClick={() => setField('groupId', group.id)}
                 >
                   {group.name}
-                  <span className={styles.groupChipSpots}>{free != null ? `${free} locuri libere` : 'fără limită'}</span>
+                  <span className={styles.groupChipSpots}>
+                    {free != null ? `${free} locuri libere` : 'fără limită'}
+                  </span>
                 </button>
               );
             })}
