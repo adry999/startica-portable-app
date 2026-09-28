@@ -2,7 +2,21 @@
 
 Am verificat `master-v2` după `7b1b753`: 129 de commituri, 300 de fișiere. Au intrat în cod filialele (Faza 6), sincronizarea (server + client), Personal (echipă, pontaj, salarii, avansuri, concedii, PIN), stickerele, bonul de 58 mm, Situația tipărită, `design-system.html` și auditul `AUDIT-UI-2026-09-28.md`. Auditul e bun și rămâne lista de referință pentru alinierea vizuală. Mai jos sunt doar lucrurile noi față de audit și ce vine din designul de azi.
 
-## 0. Întâi: urcă pachetul nou în `docs/design/`
+## Stadiu la sync 28.09, 11:06 — niciun commit nou de la 10:25; tabelul de mai jos rămâne valabil
+Pachetul e în `docs/design/` ✓. Cele 30 de commituri noi sunt din batch-urile auditului (Filiale, Personal, Situația, SMS, Review, Fee setup, Toggle nou). Din etapa A:
+| | Stare | Ce lipsește |
+|---|---|---|
+| A1 bug „Toată grupa prezentă” | ✗ | `markGroupPresent` trimite încă `present` pentru toți copiii. Fix: `attendance.mark(changesToMarkUnmarkedPresent(children.map(c => c.id), entriesByChildId, date))` + test |
+| A2 dropdown filială | ½ | `overflow` s-a mutat pe `.nav`, deci dropdown-ul nu mai e tăiat ✓. Dar `.sidebar` e tot `position: sticky` fără z-index, așa că elementele poziționate din `main` (antet sticky, `SelectionBar`) încă se pot desena peste el. **Minim:** `.sidebar { z-index: var(--z-sticky) }` cu scara `--z-*` în `tokens.css` (vezi 2a). Portalul rămâne opțional |
+| A3 `ScrollArea` | ✗ | `.nav` are bara nativă. Componenta nu există în `shared/ui` |
+| A4 texte Prezența | ✗ | „Toți nemarcații → prezenți” → „Nemarcații (N) → prezenți”; „Tipărește” → „Tipărește luna” |
+| A5 indicator salvare | ✗ | Prezența are încă toastul cu `saveError` |
+| A6 toast Vizite | ✗ | `toggleArchived` nu arată nimic la succes. Trebuie: `toast.show({ message: 'Vizită arhivată.', action: { label: 'Anulează', onClick: () => setArchived(visit, false) } })` |
+| A7 monedă 12g + pastila curs | ✓ | făcute pe 27.09 (`fc25d06`, `5f94422`), confirmat în `COADA-DE-LUCRU.md` |
+
+`COADA-DE-LUCRU.md` nu s-a schimbat: etapele A–D nu sunt trecute acolo. Adaugă-le și închide A înainte de orice alt batch din audit.
+
+## 0. Pachetul în `docs/design/` (făcut)
 În repo lipsesc designul și spec-urile de azi. Fără ele, punctele 2–5 nu au referință:
 - `Grupe.dc.html` (4a/4b/4c; 3a/3b scoase) și `screens/03-grupe.md` (rescris)
 - `Prezenta.dc.html` (18c/18d, anulare, indicator de salvare), `screens/19-prezenta.md` și `screens/26-foaie-saptamana.md` (nou)
