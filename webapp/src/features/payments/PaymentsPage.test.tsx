@@ -243,9 +243,10 @@ describe('PaymentsPage', () => {
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
     const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
-    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c2');
-    await user.type(within(dialog).getByLabelText('Cash'), '600');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Copil' }));
+    await user.click(screen.getByRole('option', { name: 'Maria Ionescu' }));
+    await user.type(within(dialog).getByLabelText('Sumă'), '600');
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
   });
@@ -261,11 +262,11 @@ describe('PaymentsPage', () => {
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
     const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
-    const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
+    const cashInput = within(dialog).getByLabelText('Sumă') as HTMLInputElement;
     expect(cashInput.value).toBe('1500');
     await user.clear(cashInput);
     await user.type(cashInput, '1600');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(await screen.findByText('Achitare actualizată.')).toBeInTheDocument();
   });
@@ -289,12 +290,13 @@ describe('PaymentsPage', () => {
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
     const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
-    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
-    const dateInput = within(dialog).getByLabelText('Data încasării');
+    await user.click(within(dialog).getByRole('button', { name: 'Copil' }));
+    await user.click(screen.getByRole('option', { name: 'Andrei Popescu' }));
+    const dateInput = within(dialog).getByLabelText('Data');
     await user.clear(dateInput);
     await user.type(dateInput, '2026-09-10');
-    await user.type(within(dialog).getByLabelText('Cash'), '1500');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    await user.type(within(dialog).getByLabelText('Sumă'), '1500');
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(window.confirm).toHaveBeenCalled();
     expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
@@ -309,12 +311,13 @@ describe('PaymentsPage', () => {
     await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
     const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
 
-    await user.selectOptions(within(dialog).getByLabelText('Copil'), 'c1');
-    const dateInput = within(dialog).getByLabelText('Data încasării');
+    await user.click(within(dialog).getByRole('button', { name: 'Copil' }));
+    await user.click(screen.getByRole('option', { name: 'Andrei Popescu' }));
+    const dateInput = within(dialog).getByLabelText('Data');
     await user.clear(dateInput);
     await user.type(dateInput, '2026-09-10');
-    await user.type(within(dialog).getByLabelText('Cash'), '1500');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    await user.type(within(dialog).getByLabelText('Sumă'), '1500');
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(window.confirm).toHaveBeenCalled();
     expect(screen.queryByText('Achitare adăugată.')).not.toBeInTheDocument();
@@ -333,7 +336,7 @@ describe('PaymentsPage', () => {
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
     const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
-    const cashInput = within(dialog).getByLabelText('Cash') as HTMLInputElement;
+    const cashInput = within(dialog).getByLabelText('Sumă') as HTMLInputElement;
     await user.clear(cashInput);
     await user.type(cashInput, '1600');
 
@@ -343,7 +346,7 @@ describe('PaymentsPage', () => {
       json: async () => ({ error: 'Suma nu poate fi negativă.' }),
     }));
 
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(await screen.findByText('Suma nu poate fi negativă.')).toBeInTheDocument();
     expect(screen.queryByText('Achitare actualizată.')).not.toBeInTheDocument();
