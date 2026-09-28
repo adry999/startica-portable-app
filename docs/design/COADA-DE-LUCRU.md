@@ -139,9 +139,19 @@ Rulat concurent cu Modulul 6 (fișiere disjuncte). Verificat pe disc + tsc/vites
 
 **Toate cele 7 module din URMATORUL-PAS.md sunt acum închise.**
 
-## ScrollArea peste tot — în lucru
+## ScrollArea peste tot — DONE 2026-09-28
 
-Delegat (`scrollarea-rollout`): 8 fișiere cu scroll nativ identificate (Topbar dropdown căutare, `/design-system` nav, GroupsBoard, PaymentDetailPanel, ReviewPage, `Drawer` — cel mai important, folosit de toate formularele —, `SearchSelect`, `SmsConfirmDialog`). `DataTable.tsx` neatins (nu are scroll intern azi, cerut explicit să nu-i schimb comportamentul).
+7 din cele 8 fișiere identificate migrate la `ScrollArea` (Topbar dropdown căutare, `/design-system` nav, GroupsBoard, ReviewPage, `Drawer`, `SearchSelect`, `SmsConfirmDialog`); `PaymentDetailPanel` nu avea scroll nativ de migrat. `DataTable.tsx` neatins (nu are scroll intern azi, neschimbat intenționat). tsc + vitest (137/137 fișiere, 753/753 teste) + prettier verzi. Commit `8861d3d`.
+
+## Bug-uri critice/majore din audit-ul de azi (A-1, B-1, E-1, E-2) — verificate 2026-09-28
+
+Toate 4 dispecerate cu cavecrew/sonnet în paralel; toate 4 găsite **deja reparate** de sesiuni concurente, între momentul auditului și dispecerizare:
+- **A-1** (token de sesiune stale peste filiale): deja în `113b1d0`. 16/16 teste verzi.
+- **B-1** (seed categorii implicite fără tranzacție): deja în `ec8d643`.
+- **E-1** (backup Comun\ lipsă la shutdown): deja în `a5cb724`.
+- **E-2** (avans marcat scăzut înainte de validarea completă a lotului): fix deja în `1c7e46b`; lipsea doar o asertare explicită în test — adăugată, commit `4995590`.
+
+Niciun cod de producție nou. Rămân nereparate din audit-ul separat (`docs/superpowers/specs/2026-09-28-audit-A-core-filiale-sync.md`): restul seriei C/D (inclusiv C-1/C-2, critice, în motorul de sincronizare) — vezi secțiunea de mai jos, nu s-a lucrat la ele azi.
 
 ## Verificare sincronizare (18-sincronizare.md) — DONE 2026-09-28, cu o descoperire importantă
 
