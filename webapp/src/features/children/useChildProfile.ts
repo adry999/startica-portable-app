@@ -14,6 +14,10 @@ export interface ChildProfileData {
   child: Child | null;
   groups: Group[];
   groupName: string;
+  /** Grupa curentă a copilului, cu capacitate/educator — `null` dacă nu are grupă. */
+  group: Group | null;
+  /** Câți copii nearhivați sunt în grupa curentă — pentru „N/capacitate copii”. */
+  groupMemberCount: number;
   contractLabel: string;
   age: string;
   obligation: ReturnType<typeof obligation> | null;
@@ -27,6 +31,8 @@ const NOT_FOUND: ChildProfileData = {
   child: null,
   groups: [],
   groupName: '',
+  group: null,
+  groupMemberCount: 0,
   contractLabel: '',
   age: '',
   obligation: null,
@@ -54,6 +60,10 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
   if (!child) return NOT_FOUND;
 
   const payments = records.payments.filter((payment: Payment) => payment.childId === childId);
+  const group = records.groups.find((g: Group) => g.id === child.groupId) ?? null;
+  const groupMemberCount = child.groupId
+    ? records.children.filter((c: Child) => c.groupId === child.groupId && !c.archived).length
+    : 0;
 
   return {
     status: 'ready',
@@ -61,6 +71,8 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     child,
     groups: records.groups,
     groupName: groupNameOf(child.groupId, records.groups) || 'nealocată',
+    group,
+    groupMemberCount,
     contractLabel: contractNumberOf(child),
     age: formatAge(child.birthDate),
     obligation: obligation(child, month, records.payments, undefined, null, rates),

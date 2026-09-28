@@ -1,6 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, BnmRateLink, Button, Card, DataTable, LoadingState, useToast, type DataTableColumn } from '@shared/ui';
+import {
+  Badge,
+  BnmRateLink,
+  Button,
+  Card,
+  DataTable,
+  LoadingState,
+  RowMenu,
+  SearchSelect,
+  groupTone,
+  useToast,
+  type CardTone,
+  type DataTableColumn,
+  type PillTone,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -16,6 +30,14 @@ import { initials } from '@shared/format/initials';
 import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
+
+const GROUP_SQUARE_TONE_CLASS: Record<PillTone, string> = {
+  orange: 'groupSquareOrange',
+  mint: 'groupSquareMint',
+  yellow: 'groupSquareYellow',
+  pink: 'groupSquarePink',
+  neutral: 'groupSquare',
+};
 
 export function ChildProfileView({
   childId,
@@ -34,6 +56,7 @@ export function ChildProfileView({
   const toast = useToast();
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [changingGroup, setChangingGroup] = useState(false);
 
   if (profileData.status === 'loading') return <LoadingState />;
   if (profileData.status === 'failed')
@@ -52,6 +75,9 @@ export function ChildProfileView({
   const { child, obligation: childObligation } = profileData;
   const isEurChild = childObligation?.currency === 'EUR';
   const todaysRate = latestKnownRate(rates);
+  const heroTone = groupTone(child.groupId, profileData.groups);
+  const heroCardTone: CardTone = heroTone === 'neutral' ? 'white' : heroTone;
+  const groupSquareTone = GROUP_SQUARE_TONE_CLASS[heroTone];
 
   async function changeGroup(groupId: string) {
     try {
@@ -63,6 +89,7 @@ export function ChildProfileView({
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
+    setChangingGroup(false);
   }
 
   // C1: re-aruncată după toast, ca ChildFormDrawer să știe că salvarea a eșuat.
@@ -87,12 +114,12 @@ export function ChildProfileView({
         / {child.name}
       </p>
 
-      <Card tone="orange" decorative className={styles.profileHeader}>
+      <Card tone={heroCardTone} decorative className={styles.profileHeader}>
         <span className={styles.profileAvatar}>{initials(child.name)}</span>
         <div className={styles.profileHeadInfo}>
           <h2 className={styles.profileName}>{child.name}</h2>
           <p className={styles.profileMeta}>
-            {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {profileData.age} · Contract{' '}
+            Născut {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {profileData.age} · Contract{' '}
             {profileData.contractLabel}
             <span className={styles.profileBadgeMint}>{child.status}</span>
             <span className={styles.profileBadgeOrange}>{profileData.groupName}</span>
@@ -123,29 +150,44 @@ export function ChildProfileView({
           <Card className={styles.profileSection}>
             <p className={styles.sectionTitle}>Grupă și educator</p>
             <div className={styles.groupRow}>
-              <span className={styles.groupSquare}>{profileData.groupName.charAt(0).toUpperCase() || '—'}</span>
-              <select
-                className={styles.select}
-                value={child.groupId ?? ''}
-                onChange={event => void changeGroup(event.target.value)}
-                aria-label="Schimbă grupa"
-              >
-                <option value="">Nealocată</option>
-                {profileData.groups.map(group => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
+              <span className={`${styles.groupSquare} ${styles[groupSquareTone]}`}>
+                {profileData.groupName.charAt(0).toUpperCase() || '—'}
+              </span>
+              <div className={styles.groupInfo}>
+                <strong>{profileData.groupName}</strong>
+                <small>
+                  {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii · Educator{' '}
+                  {profileData.group?.educator || '—'}
+                </small>
+              </div>
+              {changingGroup ? (
+                <SearchSelect
+                  ariaLabel="Schimbă grupa"
+                  placeholder="Alege o grupă…"
+                  value={child.groupId ?? ''}
+                  onChange={value => void changeGroup(value)}
+                  options={[
+                    { value: '', label: 'Fără grupă' },
+                    ...profileData.groups.map(group => ({ value: group.id, label: group.name })),
+                  ]}
+                />
+              ) : (
+                <button type="button" className={styles.sectionLink} onClick={() => setChangingGroup(true)}>
+                  Schimbă
+                </button>
+              )}
             </div>
           </Card>
 
-          {child.notes && (
-            <Card tone="yellow" className={styles.profileSection}>
+          <Card tone={child.notes ? 'yellow' : 'white'} className={styles.profileSection}>
+            <div className={styles.sectionHead}>
               <p className={styles.sectionTitle}>Note</p>
-              <p>{child.notes}</p>
-            </Card>
-          )}
+              <button type="button" className={styles.sectionLink} onClick={() => setEditDrawerOpen(true)}>
+                + Notă
+              </button>
+            </div>
+            <p>{child.notes || 'Nicio notă încă.'}</p>
+          </Card>
         </div>
 
         <div className={styles.profileRight}>
@@ -153,15 +195,22 @@ export function ChildProfileView({
             <Card tone="mint" className={styles.miniCard}>
               <span>Sold</span>
               <strong>{formatMoney(childObligation?.rest ?? null, childObligation?.currency)}</strong>
-              {isEurChild && childObligation?.rest != null && todaysRate && (
-                <small>≈ {formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi</small>
-              )}
+              <small>
+                {childObligation?.rest
+                  ? `${formatMoney(childObligation.rest, childObligation.currency)} datorie${
+                      isEurChild && todaysRate
+                        ? ` · ≈ ${formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi`
+                        : ''
+                    }`
+                  : 'La zi'}
+              </small>
             </Card>
             <Card tone="yellow" className={styles.miniCard}>
               <span>Taxă lunară</span>
               <strong>
                 {formatMoney(profileData.feeEntry?.amount ?? child.fee, profileData.feeEntry?.currency ?? 'MDL')}
               </strong>
+              <small>{childObligation ? `scadență ziua ${Number(childObligation.due.slice(-2))}` : '—'}</small>
             </Card>
             <Card className={styles.miniCard}>
               <span>Contract</span>
@@ -276,19 +325,11 @@ function PaymentHistoryTable({
       ),
     },
     {
-      key: 'print',
+      key: 'menu',
       header: '',
+      align: 'end',
       render: payment => (
-        <button
-          type="button"
-          className={styles.sectionLink}
-          onClick={event => {
-            event.stopPropagation();
-            onPrint(payment.id);
-          }}
-        >
-          Tipărește
-        </button>
+        <RowMenu items={[{ label: 'Tipărește confirmarea', onClick: () => onPrint(payment.id) }]} />
       ),
     },
   ];

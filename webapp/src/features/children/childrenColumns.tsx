@@ -14,6 +14,8 @@ const AVATAR_TONE_CLASS: Record<PillTone, string> = {
 
 export interface ChildrenColumnsOptions {
   groups: Group[];
+  /** Lună curentă (YYYY-MM) — pentru antetul „Plată <lună>”. */
+  month: string;
   onEdit: (row: ChildRow) => void;
   onToggleArchived: (row: ChildRow) => void;
   onRequestDelete: (row: ChildRow) => void;
@@ -21,10 +23,12 @@ export interface ChildrenColumnsOptions {
 
 export function buildChildrenColumns({
   groups,
+  month,
   onEdit,
   onToggleArchived,
   onRequestDelete,
 }: ChildrenColumnsOptions): DataTableColumn<ChildRow>[] {
+  const currentMonthName = new Date(`${month}-01T12:00:00`).toLocaleDateString('ro-RO', { month: 'long' });
   return [
     {
       key: 'name',
@@ -61,7 +65,7 @@ export function buildChildrenColumns({
         row.groupName ? (
           <Badge tone={groupTone(row.groupId, groups)}>{row.groupName}</Badge>
         ) : (
-          <Badge tone="neutral">Nealocată</Badge>
+          <Badge tone="neutral">Fără grupă</Badge>
         ),
     },
     {
@@ -71,7 +75,7 @@ export function buildChildrenColumns({
     },
     {
       key: 'payment',
-      header: 'Plată luna curentă',
+      header: `Plată ${currentMonthName}`,
       render: row => (
         <Badge tone={row.payment.tone}>
           <span className={styles.dot} />

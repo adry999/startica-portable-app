@@ -83,34 +83,14 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-12);
+  gap: var(--space-10);
   padding: 14px 16px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
 }
 
-.filterSelect {
-  flex: none;
-  width: 180px;
-}
-
-.select {
-  appearance: none;
-  background: var(--white);
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) 28px var(--space-8) var(--space-12);
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--slate);
-  cursor: pointer;
-}
-
-.selectionDivider {
-  opacity: 0.5;
-}
-
-.selectionArchive {
-  color: var(--pink) !important;
+.selectionArchive.selectionArchive {
+  color: var(--pink);
 }
 
 .childCell {
@@ -229,7 +209,7 @@
   gap: var(--space-8);
   margin: var(--space-4) 0 0;
   font-size: 14px;
-  color: #5b666e;
+  color: var(--muted);
 }
 
 .profileBadgeMint,
@@ -277,7 +257,7 @@
   margin: 0 0 var(--space-8);
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 18px;
 }
 
 .sectionHead {
@@ -345,16 +325,51 @@
   gap: var(--space-12);
 }
 
+.groupInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.groupInfo small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .groupSquare {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-sm);
   background: var(--neutral-soft);
+  color: var(--slate);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-heading);
   font-weight: 800;
+  font-size: 16px;
+}
+
+.groupSquareOrange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.groupSquareMint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.groupSquareYellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.groupSquarePink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
 }
 
 .miniCards {

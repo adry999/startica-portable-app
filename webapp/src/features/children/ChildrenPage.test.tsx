@@ -164,19 +164,149 @@ describe('ChildrenPage', () => {
     expect(within(activeStatCard).getByText('2')).toBeInTheDocument();
   });
 
+  it('C-3: a treia opțiune de statut e „Toți”, fără numărul total', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    expect(screen.getByRole('radio', { name: 'Toți' })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /Toți ·/ })).not.toBeInTheDocument();
+  });
+
+  it('C-5: copilul fără grupă arată badge-ul „Fără grupă”', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const row = screen.getByText('Maria Ionescu').closest('tr')!;
+    expect(within(row).getByText('Fără grupă')).toBeInTheDocument();
+  });
+
+  it('C-6/C-7: scadența arată „ziua N”, antetul plății arată luna curentă', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const row = screen.getByText('Andrei Popescu').closest('tr')!;
+    expect(within(row).getByText('ziua 10')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Plată septembrie' })).toBeInTheDocument();
+  });
+
+  it('C-2: căutarea filtrează și după numele părintelui sau telefon, nu doar nume/contract', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const search = screen.getByLabelText('Caută copil');
+
+    await userEvent.type(search, 'Ioana Ionescu');
+    expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+
+    await userEvent.clear(search);
+    await userEvent.type(search, '0722000001');
+    expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(screen.queryByText('Maria Ionescu')).not.toBeInTheDocument();
+  });
+
+  it('C-10: schimbarea unui filtru resetează paginarea la pagina 1', async () => {
+    const bigFixture = {
+      ...fixtureState,
+      children: Array.from({ length: 12 }, (_, index) => ({
+        id: `big-${index}`,
+        name: `Copil ${String.fromCharCode(65 + index)}`,
+        status: 'Activ',
+        groupId: null,
+        parent: 'Un părinte',
+        phone: '0722000000',
+        fee: 1000,
+        feeHistory: [{ from: '2020-01', amount: 1000 }],
+        statusHistory: [],
+        dueDay: 10,
+        attendanceDate: '2022-09-01',
+        archived: false,
+      })),
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: bigFixture, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    expect(screen.getByText('Copil A')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByText('Copil K')).toBeInTheDocument();
+    expect(screen.queryByText('Copil A')).not.toBeInTheDocument();
+
+    // Filtrarea nu schimbă numărul de rânduri (toți 12 corespund în continuare „Copil”),
+    // deci fără cheia derivată din filtre DataTable ar rămâne clamp-uit pe aceeași pagină.
+    await userEvent.type(screen.getByLabelText('Caută copil'), 'Copil');
+    expect(screen.getByText('Copil A')).toBeInTheDocument();
+    expect(screen.queryByText('Copil K')).not.toBeInTheDocument();
+  });
+
   it('deschide fișa copilului la click pe rând și revine la listă din breadcrumb', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { container } = renderPage();
+    await userEvent.click(screen.getByText('Andrei Popescu'));
+
+    expect(screen.getByRole('heading', { name: 'Andrei Popescu' })).toBeInTheDocument();
+    expect(screen.getByText(/Contract 7/)).toBeInTheDocument();
+    // CF-10: rândul de sub nume începe cu „Născut”.
+    const meta = container.querySelector('[class*="profileMeta"]');
+    expect(meta?.textContent).toMatch(/^Născut 24\.09\.2020/);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
+    expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Andrei Popescu' })).not.toBeInTheDocument();
+  });
+
+  it('CF-1: fișa unui copil fără grupă arată hero-ul în tonul neutru (alb), nu portocaliu fix', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { container } = renderPage();
+    await userEvent.click(screen.getByText('Maria Ionescu'));
+
+    const hero = container.querySelector('[class*="profileHeader"]');
+    expect(hero?.className).toMatch(/_white_/);
+  });
+
+  it('CF-3: cardul „Grupă și educator” arată N/capacitate și educatorul, „Schimbă” deschide alegerea grupei', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     renderPage();
     await userEvent.click(screen.getByText('Andrei Popescu'));
 
-    expect(screen.getByRole('heading', { name: 'Andrei Popescu' })).toBeInTheDocument();
-    expect(screen.getByText(/Contract 7/)).toBeInTheDocument();
+    expect(screen.getByText(/1\/15 copii · Educator —/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
-    expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Andrei Popescu' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Schimbă' }));
+    expect(screen.getByRole('button', { name: 'Schimbă grupa' })).toBeInTheDocument();
+  });
+
+  it('CF-6: acțiunea de tipărire din istoricul plăților e într-un RowMenu, cu eticheta „Tipărește confirmarea”', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    await userEvent.click(screen.getByText('Andrei Popescu'));
+
+    const paymentRow = screen.getByText('Cash').closest('tr')!;
+    await userEvent.click(within(paymentRow).getByLabelText('Mai multe acțiuni'));
+    expect(within(paymentRow).getByRole('button', { name: 'Tipărește confirmarea' })).toBeInTheDocument();
   });
 
   it('arhivează copilul selectat prin bara de selecție și afișează un toast', async () => {

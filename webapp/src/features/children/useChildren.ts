@@ -4,7 +4,7 @@ import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { buildReviewCenter } from '#features/review-center/index.web.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
-import { formatAge, formatDate } from '#shared/format/date-format.mjs';
+import { formatAge } from '#shared/format/date-format.mjs';
 import type { Child, Group } from '@contracts/record-types.mjs';
 
 export type ChildrenStatus = 'loading' | 'ready' | 'failed';
@@ -118,7 +118,7 @@ export function useChildren(month: string): ChildrenData {
       groupName: groupNameOf(child.groupId, records.groups),
       archived: !!child.archived,
       status: child.status,
-      dueDateLabel: formatDate(obligation.due),
+      dueDateLabel: `ziua ${Number(obligation.due.slice(-2))}`,
       payment: paymentStatusFor(obligation.label),
       child,
     };

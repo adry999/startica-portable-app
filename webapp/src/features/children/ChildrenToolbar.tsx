@@ -35,7 +35,7 @@ export function ChildrenToolbar({
     <>
       <div className={styles.toolbar}>
         <SearchInput
-          placeholder="Caută nume sau contract…"
+          placeholder="Caută după nume, părinte, telefon sau nr. contract"
           value={query}
           onChange={onQueryChange}
           ariaLabel="Caută copil"
@@ -47,7 +47,7 @@ export function ChildrenToolbar({
           options={[
             { value: 'active', label: `Activi · ${activeTotal}` },
             { value: 'archived', label: `Arhivați · ${archivedTotal}` },
-            { value: 'all', label: `Toți · ${activeTotal + archivedTotal}` },
+            { value: 'all', label: 'Toți' },
           ]}
         />
       </div>

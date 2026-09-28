@@ -1,4 +1,4 @@
-import { SearchSelect, SelectionBar } from '@shared/ui';
+import { RowMenu, SelectionBar } from '@shared/ui';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ArchiveFilter } from './ChildrenToolbar';
 import styles from './ChildrenPage.module.css';
@@ -6,10 +6,8 @@ import styles from './ChildrenPage.module.css';
 export interface ChildrenSelectionBarProps {
   selectedCount: number;
   onCancel: () => void;
-  moveGroupId: string;
-  onMoveGroupIdChange: (value: string) => void;
   groups: Group[];
-  onMove: () => void;
+  onMove: (groupId: string) => void;
   onExport: () => void;
   archiveFilter: ArchiveFilter;
   onArchive: () => void;
@@ -19,8 +17,6 @@ export interface ChildrenSelectionBarProps {
 export function ChildrenSelectionBar({
   selectedCount,
   onCancel,
-  moveGroupId,
-  onMoveGroupIdChange,
   groups,
   onMove,
   onExport,
@@ -30,21 +26,14 @@ export function ChildrenSelectionBar({
 }: ChildrenSelectionBarProps) {
   return (
     <SelectionBar label={<>{selectedCount} selectați</>} onCancel={onCancel}>
-      <span className={styles.selectionDivider}>|</span>
-      <SearchSelect
-        className={styles.filterSelect}
-        ariaLabel="Mută în grupa"
-        placeholder="Mută în grupă…"
-        value={moveGroupId}
-        onChange={onMoveGroupIdChange}
-        options={[
-          { value: '__none__', label: 'Fără grupă' },
-          ...groups.map(group => ({ value: group.id, label: group.name })),
+      <RowMenu
+        ariaLabel="Mută în grupă"
+        trigger="Mută în grupă"
+        items={[
+          { label: 'Fără grupă', onClick: () => onMove('__none__') },
+          ...groups.map(group => ({ label: group.name, onClick: () => onMove(group.id) })),
         ]}
       />
-      <button type="button" disabled={!moveGroupId} onClick={onMove}>
-        Mută
-      </button>
       <button type="button" onClick={onExport}>
         Exportă
       </button>

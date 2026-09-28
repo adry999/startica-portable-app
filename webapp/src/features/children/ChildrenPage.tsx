@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, ConfirmDeleteDialog, DataTable, LoadingState, useToast, useTopbarActions } from '@shared/ui';
+import { Button, ConfirmDeleteDialog, DataTable, EmptyState, LoadingState, useToast, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { useChildren, type ChildRow } from './useChildren';
@@ -52,7 +52,6 @@ function ChildrenListView({
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
-  const [moveGroupId, setMoveGroupId] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<ChildRow | null>(null);
 
   useTopbarActions(
@@ -73,7 +72,8 @@ function ChildrenListView({
       if (groupFilter !== 'all' && groupFilter !== 'none' && row.groupId !== groupFilter) return false;
       if (paymentFilter !== 'all' && row.payment.label !== paymentFilter) return false;
       if (normalizedQuery) {
-        const haystack = `${row.name} ${row.child.contractNumber ?? row.child.id}`.toLocaleLowerCase('ro-RO');
+        const haystack = `${row.name} ${row.parent} ${row.phone} ${row.child.contractNumber ?? row.child.id}`
+          .toLocaleLowerCase('ro-RO');
         if (!haystack.includes(normalizedQuery)) return false;
       }
       return true;
@@ -155,7 +155,6 @@ function ChildrenListView({
         });
       }
       setSelectedRowKeys(new Set());
-      setMoveGroupId('');
       toast.show({ message: `${targets.length} ${targets.length === 1 ? 'copil mutat' : 'copii mutați'} în grupă.` });
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -227,10 +226,28 @@ function ChildrenListView({
 
   const columns = buildChildrenColumns({
     groups: childrenData.groups,
+    month,
     onEdit: row => setFormTarget(row.child),
     onToggleArchived: row => void toggleArchived(row),
     onRequestDelete: row => setDeleteTarget(row),
   });
+
+  const activeFilterLabels: string[] = [];
+  if (query.trim()) activeFilterLabels.push(`Căutare: „${query.trim()}”`);
+  if (archiveFilter !== 'active') activeFilterLabels.push(archiveFilter === 'archived' ? 'Arhivați' : 'Toți');
+  if (groupFilter !== 'all') {
+    activeFilterLabels.push(
+      groupFilter === 'none' ? 'Fără grupă' : (childrenData.groups.find(g => g.id === groupFilter)?.name ?? ''),
+    );
+  }
+  if (paymentFilter !== 'all') activeFilterLabels.push(paymentFilter);
+
+  function clearFilters() {
+    setQuery('');
+    setArchiveFilter('active');
+    setGroupFilter('all');
+    setPaymentFilter('all');
+  }
 
   return (
     <>
@@ -264,10 +281,8 @@ function ChildrenListView({
           <ChildrenSelectionBar
             selectedCount={selectedRowKeys.size}
             onCancel={() => setSelectedRowKeys(new Set())}
-            moveGroupId={moveGroupId}
-            onMoveGroupIdChange={setMoveGroupId}
             groups={childrenData.groups}
-            onMove={() => void moveSelectedToGroup(moveGroupId)}
+            onMove={groupId => void moveSelectedToGroup(groupId)}
             onExport={exportSelected}
             archiveFilter={archiveFilter}
             onArchive={() => void archiveSelected()}
@@ -276,6 +291,7 @@ function ChildrenListView({
         )}
 
         <DataTable
+          key={`${archiveFilter}-${groupFilter}-${paymentFilter}-${query}`}
           bare
           columns={columns}
           rows={filteredRows}
@@ -284,7 +300,13 @@ function ChildrenListView({
           selectedRowKeys={selectedRowKeys}
           onSelectedRowKeysChange={setSelectedRowKeys}
           onRowClick={row => onOpenChild(row.id)}
-          emptyState={<p>Niciun copil nu corespunde filtrelor curente.</p>}
+          emptyState={
+            <EmptyState
+              title="Niciun copil nu corespunde filtrelor curente"
+              activeFilters={activeFilterLabels}
+              onClearFilters={clearFilters}
+            />
+          }
         />
       </div>
 
