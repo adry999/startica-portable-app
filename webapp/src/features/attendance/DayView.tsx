@@ -75,8 +75,13 @@ export function DayView({ data }: DayViewProps) {
               {section.present} din {section.tiles.length} prezenți
               {section.unmarked > 0 && ` · ${section.unmarked} nemarcați`}
             </span>
-            <button type="button" className={styles.sectionAction} onClick={() => data.markGroupPresent(section.key)}>
-              Toată grupa prezentă
+            <button
+              type="button"
+              className={styles.sectionAction}
+              onClick={() => data.markGroupPresent(section.key)}
+              disabled={section.unmarked === 0}
+            >
+              Nemarcații ({section.unmarked}) → prezenți
             </button>
           </div>
           <div className={styles.grid}>

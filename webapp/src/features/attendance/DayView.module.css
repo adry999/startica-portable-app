@@ -78,6 +78,11 @@
   cursor: pointer;
 }
 
+.sectionAction:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

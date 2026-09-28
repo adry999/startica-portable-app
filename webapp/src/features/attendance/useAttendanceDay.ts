@@ -108,7 +108,8 @@ export function useAttendanceDay(date: string): AttendanceDayData {
 
   function markGroupPresent(sectionKey: string) {
     const children = bySection.get(sectionKey) ?? [];
-    attendance.mark(children.map(child => ({ childId: child.id, date, status: 'present' })));
+    const childIds = children.map(child => child.id);
+    attendance.mark(changesToMarkUnmarkedPresent(childIds, entriesByChildId, date));
   }
 
   function markAllUnmarkedPresent() {

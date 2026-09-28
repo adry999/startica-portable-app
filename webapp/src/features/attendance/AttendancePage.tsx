@@ -48,7 +48,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
         {modeSwitch}
         <DayStepper value={date} max={today()} onChange={setDate} />
         <Button onClick={dayData.markAllUnmarkedPresent} disabled={dayData.counts.unmarked === 0}>
-          Toți nemarcații → prezenți
+          Nemarcații ({dayData.counts.unmarked}) → prezenți
         </Button>
       </>
     ) : (
@@ -60,7 +60,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
           onNext={() => setMonthKey(current => (current >= CURRENT_MONTH ? current : shiftMonth(current, 1)))}
         />
         <Button variant="ghost" onClick={() => window.print()}>
-          Tipărește
+          Tipărește luna
         </Button>
         <Button
           variant="ghost"
