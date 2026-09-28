@@ -1,4 +1,5 @@
-import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -42,6 +43,7 @@ function stubFetch() {
           updatedAt: '2026-09-23T10:00:00Z',
         });
       if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/kindergarten') return jsonResponse({ name: 'Grădinița Test', idno: '' });
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       if (path.startsWith('/api/personal/timesheet') && (!options || options.method !== 'POST'))
         return jsonResponse({ rows: [] });
@@ -73,7 +75,7 @@ describe('TimesheetView', () => {
 
     render(
       <ToastProvider>
-        <TimesheetView month="2026-09" printOptions={null} onPrintOptionsChange={() => {}} />
+        <TimesheetView month="2026-09" printDialogOpen={false} onPrintDialogClose={() => {}} />
       </ToastProvider>,
     );
 
@@ -93,5 +95,53 @@ describe('TimesheetView', () => {
 
     expect(posted).toHaveLength(1);
     expect(posted[0].changes).toEqual([{ staffId: 'STF-1', date: '2026-09-07', code: 'CO' }]);
+  });
+
+  it('nu tipărește până nu se încarcă datele grădiniței (M4)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    let resolveKindergarten = () => {};
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, options?: RequestInit) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+            revision: 1,
+            updatedAt: '2026-09-23T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/kindergarten')
+          return new Promise(resolve => {
+            resolveKindergarten = () => resolve(jsonResponse({ name: 'Grădinița Test', idno: '' }));
+          });
+        if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+        if (path.startsWith('/api/personal/timesheet') && (!options || options.method !== 'POST'))
+          return jsonResponse({ rows: [] });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    render(
+      <ToastProvider>
+        <TimesheetView month="2026-09" printDialogOpen onPrintDialogClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    const user = userEvent.setup();
+
+    const dialog = screen.getByRole('dialog', { name: 'Tipărește pontajul' });
+    await user.click(within(dialog).getByRole('button', { name: 'Tipărește' }));
+
+    // /api/kindergarten n-a răspuns încă — tipărirea trebuie să aștepte.
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(printSpy).not.toHaveBeenCalled();
+
+    resolveKindergarten();
+    await vi.waitFor(() => expect(printSpy).toHaveBeenCalled());
   });
 });

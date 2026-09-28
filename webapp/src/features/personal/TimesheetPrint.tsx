@@ -1,4 +1,4 @@
-import { useKindergarten } from '@shared/api/useKindergarten';
+import type { KindergartenSettings } from '@shared/api/useKindergarten';
 import { useAppSession } from '@shared/api/session';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
@@ -11,6 +11,9 @@ export interface TimesheetPrintProps {
   staff: Staff[];
   rows: ReadonlyMap<string, TimesheetRow>;
   roleName: (roleId: string) => string;
+  /** Vine de la TimesheetView, care ține hook-ul montat de la intrarea pe filă (M4) — TimesheetPrint
+   * nu mai cere singur /api/kindergarten, ca să nu tipărească cu antetul generic înainte de răspuns. */
+  kindergarten: KindergartenSettings | null;
 }
 
 const ROWS_PER_PAGE = 14;
@@ -23,8 +26,7 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 /** Pontaj tipărit (23k) — A4 orizontal, alb-negru; peste 14 rânduri, antetul se repetă pe pagina următoare. */
-export function TimesheetPrint({ month, staff, rows, roleName }: TimesheetPrintProps) {
-  const kindergarten = useKindergarten();
+export function TimesheetPrint({ month, staff, rows, roleName, kindergarten }: TimesheetPrintProps) {
   const session = useAppSession();
   const todayStr = today();
 
@@ -54,7 +56,7 @@ export function TimesheetPrint({ month, staff, rows, roleName }: TimesheetPrintP
               </p>
             </div>
             <div className={styles.printKindergarten}>
-              <span>{kindergarten.settings?.displayName || kindergarten.settings?.name || 'Startica'}</span>
+              <span>{kindergarten?.displayName || kindergarten?.name || 'Startica'}</span>
               {session.state.branch && <span>Subdiviziunea: Filiala {session.state.branch.name}</span>}
             </div>
           </div>

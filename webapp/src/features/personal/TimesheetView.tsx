@@ -2,6 +2,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { Card, FilterPills, LoadingState, type PillTone } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
+import { useKindergarten } from '@shared/api/useKindergarten';
 import { nextTimesheetCode, summarizeTimesheetMonth, timesheetKey } from '@shared/personal/timesheet-rules';
 import { useTimesheet } from './useTimesheet';
 import { TimesheetPrintDialog, type TimesheetPrintOptions } from './TimesheetPrintDialog';
@@ -11,29 +12,34 @@ import styles from './TimesheetView.module.css';
 
 export interface TimesheetViewProps {
   month: string;
-  /** „Tipărește” (23b) stă în antet, în PersonalPage — dialogul și tipărirea rămân aici, controlate de acolo. */
-  printOptions: TimesheetPrintOptions | null;
-  onPrintOptionsChange: (options: TimesheetPrintOptions | null) => void;
+  /** „Tipărește” (23b) stă în antet, în PersonalPage — doar deschide dialogul; tipărirea în sine
+   * pornește la confirmarea din TimesheetPrintDialog, nu la clicul din antet (M5). */
+  printDialogOpen: boolean;
+  onPrintDialogClose: () => void;
 }
 
 const CELL_LABEL: Record<string, string> = { CO: 'CO', CM: 'CM', A: 'A' };
 
 /** Pontaj (23b) — grilă lună × angajat, clic ciclează gol → CO → CM → A → gol. */
-export function TimesheetView({ month, printOptions, onPrintOptionsChange }: TimesheetViewProps) {
+export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: TimesheetViewProps) {
   const personal = usePersonal();
   const timesheet = useTimesheet(month);
+  // Montat aici (nu în TimesheetPrint) ca cererea /api/kindergarten să pornească la intrarea pe
+  // filă, nu la confirmarea dialogului — vezi gardă kindergarten.ready din efectul de tipărire (M4).
+  const kindergarten = useKindergarten();
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [printOptions, setPrintOptions] = useState<TimesheetPrintOptions | null>(null);
 
   useEffect(() => {
-    if (!printOptions) return;
+    if (!printOptions || !kindergarten.ready) return;
     const timer = setTimeout(() => window.print(), 0);
-    const onAfterPrint = () => onPrintOptionsChange(null);
+    const onAfterPrint = () => setPrintOptions(null);
     window.addEventListener('afterprint', onAfterPrint);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('afterprint', onAfterPrint);
     };
-  }, [printOptions, onPrintOptionsChange]);
+  }, [printOptions, kindergarten.ready]);
 
   const activeStaff = personal.staff.filter(person => !person.archivedAt);
   const filteredStaff =
@@ -147,11 +153,14 @@ export function TimesheetView({ month, printOptions, onPrintOptionsChange }: Tim
       </div>
 
       <TimesheetPrintDialog
-        open={printOptions !== null}
+        open={printDialogOpen}
         departments={departmentsSorted}
         staff={activeStaff}
-        onCancel={() => onPrintOptionsChange(null)}
-        onConfirm={options => onPrintOptionsChange(options)}
+        onCancel={onPrintDialogClose}
+        onConfirm={options => {
+          onPrintDialogClose();
+          setPrintOptions(options);
+        }}
       />
 
       {printOptions && (
@@ -166,6 +175,7 @@ export function TimesheetView({ month, printOptions, onPrintOptionsChange }: Tim
           }
           rows={timesheet.rows}
           roleName={personal.roleName}
+          kindergarten={kindergarten.settings}
         />
       )}
     </div>

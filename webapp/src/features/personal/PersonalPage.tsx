@@ -5,7 +5,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Staff } from '@shared/personal/personal.types';
 import { TeamView } from './TeamView';
 import { TimesheetView } from './TimesheetView';
-import { type TimesheetPrintOptions } from './TimesheetPrintDialog';
 import { LeavesView } from './LeavesView';
 import { SalariesView } from './SalariesView';
 import styles from './PersonalPage.module.css';
@@ -31,7 +30,9 @@ export function PersonalPage({ month }: PersonalPageProps) {
 
   // Pontaj (23b) își plimbă propria lună, independent de luna aplicației.
   const [pontajMonth, setPontajMonth] = useState(month.slice(0, 7));
-  const [printOptions, setPrintOptions] = useState<TimesheetPrintOptions | null>(null);
+  // „Tipărește” doar deschide dialogul „Ce tipăresc?” — tipărirea în sine pornește la confirmarea
+  // din dialog, în TimesheetView, nu la clicul din antet (M5: nu mai tipărește peste dialog).
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [staffFormTarget, setStaffFormTarget] = useState<Staff | 'new' | null>(null);
 
   // „Vezi cu PIN →” din fișa angajatului (23j) trece direct pe fila Salarii.
@@ -56,7 +57,7 @@ export function PersonalPage({ month }: PersonalPageProps) {
       {tab === 'pontaj' && (
         <>
           <MonthStepper value={pontajMonth} onPrev={() => shiftPontajMonth(-1)} onNext={() => shiftPontajMonth(1)} />
-          <Button variant="outline" onClick={() => setPrintOptions({ scope: 'all' })}>
+          <Button variant="outline" onClick={() => setPrintDialogOpen(true)}>
             Tipărește
           </Button>
         </>
@@ -65,7 +66,13 @@ export function PersonalPage({ month }: PersonalPageProps) {
   );
 
   if (tab === 'pontaj')
-    return <TimesheetView month={pontajMonth} printOptions={printOptions} onPrintOptionsChange={setPrintOptions} />;
+    return (
+      <TimesheetView
+        month={pontajMonth}
+        printDialogOpen={printDialogOpen}
+        onPrintDialogClose={() => setPrintDialogOpen(false)}
+      />
+    );
   if (tab === 'concedii') return <LeavesView />;
   if (tab === 'salarii') return <SalariesView />;
   return (

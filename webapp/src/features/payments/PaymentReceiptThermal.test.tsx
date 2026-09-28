@@ -136,5 +136,7 @@ describe('PaymentReceiptThermal', () => {
 
     expect(await screen.findByText('Nr. 0147')).toBeInTheDocument();
     expect(screen.getByText(/^Rest septembrie/)).toBeInTheDocument();
+    // Data scadentă vine formatată (06.09.2026), nu bruta ISO 2026-09-06 (m6).
+    expect(screen.getByText(/scadent 06\.09\.2026/)).toBeInTheDocument();
   });
 });

@@ -191,6 +191,42 @@ describe('StatusPage', () => {
     await vi.waitFor(() => expect(printSpy).toHaveBeenCalled());
   });
 
+  it('nu tipărește până nu se încarcă datele grădiniței (M4)', async () => {
+    let resolveKindergarten = () => {};
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten')
+          return new Promise(resolve => {
+            resolveKindergarten = () => resolve(jsonResponse({ name: 'Grădinița Test', idno: '' }));
+          });
+        if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Tipărește' }));
+    const dialog = screen.getByRole('dialog', { name: 'Tipărește situația plăților' });
+    await user.click(within(dialog).getByRole('button', { name: 'Tipărește' }));
+
+    // /api/kindergarten n-a răspuns încă — tipărirea trebuie să aștepte, nu să iasă cu „Startica” generic.
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(printSpy).not.toHaveBeenCalled();
+
+    resolveKindergarten();
+    await vi.waitFor(() => expect(printSpy).toHaveBeenCalled());
+  });
+
   it('antetul are comutatorul Lună | An școlar și selectorul de lună în modul Lună', async () => {
     await loadedSession();
     renderPage();

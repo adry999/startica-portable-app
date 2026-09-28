@@ -1,4 +1,4 @@
-import { useKindergarten } from '@shared/api/useKindergarten';
+import type { KindergartenSettings } from '@shared/api/useKindergarten';
 import { formatDate, formatDateTime, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { StatusRowView } from './useStatus';
@@ -12,12 +12,13 @@ export interface StatusPrintProps {
   rows: StatusRowView[];
   showPhone: boolean;
   orientation: PrintOrientation;
+  /** Vine de la StatusPage, care ține hook-ul montat din intrarea pe ecran (M4) — StatusPrint nu mai
+   * cere singur /api/kindergarten, ca să nu tipărească cu antetul generic înainte ca datele să ajungă. */
+  kindergarten: KindergartenSettings | null;
 }
 
 /** Situația plăților tipărită (16c) — vizibilă doar în @media print, vezi StatusPage.module.css. */
-export function StatusPrint({ month, asOf, filterLabel, rows, showPhone, orientation }: StatusPrintProps) {
-  const kindergarten = useKindergarten();
-
+export function StatusPrint({ month, asOf, filterLabel, rows, showPhone, orientation, kindergarten }: StatusPrintProps) {
   let expectedTotal = 0;
   let paidTotal = 0;
   let restTotal = 0;
@@ -42,8 +43,8 @@ export function StatusPrint({ month, asOf, filterLabel, rows, showPhone, orienta
           </p>
         </div>
         <div className={styles.printKindergarten}>
-          <span>{kindergarten.settings?.displayName || kindergarten.settings?.name || 'Startica'}</span>
-          {kindergarten.settings?.idno && <span>IDNO {kindergarten.settings.idno}</span>}
+          <span>{kindergarten?.displayName || kindergarten?.name || 'Startica'}</span>
+          {kindergarten?.idno && <span>IDNO {kindergarten.idno}</span>}
         </div>
       </div>
 

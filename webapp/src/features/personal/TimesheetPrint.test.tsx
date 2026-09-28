@@ -40,7 +40,6 @@ function stubFetch() {
           updatedAt: '2026-09-23T10:00:00Z',
         });
       if (path === '/api/health') return jsonResponse({});
-      if (path === '/api/kindergarten') return jsonResponse({ displayName: 'Grădinița Startica' });
       throw new Error(`neașteptat: ${path}`);
     }),
   );
@@ -62,7 +61,13 @@ describe('TimesheetPrint', () => {
     const rows = new Map<string, TimesheetRow>();
 
     const { container } = render(
-      <TimesheetPrint month="2026-09" staff={staff} rows={rows} roleName={() => 'Educator'} />,
+      <TimesheetPrint
+        month="2026-09"
+        staff={staff}
+        rows={rows}
+        roleName={() => 'Educator'}
+        kindergarten={{ displayName: 'Grădinița Startica' } as never}
+      />,
     );
 
     expect((await screen.findAllByText(/Grădinița Startica/)).length).toBeGreaterThan(0);

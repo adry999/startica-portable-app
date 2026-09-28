@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { formatDateLong } from '#shared/format/date-format.mjs';
+import { formatDate, formatDateLong } from '#shared/format/date-format.mjs';
 import { usePaymentReceipt } from './usePaymentReceipt';
 import styles from './PaymentReceiptThermal.module.css';
 
@@ -96,7 +96,8 @@ export function PaymentReceiptThermal() {
           <div className={styles.restBox}>
             <span>Rest {receipt.allocationRows.at(-1)?.label.replace('Taxă ', '')}</span>
             <strong>
-              {formatMoney(receipt.restBox.amount, receipt.restBox.currency)} · scadent {receipt.restBox.dueLabel}
+              {formatMoney(receipt.restBox.amount, receipt.restBox.currency)} · scadent{' '}
+              {formatDate(receipt.restBox.dueLabel)}
             </strong>
           </div>
         )}

@@ -24,6 +24,7 @@ import {
   type SmsSendResultView,
 } from '@shared/sms';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { useKindergarten } from '@shared/api/useKindergarten';
 import type { ViewKey } from '@shared/view-key';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -157,6 +158,9 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   const [printOptions, setPrintOptions] = useState<PrintOptions | null>(null);
   const statusData = useStatus(month);
   const yearData = useSchoolYearStatus(mode === 'year' ? startYear : null);
+  // Montat aici (nu în StatusPrint) ca cererea /api/kindergarten să pornească la intrarea pe
+  // ecran, nu la apăsarea „Tipărește” — vezi gardă kindergarten.ready din efectul de tipărire (M4).
+  const kindergarten = useKindergarten();
   const sms = useSmsStatus();
   const lastNotified = useSmsLastNotified();
   const smsSend = useSmsSend();
@@ -245,8 +249,10 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
 
   // Randarea confirmării tipărite trebuie să apară în DOM înainte de window.print();
   // afterprint golește starea, ca situația tipărită să nu rămână montată pe ecran.
+  // Așteaptă kindergarten.ready (M4) — altfel foaia tipărită iese cu „Startica” generic,
+  // pentru că /api/kindergarten nu a răspuns încă la momentul window.print().
   useEffect(() => {
-    if (!printOptions) return;
+    if (!printOptions || !kindergarten.ready) return;
     const timer = setTimeout(() => window.print(), 0);
     const onAfterPrint = () => setPrintOptions(null);
     window.addEventListener('afterprint', onAfterPrint);
@@ -254,7 +260,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
       clearTimeout(timer);
       window.removeEventListener('afterprint', onAfterPrint);
     };
-  }, [printOptions]);
+  }, [printOptions, kindergarten.ready]);
 
   useTopbarActions(
     <div className={styles.headerActions}>
@@ -312,6 +318,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           rows={printOptions.scope === 'all' ? statusData.allRows : statusData.rows}
           showPhone={printOptions.showPhone}
           orientation={printOptions.orientation}
+          kindergarten={kindergarten.settings}
         />
       )}
 

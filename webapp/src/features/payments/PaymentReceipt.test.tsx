@@ -121,6 +121,28 @@ describe('PaymentReceipt', () => {
     expect(screen.getByText(/Nu ține locul bonului fiscal\./)).toBeInTheDocument();
   });
 
+  it('subsolul arată versiunea reală a aplicației, nu una fixă în cod (m5)', async () => {
+    const currentState = stateWith([{ ...paymentUnnumbered, receiptNumber: 41 }]);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.7.2' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: currentState, revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderReceipt();
+
+    expect(await screen.findByText(/Generat din Startica v1\.7\.2/)).toBeInTheDocument();
+  });
+
   it('retipărirea unei achitări deja numerotate nu trimite din nou cererea', async () => {
     const numberedState = stateWith([{ ...paymentUnnumbered, receiptNumber: 41 }]);
     const receiptNumberCalls: unknown[] = [];

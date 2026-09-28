@@ -1,12 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { StatusPrint } from './StatusPrint';
 import type { StatusRowView } from './useStatus';
-
-function jsonResponse(body: unknown) {
-  return { ok: true, status: 200, json: async () => body };
-}
 
 const rows: StatusRowView[] = [
   {
@@ -50,29 +46,17 @@ function renderPrint(overrides: Partial<Parameters<typeof StatusPrint>[0]> = {})
       rows={rows}
       showPhone={true}
       orientation="landscape"
+      kindergarten={null}
       {...overrides}
     />,
   );
 }
 
 describe('StatusPrint', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  it('arată antetul, totalurile și rândurile, cu restanța evidențiată', () => {
+    renderPrint({ kindergarten: { displayName: 'Grădinița Startica', idno: '1000600000000' } as never });
 
-  it('arată antetul, totalurile și rândurile, cu restanța evidențiată', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/kindergarten')
-          return jsonResponse({ displayName: 'Grădinița Startica', idno: '1000600000000' });
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
-
-    renderPrint();
-
-    expect(await screen.findByText('Grădinița Startica')).toBeInTheDocument();
+    expect(screen.getByText('Grădinița Startica')).toBeInTheDocument();
     expect(screen.getByText(/Situația plăților · 2026 Sep/)).toBeInTheDocument();
     expect(screen.getByText(/filtru: toate grupele/)).toBeInTheDocument();
 
@@ -87,14 +71,14 @@ describe('StatusPrint', () => {
     expect(screen.getAllByText(formatMoney(2200)).length).toBeGreaterThanOrEqual(1);
   });
 
-  it('coloana Telefon apare doar când showPhone e adevărat', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => jsonResponse({})),
-    );
+  it('fără date de grădiniță, antetul cade pe „Startica” generic', () => {
+    renderPrint();
+    expect(screen.getByText('Startica')).toBeInTheDocument();
+  });
 
+  it('coloana Telefon apare doar când showPhone e adevărat', () => {
     renderPrint({ showPhone: false });
-    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.queryByText('Telefon')).not.toBeInTheDocument();
   });
 });

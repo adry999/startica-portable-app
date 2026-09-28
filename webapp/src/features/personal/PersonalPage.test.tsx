@@ -45,6 +45,7 @@ function stubFetch() {
           updatedAt: '2026-09-23T10:00:00Z',
         });
       if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/kindergarten') return jsonResponse({ name: 'Grădinița Test', idno: '' });
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       if (path.startsWith('/api/personal/timesheet')) return jsonResponse({ rows: [] });
       throw new Error(`neașteptat: ${path}`);
@@ -128,5 +129,38 @@ describe('PersonalPage', () => {
     expect(within(topbarSlot).getByRole('button', { name: 'Tipărește' })).toBeInTheDocument();
     // Un singur buton „Tipărește” în tot documentul — nu unul dublat în corpul paginii.
     expect(screen.getAllByRole('button', { name: 'Tipărește' })).toHaveLength(1);
+  });
+
+  it('„Tipărește” din Pontaj deschide doar dialogul; tipărirea pornește la confirmare (M5)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <MemoryRouter>
+            <PersonalPage month="2026-09" />
+          </MemoryRouter>
+        </TopbarActionsProvider>
+      </ToastProvider>,
+    );
+
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    await userEvent.click(within(topbarSlot).getByRole('radio', { name: 'Pontaj' }));
+    await screen.findByText('Ana Popescu');
+
+    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
+    await userEvent.click(within(topbarSlot).getByRole('button', { name: 'Tipărește' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Tipărește pontajul' });
+    expect(dialog).toBeInTheDocument();
+    // Butonul din antet nu declanșează dialogul de tipărire al browserului direct.
+    expect(printSpy).not.toHaveBeenCalled();
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Tipărește' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await vi.waitFor(() => expect(printSpy).toHaveBeenCalledTimes(1));
   });
 });

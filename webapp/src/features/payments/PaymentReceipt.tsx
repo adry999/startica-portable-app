@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Badge, Button, groupTone } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatDateLong } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -21,6 +22,7 @@ export function PaymentReceipt() {
   const { id } = useParams();
   const navigate = useNavigate();
   const receipt = usePaymentReceipt(id ?? '');
+  const session = useAppSession();
 
   if (receipt.status === 'loading') return <p>Se încarcă confirmarea de plată…</p>;
   if (receipt.status === 'not-found' || !receipt.payment)
@@ -47,7 +49,7 @@ export function PaymentReceipt() {
           Bon 58 mm
         </Button>
       </div>
-      {isA4 ? <ReceiptA4Third data={receipt} /> : <ReceiptA5 data={receipt} />}
+      {isA4 ? <ReceiptA4Third data={receipt} /> : <ReceiptA5 data={receipt} appVersion={session.state.version} />}
     </div>
   );
 }
@@ -78,7 +80,7 @@ function EurBlock({ data }: { data: PaymentReceiptData }) {
   );
 }
 
-function ReceiptA5({ data }: { data: PaymentReceiptData }) {
+function ReceiptA5({ data, appVersion }: { data: PaymentReceiptData; appVersion: string }) {
   const { payment, child, kindergarten } = data;
   if (!payment) return null;
   const receiptNumber = payment.receiptNumber ? String(payment.receiptNumber).padStart(4, '0') : '—';
@@ -158,7 +160,7 @@ function ReceiptA5({ data }: { data: PaymentReceiptData }) {
 
       <p className={styles.footer}>
         {kindergarten?.footerNote || 'Document intern de confirmare a plății. Nu ține locul bonului fiscal.'} · Generat
-        din Startica v2.0.0
+        din Startica{appVersion ? ` v${appVersion}` : ''}
       </p>
     </div>
   );
