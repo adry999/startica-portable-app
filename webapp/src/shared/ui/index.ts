@@ -27,6 +27,7 @@ export {
   type TopbarTitleOverride,
 } from './TopbarActions';
 export { SmsConfirmDialog, type SmsConfirmDialogProps, type SmsRecipientView } from './sms/SmsConfirmDialog';
+export { ScrollArea, type ScrollAreaProps } from './ScrollArea';
 export { Skeleton } from './Skeleton';
 export { LoadingState } from './LoadingState';
 export { useDelayedLoading } from './useDelayedLoading';

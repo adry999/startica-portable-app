@@ -1,4 +1,5 @@
 import {
+  ScrollArea,
   TopbarActionsProvider,
   useTopbarActions,
   useTopbarActionsSlot,
@@ -19,6 +20,24 @@ export function AlteleSection() {
   return (
     <div className={styles.section}>
       <h2 className={styles.heading}>Altele</h2>
+
+      <ComponentShowcase
+        name="ScrollArea"
+        importLine="import { ScrollArea } from '@shared/ui';"
+        reference="Formulare.dc.html#15g (13-formulare.md 15g) — bară de 3px, 5px la hover/tragere, pistă invizibilă"
+      >
+        <DemoRow label="demo">
+          <div className={styles.scrollDemoFrame}>
+            <ScrollArea>
+              <ul className={styles.scrollDemoList}>
+                {Array.from({ length: 20 }, (_, index) => (
+                  <li key={index}>Element {index + 1}</li>
+                ))}
+              </ul>
+            </ScrollArea>
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
 
       <ComponentShowcase
         name="TopbarActionsProvider"

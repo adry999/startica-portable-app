@@ -38,12 +38,14 @@
 }
 
 .nav {
+  flex: 1;
+  min-height: 0;
+}
+
+.navList {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
 }
 
 .navGroup {

@@ -38,3 +38,23 @@
   font-size: 13px;
   color: var(--muted);
 }
+
+.scrollDemoFrame {
+  height: 160px;
+  width: 220px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.scrollDemoList {
+  margin: 0;
+  padding: var(--space-8) var(--space-16);
+  list-style: none;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.scrollDemoList li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}

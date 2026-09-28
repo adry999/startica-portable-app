@@ -1,0 +1,80 @@
+.root {
+  position: relative;
+  overflow: hidden;
+}
+
+.root::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, var(--white));
+  pointer-events: none;
+}
+
+.root.atEnd::after {
+  display: none;
+}
+
+.viewport {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.bar {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: 2px;
+  width: 7px;
+  border-radius: 99px;
+  opacity: 0;
+  transition:
+    opacity 0.2s 0.8s,
+    background 0.15s;
+}
+
+.root:hover .bar,
+.root:focus-within .bar,
+.bar.dragging {
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.thumb {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  min-height: 32px;
+  border-radius: 99px;
+  background: var(--dashed-border-empty);
+  transition:
+    width 0.15s,
+    background 0.15s;
+}
+
+.bar:hover {
+  background: rgba(58, 71, 80, 0.04);
+}
+
+.bar:hover .thumb {
+  width: 5px;
+  background: var(--input-border);
+}
+
+.bar.dragging {
+  background: rgba(58, 71, 80, 0.06);
+}
+
+.bar.dragging .thumb {
+  width: 5px;
+  background: var(--subtle);
+}

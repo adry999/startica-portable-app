@@ -1,4 +1,4 @@
-import { Badge } from '@shared/ui';
+import { Badge, ScrollArea } from '@shared/ui';
 import { NAV_GROUPS, type ViewKey } from './nav-items';
 import { SaveStatusCard, type SaveStatusCardProps } from './SaveStatusCard';
 import { SyncStatusCard, type SyncStatusCardProps } from './SyncStatusCard';
@@ -51,32 +51,34 @@ export function Sidebar({
         </div>
       )}
 
-      <nav className={styles.nav}>
-        {NAV_GROUPS.map(group => (
-          <div key={group.title ?? 'primary'} className={styles.navGroup}>
-            {group.title && <p className={styles.navGroupTitle}>{group.title}</p>}
-            {group.items.map(item => {
-              const count = counts[item.view];
-              const active = item.view === activeView;
-              return (
-                <button
-                  key={item.view}
-                  type="button"
-                  className={active ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-                  aria-current={active ? 'page' : undefined}
-                  onClick={() => onNavigate(item.view)}
-                >
-                  <span className={`${styles.marker} ${styles[group.marker]}`} aria-hidden="true" />
-                  <span className={styles.navLabel}>{item.label}</span>
-                  {!!count && <Badge tone="pink">{count}</Badge>}
-                  {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare doar aici. */}
-                  {item.view === 'settings' && <small className={styles.navVersion}>{version}</small>}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
+      <ScrollArea className={styles.nav}>
+        <nav className={styles.navList}>
+          {NAV_GROUPS.map(group => (
+            <div key={group.title ?? 'primary'} className={styles.navGroup}>
+              {group.title && <p className={styles.navGroupTitle}>{group.title}</p>}
+              {group.items.map(item => {
+                const count = counts[item.view];
+                const active = item.view === activeView;
+                return (
+                  <button
+                    key={item.view}
+                    type="button"
+                    className={active ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={() => onNavigate(item.view)}
+                  >
+                    <span className={`${styles.marker} ${styles[group.marker]}`} aria-hidden="true" />
+                    <span className={styles.navLabel}>{item.label}</span>
+                    {!!count && <Badge tone="pink">{count}</Badge>}
+                    {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare doar aici. */}
+                    {item.view === 'settings' && <small className={styles.navVersion}>{version}</small>}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+      </ScrollArea>
 
       {syncStatus ? <SyncStatusCard {...syncStatus} /> : <SaveStatusCard {...saveStatus} />}
     </aside>
