@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { isoDateOf } from '@domain/calendar-month.mjs';
 import type { SmsLastNotifiedView } from './sms-types';
@@ -13,20 +13,19 @@ export interface SmsLastNotifiedData {
 /** Ultima notificare SMS per copil — folosit de badge-ul „Notificat azi" din De notificat/Situația plăților. */
 export function useSmsLastNotified(): SmsLastNotifiedData {
   const [byChild, setByChild] = useState<Record<string, SmsLastNotifiedView>>({});
+  // M11: un token de cerere ignoră un răspuns vechi sosit după unul mai nou — fostul `cancelled`
+  // proteja doar eroarea de la montare, nu și un succes sosit după un refresh() mai nou.
+  const requestIdRef = useRef(0);
 
   async function refresh() {
+    const requestId = ++requestIdRef.current;
     const response = (await requestJson('/api/sms-last-notified')) as Record<string, SmsLastNotifiedView>;
-    setByChild(response);
+    if (requestId === requestIdRef.current) setByChild(response);
   }
 
   useEffect(() => {
-    let cancelled = false;
-    refresh().catch(() => {
-      if (cancelled) return;
-    });
-    return () => {
-      cancelled = true;
-    };
+    refresh().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function notifiedToday(childId: string, todayStr: string): boolean {
