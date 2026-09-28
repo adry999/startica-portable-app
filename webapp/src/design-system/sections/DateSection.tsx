@@ -1,5 +1,18 @@
 import { useState } from 'react';
-import { Badge, Card, DataTable, RowMenu, SelectionBar, type DataTableColumn } from '@shared/ui';
+import {
+  Badge,
+  Card,
+  DataTable,
+  ListToolbar,
+  PersonCell,
+  ProfileLayout,
+  ProfileNotFound,
+  ProfileSection,
+  RowMenu,
+  SelectionBar,
+  StatCard,
+  type DataTableColumn,
+} from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import { DEMO_PAYMENT_ROWS, type DemoPaymentRow } from '../fixtures';
@@ -31,6 +44,7 @@ const PAYMENT_COLUMNS: DataTableColumn<DemoPaymentRow>[] = [
 /** Componente pentru afișarea datelor: statusuri, carduri, tabel și acțiunile lui. */
 export function DateSection() {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
+  const [search, setSearch] = useState('');
 
   return (
     <div className={styles.section}>
@@ -79,6 +93,19 @@ export function DateSection() {
       </ComponentShowcase>
 
       <ComponentShowcase
+        name="PersonCell"
+        importLine="import { PersonCell } from '@shared/ui';"
+        reference="27-componente-comune.md #1 — avatar+nume+sub unic (Copii, Personal, Candidați)"
+      >
+        <DemoRow label="md">
+          <PersonCell name="Coceva Alisa" sub="Contract 214" tone="orange" />
+        </DemoRow>
+        <DemoRow label="lg (banda fișei)">
+          <PersonCell size="lg" name="Coceva Alisa" sub="Contract 214" tone="orange" />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
         name="DataTable"
         importLine="import { DataTable } from '@shared/ui';"
         reference="05-achitari.md (tabel sortabil) · vizual în Achitari.dc.html#5a"
@@ -93,6 +120,17 @@ export function DateSection() {
             onSelectedRowKeysChange={setSelectedRowKeys}
           />
         </DemoRow>
+        <DemoRow label="groupBy (27-componente-comune.md #2 — TeamView, grupat pe departamente)">
+          <DataTable
+            columns={PAYMENT_COLUMNS}
+            rows={DEMO_PAYMENT_ROWS}
+            rowKey={row => row.id}
+            groupBy={{
+              key: row => row.group,
+              label: key => <strong>{key}</strong>,
+            }}
+          />
+        </DemoRow>
         <DemoRow label="gol">
           <DataTable
             columns={PAYMENT_COLUMNS}
@@ -100,6 +138,79 @@ export function DateSection() {
             rowKey={row => row.id}
             emptyState={<span>Niciun rezultat pentru filtrele alese.</span>}
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ListToolbar"
+        importLine="import { ListToolbar } from '@shared/ui';"
+        reference="27-componente-comune.md #3 — căutare + acțiuni + contor, unic (Copii, Personal, Candidați)"
+      >
+        <DemoRow label="control">
+          <ListToolbar
+            search={{ value: search, onChange: setSearch, ariaLabel: 'Caută', placeholder: 'Caută după nume' }}
+            trailing="8 persoane"
+          >
+            <button type="button">Funcții</button>
+          </ListToolbar>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ProfileLayout"
+        importLine="import { ProfileLayout } from '@shared/ui';"
+        reference="27-componente-comune.md #4 — bandă + grilă stânga/dreapta (Fișa copilului, Fișa angajatului)"
+      >
+        <DemoRow label="control">
+          <ProfileLayout
+            back={{ label: 'Copii', onClick: () => {} }}
+            header={{
+              name: 'Coceva Alisa',
+              tone: 'orange',
+              meta: '5a 2l · Contract 214',
+              badges: [
+                { label: 'Activ', tone: 'mint' },
+                { label: 'Fluturași', tone: 'orange' },
+              ],
+              actions: <button type="button">Editează fișa</button>,
+            }}
+            left={<ProfileSection title="Părinți">Ana Coceva · 069 000 000</ProfileSection>}
+            stats={[<StatCard key="sold" label="Sold" value="0 lei" tone="mint" sub="La zi" />]}
+            right={<ProfileSection title="Istoric plăți">Fără achitări.</ProfileSection>}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ProfileSection"
+        importLine="import { ProfileSection } from '@shared/ui';"
+        reference="27-componente-comune.md #4 — card cu titlu și, opțional, un link în dreapta"
+      >
+        <DemoRow label="cu acțiune">
+          <ProfileSection title="Note" action={{ label: '+ Notă', onClick: () => {} }}>
+            Nicio notă încă.
+          </ProfileSection>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="StatCard"
+        importLine="import { StatCard } from '@shared/ui';"
+        reference="27-componente-comune.md #4 — mini-card de statistică din dreapta unei fișe"
+      >
+        <DemoRow label="control">
+          <StatCard label="Sold" value="0 lei" tone="mint" sub="La zi" />
+          <StatCard label="Salariu" value="•••••" link={{ label: 'Vezi cu PIN →', onClick: () => {} }} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ProfileNotFound"
+        importLine="import { ProfileNotFound } from '@shared/ui';"
+        reference="27-componente-comune.md #4 — fișa cerută nu a fost găsită"
+      >
+        <DemoRow label="control">
+          <ProfileNotFound back={{ label: 'Copii', onClick: () => {} }} />
         </DemoRow>
       </ComponentShowcase>
 

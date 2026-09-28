@@ -1,0 +1,87 @@
+.cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  min-width: 0;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.lg {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  font-family: var(--font-heading);
+}
+
+.cellLg {
+  gap: var(--space-20);
+}
+
+.cellLg .name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.cellLg .sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 14px;
+}
+
+.orange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.neutral {
+  background: var(--neutral-soft);
+  color: var(--subtle);
+}

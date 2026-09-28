@@ -4,14 +4,16 @@ import {
   Badge,
   BnmRateLink,
   Button,
-  Card,
   DataTable,
   LoadingState,
+  ProfileLayout,
+  ProfileNotFound,
+  ProfileSection,
   RowMenu,
   SearchSelect,
+  StatCard,
   groupTone,
   useToast,
-  type CardTone,
   type DataTableColumn,
   type PillTone,
 } from '@shared/ui';
@@ -26,7 +28,6 @@ import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import { initials } from '@shared/format/initials';
 import type { Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
@@ -62,21 +63,13 @@ export function ChildProfileView({
   if (profileData.status === 'failed')
     return <p className={styles.notice}>{profileData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
   if (profileData.status === 'not-found' || !profileData.child) {
-    return (
-      <>
-        <button type="button" className={styles.backLink} onClick={onBack}>
-          ← Copii
-        </button>
-        <p className={styles.notice}>Fișa nu a putut fi găsită.</p>
-      </>
-    );
+    return <ProfileNotFound back={{ label: 'Copii', onClick: onBack }} />;
   }
 
   const { child, obligation: childObligation } = profileData;
   const isEurChild = childObligation?.currency === 'EUR';
   const todaysRate = latestKnownRate(rates);
   const heroTone = groupTone(child.groupId, profileData.groups);
-  const heroCardTone: CardTone = heroTone === 'neutral' ? 'white' : heroTone;
   const groupSquareTone = GROUP_SQUARE_TONE_CLASS[heroTone];
 
   async function changeGroup(groupId: string) {
@@ -107,139 +100,130 @@ export function ChildProfileView({
 
   return (
     <>
-      <p className={styles.breadcrumb}>
-        <button type="button" onClick={onBack}>
-          Copii
-        </button>{' '}
-        / {child.name}
-      </p>
-
-      <Card tone={heroCardTone} decorative className={styles.profileHeader}>
-        <span className={styles.profileAvatar}>{initials(child.name)}</span>
-        <div className={styles.profileHeadInfo}>
-          <h2 className={styles.profileName}>{child.name}</h2>
-          <p className={styles.profileMeta}>
-            Născut {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {profileData.age} · Contract{' '}
-            {profileData.contractLabel}
-            <span className={styles.profileBadgeMint}>{child.status}</span>
-            <span className={styles.profileBadgeOrange}>{profileData.groupName}</span>
-          </p>
-        </div>
-        <div className={styles.profileActions}>
-          <Button variant="white" onClick={() => setEditDrawerOpen(true)}>
-            Editează fișa
-          </Button>
-          <Button onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}>+ Plată</Button>
-        </div>
-      </Card>
-
-      <div className={styles.profileGrid}>
-        <div className={styles.profileLeft}>
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Părinți</p>
-            <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
-            {(child.parent2 || child.phone2) && (
-              <ParentRow
-                name={child.parent2 || ''}
-                phone={child.phone2 || ''}
-                onAddPhone={() => setEditDrawerOpen(true)}
-              />
-            )}
-          </Card>
-
-          <Card className={styles.profileSection}>
-            <p className={styles.sectionTitle}>Grupă și educator</p>
-            <div className={styles.groupRow}>
-              <span className={`${styles.groupSquare} ${styles[groupSquareTone]}`}>
-                {profileData.groupName.charAt(0).toUpperCase() || '—'}
-              </span>
-              <div className={styles.groupInfo}>
-                <strong>{profileData.groupName}</strong>
-                <small>
-                  {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii · Educator{' '}
-                  {profileData.group?.educator || '—'}
-                </small>
-              </div>
-              {changingGroup ? (
-                <SearchSelect
-                  ariaLabel="Schimbă grupa"
-                  placeholder="Alege o grupă…"
-                  value={child.groupId ?? ''}
-                  onChange={value => void changeGroup(value)}
-                  options={[
-                    { value: '', label: 'Fără grupă' },
-                    ...profileData.groups.map(group => ({ value: group.id, label: group.name })),
-                  ]}
+      <ProfileLayout
+        back={{ label: 'Copii', onClick: onBack }}
+        header={{
+          name: child.name,
+          tone: heroTone,
+          meta: (
+            <>
+              Născut {child.birthDate ? formatDate(child.birthDate) : 'dată necunoscută'} · {profileData.age} · Contract{' '}
+              {profileData.contractLabel}
+            </>
+          ),
+          badges: [
+            { label: child.status, tone: 'mint' },
+            { label: profileData.groupName, tone: 'orange' },
+          ],
+          actions: (
+            <>
+              <Button variant="white" onClick={() => setEditDrawerOpen(true)}>
+                Editează fișa
+              </Button>
+              <Button onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}>+ Plată</Button>
+            </>
+          ),
+        }}
+        left={
+          <>
+            <ProfileSection title="Părinți">
+              <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
+              {(child.parent2 || child.phone2) && (
+                <ParentRow
+                  name={child.parent2 || ''}
+                  phone={child.phone2 || ''}
+                  onAddPhone={() => setEditDrawerOpen(true)}
                 />
-              ) : (
-                <button type="button" className={styles.sectionLink} onClick={() => setChangingGroup(true)}>
-                  Schimbă
-                </button>
               )}
-            </div>
-          </Card>
+            </ProfileSection>
 
-          <Card tone={child.notes ? 'yellow' : 'white'} className={styles.profileSection}>
-            <div className={styles.sectionHead}>
-              <p className={styles.sectionTitle}>Note</p>
-              <button type="button" className={styles.sectionLink} onClick={() => setEditDrawerOpen(true)}>
-                + Notă
-              </button>
-            </div>
-            <p>{child.notes || 'Nicio notă încă.'}</p>
-          </Card>
-        </div>
+            <ProfileSection title="Grupă și educator">
+              <div className={styles.groupRow}>
+                <span className={`${styles.groupSquare} ${styles[groupSquareTone]}`}>
+                  {profileData.groupName.charAt(0).toUpperCase() || '—'}
+                </span>
+                <div className={styles.groupInfo}>
+                  <strong>{profileData.groupName}</strong>
+                  <small>
+                    {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii · Educator{' '}
+                    {profileData.group?.educator || '—'}
+                  </small>
+                </div>
+                {changingGroup ? (
+                  <SearchSelect
+                    ariaLabel="Schimbă grupa"
+                    placeholder="Alege o grupă…"
+                    value={child.groupId ?? ''}
+                    onChange={value => void changeGroup(value)}
+                    options={[
+                      { value: '', label: 'Fără grupă' },
+                      ...profileData.groups.map(group => ({ value: group.id, label: group.name })),
+                    ]}
+                  />
+                ) : (
+                  <button type="button" className={styles.sectionLink} onClick={() => setChangingGroup(true)}>
+                    Schimbă
+                  </button>
+                )}
+              </div>
+            </ProfileSection>
 
-        <div className={styles.profileRight}>
-          <div className={styles.miniCards}>
-            <Card tone="mint" className={styles.miniCard}>
-              <span>Sold</span>
-              <strong>{formatMoney(childObligation?.rest ?? null, childObligation?.currency)}</strong>
-              <small>
-                {childObligation?.rest
-                  ? `${formatMoney(childObligation.rest, childObligation.currency)} datorie${
-                      isEurChild && todaysRate
-                        ? ` · ≈ ${formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi`
-                        : ''
-                    }`
-                  : 'La zi'}
-              </small>
-            </Card>
-            <Card tone="yellow" className={styles.miniCard}>
-              <span>Taxă lunară</span>
-              <strong>
-                {formatMoney(profileData.feeEntry?.amount ?? child.fee, profileData.feeEntry?.currency ?? 'MDL')}
-              </strong>
-              <small>{childObligation ? `scadență ziua ${Number(childObligation.due.slice(-2))}` : '—'}</small>
-            </Card>
-            <Card className={styles.miniCard}>
-              <span>Contract</span>
-              <strong>{profileData.contractLabel}</strong>
-              <small>{child.contractDate ? formatDate(child.contractDate) : '—'}</small>
-            </Card>
-          </div>
+            <ProfileSection
+              title="Note"
+              tone={child.notes ? 'yellow' : 'white'}
+              action={{ label: '+ Notă', onClick: () => setEditDrawerOpen(true) }}
+            >
+              <p>{child.notes || 'Nicio notă încă.'}</p>
+            </ProfileSection>
+          </>
+        }
+        stats={[
+          <StatCard
+            key="sold"
+            label="Sold"
+            tone="mint"
+            value={formatMoney(childObligation?.rest ?? null, childObligation?.currency)}
+            sub={
+              childObligation?.rest
+                ? `${formatMoney(childObligation.rest, childObligation.currency)} datorie${
+                    isEurChild && todaysRate
+                      ? ` · ≈ ${formatMoney(convertAmount(childObligation.rest, 'EUR', 'MDL', todaysRate), 'MDL')} azi`
+                      : ''
+                  }`
+                : 'La zi'
+            }
+          />,
+          <StatCard
+            key="fee"
+            label="Taxă lunară"
+            tone="yellow"
+            value={formatMoney(profileData.feeEntry?.amount ?? child.fee, profileData.feeEntry?.currency ?? 'MDL')}
+            sub={childObligation ? `scadență ziua ${Number(childObligation.due.slice(-2))}` : '—'}
+          />,
+          <StatCard
+            key="contract"
+            label="Contract"
+            value={profileData.contractLabel}
+            sub={child.contractDate ? formatDate(child.contractDate) : '—'}
+          />,
+        ]}
+        right={
+          <>
+            <ProfileSection
+              title="Istoric plăți"
+              action={{ label: 'Toate achitările →', onClick: () => onNavigate('payments', { copil: child.id }) }}
+            >
+              <PaymentHistoryTable
+                payments={profileData.payments}
+                showEurColumns={isEurChild}
+                onPrint={paymentId => navigate(`/achitari/${paymentId}/confirmare`)}
+              />
+            </ProfileSection>
 
-          <Card className={styles.profileSection}>
-            <div className={styles.sectionHead}>
-              <p className={styles.sectionTitle}>Istoric plăți</p>
-              <button
-                type="button"
-                className={styles.sectionLink}
-                onClick={() => onNavigate('payments', { copil: child.id })}
-              >
-                Toate achitările →
-              </button>
-            </div>
-            <PaymentHistoryTable
-              payments={profileData.payments}
-              showEurColumns={isEurChild}
-              onPrint={paymentId => navigate(`/achitari/${paymentId}/confirmare`)}
-            />
-          </Card>
-
-          <ChildAttendanceSection childId={child.id} month={month} />
-        </div>
-      </div>
+            <ChildAttendanceSection childId={child.id} month={month} />
+          </>
+        }
+      />
 
       <ChildFormDrawer
         key={editDrawerOpen ? child.id : 'closed'}

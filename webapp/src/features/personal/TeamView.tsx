@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Card, FilterPills, LoadingState, SearchInput, type PillTone } from '@shared/ui';
+import { Button, DataTable, FilterPills, ListToolbar, LoadingState, type PillTone } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
-import { bothBranchesLabel, birthdayTag, initials } from '@shared/personal/staff-labels';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import { RolesDrawer } from './RolesDrawer';
+import { buildStaffColumns } from './staffColumns';
 import type { Staff, TimesheetRow } from '@shared/personal/personal.types';
 import type { Group } from '@contracts/record-types.mjs';
 import styles from './TeamView.module.css';
@@ -17,29 +17,7 @@ export interface TeamViewProps {
   onCloseStaffForm: () => void;
 }
 
-type SortKey = 'name' | 'role' | 'group';
-
 const DEPARTMENT_TONES: PillTone[] = ['orange', 'mint', 'yellow', 'pink'];
-
-function groupAndRoleLabel(staffId: string, groups: Group[]): string {
-  for (const group of groups) {
-    const entry = group.team?.find(member => member.staffId === staffId);
-    if (entry) {
-      const roleLabel =
-        entry.role === 'principal' ? 'principal' : entry.role === 'asistent' ? 'asistent' : 'înlocuitor';
-      return `${group.name} · ${roleLabel}`;
-    }
-  }
-  return '—';
-}
-
-/** Codul de azi din pontaj → eticheta din 23a (La lucru / Concediu / Boală). */
-function todayBadgeLabel(code: TimesheetRow['code'] | '' | undefined): string {
-  if (code === 'CO') return 'Concediu';
-  if (code === 'CM') return 'Boală';
-  if (code === 'A') return 'Absent';
-  return 'La lucru';
-}
 
 /** Echipa (23a): tabel grupat pe departamente, cu filtru și sortare din antet. Rând → fișa angajatului (23j). */
 export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: TeamViewProps) {
@@ -50,7 +28,6 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
 
   const [search, setSearch] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [sort, setSort] = useState<SortKey>('name');
   const [rolesOpen, setRolesOpen] = useState(false);
   const [todayCodes, setTodayCodes] = useState<Map<string, string>>(new Map());
 
@@ -67,12 +44,21 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
       .catch(() => setTodayCodes(new Map()));
   }, []);
 
-  const departmentTone = useMemo(() => {
-    const sorted = [...personal.departments].sort((a, b) => a.order - b.order);
-    return new Map(
-      sorted.map((department, index) => [department.id, DEPARTMENT_TONES[index % DEPARTMENT_TONES.length]]),
-    );
-  }, [personal.departments]);
+  const departmentsSorted = useMemo(
+    () => [...personal.departments].sort((a, b) => a.order - b.order),
+    [personal.departments],
+  );
+
+  const departmentTone = useMemo(
+    () =>
+      new Map(
+        departmentsSorted.map((department, index) => [
+          department.id,
+          DEPARTMENT_TONES[index % DEPARTMENT_TONES.length],
+        ]),
+      ),
+    [departmentsSorted],
+  );
 
   const activeStaff = personal.staff.filter(person => !person.archivedAt);
 
@@ -86,34 +72,26 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
     });
   }, [activeStaff, departmentFilter, search, personal]);
 
-  function sortValue(person: Staff): string {
-    if (sort === 'role') return personal.roleName(person.roleId);
-    if (sort === 'group') return groupAndRoleLabel(person.id, groups);
-    return person.name;
-  }
-
-  const departmentsSorted = [...personal.departments].sort((a, b) => a.order - b.order);
-  const groupedByDepartment = departmentsSorted
-    .map(department => ({
-      department,
-      staff: filteredStaff
-        .filter(person => personal.roleDepartmentId(person.roleId) === department.id)
-        .sort((a, b) => sortValue(a).localeCompare(sortValue(b), 'ro')),
-    }))
-    .filter(group => group.staff.length > 0);
-
   if (personal.status === 'loading') return <LoadingState />;
   if (personal.status === 'failed')
     return <p className={styles.notice}>{personal.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
+  const columns = buildStaffColumns({
+    groups,
+    branchIds,
+    roleName: roleId => personal.roleName(roleId),
+    todayCodes,
+  });
+
   return (
     <div className={styles.root}>
-      <div className={styles.toolbar}>
-        <SearchInput value={search} onChange={setSearch} ariaLabel="Caută angajat" placeholder="Caută angajat" />
+      <ListToolbar
+        search={{ value: search, onChange: setSearch, ariaLabel: 'Caută angajat', placeholder: 'Caută angajat' }}
+      >
         <Button variant="outline" onClick={() => setRolesOpen(true)}>
           Funcții
         </Button>
-      </div>
+      </ListToolbar>
 
       <FilterPills
         groups={[
@@ -133,77 +111,34 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
         ]}
       />
 
-      <Card className={styles.tableCard}>
-        <div className={styles.headRow}>
-          <button type="button" className={styles.sortButton} onClick={() => setSort('name')}>
-            Angajat
-          </button>
-          <button type="button" className={styles.sortButton} onClick={() => setSort('role')}>
-            Funcția
-          </button>
-          <button type="button" className={styles.sortButton} onClick={() => setSort('group')}>
-            Grupa și rolul
-          </button>
-          <span>Azi</span>
-          <span>Telefon</span>
-        </div>
-
-        {groupedByDepartment.length === 0 && <p className={styles.notice}>Niciun angajat găsit.</p>}
-
-        {groupedByDepartment.map(({ department, staff }) => (
-          <div key={department.id}>
-            <div className={styles.departmentHead}>
-              <span
-                className={styles.departmentSquare}
-                style={{ background: `var(--${departmentTone.get(department.id)}-soft, var(--neutral-soft))` }}
-                aria-hidden
-              />
-              <strong>{department.name}</strong>
-              <span className={styles.departmentCount}>{staff.length}</span>
-            </div>
-            {staff.map(person => {
-              const tag = bothBranchesLabel(person, branchIds);
-              const birthday = birthdayTag(person.birth);
-              return (
-                <div
-                  key={person.id}
-                  className={styles.row}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onOpenStaff(person.id)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter') onOpenStaff(person.id);
-                  }}
-                >
-                  <span className={styles.nameCell}>
-                    <span className={styles.avatar}>{initials(person.name)}</span>
-                    <span>
-                      <strong>{person.name}</strong>
-                      {(tag || birthday) && (
-                        <span className={styles.tagLine}>
-                          {[tag, birthday && `ziua de naștere ${birthday}`].filter(Boolean).join(' · ')}
-                        </span>
-                      )}
-                    </span>
-                  </span>
-                  <span>{personal.roleName(person.roleId)}</span>
-                  <span>{groupAndRoleLabel(person.id, groups)}</span>
-                  <span>
-                    <Badge
-                      tone={
-                        todayCodes.get(person.id) === 'CO' || todayCodes.get(person.id) === 'CM' ? 'yellow' : 'mint'
-                      }
-                    >
-                      {todayBadgeLabel(todayCodes.get(person.id) as TimesheetRow['code'])}
-                    </Badge>
-                  </span>
-                  <span>{person.phone || '—'}</span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </Card>
+      <DataTable
+        columns={columns}
+        rows={filteredStaff}
+        rowKey={person => person.id}
+        onRowClick={person => onOpenStaff(person.id)}
+        emptyState={<p className={styles.notice}>Niciun angajat găsit.</p>}
+        groupBy={{
+          key: person => personal.roleDepartmentId(person.roleId) ?? '',
+          order: departmentsSorted.map(department => department.id),
+          label: departmentId => {
+            const department = departmentsSorted.find(item => item.id === departmentId);
+            const count = filteredStaff.filter(
+              person => personal.roleDepartmentId(person.roleId) === departmentId,
+            ).length;
+            return (
+              <span className={styles.departmentHead}>
+                <span
+                  className={styles.departmentSquare}
+                  style={{ background: `var(--${departmentTone.get(departmentId)}-soft, var(--neutral-soft))` }}
+                  aria-hidden
+                />
+                <strong>{department?.name ?? '—'}</strong>
+                <span className={styles.departmentCount}>{count}</span>
+              </span>
+            );
+          },
+        }}
+      />
 
       {/* C2: 'closed' distinct de 'new' — altfel a doua „+ Angajat” reia instanța (și
           valorile) primei, în loc să pornească de la un formular gol. */}

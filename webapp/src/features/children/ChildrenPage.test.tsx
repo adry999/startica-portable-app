@@ -259,13 +259,14 @@ describe('ChildrenPage', () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
-    const { container } = renderPage();
+    renderPage();
     await userEvent.click(screen.getByText('Andrei Popescu'));
 
-    expect(screen.getByRole('heading', { name: 'Andrei Popescu' })).toBeInTheDocument();
+    const heading = screen.getByRole('heading', { name: 'Andrei Popescu' });
+    expect(heading).toBeInTheDocument();
     expect(screen.getByText(/Contract 7/)).toBeInTheDocument();
     // CF-10: rândul de sub nume începe cu „Născut”.
-    const meta = container.querySelector('[class*="profileMeta"]');
+    const meta = heading.nextElementSibling;
     expect(meta?.textContent).toMatch(/^Născut 24\.09\.2020/);
 
     await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
@@ -277,10 +278,13 @@ describe('ChildrenPage', () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
-    const { container } = renderPage();
+    renderPage();
     await userEvent.click(screen.getByText('Maria Ionescu'));
 
-    const hero = container.querySelector('[class*="profileHeader"]');
+    const heading = screen.getByRole('heading', { name: 'Maria Ionescu' });
+    const hero = heading.closest(
+      '[class*="_white_"], [class*="_orange_"], [class*="_mint_"], [class*="_yellow_"], [class*="_pink_"]',
+    );
     expect(hero?.className).toMatch(/_white_/);
   });
 

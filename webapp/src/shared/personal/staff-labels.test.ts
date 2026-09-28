@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bothBranchesLabel, birthdayTag, initials } from './staff-labels';
-
-describe('initials', () => {
-  it('ia primele litere din primele două cuvinte', () => {
-    expect(initials('Ana Maria Popescu')).toBe('AM');
-  });
-});
+import { bothBranchesLabel, birthdayTag } from './staff-labels';
 
 describe('bothBranchesLabel', () => {
   it('arată eticheta doar când angajatul lucrează la toate filialele', () => {
