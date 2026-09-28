@@ -59,6 +59,11 @@
   width: 44px;
 }
 
+.table .groupRow td {
+  background: var(--cream);
+  padding: var(--space-8) var(--space-20);
+}
+
 /* Rândul se evidențiază la trecerea cursorului chiar și fără onRowClick (00-comun E .row:hover). */
 .table tbody tr:hover {
   background: var(--sand-soft);

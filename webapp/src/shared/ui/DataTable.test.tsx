@@ -9,6 +9,12 @@ interface Child {
   fee: number;
 }
 
+interface Staff {
+  id: string;
+  name: string;
+  departmentId: string;
+}
+
 const children: Child[] = [
   { id: 'c1', name: 'Andrei', fee: 1500 },
   { id: 'c2', name: 'Maria', fee: 2000 },
@@ -146,5 +152,68 @@ describe('DataTable', () => {
     render(<DataTable columns={columns} rows={children} rowKey={c => c.id} />);
     const rows = screen.getAllByRole('row').slice(1);
     expect(rows[0]).not.toHaveAttribute('tabIndex');
+  });
+});
+
+describe('DataTable groupBy', () => {
+  const staff: Staff[] = [
+    { id: 's1', name: 'Ana', departmentId: 'DEP-B' },
+    { id: 's2', name: 'Bogdan', departmentId: 'DEP-A' },
+    { id: 's3', name: 'Cristina', departmentId: 'DEP-B' },
+  ];
+  const staffColumns: DataTableColumn<Staff>[] = [{ key: 'name', header: 'Nume', render: s => s.name }];
+
+  it('randează un titlu de grup cu numărul de rânduri, respectând ordinea dată', () => {
+    render(
+      <DataTable
+        columns={staffColumns}
+        rows={staff}
+        rowKey={s => s.id}
+        groupBy={{
+          key: s => s.departmentId,
+          order: ['DEP-A', 'DEP-B'],
+          label: key => `${key} (${staff.filter(s => s.departmentId === key).length})`,
+        }}
+      />,
+    );
+    const rows = screen.getAllByRole('row').slice(1); // fără antet
+    expect(within(rows[0]).getByText('DEP-A (1)')).toBeInTheDocument();
+    expect(within(rows[1]).getByText('Bogdan')).toBeInTheDocument();
+    expect(within(rows[2]).getByText('DEP-B (2)')).toBeInTheDocument();
+    expect(within(rows[3]).getByText('Ana')).toBeInTheDocument();
+    expect(within(rows[4]).getByText('Cristina')).toBeInTheDocument();
+  });
+
+  it('grupurile care nu apar în `order` merg la coadă, în ordinea de apariție', () => {
+    render(
+      <DataTable
+        columns={staffColumns}
+        rows={staff}
+        rowKey={s => s.id}
+        groupBy={{
+          key: s => s.departmentId,
+          order: ['DEP-B'],
+          label: key => key,
+        }}
+      />,
+    );
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('DEP-B')).toBeInTheDocument();
+    expect(within(rows[3]).getByText('DEP-A')).toBeInTheDocument();
+  });
+
+  it('nu paginează cât timp groupBy e activ', () => {
+    render(
+      <DataTable
+        columns={staffColumns}
+        rows={staff}
+        rowKey={s => s.id}
+        pageSize={1}
+        groupBy={{ key: s => s.departmentId, label: key => key }}
+      />,
+    );
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+    expect(screen.getByText('Cristina')).toBeInTheDocument();
+    expect(screen.queryByText(/Afișez/)).not.toBeInTheDocument();
   });
 });

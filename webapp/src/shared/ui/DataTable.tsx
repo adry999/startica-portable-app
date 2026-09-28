@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Badge } from './Badge';
 import styles from './DataTable.module.css';
 
@@ -9,6 +9,15 @@ export interface DataTableColumn<Row> {
   /** Lipsă = coloana nu e sortabilă (click pe antet nu face nimic). */
   sortValue?: (row: Row) => string | number;
   align?: 'start' | 'end';
+}
+
+export interface DataTableGroupBy<Row> {
+  /** Cheia grupului (ex. `departmentId`). */
+  key: (row: Row) => string;
+  /** Conținutul rândului-titlu pentru un grup — pătrat, nume, număr: la latitudinea apelantului. */
+  label: (key: string) => ReactNode;
+  /** Ordinea grupurilor; grupurile care apar în date dar nu sunt în listă vin la coadă, în ordinea de apariție. */
+  order?: string[];
 }
 
 export interface DataTableProps<Row> {
@@ -26,6 +35,8 @@ export interface DataTableProps<Row> {
   /** Fără fundal/bordură/umbră proprii — pentru ecranele care pun tabelul într-un container deja bordat
    * (bară de filtre + bară de selecție + tabel, ca un singur card, nu cutie-în-cutie). */
   bare?: boolean;
+  /** Rânduri-titlu între grupuri (ex. departamentele din 23a). Dezactivează paginarea. */
+  groupBy?: DataTableGroupBy<Row>;
 }
 
 type SortDirection = 'asc' | 'desc';
@@ -47,6 +58,7 @@ export function DataTable<Row>({
   selectedRowKeys,
   onSelectedRowKeysChange,
   bare = false,
+  groupBy,
 }: DataTableProps<Row>) {
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
   const [page, setPage] = useState(0);
@@ -65,9 +77,30 @@ export function DataTable<Row>({
     });
   }, [rows, sort, columns]);
 
+  const groupedBuckets = useMemo(() => {
+    if (!groupBy) return null;
+    const buckets = new Map<string, Row[]>();
+    for (const row of sortedRows) {
+      const key = groupBy.key(row);
+      const list = buckets.get(key);
+      if (list) list.push(row);
+      else buckets.set(key, [row]);
+    }
+    const orderedKeys: string[] = [];
+    for (const key of groupBy.order ?? []) {
+      if (buckets.has(key)) orderedKeys.push(key);
+    }
+    for (const key of buckets.keys()) {
+      if (!orderedKeys.includes(key)) orderedKeys.push(key);
+    }
+    return orderedKeys.map(key => ({ key, rows: buckets.get(key)! }));
+  }, [sortedRows, groupBy]);
+
   const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
-  const pageRows = sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const pageRows = groupBy
+    ? sortedRows
+    : sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
 
   function toggleSort(column: DataTableColumn<Row>) {
     if (!column.sortValue) return;
@@ -103,6 +136,48 @@ export function DataTable<Row>({
   }
 
   const allOnPageSelected = pageRows.length > 0 && pageRows.every(row => selectedRowKeys?.has(rowKey(row)));
+
+  function renderDataRow(row: Row) {
+    const key = rowKey(row);
+    const selected = selectedRowKeys?.has(key) ?? false;
+    return (
+      <tr
+        key={key}
+        className={
+          [onRowClick ? styles.clickableRow : '', rowClassName?.(row) ?? ''].filter(Boolean).join(' ') || undefined
+        }
+        data-selected={selected || undefined}
+        tabIndex={onRowClick ? 0 : undefined}
+        onClick={onRowClick ? () => onRowClick(row) : undefined}
+        onKeyDown={
+          onRowClick
+            ? event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onRowClick(row);
+                }
+              }
+            : undefined
+        }
+      >
+        {selectable && (
+          <td className={styles.checkboxCell} onClick={event => event.stopPropagation()}>
+            <input
+              type="checkbox"
+              aria-label="Selectează rândul"
+              checked={selected}
+              onChange={() => toggleRow(key)}
+            />
+          </td>
+        )}
+        {columns.map(column => (
+          <td key={column.key} className={column.align === 'end' ? styles.alignEnd : undefined}>
+            {column.render(row)}
+          </td>
+        ))}
+      </tr>
+    );
+  }
 
   return (
     <div className={bare ? styles.wrapBare : styles.wrap}>
@@ -140,51 +215,19 @@ export function DataTable<Row>({
           </tr>
         </thead>
         <tbody>
-          {pageRows.map(row => {
-            const key = rowKey(row);
-            const selected = selectedRowKeys?.has(key) ?? false;
-            return (
-              <tr
-                key={key}
-                className={
-                  [onRowClick ? styles.clickableRow : '', rowClassName?.(row) ?? ''].filter(Boolean).join(' ') ||
-                  undefined
-                }
-                data-selected={selected || undefined}
-                tabIndex={onRowClick ? 0 : undefined}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                onKeyDown={
-                  onRowClick
-                    ? event => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          onRowClick(row);
-                        }
-                      }
-                    : undefined
-                }
-              >
-                {selectable && (
-                  <td className={styles.checkboxCell} onClick={event => event.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      aria-label="Selectează rândul"
-                      checked={selected}
-                      onChange={() => toggleRow(key)}
-                    />
-                  </td>
-                )}
-                {columns.map(column => (
-                  <td key={column.key} className={column.align === 'end' ? styles.alignEnd : undefined}>
-                    {column.render(row)}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
+          {groupedBuckets
+            ? groupedBuckets.map(({ key, rows: groupRows }) => (
+                <Fragment key={key}>
+                  <tr className={styles.groupRow}>
+                    <td colSpan={columns.length + (selectable ? 1 : 0)}>{groupBy!.label(key)}</td>
+                  </tr>
+                  {groupRows.map(renderDataRow)}
+                </Fragment>
+              ))
+            : pageRows.map(renderDataRow)}
         </tbody>
       </table>
-      {sortedRows.length > pageSize && (
+      {!groupBy && sortedRows.length > pageSize && (
         <div className={styles.pager}>
           <Badge tone="neutral">
             Afișez {currentPage * pageSize + 1}–{Math.min(sortedRows.length, (currentPage + 1) * pageSize)} din{' '}
