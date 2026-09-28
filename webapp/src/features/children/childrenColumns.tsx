@@ -1,16 +1,7 @@
-import { Badge, RowMenu, groupTone, type DataTableColumn, type PillTone } from '@shared/ui';
-import { initials } from '@shared/format/initials';
+import { Badge, PersonCell, RowMenu, groupTone, type DataTableColumn } from '@shared/ui';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ChildRow } from './useChildren';
 import styles from './ChildrenPage.module.css';
-
-const AVATAR_TONE_CLASS: Record<PillTone, string> = {
-  orange: 'toneOrange',
-  mint: 'toneMint',
-  yellow: 'toneYellow',
-  pink: 'tonePink',
-  neutral: 'toneOrange',
-};
 
 export interface ChildrenColumnsOptions {
   groups: Group[];
@@ -34,17 +25,7 @@ export function buildChildrenColumns({
       key: 'name',
       header: 'Copil',
       sortValue: row => row.name,
-      render: row => (
-        <div className={styles.childCell}>
-          <span className={`${styles.avatar} ${styles[AVATAR_TONE_CLASS[groupTone(row.groupId, groups)]]}`}>
-            {initials(row.name)}
-          </span>
-          <div>
-            <strong>{row.name}</strong>
-            <small>{row.contractLabel}</small>
-          </div>
-        </div>
-      ),
+      render: row => <PersonCell name={row.name} sub={row.contractLabel} tone={groupTone(row.groupId, groups)} />,
     },
     {
       key: 'parent',

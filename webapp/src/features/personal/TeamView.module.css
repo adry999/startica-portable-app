@@ -82,29 +82,3 @@
   background: #faf7ef;
 }
 
-.nameCell {
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  min-width: 0;
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--orange-soft);
-  color: var(--orange-ink);
-  font-weight: 800;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.tagLine {
-  display: block;
-  font-size: 12px;
-  color: var(--subtle);
-}

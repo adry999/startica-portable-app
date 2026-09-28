@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Card, FilterPills, LoadingState, SearchInput, type PillTone } from '@shared/ui';
+import { Badge, Button, Card, FilterPills, LoadingState, PersonCell, SearchInput, type PillTone } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { bothBranchesLabel, birthdayTag } from '@shared/personal/staff-labels';
-import { initials } from '@shared/format/initials';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import { RolesDrawer } from './RolesDrawer';
 import type { Staff, TimesheetRow } from '@shared/personal/personal.types';
@@ -176,17 +175,10 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
                     if (event.key === 'Enter') onOpenStaff(person.id);
                   }}
                 >
-                  <span className={styles.nameCell}>
-                    <span className={styles.avatar}>{initials(person.name)}</span>
-                    <span>
-                      <strong>{person.name}</strong>
-                      {(tag || birthday) && (
-                        <span className={styles.tagLine}>
-                          {[tag, birthday && `ziua de naștere ${birthday}`].filter(Boolean).join(' · ')}
-                        </span>
-                      )}
-                    </span>
-                  </span>
+                  <PersonCell
+                    name={person.name}
+                    sub={[tag, birthday && `ziua de naștere ${birthday}`].filter(Boolean).join(' · ') || undefined}
+                  />
                   <span>{personal.roleName(person.roleId)}</span>
                   <span>{groupAndRoleLabel(person.id, groups)}</span>
                   <span>
