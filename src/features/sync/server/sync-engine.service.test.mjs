@@ -27,8 +27,20 @@ function fakeClient(overrides = {}) {
   };
 }
 
+/** Un `backups` fals care înregistrează motivele — evită depinderea de VACUUM INTO în teste. */
+function fakeBackups() {
+  const reasons = [];
+  return {
+    reasons,
+    backup(reason) {
+      reasons.push(reason);
+      return { file: '', name: '', warning: '' };
+    },
+  };
+}
+
 /** @param {any} [options] */
-function createHarness({ client = fakeClient(), ...engineOverrides } = {}) {
+function createHarness({ client = fakeClient(), backups = fakeBackups(), ...engineOverrides } = {}) {
   const database = new DatabaseSync(':memory:');
   applySchema(database);
   const rawRecordRepository = createRecordRepository(database);
@@ -49,6 +61,7 @@ function createHarness({ client = fakeClient(), ...engineOverrides } = {}) {
     outbox,
     syncState,
     conflicts,
+    backups,
     auditTrail,
     readSetting,
     writeSetting: settings.setSetting,
@@ -69,6 +82,7 @@ function createHarness({ client = fakeClient(), ...engineOverrides } = {}) {
     syncState,
     conflicts,
     auditTrail,
+    backups,
     engine,
     statuses,
     recordsChangedRevisions,
@@ -233,6 +247,241 @@ test('o eroare de rețea trece în offline cu backoff, 401 în revocat și opre�
   assert.equal(revokedEngine.status().connection, 'revoked');
   assert.ok(timerCalls2.clearInterval >= 1, 'timerul de polling a fost oprit automat la 401');
   assert.equal(sseClosed, true, 'conexiunea SSE a fost închisă');
+});
+
+test('o modificare locală apărută în timpul unui push în zbor rămâne pending, nu se pierde (C-1)', async () => {
+  const pushGate = Promise.withResolvers();
+  const { outbox, engine } = createHarness({
+    client: fakeClient({
+      pushChanges: async (_branchId, changes) => {
+        await pushGate.promise;
+        return { results: changes.map(change => ({ changeId: change.changeId, status: 'applied', revision: 1 })) };
+      },
+    }),
+  });
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana' } });
+
+  const syncPromise = engine.syncNow();
+  // Salvare locală nouă chiar în fereastra în care push-ul primei modificări e „în zbor”
+  // (await client.pushChanges de mai sus nu s-a rezolvat încă) — scenariul exact din audit.
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana Popescu' } });
+  pushGate.resolve(undefined);
+  await syncPromise;
+
+  assert.equal(outbox.countPending(), 1, 'modificarea nouă a rămas în coadă, nu s-a pierdut');
+  assert.deepEqual(outbox.pending()[0].payload, { id: 'CHILD-1', name: 'Ana Popescu' });
+});
+
+test('un rând parcat nu e suprascris de pull; conflictul își actualizează varianta de pe server (C-3)', async () => {
+  const { outbox, conflicts, rawRecordRepository, engine } = createHarness({
+    client: fakeClient({
+      pullChanges: async () => ({
+        changes: [
+          {
+            seq: 10,
+            changeId: 'c-de-pe-c',
+            kind: 'children',
+            recordId: 'CHILD-1',
+            revision: 6,
+            payload: { id: 'CHILD-1', name: 'Ana (server, a treia oară)' },
+            changedAt: '2026-09-27T09:30:00.000Z',
+            device: { id: 'dev-c', name: 'Calculator C' },
+          },
+        ],
+        nextSince: 10,
+        headSeq: 10,
+      }),
+    }),
+  });
+  rawRecordRepository.save('children', { id: 'CHILD-1', name: 'Ana (local, cu conflict)' });
+  outbox.enqueue({
+    kind: 'children',
+    recordId: 'CHILD-1',
+    payload: { id: 'CHILD-1', name: 'Ana (local, cu conflict)' },
+  });
+  const [{ seq, changeId }] = outbox.pending();
+  const conflictId = conflicts.insert({
+    kind: 'children',
+    recordId: 'CHILD-1',
+    localPayload: { id: 'CHILD-1', name: 'Ana (local, cu conflict)' },
+    localUpdatedAt: '2026-09-27T09:00:00.000Z',
+    remotePayload: { id: 'CHILD-1', name: 'Ana (server, veche)' },
+    remoteRevision: 4,
+    remoteUpdatedAt: '2026-09-27T08:00:00.000Z',
+    remoteDeviceId: 'dev-b',
+    remoteDeviceName: 'Calculator B',
+    outboxSeq: seq,
+  });
+  outbox.park(seq, changeId);
+
+  await engine.syncNow();
+
+  assert.equal(
+    rawRecordRepository.find('children', 'CHILD-1').name,
+    'Ana (local, cu conflict)',
+    'varianta locală nu s-a schimbat',
+  );
+  const conflict = /** @type {import('../sync.types.d.mts').SyncConflictEntry} */ (conflicts.find(conflictId));
+  assert.deepEqual(conflict.remotePayload, { id: 'CHILD-1', name: 'Ana (server, a treia oară)' });
+  assert.equal(conflict.remoteRevision, 6);
+  assert.equal(conflict.remoteDeviceName, 'Calculator C');
+});
+
+test('superseded scrie capul serverului, crește meta.revision și notifică o singură dată (C-4)', async () => {
+  const { database, rawRecordRepository, recordsChangedRevisions, outbox, engine } = createHarness({
+    client: fakeClient({
+      pushChanges: async (_branchId, changes) => ({
+        results: changes.map(change => ({
+          changeId: change.changeId,
+          status: 'superseded',
+          head: {
+            payload: { id: 'CHILD-1', name: 'Remote' },
+            revision: 3,
+            updatedAt: '2026-09-27T09:00:00.000Z',
+            updatedBy: { id: 'dev-b', name: 'Calculator B' },
+          },
+        })),
+      }),
+    }),
+  });
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Local' } });
+  const metaBefore = /** @type {{ revision: number }} */ (
+    database.prepare('SELECT revision FROM meta WHERE id=1').get()
+  ).revision;
+
+  await engine.syncNow();
+
+  assert.equal(rawRecordRepository.find('children', 'CHILD-1').name, 'Remote');
+  assert.equal(outbox.countPending(), 0);
+  const metaAfter = /** @type {{ revision: number }} */ (database.prepare('SELECT revision FROM meta WHERE id=1').get())
+    .revision;
+  assert.equal(metaAfter, metaBefore + 1);
+  assert.deepEqual(recordsChangedRevisions, [metaAfter]);
+});
+
+test('superseded fără head șterge rândul din outbox, nu-l ține pending la nesfârșit (D-2)', async () => {
+  const { outbox, engine } = createHarness({
+    client: fakeClient({
+      pushChanges: async (_branchId, changes) => ({
+        // Reluarea unui changeId cu rezultat „superseded” poate întoarce fără head
+        // (serverul îl retrimite doar la primul rezultat) — vezi D-2.
+        results: changes.map(change => ({ changeId: change.changeId, status: 'superseded' })),
+      }),
+    }),
+  });
+  outbox.enqueue({ kind: 'payments', recordId: 'PAY-1', payload: { id: 'PAY-1', amount: 100 } });
+
+  await engine.syncNow();
+
+  assert.equal(outbox.countPending(), 0, 'rândul nu rămâne pending la nesfârșit');
+});
+
+test('bumpRevision scrie și meta.updated_at, nu doar revision (C-7)', async () => {
+  const { database, engine } = createHarness({
+    now: () => new Date('2026-09-27T12:00:00.000Z'),
+    client: fakeClient({
+      pullChanges: async () => ({
+        changes: [
+          {
+            seq: 1,
+            changeId: 'c-1',
+            kind: 'children',
+            recordId: 'CHILD-1',
+            revision: 1,
+            payload: { id: 'CHILD-1', name: 'Ana' },
+            changedAt: '2026-09-27T09:00:00.000Z',
+            device: { id: 'dev-b', name: 'Calculator B' },
+          },
+        ],
+        nextSince: 1,
+        headSeq: 1,
+      }),
+    }),
+  });
+
+  await engine.syncNow();
+
+  const meta = /** @type {{ updated_at: string }} */ (database.prepare('SELECT updated_at FROM meta WHERE id=1').get());
+  assert.equal(meta.updated_at, '2026-09-27T12:00:00.000Z');
+});
+
+test('o eroare care nu e de rețea programează totuși un backoff (C-9)', async () => {
+  const timerCalls = { setTimeout: 0 };
+  const { engine } = createHarness({
+    client: fakeClient({
+      pullChanges: async () => {
+        throw new SyncHttpError(404, 'filiala neînregistrată');
+      },
+    }),
+    setIntervalFn: () => ({ unref() {} }),
+    setTimeoutFn: () => {
+      timerCalls.setTimeout += 1;
+      return { unref() {} };
+    },
+  });
+
+  engine.start();
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.ok(timerCalls.setTimeout >= 1, 'un backoff a fost programat și pentru o eroare HTTP generică');
+  engine.stop();
+});
+
+test('resincronizarea din snapshot face backup înainte, tratează prezența și păstrează un rând cu conflict parcat (C-5)', async () => {
+  const { database, rawRecordRepository, backups, outbox, recordsChangedRevisions, engine } = createHarness({
+    client: fakeClient({
+      pullChanges: async () => {
+        throw new SyncHttpError(410, 'cursor-expirat');
+      },
+      downloadSnapshot: async () => ({
+        records: {
+          children: [
+            {
+              id: 'CHILD-1',
+              revision: 5,
+              payload: { id: 'CHILD-1', name: 'Ana (server)' },
+              updatedAt: '2026-09-27T09:00:00.000Z',
+            },
+            {
+              id: 'CHILD-2',
+              revision: 2,
+              payload: { id: 'CHILD-2', name: 'Server ar suprascrie conflictul' },
+              updatedAt: '2026-09-27T09:00:00.000Z',
+            },
+          ],
+          attendance: [
+            {
+              id: 'CHILD-1|2026-09-27',
+              revision: 1,
+              payload: { status: 'present', reason: '', updatedAt: '2026-09-27T08:00:00.000Z' },
+              updatedAt: '2026-09-27T08:00:00.000Z',
+            },
+          ],
+        },
+        headSeq: 9,
+      }),
+    }),
+  });
+  // CHILD-2 are o editare locală cu conflict parcat — resincronizarea nu trebuie să o piardă.
+  rawRecordRepository.save('children', { id: 'CHILD-2', name: 'Local, cu conflict' });
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-2', payload: { id: 'CHILD-2', name: 'Local, cu conflict' } });
+  const [{ seq: seqChild2, changeId: changeIdChild2 }] = outbox.pending();
+  outbox.park(seqChild2, changeIdChild2);
+
+  await engine.syncNow();
+
+  assert.deepEqual(backups.reasons, ['inainte-resincronizare']);
+  assert.equal(rawRecordRepository.find('children', 'CHILD-1').name, 'Ana (server)');
+  assert.equal(
+    rawRecordRepository.find('children', 'CHILD-2').name,
+    'Local, cu conflict',
+    'conflictul parcat nu a fost suprascris',
+  );
+  const attendanceRow = /** @type {{ status: string }} */ (
+    database.prepare('SELECT * FROM attendance WHERE child_id=? AND date=?').get('CHILD-1', '2026-09-27')
+  );
+  assert.equal(attendanceRow.status, 'present');
+  assert.ok(recordsChangedRevisions.length >= 1);
 });
 
 test('410 reface filiala din snapshot', async () => {

@@ -65,3 +65,24 @@ test('remove scoate conflictul din listă', () => {
   assert.equal(repository.count(), 0);
   assert.equal(repository.find(id), undefined);
 });
+
+test('updateRemote actualizează varianta de pe server, fără să atingă varianta locală (C-3)', () => {
+  const repository = createRepository();
+  const id = repository.insert(SAMPLE);
+
+  repository.updateRemote(SAMPLE.outboxSeq, {
+    payload: { id: 'CHILD-1', name: 'Ana Remote a treia oară' },
+    revision: 6,
+    updatedAt: '2026-09-27T09:10:00.000Z',
+    deviceId: 'dev-3',
+    deviceName: 'Calculator C',
+  });
+
+  const updated = repository.find(id);
+  assert.deepEqual(updated?.remotePayload, { id: 'CHILD-1', name: 'Ana Remote a treia oară' });
+  assert.equal(updated?.remoteRevision, 6);
+  assert.equal(updated?.remoteUpdatedAt, '2026-09-27T09:10:00.000Z');
+  assert.equal(updated?.remoteDeviceId, 'dev-3');
+  assert.equal(updated?.remoteDeviceName, 'Calculator C');
+  assert.deepEqual(updated?.localPayload, SAMPLE.localPayload, 'varianta locală nu s-a schimbat');
+});

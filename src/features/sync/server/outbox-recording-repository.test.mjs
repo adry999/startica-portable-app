@@ -32,7 +32,8 @@ test('save pune în outbox doar când înregistrarea chiar diferă', () => {
 test('remove pune o ștergere în outbox, cu payload null', () => {
   const { recordRepository, outbox } = createHarness();
   recordRepository.save('children', { id: 'CHILD-1', name: 'Ana' });
-  outbox.remove(outbox.pending()[0].seq);
+  const [{ seq, changeId }] = outbox.pending();
+  outbox.remove(seq, changeId);
 
   recordRepository.remove('children', 'CHILD-1');
 

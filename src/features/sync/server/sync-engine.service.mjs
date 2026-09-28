@@ -1,6 +1,5 @@
-import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { SyncNetworkError, SyncRevokedError, SyncHttpError } from './sync-http-client.mjs';
-import { createChangeApplier, SyncApplyError } from './change-applier.mjs';
+import { createChangeApplier, applySnapshotEntry, SyncApplyError } from './change-applier.mjs';
 
 const PUSH_BATCH_SIZE = 200;
 const INITIAL_BACKOFF_MS = 5000;
@@ -34,6 +33,7 @@ function toWireChange(row) {
  *   outbox: ReturnType<typeof import('./sync-outbox.repository.mjs').createSyncOutboxRepository>,
  *   syncState: ReturnType<typeof import('./sync-state.repository.mjs').createSyncStateRepository>,
  *   conflicts: ReturnType<typeof import('./sync-conflicts.repository.mjs').createSyncConflictsRepository>,
+ *   backups: { backup: (reason?: string) => unknown },
  *   auditTrail: import('#shared/contracts/audit-trail.d.mts').AuditTrail,
  *   readSetting: (key: string) => string,
  *   writeSetting: (key: string, value: string) => void,
@@ -59,6 +59,15 @@ export function createSyncEngine({
   outbox,
   syncState,
   conflicts,
+  // C-5: resincronizarea din snapshot (410) e distructivă (DELETE FROM records) — are
+  // nevoie de o copie de siguranță înainte, ca runRevisionTransaction pentru orice altă
+  // operație ireversibilă. Implicitul aruncă cu un mesaj clar, ca o compoziție care încă
+  // nu leagă `backups` să nu resincronizeze în tăcere fără copie.
+  backups = {
+    backup() {
+      throw new Error('sync-engine: „backups” nu a fost injectat (vezi create-branch-context.mjs).');
+    },
+  },
   auditTrail,
   readSetting,
   writeSetting,
@@ -123,7 +132,9 @@ export function createSyncEngine({
   }
 
   function bumpRevision() {
-    database.prepare('UPDATE meta SET revision=revision+1 WHERE id=1').run();
+    // Aceeași instrucțiune ca runRevisionTransaction (C-7): fără updated_at, /api/state
+    // rămâne cu ora vechi după un pull, chiar dacă revizia a crescut.
+    database.prepare('UPDATE meta SET revision=revision+1,updated_at=? WHERE id=1').run(now().toISOString());
   }
 
   async function pushOnce() {
@@ -132,45 +143,72 @@ export function createSyncEngine({
       pushing = true;
       notify();
       const { results } = await client.pushChanges(branch.id, rows.map(toWireChange));
-      for (const row of rows) {
-        const result = results.find(entry => entry.changeId === row.changeId);
-        if (!result) continue;
-        if (result.status === 'applied') {
-          syncState.set(row.kind, row.recordId, {
-            serverRevision: result.revision,
-            updatedAt: row.createdAt,
-            updatedByDevice: deviceId,
-            updatedByName: deviceName,
-          });
-          outbox.remove(row.seq);
-        } else if (result.status === 'superseded' && result.head) {
-          // Modificarea noastră a pierdut (last-writer-wins) — varianta serverului
-          // devine cea locală, ca cele două calculatoare să nu rămână divergente.
-          applier.apply({
-            kind: row.kind,
-            recordId: row.recordId,
-            payload: result.head.payload,
-            revision: result.head.revision,
-            changedAt: result.head.updatedAt,
-            device: result.head.updatedBy,
-          });
-          outbox.remove(row.seq);
-        } else if (result.status === 'conflict' && result.head) {
-          conflicts.insert({
-            kind: row.kind,
-            recordId: row.recordId,
-            localPayload: row.payload,
-            localUpdatedAt: row.createdAt,
-            remotePayload: result.head.payload,
-            remoteRevision: result.head.revision,
-            remoteUpdatedAt: result.head.updatedAt,
-            remoteDeviceId: result.head.updatedBy.id,
-            remoteDeviceName: result.head.updatedBy.name,
-            outboxSeq: row.seq,
-          });
-          outbox.park(row.seq);
+      let supersededApplied = false;
+      // C-1 + C-4: tot lotul de rezultate se tratează într-o singură tranzacție — un rând
+      // „applied”/„superseded”/„conflict” își schimbă starea din outbox împreună cu
+      // sync_state/sync_conflicts, nu în autocommit-uri separate care ar putea lăsa
+      // sync_state neschimbat dacă procesul cade la mijloc.
+      database.exec('BEGIN IMMEDIATE');
+      try {
+        for (const row of rows) {
+          const result = results.find(entry => entry.changeId === row.changeId);
+          if (!result) continue;
+          if (result.status === 'applied') {
+            syncState.set(row.kind, row.recordId, {
+              serverRevision: result.revision,
+              updatedAt: row.createdAt,
+              updatedByDevice: deviceId,
+              updatedByName: deviceName,
+            });
+            // C-1: șterge doar dacă rândul e încă cel trimis. O modificare locală apărută
+            // cât timp push-ul era în zbor a actualizat deja acest rând (change_id nou,
+            // coalesceOutboxChange) — ștergerea necondiționată ar pierde-o silențios.
+            outbox.remove(row.seq, row.changeId);
+          } else if (result.status === 'superseded') {
+            // Modificarea noastră a pierdut (last-writer-wins) — varianta serverului
+            // devine cea locală, ca cele două calculatoare să nu rămână divergente.
+            // D-2: un replay al aceluiași changeId poate întoarce „superseded” fără
+            // „head” (serverul nu-l retrimite decât la primul rezultat) — fără ștergere,
+            // rândul ar rămâne pending la nesfârșit, retrimis identic la fiecare ciclu.
+            if (result.head) {
+              const applied = applier.apply({
+                kind: row.kind,
+                recordId: row.recordId,
+                payload: result.head.payload,
+                revision: result.head.revision,
+                changedAt: result.head.updatedAt,
+                device: result.head.updatedBy,
+              });
+              // sms_templates/settings (C-8): apply() nu scrie nimic până la Faza 6 —
+              // fără schimbare locală, nu are rost nici bumpRevision, nici onRecordsChanged.
+              if (applied) supersededApplied = true;
+            }
+            outbox.remove(row.seq, row.changeId);
+          } else if (result.status === 'conflict' && result.head) {
+            conflicts.insert({
+              kind: row.kind,
+              recordId: row.recordId,
+              localPayload: row.payload,
+              localUpdatedAt: row.createdAt,
+              remotePayload: result.head.payload,
+              remoteRevision: result.head.revision,
+              remoteUpdatedAt: result.head.updatedAt,
+              remoteDeviceId: result.head.updatedBy.id,
+              remoteDeviceName: result.head.updatedBy.name,
+              outboxSeq: row.seq,
+            });
+            outbox.park(row.seq, row.changeId);
+          }
         }
+        // C-4: „superseded” rescrie o fișă locală prin depozitul brut — fila deschisă
+        // trebuie să afle, altfel salvează din nou varianta veche (ping-pong cu serverul).
+        if (supersededApplied) bumpRevision();
+        database.exec('COMMIT');
+      } catch (error) {
+        database.exec('ROLLBACK');
+        throw error;
       }
+      if (supersededApplied) onRecordsChanged(currentRevision());
       rows = rows.length === PUSH_BATCH_SIZE ? outbox.pending(PUSH_BATCH_SIZE) : [];
     }
     pushing = false;
@@ -183,14 +221,42 @@ export function createSyncEngine({
 
   async function resyncFromSnapshot() {
     const snapshot = await client.downloadSnapshot(branch.id);
+    // C-5: DELETE FROM records e ireversibil — aceeași convenție ca runRevisionTransaction
+    // (backupBefore): fără copie, nu continuăm o resincronizare care poate rescrie tot.
+    backups.backup('inainte-resincronizare');
+    // C-3 aplicat și aici: o editare locală cu conflict parcat își ține varianta doar în
+    // `records` (outbox-ul reține payload-ul trimis atunci, nu neapărat pe cel curent) —
+    // salvată înainte de DELETE și rescrisă după, ca resincronizarea să nu o piardă.
+    const parkedRows = outbox.parked();
+    const preserved = parkedRows
+      .map(row => ({
+        kind: row.kind,
+        recordId: row.recordId,
+        payload: rawRecordRepository.find(row.kind, row.recordId),
+      }))
+      .filter(row => row.payload !== undefined);
+    const parkedKeys = new Set(parkedRows.map(row => `${row.kind}|${row.recordId}`));
     let count = 0;
     database.exec('BEGIN IMMEDIATE');
     try {
       database.exec('DELETE FROM records');
+      // sync_state ținea reviziile filialei vechi; fără resetare, o înregistrare care a
+      // dispărut din snapshot ar rămâne cu un base_revision învechit la următoarea editare.
+      database.exec('DELETE FROM sync_state');
       for (const kind of Object.keys(snapshot.records)) {
         for (const entry of snapshot.records[kind]) {
-          if (entry.payload === null) continue;
-          rawRecordRepository.save(kind, normalizeRecord(kind, entry.payload));
+          if (parkedKeys.has(`${kind}|${entry.id}`)) continue;
+          // applySnapshotEntry (nu normalizeRecord direct): snapshot-ul serverului conține
+          // orice KINDS a fost trimis, inclusiv attendance — normalizeRecord ar arunca
+          // „Înregistrare invalidă.” pe primul rând de prezență (C-5).
+          const applied = applySnapshotEntry({
+            rawRecordRepository,
+            attendanceRepository,
+            kind,
+            recordId: entry.id,
+            payload: entry.payload,
+          });
+          if (!applied) continue; // sms_templates/settings: Faza 6 (C-8)
           syncState.set(kind, entry.id, {
             serverRevision: entry.revision,
             updatedAt: entry.updatedAt,
@@ -200,6 +266,7 @@ export function createSyncEngine({
           count += 1;
         }
       }
+      for (const row of preserved) rawRecordRepository.save(row.kind, row.payload);
       bumpRevision();
       writeSetting(SYNC_SINCE_SETTING, String(snapshot.headSeq));
       database.exec('COMMIT');
@@ -237,8 +304,27 @@ export function createSyncEngine({
           // Propriile modificări (reluate de pe server, ex. după un push aplicat de un
           // alt lot) nu se aplică peste ele însele — le-am scris deja local.
           if (change.device.id === deviceId) continue;
-          applier.apply(change);
-          appliedAny = true;
+          // C-3: o fișă cu un conflict nerezolvat (rând parcat) nu se suprascrie la pull —
+          // varianta locală rămâne vizibilă până la alegerea utilizatorului (14c); doar
+          // capul serverului din conflict și sync_state se actualizează cu ce a mai venit.
+          const parked = outbox.findParked(change.kind, change.recordId);
+          if (parked) {
+            conflicts.updateRemote(parked.seq, {
+              payload: change.payload,
+              revision: change.revision,
+              updatedAt: change.changedAt,
+              deviceId: change.device.id,
+              deviceName: change.device.name,
+            });
+            syncState.set(change.kind, change.recordId, {
+              serverRevision: change.revision,
+              updatedAt: change.changedAt,
+              updatedByDevice: change.device.id,
+              updatedByName: change.device.name,
+            });
+            continue;
+          }
+          if (applier.apply(change)) appliedAny = true;
         }
         if (appliedAny) bumpRevision();
         writeSetting(SYNC_SINCE_SETTING, String(nextSince));
@@ -276,6 +362,9 @@ export function createSyncEngine({
     if (error instanceof SyncApplyError) pullPaused = true;
     lastError = /** @type {Error} */ (error).message;
     console.error(/** @type {Error} */ (error).stack || error);
+    // C-9: un 404 (filială neînregistrată), un 410 repetat sau o SyncApplyError ar reveni
+    // la fiecare ciclu de 15 s, la nesfârșit, fără backoff — același tratament ca offline-ul.
+    scheduleBackoff();
   }
 
   async function syncNow() {

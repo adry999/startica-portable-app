@@ -32,13 +32,26 @@ function parseSeqFromSseEvent(rawEvent) {
   }
 }
 
+const EVENTS_INITIAL_RECONNECT_MS = 2000;
+const EVENTS_MAX_RECONNECT_MS = 30000;
+
 /**
  * Clientul HTTP către sync-server/ (contractul din Fazele 1-3 ale planului).
  * Traduce fiecare eroare de rețea/HTTP într-un tip anume, ca motorul de
  * sincronizare (Faza 3) să decidă starea `connection` fără să inspecteze coduri.
- * @param {{ serverUrl: string, token?: string, fetch?: typeof fetch, timeoutMs?: number }} dependencies
+ * @param {{
+ *   serverUrl: string, token?: string, fetch?: typeof fetch, timeoutMs?: number,
+ *   setTimeoutFn?: typeof setTimeout, clearTimeoutFn?: typeof clearTimeout,
+ * }} dependencies
  */
-export function createSyncHttpClient({ serverUrl, token, fetch: fetchImpl = globalThis.fetch, timeoutMs = 10000 }) {
+export function createSyncHttpClient({
+  serverUrl,
+  token,
+  fetch: fetchImpl = globalThis.fetch,
+  timeoutMs = 10000,
+  setTimeoutFn = setTimeout,
+  clearTimeoutFn = clearTimeout,
+}) {
   assertServerUrl(serverUrl);
   const base = serverUrl.replace(/\/+$/, '');
 
@@ -104,36 +117,72 @@ export function createSyncHttpClient({ serverUrl, token, fetch: fetchImpl = glob
     pullChanges: (branchId, since, limit = 500) =>
       request(`/v1/branches/${branchId}/changes?since=${encodeURIComponent(since)}&limit=${limit}`),
     /**
-     * Wake-up SSE (decizia 7): polling-ul rămâne baza, deci o eroare de conexiune
-     * aici e ignorată în tăcere — nu există alt consumator al ei decât un semnal mai rapid.
+     * Wake-up SSE (decizia 7): polling-ul rămâne baza, dar fără reconectare (C-6) o
+     * repornire a serverului/Caddy pierde trezirea rapidă până la restartul aplicației
+     * sau schimbarea filialei — reconectează cu backoff (2 s → 30 s, dublat la fiecare
+     * eșec, resetat la o conexiune reușită), cât timp `close()` nu a fost apelat.
      * @param {string} branchId @param {(seq: number) => void} onSeq
      */
     openEvents(branchId, onSeq) {
-      const controller = new AbortController();
-      fetchImpl(base + `/v1/branches/${branchId}/events`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        signal: controller.signal,
-      })
-        .then(async response => {
-          if (!response.body) return;
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
-          for (;;) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            let boundary;
-            while ((boundary = buffer.indexOf('\n\n')) !== -1) {
-              const rawEvent = buffer.slice(0, boundary);
-              buffer = buffer.slice(boundary + 2);
-              const seq = parseSeqFromSseEvent(rawEvent);
-              if (seq !== undefined) onSeq(seq);
-            }
-          }
+      let closed = false;
+      let reconnectMs = EVENTS_INITIAL_RECONNECT_MS;
+      /** @type {ReturnType<typeof setTimeout> | null} */
+      let reconnectTimer = null;
+      /** @type {AbortController | null} */
+      let controller = null;
+
+      function scheduleReconnect() {
+        if (closed) return;
+        if (reconnectTimer) clearTimeoutFn(reconnectTimer);
+        reconnectTimer = setTimeoutFn(connect, reconnectMs);
+        reconnectTimer.unref?.();
+        reconnectMs = Math.min(reconnectMs * 2, EVENTS_MAX_RECONNECT_MS);
+      }
+
+      function connect() {
+        controller = new AbortController();
+        fetchImpl(base + `/v1/branches/${branchId}/events`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal: controller.signal,
         })
-        .catch(() => {});
-      return { close: () => controller.abort() };
+          .then(async response => {
+            reconnectMs = EVENTS_INITIAL_RECONNECT_MS; // conexiune reușită: reia backoff-ul de la început
+            if (!response.body) {
+              scheduleReconnect();
+              return;
+            }
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            for (;;) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              let boundary;
+              while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+                const rawEvent = buffer.slice(0, boundary);
+                buffer = buffer.slice(boundary + 2);
+                const seq = parseSeqFromSseEvent(rawEvent);
+                if (seq !== undefined) onSeq(seq);
+              }
+            }
+            // Fluxul s-a terminat fără un close() explicit (server/Caddy repornit) —
+            // reconectăm, altfel trezirea rapidă rămâne moartă pentru tot restul sesiunii.
+            scheduleReconnect();
+          })
+          .catch(() => {
+            scheduleReconnect();
+          });
+      }
+
+      connect();
+      return {
+        close: () => {
+          closed = true;
+          if (reconnectTimer) clearTimeoutFn(reconnectTimer);
+          controller?.abort();
+        },
+      };
     },
   };
 }

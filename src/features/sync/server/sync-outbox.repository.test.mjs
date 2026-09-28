@@ -58,9 +58,9 @@ test('o ștergere pune un rând cu payload null', () => {
 test('markSent, park și unpark mută rândul în afara sau înapoi în pending', () => {
   const { outbox } = createRepository();
   outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1' } });
-  const [{ seq }] = outbox.pending();
+  const [{ seq, changeId }] = outbox.pending();
 
-  outbox.park(seq);
+  assert.equal(outbox.park(seq, changeId), true);
   assert.equal(outbox.pending().length, 0);
 
   outbox.unpark(seq, 7);
@@ -75,11 +75,49 @@ test('markSent, park și unpark mută rândul în afara sau înapoi în pending'
 test('remove șterge definitiv rândul', () => {
   const { outbox } = createRepository();
   outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1' } });
-  const [{ seq }] = outbox.pending();
+  const [{ seq, changeId }] = outbox.pending();
 
-  outbox.remove(seq);
+  assert.equal(outbox.remove(seq, changeId), true);
 
   assert.equal(outbox.countPending(), 0);
+});
+
+test('remove nu șterge rândul dacă a fost coalescat cu o modificare mai nouă (C-1)', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana' } });
+  const [{ seq, changeId: changeIdTrimis }] = outbox.pending();
+
+  // O a doua salvare locală, cât timp push-ul cu changeIdTrimis era în zbor: actualizează
+  // rândul cu un change_id nou, exact ca outbox-recording-repository.mjs.
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana Popescu' } });
+
+  assert.equal(outbox.remove(seq, changeIdTrimis), false, 'change_id-ul vechi nu mai corespunde');
+  const [stillPending] = outbox.pending();
+  assert.deepEqual(stillPending.payload, { id: 'CHILD-1', name: 'Ana Popescu' }, 'modificarea nouă nu s-a pierdut');
+});
+
+test('park nu parchează rândul dacă a fost coalescat cu o modificare mai nouă (C-1)', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana' } });
+  const [{ seq, changeId: changeIdTrimis }] = outbox.pending();
+
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana Popescu' } });
+
+  assert.equal(outbox.park(seq, changeIdTrimis), false);
+  assert.equal(outbox.pending().length, 1, 'rândul rămâne pending, nu parcat pentru un conflict vechi');
+});
+
+test('parked() și findParked() văd doar rândurile parcate', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1' } });
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-2', payload: { id: 'CHILD-2' } });
+  const [row1] = outbox.pending();
+  outbox.park(row1.seq, row1.changeId);
+
+  assert.equal(outbox.parked().length, 1);
+  assert.equal(outbox.parked()[0].recordId, 'CHILD-1');
+  assert.ok(outbox.findParked('children', 'CHILD-1'));
+  assert.equal(outbox.findParked('children', 'CHILD-2'), undefined);
 });
 
 test('pending respectă limita și ordinea de inserare', () => {

@@ -34,11 +34,19 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     'UPDATE sync_outbox SET change_id=?,payload=?,created_at=? WHERE seq=?',
   );
   const pendingStatement = database.prepare("SELECT * FROM sync_outbox WHERE status='pending' ORDER BY seq LIMIT ?");
+  const parkedStatement = database.prepare("SELECT * FROM sync_outbox WHERE status='parked' ORDER BY seq");
+  const findParkedStatement = database.prepare(
+    "SELECT * FROM sync_outbox WHERE kind=? AND record_id=? AND status='parked'",
+  );
   const countPendingStatement = database.prepare("SELECT COUNT(*) AS count FROM sync_outbox WHERE status='pending'");
   const markSentStatement = database.prepare("UPDATE sync_outbox SET status='sent' WHERE seq=?");
-  const parkStatement = database.prepare("UPDATE sync_outbox SET status='parked' WHERE seq=?");
+  // C-1: parcarea/ștergerea unui rând se face doar dacă change_id încă e cel trimis la
+  // server — o a doua modificare locală, apărută cât timp push-ul era în zbor, a actualizat
+  // deja rândul (coalesceOutboxChange) cu un change_id nou; fără această gardă, „applied”
+  // sau „conflict” pentru payload-ul vechi ar șterge/parca payload-ul nou, nevăzut de server.
+  const parkStatement = database.prepare("UPDATE sync_outbox SET status='parked' WHERE seq=? AND change_id=?");
   const unparkStatement = database.prepare("UPDATE sync_outbox SET status='pending',base_revision=? WHERE seq=?");
-  const removeStatement = database.prepare('DELETE FROM sync_outbox WHERE seq=?');
+  const removeStatement = database.prepare('DELETE FROM sync_outbox WHERE seq=? AND change_id=?');
 
   /**
    * @param {{ kind: string, recordId: string, payload: unknown | null }} change
@@ -76,6 +84,17 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     return pendingStatement.all(limit).map(toChange);
   }
 
+  /** Rândurile cu un conflict nerezolvat (14c) — folosite la 410/resincronizare (C-5) și la pull (C-3). */
+  function parked() {
+    return parkedStatement.all().map(toChange);
+  }
+
+  /** @param {string} kind @param {string} recordId */
+  function findParked(kind, recordId) {
+    const row = findParkedStatement.get(kind, recordId);
+    return row ? toChange(row) : undefined;
+  }
+
   function countPending() {
     return /** @type {{ count: number }} */ (countPendingStatement.get()).count;
   }
@@ -85,9 +104,12 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     for (const seq of seqs) markSentStatement.run(seq);
   }
 
-  /** @param {number} seq */
-  function park(seq) {
-    parkStatement.run(seq);
+  /**
+   * @param {number} seq @param {string} changeId
+   * @returns {boolean} fals dacă rândul a fost deja coalescat cu o modificare mai nouă (change_id diferit)
+   */
+  function park(seq, changeId) {
+    return parkStatement.run(seq, changeId).changes > 0;
   }
 
   /** @param {number} seq @param {number} baseRevision */
@@ -95,10 +117,13 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     unparkStatement.run(baseRevision, seq);
   }
 
-  /** @param {number} seq */
-  function remove(seq) {
-    removeStatement.run(seq);
+  /**
+   * @param {number} seq @param {string} changeId
+   * @returns {boolean} fals dacă rândul a fost deja coalescat cu o modificare mai nouă (change_id diferit)
+   */
+  function remove(seq, changeId) {
+    return removeStatement.run(seq, changeId).changes > 0;
   }
 
-  return { enqueue, pending, countPending, markSent, park, unpark, remove };
+  return { enqueue, pending, parked, findParked, countPending, markSent, park, unpark, remove };
 }

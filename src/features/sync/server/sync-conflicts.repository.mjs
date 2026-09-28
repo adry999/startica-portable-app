@@ -34,6 +34,10 @@ export function createSyncConflictsRepository(database, { now = () => new Date()
   const findStatement = database.prepare('SELECT * FROM sync_conflicts WHERE id=?');
   const removeStatement = database.prepare('DELETE FROM sync_conflicts WHERE id=?');
   const countStatement = database.prepare('SELECT COUNT(*) AS count FROM sync_conflicts');
+  const updateRemoteStatement = database.prepare(
+    `UPDATE sync_conflicts SET remote_payload=?,remote_revision=?,remote_updated_at=?,remote_device_id=?,
+       remote_device_name=? WHERE outbox_seq=?`,
+  );
 
   /**
    * @param {{
@@ -81,5 +85,23 @@ export function createSyncConflictsRepository(database, { now = () => new Date()
     return /** @type {{ count: number }} */ (countStatement.get()).count;
   }
 
-  return { insert, list, find, remove, count };
+  /**
+   * C-3: pull-ul nu suprascrie o fișă cu conflict parcat, dar capul serverului poate
+   * avansa în continuare (a treia modificare, de pe alt calculator) — conflictul trebuie
+   * să arate mereu ultima variantă remote, nu doar prima văzută.
+   * @param {number} outboxSeq
+   * @param {{ payload: unknown | null, revision: number, updatedAt: string, deviceId: string, deviceName: string }} remote
+   */
+  function updateRemote(outboxSeq, remote) {
+    updateRemoteStatement.run(
+      remote.payload === null ? null : JSON.stringify(remote.payload),
+      remote.revision,
+      remote.updatedAt,
+      remote.deviceId,
+      remote.deviceName,
+      outboxSeq,
+    );
+  }
+
+  return { insert, list, find, remove, count, updateRemote };
 }

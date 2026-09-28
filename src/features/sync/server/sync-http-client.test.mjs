@@ -137,6 +137,72 @@ test('pushChanges trimite lista de modificări în corp', async () => {
   assert.deepEqual(JSON.parse(calls[0].options.body), { changes: [{ changeId: 'c1' }] });
 });
 
+// setTimeoutFn/clearTimeoutFn false: nu întorc niciodată direct rezultatul lui setTimeout
+// (NodeJS.Timeout) — tipul `typeof setTimeout` din createSyncHttpClient cere și proprietatea
+// statică __promisify__ a funcției globale, pe care o funcție fake nu o are; un obiect propriu,
+// împachetat, evită nepotrivirea de tip și tot anulează temporizatorul real la close().
+/**
+ * @param {{ setTimeout: number }} timerCalls
+ * @returns {any}
+ */
+function fakeTimers(timerCalls) {
+  return {
+    setTimeoutFn: (callback, delay) => {
+      timerCalls.setTimeout += 1;
+      return { handle: setTimeout(callback, 1), unref() {} };
+    },
+    clearTimeoutFn: fake => clearTimeout(fake?.handle),
+  };
+}
+
+test('openEvents se reconectează cu backoff după ce fluxul se termină (C-6)', async () => {
+  let connectCount = 0;
+  const timerCalls = { setTimeout: 0 };
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async () => {
+      connectCount += 1;
+      const stream = new ReadableStream({
+        start(controller) {
+          // Fluxul se termină imediat, fără eroare — o repornire a serverului/Caddy.
+          controller.close();
+        },
+      });
+      return { body: stream };
+    }),
+    ...fakeTimers(timerCalls),
+  });
+
+  const events = client.openEvents('branch-1', () => {});
+  await new Promise(resolve => setTimeout(resolve, 20));
+  events.close();
+
+  assert.ok(connectCount >= 2, 'o a doua conectare a avut loc după ce prima s-a terminat');
+  assert.ok(timerCalls.setTimeout >= 1, 'reconectarea a fost programată, nu imediată');
+});
+
+test('openEvents nu se mai reconectează după close()', async () => {
+  let connectCount = 0;
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async () => {
+      connectCount += 1;
+      throw new Error('ECONNREFUSED');
+    }),
+    ...fakeTimers({ setTimeout: 0 }),
+  });
+
+  const events = client.openEvents('branch-1', () => {});
+  await new Promise(resolve => setTimeout(resolve, 5));
+  events.close();
+  const countAtClose = connectCount;
+  await new Promise(resolve => setTimeout(resolve, 20));
+
+  assert.equal(connectCount, countAtClose, 'nicio reconectare nouă după close()');
+});
+
 test('openEvents parsează un flux SSE și cheamă onSeq pentru fiecare eveniment cu seq', async () => {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

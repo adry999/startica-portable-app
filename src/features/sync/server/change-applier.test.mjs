@@ -5,7 +5,12 @@ import { applySchema } from '#core/server/database/schema.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { createSyncStateRepository } from './sync-state.repository.mjs';
 import { createRecordingAuditTrail } from '#test-support/recording-audit-trail.mjs';
-import { createChangeApplier, createSyncAttendanceWriter, SyncApplyError } from './change-applier.mjs';
+import {
+  createChangeApplier,
+  createSyncAttendanceWriter,
+  applySnapshotEntry,
+  SyncApplyError,
+} from './change-applier.mjs';
 
 function createHarness() {
   const database = new DatabaseSync(':memory:');
@@ -129,6 +134,23 @@ test('apply pentru prezență cu payload null șterge rândul', () => {
   assert.equal(row, undefined);
 });
 
+test('apply ignoră settings/sms_templates fără audit și fără sync_state, până la Faza 6 (C-8)', () => {
+  const { auditTrail, syncState, applier } = createHarness();
+
+  const applied = applier.apply({
+    kind: 'settings',
+    recordId: 'kindergarten',
+    payload: { value: { name: 'Grădinița Curcubeul' } },
+    revision: 2,
+    changedAt: '2026-09-27T10:00:00.000Z',
+    device: DEVICE,
+  });
+
+  assert.equal(applied, false);
+  assert.equal(auditTrail.changes.length, 0);
+  assert.equal(syncState.get('settings', 'kindergarten'), undefined);
+});
+
 test('o fișă cu id invalid întoarce SyncApplyError, nu o eroare oarecare', () => {
   const { applier } = createHarness();
 
@@ -143,5 +165,50 @@ test('o fișă cu id invalid întoarce SyncApplyError, nu o eroare oarecare', ()
         device: DEVICE,
       }),
     SyncApplyError,
+  );
+});
+
+test('applySnapshotEntry scrie prezența dintr-un snapshot fără să apeleze normalizeRecord (C-5)', () => {
+  const { database, rawRecordRepository, attendanceRepository } = createHarness();
+
+  const applied = applySnapshotEntry({
+    rawRecordRepository,
+    attendanceRepository,
+    kind: 'attendance',
+    recordId: 'CHILD-1|2026-09-27',
+    payload: { status: 'present', reason: '', updatedAt: '2026-09-27T10:00:00.000Z' },
+  });
+
+  assert.equal(applied, true);
+  const row = /** @type {{ status: string }} */ (
+    database.prepare('SELECT * FROM attendance WHERE child_id=? AND date=?').get('CHILD-1', '2026-09-27')
+  );
+  assert.equal(row.status, 'present');
+});
+
+test('applySnapshotEntry scrie o fișă și întoarce fals pentru un tip netratat (sms_templates/settings)', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+
+  assert.equal(
+    applySnapshotEntry({
+      rawRecordRepository,
+      attendanceRepository,
+      kind: 'children',
+      recordId: 'CHILD-1',
+      payload: { id: 'CHILD-1', name: 'Ana' },
+    }),
+    true,
+  );
+  assert.equal(rawRecordRepository.find('children', 'CHILD-1').name, 'Ana');
+
+  assert.equal(
+    applySnapshotEntry({
+      rawRecordRepository,
+      attendanceRepository,
+      kind: 'settings',
+      recordId: 'kindergarten',
+      payload: { value: {} },
+    }),
+    false,
   );
 });
