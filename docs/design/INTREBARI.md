@@ -2,6 +2,14 @@
 
 Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
 
+## ⏳ Modulul 2 (Copii) — CF-2, fișa copilului: „Date personale” + „Plătitori reținuți” lipsesc din modelul de date
+
+Auditul (`AUDIT-UI-2026-09-28.md` CF-2) le marchează **[sigur]**, dar am verificat `record-types.d.mts`: `Child` are `birthDate` (deja afișat), dar **niciun câmp IDNP/adresă**, și **niciun concept `payer_aliases`** (plătitori reținuți) nu există nicăieri în cod — nici schemă, nici API, nici UI. Nu-s tweak-uri de UI, e o funcție nouă (schemă + backend + UI + ștergere alias).
+
+Decizie necesară: (a) adăugăm acum IDNP + adresă pe `Child` și un tabel/câmp nou pentru plătitori reținuți (plan tehnic separat, ca la EUR/BNM sau filiale), sau (b) le amânăm și Modulul 2 se închide fără cardurile astea două (rămân pe coadă, similar cu „Tipărește chitanța” mai sus)?
+
+Până la răspuns: Modulul 2 se închide fără „Date personale” (rămâne doar data nașterii, deja afișată în header) și fără „Plătitori reținuți" — restul din CF-1…CF-10 se face normal.
+
 ## ✅ Achitări — „Tipărește chitanța” (punctul 5) — confirmat amânat
 Rămâne amânat, se reia împreună cu ecranul 16b (`screens/15-tiparire.md`). Nimic de schimbat acum.
 
