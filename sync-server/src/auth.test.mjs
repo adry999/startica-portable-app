@@ -40,3 +40,25 @@ test('limitatorul ține evidența separat pe fiecare cheie', () => {
   assert.equal(limiter.consume('1.2.3.4', 0), true);
   assert.equal(limiter.consume('5.6.7.8', 0), true);
 });
+
+test('curățarea periodică elimină cheile fără nicio lovitură în fereastra curentă (D-6)', () => {
+  const limiter = createRateLimiter({ limit: 5, windowMs: 1000 });
+  limiter.consume('1.2.3.4', 0);
+  limiter.consume('5.6.7.8', 0);
+  limiter.sweep(500); // încă în fereastră
+  assert.equal(limiter.size(), 2);
+  limiter.sweep(2000); // fereastra a trecut pentru amândouă
+  assert.equal(limiter.size(), 0);
+  limiter.stop();
+});
+
+test('limitatorul nu crește nelimitat: peste maxKeys, cea mai veche cheie e eliminată (D-6)', () => {
+  const limiter = createRateLimiter({ limit: 5, windowMs: 600000, maxKeys: 3 });
+  limiter.consume('a', 0);
+  limiter.consume('b', 0);
+  limiter.consume('c', 0);
+  limiter.consume('d', 0); // peste plafon: 'a', cea mai veche, e eliminată
+  assert.equal(limiter.size(), 3);
+  assert.equal(limiter.consume('a', 0), true); // 'a' a fost eliminată, nu mai are istoric
+  limiter.stop();
+});

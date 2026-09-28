@@ -24,9 +24,16 @@ const PAIRING_RATE_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
  *   now?: () => Date,
  *   createId?: () => string,
  *   log?: (message: unknown) => void,
+ *   accessLog?: (message: string) => void,
  * }} options
  */
-export function createSyncServer({ config, now = () => new Date(), createId = randomUUID, log = console.error }) {
+export function createSyncServer({
+  config,
+  now = () => new Date(),
+  createId = randomUUID,
+  log = console.error,
+  accessLog = console.log,
+}) {
   const database = openSyncDatabase(config.dataDir);
   const devices = createDevicesRepository(database);
   const pairing = createPairingService(database);
@@ -56,6 +63,7 @@ export function createSyncServer({ config, now = () => new Date(), createId = ra
     authenticate,
     trustProxy: config.trustProxy,
     log,
+    accessLog,
   });
 
   const server = createServer((request, response) => {
@@ -73,6 +81,7 @@ export function createSyncServer({ config, now = () => new Date(), createId = ra
 
   function close() {
     backup.stop();
+    pairingRateLimiter.stop();
     events.closeAll();
     // O conexiune SSE abandonată de client (fetch anulat) poate rămâne „pe jumătate
     // deschisă” din perspectiva serverului până la următoarea scriere; closeAllConnections

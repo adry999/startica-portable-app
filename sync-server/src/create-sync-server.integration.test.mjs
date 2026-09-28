@@ -19,7 +19,7 @@ function startServer(t) {
     historyDays: 365,
     trustProxy: false,
   };
-  const app = createSyncServer({ config, log: () => {} });
+  const app = createSyncServer({ config, log: () => {}, accessLog: () => {} });
   return new Promise(resolve => {
     app.server.listen(0, '127.0.0.1', () => {
       const { port } = app.server.address();
