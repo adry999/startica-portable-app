@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { reloadPersonal, usePersonal } from './usePersonal';
 
@@ -57,7 +57,39 @@ describe('usePersonal', () => {
     );
     await act(() => reloadPersonal());
     const { result } = renderHook(() => usePersonal());
-    expect(result.current.status).toBe('failed');
+    // m11: un eșec resetează `bootstrapped`, deci acest nou montaj reîncearcă automat (trece prin
+    // „loading” din nou) înainte să se stabilizeze pe „failed”, cu server-ul tot picat.
+    await waitFor(() => expect(result.current.status).toBe('failed'));
     expect(result.current.failureMessage).toBe('Eroare server');
+  });
+
+  // m11: după un eșec, `bootstrapped` rămâne true pentru totdeauna — toate ecranele Personal
+  // rămâneau pe „failed" până la reload complet al aplicației, chiar dacă operatorul naviga la
+  // alt ecran Personal (un nou montaj al hook-ului ar trebui să reîncerce automat).
+  it('un eșec permite reîncercarea automată la un montaj ulterior, nu doar reload() manual', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 500, json: async () => ({ error: 'Eroare server' }) })),
+    );
+    await act(() => reloadPersonal());
+    const first = renderHook(() => usePersonal());
+    // m11: montajul reîncearcă automat (bootstrapped a fost resetat de reloadPersonal eșuat mai sus)
+    // înainte să se stabilizeze din nou pe „failed", cu server-ul tot picat.
+    await waitFor(() => expect(first.result.current.status).toBe('failed'));
+    first.unmount();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/personal/state') return jsonResponse(fixtureState);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    // Simulează navigarea la un alt ecran Personal (ex. de la Echipa la Pontaj) — un nou montaj
+    // al hook-ului, fără să apeleze explicit reload().
+    const second = renderHook(() => usePersonal());
+    await waitFor(() => expect(second.result.current.status).toBe('ready'));
+    expect(second.result.current.staffById.get('STF-1')?.name).toBe('Ana Popescu');
   });
 });

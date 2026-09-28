@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { requestJson } from '@shared/api/session';
 import type { Department, PersonalSettings, Role, Staff } from './personal.types';
 
@@ -79,6 +79,9 @@ async function load(): Promise<void> {
     };
   } catch (error) {
     state = { ...state, status: 'failed', failureMessage: (error as Error).message };
+    // m11: fără asta, `bootstrapped` rămânea true pentru totdeauna — niciun ecran Personal montat
+    // ulterior (alt ecran, sau același după navigare) nu mai reîncerca automat, doar reload() manual.
+    bootstrapped = false;
   }
   notify();
 }
@@ -96,10 +99,14 @@ export function reloadPersonal(): Promise<void> {
  */
 export function usePersonal(): PersonalData {
   useSyncExternalStore(subscribe, getVersion, getVersion);
-  if (!bootstrapped) {
-    bootstrapped = true;
-    void load();
-  }
+  // m11: pornit dintr-un efect, nu direct în corpul randării — apelul sincron de aici declanșa
+  // `notify()` (deci un re-render al altor consumatori) în timp ce acest component se randa.
+  useEffect(() => {
+    if (!bootstrapped) {
+      bootstrapped = true;
+      void load();
+    }
+  }, []);
 
   const staffById = new Map(state.staff.map(person => [person.id, person]));
   const roleById = new Map(state.roles.map(role => [role.id, role]));

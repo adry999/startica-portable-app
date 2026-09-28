@@ -388,6 +388,36 @@ describe('usePayments', () => {
     );
   });
 
+  // m8: „Anulează” dintr-un toast ține o referință mai veche la archivePayment/unarchivePayment
+  // (capturată la randarea de atunci) — dacă starea s-a schimbat între timp (ex. un receiptNumber
+  // atribuit), funcția trebuie să citească snapshot-ul curent al sesiunii, nu closure-ul vechi.
+  it('archivePayment citește starea curentă la momentul apelului, nu closure-ul randării în care a fost capturată referința', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+    const staleArchivePayment = result.current.archivePayment; // ca referința ținută de un toast „Anulează”
+
+    // Alt calculator/altă acțiune atribuie un receiptNumber lui p1 între timp.
+    const updatedP1 = { ...fixtureState.payments[0], receiptNumber: 'BON-42' };
+    const stateWithReceipt = { ...fixtureState, payments: [updatedP1, ...fixtureState.payments.slice(1)] };
+    const session = renderHook(() => useAppSession());
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () =>
+      jsonResponse({ state: stateWithReceipt, revision: 2, updatedAt: '2026-09-23T10:05:00Z' }),
+    );
+    await act(() =>
+      session.result.current.mutate('/api/record', { type: 'payments', mode: 'update', record: updatedP1 }),
+    );
+
+    let sentRecord: Record<string, unknown> = {};
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
+      sentRecord = JSON.parse(options.body as string).record;
+      return jsonResponse({ state: stateWithReceipt, revision: 3, updatedAt: '2026-09-23T10:06:00Z' });
+    });
+
+    await act(() => staleArchivePayment('p1'));
+
+    expect(sentRecord.receiptNumber).toBe('BON-42');
+  });
+
   it('deletePayment cheamă /api/record-delete cu tipul și id-ul', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());

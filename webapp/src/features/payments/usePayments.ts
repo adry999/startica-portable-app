@@ -122,8 +122,12 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const [monthTo, setMonthTo] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
 
+  // m8: citesc `session.state.state` la momentul apelului, nu `records` din closure-ul randării în
+  // care a fost capturată funcția — o referință ținută de un toast „Anulează” (arhivare/dezarhivare)
+  // poate fi apelată după ce starea s-a schimbat (ex. un receiptNumber atribuit între timp).
   async function archivePayment(id: string) {
-    const payment = records.payments.find(p => p.id === id);
+    const current = session.state.state as RecordsSnapshot;
+    const payment = current.payments.find(p => p.id === id);
     if (!payment) throw new Error('Achitarea nu mai există.');
     await session.mutate('/api/record', {
       type: 'payments',
@@ -133,7 +137,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
   }
 
   async function unarchivePayment(id: string) {
-    const payment = records.payments.find(p => p.id === id);
+    const current = session.state.state as RecordsSnapshot;
+    const payment = current.payments.find(p => p.id === id);
     if (!payment) throw new Error('Achitarea nu mai există.');
     await session.mutate('/api/record', {
       type: 'payments',
