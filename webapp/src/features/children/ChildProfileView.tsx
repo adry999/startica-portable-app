@@ -328,9 +328,7 @@ function PaymentHistoryTable({
       key: 'menu',
       header: '',
       align: 'end',
-      render: payment => (
-        <RowMenu items={[{ label: 'Tipărește confirmarea', onClick: () => onPrint(payment.id) }]} />
-      ),
+      render: payment => <RowMenu items={[{ label: 'Tipărește confirmarea', onClick: () => onPrint(payment.id) }]} />,
     },
   ];
 

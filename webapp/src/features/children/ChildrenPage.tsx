@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, ConfirmDeleteDialog, DataTable, EmptyState, LoadingState, useToast, useTopbarActions } from '@shared/ui';
+import {
+  Button,
+  ConfirmDeleteDialog,
+  DataTable,
+  EmptyState,
+  LoadingState,
+  useToast,
+  useTopbarActions,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { useChildren, type ChildRow } from './useChildren';
@@ -72,8 +80,10 @@ function ChildrenListView({
       if (groupFilter !== 'all' && groupFilter !== 'none' && row.groupId !== groupFilter) return false;
       if (paymentFilter !== 'all' && row.payment.label !== paymentFilter) return false;
       if (normalizedQuery) {
-        const haystack = `${row.name} ${row.parent} ${row.phone} ${row.child.contractNumber ?? row.child.id}`
-          .toLocaleLowerCase('ro-RO');
+        const haystack =
+          `${row.name} ${row.parent} ${row.phone} ${row.child.contractNumber ?? row.child.id}`.toLocaleLowerCase(
+            'ro-RO',
+          );
         if (!haystack.includes(normalizedQuery)) return false;
       }
       return true;
