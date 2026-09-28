@@ -120,3 +120,66 @@ describe('StartupScreen — linia de filială (21a)', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('StartupScreen — pasul de sincronizare (18-sincronizare.md, Task 8)', () => {
+  // /api/state rămâne în așteptare (ca la primul describe din fișier): ready nu devine
+  // niciodată true, deci ecranul rămâne vizibil cât verificăm pasul de sincronizare —
+  // acel pas e pornit abia după /api/state, deci nu poate fi „bifat” fără să treacă prin
+  // ready (același motiv pentru care „Pregătesc Dashboard-ul” nu e testat ca „done” mai sus).
+  it('apare când sync.json e configurat, imediat după Citesc baza de date', async () => {
+    vi.useFakeTimers();
+    const pendingState = withResolvers<unknown>();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session')
+          return jsonResponse({
+            token: 'TOK',
+            version: '2.0.0',
+            sync: { configured: true, deviceName: 'Calculator A', serverUrl: 'https://sync.exemplu.md' },
+          });
+        if (path === '/api/state') return jsonResponse(await pendingState.promise);
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    void session.result.current.load();
+    await act(flushMicrotasks);
+
+    render(<StartupScreen />);
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByText('Sincronizez cu serverul comun')).toBeInTheDocument();
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('nu apare când sync.json nu e configurat (comportament de astăzi)', async () => {
+    vi.useFakeTimers();
+    const pendingState = withResolvers<unknown>();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'TOK', version: '2.0.0' });
+        if (path === '/api/state') return jsonResponse(await pendingState.promise);
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    void session.result.current.load();
+    await act(flushMicrotasks);
+
+    render(<StartupScreen />);
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.queryByText(/Sincronizez/)).not.toBeInTheDocument();
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+});

@@ -79,3 +79,14 @@ export function useAppSession(): AppSession {
     checkConnection: store.checkConnection,
   };
 }
+
+/**
+ * Reîncarcă datele când o modificare de pe alt calculator ajunge prin sincronizare
+ * (useSyncStatus, `records-changed`) — aceeași cale ca „Reîncarcă” din SaveStatusCard,
+ * dar fără să o pornească peste o operațiune deja în curs (nu am de ce să concurez cu
+ * un `mutate()` sau cu un `load()` deja pornit).
+ */
+export function reloadRecords(): void {
+  if (store.state.busy || store.state.pending || store.state.loading) return;
+  void store.load();
+}

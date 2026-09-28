@@ -27,14 +27,21 @@ function formatDuration(elapsedMs: number | null): string {
 /** Pașii vin din evenimente reale ale sesiunii (startupTimings), nu dintr-un timer separat. */
 function useStartupSteps() {
   const session = useAppSession();
-  const { startedAt, serverAt, databaseAt } = session.state.startupTimings;
+  const { startedAt, serverAt, databaseAt, syncAt } = session.state.startupTimings;
   const ready = session.state.ready;
+  // Pasul de sincronizare (18-sincronizare.md) apare doar când sync.json există —
+  // o instalare neconfigurată vede exact pașii de astăzi, fără nicio linie nouă.
+  const syncConfigured = !!session.state.sync?.configured;
+  const syncOffline = session.state.sync?.connection === 'offline';
+  const syncLabel = syncOffline ? 'Fără internet — lucrezi cu datele locale' : 'Sincronizez cu serverul comun';
+  const lastKnownAt = syncConfigured ? syncAt : databaseAt;
 
   const steps = useMemo<StepView[]>(() => {
     const entries: { key: string; label: string; at: number | null }[] = [
       { key: 'server', label: 'Pornesc serverul local', at: serverAt },
       { key: 'database', label: 'Citesc baza de date', at: databaseAt },
-      { key: 'dashboard', label: 'Pregătesc Dashboard-ul', at: ready ? databaseAt : null },
+      ...(syncConfigured ? [{ key: 'sync', label: syncLabel, at: syncAt }] : []),
+      { key: 'dashboard', label: 'Pregătesc Dashboard-ul', at: ready ? lastKnownAt : null },
     ];
     let currentAssigned = false;
     return entries.map(entry => {
@@ -52,7 +59,7 @@ function useStartupSteps() {
       }
       return { key: entry.key, label: entry.label, status: 'pending' as const, duration: '' };
     });
-  }, [startedAt, serverAt, databaseAt, ready]);
+  }, [startedAt, serverAt, databaseAt, syncConfigured, syncAt, syncLabel, lastKnownAt, ready]);
 
   return { steps, session };
 }

@@ -76,6 +76,28 @@ describe('Sidebar', () => {
     expect(screen.getByRole('button', { name: /Buiucani/ })).toBeInTheDocument();
   });
 
+  it('cu sincronizarea configurată cardul de sincronizare înlocuiește „Salvat · ora”', () => {
+    render(
+      <Sidebar
+        activeView="dashboard"
+        onNavigate={() => {}}
+        counts={{}}
+        version="v1.6.3"
+        saveStatus={saveStatus}
+        syncStatus={{ mode: 'synced', label: 'Sincronizat · 12:06', detail: 'Toate calculatoarele au aceleași date' }}
+      />,
+    );
+    expect(screen.getByText('Sincronizat · 12:06')).toBeInTheDocument();
+    expect(screen.queryByText('Salvat · 12:06')).not.toBeInTheDocument();
+  });
+
+  it('fără syncStatus rămâne cardul „Salvat · ora” de astăzi', () => {
+    render(
+      <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+    );
+    expect(screen.getByText('Salvat · 12:06')).toBeInTheDocument();
+  });
+
   it('Prezența stă imediat după Grupe', () => {
     render(
       <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,

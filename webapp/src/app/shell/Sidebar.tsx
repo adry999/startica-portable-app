@@ -1,6 +1,7 @@
 import { Badge } from '@shared/ui';
 import { NAV_GROUPS, type ViewKey } from './nav-items';
 import { SaveStatusCard, type SaveStatusCardProps } from './SaveStatusCard';
+import { SyncStatusCard, type SyncStatusCardProps } from './SyncStatusCard';
 import { BranchSelector, type BranchSelectorBranch } from './BranchSelector';
 import styles from './Sidebar.module.css';
 
@@ -11,6 +12,8 @@ export interface SidebarProps {
   counts: Partial<Record<ViewKey, number>>;
   version: string;
   saveStatus: SaveStatusCardProps;
+  /** Prezent doar când sincronizarea e configurată și nicio eroare locală nu are întâietate (18-sincronizare.md §14a) — înlocuiește saveStatus. */
+  syncStatus?: SyncStatusCardProps;
   /** Filiala curentă — null înainte ca sesiunea să răspundă; selectorul nu se randează atunci. */
   branch?: BranchSelectorBranch | null;
   branches?: BranchSelectorBranch[];
@@ -25,6 +28,7 @@ export function Sidebar({
   counts,
   version,
   saveStatus,
+  syncStatus,
   branch,
   branches,
   onSwitchBranch,
@@ -74,7 +78,7 @@ export function Sidebar({
         ))}
       </nav>
 
-      <SaveStatusCard {...saveStatus} />
+      {syncStatus ? <SyncStatusCard {...syncStatus} /> : <SaveStatusCard {...saveStatus} />}
     </aside>
   );
 }
