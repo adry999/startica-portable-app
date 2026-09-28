@@ -10,7 +10,7 @@ import { VIEW_PATHS, viewForPathname } from './shell/routes';
 import { DashboardPage, useDashboard } from '@features/dashboard';
 import { ChildrenPage, BirthdaysPage } from '@features/children';
 import { GroupsPage } from '@features/groups';
-import { AttendancePage } from '@features/attendance';
+import { AttendancePage, WeeklySheetPrintPage } from '@features/attendance';
 import { VisitsPage } from '@features/visits';
 import { PersonalPage, StaffProfilePage } from '@features/personal';
 import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
@@ -119,6 +119,7 @@ export function App() {
           element={<GroupsPage onOpenGroupStickers={id => navigate(`/tiparire/stickere?grupa=${id}`)} />}
         />
         <Route path="/prezenta" element={<AttendancePage month={month} />} />
+        <Route path="/prezenta/foi" element={<WeeklySheetPrintPage />} />
         <Route path="/vizite" element={<VisitsRoute />} />
         <Route path="/personal" element={<PersonalPage month={month} />} />
         <Route path="/personal/:id" element={<StaffProfilePage />} />
