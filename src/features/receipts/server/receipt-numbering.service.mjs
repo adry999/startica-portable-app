@@ -39,6 +39,9 @@ export function createReceiptNumberingService({
       const payment = recordRepository.find('payments', paymentId);
       if (!payment) fail(`Achitarea ${paymentId} nu mai există. Reîncarcă datele.`, 409);
       if (payment.receiptNumber) return; // are deja un număr — nu se reasignează.
+      // O achitare arhivată nu mai poate consuma un număr nou (m23) — retipărirea
+      // uneia deja numerotate rămâne posibilă mai sus, doar emiterea NOUĂ e blocată.
+      if (payment.archived) fail('Achitarea este arhivată — nu se emite o confirmare nouă.', 409);
 
       const settings = parseKindergartenSettings(readSetting('kindergarten'));
       const updated = normalizeRecord('payments', { ...payment, receiptNumber: settings.nextReceiptNumber });

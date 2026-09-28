@@ -1,6 +1,6 @@
 import { today, shiftDays, daysBetween } from './calendar-month.mjs';
 import { cents } from './money.mjs';
-import { allocations } from './payment-allocations.mjs';
+import { allocations, allocationCurrency } from './payment-allocations.mjs';
 import { eurToMdlRate, convertAmount } from './exchange-rates.mjs';
 
 // Cu câte zile înainte de scadență trece eticheta pe „Scadent în curând”.
@@ -63,7 +63,7 @@ export function obligation(child, month, payments, asOf = today(), index = null,
         .flatMap(p =>
           allocations(p)
             .filter(a => a.month === month)
-            .map(a => ({ amount: a.amount, currency: p.currency || 'MDL', date: p.date })),
+            .map(a => ({ amount: a.amount, currency: allocationCurrency(p), date: p.date })),
         );
   const paid = sumEntriesInCurrency(paidEntries, feeCurrency, rates);
   const unknown = (!inactive && (!start || !status || fee === null)) || paid === null;

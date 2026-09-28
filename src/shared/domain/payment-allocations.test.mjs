@@ -52,3 +52,22 @@ test('paymentIndex grupează intrările pe copil și lună fără să le adune, 
     { amount: 200, currency: 'MDL', date: '2026-09-20' },
   ]);
 });
+
+test('paymentIndex marchează intrarea cu moneda EUR când plata are amountEur îngheţat, indiferent de currency (rămâne MDL)', () => {
+  const frozenPayment = normalizeRecord('payments', {
+    id: 'P-FROZEN',
+    childId: 'C-2',
+    date: '2026-09-10',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'manual',
+    amountEur: 150,
+    allocations: [{ month: '2026-09', amount: 150 }],
+  });
+  assert.equal(frozenPayment.currency, 'MDL');
+
+  const index = paymentIndex([frozenPayment], '2026-09-30');
+
+  assert.deepEqual(index.get('C-2').get('2026-09'), [{ amount: 150, currency: 'EUR', date: '2026-09-10' }]);
+});

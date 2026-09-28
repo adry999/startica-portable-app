@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
 import { DEFAULT_KINDERGARTEN_SETTINGS } from '#shared/domain/kindergarten-settings.mjs';
 
@@ -36,4 +37,40 @@ test('POST /api/kindergarten cu receiptFormat necunoscut revine la a5', async t 
   const { post } = await startTestApplication(t, { prefix: 'startica-kindergarten-format-' });
   const response = await post('/api/kindergarten', { receiptFormat: 'altceva' });
   assert.equal(response.body.receiptFormat, 'a5');
+});
+
+test('POST /api/kindergarten nu poate reutiliza numere de confirmare deja emise (M6)', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-kindergarten-reuse-' });
+
+  // Operatorul deschide fila „Grădinița” — încarcă nextReceiptNumber: 1 (implicit).
+  const opened = await post('/api/kindergarten', {});
+  assert.equal(opened.body.nextReceiptNumber, 1);
+
+  // Într-un alt tab se tipăresc 3 confirmări, care avansează contorul la 4.
+  for (const receiptNumber of [1, 2, 3]) {
+    const state = await get('/api/state');
+    const created = await post('/api/record', {
+      mode: 'create',
+      type: 'payments',
+      record: {
+        id: `PAY-${receiptNumber}`,
+        date: '2026-09-10',
+        amount: 1000,
+        method: 'Cash',
+        receiptNumber,
+        allocations: [{ month: '2026-09', amount: 1000 }],
+      },
+      revision: state.revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(created.status, 200, JSON.stringify(created.body));
+  }
+  await post('/api/kindergarten', { nextReceiptNumber: 4 });
+
+  // Fila deschisă mai devreme (nextReceiptNumber: 1) e salvată abia acum, cu denumirea completată.
+  const saved = await post('/api/kindergarten', { name: 'Grădinița Curcubeu', nextReceiptNumber: 1 });
+
+  assert.equal(saved.status, 200, JSON.stringify(saved.body));
+  assert.equal(saved.body.nextReceiptNumber, 4, 'nu trebuie să dea înapoi la 1 — ar reemite numerele 1-3');
+  assert.equal(saved.body.name, 'Grădinița Curcubeu');
 });

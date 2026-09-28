@@ -34,6 +34,16 @@ function createHarness({ kindergarten } = {}) {
         receiptNumber: 41,
         allocations: [{ month: '2026-09', amount: 1500 }],
       }),
+      {
+        ...normalizeRecord('payments', {
+          id: 'PAY-ARHIVATA',
+          date: '2026-09-02',
+          amount: 800,
+          method: 'Cash',
+          allocations: [{ month: '2026-09', amount: 800 }],
+        }),
+        archived: true,
+      },
     ],
   });
   const auditTrail = createRecordingAuditTrail();
@@ -104,6 +114,17 @@ test('refuză o achitare ștearsă între timp, fără să consume un număr', (
     message: /nu mai există/,
   });
   assert.equal(JSON.parse(settings.readSetting('kindergarten') || '{}').nextReceiptNumber, 7);
+});
+
+test('refuză emiterea unui număr nou pentru o achitare arhivată (m23)', () => {
+  const { service, settings } = createHarness({ kindergarten: { nextReceiptNumber: 42 } });
+
+  assert.throws(() => service.assignReceiptNumber(assignRequest('PAY-ARHIVATA')), {
+    status: 409,
+    message: /arhivată/,
+  });
+  // Contorul nu s-a consumat pentru o achitare arhivată.
+  assert.equal(JSON.parse(settings.readSetting('kindergarten')).nextReceiptNumber, 42);
 });
 
 test('refuză un identificator de achitare invalid', () => {

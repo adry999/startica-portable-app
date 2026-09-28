@@ -332,6 +332,137 @@ test('obligation: fișă existentă fără currency (date vechi) se comportă ca
   assert.equal(result.label, 'Plătit');
 });
 
+test('obligation: plată cu curs manual pe achitare — paid este suma îngheţată amountEur, nu recalculul din tabelul de cursuri', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  // Curs manual 20 la achitare => 3000 lei / 20 = 150 €, îngheţat pe plată.
+  const manualPayment = normalizeRecord('payments', {
+    id: 'P-MANUAL',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'manual',
+    amountEur: 150,
+    allocations: [{ month: '2026-09', amount: 150 }],
+  });
+  // Tabelul de cursuri are cu totul altă valoare pentru aceeași zi — nu trebuie folosită.
+  const rates = { '2026-09-10': 25 };
+
+  const result = obligation(eurChild, '2026-09', [manualPayment], '2026-09-30', null, rates);
+
+  assert.equal(result.paid, 150);
+  assert.equal(result.rest, 350);
+});
+
+test('obligation: cursul corectat ulterior în tabel nu modifică retroactiv o plată deja îngheţată', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  // Îngheţată la cursul BNM al zilei (20.1352): 3000 / 20.1352 ≈ 148,99 €.
+  const frozenPayment = normalizeRecord('payments', {
+    id: 'P-FROZEN',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 3000,
+    method: 'Cash',
+    fxRate: 20.1352,
+    fxRateSource: 'bnm',
+    amountEur: 148.99,
+    allocations: [{ month: '2026-09', amount: 148.99 }],
+  });
+  // Cursul din 12a a fost corectat retroactiv, la o valoare diferită.
+  const correctedRates = { '2026-09-10': 22 };
+
+  const result = obligation(eurChild, '2026-09', [frozenPayment], '2026-09-30', null, correctedRates);
+
+  assert.equal(result.paid, 148.99);
+});
+
+test('obligation: fără curs în tabel pentru ziua plății, o plată cu amountEur îngheţat nu devine "De verificat"', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const frozenPayment = normalizeRecord('payments', {
+    id: 'P-FROZEN',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 2000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'bnm',
+    amountEur: 100,
+    allocations: [{ month: '2026-09', amount: 100 }],
+  });
+
+  const result = obligation(eurChild, '2026-09', [frozenPayment], '2026-09-30', null, {});
+
+  assert.equal(result.paid, 100);
+  assert.equal(result.rest, 400);
+  assert.notEqual(result.label, 'De verificat');
+});
+
+test('firstUnpaidMonth pentru un copil cu taxă EUR nu sare lunile plătite parțial cu plăți îngheţate', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-08-01',
+    feeHistory: [{ from: '2026-08', amount: 500, currency: 'EUR' }],
+  });
+  // Septembrie e plătit parțial (100 din 500 €) — trebuie propus septembrie, nu octombrie.
+  const partialPayment = normalizeRecord('payments', {
+    id: 'P-PARTIAL',
+    childId: 'C-EUR',
+    date: '2026-09-05',
+    amount: 2000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'bnm',
+    amountEur: 100,
+    allocations: [{ month: '2026-09', amount: 100 }],
+  });
+
+  assert.equal(firstUnpaidMonth(eurChild, [partialPayment], '2026-09-30'), '2026-08');
+});
+
+test('firstUnpaidMonth pentru un copil cu taxă EUR: luna plătită integral cu o plată îngheţată e sărită corect', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const fullPayment = normalizeRecord('payments', {
+    id: 'P-FULL',
+    childId: 'C-EUR',
+    date: '2026-09-05',
+    amount: 10000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'bnm',
+    amountEur: 500,
+    allocations: [{ month: '2026-09', amount: 500 }],
+  });
+
+  assert.equal(firstUnpaidMonth(eurChild, [fullPayment], '2026-10-05'), '2026-10');
+});
+
 test('firstUnpaidMonth caută până la 120 de luni, pentru o frecventare de peste 5 ani', () => {
   // Frecventare din 2020; taxa e 0 până în 2025-06 (luna 66, dincolo de vechea limită de 60), apoi devine reală.
   const unpaidFrom = '2025-06';
