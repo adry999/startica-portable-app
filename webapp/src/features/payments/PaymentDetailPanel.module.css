@@ -1,0 +1,187 @@
+.panel {
+  width: 400px;
+  flex-shrink: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: var(--space-24);
+}
+
+.header {
+  padding: 26px 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  position: relative;
+  overflow: hidden;
+}
+
+.headerPink {
+  background: var(--pink-soft);
+}
+
+.headerMint {
+  background: var(--mint-soft);
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.headerPink .headerEyebrow {
+  color: var(--pink-ink);
+}
+
+.headerMint .headerEyebrow {
+  color: var(--mint-ink);
+}
+
+.close {
+  border: none;
+  background: none;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.headerAmount {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 38px;
+  line-height: 1;
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #5b666e;
+}
+
+.body {
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-18);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding: 16px;
+  border-radius: var(--radius-md-lg);
+  background: var(--cream);
+  border: 1px solid var(--border);
+}
+
+.boxRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.boxRow span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.unassignedValue {
+  color: var(--pink-ink);
+}
+
+.assignLink {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--orange-ink);
+}
+
+.months {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.monthsLabel {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.monthRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-input);
+  background: var(--cream);
+  border: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.notice {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 13px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-10);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.fieldValue {
+  padding: 10px 12px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--input-border);
+  font-size: 14px;
+  color: var(--slate);
+  font-weight: 600;
+}
+
+.footer {
+  padding: 16px 26px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.archiveLink {
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--pink-ink);
+}
+
+.printButton {
+  margin-left: auto;
+}

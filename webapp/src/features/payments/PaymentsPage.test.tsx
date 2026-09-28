@@ -77,6 +77,26 @@ function renderPage(onOpenChild?: (id: string) => void) {
   );
 }
 
+function LocationDisplay() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname + location.search}</div>;
+}
+
+/** Pentru testele care verifică navigarea (Neasociată →, Schimbă copilul, Tipărește confirmarea). */
+function renderPageWithLocation() {
+  return render(
+    <MemoryRouter>
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <LocationDisplay />
+          <PaymentsHarness />
+        </TopbarActionsProvider>
+      </ToastProvider>
+    </MemoryRouter>,
+  );
+}
+
 async function loadedSession() {
   const session = renderHook(() => useAppSession());
   await act(() => session.result.current.load());
@@ -133,21 +153,7 @@ describe('PaymentsPage', () => {
 
   it('butonul „Bon zi" navighează la bonul de închidere a zilei de azi', async () => {
     await loadedSession();
-    function LocationDisplay() {
-      const location = useLocation();
-      return <div data-testid="location">{location.pathname + location.search}</div>;
-    }
-    render(
-      <MemoryRouter>
-        <ToastProvider>
-          <TopbarActionsProvider>
-            <TopbarActionsSlot />
-            <LocationDisplay />
-            <PaymentsHarness />
-          </TopbarActionsProvider>
-        </ToastProvider>
-      </MemoryRouter>,
-    );
+    renderPageWithLocation();
 
     await userEvent.click(screen.getByRole('button', { name: 'Bon zi' }));
 
@@ -158,10 +164,10 @@ describe('PaymentsPage', () => {
     await loadedSession();
     renderPage();
 
-    expect(screen.getByText('Total filtrat')).toBeInTheDocument();
+    expect(screen.getByText(/Total filtrat/)).toBeInTheDocument();
     expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);
-    expect(screen.getByText('Neasociată')).toBeInTheDocument();
+    expect(screen.getByText('Neasociată →')).toBeInTheDocument();
   });
 
   it('click pe un rând cu copil asociat deschide fișa copilului', async () => {
@@ -352,9 +358,8 @@ describe('PaymentsPage', () => {
     await user.click(checkboxes[0]);
     await user.click(checkboxes[1]);
 
-    expect(screen.getByText(`2 selectate · ${formatMoney(1800)}`)).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Arhivează selectate' }));
+    const selectionBar = screen.getByText(`2 selectate · ${formatMoney(1800)}`).closest('div')!;
+    await user.click(within(selectionBar).getByRole('button', { name: 'Arhivează' }));
 
     expect(await screen.findByText('2 achitări arhivate.')).toBeInTheDocument();
     expect(screen.queryByText(/selectate ·/)).not.toBeInTheDocument();
@@ -427,5 +432,90 @@ describe('PaymentsPage', () => {
 
     const altelesCard = screen.getByText('Altele').closest('div') as HTMLElement;
     expect(within(altelesCard).getByText(formatMoney(200))).toBeInTheDocument();
+  });
+
+  it('badge-link „Neasociată →" navighează la Asociere achitări cu id-ul plății', async () => {
+    await loadedSession();
+    const user = userEvent.setup();
+    renderPageWithLocation();
+
+    await user.click(screen.getByText('Neasociată →'));
+
+    expect(screen.getByTestId('location').textContent).toBe('/asociere-achitari?id=p4');
+  });
+
+  it('„Schimbă copilul" din meniul rândului navighează la Asociere achitări cu id-ul plății', async () => {
+    await loadedSession();
+    const user = userEvent.setup();
+    renderPageWithLocation();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Schimbă copilul' }));
+
+    expect(screen.getByTestId('location').textContent).toBe('/asociere-achitari?id=p1');
+  });
+
+  it('„Tipărește confirmarea" din meniul rândului navighează la confirmarea de plată', async () => {
+    await loadedSession();
+    const user = userEvent.setup();
+    renderPageWithLocation();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Tipărește confirmarea' }));
+
+    expect(screen.getByTestId('location').textContent).toBe('/achitari/p1/confirmare');
+  });
+
+  describe('Pe luna încasării', () => {
+    it('grupează achitările pe lună și arată panoul de detaliu pentru rândul activ', async () => {
+      await loadedSession();
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
+
+      expect(screen.getAllByText(/septembrie 2026/i).length).toBeGreaterThan(0);
+      // Primul rând al grupului (p1) e activ implicit — panoul arată datele lui.
+      expect(screen.getByText('Achitare · 10.09.2026')).toBeInTheDocument();
+    });
+
+    it('click pe un rând din listă îi deschide panoul de detaliu', async () => {
+      await loadedSession();
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
+      const importRow = screen.getAllByText(/Import CSV/)[0].closest('button')!;
+      await user.click(importRow);
+
+      expect(screen.getByText('Achitare · 02.09.2026')).toBeInTheDocument();
+    });
+
+    it('pastila „Neasociate" filtrează lista doar la achitările neasociate', async () => {
+      await loadedSession();
+      const user = userEvent.setup();
+      renderPage();
+
+      await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
+      await user.click(screen.getByRole('button', { name: /Neasociate ·/ }));
+
+      expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+      expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);
+    });
+
+    it('panoul de detaliu are link „Asociază în De rezolvat →", nu un formular de asociere', async () => {
+      await loadedSession();
+      const user = userEvent.setup();
+      renderPageWithLocation();
+
+      await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
+      await user.click(screen.getByRole('button', { name: 'Asociază în De rezolvat →' }));
+
+      expect(screen.getByTestId('location').textContent).toMatch(/^\/asociere-achitari\?id=/);
+    });
   });
 });

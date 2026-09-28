@@ -52,6 +52,11 @@ export interface PaymentsSummary {
   card: number;
   transfer: number;
   other: number;
+  /** Numărul de achitări cu un tender pe metoda respectivă — pentru eticheta cardului
+   * („Cash · 9”), neafectat de filtrul Metodă, la fel ca suma (05-achitari.md §3). */
+  cashCount: number;
+  cardCount: number;
+  transferCount: number;
 }
 
 export interface PaymentsData {
@@ -83,7 +88,22 @@ export interface PaymentsData {
   deletePayment: (id: string) => Promise<void>;
 }
 
-const EMPTY_SUMMARY: PaymentsSummary = { count: 0, total: 0, cash: 0, card: 0, transfer: 0, other: 0 };
+const EMPTY_SUMMARY: PaymentsSummary = {
+  count: 0,
+  total: 0,
+  cash: 0,
+  card: 0,
+  transfer: 0,
+  other: 0,
+  cashCount: 0,
+  cardCount: 0,
+  transferCount: 0,
+};
+
+function countByMethod(payments: Payment[], method: string): number {
+  return payments.filter(payment => paymentTenders(payment).some((tender: PaymentTender) => tender.method === method))
+    .length;
+}
 
 function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
   return {
@@ -255,6 +275,9 @@ export function usePayments(initialChildId = ''): PaymentsData {
       card: byMethod.Card,
       transfer: byMethod.Transfer,
       other: byMethod.Altele,
+      cashCount: countByMethod(paymentsForSummary, 'Cash'),
+      cardCount: countByMethod(paymentsForSummary, 'Card'),
+      transferCount: countByMethod(paymentsForSummary, 'Transfer'),
     },
     ...actions,
   };

@@ -39,3 +39,9 @@
   margin-left: auto;
   opacity: 0.8;
 }
+
+.floating {
+  margin: 14px 16px;
+  border-radius: var(--radius-md-lg);
+  box-shadow: var(--shadow-floating-bar);
+}
