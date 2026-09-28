@@ -8,9 +8,10 @@ test('Paștele ortodox cade pe 20.04.2025, 12.04.2026, 02.05.2027', () => {
   assert.equal(orthodoxEaster(2027), '2027-05-02');
 });
 
-test('sărbătorile legale ale anului 2026 sunt 14 zile, inclusiv Paștele Blajinilor pe 20 aprilie', () => {
+test('sărbătorile legale ale anului 2026 sunt 13 zile, inclusiv Paștele Blajinilor pe 20 aprilie', () => {
   const holidays = legalHolidaysMd(2026);
-  assert.equal(holidays.length, 14);
+  assert.equal(holidays.length, 13);
+  assert.equal(isLegalHolidayMd('2026-12-26'), false);
   assert.ok(holidays.some(holiday => holiday.date === '2026-04-20' && holiday.name.includes('Blajinilor')));
 });
 

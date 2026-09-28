@@ -23,12 +23,7 @@ const holidaysCache = new Map();
 /**
  * Zilele fixe (lună-zi), necorelate cu Paștele — Codul muncii al R. Moldova, art. 111.
  * Fără zilele locale de hram (o setare ulterioară).
- *
- * 26 decembrie e NEVERIFICATĂ: planul care a introdus modulul
- * (`docs/superpowers/plans/2026-09-27-prezenta.md`, Task 1) citează art. 111 cu doar 25
- * decembrie, fără „a doua zi de Crăciun”; nu am găsit aici o sursă autoritară care să
- * confirme sau să infirme intrarea. Păstrată neschimbată din codul existent (audit
- * 2026-09-28, constatarea m2) — de confirmat separat, nu se ghicește într-un batch de fix-uri.
+ * Art. 111 enumeră 13 zile; 26 decembrie nu e zi nelucrătoare (verificat 2026-09-28, legis.md).
  * @type {{ month: number, day: number, name: string }[]}
  */
 const FIXED_HOLIDAYS_MD = [
@@ -42,7 +37,6 @@ const FIXED_HOLIDAYS_MD = [
   { month: 8, day: 27, name: 'Ziua Independenței' },
   { month: 8, day: 31, name: 'Ziua Limbii Române' },
   { month: 12, day: 25, name: 'Crăciunul' },
-  { month: 12, day: 26, name: 'Crăciunul (a doua zi)' }, // nesigur, vezi comentariul de mai sus
 ];
 
 /**
