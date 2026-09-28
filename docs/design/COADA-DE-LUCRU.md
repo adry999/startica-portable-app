@@ -192,7 +192,9 @@ Rulate cu crew multiple în paralel (worktree-uri izolate), fiecare verificat pe
 ## FM-1, FM-2 — formulare (Lot 15, AUDIT-UI-2026-09-28.md)
 
 - **FM-2 (`ExpenseFormDrawer` pe spec 15c):** DONE — sumă mare (Baloo 40/800), chip-uri categorie (`role="radio"`, border 2px în culoarea categoriei), „Salvează și adaugă alta" (doar la cheltuieli noi, cablat pe `quickAddExpense` existent) + „Salvează". **Reparat de mine, după raport:** agentul crease inițial un `category-tone.ts` nou, l-a șters pe disc după ce a găsit `categoryStyleFor()` deja existent în `useExpenses.ts` (sursă unică documentată pentru culoarea categoriilor) — dar ștergerea nu ajunsese în commit (`git status` arăta ` D` necomis). Am comis eu ștergerea lipsă înainte de merge. `npm run check` (1064/1066) + webapp typecheck/test (146 fișiere, 795 teste) verzi, verificat de mine după fix. Commit-uri `290ba4b` + fix-ul meu, merge `b5685d1`.
-- **FM-1 (`ChildFormDrawer` pe 4 secțiuni):** verificare + merge în curs.
+- **FM-1 (`ChildFormDrawer` pe 4 secțiuni):** DONE — 1·Copil (Nume, Data nașterii+vârstă, grupe compatibile din `Group.ageMinYears/ageMaxYears`, Statut), 2·Părinți (2 carduri Nume+Telefon, pe modelul fix existent `parent/phone/parent2/phone2` — nu dinamic), 3·Contract și taxă (carduri de program din `usePlanPresets` EUR existente, nu dropdown), 4·Grupă opțional (chip-uri cu „N locuri libere”, calculat din capacitate minus copii nearhivați, exclude copilul editat). **Gap-uri de model semnalate, nerezolvate, pe cont propriu nu s-a extins schema:** Nume/Prenume separate (`Child.name` e un singur câmp), relație pe părinte + listă dinamică „+ Adaugă încă un părinte” (schema are exact 2 sloturi fixe). `npm run check` (1064/1066) + webapp typecheck/test (146 fișiere, 798 teste) verzi. Commit-uri `f0b28d6`, `7884a65`, merge `abc5d02`.
+
+**FM-1 și FM-2 închise. Toată coada cerută azi (0.5–0.9, S.1–S.5, FM-1–2) e integrată pe `master-v2`, comisă local, nepushată.**
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** (de mai sus) — reparăm motorul întâi (auditul separat) sau construim UI-ul peste el așa cum e?
