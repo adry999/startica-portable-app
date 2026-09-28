@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -130,15 +130,21 @@ describe('AttendancePage · Ziua', () => {
     stubFetch(posted);
     await renderPage();
 
-    const user = userEvent.setup();
+    // M14: cu timere reale + userEvent.type (delay real între taste), debounce-ul de 400 ms pornit
+    // de al treilea clic (starea „motivat”, cu reason='') putea expira cât timp se tasta motivul
+    // (mai ales în suita completă, mai lentă) — flush()-ul intermediar trimitea un prim POST cu
+    // reason='', înainte ca „Salvează” din popover să apuce să-l completeze. `fireEvent` scrie
+    // motivul sincron (fără scurgere de timp real între taste), deci debounce-ul pornit de clicul
+    // „motivat” nu mai poate expira înainte de „Salvează” — nu mai există cursa, fără timere false
+    // (care blochează userEvent/act pe alte hook-uri din pagină, vezi TimesheetView.test.tsx).
     const tile = screen.getByRole('button', { name: /Ana Popescu:/ });
-    await user.click(tile); // prezent
-    await user.click(tile); // absent
-    await user.click(tile); // motivat -> popover
+    fireEvent.click(tile); // prezent
+    fireEvent.click(tile); // absent
+    fireEvent.click(tile); // motivat -> popover, pornește debounce-ul pentru status='excused', reason=''
 
     const dialog = screen.getByRole('dialog', { name: /Ana Popescu/ });
-    await user.type(within(dialog).getByPlaceholderText('Motivul absenței…'), 'Boală');
-    await user.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+    fireEvent.change(within(dialog).getByPlaceholderText('Motivul absenței…'), { target: { value: 'Boală' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvează' }));
 
     await waitForDebounce();
 
