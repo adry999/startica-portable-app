@@ -11,7 +11,7 @@ function createDatabase(t) {
   return database;
 }
 
-test('kind-repository salvează, citește și șterge pe kind și notifică onChange în tranzacție', t => {
+test('kind-repository salvează, citește și șterge pe kind și notifică onChange după COMMIT', t => {
   const database = createDatabase(t);
   const changes = [];
   const repository = createKindRepository(database, { onChange: change => changes.push(change) });
@@ -22,8 +22,8 @@ test('kind-repository salvează, citește și șterge pe kind și notifică onCh
   assert.deepEqual(repository.list('staff'), [staff]);
   assert.deepEqual(changes, [{ kind: 'staff', id: 'STF-1', payload: staff }]);
 
-  // schimbarea trebuie deja vizibilă în bază când onChange rulează, deci onChange
-  // e chiar în tranzacția scrierii, nu după COMMIT.
+  // Aceeași conexiune vede oricum propriile scrieri necomise (SQLite) — schimbarea
+  // e vizibilă indiferent de momentul lui onChange; asta doar confirmă că e vizibilă.
   let visibleDuringOnChange;
   const repositoryWithReadback = createKindRepository(database, {
     onChange: () => {
@@ -43,6 +43,46 @@ test('kind-repository salvează, citește și șterge pe kind și notifică onCh
     repository.list('staff').map(record => record.id),
     ['STF-2'],
   );
+});
+
+test('onChange rulează abia după COMMIT: o eroare în el nu anulează scrierea (E-1 — permite un backup sincron în onChange)', t => {
+  const database = createDatabase(t);
+  const repository = createKindRepository(database, {
+    onChange: () => {
+      throw new Error('eroare în abonat');
+    },
+  });
+
+  assert.throws(() => repository.save('staff', { id: 'STF-1', name: 'Ana' }), /eroare în abonat/);
+  // Scrierea a fost deja confirmată (COMMIT) înainte ca onChange să arunce — altfel un
+  // backup sincron (VACUUM INTO) declanșat din onChange ar arunca „cannot VACUUM from
+  // within a transaction”, pentru că tranzacția scrierii ar fi încă deschisă.
+  const readback = createKindRepository(database);
+  assert.deepEqual(readback.find('staff', 'STF-1'), { id: 'STF-1', name: 'Ana' });
+});
+
+test('transaction(fn) grupează notificările onChange și le trimite o singură dată, după COMMIT', t => {
+  const database = createDatabase(t);
+  const changes = [];
+  const repository = createKindRepository(database, { onChange: change => changes.push(change) });
+
+  repository.transaction(() => {
+    repository.save('timesheet', { id: 'TS-1', code: 'CO' });
+    repository.save('timesheet', { id: 'TS-2', code: 'CM' });
+    // Nicio notificare încă — tranzacția grupată nu s-a încheiat.
+    assert.deepEqual(changes, []);
+  });
+  assert.equal(changes.length, 2);
+
+  changes.length = 0;
+  assert.throws(() => {
+    repository.transaction(() => {
+      repository.save('timesheet', { id: 'TS-3', code: 'A' });
+      throw new Error('eroare în lot');
+    });
+  });
+  // Rollback — nicio notificare pentru un lot care nu s-a scris niciodată.
+  assert.deepEqual(changes, []);
 });
 
 test('transaction(fn) grupează mai multe scrieri într-o singură tranzacție, atomic la eroare', t => {

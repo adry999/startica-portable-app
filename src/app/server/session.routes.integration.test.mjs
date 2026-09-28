@@ -63,6 +63,12 @@ test('Oprire desktop autentificată, cu backup final și închiderea bazei', asy
     const check = new DatabaseSync(join(dir, 'data/startica.db'), { readOnly: true });
     assert.equal(check.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
     check.close();
+    // E-1 din audit: oprirea din lansator e singura cale reală de închidere — Comun\
+    // (salarii/avansuri/pontaj) trebuie să aibă și ea o copie la acest moment, nu doar filiala.
+    assert.ok(
+      readdirSync(join(dir, 'Comun', 'Startica_Backup')).some(name => name.includes('inchidere')),
+      'Comun\\ nu are nicio copie la oprirea din lansator',
+    );
   } finally {
     if (app.server.listening) await app.close();
     if (

@@ -16,19 +16,35 @@ export function createKindRepository(database, { onChange } = {}) {
   const removeStatement = database.prepare('DELETE FROM records WHERE kind=? AND id=?');
 
   let inTransaction = false;
+  /** @type {{ kind: string, id: string, payload: unknown | null }[]} */
+  let pendingChanges = [];
+
+  // onChange rulează întotdeauna după COMMIT, niciodată în interiorul tranzacției care
+  // a scris — un abonat (backup automat, E-1 din audit) poate face o operație sincronă
+  // proprie (VACUUM INTO) fără să lovească „cannot VACUUM from within a transaction”.
+  // Aceeași conexiune vede oricum propriile scrieri necomise, deci nimic nu pierde din
+  // vizibilitate față de a notifica înainte de COMMIT.
+  function flushPendingChanges() {
+    const changes = pendingChanges;
+    pendingChanges = [];
+    for (const change of changes) onChange?.(change);
+  }
 
   /** @template T @param {() => T} action @returns {T} */
   function withOwnTransaction(action) {
     if (inTransaction) return action();
     database.exec('BEGIN IMMEDIATE');
+    let result;
     try {
-      const result = action();
+      result = action();
       database.exec('COMMIT');
-      return result;
     } catch (error) {
       database.exec('ROLLBACK');
+      pendingChanges = [];
       throw error;
     }
+    flushPendingChanges();
+    return result;
   }
 
   /** @param {string} kind */
@@ -46,7 +62,7 @@ export function createKindRepository(database, { onChange } = {}) {
   function save(kind, record) {
     return withOwnTransaction(() => {
       saveStatement.run(kind, record.id, JSON.stringify(record));
-      onChange?.({ kind, id: record.id, payload: record });
+      pendingChanges.push({ kind, id: record.id, payload: record });
       return record;
     });
   }
@@ -55,7 +71,7 @@ export function createKindRepository(database, { onChange } = {}) {
   function remove(kind, id) {
     return withOwnTransaction(() => {
       removeStatement.run(kind, id);
-      onChange?.({ kind, id, payload: null });
+      pendingChanges.push({ kind, id, payload: null });
     });
   }
 
@@ -64,16 +80,19 @@ export function createKindRepository(database, { onChange } = {}) {
     if (inTransaction) return fn();
     database.exec('BEGIN IMMEDIATE');
     inTransaction = true;
+    let result;
     try {
-      const result = fn();
+      result = fn();
       database.exec('COMMIT');
-      return result;
     } catch (error) {
       database.exec('ROLLBACK');
+      pendingChanges = [];
       throw error;
     } finally {
       inTransaction = false;
     }
+    flushPendingChanges();
+    return result;
   }
 
   return { list, find, save, remove, transaction };

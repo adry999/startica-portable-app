@@ -212,6 +212,7 @@ export function createBranchContext({
       version,
       readEnvelope: recordRepository.readEnvelope,
       backupService: backups,
+      commonBackupService: common?.backups,
       allowShutdown: !!allowShutdown,
       shutdown,
       branch,

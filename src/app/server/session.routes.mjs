@@ -8,6 +8,7 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
  *   version: string,
  *   readEnvelope: () => unknown,
  *   backupService: { cancelScheduledBackup: () => void, safeBackup: (reason: string) => { warning?: string } },
+ *   commonBackupService?: { cancelScheduledBackup: () => void, safeBackup: (reason: string) => { warning?: string } },
  *   allowShutdown: boolean,
  *   shutdown: () => void,
  *   branch: import('#core/server/branches/branch-registry.mjs').BranchEntry,
@@ -20,6 +21,11 @@ export function createSessionRoutes({
   version,
   readEnvelope,
   backupService,
+  // Baza comună (Personal 24, E-1 din audit): oprirea din lansator e singura cale reală
+  // de închidere (main.mjs face propriul backup separat, la SIGINT/SIGTERM) — Comun\
+  // (salarii, avansuri, pontaj) trebuie să aibă și ea o copie la acest moment, nu doar
+  // filiala activă. Opțional — un context fără el (teste izolate de filială) nu-l are.
+  commonBackupService = { cancelScheduledBackup: () => {}, safeBackup: () => ({}) },
   allowShutdown,
   shutdown,
   branch,
@@ -55,8 +61,11 @@ export function createSessionRoutes({
         }
         closing = true;
         backupService.cancelScheduledBackup();
+        commonBackupService.cancelScheduledBackup();
+        const commonResult = commonBackupService.safeBackup('inchidere');
         const result = backupService.safeBackup('inchidere');
-        sendResponse(response, { ok: true, warning: result.warning || '' });
+        const warning = [commonResult.warning, result.warning].filter(Boolean).join(' ');
+        sendResponse(response, { ok: true, warning });
         shutdown();
         return RESPONSE_SENT;
       },

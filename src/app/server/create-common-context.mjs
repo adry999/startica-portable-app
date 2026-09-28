@@ -41,7 +41,16 @@ export function createCommonContext({ home, autoBackupIntervalMs, onChange }) {
     forbiddenFolders: () => [],
   });
 
-  const kinds = createKindRepository(db, { onChange });
+  // E-1 din audit: Comun\ (salarii, avansuri, pontaj) primește acum backup automat
+  // după fiecare scriere, ca o filială — altfel nu are nicio copie între pornirea
+  // aplicației și oprirea ei din lansator. onChange rulează după COMMIT (kind-repository.mjs),
+  // deci autoBackup() (VACUUM INTO) nu lovește peste o tranzacție încă deschisă.
+  const kinds = createKindRepository(db, {
+    onChange: change => {
+      backups.autoBackup();
+      onChange?.(change);
+    },
+  });
 
   // Deblocarea PIN-ului trăiește doar în procesul curent (decizia 8): un obiect mutabil
   // simplu, partajat de pin.service.mjs (Faza 2), nu persistat niciunde.

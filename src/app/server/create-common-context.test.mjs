@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createCommonContext } from './create-common-context.mjs';
@@ -38,6 +38,25 @@ test('un install care nu deschide niciodată Personal are doar un fișier gol î
 
   assert.deepEqual(common.kinds.list('staff'), []);
   assert.ok(existsSync(common.dbFile));
+  common.close();
+});
+
+test('o scriere prin kinds produce un backup automat, ca la o filială (E-1 din audit)', t => {
+  const home = tempHome(t);
+  // autoBackupIntervalMs: 0 => autoBackup() face o copie reală la fiecare notificare,
+  // exact ca revision-transaction.mjs pentru o filială (vezi comentariul din
+  // create-application.integration.test.mjs).
+  const common = createCommonContext({ home, autoBackupIntervalMs: 0 });
+  const backupDir = join(home, 'Comun', 'Startica_Backup');
+  assert.deepEqual(readdirSync(backupDir), []);
+
+  common.kinds.save('staff', { id: 'STF-1', name: 'Ana' });
+
+  assert.equal(
+    readdirSync(backupDir).length,
+    1,
+    'salariile/avansurile/pontajul trebuie să aibă o copie fără să aștepte următoarea pornire',
+  );
   common.close();
 });
 
