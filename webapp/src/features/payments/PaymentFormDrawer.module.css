@@ -113,3 +113,123 @@
   font-size: 12px;
   color: var(--slate);
 }
+
+.linkButton {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--orange-ink);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+}
+
+.childCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-10) var(--space-14);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+}
+
+.childCard > :first-child {
+  flex: 1;
+}
+
+.sumBox {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+  padding: var(--space-14) var(--space-18);
+  border-radius: var(--radius-md-lg);
+  border: 1.5px solid var(--orange);
+  background: var(--cream);
+}
+
+.sumInput {
+  flex: 1;
+  border: none !important;
+  background: none;
+  padding: 0 !important;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 40px !important;
+  line-height: 1;
+  color: var(--slate);
+  outline: none;
+}
+
+.sumCurrency {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--subtle);
+}
+
+.shortcuts {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.shortcut {
+  border: none;
+  background: var(--neutral-soft);
+  border-radius: var(--radius-pill);
+  padding: var(--space-4) var(--space-12);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.shortcutActive {
+  background: var(--slate);
+  color: var(--white);
+}
+
+.autoList {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md-lg);
+  overflow: hidden;
+}
+
+.autoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-12) var(--space-16);
+  font-size: 14px;
+}
+
+.autoRow + .autoRow {
+  border-top: 1px solid var(--row-divider);
+}
+
+.autoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success-dot);
+  flex: none;
+}
+
+.autoMonth {
+  flex: 1;
+  font-weight: 700;
+}
+
+.autoAmount {
+  font-weight: 800;
+}
+
+.autoStatus {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--mint-ink);
+}

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { BnmRateLink, Button, Drawer } from '@shared/ui';
+import { BnmRateLink, Button, Drawer, groupTone, PersonCell, SearchSelect, SegmentedControl } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { formatDate } from '#shared/format/date-format.mjs';
+import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
@@ -34,6 +34,12 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const [submitting, setSubmitting] = useState(false);
   // Curs manual pentru ACEASTĂ plată (copil cu taxă EUR) — nu e o corectare de setări.
   const [manualRate, setManualRate] = useState('');
+  // Cardul copilului e implicit; „Schimbă" deschide căutarea (15b).
+  const [pickerOpen, setPickerOpen] = useState(false);
+  // O repartizare cu mai multe rânduri (avans pe mai multe luni) pornește direct în modul manual.
+  const [allocationMode, setAllocationMode] = useState<'auto' | 'manual'>(
+    values.allocations.length > 1 ? 'manual' : 'auto',
+  );
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual.
@@ -43,11 +49,18 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const syncedAmountRef = useRef(editing ? '' : values.allocations.length === 1 ? values.allocations[0].amount : '');
 
   const methods = tenderMethodsFor(editing);
+  // Metoda activă e cea completată deja (editare) sau prima din listă — schimbarea din
+  // SegmentedControl mută suma pe noua metodă, ca „Sumă" să rămână un singur câmp (15b).
+  const [activeMethod, setActiveMethod] = useState(
+    () => methods.find(method => Number(values.tenders[method]) > 0) ?? methods[0],
+  );
   const totalAmount = totalOfTenders(values.tenders);
 
   const selectedChild = records.children.find((c: Child) => c.id === values.childId);
   const feeEntry = selectedChild ? feeEntryFor(selectedChild, values.date.slice(0, 7)) : null;
   const isEurChild = feeEntry?.currency === 'EUR';
+  const unpaidMonth = selectedChild ? firstUnpaidMonth(selectedChild, records.payments) : null;
+  const groupLabel = records.groups.find(group => group.id === selectedChild?.groupId)?.name ?? 'Fără grupă';
 
   const { rates } = useExchangeRates();
   const bnmRate = eurToMdlRate(rates, values.date);
@@ -78,6 +91,15 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
 
   function setTender(method: string, amount: string) {
     setValues(previous => ({ ...previous, tenders: { ...previous.tenders, [method]: amount } }));
+  }
+
+  // Schimbarea metodei mută suma pe cheia nouă — un singur câmp „Sumă" editabil, nu un
+  // formular cu toate metodele deschise simultan.
+  function selectMethod(next: string) {
+    if (next === activeMethod) return;
+    const amount = values.tenders[activeMethod] ?? '';
+    setValues(previous => ({ ...previous, tenders: { ...previous.tenders, [activeMethod]: '', [next]: amount } }));
+    setActiveMethod(next);
   }
 
   function setDate(date: string) {
@@ -152,6 +174,23 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const balanceCurrency = isEurChild ? 'EUR' : 'MDL';
   const balanceTotal = isEurChild ? (eurEquivalent ?? 0) : totalAmount;
   const childOptions = [...records.children].sort((a, b) => a.name.localeCompare(b.name, 'ro'));
+  const childSelectOptions = [
+    { value: '', label: 'Copil neasociat' },
+    ...childOptions.map(child => ({ value: child.id, label: `${child.name}${child.archived ? ' (arhivat)' : ''}` })),
+  ];
+
+  // Etichetă informativă pentru modul automat — nu recalculează obligația (asta rămâne în
+  // #shared/domain/tuition-obligation.mjs), doar compară suma rândului cu taxa lunii lui.
+  function allocationStatus(row: { month: string; amount: string }): string | null {
+    if (!selectedChild) return null;
+    const fee = feeEntryFor(selectedChild, row.month)?.amount;
+    if (fee == null) return null;
+    const amount = Number(row.amount) || 0;
+    if (amount <= 0) return 'neachitat';
+    if (amount < fee) return 'plată parțială';
+    if (amount > fee) return 'avans';
+    return 'achitat complet';
+  }
 
   return (
     <Drawer
@@ -161,7 +200,7 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
       onClose={onClose}
       footer={
         <Button type="submit" form="payment-form-drawer" disabled={submitting || (isEurChild && !effectiveRate)}>
-          Salvează
+          Salvează · {formatMoney(totalAmount, 'MDL')}
         </Button>
       }
     >
@@ -173,32 +212,70 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           void handleSubmit();
         }}
       >
-        <fieldset className={styles.section}>
-          <legend>Copil și dată</legend>
-          <label className={styles.field}>
-            Copil
-            <select value={values.childId} onChange={event => setChildId(event.target.value)}>
-              <option value="">Copil neasociat</option>
-              {childOptions.map(child => (
-                <option key={child.id} value={child.id}>
-                  {child.name}
-                  {child.archived ? ' (arhivat)' : ''}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.field}>
-            Data încasării
-            <input type="date" required value={values.date} onChange={event => setDate(event.target.value)} />
-          </label>
-        </fieldset>
+        <div className={styles.field}>
+          Copil
+          {selectedChild && !pickerOpen ? (
+            <div className={styles.childCard}>
+              <PersonCell
+                name={selectedChild.name}
+                tone={groupTone(selectedChild.groupId, records.groups)}
+                sub={
+                  <>
+                    {groupLabel}
+                    {feeEntry && <> · taxă {formatMoney(feeEntry.amount, feeEntry.currency)}</>}
+                    {unpaidMonth && <> · {formatMonthLabel(unpaidMonth)} neachitat</>}
+                  </>
+                }
+              />
+              <button type="button" className={styles.linkButton} onClick={() => setPickerOpen(true)}>
+                Schimbă
+              </button>
+            </div>
+          ) : (
+            <SearchSelect
+              ariaLabel="Copil"
+              options={childSelectOptions}
+              value={values.childId}
+              onChange={childId => {
+                setChildId(childId);
+                setPickerOpen(false);
+              }}
+            />
+          )}
+        </div>
 
-        <fieldset className={styles.section}>
-          <legend>Sumă și metodă</legend>
-          <label className={styles.field}>
-            Total achitare (calculat automat)
-            <input type="number" readOnly step="0.01" value={totalAmount.toFixed(2)} />
-          </label>
+        <div className={styles.field}>
+          Sumă
+          <div className={styles.sumBox}>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              aria-label="Sumă"
+              className={styles.sumInput}
+              value={values.tenders[activeMethod] ?? ''}
+              onChange={event => setTender(activeMethod, event.target.value)}
+            />
+            <span className={styles.sumCurrency}>lei</span>
+          </div>
+          {feeEntry && !isEurChild && (
+            <div className={styles.shortcuts}>
+              {[1, 2, 3].map(months => {
+                const amount = feeEntry.amount * months;
+                const active = Number(values.tenders[activeMethod]) === amount;
+                return (
+                  <button
+                    key={months}
+                    type="button"
+                    className={active ? `${styles.shortcut} ${styles.shortcutActive}` : styles.shortcut}
+                    onClick={() => setTender(activeMethod, String(amount))}
+                  >
+                    {months} {months === 1 ? 'lună' : 'luni'} · {new Intl.NumberFormat('ro-RO').format(amount)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {isEurChild && (
             <>
               <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
@@ -223,76 +300,101 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
               </p>
             </>
           )}
-          <p className={styles.notice}>
-            Completează una sau mai multe metode. Totalul se calculează automat; repartizarea pe luni folosește acest
-            total o singură dată.
-          </p>
-          {methods.map(method => (
-            <label key={method} className={styles.field}>
-              {method}
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                value={values.tenders[method] ?? ''}
-                onChange={event => setTender(method, event.target.value)}
-              />
-            </label>
-          ))}
-          <label className={styles.field}>
-            Nume din sursă / plătitor
-            <input
-              value={values.sourceName}
-              onChange={event => setValues(p => ({ ...p, sourceName: event.target.value }))}
-            />
-          </label>
-        </fieldset>
+        </div>
 
-        <fieldset className={styles.section}>
-          <legend>Repartizare pe luni</legend>
-          <p className={styles.notice}>Suma rămasă nerepartizată este evidențiată ca avans.</p>
-          <div className={styles.allocationRows}>
-            {values.allocations.map((row, index) => (
-              <div key={row.id} className={styles.allocationRow}>
-                <label className={styles.allocationField}>
-                  Luna
-                  <input
-                    type="month"
-                    required
-                    value={row.month}
-                    onChange={event => setAllocationField(index, 'month', event.target.value)}
-                  />
-                </label>
-                <label className={styles.allocationField}>
-                  Suma
-                  <input
-                    type="number"
-                    required
-                    min={0.01}
-                    step="0.01"
-                    value={row.amount}
-                    onChange={event => setAllocationField(index, 'amount', event.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className={styles.removeRow}
-                  aria-label="Elimină repartizarea"
-                  onClick={() => removeAllocationRow(index)}
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+        <div className={styles.grid2}>
+          <label className={styles.field}>
+            Data
+            <input type="date" required value={values.date} onChange={event => setDate(event.target.value)} />
+          </label>
+          <div className={styles.field}>
+            Metodă
+            <SegmentedControl
+              ariaLabel="Metodă"
+              value={activeMethod}
+              onChange={selectMethod}
+              options={methods.map(method => ({ value: method, label: method }))}
+            />
           </div>
-          <button type="button" className={styles.btnGhostSmall} onClick={addAllocationRow}>
-            + Lună
-          </button>
-          <p className={styles.balance}>
-            Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
-            {formatMoney(balanceTotal - allocated, balanceCurrency)}
-          </p>
-        </fieldset>
+        </div>
+
+        <label className={styles.field}>
+          Nume din sursă / plătitor
+          <input
+            value={values.sourceName}
+            onChange={event => setValues(p => ({ ...p, sourceName: event.target.value }))}
+          />
+        </label>
+
+        <div className={styles.field}>
+          {allocationMode === 'auto' ? (
+            <>
+              Se repartizează automat
+              <div className={styles.autoList}>
+                {values.allocations.map(row => (
+                  <div key={row.id} className={styles.autoRow}>
+                    <span className={styles.autoDot} />
+                    <span className={styles.autoMonth}>{formatMonthLabel(row.month)}</span>
+                    <span className={styles.autoAmount}>{formatMoney(Number(row.amount) || 0, balanceCurrency)}</span>
+                    {allocationStatus(row) && <span className={styles.autoStatus}>{allocationStatus(row)}</span>}
+                  </div>
+                ))}
+              </div>
+              <button type="button" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
+                Repartizează manual
+              </button>
+            </>
+          ) : (
+            <>
+              Repartizare manuală
+              <p className={styles.notice}>Suma rămasă nerepartizată este evidențiată ca avans.</p>
+              <div className={styles.allocationRows}>
+                {values.allocations.map((row, index) => (
+                  <div key={row.id} className={styles.allocationRow}>
+                    <label className={styles.allocationField}>
+                      Luna
+                      <input
+                        type="month"
+                        required
+                        value={row.month}
+                        onChange={event => setAllocationField(index, 'month', event.target.value)}
+                      />
+                    </label>
+                    <label className={styles.allocationField}>
+                      Suma
+                      <input
+                        type="number"
+                        required
+                        min={0.01}
+                        step="0.01"
+                        value={row.amount}
+                        onChange={event => setAllocationField(index, 'amount', event.target.value)}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.removeRow}
+                      aria-label="Elimină repartizarea"
+                      onClick={() => removeAllocationRow(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" className={styles.btnGhostSmall} onClick={addAllocationRow}>
+                + Lună
+              </button>
+              <p className={styles.balance}>
+                Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
+                {formatMoney(balanceTotal - allocated, balanceCurrency)}
+              </p>
+              <button type="button" className={styles.linkButton} onClick={() => setAllocationMode('auto')}>
+                Se repartizează automat
+              </button>
+            </>
+          )}
+        </div>
 
         {editing?.verification && (
           <fieldset className={styles.section}>
