@@ -223,6 +223,9 @@ test('un lot cu un angajat cu avansuri ce acoperă salariul refuză tot lotul, f
     ),
     undefined,
   );
+  // E-2 (audit Comun): lotul e validat integral înainte de a marca vreun avans ca scăzut —
+  // avansul lui staffZero rămâne nescăzut, nu doar cheltuiala/plata lipsesc.
+  assert.equal(personalRepository.kinds.find('advances', advanceResult.advance.id).deductedBy, null);
 
   // Angajatul valid rămâne plătibil normal, singur, după ce lotul e corectat.
   const retry = service.pay({
