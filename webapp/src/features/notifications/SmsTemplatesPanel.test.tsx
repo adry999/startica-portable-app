@@ -1,7 +1,17 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { SmsTemplatesPanel } from './SmsTemplatesPanel';
+
+function renderPanel() {
+  return render(
+    <ToastProvider>
+      <SmsTemplatesPanel />
+    </ToastProvider>,
+  );
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -41,14 +51,14 @@ const smsStatus = {
   lastError: '',
 };
 
-function stubFetch() {
+function stubFetch(state?: unknown, rates?: Record<string, number>) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string) => {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
       if (path === '/api/state')
         return jsonResponse({
-          state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+          state: state ?? { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
           revision: 1,
           updatedAt: '2026-09-27T10:00:00Z',
         });
@@ -56,6 +66,7 @@ function stubFetch() {
       if (path === '/api/sms-status') return jsonResponse(smsStatus);
       if (path === '/api/sms-templates')
         return jsonResponse({ templates: [defaultTemplate, customTemplate], usageCountById: { t1: 12, t2: 0 } });
+      if (path === '/api/exchange-rates') return jsonResponse({ rates: rates ?? {}, sources: {} });
       throw new Error(`neașteptat: ${path}`);
     }),
   );
@@ -68,15 +79,61 @@ describe('SmsTemplatesPanel', () => {
 
   it('selectează implicit șablonul marcat Implicit și nu arată Șterge șablonul pentru el', async () => {
     stubFetch();
-    render(<SmsTemplatesPanel />);
+    renderPanel();
 
     expect(await screen.findByDisplayValue('Reamintire restanță')).toBeInTheDocument();
     expect(screen.queryByText('Șterge șablonul')).not.toBeInTheDocument();
   });
 
+  // M10: previzualizarea trebuie să foloseasca `rates` din @shared/api/useExchangeRates — altfel un copil
+  // cu taxă EUR plătit parțial în lei apare fără restanță reală (obligation().notify === false fără curs)
+  // și panoul arată mereu datele de exemplu, chiar când există un restanțier real.
+  it('previzualizarea folosește restanțierul real cu taxă EUR, convertit cu cursul din /api/exchange-rates', async () => {
+    const state = {
+      children: [
+        {
+          id: 'c1',
+          name: 'Cristian Oprea',
+          parent: 'Cristina Oprea',
+          phone: '0722000000',
+          contractDate: '2026-01-05',
+          attendanceDate: '2026-01-05',
+          status: 'Activ',
+          statusHistory: [],
+          feeHistory: [{ from: '2026-01', amount: 50, currency: 'EUR' }],
+          groupId: null,
+          archived: false,
+        },
+      ],
+      // 380 lei la 19 lei/EUR = 20 EUR din 50 EUR taxă — rest 30 EUR, dacă panoul foloseste cursul.
+      payments: [
+        {
+          id: 'p1',
+          date: '2026-09-05',
+          childId: 'c1',
+          amount: 380,
+          method: 'Cash',
+          allocations: [{ month: '2026-09', amount: 380 }],
+          archived: false,
+        },
+      ],
+      expenses: [],
+      groups: [],
+      categories: [],
+      visits: [],
+    };
+    stubFetch(state, { '2026-09-05': 19 });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    renderPanel();
+
+    await screen.findByDisplayValue('Reamintire restanță');
+    expect(await screen.findByText(/Cristina Oprea/)).toBeInTheDocument();
+  });
+
   it('arată „Folosit de N ori" pentru șablonul selectat', async () => {
     stubFetch();
-    render(<SmsTemplatesPanel />);
+    renderPanel();
 
     await screen.findByDisplayValue('Reamintire restanță');
     expect(screen.getByText('Folosit de 12 ori')).toBeInTheDocument();
@@ -84,7 +141,7 @@ describe('SmsTemplatesPanel', () => {
 
   it('un șablon care nu e implicit arată Șterge șablonul', async () => {
     stubFetch();
-    render(<SmsTemplatesPanel />);
+    renderPanel();
     const user = userEvent.setup();
 
     await screen.findByDisplayValue('Reamintire restanță');
@@ -96,7 +153,7 @@ describe('SmsTemplatesPanel', () => {
 
   it('„+ Șablon nou" pornește cu „Fără diacritice la trimitere" bifat', async () => {
     stubFetch();
-    render(<SmsTemplatesPanel />);
+    renderPanel();
     const user = userEvent.setup();
 
     await screen.findByDisplayValue('Reamintire restanță');
@@ -129,7 +186,7 @@ describe('SmsTemplatesPanel', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<SmsTemplatesPanel />);
+    renderPanel();
     const user = userEvent.setup();
 
     await screen.findByDisplayValue('Reamintire restanță');
@@ -139,5 +196,34 @@ describe('SmsTemplatesPanel', () => {
     await user.click(screen.getByText('Salvează șablonul'));
 
     expect(fetchMock).toHaveBeenCalledWith('/api/sms-template-save', expect.anything());
+  });
+
+  it('un 400 la salvare arată eroarea, nu doar butonul reactivat fără mesaj (M7)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+            revision: 1,
+            updatedAt: '2026-09-27T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/sms-status') return jsonResponse(smsStatus);
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [defaultTemplate, customTemplate] });
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/sms-template-save') return { ok: false, status: 400, json: async () => ({ error: 'Numele șablonului e obligatoriu.' }) };
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderPanel();
+    const user = userEvent.setup();
+
+    await screen.findByDisplayValue('Reamintire restanță');
+    await user.click(screen.getByText('Salvează șablonul'));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Numele șablonului e obligatoriu.');
   });
 });

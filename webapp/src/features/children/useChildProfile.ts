@@ -1,4 +1,5 @@
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { obligation, feeEntryFor } from '#shared/domain/tuition-obligation.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
@@ -35,6 +36,7 @@ const NOT_FOUND: ChildProfileData = {
 /** Aceleași calcule ca fișa vanilla (child-profile.view.mjs), portate 1:1 pe date derivate. */
 export function useChildProfile(childId: string, month: string): ChildProfileData {
   const session = useAppSession();
+  const { rates } = useExchangeRates();
   const { state, ready, loading, saveError } = session.state;
 
   if (!ready) {
@@ -59,7 +61,7 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     groupName: groupNameOf(child.groupId, records.groups) || 'nealocată',
     contractLabel: contractNumberOf(child),
     age: formatAge(child.birthDate),
-    obligation: obligation(child, month, records.payments),
+    obligation: obligation(child, month, records.payments, undefined, null, rates),
     feeEntry: feeEntryFor(child, month),
     payments,
   };

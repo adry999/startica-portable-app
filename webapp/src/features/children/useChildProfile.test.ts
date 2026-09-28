@@ -26,6 +26,21 @@ const fixtureState = {
       notes: 'Alergic la arahide.',
       archived: false,
     },
+    {
+      id: 'c2',
+      name: 'Elena Vasile',
+      status: 'Activ',
+      groupId: 'g1',
+      parent: 'Ion Vasile',
+      phone: '0722000002',
+      // Taxă EUR, plătită integral în lei — fără curs (M10), obligation() ar arăta „De verificat".
+      feeHistory: [{ from: '2020-01', amount: 40, currency: 'EUR' }],
+      statusHistory: [],
+      dueDay: 10,
+      attendanceDate: '2022-09-01',
+      birthDate: '2021-01-01',
+      archived: false,
+    },
   ],
   payments: [
     {
@@ -55,6 +70,16 @@ const fixtureState = {
       allocations: [],
       archived: false,
     },
+    // 760 lei la 19 lei/EUR = 40 EUR — taxa c2 achitată integral, dacă hook-ul foloseste cursul.
+    {
+      id: 'p4',
+      date: '2026-09-05',
+      childId: 'c2',
+      amount: 760,
+      method: 'Cash',
+      allocations: [{ month: '2026-09', amount: 760 }],
+      archived: false,
+    },
   ],
   expenses: [],
   groups: [{ id: 'g1', name: 'Fluturași', capacity: 15 }],
@@ -71,10 +96,19 @@ describe('useChildProfile', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates')
+          return jsonResponse({ rates: { '2026-09-05': 19 }, sources: { '2026-09-05': 'bnm' } });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
   });
+
+  // useExchangeRates își pornește fetch-ul într-un efect, fără o promisiune expusă de urmărit direct.
+  async function flushExchangeRates() {
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+  }
 
   it('e loading înainte ca sesiunea să fie gata', () => {
     const { result } = renderHook(() => useChildProfile('c1', '2026-09'));
@@ -101,5 +135,18 @@ describe('useChildProfile', () => {
     expect(result.current.obligation?.label).toBe('Plătit');
     expect(result.current.payments).toHaveLength(2);
     expect(result.current.payments.map(p => p.id)).toEqual(['p1', 'p2']);
+  });
+
+  // M10: obligation() trebuie chemată cu `rates`, altfel un copil cu taxă EUR plătit integral în lei
+  // apare „De verificat" în fișă, dar corect în Situația plăților (useStatus, care deja trece rates).
+  it('copilul cu taxă EUR plătit integral în lei foloseste cursul din /api/exchange-rates', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { result } = renderHook(() => useChildProfile('c2', '2026-09'));
+    await flushExchangeRates();
+
+    expect(result.current.obligation?.label).toBe('Plătit');
+    expect(result.current.obligation?.rest).toBe(0);
   });
 });

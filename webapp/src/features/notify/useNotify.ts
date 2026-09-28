@@ -6,6 +6,7 @@ import { DEFAULT_SMS_TEMPLATE_BODY, renderSmsTemplate, smsVariablesFor } from '@
 import { formatDate } from '#shared/format/date-format.mjs';
 import { copyToClipboard } from '#shared/ui/copy-to-clipboard.mjs';
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 import type { SmsRecipientRow } from '@shared/sms';
@@ -90,6 +91,7 @@ function contactLinesOf(child: Child): ContactLine[] {
  */
 export function useNotify(month: string): NotifyData {
   const session = useAppSession();
+  const { rates } = useExchangeRates();
   const { state, ready, loading, saveError } = session.state;
   const todayStr = todayFn();
 
@@ -108,7 +110,7 @@ export function useNotify(month: string): NotifyData {
   }
 
   const records = state as RecordsSnapshot;
-  const evaluations = evaluateChildrenForMonth(records, month, todayStr).filter(e => !e.child.archived);
+  const evaluations = evaluateChildrenForMonth(records, month, todayStr, rates).filter(e => !e.child.archived);
   const notified = [...evaluations]
     .filter(e => e.obligation.notify)
     .sort((a, b) => a.obligation.daysToDue - b.obligation.daysToDue || a.child.name.localeCompare(b.child.name, 'ro'));

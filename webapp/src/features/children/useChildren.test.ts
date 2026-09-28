@@ -72,6 +72,21 @@ const fixtureState = {
       birthDate: '2021-11-15',
       archived: false,
     },
+    {
+      id: 'c5',
+      name: 'Radu Groza',
+      status: 'Activ',
+      groupId: 'g1',
+      parent: 'Elena Groza',
+      phone: '0722000005',
+      // Taxă EUR, plătită integral în lei — fără curs (M10), obligation() ar arăta „De verificat".
+      feeHistory: [{ from: '2020-01', amount: 40, currency: 'EUR' }],
+      statusHistory: [],
+      dueDay: 10,
+      attendanceDate: '2022-09-01',
+      birthDate: '2021-01-01',
+      archived: false,
+    },
   ],
   payments: [
     {
@@ -90,6 +105,16 @@ const fixtureState = {
       amount: 500,
       method: 'Cash',
       allocations: [{ month: '2026-09', amount: 500 }],
+      archived: false,
+    },
+    // 760 lei la 19 lei/EUR = 40 EUR — taxa c5 achitată integral, dacă hook-ul foloseste cursul.
+    {
+      id: 'p3',
+      date: '2026-09-05',
+      childId: 'c5',
+      amount: 760,
+      method: 'Cash',
+      allocations: [{ month: '2026-09', amount: 760 }],
       archived: false,
     },
   ],
@@ -111,10 +136,19 @@ describe('useChildren', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates')
+          return jsonResponse({ rates: { '2026-09-05': 19 }, sources: { '2026-09-05': 'bnm' } });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
   });
+
+  // useExchangeRates își pornește fetch-ul într-un efect, fără o promisiune expusă de urmărit direct.
+  async function flushExchangeRates() {
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+  }
 
   it('e loading înainte ca sesiunea să fie gata', () => {
     const { result } = renderHook(() => useChildren('2026-09'));
@@ -126,11 +160,12 @@ describe('useChildren', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useChildren('2026-09'));
+    await flushExchangeRates();
     expect(result.current.status).toBe('ready');
-    expect(result.current.summary.activeCount).toBe(3);
+    expect(result.current.summary.activeCount).toBe(4);
     expect(result.current.summary.occupiedGroupsCount).toBe(2);
     expect(result.current.summary.incompleteCount).toBe(1); // c2, singurul nearhivat fără grupă
-    expect(result.current.activeTotal).toBe(3);
+    expect(result.current.activeTotal).toBe(4);
     expect(result.current.archivedTotal).toBe(1);
   });
 
@@ -139,6 +174,7 @@ describe('useChildren', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useChildren('2026-09'));
+    await flushExchangeRates();
     const byId = Object.fromEntries(result.current.rows.map(row => [row.id, row]));
 
     expect(byId.c1.payment).toEqual({ tone: 'mint', label: 'Achitat' }); // plătit integral
@@ -147,12 +183,25 @@ describe('useChildren', () => {
     expect(byId.c4.payment).toEqual({ tone: 'neutral', label: 'Scadent' }); // nescadent, neplătit
   });
 
+  // M10: obligation() trebuie chemată cu `rates`, altfel un copil cu taxă EUR plătit integral în lei
+  // apare „De verificat" aici, dar corect în Situația plăților (useStatus, care deja trece rates).
+  it('copilul cu taxă EUR plătit integral în lei foloseste cursul, nu „De verificat"', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { result } = renderHook(() => useChildren('2026-09'));
+    await flushExchangeRates();
+    const c5 = result.current.rows.find(row => row.id === 'c5');
+
+    expect(c5?.payment).toEqual({ tone: 'mint', label: 'Achitat' });
+  });
+
   it('păstrează copiii arhivați în listă, cu flag-ul propriu', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useChildren('2026-09'));
-    expect(result.current.rows).toHaveLength(4);
+    expect(result.current.rows).toHaveLength(5);
     expect(result.current.rows.find(row => row.id === 'c3')?.archived).toBe(true);
     expect(result.current.rows.find(row => row.id === 'c1')?.archived).toBe(false);
   });

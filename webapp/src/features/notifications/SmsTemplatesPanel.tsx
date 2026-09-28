@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, ConfirmDeleteDialog } from '@shared/ui';
+import { Badge, Button, ConfirmDeleteDialog, useToast } from '@shared/ui';
 import { useSmsTemplates, SmsSegmentCounter, type SmsTemplateView } from '@shared/sms';
 import { finalizeSmsText } from '#features/sms-notify/index.web.mjs';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { renderSmsTemplate, smsVariablesFor, SMS_TEMPLATE_VARIABLES } from '@domain/sms-template.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { SmsProviderCard } from './SmsProviderCard';
 import notificationsStyles from './NotificationsPage.module.css';
@@ -30,6 +31,8 @@ function blankDraft() {
 export function SmsTemplatesPanel() {
   const templatesData = useSmsTemplates();
   const session = useAppSession();
+  const { rates } = useExchangeRates();
+  const toast = useToast();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState(blankDraft());
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -71,16 +74,24 @@ export function SmsTemplatesPanel() {
   }
 
   async function save() {
-    const saved = await templatesData.save({ id: selectedId ?? undefined, ...draft });
-    setSelectedId(saved.id);
+    try {
+      const saved = await templatesData.save({ id: selectedId ?? undefined, ...draft });
+      setSelectedId(saved.id);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   async function confirmDelete() {
     if (!selectedId) return;
-    await templatesData.remove(selectedId);
     setConfirmingDelete(false);
-    setSelectedId(null);
-    setDraft(blankDraft());
+    try {
+      await templatesData.remove(selectedId);
+      setSelectedId(null);
+      setDraft(blankDraft());
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
   }
 
   const todayStr = todayFn();
@@ -88,7 +99,7 @@ export function SmsTemplatesPanel() {
   let previewVariables = SAMPLE_VARIABLES;
   if (session.state.ready) {
     const records = session.state.state as RecordsSnapshot;
-    const notified = evaluateChildrenForMonth(records, month, todayStr).find(
+    const notified = evaluateChildrenForMonth(records, month, todayStr, rates).find(
       evaluation => !evaluation.child.archived && evaluation.obligation.notify,
     );
     if (notified) {

@@ -1,4 +1,5 @@
 import { useAppSession } from '@shared/api/session';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
 import { buildReviewCenter } from '#features/review-center/index.web.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
@@ -76,6 +77,7 @@ const EMPTY_SUMMARY: ChildrenSummary = { activeCount: 0, occupiedGroupsCount: 0,
  */
 export function useChildren(month: string): ChildrenData {
   const session = useAppSession();
+  const { rates } = useExchangeRates();
   const { state, ready, loading, saveError } = session.state;
 
   if (!ready) {
@@ -92,7 +94,7 @@ export function useChildren(month: string): ChildrenData {
 
   const records = state;
   const review = buildReviewCenter(records);
-  const evaluations = evaluateChildrenForMonth(records, month);
+  const evaluations = evaluateChildrenForMonth(records, month, undefined, rates);
   const obligationByChildId = new Map(evaluations.map(evaluation => [evaluation.child.id, evaluation.obligation]));
 
   const nonArchived = records.children.filter((child: Child) => !child.archived);

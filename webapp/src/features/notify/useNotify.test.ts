@@ -63,8 +63,33 @@ const fixtureState = {
       groupId: null,
       archived: false,
     },
+    {
+      id: 'c5',
+      name: 'Diana Croitoru',
+      parent: 'Vera Croitoru',
+      phone: '0755000000',
+      contractDate: '2026-01-05',
+      attendanceDate: '2026-01-05',
+      status: 'Activ',
+      statusHistory: [],
+      feeHistory: [{ from: '2026-01', amount: 50, currency: 'EUR' }],
+      groupId: null,
+      archived: false,
+    },
   ],
-  payments: [],
+  payments: [
+    // Achitare în lei pentru c5 (taxă EUR, 50 EUR) — fără curs, obligation() nu poate converti și rest devine necunoscut.
+    // Cu cursul din /api/exchange-rates (19 lei/EUR), 570 lei = 30 EUR, rest 20 EUR.
+    {
+      id: 'p-c5',
+      date: '2026-09-05',
+      childId: 'c5',
+      amount: 570,
+      method: 'Cash',
+      allocations: [{ month: '2026-09', amount: 570 }],
+      archived: false,
+    },
+  ],
   expenses: [],
   groups: [],
   categories: [],
@@ -77,6 +102,14 @@ async function loadedSession() {
   return session;
 }
 
+// useExchangeRates își pornește fetch-ul într-un efect, fără o promisiune expusă de urmărit direct —
+// o singură rundă de microtask-uri e suficientă ca `requestJson` (fetch + .json()) să se rezolve.
+async function flushExchangeRates() {
+  await act(async () => {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+}
+
 describe('useNotify', () => {
   beforeEach(() => {
     vi.stubGlobal(
@@ -86,6 +119,8 @@ describe('useNotify', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates')
+          return jsonResponse({ rates: { '2026-09-05': 19 }, sources: { '2026-09-05': 'bnm' } });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -103,8 +138,22 @@ describe('useNotify', () => {
   it('exclude arhivații și copiii fără rest, include restanțierul și pe cel nescadent', async () => {
     await loadedSession();
     const { result } = renderHook(() => useNotify('2026-09'));
+    await flushExchangeRates();
 
-    expect(result.current.rows.map(row => row.id)).toEqual(['c1', 'c2']);
+    expect(result.current.rows.map(row => row.id)).toEqual(['c1', 'c5', 'c2']);
+  });
+
+  // M10: obligation() trebuie chemată cu `rates` (din @shared/api/useExchangeRates), altfel un copil cu
+  // taxă EUR plătită în lei apare „De verificat" aici, dar „Restanță" în Situația plăților (useStatus, care
+  // deja trece rates) — copilul nu ar mai fi notificabil din cauza discrepanței dintre ecrane.
+  it('copilul cu taxă EUR plătit în lei foloseste cursul din /api/exchange-rates, nu „De verificat"', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useNotify('2026-09'));
+    await flushExchangeRates();
+
+    const c5 = result.current.rows.find(row => row.id === 'c5');
+    expect(c5?.label).toBe('Restanță');
+    expect(c5?.rest).toBe(20);
   });
 
   it('sortează implicit după întârzierea cea mai veche', async () => {
@@ -118,6 +167,7 @@ describe('useNotify', () => {
   it('contorizează "Nu pot fi evaluați" peste toate evaluările active, nu doar cele notificate', async () => {
     await loadedSession();
     const { result } = renderHook(() => useNotify('2026-09'));
+    await flushExchangeRates();
 
     expect(result.current.stats.unknown).toBe(1);
   });
