@@ -283,7 +283,11 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                   >
                     Trimite SMS
                   </button>
-                  <button type="button" className={styles.btnGhostSmall} onClick={() => void copyOne(messageFor(activeRow))}>
+                  <button
+                    type="button"
+                    className={styles.btnGhostSmall}
+                    onClick={() => void copyOne(messageFor(activeRow))}
+                  >
                     Copiază
                   </button>
                 </div>

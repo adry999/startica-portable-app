@@ -70,7 +70,8 @@ interface StatusCardView {
 
 /** Cardurile ①②③ de sus (10c) — un ton per card, nu doar un singur status agregat. */
 function localBackupCard(health: BackupHealthView): StatusCardView {
-  if (health.localError) return { tone: 'pink', warning: true, label: '② Backup local', headline: 'Eșuat', subtitle: health.localError };
+  if (health.localError)
+    return { tone: 'pink', warning: true, label: '② Backup local', headline: 'Eșuat', subtitle: health.localError };
   if (isStale(health.lastLocal))
     return {
       tone: 'yellow',
@@ -98,7 +99,13 @@ function externalBackupCard(health: BackupHealthView): StatusCardView {
       subtitle: 'Dacă se strică discul, datele se pierd.',
     };
   if (health.externalError)
-    return { tone: 'pink', warning: true, label: '③ Copie externă', headline: 'Eroare', subtitle: health.externalError };
+    return {
+      tone: 'pink',
+      warning: true,
+      label: '③ Copie externă',
+      headline: 'Eroare',
+      subtitle: health.externalError,
+    };
   if (isStale(health.lastExternal))
     return {
       tone: 'yellow',
@@ -295,8 +302,9 @@ export function BackupPage() {
                 <p className={styles.hint}>
                   Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google
                   Drive. Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de
-                  zile. Cu mai multe filiale, folosește un subfolder pe filială, ex. „G:\My Drive\Startica_Backup\Botanica”
-                  — folderul de date sau backup al altei filiale nu poate fi folosit ca destinație externă.
+                  zile. Cu mai multe filiale, folosește un subfolder pe filială, ex. „G:\My
+                  Drive\Startica_Backup\Botanica” — folderul de date sau backup al altei filiale nu poate fi folosit ca
+                  destinație externă.
                 </p>
                 {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
                 <Button type="submit" disabled={backupData.settingsBusy}>
@@ -317,8 +325,8 @@ export function BackupPage() {
             <Card className={styles.excelCard}>
               <h3 className={styles.panelTitle}>Import și export</h3>
               <p className={styles.notice}>
-                Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet
-                păstrează câmpurile și poate fi reimportat.
+                Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet păstrează
+                câmpurile și poate fi reimportat.
               </p>
               <div className={styles.toolbar}>
                 <Button variant="ghost" onClick={excel.importDialog.openDialog}>

@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Card, EmptyState, LoadingState, ScrollArea, SearchInput, useToast, useTopbarActions } from '@shared/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  LoadingState,
+  ScrollArea,
+  SearchInput,
+  useToast,
+  useTopbarActions,
+} from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
@@ -66,7 +75,8 @@ export function AssignPage({ month }: AssignPageProps) {
   const filteredRows = query
     ? assignData.rows.filter(
         row =>
-          (row.source || '').toLocaleLowerCase('ro-RO').includes(query) || row.amountLabel.toLocaleLowerCase('ro-RO').includes(query),
+          (row.source || '').toLocaleLowerCase('ro-RO').includes(query) ||
+          row.amountLabel.toLocaleLowerCase('ro-RO').includes(query),
       )
     : assignData.rows;
 

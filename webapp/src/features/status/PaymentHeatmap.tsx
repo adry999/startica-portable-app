@@ -54,31 +54,34 @@ export function PaymentHeatmap({ rows, groups = [], monthLabels, currentMonth }:
           {rows.map(row => {
             const tone = groupTone(row.groupId, groups);
             return (
-            <div key={row.id} className={styles.row} style={gridStyle}>
-              <span className={styles.nameCell}>
-                <span
-                  className={styles.avatar}
-                  style={{ background: `var(--${tone}-soft, var(--neutral-soft))`, color: `var(--${tone}-ink, var(--subtle))` }}
-                >
-                  {initials(row.name)}
+              <div key={row.id} className={styles.row} style={gridStyle}>
+                <span className={styles.nameCell}>
+                  <span
+                    className={styles.avatar}
+                    style={{
+                      background: `var(--${tone}-soft, var(--neutral-soft))`,
+                      color: `var(--${tone}-ink, var(--subtle))`,
+                    }}
+                  >
+                    {initials(row.name)}
+                  </span>
+                  <span className={styles.name}>{row.name}</span>
                 </span>
-                <span className={styles.name}>{row.name}</span>
-              </span>
-              {row.cells.map((cell, index) => (
-                <span
-                  key={cell.month}
-                  role="img"
-                  aria-label={`${monthLabels[index]}: ${KIND_LABEL[cell.kind]}`}
-                  title={`${monthLabels[index]}: ${KIND_LABEL[cell.kind]}`}
-                  className={[styles.cell, styles[cell.kind], cell.month === currentMonth ? styles.current : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                />
-              ))}
-              <span className={row.sold > 0 ? styles.soldPositive : styles.soldZero}>
-                {formatMoney(row.sold, row.soldCurrency)}
-              </span>
-            </div>
+                {row.cells.map((cell, index) => (
+                  <span
+                    key={cell.month}
+                    role="img"
+                    aria-label={`${monthLabels[index]}: ${KIND_LABEL[cell.kind]}`}
+                    title={`${monthLabels[index]}: ${KIND_LABEL[cell.kind]}`}
+                    className={[styles.cell, styles[cell.kind], cell.month === currentMonth ? styles.current : '']
+                      .filter(Boolean)
+                      .join(' ')}
+                  />
+                ))}
+                <span className={row.sold > 0 ? styles.soldPositive : styles.soldZero}>
+                  {formatMoney(row.sold, row.soldCurrency)}
+                </span>
+              </div>
             );
           })}
         </div>

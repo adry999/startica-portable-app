@@ -170,8 +170,8 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
           </div>
         </div>
         <p className={styles.priceNote}>
-          Preț: <b>{settings.pricePerSession} lei</b> pe ședință, adăugat la taxa lunii după prezențe. Se poate
-          schimba pentru acest copil în fișa lui.
+          Preț: <b>{settings.pricePerSession} lei</b> pe ședință, adăugat la taxa lunii după prezențe. Se poate schimba
+          pentru acest copil în fișa lui.
         </p>
         {error && <p className={styles.error}>{error}</p>}
       </div>

@@ -302,11 +302,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
             </label>
             <label className={styles.field}>
               Taxa aplicabilă din luna
-              <input
-                type="month"
-                value={values.feeFrom}
-                onChange={event => setField('feeFrom', event.target.value)}
-              />
+              <input type="month" value={values.feeFrom} onChange={event => setField('feeFrom', event.target.value)} />
             </label>
             <label className={styles.field}>
               Ziua scadenței
@@ -327,9 +323,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
           <div className={styles.groupChips}>
             <button
               type="button"
-              className={
-                values.groupId === '' ? `${styles.groupChip} ${styles.selected}` : styles.groupChip
-              }
+              className={values.groupId === '' ? `${styles.groupChip} ${styles.selected}` : styles.groupChip}
               onClick={() => setField('groupId', '')}
             >
               Fără grupă
@@ -344,9 +338,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                   key={group.id}
                   type="button"
                   className={
-                    selected
-                      ? `${styles.groupChip} ${styles.selected}`
-                      : `${styles.groupChip} ${styles[tone]}`
+                    selected ? `${styles.groupChip} ${styles.selected}` : `${styles.groupChip} ${styles[tone]}`
                   }
                   onClick={() => setField('groupId', group.id)}
                 >

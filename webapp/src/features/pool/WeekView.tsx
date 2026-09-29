@@ -131,7 +131,10 @@ export function WeekView({ days, stats, groups = [], onCycle }: WeekViewProps) {
                       >
                         <span
                           className={styles.avatar}
-                          style={{ background: `var(--${tone}-soft, var(--neutral-soft))`, color: `var(--${tone}-ink, var(--subtle))` }}
+                          style={{
+                            background: `var(--${tone}-soft, var(--neutral-soft))`,
+                            color: `var(--${tone}-ink, var(--subtle))`,
+                          }}
                         >
                           {initials(name)}
                         </span>
@@ -151,8 +154,8 @@ export function WeekView({ days, stats, groups = [], onCycle }: WeekViewProps) {
       </div>
 
       <p className={styles.note}>
-        Zilele trecute și ziua de azi se pot marca. Zilele viitoare arată doar programul. O programare
-        anulată pentru o zi (sărbătoare, bazin închis) apare tăiată și nu se taxează.
+        Zilele trecute și ziua de azi se pot marca. Zilele viitoare arată doar programul. O programare anulată pentru o
+        zi (sărbătoare, bazin închis) apare tăiată și nu se taxează.
       </p>
     </>
   );

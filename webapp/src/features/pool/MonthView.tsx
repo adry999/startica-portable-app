@@ -134,37 +134,40 @@ export function MonthView({
           {children.map(row => {
             const tone = groupTone(row.child?.groupId ?? null, groups);
             return (
-            <div className={styles.tableRow} key={row.childId}>
-              <div className={styles.childCell}>
-                <span
-                  className={styles.childAvatar}
-                  style={{ background: `var(--${tone}-soft, var(--neutral-soft))`, color: `var(--${tone}-ink, var(--subtle))` }}
-                >
-                  {initials(row.child?.name ?? row.childId)}
+              <div className={styles.tableRow} key={row.childId}>
+                <div className={styles.childCell}>
+                  <span
+                    className={styles.childAvatar}
+                    style={{
+                      background: `var(--${tone}-soft, var(--neutral-soft))`,
+                      color: `var(--${tone}-ink, var(--subtle))`,
+                    }}
+                  >
+                    {initials(row.child?.name ?? row.childId)}
+                  </span>
+                  <span className={styles.childName}>{row.child?.name ?? row.childId}</span>
+                </div>
+                <span className={styles.center}>{row.scheduled}</span>
+                <span className={`${styles.center} ${styles.present}`}>{row.present}</span>
+                <span className={`${styles.center} ${styles.absent}`}>{row.absent}</span>
+                <span className={`${styles.center} ${styles.excused}`}>{row.excused}</span>
+                <span className={`${styles.right} ${styles.amount}`}>{formatMoney(row.amount)}</span>
+                <span>
+                  <Badge tone={row.charged ? 'mint' : 'neutral'}>{row.charged ? 'Taxat' : 'Neînchis'}</Badge>
                 </span>
-                <span className={styles.childName}>{row.child?.name ?? row.childId}</span>
+                <span className={styles.rowActions}>
+                  <RowMenu
+                    items={[
+                      { label: 'Bon 58 mm', onClick: () => navigate(`/bazin/bon/${row.childId}?month=${month}`) },
+                      {
+                        label: 'Oprește programarea',
+                        onClick: () => openEndBooking(row),
+                        disabled: row.bookings.length === 0,
+                      },
+                    ]}
+                  />
+                </span>
               </div>
-              <span className={styles.center}>{row.scheduled}</span>
-              <span className={`${styles.center} ${styles.present}`}>{row.present}</span>
-              <span className={`${styles.center} ${styles.absent}`}>{row.absent}</span>
-              <span className={`${styles.center} ${styles.excused}`}>{row.excused}</span>
-              <span className={`${styles.right} ${styles.amount}`}>{formatMoney(row.amount)}</span>
-              <span>
-                <Badge tone={row.charged ? 'mint' : 'neutral'}>{row.charged ? 'Taxat' : 'Neînchis'}</Badge>
-              </span>
-              <span className={styles.rowActions}>
-                <RowMenu
-                  items={[
-                    { label: 'Bon 58 mm', onClick: () => navigate(`/bazin/bon/${row.childId}?month=${month}`) },
-                    {
-                      label: 'Oprește programarea',
-                      onClick: () => openEndBooking(row),
-                      disabled: row.bookings.length === 0,
-                    },
-                  ]}
-                />
-              </span>
-            </div>
             );
           })}
           {children.length === 0 && <div className={styles.empty}>Nicio programare în luna asta.</div>}
@@ -178,7 +181,8 @@ export function MonthView({
                 <div className={styles.coachHeadText}>
                   <strong>{row.coach?.name ?? row.coachId}</strong>
                   <span className={styles.coachRole}>
-                    Antrenor · {formatMoney(row.rate)} pe {row.mode === 'per_child' ? 'copil prezent' : 'ședință ținută'}
+                    Antrenor · {formatMoney(row.rate)} pe{' '}
+                    {row.mode === 'per_child' ? 'copil prezent' : 'ședință ținută'}
                   </span>
                 </div>
               </div>
@@ -195,8 +199,8 @@ export function MonthView({
                 <span className={styles.coachAmount}>{formatMoney(row.amount)}</span>
               </div>
               <p className={styles.coachNote}>
-                Lipsele și motivările nu intră în salariu. La „Închide luna”, salariul se adaugă automat în
-                Cheltuieli, categoria Salarii.
+                Lipsele și motivările nu intră în salariu. La „Închide luna”, salariul se adaugă automat în Cheltuieli,
+                categoria Salarii.
               </p>
             </Card>
           ))}

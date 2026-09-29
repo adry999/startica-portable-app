@@ -308,7 +308,12 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
             onNotifyAll={openBannerNotify}
           />
         ) : (
-          <YearView data={yearData} groups={statusData.groups} smsConfigured={smsConfigured} onNotifyYear={openYearNotify} />
+          <YearView
+            data={yearData}
+            groups={statusData.groups}
+            smsConfigured={smsConfigured}
+            onNotifyYear={openYearNotify}
+          />
         )}
       </div>
 
@@ -610,7 +615,12 @@ function YearView({
             ariaLabel="Caută copil"
           />
         </div>
-        <PaymentHeatmap rows={data.rows} groups={groups} monthLabels={data.monthLabels} currentMonth={data.currentMonth} />
+        <PaymentHeatmap
+          rows={data.rows}
+          groups={groups}
+          monthLabels={data.monthLabels}
+          currentMonth={data.currentMonth}
+        />
       </Card>
     </>
   );
