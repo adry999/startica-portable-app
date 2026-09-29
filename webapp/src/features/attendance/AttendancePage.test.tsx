@@ -125,6 +125,85 @@ describe('AttendancePage · Ziua', () => {
     expect(posted[0].changes).toEqual([{ childId: 'c1', date: TODAY, status: null }]);
   });
 
+  it('A3c: „↶ Anulează” din antet întoarce ultimul clic la starea de dinainte', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    const tile = screen.getByRole('button', { name: /Ana Popescu:/ });
+    await user.click(tile); // nemarcat -> prezent
+    await waitForDebounce();
+    posted.length = 0;
+
+    await user.click(screen.getByRole('button', { name: '↶ Anulează' }));
+    expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
+
+    await waitForDebounce();
+    expect(posted).toHaveLength(1);
+    expect(posted[0].changes).toEqual([{ childId: 'c1', date: TODAY, status: null, reason: '' }]);
+  });
+
+  it('A3c: Ctrl+Z pe pagină face aceeași anulare ca butonul din antet', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ })); // prezent
+    await waitForDebounce();
+    posted.length = 0;
+
+    await user.keyboard('{Control>}z{/Control}');
+
+    expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
+    await waitForDebounce();
+    expect(posted).toHaveLength(1);
+  });
+
+  it('A3c: istoricul zilei arată acțiunile și „Anulează tot” revine la starea de la intrarea pe zi', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ })); // prezent
+    await user.click(screen.getByRole('button', { name: /Bogdan Rusu:/ })); // prezent
+    await waitForDebounce();
+    posted.length = 0;
+
+    await user.click(screen.getByLabelText('Istoricul zilei'));
+    expect(screen.getByText('Modificări azi')).toBeInTheDocument();
+    expect(screen.getByText(/Ana Popescu: Nemarcat → Prezent/)).toBeInTheDocument();
+    expect(screen.getByText(/Bogdan Rusu: Nemarcat → Prezent/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Anulează tot' }));
+
+    expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bogdan Rusu: Nemarcat' })).toBeInTheDocument();
+    await waitForDebounce();
+    expect(posted).toHaveLength(1);
+    const changedChildIds = posted[0].changes.map(change => change.childId).sort();
+    expect(changedChildIds).toEqual(['c1', 'c2']);
+  });
+
+  it('A3c: „Nemarcații → prezenți” arată un toast cu „↶ Anulează” care revine la starea dinainte', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Nemarcații (3) → prezenți' }));
+
+    const toast = await screen.findByRole('status');
+    expect(within(toast).getByText(/copii marcați prezenți/)).toBeInTheDocument();
+    await user.click(within(toast).getByRole('button', { name: '↶ Anulează' }));
+
+    expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bogdan Rusu: Nemarcat' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cristina Ionescu: Nemarcat' })).toBeInTheDocument();
+  });
+
   it('„Motivat” deschide popover-ul, iar motivul ales pleacă în același POST', async () => {
     const posted: PostedBatch[] = [];
     stubFetch(posted);
@@ -209,7 +288,7 @@ describe('AttendancePage · Ziua', () => {
     await user.click(screen.getByRole('button', { name: /Bogdan Rusu:/ }));
     await waitForDebounce();
 
-    const sectionButton = screen.getAllByRole('button', { name: 'Nemarcații (0) → prezenți' })[0];
+    const sectionButton = screen.getAllByRole('button', { name: 'Toți sunt marcați' })[0];
     expect(sectionButton).toBeDisabled();
   });
 
@@ -218,7 +297,7 @@ describe('AttendancePage · Ziua', () => {
     stubFetch(posted);
     await renderPage();
 
-    const unmarkedValue = () => screen.getByText('Nemarcați').nextSibling as HTMLElement;
+    const unmarkedValue = () => screen.getByText('Nemarcați').previousSibling as HTMLElement;
     expect(unmarkedValue().textContent).toBe('3');
 
     const user = userEvent.setup();
@@ -228,7 +307,7 @@ describe('AttendancePage · Ziua', () => {
     expect(unmarkedValue().textContent).toBe('3');
   });
 
-  it('cifra Absenți e roz-raspberry și Motivați e galben, restul rămân slate', async () => {
+  it('A3c: contorul Absenți e roz-raspberry și Motivați e galben, restul rămân neutre', async () => {
     const posted: PostedBatch[] = [];
     stubFetch(posted);
     await renderPage();
@@ -244,17 +323,17 @@ describe('AttendancePage · Ziua', () => {
     await user.click(excusedTile); // motivat -> popover
     await user.keyboard('{Escape}');
 
-    const absentValue = screen.getByText('Absenți').nextSibling as HTMLElement;
-    const excusedValue = screen.getByText('Motivați').nextSibling as HTMLElement;
-    const presentValue = screen.getByText('Prezenți').nextSibling as HTMLElement;
-    const unmarkedValue = screen.getByText('Nemarcați').nextSibling as HTMLElement;
+    const absentValue = screen.getByText('Absenți').previousSibling as HTMLElement;
+    const excusedValue = screen.getByText('Motivați').previousSibling as HTMLElement;
+    const presentValue = screen.getByText('Prezenți').previousSibling as HTMLElement;
+    const unmarkedValue = screen.getByText('Nemarcați').previousSibling as HTMLElement;
 
     expect(absentValue.textContent).toBe('1');
-    expect(absentValue.className).toMatch(/cardValueAbsent/);
+    expect(absentValue.parentElement?.className).toMatch(/counterAbsent/);
     expect(excusedValue.textContent).toBe('1');
-    expect(excusedValue.className).toMatch(/cardValueExcused/);
-    expect(presentValue.className).not.toMatch(/cardValueAbsent|cardValueExcused/);
-    expect(unmarkedValue.className).not.toMatch(/cardValueAbsent|cardValueExcused/);
+    expect(excusedValue.parentElement?.className).toMatch(/counterExcused/);
+    expect(presentValue.parentElement?.className).not.toMatch(/counterAbsent|counterExcused/);
+    expect(unmarkedValue.parentElement?.className).not.toMatch(/counterAbsent|counterExcused/);
   });
 
   it('copiii arhivați sau înscriși după zi nu apar', async () => {

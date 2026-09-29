@@ -1,7 +1,7 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: 18px;
 }
 
 .notice {
@@ -9,84 +9,238 @@
   color: var(--muted);
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-12);
+/* A3c: cele 4 carduri mari devin o bandă compactă, un singur card alb cu 4 contoare pe un rând
+   și o bară de progres pe rândul 2 — vezi Prezenta.dc.html#18a (actualizat 29.09). */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding: var(--space-12) var(--space-18);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--white);
 }
 
-.cardLabel {
-  display: block;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+.counters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
 }
 
-.cardValue {
-  display: block;
+.counter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding-right: var(--space-18);
+  border-right: 1px solid var(--row-divider);
+}
+
+.counter:last-of-type {
+  border-right: none;
+}
+
+.counterDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.counterDotUnmarked {
+  background: none;
+  border: 1.5px solid var(--input-border);
+}
+
+.counterValue {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 30px;
-  color: var(--slate);
+  font-size: 22px;
+  line-height: 1;
 }
 
-.subtle {
-  color: var(--subtle);
+.counterLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
-.cardValueAbsent {
+.zero {
+  color: var(--input-border);
+}
+
+.counterPresent .counterDot {
+  background: var(--success-dot);
+}
+.counterAbsent .counterDot {
+  background: var(--raspberry);
+}
+.counterExcused .counterDot {
+  background: var(--yellow-bar);
+}
+
+.counterPresent .counterValue {
+  color: var(--mint-ink);
+}
+.counterAbsent .counterValue {
   color: var(--raspberry);
 }
-
-.cardValueExcused {
+.counterExcused .counterValue {
   color: var(--yellow-ink);
+}
+
+.presentRate {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mint-ink);
+  white-space: nowrap;
+}
+
+.progressBar {
+  display: flex;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--sand);
+}
+
+.progressPresent {
+  background: var(--success-dot);
+}
+.progressAbsent {
+  background: var(--raspberry);
+}
+.progressExcused {
+  background: var(--yellow-bar);
 }
 
 .trailing {
   display: inline-flex;
   align-items: center;
   gap: var(--space-16);
+  margin-left: auto;
 }
 
-.legend {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
-  font-size: 13px;
-  color: var(--muted);
-}
+/* Legenda (Prezent/Absent/Motivat) a fost înlocuită de contoarele din .summary (A3c). */
 
+/* A3c: fiecare grupă e un chenar în culoarea ei — fundal -soft, border 1.5px într-un ton
+   „mediu" per grupă (vezi tokens.css, familia --<ton>-frame). */
 .section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-10);
+  gap: var(--space-12);
+  border-radius: 22px;
+  border: 1.5px solid var(--border);
+  padding: 14px 16px 16px;
+}
+
+.sectionOrange {
+  background: var(--orange-soft);
+  border-color: var(--orange-frame);
+}
+.sectionMint {
+  background: var(--mint-soft);
+  border-color: var(--mint-frame);
+}
+.sectionYellow {
+  background: var(--yellow-soft);
+  border-color: var(--yellow-border);
+}
+.sectionPink {
+  background: var(--pink-soft);
+  border-color: var(--pink-frame);
+}
+.sectionTeal {
+  background: var(--teal-soft);
+  border-color: var(--teal-frame);
+}
+.sectionBlue {
+  background: var(--blue-soft);
+  border-color: var(--blue-frame);
+}
+.sectionPurple {
+  background: var(--purple-soft);
+  border-color: var(--purple-frame);
+}
+.sectionCoral {
+  background: var(--coral-soft);
+  border-color: var(--coral-frame);
+}
+.sectionNeutral {
+  background: var(--neutral-soft);
+  border-color: var(--border);
 }
 
 .sectionHead {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-10);
+}
+
+.sectionName {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 19px;
 }
 
 .sectionMeta {
   font-size: 13px;
+  font-weight: 700;
   color: var(--muted);
 }
 
 .sectionAction {
   margin-left: auto;
-  border: 0;
-  background: none;
-  color: var(--orange-ink);
-  font-weight: 700;
-  font-size: 13px;
+  border: none;
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.75);
+  font-weight: 800;
+  font-size: 12px;
   cursor: pointer;
 }
 
 .sectionAction:disabled {
-  color: var(--muted);
+  color: var(--subtle);
+  background: rgba(255, 255, 255, 0.5);
   cursor: default;
+}
+
+/* Numele grupei + butonul „Nemarcații → prezenți" trec în -ink-ul tonului secțiunii lor. */
+.sectionOrange .sectionName,
+.sectionOrange .sectionAction:not(:disabled) {
+  color: var(--orange-ink);
+}
+.sectionMint .sectionName,
+.sectionMint .sectionAction:not(:disabled) {
+  color: var(--mint-ink);
+}
+.sectionYellow .sectionName,
+.sectionYellow .sectionAction:not(:disabled) {
+  color: var(--yellow-ink);
+}
+.sectionPink .sectionName,
+.sectionPink .sectionAction:not(:disabled) {
+  color: var(--pink-ink);
+}
+.sectionTeal .sectionName,
+.sectionTeal .sectionAction:not(:disabled) {
+  color: var(--teal-ink);
+}
+.sectionBlue .sectionName,
+.sectionBlue .sectionAction:not(:disabled) {
+  color: var(--blue-ink);
+}
+.sectionPurple .sectionName,
+.sectionPurple .sectionAction:not(:disabled) {
+  color: var(--purple-ink);
+}
+.sectionCoral .sectionName,
+.sectionCoral .sectionAction:not(:disabled) {
+  color: var(--coral-ink);
+}
+.sectionNeutral .sectionName {
+  color: var(--slate);
 }
 
 .grid {
@@ -113,8 +267,8 @@
 }
 
 .tilePresent {
-  background: var(--mint-soft);
-  border-color: var(--mint);
+  background: var(--present-tile-bg);
+  border-color: var(--present-tile-border);
 }
 
 .tileAbsent {
@@ -134,34 +288,55 @@
 
 .avatar {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .orange {
-  background: var(--orange-soft);
+  background: var(--orange-frame);
   color: var(--orange-ink);
 }
 
 .mint {
-  background: var(--mint-soft);
+  background: var(--mint-frame);
   color: var(--mint-ink);
 }
 
 .yellow {
-  background: var(--yellow-soft);
+  background: var(--yellow-border);
   color: var(--yellow-ink);
 }
 
 .pink {
-  background: var(--pink-soft);
+  background: var(--pink-frame);
   color: var(--pink-ink);
+}
+
+.teal {
+  background: var(--teal-frame);
+  color: var(--teal-ink);
+}
+
+.blue {
+  background: var(--blue-frame);
+  color: var(--blue-ink);
+}
+
+.purple {
+  background: var(--purple-frame);
+  color: var(--purple-ink);
+}
+
+.coral {
+  background: var(--coral-frame);
+  color: var(--coral-ink);
 }
 
 .neutral {
@@ -169,19 +344,38 @@
   color: var(--slate);
 }
 
-.tileName {
+.tileText {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tileName {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
   color: var(--slate);
 }
 
 .tileStatus {
   font-size: 11px;
+  font-weight: 800;
+}
+
+.tileStatusPresent {
+  color: var(--mint-ink);
+}
+.tileStatusAbsent {
+  color: var(--raspberry);
+}
+.tileStatusExcused {
+  color: var(--yellow-ink);
+}
+.tileStatusUnmarked {
   color: var(--muted);
 }
 
@@ -214,4 +408,12 @@
 .markUnmarked {
   background: #fff;
   border: 1.5px solid var(--input-border);
+}
+
+.footNote {
+  padding: var(--space-12) var(--space-16);
+  border-radius: 14px;
+  background: var(--yellow-soft);
+  font-size: 13px;
+  color: var(--slate);
 }

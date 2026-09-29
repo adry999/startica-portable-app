@@ -100,6 +100,19 @@
   --coral-soft: #fbe6dc;
   --coral-ink: #9a3f1c;
   --coral-bar: #e0714a;
+  /* Chenarul unei secțiuni de grupă (Prezența 18a, A3c) — un ton „mediu" între -soft și culoarea
+     plină, câte unul per ton de grupă; galbenul refolosește --yellow-border (deja identic). */
+  --orange-frame: #f6d3ad;
+  --mint-frame: #c6e6d3;
+  --pink-frame: #f6c6d5;
+  --teal-frame: #a8d9d9;
+  --blue-frame: #aecbe0;
+  --purple-frame: #cfc0e6;
+  --coral-frame: #f0b79c;
+  /* Placa „Prezent” din grila zilei — mai deschisă decât --mint-soft, ca să rămână distinctă
+     chiar și într-o secțiune de grupă cu ton mint (altfel s-ar confunda cu fundalul secțiunii). */
+  --present-tile-bg: #f3faf6;
+  --present-tile-border: #bfe3cf;
 
   /* Tipografie. */
   --font-heading: 'Baloo 2', Arial, sans-serif;

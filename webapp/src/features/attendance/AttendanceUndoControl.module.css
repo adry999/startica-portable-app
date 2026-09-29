@@ -1,0 +1,137 @@
+.group {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.undoButton {
+  padding: var(--space-8) var(--space-10) var(--space-8) var(--space-12);
+  color: var(--slate);
+  background: none;
+  border: none;
+}
+
+.undoButton:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.history {
+  position: relative;
+}
+
+.history summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-8) var(--space-12) var(--space-8) var(--space-8);
+  border-left: 1.5px solid var(--border);
+  color: var(--slate);
+}
+
+.history summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-8));
+  right: 0;
+  z-index: var(--z-popover);
+  width: 420px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  padding: var(--space-8) var(--space-10) var(--space-6);
+}
+
+.panelHead span {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 17px;
+}
+
+.undoAll {
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--raspberry);
+}
+
+.undoAll:disabled {
+  color: var(--muted);
+}
+
+.empty {
+  padding: var(--space-8) var(--space-10);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.list {
+  max-height: 320px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-sm);
+}
+
+.row:hover {
+  background: var(--cream);
+}
+
+.time {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowUndo {
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-10);
+  border-radius: var(--radius-pill);
+  background: var(--neutral-soft);
+  font-size: 12px;
+  font-weight: 800;
+  border: none;
+  white-space: nowrap;
+}
+
+.note {
+  padding: var(--space-8) var(--space-10) var(--space-6);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--slate);
+}

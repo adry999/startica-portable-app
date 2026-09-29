@@ -27,6 +27,13 @@ const MARK_CLASS: Record<'present' | 'absent' | 'excused' | 'unmarked', string> 
 
 const MARK_SYMBOL: Record<'present' | 'absent' | 'excused', string> = { present: '✓', absent: '×', excused: 'M' };
 
+const STATUS_TEXT_CLASS: Record<'present' | 'absent' | 'excused' | 'unmarked', string> = {
+  present: styles.tileStatusPresent,
+  absent: styles.tileStatusAbsent,
+  excused: styles.tileStatusExcused,
+  unmarked: styles.tileStatusUnmarked,
+};
+
 /** Placa de copil din grila zilei (18a) — clic pe orice punct al plăcii ciclează starea. */
 export function ChildTile({ name, initials, status, tone, onClick }: ChildTileProps) {
   const kind = status ?? 'unmarked';
@@ -44,8 +51,10 @@ export function ChildTile({ name, initials, status, tone, onClick }: ChildTilePr
       <span className={`${styles.avatar} ${styles[tone]}`} style={dimmed ? { opacity: 0.55 } : undefined}>
         {initials}
       </span>
-      <span className={styles.tileName}>{name}</span>
-      <span className={styles.tileStatus}>{label}</span>
+      <span className={styles.tileText}>
+        <span className={styles.tileName}>{name}</span>
+        <span className={`${styles.tileStatus} ${STATUS_TEXT_CLASS[kind]}`}>{label}</span>
+      </span>
       <span className={`${styles.mark} ${MARK_CLASS[kind]}`}>{status ? MARK_SYMBOL[status] : ''}</span>
     </button>
   );
