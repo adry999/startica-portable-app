@@ -116,6 +116,7 @@ export function PoolPage({ month }: PoolPageProps) {
           settings={settings.settings}
           coaches={settings.coaches}
           today={today()}
+          weekDays={week.days}
         />
       )}
     </>

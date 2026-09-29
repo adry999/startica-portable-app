@@ -4,15 +4,15 @@ import { useAppSession } from '@shared/api/session';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 import { slotTimes } from '#features/pool/index.web.mjs';
 import type { PoolSettings } from '#features/pool/pool.types.d.mts';
-import { saveBooking } from '@shared/pool/usePool';
+import { saveBooking, type WeekDay } from '@shared/pool/usePool';
 import styles from './BookingDrawer.module.css';
 
 const WEEKDAYS = [
-  { value: 1, label: 'Luni' },
-  { value: 2, label: 'Marți' },
-  { value: 3, label: 'Miercuri' },
-  { value: 4, label: 'Joi' },
-  { value: 5, label: 'Vineri' },
+  { value: 1, label: 'Lu' },
+  { value: 2, label: 'Ma' },
+  { value: 3, label: 'Mi' },
+  { value: 4, label: 'Jo' },
+  { value: 5, label: 'Vi' },
 ];
 
 export interface BookingDrawerProps {
@@ -22,10 +22,14 @@ export interface BookingDrawerProps {
   settings: PoolSettings;
   coaches: { id: string; name: string }[];
   today: string;
+  /** Săptămâna deja încărcată de `PoolPage` (`usePoolWeek`) — reținută aici doar ca previzualizare
+   * de ocupare pe cardurile de oră, ca să nu pornească un al doilea abonament la `/api/pool/week`
+   * cât timp panoul stă montat (dar închis) în spatele ecranului. */
+  weekDays: WeekDay[];
 }
 
 /** Programare nouă (22b): copil, antrenor, ziua săptămânii, oră — cu prețul lunii ca previzualizare. */
-export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today }: BookingDrawerProps) {
+export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today, weekDays }: BookingDrawerProps) {
   const session = useAppSession();
   const records = session.state.state as RecordsSnapshot;
   const toast = useToast();
@@ -38,6 +42,9 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
   const [error, setError] = useState('');
 
   const times = useMemo(() => slotTimes(settings), [settings]);
+  // Ocuparea reală a sloturilor (câți copii sunt deja programați), din săptămâna deja încărcată de
+  // PoolPage — corectă cât timp „Începând cu” cade în săptămâna vizualizată curent (cazul obișnuit).
+  const daySlots = weekDays[weekday - 1]?.slots ?? [];
 
   const childOptions = useMemo(
     () =>
@@ -70,13 +77,18 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
   return (
     <Drawer
       open={open}
-      title="Programare nouă"
-      width={520}
+      title="Programare la bazin"
+      width={480}
       onClose={onClose}
       footer={
-        <Button disabled={saving} onClick={() => void submit()}>
-          Salvează
-        </Button>
+        <>
+          <Button variant="outline" onClick={onClose}>
+            Renunță
+          </Button>
+          <Button disabled={saving} onClick={() => void submit()}>
+            Programează
+          </Button>
+        </>
       }
     >
       <div className={styles.form}>
@@ -104,7 +116,7 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
           </select>
         </label>
         <div className={styles.field}>
-          Ziua săptămânii
+          Ziua
           <div className={styles.weekdays}>
             {WEEKDAYS.map(day => (
               <button
@@ -118,24 +130,49 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
             ))}
           </div>
         </div>
-        <label className={styles.field}>
+        <div className={styles.field}>
           Ora
-          <select value={time} onChange={event => setTime(event.target.value)}>
-            <option value="" disabled>
-              Alege ora
-            </option>
-            {times.map(slot => (
-              <option key={slot} value={slot}>
-                {slot}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.field}>
-          Din data
-          <input type="date" value={startDate} onChange={event => setStartDate(event.target.value)} />
-        </label>
-        <p className={styles.price}>{settings.pricePerSession} lei / ședință</p>
+          <div className={styles.hours}>
+            {times.map(slot => {
+              const taken = daySlots.find(daySlot => daySlot.time === slot)?.entries.length ?? 0;
+              const full = settings.seatsPerSlot != null && taken >= settings.seatsPerSlot;
+              const active = time === slot;
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  disabled={full}
+                  className={[styles.hourCard, active ? styles.hourCardActive : '', full ? styles.hourCardFull : '']
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => setTime(slot)}
+                >
+                  <span className={styles.hourTime}>{slot}</span>
+                  <span className={styles.hourSeats}>{taken === 1 ? '1 copil' : `${taken} copii`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className={styles.grid2}>
+          <label className={styles.field}>
+            Începând cu
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={startDate}
+              onChange={event => setStartDate(event.target.value)}
+            />
+          </label>
+          <div className={styles.field}>
+            Se repetă
+            <span className={styles.staticValue}>Săptămânal</span>
+          </div>
+        </div>
+        <p className={styles.priceNote}>
+          Preț: <b>{settings.pricePerSession} lei</b> pe ședință, adăugat la taxa lunii după prezențe. Se poate
+          schimba pentru acest copil în fișa lui.
+        </p>
         {error && <p className={styles.error}>{error}</p>}
       </div>
     </Drawer>
