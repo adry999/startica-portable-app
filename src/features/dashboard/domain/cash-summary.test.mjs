@@ -28,7 +28,7 @@ test('summarizeCashForMonth totalizează încasările lunii pe metodă și scade
   });
   const summary = summarizeCashForMonth(records, '2026-09');
   assert.equal(summary.income, 1500.3);
-  assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });
+  assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0 });
   assert.equal(summary.expense, 200);
   assert.equal(summary.net, 1300.3);
 });
@@ -49,7 +49,7 @@ test('summarizeCashForMonth ignoră plățile arhivate sau din altă lună', () 
   );
 });
 
-test('summarizeCashForMonth pune metodele necunoscute la Altele', () => {
+test('summarizeCashForMonth nu bagă metodele necunoscute în niciun total (B1, fără Altele)', () => {
   const records = asAny({
     children: [],
     payments: [{ id: 'P1', date: '2026-09-08', amount: 300, tenders: [{ method: 'Bon', amount: 300 }] }],
@@ -57,7 +57,7 @@ test('summarizeCashForMonth pune metodele necunoscute la Altele', () => {
     groups: [],
     categories: [],
   });
-  assert.equal(summarizeCashForMonth(records, '2026-09').byMethod.Altele, 300);
+  assert.deepEqual(summarizeCashForMonth(records, '2026-09').byMethod, { Cash: 0, Card: 0, Transfer: 0 });
 });
 
 test('sumUnallocatedAdvance ia partea nerepartizată dintr-o plată încasată la sau înainte de asOf', () => {
@@ -123,7 +123,7 @@ test('Achitarea mixtă se împarte pe metode, cea arhivată nu contează', () =>
   const records = asAny({ children: [child], payments: [payment], expenses: [], groups: [], categories: [] });
   const summary = summarizeCashForMonth(records, '2026-09');
   assert.equal(summary.income, 1500.3);
-  assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0, Altele: 0 });
+  assert.deepEqual(summary.byMethod, { Cash: 1000.1, Card: 500.2, Transfer: 0 });
   assert.equal(obligation(child, '2026-09', [payment], [], '2026-09-08').paid, 1500);
   assert.equal(
     summarizeCashForMonth(asAny({ ...records, payments: [{ ...payment, archived: true }] }), '2026-09').income,

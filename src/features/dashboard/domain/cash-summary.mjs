@@ -32,12 +32,14 @@ export function summarizeCashForMonth(records, month, rates = {}) {
   const income = total(
     payments.map(p => ({ amount: toMdl(p.amount, /** @type {any} */ (p).currency || 'MDL', p.date, rates) })),
   );
-  const byMethod = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
+  // Fără „Altele" (B1): o metodă necunoscută nu intră în niciun total al Dashboard-ului,
+  // rămâne doar în De rezolvat — la fel ca `summarizePaymentsByMethod`.
+  const byMethod = { Cash: 0, Card: 0, Transfer: 0 };
   for (const p of payments) {
     const paymentCurrency = /** @type {any} */ (p).currency || 'MDL';
     for (const part of paymentTenders(p)) {
-      const method = Object.hasOwn(byMethod, part.method) ? part.method : 'Altele';
-      byMethod[method] += cents(toMdl(part.amount, paymentCurrency, p.date, rates));
+      if (!Object.hasOwn(byMethod, part.method)) continue;
+      byMethod[part.method] += cents(toMdl(part.amount, paymentCurrency, p.date, rates));
     }
   }
   for (const method of Object.keys(byMethod)) byMethod[method] /= 100;

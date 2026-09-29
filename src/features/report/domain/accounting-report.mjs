@@ -136,10 +136,10 @@ function sumAmounts(rows) {
 }
 
 /**
- * Repartizarea încasărilor pe metodă (Cash / Card / Transfer / Altele),
+ * Repartizarea încasărilor pe metodă (Cash / Card / Transfer — fără „Altele”, B1),
  * calculată din tenders (o achitare poate avea mai multe metode) — aceeași
- * regulă ca `summarizePaymentsByMethod`, dar cu numărul de mișcări pe metodă
- * și procentul din total, cerute de cardurile ecranului.
+ * regulă ca `summarizePaymentsByMethod`: o metodă necunoscută (date vechi
+ * nerezolvate) nu intră în niciun total, rămâne doar în De rezolvat.
  * @param {Payment[]} payments
  * @param {number} incomeTotal
  */
@@ -148,13 +148,12 @@ function buildMethodBreakdown(payments, incomeTotal) {
     Cash: { amount: 0, count: 0 },
     Card: { amount: 0, count: 0 },
     Transfer: { amount: 0, count: 0 },
-    Altele: { amount: 0, count: 0 },
   };
   for (const payment of payments)
     for (const tender of paymentTenders(payment)) {
-      const method = Object.hasOwn(byMethod, tender.method) ? tender.method : 'Altele';
-      byMethod[method].amount += cents(tender.amount);
-      byMethod[method].count += 1;
+      if (!Object.hasOwn(byMethod, tender.method)) continue;
+      byMethod[tender.method].amount += cents(tender.amount);
+      byMethod[tender.method].count += 1;
     }
   return Object.entries(byMethod)
     .map(([method, bucket]) => ({
