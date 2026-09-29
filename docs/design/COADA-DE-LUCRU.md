@@ -365,5 +365,21 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - **Neimplementat, notat explicit:** „Anulare/istoric: ca în A3c” pentru grila lunii. `useAttendanceMonth.ts` nu are deloc mecanismul de istoric al lui A3c, iar clic-urile de-a lungul unei luni întregi (copil × zi, nu doar ziua curentă) ar cere o adaptare non-trivială a structurii `HistoryEntry`/`applyRestore` (state per dată, nu doar per copil). Dat volumul mare rămas în coadă (A3d/A3f/A4-A9), am tratat asta ca punct separat de urmărit, nu ca blocaj pentru restul restilizării A3e — semnalat aici pentru decizie/prioritizare ulterioară.
 - Verificare: `npm run check` (root, 1169/1171 + 2 skip) + webapp typecheck + 855/855 teste — toate verzi.
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A2 (Copil nou) — DONE
+
+- Lucrat de un subagent (Sonnet) pe `ChildFormDrawer.tsx`/`.module.css`/`child-form.ts` din `screens/29-copil-nou-diferente.md`, verificat personal (diff citit integral, typecheck + teste rulate de mine, nu doar raportul agentului).
+- Găsit și reparat la verificare: „Începe la” nu seta automat și `contractDate` pentru copil nou (câmpul e ascuns în „Copil nou”, dar decizia 29.09 cerea completare automată alături de `feeFrom`/`statusFrom`) — adăugat în `setAttendanceDate()`.
+- Restul (4 secțiuni fără chenar, relația părintelui, persoane autorizate, nr. contract, carduri de program mereu vizibile, chip-uri de grupă colorate, secțiunile 5-6 pliate doar la editare) — deja corect din prima, verificat rând cu rând față de spec.
+- `npm run check` (root) + webapp typecheck + 855/855 teste — toate verzi.
+
+## 2026-09-29 — ALINIERE-DESIGN.md — A3 (Fișa copilului) — DONE (2 note, vezi mai jos)
+
+- Lucrat de un subagent (Sonnet) pe `ChildProfileView.tsx` + `ChildrenPage.module.css` + `ProfileLayout.module.css` din `ALINIERE-DESIGN.md` A3 + `screens/28-fisa-copilului-date.md §6`, verificat personal.
+- Găsit și reparat la verificare: editorul de notă (adăugare și editare) nu avea Ctrl+Enter/Esc cerut explicit în spec (§6) — adăugat `onKeyDown` pe ambele textarea-uri.
+- Restul (grid 1fr/1.35fr, cardul unic „Date personale” cu alergii/părinți-cu-relație/persoane-autorizate, note cu autor+editare+ștergere+toast, pătratul de grupă 48/14/20) — corect din prima.
+- **Efect secundar asumat, nu o greșeală:** padding-ul nou al `.section` din `ProfileLayout.module.css` (20px 22px, cerut de spec doar pentru cardul „Date personale”) se aplică global tuturor cardurilor cu acest layout — inclusiv fișa angajatului din Personal (A3f, neatins încă altfel). Testele întregului webapp rămân verzi; nu recomand un CSS separat doar pentru un card, dar semnalez aici pentru cazul în care A3f arată diferit de așteptat.
+- **Limitare de model de date, nu bug:** rândul „Educator Ala · vârste 2c 5l – 6a 9l” din spec cere ani+luni; `Group` are doar `ageMinYears`/`ageMaxYears` (ani întregi) — rămâne „vârste 2–6 ani”. Ar cere schimbare de schemă, nu doar UI.
+- `npm run check` (root) + webapp typecheck + 855/855 teste — toate verzi.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
