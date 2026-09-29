@@ -7,6 +7,8 @@ export interface ListToolbarSearch {
   onChange: (value: string) => void;
   placeholder?: string;
   ariaLabel: string;
+  /** Ecranul apelant poate impune o lățime fixă (ex. Candidați, 360px) în loc de flex:1 implicit. */
+  className?: string;
 }
 
 export interface ListToolbarProps {
@@ -28,6 +30,7 @@ export function ListToolbar({ search, trailing, children, className }: ListToolb
         onChange={search.onChange}
         placeholder={search.placeholder}
         ariaLabel={search.ariaLabel}
+        className={search.className}
       />
       {children}
       {trailing != null && <span className={styles.trailing}>{trailing}</span>}

@@ -4,6 +4,12 @@
   gap: 12px;
 }
 
+/* 23l: căutare cu lățime fixă, nu flex:1 ca la Copii — ListToolbar rămâne generic. */
+.search {
+  flex: none;
+  width: 360px;
+}
+
 .notice {
   padding: 24px;
   color: var(--muted);

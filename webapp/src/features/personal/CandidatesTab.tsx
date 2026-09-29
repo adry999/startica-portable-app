@@ -64,7 +64,13 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
   return (
     <div className={styles.root}>
       <ListToolbar
-        search={{ value: search, onChange: setSearch, ariaLabel: 'Caută candidat', placeholder: 'Caută candidat' }}
+        search={{
+          value: search,
+          onChange: setSearch,
+          ariaLabel: 'Caută candidat',
+          placeholder: 'Caută candidat',
+          className: styles.search,
+        }}
         trailing={trailing}
       />
 
