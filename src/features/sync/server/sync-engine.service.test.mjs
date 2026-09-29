@@ -514,3 +514,55 @@ test('410 reface filiala din snapshot', async () => {
   assert.equal(meta.revision, 1);
   assert.deepEqual(recordsChangedRevisions, [1]);
 });
+
+test('S-4: o resincronizare 410 a setului comun nu șterge candidates — kind comun, ca staff', async () => {
+  const { rawRecordRepository, engine } = createHarness({
+    client: fakeClient({
+      pullChanges: async () => {
+        throw new SyncHttpError(410, 'cursor-expirat');
+      },
+      // Reproducerea auditului (v3-comun-410.mjs): 1 staff + 2 candidates înainte de 410 —
+      // dacă `candidates` lipsește din COMMON_KINDS (change-applier.mjs), applySnapshotEntry
+      // întoarce fals pentru el chiar dacă e în instantaneul serverului, iar DELETE FROM
+      // records (rulat necondiționat mai sus în resyncFromSnapshot) le șterge fără să le
+      // mai rescrie — candidates 2 → 0, fără niciun mesaj.
+      downloadSnapshot: async () => ({
+        records: {
+          staff: [
+            {
+              id: 'STF-1',
+              revision: 3,
+              payload: { id: 'STF-1', name: 'Ana Popescu' },
+              updatedAt: '2026-09-27T09:00:00.000Z',
+            },
+          ],
+          candidates: [
+            {
+              id: 'CAND-1',
+              revision: 1,
+              payload: { id: 'CAND-1', name: 'Maria Ionescu' },
+              updatedAt: '2026-09-27T09:00:00.000Z',
+            },
+            {
+              id: 'CAND-2',
+              revision: 1,
+              payload: { id: 'CAND-2', name: 'Elena Rusu' },
+              updatedAt: '2026-09-27T09:00:00.000Z',
+            },
+          ],
+        },
+        headSeq: 4,
+      }),
+    }),
+  });
+  // Starea locală dinaintea 410-ului — aceeași bază, cu 1 staff + 2 candidates.
+  rawRecordRepository.save('staff', { id: 'STF-1', name: 'Ana Popescu' });
+  rawRecordRepository.save('candidates', { id: 'CAND-1', name: 'Maria Ionescu' });
+  rawRecordRepository.save('candidates', { id: 'CAND-2', name: 'Elena Rusu' });
+
+  await engine.syncNow();
+
+  assert.ok(rawRecordRepository.find('staff', 'STF-1'), 'staff supraviețuiește (era deja în COMMON_KINDS)');
+  assert.ok(rawRecordRepository.find('candidates', 'CAND-1'), 'primul candidat supraviețuiește resincronizării');
+  assert.ok(rawRecordRepository.find('candidates', 'CAND-2'), 'al doilea candidat supraviețuiește resincronizării');
+});

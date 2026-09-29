@@ -37,6 +37,12 @@ export const COMMON_KINDS = /** @type {const} */ ([
   'salaries',
   'advances',
   'salary_payments',
+  // S-4: candidates trăiește în aceeași tabelă `records` din Comun (personal.repository.mjs)
+  // ca celelalte kind-uri de mai sus, dar lipsea de aici — nu se contopea între calculatoare
+  // ȘI era șters de un 410 (resyncFromSnapshot rescrie DOAR ce e listat în COMMON_KINDS).
+  // docs/design/screens/24-personal.md: „sincronizat ca restul” — LWW, ca oricare siblings
+  // aici, nu CONFLICT_KIND (vezi sync-server/src/change-policy.mjs).
+  'candidates',
 ]);
 
 /**

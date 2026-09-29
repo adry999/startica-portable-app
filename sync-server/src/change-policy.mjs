@@ -34,6 +34,11 @@ export const COMMON_KINDS = [
   'salaries',
   'advances',
   'salary_payments',
+  // S-4: candidates la angajare — nu era în listă, deci nu se contopea între calculatoare
+  // și un 410 îl ștergea (change-applier.mjs COMMON_KINDS controla ce supraviețuia). LWW ca
+  // majoritatea siblings de mai sus, nu CONFLICT_KIND ca `staff` (docs/design/screens/
+  // 24-personal.md: „sincronizat ca restul”).
+  'candidates',
 ];
 
 // Tipurile sincronizate în total: fișele (RECORD_KINDS) + prezența + tabelele proprii ale

@@ -29,6 +29,7 @@ test('KINDS conține toate tipurile de fișe plus prezența, tabelele Bazinului,
     'salaries',
     'advances',
     'salary_payments',
+    'candidates',
     'sms_templates',
     'settings',
   ]);
