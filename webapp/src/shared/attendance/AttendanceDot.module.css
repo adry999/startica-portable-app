@@ -19,8 +19,9 @@
   background: var(--raspberry);
 }
 
+/* A3e: motivat #e0b400 în spec — mai apropiat de --yellow-bar decât de --yellow (prea deschis pe alb). */
 .excused {
-  background: var(--yellow);
+  background: var(--yellow-bar);
 }
 
 .unmarked {

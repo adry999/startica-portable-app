@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { Card, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { formatMonthName } from '#shared/format/date-format.mjs';
@@ -11,7 +11,9 @@ export interface MonthViewProps {
   data: AttendanceMonthData;
 }
 
-/** Ecranul Luna (18b): grilă copil × zi pentru o singură grupă, cu tipărire A4 și export .xlsx. */
+/** Ecranul Luna (18b): grilă copil × zi pentru o singură grupă, cu tipărire A4 și export .xlsx.
+ * A3e: un `div` grid per rând (antet/copil/subsol), toate cu același `gridTemplateColumns` —
+ * padding pe rând, nu pe fiecare din cele 30+ celule (altfel lățimile coloanelor se strică). */
 export function MonthView({ month, data }: MonthViewProps) {
   const [excuseTarget, setExcuseTarget] = useState<{ childId: string; date: string } | null>(null);
 
@@ -57,24 +59,24 @@ export function MonthView({ month, data }: MonthViewProps) {
       {data.rows.length === 0 ? (
         <p className={styles.notice}>Niciun copil în această grupă.</p>
       ) : (
-        <Card className={styles.tableCard}>
-          <div className={styles.grid} style={{ gridTemplateColumns }}>
-            <div className={styles.headCell}>Copil</div>
-            {data.dayNumbers.map((day, index) => (
-              <div
-                key={data.dates[index]}
-                className={`${styles.headCell} ${styles.dayCell} ${data.offDays[index] ? styles.offHead : ''} ${index === data.todayIndex ? styles.todayHead : ''}`}
-              >
-                {day}
-              </div>
-            ))}
-            <div className={`${styles.headCell} ${styles.totalsHead}`}>Zile</div>
+        <>
+          <Card className={styles.tableCard}>
+            <div className={styles.headRow} style={{ gridTemplateColumns }}>
+              <div className={styles.headCopil}>Copil</div>
+              {data.dayNumbers.map((day, index) => (
+                <div
+                  key={data.dates[index]}
+                  className={`${styles.headDay} ${data.offDays[index] ? styles.offHead : ''}`}
+                >
+                  {index === data.todayIndex ? <span className={styles.todayPill}>{day}</span> : day}
+                </div>
+              ))}
+              <div className={styles.headZile}>Zile</div>
+            </div>
 
             {data.rows.map(row => (
-              <Fragment key={row.id}>
-                <div key={`${row.id}-name`} className={styles.nameCell}>
-                  {row.name}
-                </div>
+              <div key={row.id} className={styles.dataRow} style={{ gridTemplateColumns }}>
+                <div className={styles.nameCell}>{row.name}</div>
                 {row.cells.map((cell, index) => (
                   <div
                     key={`${row.id}-${cell.date}`}
@@ -108,21 +110,31 @@ export function MonthView({ month, data }: MonthViewProps) {
                     )}
                   </div>
                 ))}
-                <div key={`${row.id}-days`} className={styles.daysCell}>
+                <div className={styles.daysCell}>
                   {row.presentDays}/{row.workingDays}
                 </div>
-              </Fragment>
-            ))}
-
-            <div className={`${styles.footCell} ${styles.footLabel}`}>Prezenți pe zi</div>
-            {data.presentPerDay.map((count, index) => (
-              <div key={`present-${data.dates[index]}`} className={styles.footCell}>
-                {count ?? ''}
               </div>
             ))}
-            <div className={styles.footCell} />
-          </div>
-        </Card>
+
+            <div className={styles.footRow} style={{ gridTemplateColumns }}>
+              <div className={`${styles.footCell} ${styles.footLabel}`}>Prezenți pe zi</div>
+              {data.presentPerDay.map((count, index) => (
+                <div
+                  key={`present-${data.dates[index]}`}
+                  className={`${styles.footCell} ${data.offDays[index] ? styles.offFoot : ''}`}
+                >
+                  {count ?? ''}
+                </div>
+              ))}
+              <div className={styles.footCell} />
+            </div>
+          </Card>
+
+          <p className={styles.footNote}>
+            Zilele de weekend și sărbătorile sunt gri. Un clic pe o celulă deschide aceeași alegere ca în vederea Ziua,
+            pentru acea zi. Zilele viitoare rămân goale.
+          </p>
+        </>
       )}
     </div>
   );

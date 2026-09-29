@@ -1,7 +1,7 @@
 .root {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: 18px;
 }
 
 .notice {
@@ -19,7 +19,13 @@
 
 .legendStat {
   font-size: 13px;
+  font-weight: 700;
   color: var(--muted);
+}
+
+.legendStat b {
+  color: var(--slate);
+  font-weight: 800;
 }
 
 .printTitle {
@@ -28,30 +34,54 @@
 
 .tableCard {
   padding: 0;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  overflow: hidden;
   overflow-x: auto;
 }
 
-.grid {
+/* A3e: fiecare rând (antet/copil/subsol) e propriul grid, cu același gridTemplateColumns —
+   padding pe rând, nu pe fiecare celulă (30+ celule pe rând ar strica lățimile). */
+.headRow,
+.dataRow,
+.footRow {
   display: grid;
   align-items: center;
 }
 
-.headCell {
-  padding: var(--space-8);
+.headRow {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dataRow {
+  padding: 7px 16px;
+  border-bottom: 1px solid #f3eee5;
+}
+
+.footRow {
+  padding: 9px 16px;
+  background: var(--cream);
+}
+
+.headCopil,
+.headZile {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--subtle);
-  border-bottom: 1px solid var(--border);
 }
 
-.dayCell {
-  text-align: center;
-}
-
-.totalsHead {
+.headZile {
   text-align: right;
+}
+
+.headDay {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--subtle);
 }
 
 /* Coloanele de weekend/sărbătoare au eticheta mai stinsă decât zilele lucrătoare (18b). */
@@ -59,18 +89,19 @@
   color: var(--input-border);
 }
 
-.todayHead {
+.todayPill {
+  display: inline-block;
+  min-width: 20px;
+  padding: 3px 0;
+  border-radius: 6px;
   background: var(--orange);
   color: #fff;
-  border-radius: 8px;
 }
 
 .nameCell {
-  padding: var(--space-8);
   font-weight: 800;
   font-size: 13px;
   color: var(--slate);
-  border-bottom: 1px solid var(--row-divider);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -81,11 +112,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-bottom: 1px solid var(--row-divider);
+  align-self: stretch;
 }
 
-.offCell {
+.offCell,
+.offFoot {
   background: var(--off-day);
 }
 
@@ -98,26 +129,30 @@
 }
 
 .daysCell {
-  padding: var(--space-8);
   text-align: right;
   font-weight: 800;
   font-size: 13px;
   color: var(--slate);
-  border-bottom: 1px solid var(--row-divider);
 }
 
 .footCell {
-  padding: var(--space-8);
   text-align: center;
   font-weight: 800;
   font-size: 10px;
   color: var(--muted);
-  background: var(--cream);
 }
 
 .footLabel {
   text-align: left;
   font-size: 12px;
+}
+
+.footNote {
+  padding: var(--space-12) var(--space-16);
+  border-radius: 14px;
+  background: var(--yellow-soft);
+  font-size: 13px;
+  color: var(--slate);
 }
 
 @media print {
@@ -126,7 +161,8 @@
     margin: 10mm;
   }
 
-  .filterBar {
+  .filterBar,
+  .footNote {
     display: none;
   }
 
@@ -137,8 +173,9 @@
     font-size: 18px;
   }
 
-  .cell,
-  .headCell,
+  .headRow,
+  .dataRow,
+  .footRow,
   .nameCell,
   .daysCell,
   .footCell {
