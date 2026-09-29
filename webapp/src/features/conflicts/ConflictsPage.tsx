@@ -48,6 +48,7 @@ export function ConflictsPage() {
             <span className={styles.rowTitle}>{conflict.title}</span>
             <span className={styles.rowSubtitle}>
               {kindLabel(conflict.kind)} · {conflict.subtitle}
+              {conflict.dataset === 'comun' ? ' · Comun' : ''}
             </span>
           </button>
         ))}

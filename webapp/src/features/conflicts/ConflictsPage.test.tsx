@@ -35,6 +35,7 @@ const CFL_1 = {
     { field: 'name', local: 'Ana', remote: 'Ana Popescu', differs: true },
     { field: 'phone', local: '069123456', remote: '069123456', differs: false },
   ],
+  dataset: 'branch' as const,
 };
 
 const CFL_2 = {
@@ -47,6 +48,7 @@ const CFL_2 = {
   remoteUpdatedAt: '2026-09-27T09:30:00.000Z',
   remoteDeviceName: 'Calculator B',
   fields: [{ field: 'capacity', local: 20, remote: 22, differs: true }],
+  dataset: 'branch' as const,
 };
 
 describe('ConflictsPage', () => {

@@ -9,12 +9,48 @@ import { TYPES, normalizeRecord } from '#shared/domain/record-schema.mjs';
 export class SyncApplyError extends Error {}
 
 /**
- * @param {ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>} rawRecordRepository
- * @param {string} kind @param {string} recordId @param {unknown} payload
+ * Interfața minimă folosită mai jos — `createRecordRepository` (`records(kind,id,payload)`,
+ * fără nicio tranzacție proprie) o îndeplinește pentru orice kind, nu doar TYPES, deci motorul
+ * setului comun (decizia 9, create-common-context.mjs) o trece direct drept
+ * `rawRecordRepository`, fără nicio schimbare aici sau în sync-engine.service.mjs.
+ * NU `createKindRepository`: `save`/`remove` ale aceluia își deschid singure o tranzacție
+ * când sunt apelate direct (bun pentru o rută, rău imbricat în tranzacția motorului —
+ * „cannot start a transaction within a transaction”).
+ * @typedef {{
+ *   find: (kind: string, id: string) => any,
+ *   save: (kind: string, record: { id: string }) => unknown,
+ *   remove: (kind: string, id: string) => unknown,
+ * }} RawKindWriter
  */
-function applyRecordEntry(rawRecordRepository, kind, recordId, payload) {
+
+// Kind-urile setului comun (Personal 24 — decizia 9, „Changes to the sync plan” din
+// 2026-09-27-personal-bazin.md): scrise brut, ca attendance/pool_*, niciodată prin
+// normalizeRecord (acela cunoaște doar TYPES, fișele filialei) — motorul setului comun trece
+// exact aceeași interfață find/save/remove (createKindRepository, nu createRecordRepository)
+// drept `rawRecordRepository`, deci ea funcționează neschimbată mai jos.
+export const COMMON_KINDS = /** @type {const} */ ([
+  'staff',
+  'departments',
+  'roles',
+  'timesheet',
+  'leaves',
+  'salaries',
+  'advances',
+  'salary_payments',
+]);
+
+/**
+ * @param {RawKindWriter} rawRecordRepository
+ * @param {string} kind @param {string} recordId @param {unknown} payload
+ * @param {{ normalize?: boolean }} [options] `normalize: false` pentru setul comun (COMMON_KINDS) — plată, fără validare.
+ */
+function applyRecordEntry(rawRecordRepository, kind, recordId, payload, { normalize = true } = {}) {
   if (payload === null) {
     rawRecordRepository.remove(kind, recordId);
+    return;
+  }
+  if (!normalize) {
+    rawRecordRepository.save(kind, /** @type {{ id: string }} */ (payload));
     return;
   }
   let normalized;
@@ -91,7 +127,7 @@ function applyPoolEntry(poolRepository, kind, recordId, payload) {
  * Evită exact crash-ul C-5: `normalizeRecord` nu mai e apelat pentru tipuri care nu sunt
  * fișe (`attendance`, sau `sms_templates`/`settings` până la Faza 6).
  * @param {{
- *   rawRecordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
+ *   rawRecordRepository: RawKindWriter,
  *   attendanceRepository: ReturnType<typeof createSyncAttendanceWriter>,
  *   poolRepository?: ReturnType<typeof createSyncPoolWriter>,
  *   kind: string, recordId: string, payload: unknown,
@@ -108,6 +144,10 @@ export function applySnapshotEntry({
 }) {
   if (TYPES.includes(kind)) {
     applyRecordEntry(rawRecordRepository, kind, recordId, payload);
+    return true;
+  }
+  if (COMMON_KINDS.includes(/** @type {any} */ (kind))) {
+    applyRecordEntry(rawRecordRepository, kind, recordId, payload, { normalize: false });
     return true;
   }
   if (kind === 'attendance') {
@@ -220,7 +260,7 @@ export function createSyncPoolWriter(database) {
  * niciodată prin cel împachetat cu outbox-ul (decizia 4 din plan): altfel o modificare
  * de pe alt calculator s-ar întoarce în propria coadă de trimis.
  * @param {{
- *   rawRecordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
+ *   rawRecordRepository: RawKindWriter,
  *   attendanceRepository: ReturnType<typeof createSyncAttendanceWriter>,
  *   poolRepository?: ReturnType<typeof createSyncPoolWriter>,
  *   syncState: ReturnType<typeof import('./sync-state.repository.mjs').createSyncStateRepository>,
@@ -246,13 +286,15 @@ export function createChangeApplier({
    */
   function apply({ kind, recordId, payload, revision, changedAt, device }) {
     const isRecordKind = TYPES.includes(kind);
+    const isCommonKind = COMMON_KINDS.includes(/** @type {any} */ (kind));
     const isAttendance = kind === 'attendance';
     const isPool = poolRepository && POOL_KINDS.includes(/** @type {any} */ (kind));
     // sms_templates / settings: numele de tip e deja rezervat (KINDS din sync-server/), dar
     // nimeni nu le trimite încă — până la Faza 6, nici audit, nici sync_state (C-8).
-    if (!isRecordKind && !isAttendance && !isPool) return false;
-    const before = isRecordKind ? (rawRecordRepository.find(kind, recordId) ?? null) : null;
+    if (!isRecordKind && !isCommonKind && !isAttendance && !isPool) return false;
+    const before = isRecordKind || isCommonKind ? (rawRecordRepository.find(kind, recordId) ?? null) : null;
     if (isRecordKind) applyRecordEntry(rawRecordRepository, kind, recordId, payload);
+    else if (isCommonKind) applyRecordEntry(rawRecordRepository, kind, recordId, payload, { normalize: false });
     else if (isAttendance) applyAttendanceEntry(attendanceRepository, recordId, payload);
     else applyPoolEntry(/** @type {any} */ (poolRepository), /** @type {any} */ (kind), recordId, payload);
     auditTrail.recordChange({

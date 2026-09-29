@@ -21,6 +21,7 @@ const CONFLICTS = [
     remoteUpdatedAt: '2026-09-27T11:00:00.000Z',
     remoteDeviceName: 'Calculator B',
     fields: [{ field: 'name', local: 'Ana', remote: 'Ana Popescu', differs: true }],
+    dataset: 'branch' as const,
   },
   {
     id: 'CFL-2',
@@ -32,6 +33,19 @@ const CONFLICTS = [
     remoteUpdatedAt: '2026-09-27T09:30:00.000Z',
     remoteDeviceName: 'Calculator B',
     fields: [{ field: 'capacity', local: 20, remote: 22, differs: true }],
+    dataset: 'branch' as const,
+  },
+  {
+    id: 'CFL-3',
+    kind: 'staff',
+    recordId: 'STF-1',
+    title: 'Maria Ionescu',
+    subtitle: '1 câmp diferit',
+    localUpdatedAt: '2026-09-27T09:00:00.000Z',
+    remoteUpdatedAt: '2026-09-27T09:30:00.000Z',
+    remoteDeviceName: 'Calculator B',
+    fields: [{ field: 'name', local: 'Maria I.', remote: 'Maria Ionescu', differs: true }],
+    dataset: 'comun' as const,
   },
 ];
 
@@ -44,7 +58,7 @@ describe('useConflicts', () => {
   it('încarcă lista și marchează primul conflict ca activ', async () => {
     const { result } = renderHook(() => useConflicts());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.conflicts).toHaveLength(2);
+    expect(result.current.conflicts).toHaveLength(3);
     expect(result.current.activeId).toBe('CFL-1');
   });
 
@@ -59,8 +73,30 @@ describe('useConflicts', () => {
       await result.current.resolve('CFL-1', 'remote');
     });
 
-    expect(mutateMock).toHaveBeenCalledWith('/api/sync/conflicts/resolve', { id: 'CFL-1', choice: 'remote' });
+    expect(mutateMock).toHaveBeenCalledWith('/api/sync/conflicts/resolve', {
+      id: 'CFL-1',
+      choice: 'remote',
+      dataset: 'branch',
+    });
     expect(requestJsonMock).toHaveBeenCalledTimes(2);
     await waitFor(() => expect(result.current.conflicts).toHaveLength(1));
+  });
+
+  it('resolve pentru un conflict „staff” trimite dataset: comun (Personal 24, decizia 9)', async () => {
+    requestJsonMock
+      .mockResolvedValueOnce({ conflicts: CONFLICTS })
+      .mockResolvedValueOnce({ conflicts: [CONFLICTS[0], CONFLICTS[1]] });
+    const { result } = renderHook(() => useConflicts());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.resolve('CFL-3', 'local');
+    });
+
+    expect(mutateMock).toHaveBeenCalledWith('/api/sync/conflicts/resolve', {
+      id: 'CFL-3',
+      choice: 'local',
+      dataset: 'comun',
+    });
   });
 });

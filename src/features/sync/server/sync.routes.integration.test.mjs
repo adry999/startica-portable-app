@@ -241,7 +241,9 @@ test('schimbarea filialei oprește motorul vechi și pornește unul pe filiala n
   // Înregistrat după hook-ul de închidere al startApp — vezi motivul la testul anterior.
   t.after(() => rmSync(home, { recursive: true, force: true }));
   app.startSync();
-  assert.equal(started, 1, 'motorul filialei inițiale a pornit un timer de polling');
+  // 2, nu 1: startSync() pornește și motorul filialei active, și cel al setului comun
+  // (decizia 9, 2026-09-27-personal-bazin.md) — ambele citesc același sync.json.
+  assert.equal(started, 2, 'motorul filialei inițiale și cel al setului comun au pornit câte un timer de polling');
   const clearedBefore = cleared;
 
   const secondBranch = app.registry.add({ name: 'Filiala a doua', color: 'orange', address: '' });

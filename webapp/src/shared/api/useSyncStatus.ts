@@ -32,6 +32,23 @@ type Listener = () => void;
 const listeners = new Set<Listener>();
 let version = 0;
 
+/**
+ * Setul comun (Personal 24, decizia 9, 2026-09-27-personal-bazin.md): evenimentul local
+ * `records-changed` poartă acum `dataset` — `usePersonal()`/`usePool()` se abonează aici
+ * ca să reîncarce doar pe cel care le privește (`reloadRecords()` de mai jos rămâne pentru
+ * `dataset: 'branch'`, singurul care afectează starea sesiunii/`session.state.revision`).
+ */
+type Dataset = 'branch' | 'comun';
+type DatasetListener = (dataset: Dataset) => void;
+const datasetListeners = new Set<DatasetListener>();
+
+export function onRecordsChangedByDataset(listener: DatasetListener): () => void {
+  datasetListeners.add(listener);
+  return () => {
+    datasetListeners.delete(listener);
+  };
+}
+
 function notify() {
   version += 1;
   for (const listener of listeners) listener();
@@ -104,8 +121,13 @@ function start() {
     stopPollingFallback();
   });
   eventSource.addEventListener('records-changed', event => {
-    const data = JSON.parse((event as MessageEvent).data) as { revision: number };
-    if (data.revision !== latestKnownRevision) scheduleReload();
+    const data = JSON.parse((event as MessageEvent).data) as { revision: number; dataset?: Dataset };
+    const dataset = data.dataset ?? 'branch';
+    // Setul comun nu ține revizia sesiunii de filială (Personal nu e în /api/state, decizia 2
+    // din plan) — reîncărcarea lui trece doar prin ascultătorii de mai jos, nu prin
+    // scheduleReload()/reloadRecords() (acela cere /api/state, irelevant pentru „comun”).
+    if (dataset === 'branch' && data.revision !== latestKnownRevision) scheduleReload();
+    for (const listener of datasetListeners) listener(dataset);
   });
   eventSource.onerror = () => startPollingFallback();
 }
@@ -127,6 +149,7 @@ export function __resetSyncStatusForTests() {
     reloadTimer = null;
   }
   latestKnownRevision = 0;
+  datasetListeners.clear();
 }
 
 /**
@@ -148,4 +171,21 @@ export function useSyncStatus(): SyncStatus {
   }, [configured]);
 
   return configured ? status : EMPTY_STATUS;
+}
+
+/**
+ * Personal 24 (decizia 9): `usePersonal()` ascultă `'comun'`, `usePool()`-urile din
+ * `shared/pool/usePool.ts` ascultă `'branch'` (Bazinul e per filială) — o modificare
+ * făcută de pe alt calculator reîncarcă ecranul deschis aici, fără reload manual.
+ * Nu pornește singur fluxul SSE — el pornește doar din `useSyncStatus()` (cardul 14a),
+ * montat oricum global cât sincronizarea e configurată.
+ */
+export function useReloadOnRecordsChanged(dataset: 'branch' | 'comun', reload: () => void): void {
+  useEffect(
+    () =>
+      onRecordsChangedByDataset(changed => {
+        if (changed === dataset) reload();
+      }),
+    [dataset, reload],
+  );
 }

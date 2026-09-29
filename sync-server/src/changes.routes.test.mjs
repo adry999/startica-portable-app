@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createChangesRoutes } from './changes.routes.mjs';
 
-/** @param {{ changesService?: object }} [overrides] */
+/** @param {{ changesService?: object, branches?: object }} [overrides] */
 function withRoutes(overrides = {}) {
   const changesService = {
     applyPush: () => ({ results: [] }),
@@ -12,7 +12,7 @@ function withRoutes(overrides = {}) {
     branchHeadSeq: () => 0,
     ...overrides.changesService,
   };
-  const branches = /** @type {any} */ ({ findById: () => ({ id: 'branch-1' }) });
+  const branches = /** @type {any} */ ({ findById: () => ({ id: 'branch-1' }), ...overrides.branches });
   const devices = /** @type {any} */ ({ touchLastSeen: () => {} });
   const events = /** @type {any} */ ({ publish: () => {} });
   const routes = createChangesRoutes({
@@ -31,6 +31,9 @@ function withRoutes(overrides = {}) {
     ),
     writeSnapshot: /** @type {import('./router.mjs').RouteDefinition} */ (
       routes.routes.find(route => route.method === 'POST' && route.pattern.test('/v1/branches/branch-1/snapshot'))
+    ),
+    pullComun: /** @type {import('./router.mjs').RouteDefinition} */ (
+      routes.routes.find(route => route.method === 'GET' && route.pattern.test('/v1/branches/comun/changes'))
     ),
   };
 }
@@ -126,4 +129,12 @@ test('POST .../snapshot acceptă o intrare validă', () => {
     }),
   );
   assert.deepEqual(result, { headSeq: 0 });
+});
+
+test('GET .../changes pentru „comun” nu cere o filială înregistrată (decizia 9, personal-bazin)', () => {
+  const { pullComun } = withRoutes({ branches: { findById: () => undefined } });
+  const result = /** @type {{ nextSince: number }} */ (
+    pullComun.handle(/** @type {any} */ ({ params: { id: 'comun' }, url: urlWith('http://x/'), device: {} }))
+  );
+  assert.equal(result.nextSince, 0);
 });

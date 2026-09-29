@@ -29,7 +29,7 @@ function toWireChange(row) {
  * @param {{
  *   database: import('node:sqlite').DatabaseSync,
  *   branch: { id: string },
- *   rawRecordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
+ *   rawRecordRepository: import('./change-applier.mjs').RawKindWriter,
  *   outbox: ReturnType<typeof import('./sync-outbox.repository.mjs').createSyncOutboxRepository>,
  *   syncState: ReturnType<typeof import('./sync-state.repository.mjs').createSyncStateRepository>,
  *   conflicts: ReturnType<typeof import('./sync-conflicts.repository.mjs').createSyncConflictsRepository>,

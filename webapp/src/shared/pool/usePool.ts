@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { requestJson, useAppSession } from '@shared/api/session';
+import { useReloadOnRecordsChanged } from '@shared/api/useSyncStatus';
 import type { Child } from '@contracts/record-types.mjs';
 import type {
   PoolBooking,
@@ -67,6 +68,10 @@ export function usePoolWeek(date: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, session.state.revision]);
 
+  // Bazinul e per filială (Personal 24, decizia 9) — reîncarcă doar la un `records-changed`
+  // cu dataset 'branch' (motorul filialei active), nu la unul al setului comun.
+  useReloadOnRecordsChanged('branch', load);
+
   async function markSession(bookingId: string, sessionDate: string, status: PoolSessionStatus | null) {
     await requestJson('/api/pool/sessions', { changes: [{ bookingId, date: sessionDate, status }] });
     await load();
@@ -133,6 +138,8 @@ export function usePoolMonth(month: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, session.state.revision]);
 
+  useReloadOnRecordsChanged('branch', load);
+
   async function closeMonth(method: string, date: string) {
     setClosingBusy(true);
     setCloseError('');
@@ -176,6 +183,8 @@ export function usePoolSettings() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useReloadOnRecordsChanged('branch', load);
 
   async function save(next: PoolSettings) {
     const result = (await requestJson('/api/pool/settings', next)) as { settings: PoolSettings };

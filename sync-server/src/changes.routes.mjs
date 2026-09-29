@@ -1,5 +1,5 @@
 import { fail, RESPONSE_SENT } from './router.mjs';
-import { KINDS } from './change-policy.mjs';
+import { KINDS, COMMON_DATASET_ID } from './change-policy.mjs';
 
 const SNAPSHOT_MAX_BYTES = 64 * 1024 * 1024;
 const HEARTBEAT_MS = 25000;
@@ -67,6 +67,9 @@ function readLimitParam(url) {
 export function createChangesRoutes({ changesService, branches, devices, events, now }) {
   /** @param {string} id */
   function ensureBranchExists(id) {
+    // Setul comun (decizia 9, 2026-09-27-personal-bazin.md) e un dataset cu id fix, nu o
+    // filială — nu are și nu are voie să ceară un rând în branches.json.
+    if (id === COMMON_DATASET_ID) return;
     if (!branches.findById(id)) fail('Filială inexistentă.', 404);
   }
 

@@ -1,7 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { branchDirectories, countBranchRecords } from '#core/server/branches/branch-layout.mjs';
-import { readLocalSnapshot, writeLocalSnapshot } from './snapshot-io.mjs';
+import { readLocalSnapshot, writeLocalSnapshot, readCommonSnapshot, writeCommonSnapshot } from './snapshot-io.mjs';
 
 /** @param {string} dataDir */
 function isBranchEmpty(dataDir) {
@@ -26,6 +27,8 @@ function isBranchEmpty(dataDir) {
  *   now: () => Date,
  *   platform: () => string,
  *   reopenActiveBranch: () => void,
+ *   getCommon?: () => { db: import('node:sqlite').DatabaseSync, kinds: { list: (kind: string) => { id: string }[] } } | undefined,
+ *   commonDatasetId?: string,
  * }} dependencies
  */
 export function createSyncConnectService({
@@ -38,6 +41,10 @@ export function createSyncConnectService({
   now,
   platform,
   reopenActiveBranch,
+  // Neconfigurate implicit — un test care nu le dă (harness-ul existent, reconciliere de
+  // filiale) nu atinge deloc setul comun, exact comportamentul de dinainte de Personal 24.
+  getCommon = () => undefined,
+  commonDatasetId = 'comun',
 }) {
   /** @param {import('#core/server/branches/branch-registry.mjs').BranchEntry} branch */
   const dirsOf = branch => branchDirectories({ home, legacy, branch });
@@ -126,6 +133,39 @@ export function createSyncConnectService({
         downloaded.push({ id: adopted.id, name: adopted.name });
       } finally {
         opened.db.close();
+      }
+    }
+
+    // Setul comun (decizia 9, „Changes to the sync plan”): nu e o filială, deci nu trece prin
+    // reconcilierea de mai sus. „comun” e opțional (getCommon()) doar când installul nu are
+    // deloc Personal/Bazin cablate (teste izolate de reconciliere de filiale, mai vechi).
+    const common = getCommon();
+    if (common) {
+      const serverSnapshot = await client.downloadSnapshot(commonDatasetId);
+      const serverHasRecords = Object.values(serverSnapshot.records).some(rows => rows.length > 0);
+      const { entries: localEntries } = readCommonSnapshot(common.db, { now });
+      const localHasRecords = localEntries.length > 0;
+      if (!serverHasRecords) {
+        await client.uploadSnapshot(commonDatasetId, { entries: localEntries });
+      } else if (!localHasRecords) {
+        writeCommonSnapshot(common.db, serverSnapshot);
+      } else {
+        // Amândouă au date (decizia 9): nu 409 — rândurile locale se urcă drept modificări
+        // obișnuite, cu baseRevision 0. Id-urile noi se aplică; cele care coincid urmează
+        // politica kind-ului (LWW pentru majoritate, conflict pentru „staff”, o fișă).
+        if (localEntries.length) {
+          await client.pushChanges(
+            commonDatasetId,
+            localEntries.map(entry => ({
+              changeId: randomUUID(),
+              kind: entry.kind,
+              recordId: entry.id,
+              baseRevision: 0,
+              payload: entry.payload,
+              changedAt: entry.updatedAt,
+            })),
+          );
+        }
       }
     }
 

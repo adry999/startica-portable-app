@@ -9,6 +9,9 @@ export const KIND_LABELS: Record<string, string> = {
   groups: 'Grupă',
   categories: 'Categorie',
   visits: 'Vizită',
+  // Personal 24 (decizia 9, 2026-09-27-personal-bazin.md): singurul kind al setului comun
+  // care intră în conflict — restul lui sunt last-writer-wins.
+  staff: 'Angajat',
 };
 
 export function kindLabel(kind: string): string {

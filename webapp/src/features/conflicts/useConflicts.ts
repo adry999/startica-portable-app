@@ -18,6 +18,8 @@ export interface ConflictSummary {
   remoteUpdatedAt: string;
   remoteDeviceName: string;
   fields: ConflictField[];
+  /** Personal 24 (decizia 9): 'comun' pentru un conflict „staff”, din setul comun ambelor filiale. */
+  dataset: 'branch' | 'comun';
 }
 
 export interface UseConflictsResult {
@@ -54,10 +56,11 @@ export function useConflicts(): UseConflictsResult {
 
   const resolve = useCallback(
     async (id: string, choice: 'local' | 'remote') => {
-      await session.mutate('/api/sync/conflicts/resolve', { id, choice });
+      const dataset = conflicts.find(c => c.id === id)?.dataset ?? 'branch';
+      await session.mutate('/api/sync/conflicts/resolve', { id, choice, dataset });
       await load();
     },
-    [session, load],
+    [session, load, conflicts],
   );
 
   return { conflicts, loading, activeId, setActiveId: setActiveIdState, resolve };

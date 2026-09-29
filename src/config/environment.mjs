@@ -12,6 +12,14 @@ export const BRANCH_REGISTRY_FILE_NAME = 'filiale.json';
 // decizia 1), lângă filiale.json, niciodată folderul vreunei filiale.
 export const COMMON_DIR_NAME = 'Comun';
 
+// Id-ul ei de dataset pentru sincronizare (decizia 9 din același plan, „Changes to the sync
+// plan”): fix, nu un id de filială — sync-server/src/change-policy.mjs ține o copie identică,
+// COMMON_DATASET_ID (sync-server/ nu importă din src/, ca RECORD_KINDS — vezi
+// tests/sync-shared-constants.test.mjs). Folosit doar din src/app/ (features/ nu importă
+// #config/, vezi tests/architecture/import-boundary-rules.mjs) — restul primește valoarea
+// ca parametru injectat.
+export const COMMON_DATASET_ID = 'comun';
+
 // Identitatea de dispozitiv pentru sincronizare (docs/superpowers/plans/2026-09-27-sincronizare.md,
 // decizia 2), tot per instalare, lângă filiale.json — nu per filială.
 export const SYNC_DEVICE_FILE_NAME = 'sync.json';

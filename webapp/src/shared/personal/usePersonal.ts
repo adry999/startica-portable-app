@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { requestJson } from '@shared/api/session';
+import { useReloadOnRecordsChanged } from '@shared/api/useSyncStatus';
 import type { Department, PersonalSettings, Role, Staff } from './personal.types';
 
 export interface PersonalData {
@@ -107,6 +108,11 @@ export function usePersonal(): PersonalData {
       void load();
     }
   }, []);
+
+  // Personal 24 (decizia 9, 2026-09-27-personal-bazin.md): setul comun are propriul motor
+  // de sincronizare — o modificare de personal făcută pe alt calculator reîncarcă echipa
+  // aici, prin evenimentul local `records-changed` tăgăduit `dataset: 'comun'`.
+  useReloadOnRecordsChanged('comun', reloadPersonal);
 
   const staffById = new Map(state.staff.map(person => [person.id, person]));
   const roleById = new Map(state.roles.map(role => [role.id, role]));

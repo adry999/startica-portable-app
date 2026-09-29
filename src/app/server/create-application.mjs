@@ -7,6 +7,7 @@ import {
   DEFAULT_AUTO_BACKUP_INTERVAL_MS,
   BRANCH_REGISTRY_FILE_NAME,
   SYNC_DEVICE_FILE_NAME,
+  COMMON_DATASET_ID,
   dataLayout,
 } from '#config/environment.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
@@ -123,6 +124,11 @@ export function createApplication(options = {}) {
     now: () => new Date(),
     platform: () => process.platform,
     reopenActiveBranch: () => reopenActiveBranch(),
+    // `common` nu există încă la acest rând (declarat mai jos) — o închidere, nu o
+    // valoare, exact ca `reopenActiveBranch` de mai sus (connect() rulează mult mai
+    // târziu, după ce `common` s-a inițializat).
+    getCommon: () => common,
+    commonDatasetId: COMMON_DATASET_ID,
   });
 
   // Rutele filialelor sunt construite o singură dată, nu per filială: ele nu
@@ -182,7 +188,18 @@ export function createApplication(options = {}) {
   // Baza comună (Personal 24, decizia 1): deschisă o singură dată aici, înainte de
   // prima filială, și ținută deschisă la orice schimbare de filială — nu ține de
   // contextul unei filiale anume, ca syncDevice sau registry mai sus.
-  const common = createCommonContext({ home, autoBackupIntervalMs });
+  const common = createCommonContext({
+    home,
+    autoBackupIntervalMs,
+    syncDevice,
+    fetch: options.fetch ?? globalThis.fetch,
+    // Motorul setului comun (decizia 9) transmite statusul/reîncărcarea prin contextul de
+    // filială ACTIV la momentul apelului — `active` se schimbă la fiecare schimbare de
+    // filială/comutare, dar aceste închideri rămân valabile (closures, nu o referință
+    // capturată o singură dată la construcție).
+    onSyncStatus: () => active.notifySyncStatus(),
+    onSyncRecordsChanged: revision => active.notifyCommonRecordsChanged(revision),
+  });
   try {
     if (existingRegistry) {
       const target =
@@ -290,6 +307,11 @@ export function createApplication(options = {}) {
     }
     const previous = active;
     active = next;
+    // Conectarea/deconectarea (sync.json creat sau șters) e singurul moment în care motorul
+    // setului comun trebuie reconstruit — altfel rulează mai departe pe clientul vechi
+    // (decizia 9): reopenActiveBranch e chemat de sync-connect.service.mjs exact la connect()
+    // și disconnect(), niciodată la o simplă schimbare de filială (selectBranch, mai jos).
+    common.reconnectSync();
     setTimeout(() => {
       try {
         previous.close();
@@ -333,8 +355,13 @@ export function createApplication(options = {}) {
     // Pornirea motorului de sincronizare al filialei active (Faza 3) — separată de
     // runStartupSweeps() pentru că lansatorul (main.mjs) o apelă tot amânat, dar
     // aceleași teste care nu pornesc niciun server real trebuie să poată porni
-    // aplicația fără să declanșeze cereri de rețea neintenționat.
-    startSync: () => active.startSync(),
+    // aplicația fără să declanșeze cereri de rețea neintenționat. Motorul setului comun
+    // (decizia 9) pornește aici o singură dată — nu mai e reconstruit/repornit la
+    // schimbarea filialei (spre deosebire de cel al filialei active).
+    startSync: () => {
+      common.startSync();
+      active.startSync();
+    },
     envelope: () => active.envelope(),
     activeBranch,
     selectBranch,

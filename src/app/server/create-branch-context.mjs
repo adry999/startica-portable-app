@@ -166,7 +166,13 @@ export function createBranchContext({
   const syncPoolWriter = createSyncPoolWriter(db);
   /** @type {ReturnType<typeof createSyncEngine> | null} */
   let syncEngine = null;
-  const syncRoutes = createSyncRoutes({ syncDevice, getEngine: () => syncEngine });
+  // Statusul motorului setului comun (Personal 24, decizia 9) se adună la cel al filialei —
+  // `common` poate lipsi doar într-un context de test izolat de filială (vezi mai jos).
+  const syncRoutes = createSyncRoutes({
+    syncDevice,
+    getEngine: () => syncEngine,
+    getCommonEngine: () => common?.sync.getEngine() ?? null,
+  });
   const syncDeviceFile = syncDevice.read();
   if (syncDeviceFile) {
     syncEngine = createSyncEngine({
@@ -219,6 +225,19 @@ export function createBranchContext({
     auditTrail: auditLogRepository,
     runRevisionTransaction,
     getEngine: () => syncEngine,
+    // Conflictele setului comun (Personal 24, decizia 9 — kind „staff”) se rezolvă prin
+    // aceleași două rute, tăgăduite `dataset: 'comun'` de client.
+    common: common
+      ? {
+          conflicts: common.sync.conflicts,
+          outbox: common.sync.outbox,
+          state: common.sync.state,
+          rawRepository: common.sync.rawRepository,
+          auditTrail: common.sync.auditTrail,
+          getEngine: common.sync.getEngine,
+          runInTransaction: common.sync.runInTransaction,
+        }
+      : undefined,
   });
 
   const recordWriteDependencies = { recordRepository, auditTrail: auditLogRepository, runRevisionTransaction };
@@ -489,6 +508,14 @@ export function createBranchContext({
     /** @param {string} [todayStr] */
     expireSmsLog: (todayStr = today()) => createSmsLogRepository(db).expireOldEntries(todayStr),
     refreshExchangeRateIfMissing,
+    // Motorul setului comun (Personal 24, decizia 9) trăiește în create-common-context.mjs,
+    // pornit o singură dată și nereconstruit la schimbarea filialei — dar SSE-ul local
+    // (/api/sync/events) e reconstruit la fiecare context de filială, deci punctul lui
+    // onStatus/onRecordsChanged trebuie realiniat de fiecare dată. create-application.mjs
+    // ține minte contextul activ și apelează aceste două metode, nu pe cele ale motorului.
+    notifySyncStatus: () => syncRoutes.onStatus(),
+    /** @param {number} revision */
+    notifyCommonRecordsChanged: revision => syncRoutes.onRecordsChanged(revision, 'comun'),
     // A-2: un flux SSE (/api/sync/events) rămas deschis ține conexiunea vie la infinit —
     // server.close(callback) din create-application.mjs așteaptă tocmai închiderea ei, deci
     // trebuie terminată explicit ÎNAINTE de acel apel, nu în interiorul callback-ului lui.
