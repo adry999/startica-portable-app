@@ -1,7 +1,16 @@
 // Copie a constantelor din #shared/domain/record-schema.mjs — sync-server/ nu importă nimic
 // din src/ (decizia 1 din plan). Egalitatea cu originalul e verificată de testul de la
 // rădăcina depozitului, tests/sync-shared-constants.test.mjs.
-export const RECORD_KINDS = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits', 'charges'];
+export const RECORD_KINDS = [
+  'children',
+  'payments',
+  'expenses',
+  'groups',
+  'categories',
+  'visits',
+  'charges',
+  'payerAliases',
+];
 export const SENSITIVE_FIELDS = { visits: ['healthNotes'], children: ['healthNotes'] };
 
 // Copie a paletei din #shared/domain/branch.mjs (D-1 din audit): aplicația trimite unul
