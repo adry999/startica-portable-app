@@ -12,5 +12,8 @@ export function listUnassignedPayments(records, limit = 200) {
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit);
   const index = paymentIndex(records.payments);
-  return open.map(payment => ({ payment, suggestions: suggestChildren(payment, records.children, index) }));
+  return open.map(payment => ({
+    payment,
+    suggestions: suggestChildren(payment, records.children, index, records.payerAliases ?? []),
+  }));
 }

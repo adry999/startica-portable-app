@@ -37,6 +37,18 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
         if (visit.status === 'Înscris' && previousVisit?.status !== 'Înscris')
           fail('Statutul „Înscris” se setează doar prin înscrierea copilului, nu prin editare directă.');
       }
+      // „Ține minte plătitorul” (11-de-rezolvat.md §9c) se poate bifa la fiecare achitare a
+      // aceluiași plătitor — a doua bifare nu trebuie să creeze un al doilea alias identic.
+      // Verificat server-side (nu în client) pentru că două calculatoare pot scrie aproape
+      // simultan, prin sincronizarea setului comun.
+      if (request.type === 'payerAliases' && request.mode === 'create') {
+        const alias = /** @type {import('#shared/contracts/record-types.mjs').PayerAlias} */ (record);
+        const normalizedAlias = alias.alias.toLocaleLowerCase('ro-RO');
+        const isDuplicate = (recordRepository.readSnapshot().payerAliases ?? []).some(
+          other => other.childId === alias.childId && other.alias.toLocaleLowerCase('ro-RO') === normalizedAlias,
+        );
+        if (isDuplicate) return;
+      }
       assertRecordReferencesExist(request.type, record, recordRepository.exists);
       assertUniqueName(request.type, record, recordRepository.readSnapshot());
       recordRepository.save(request.type, record);

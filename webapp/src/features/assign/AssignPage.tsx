@@ -88,7 +88,12 @@ export function AssignPage({ month }: AssignPageProps) {
               </tr>
             ) : (
               assignData.rows.map(row => (
-                <AssignRow key={row.paymentId} row={row} onSelectChild={assignData.selectChild} />
+                <AssignRow
+                  key={row.paymentId}
+                  row={row}
+                  onSelectChild={assignData.selectChild}
+                  onToggleRemember={assignData.toggleRemember}
+                />
               ))
             )}
           </tbody>
@@ -107,9 +112,11 @@ export function AssignPage({ month }: AssignPageProps) {
 function AssignRow({
   row,
   onSelectChild,
+  onToggleRemember,
 }: {
   row: AssignRowView;
   onSelectChild: (id: string, childId: string) => void;
+  onToggleRemember: (id: string) => void;
 }) {
   const groups = [...new Set(row.options.map(option => option.group))];
   return (
@@ -140,6 +147,17 @@ function AssignRow({
             </optgroup>
           ))}
         </select>
+        {/* 11-de-rezolvat.md §9c: scrie în payer_aliases — sugestia apare primă, cu motivul
+            „Plătitor reținut”, la următoarea achitare de la același plătitor. */}
+        <label className={styles.rememberField}>
+          <input
+            type="checkbox"
+            checked={row.remember}
+            disabled={!row.canRemember}
+            onChange={() => onToggleRemember(row.paymentId)}
+          />
+          <span>Ține minte plătitorul</span>
+        </label>
       </td>
     </tr>
   );

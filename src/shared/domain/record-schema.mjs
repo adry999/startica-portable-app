@@ -1,7 +1,10 @@
 import { monthOK, dateOK } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 
-export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits', 'charges'];
+// `payerAliases` = tabelul „payer_aliases” din decizia 25 sept. 2026 (docs/design/README.md
+// „Decizii funcții noi”) — numele e camelCase aici ca toate celelalte tipuri din TYPES, nu
+// snake_case ca în textul deciziei.
+export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits', 'charges', 'payerAliases'];
 // Tipurile de taxă suplimentară dintr-un `charges` (decizia 4, 2026-09-27-personal-bazin.md) — azi
 // doar Bazin; un al doilea modul cu taxe suplimentare adaugă aici, nu inventează alt kind.
 export const CHARGE_KINDS = ['bazin'];
@@ -18,7 +21,7 @@ export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Î
 // staff-ul e comun (baza „comun”), grupa e a filialei — de-aia trăiește pe `records`, nu ca kind separat.
 export const GROUP_TEAM_ROLES = ['principal', 'asistent', 'inlocuitor'];
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
-/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[] }} */
+/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[], payerAliases: any[] }} */
 export const emptyState = () => ({
   children: [],
   payments: [],
@@ -27,6 +30,7 @@ export const emptyState = () => ({
   categories: [],
   visits: [],
   charges: [],
+  payerAliases: [],
 });
 // Câmpurile per tip care duc date medicale în clar: excluse din export
 // (stripSensitiveFields) și redactate în istoric (redactSensitiveFields). O
@@ -170,6 +174,11 @@ const FIELDS = {
   // separată în obligation(), nu o mutație a copilului: id determinist per (childId, month, kind)
   // scris de modulul care o generează (ex. Pool la „Închide luna”), idempotent la reînchidere.
   charges: new Set(['id', 'childId', 'month', 'kind', 'label', 'amount', 'currency', 'date']),
+  // Un plătitor reținut (Asociere achitări, 11-de-rezolvat.md §9c, decizia 25 sept. 2026): leagă
+  // textul plătitorului din extrasul bancar (payment.sourceName) de un copil, ca sugestia să
+  // apară primă, cu motivul „Plătitor reținut”, la următoarea achitare de la același plătitor.
+  // Fără arhivare — se șterge direct din fișa copilului (09-copii-fisa.md).
+  payerAliases: new Set(['id', 'alias', 'childId', 'createdAt']),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -412,6 +421,15 @@ export function normalizeRecord(type, input) {
     text(record.label, 'Etichetă', true);
     record.currency ??= 'MDL';
     requireThat(CURRENCIES.includes(record.currency), 'Monedă necunoscută.');
+  } else if (type === 'payerAliases') {
+    text(record.alias, 'Plătitor', true);
+    record.alias = record.alias.trim();
+    text(record.childId, 'ID copil', true);
+    requireThat(/^[A-Za-z0-9_-]{1,100}$/.test(record.childId), 'ID copil invalid.');
+    requireThat(
+      typeof record.createdAt === 'string' && !Number.isNaN(Date.parse(record.createdAt)),
+      'Data creării este invalidă.',
+    );
   } else {
     requireThat(dateOK(record.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && record.tenders !== undefined) {
@@ -521,5 +539,9 @@ export function validateState(input) {
     );
   for (const charge of state.charges)
     requireThat(ids.has(charge.childId), `Taxa ${charge.id}: copilul ${charge.childId} nu există.`);
+  // payerAliases nu are un requireThat echivalent, intenționat: spre deosebire de charges (generat
+  // și șters de Bazin în același ciclu cu copilul), un alias poate supraviețui ștergerii copilului
+  // pe care îl leagă (backup vechi, restaurare parțială) — validateState() nu trebuie să blocheze
+  // reimportul din cauza unei referințe moarte pe o simplă comoditate de sugestie.
   return state;
 }

@@ -11,6 +11,7 @@ import {
   createPaymentAssignmentRoutes,
 } from '#features/payment-assignment/index.server.mjs';
 import { createGroupsRoutes } from '#features/groups/index.server.mjs';
+import { createPayerAliasesRoutes } from '#features/payer-aliases/index.server.mjs';
 import { createExpenseCategoriesRoutes } from '#features/expenses/index.server.mjs';
 import { createFeeSetupRoutes } from '#features/fee-setup/index.server.mjs';
 import { createRecordEditingRoutes } from '#features/record-editing/index.server.mjs';
@@ -324,6 +325,7 @@ export function createBranchContext({
       findRecordIssues,
     }),
     ...createGroupsRoutes(recordWriteDependencies),
+    ...createPayerAliasesRoutes(recordWriteDependencies),
     ...createExpenseCategoriesRoutes({ ...recordWriteDependencies, rawRecordRepository, database: db }),
     ...createFeeSetupRoutes(recordWriteDependencies),
     ...createBackupRoutes({

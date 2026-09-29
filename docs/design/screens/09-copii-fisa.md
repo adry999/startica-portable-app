@@ -40,4 +40,4 @@ Titlul din antet rămâne „Copii” (`VIEW_TITLES`). În conținut, primul râ
 - [x] Fișa e pagină (`/copii/:id`), nu dialog
 - [x] Culoarea headerului vine din grupa copilului (`groupTone`)
 - [x] „+ Plată” deschide formularul de achitare cu copilul precompletat
-- [ ] Plătitorii reținuți se pot șterge din fișă — nu s-a construit (CF-2, decizie amânată în INTREBARI.md)
+- [x] Plătitorii reținuți se pot șterge din fișă (CF-2, construit 29 sept. 2026: `payerAliases` — cardul „Plătitori reținuți” + `POST /api/payer-alias-delete`, testat)

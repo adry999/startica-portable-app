@@ -27,7 +27,10 @@ const child = {
   address: undefined as string | undefined,
 };
 
-function fixtureState(overrides: Partial<typeof child> = {}) {
+function fixtureState(
+  overrides: Partial<typeof child> = {},
+  payerAliases: { id: string; alias: string; childId: string; createdAt: string }[] = [],
+) {
   return {
     children: [{ ...child, ...overrides }],
     payments: [],
@@ -35,6 +38,7 @@ function fixtureState(overrides: Partial<typeof child> = {}) {
     groups: [{ id: 'G1', name: 'Mars', capacity: 10 }],
     categories: [],
     visits: [],
+    payerAliases,
   };
 }
 
@@ -55,6 +59,14 @@ function stubFetch() {
         currentState = {
           ...currentState,
           children: currentState.children.map(c => (c.id === body.record.id ? body.record : c)),
+        };
+        return jsonResponse({ state: currentState, revision: (body.revision ?? 1) + 1, updatedAt: '' });
+      }
+      if (path === '/api/payer-alias-delete' && options?.method === 'POST') {
+        const body = JSON.parse(String(options.body));
+        currentState = {
+          ...currentState,
+          payerAliases: currentState.payerAliases.filter(alias => alias.id !== body.id),
         };
         return jsonResponse({ state: currentState, revision: (body.revision ?? 1) + 1, updatedAt: '' });
       }
@@ -147,5 +159,29 @@ describe('ChildProfileView', () => {
     await screen.findByText('notă veche');
     expect(screen.getByText('Date personale')).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('cardul Plătitori reținuți arată „niciun plătitor” când lista e goală (CF-2)', async () => {
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(screen.getByText('Plătitori reținuți')).toBeInTheDocument();
+    expect(screen.getByText('Niciun plătitor reținut încă.')).toBeInTheDocument();
+  });
+
+  it('cardul Plătitori reținuți arată aliasurile copilului, iar × le șterge din fișă (CF-2)', async () => {
+    currentState = fixtureState({}, [
+      { id: 'PAY-ALIAS-1', alias: 'Ion Popescu IBAN MD00XYZ', childId: 'C1', createdAt: '2026-09-01T00:00:00.000Z' },
+    ]);
+    await loadedSession();
+    renderProfile();
+
+    expect(await screen.findByText('Ion Popescu IBAN MD00XYZ')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Șterge Ion Popescu IBAN MD00XYZ' }));
+
+    await waitFor(() => expect(screen.queryByText('Ion Popescu IBAN MD00XYZ')).not.toBeInTheDocument());
+    expect(currentState.payerAliases).toEqual([]);
   });
 });

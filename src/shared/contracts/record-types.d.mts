@@ -1,4 +1,5 @@
-export type RecordType = 'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits' | 'charges';
+export type RecordType =
+  'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits' | 'charges' | 'payerAliases';
 
 /** YYYY-MM */
 export type MonthKey = string;
@@ -190,6 +191,18 @@ export interface Charge {
   date: DateKey;
 }
 
+/** Un plătitor reținut (Asociere achitări, 11-de-rezolvat.md §9c / fișa copilului, 09-copii-fisa.md
+ * — decizia 25 sept. 2026): leagă textul plătitorului din extrasul bancar de un copil, ca sugestia
+ * să apară primă, cu motivul „Plătitor reținut”, la următoarea achitare de la același plătitor. */
+export interface PayerAlias {
+  id: string;
+  /** Text brut al plătitorului, cum a apărut în `payment.sourceName` la salvare. */
+  alias: string;
+  childId: string;
+  /** ISO */
+  createdAt: string;
+}
+
 export interface RecordsSnapshot {
   children: Child[];
   payments: Payment[];
@@ -199,6 +212,8 @@ export interface RecordsSnapshot {
   visits: Visit[];
   /** Opțional în tipul TS (fixturile vechi de test nu-l declară); serverul îl trimite mereu ca listă reală. */
   charges?: Charge[];
+  /** Opțional în tipul TS, din același motiv ca `charges`. */
+  payerAliases?: PayerAlias[];
 }
 
 export interface RecordByType {
@@ -209,4 +224,5 @@ export interface RecordByType {
   categories: ExpenseCategory;
   visits: Visit;
   charges: Charge;
+  payerAliases: PayerAlias;
 }

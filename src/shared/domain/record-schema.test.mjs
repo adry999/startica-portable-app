@@ -708,3 +708,81 @@ test('notes respinge un id repetat, un text gol sau o dată invalidă', () => {
 test('notes respinge o valoare care nu e listă (format vechi, text liber, netrecut prin migrare)', () => {
   assert.throws(() => normalizeRecord('children', { ...child(), notes: 'text vechi' }), /Note: listă invalidă/);
 });
+
+const payerAlias = () =>
+  normalizeRecord('payerAliases', {
+    id: 'PAY-ALIAS-test',
+    alias: 'Ion Popescu IBAN MD00XYZ',
+    childId: 'ID-test',
+    createdAt: '2026-09-25T10:00:00.000Z',
+  });
+
+test('payerAliases (plătitor reținut) se normalizează cu alias, copil și dată valide', () => {
+  const normalized = payerAlias();
+  assert.equal(normalized.alias, 'Ion Popescu IBAN MD00XYZ');
+  assert.equal(normalized.childId, 'ID-test');
+  assert.equal(normalized.createdAt, '2026-09-25T10:00:00.000Z');
+  // Alias-ul se scrie tale-quale — doar spațiile de la capete se elimină.
+  assert.equal(normalizeRecord('payerAliases', { ...payerAlias(), alias: '  Cu spații  ' }).alias, 'Cu spații');
+});
+
+test('payerAliases respinge un alias lipsă sau gol', () => {
+  assert.throws(() => normalizeRecord('payerAliases', { ...payerAlias(), alias: undefined }), /Plătitor/);
+  assert.throws(() => normalizeRecord('payerAliases', { ...payerAlias(), alias: '   ' }), /Plătitor/);
+});
+
+test('payerAliases respinge un childId lipsă sau invalid', () => {
+  assert.throws(() => normalizeRecord('payerAliases', { ...payerAlias(), childId: undefined }), /ID copil/);
+  assert.throws(
+    () => normalizeRecord('payerAliases', { ...payerAlias(), childId: 'cu spații nu e permis' }),
+    /ID copil invalid/,
+  );
+});
+
+test('payerAliases respinge o dată de creare lipsă sau invalidă', () => {
+  assert.throws(() => normalizeRecord('payerAliases', { ...payerAlias(), createdAt: undefined }), /creării/);
+  assert.throws(() => normalizeRecord('payerAliases', { ...payerAlias(), createdAt: 'nu e dată' }), /creării/);
+});
+
+test('validateState acceptă un plătitor reținut legat de un copil existent', () => {
+  const state = validateState({
+    children: [child()],
+    payments: [],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+    payerAliases: [payerAlias()],
+  });
+  assert.equal(state.payerAliases.length, 1);
+  assert.equal(state.payerAliases[0].alias, 'Ion Popescu IBAN MD00XYZ');
+});
+
+// Precedentul e `charges` (Bazin, 2026-09-27): un backup sau export dinainte ca acest tip să
+// existe nu trebuie să blocheze reimportul — lista lipsă devine [], nu o eroare.
+test('validateState acceptă un instantaneu fără payerAliases și îl implicitează la listă goală', () => {
+  const state = validateState({
+    children: [child()],
+    payments: [],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+  });
+  assert.deepEqual(state.payerAliases, []);
+});
+
+// Spre deosebire de `charges`, un alias orfan (copilul a fost șters ulterior) nu blochează
+// validateState() — e o comoditate de sugestie, nu o înregistrare financiară.
+test('validateState nu respinge un plătitor reținut al cărui copil nu mai există', () => {
+  const state = validateState({
+    children: [],
+    payments: [],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+    payerAliases: [payerAlias()],
+  });
+  assert.equal(state.payerAliases.length, 1);
+});

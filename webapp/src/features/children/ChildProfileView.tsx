@@ -29,7 +29,7 @@ import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import type { Child, ChildNote, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import type { Child, ChildNote, PayerAlias, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
 
@@ -104,6 +104,16 @@ export function ChildProfileView({
       });
       setNoteText('');
       setAddingNote(false);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  // CF-2 (09-copii-fisa.md): „Plătitorii reținuți se pot șterge din fișă” — ștergere directă,
+  // fără arhivare (vezi /api/payer-alias-delete din feature-ul payer-aliases).
+  async function deleteAlias(alias: PayerAlias) {
+    try {
+      await session.mutate('/api/payer-alias-delete', { id: alias.id });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -243,6 +253,21 @@ export function ChildProfileView({
                     <span className={styles.noteDate}>{formatDate(note.date)}</span>
                     {note.text}
                   </p>
+                ))
+              )}
+            </ProfileSection>
+
+            <ProfileSection title="Plătitori reținuți">
+              {profileData.payerAliases.length === 0 ? (
+                <p>Niciun plătitor reținut încă.</p>
+              ) : (
+                profileData.payerAliases.map(alias => (
+                  <div key={alias.id} className={styles.aliasRow}>
+                    <span>{alias.alias}</span>
+                    <button type="button" aria-label={`Șterge ${alias.alias}`} onClick={() => void deleteAlias(alias)}>
+                      ×
+                    </button>
+                  </div>
                 ))
               )}
             </ProfileSection>

@@ -5,7 +5,7 @@ import { sortByGroupOrder } from '@shared/format/group-order';
 import { obligation, feeEntryFor } from '#shared/domain/tuition-obligation.mjs';
 import { contractNumberOf, groupNameOf } from '#shared/domain/record-labels.mjs';
 import { formatAge } from '#shared/format/date-format.mjs';
-import type { Child, Group, Payment } from '@contracts/record-types.mjs';
+import type { Child, Group, Payment, PayerAlias } from '@contracts/record-types.mjs';
 
 export type ChildProfileStatus = 'loading' | 'ready' | 'failed' | 'not-found';
 
@@ -24,6 +24,8 @@ export interface ChildProfileData {
   obligation: ReturnType<typeof obligation> | null;
   feeEntry: ReturnType<typeof feeEntryFor> | null;
   payments: Payment[];
+  /** Plătitori reținuți ai acestui copil (09-copii-fisa.md), cei mai noi primii. */
+  payerAliases: PayerAlias[];
 }
 
 const NOT_FOUND: ChildProfileData = {
@@ -39,6 +41,7 @@ const NOT_FOUND: ChildProfileData = {
   obligation: null,
   feeEntry: null,
   payments: [],
+  payerAliases: [],
 };
 
 /** Aceleași calcule ca fișa vanilla (child-profile.view.mjs), portate 1:1 pe date derivate. */
@@ -61,6 +64,9 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
   if (!child) return NOT_FOUND;
 
   const payments = records.payments.filter((payment: Payment) => payment.childId === childId);
+  const payerAliases = (records.payerAliases ?? [])
+    .filter((alias: PayerAlias) => alias.childId === childId)
+    .sort((a: PayerAlias, b: PayerAlias) => b.createdAt.localeCompare(a.createdAt));
   const group = records.groups.find((g: Group) => g.id === child.groupId) ?? null;
   const groupMemberCount = child.groupId
     ? records.children.filter((c: Child) => c.groupId === child.groupId && !c.archived).length
@@ -79,5 +85,6 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     obligation: obligation(child, month, records.payments, records.charges, undefined, null, rates),
     feeEntry: feeEntryFor(child, month),
     payments,
+    payerAliases,
   };
 }

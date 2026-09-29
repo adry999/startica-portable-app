@@ -60,12 +60,27 @@ const feeFor = (child, month) =>
     .filter(f => f.from <= month)
     .at(-1)?.amount ?? null;
 
+// Un plătitor reținut (payerAliases, decizia 25 sept. 2026) e cel mai tare indiciu posibil: cineva
+// a confirmat deja manual, la o achitare anterioară, cine e copilul din spatele acestui text exact.
+// Scorul e suficient de mare ca să domine orice combinație de nume/sumă/lună neachitată, iar
+// nameMatch rămâne true, ca alias-ul să treacă și prin findUnassignedPaymentHintsByChild().
+const REMEMBERED_PAYER_SCORE = 1000;
+const REMEMBERED_PAYER_REASON = 'Plătitor reținut';
+
 // Un candidat primește puncte pentru fiecare indiciu independent care se
 // potrivește. Nimic nu se asociază automat: scorul doar ordonează sugestiile,
 // iar decizia rămâne a operatorului.
-/** @returns {ChildSuggestion[]} */
-export function suggestChildren(payment, children, index, limit = 5) {
+/**
+ * @param {*} payment
+ * @param {*} children
+ * @param {*} index
+ * @param {import('#shared/contracts/record-types.mjs').PayerAlias[]} [payerAliases]
+ * @param {number} [limit]
+ * @returns {ChildSuggestion[]}
+ */
+export function suggestChildren(payment, children, index, payerAliases = [], limit = 5) {
   const sourceTokens = new Set([...nameTokens(payment.sourceName), ...nameTokens(payment.childName)]);
+  const sourceAlias = strip(payment.sourceName || '').trim();
   const months = allocations(payment).map(a => a.month);
   const amount = cents(payment.amount);
   const scored = [];
@@ -73,6 +88,14 @@ export function suggestChildren(payment, children, index, limit = 5) {
     if (child.archived) continue;
     let score = 0;
     const reasons = [];
+
+    const isRememberedPayer =
+      sourceAlias !== '' &&
+      payerAliases.some(alias => alias.childId === child.id && strip(alias.alias).trim() === sourceAlias);
+    if (isRememberedPayer) {
+      score += REMEMBERED_PAYER_SCORE;
+      reasons.push(REMEMBERED_PAYER_REASON);
+    }
 
     const shared = [...new Set(nameTokens(child.name))].filter(t => sourceTokens.has(t));
     if (shared.length) {
@@ -114,8 +137,9 @@ export function suggestChildren(payment, children, index, limit = 5) {
         // Doar numele leagă o achitare de un anume copil. Suma și luna
         // neachitată se potrivesc la zeci de copii deodată, deci nu pot susține
         // singure o propunere: fără nameMatch, candidatul e un punct de pornire
-        // pentru căutare, niciodată ceva de acceptat în masă.
-        nameMatch: shared.length > 0,
+        // pentru căutare, niciodată ceva de acceptat în masă. Un plătitor reținut
+        // e la fel de sigur ca un nume potrivit — de asta contează tot nameMatch.
+        nameMatch: shared.length > 0 || isRememberedPayer,
         reasons,
       });
   }

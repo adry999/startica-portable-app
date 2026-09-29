@@ -11,7 +11,7 @@ export function findUnassignedPaymentHintsByChild(records) {
   const index = paymentIndex(records.payments);
   const byChild = new Map();
   for (const payment of records.payments.filter(p => !p.archived && !p.childId)) {
-    for (const suggestion of suggestChildren(payment, records.children, index)) {
+    for (const suggestion of suggestChildren(payment, records.children, index, records.payerAliases ?? [])) {
       if (!suggestion.nameMatch) continue;
       let list = byChild.get(suggestion.id);
       if (!list) byChild.set(suggestion.id, (list = []));

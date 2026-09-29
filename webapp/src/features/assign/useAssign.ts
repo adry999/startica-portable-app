@@ -29,6 +29,10 @@ export interface AssignRowView {
   source: string;
   selectedChildId: string;
   options: ChildOption[];
+  /** „Ține minte plătitorul” (11-de-rezolvat.md §9c) — bifat pentru această achitare. */
+  remember: boolean;
+  /** Fără text de plătitor în extrasul bancar nu există ce reține — checkbox-ul se dezactivează. */
+  canRemember: boolean;
 }
 
 export interface AssignData {
@@ -39,6 +43,7 @@ export interface AssignData {
   summary: string;
   selectedCount: number;
   selectChild: (paymentId: string, childId: string) => void;
+  toggleRemember: (paymentId: string) => void;
   fillSuggested: () => number;
   clearSelections: () => void;
   save: () => Promise<{ saved: number }>;
@@ -71,7 +76,7 @@ function childOptionsFor(suggestions: ChildSuggestion[], children: Child[]): Chi
   ];
 }
 
-type AssignBaseRow = Omit<AssignRowView, 'selectedChildId'>;
+type AssignBaseRow = Omit<AssignRowView, 'selectedChildId' | 'remember'>;
 
 /**
  * Combobox-ul căutabil devine un <select> grupat — webapp nu are încă o
@@ -83,6 +88,7 @@ export function useAssign(month: string): AssignData {
   const todayStr = todayFn();
 
   const [selections, setSelections] = useState<Record<string, string>>({});
+  const [remembered, setRemembered] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
@@ -111,6 +117,9 @@ export function useAssign(month: string): AssignData {
         method: payment.method || '',
         monthLines,
         source: payment.sourceName || payment.childName || '',
+        // „Ține minte plătitorul” salvează payment.sourceName ca alias — fără text de bancă în
+        // sursă (doar childName, sau nimic) nu există ce reține.
+        canRemember: !!payment.sourceName?.trim(),
         options: childOptionsFor(suggestions, records.children),
       };
     });
@@ -127,11 +136,19 @@ export function useAssign(month: string): AssignData {
       for (const id of staleIds) delete next[id];
       return next;
     });
+    setRemembered(prev => {
+      const staleIds = Object.keys(prev).filter(id => !queueIds.has(id));
+      if (!staleIds.length) return prev;
+      const next = { ...prev };
+      for (const id of staleIds) delete next[id];
+      return next;
+    });
   }, [queueIds]);
 
   const rows: AssignRowView[] = baseRows.map(row => ({
     ...row,
     selectedChildId: selections[row.paymentId] ?? '',
+    remember: remembered[row.paymentId] ?? false,
   }));
 
   if (!ready) {
@@ -143,6 +160,7 @@ export function useAssign(month: string): AssignData {
       summary: '',
       selectedCount: 0,
       selectChild: () => {},
+      toggleRemember: () => {},
       fillSuggested: () => 0,
       clearSelections: () => {},
       save: async () => ({ saved: 0 }),
@@ -176,6 +194,10 @@ export function useAssign(month: string): AssignData {
     });
   }
 
+  function toggleRemember(paymentId: string) {
+    setRemembered(prev => ({ ...prev, [paymentId]: !prev[paymentId] }));
+  }
+
   // Se completează doar un candidat unic cu nume potrivit; suma și luna se potrivesc la zeci de copii.
   function fillSuggested(): number {
     const next = { ...selections };
@@ -192,6 +214,7 @@ export function useAssign(month: string): AssignData {
 
   function clearSelections() {
     setSelections({});
+    setRemembered({});
   }
 
   async function save(): Promise<{ saved: number }> {
@@ -204,7 +227,35 @@ export function useAssign(month: string): AssignData {
     setSaving(true);
     try {
       await session.mutate('/api/payments-assign', { assignments });
+      // „Ține minte plătitorul” (11-de-rezolvat.md §9c): un alias per achitare bifată, salvat
+      // secvențial după asociere — mutate() refuză o a doua scriere pornită înainte ca prima
+      // să se termine. O eroare la reținerea plătitorului nu anulează asocierea deja reușită.
+      const paymentById = new Map(queue.map(entry => [entry.payment.id, entry.payment]));
+      for (const { id, childId } of assignments) {
+        if (!remembered[id]) continue;
+        const sourceName = paymentById.get(id)?.sourceName?.trim();
+        if (!sourceName) continue;
+        try {
+          await session.mutate('/api/record', {
+            type: 'payerAliases',
+            mode: 'create',
+            record: {
+              id: `PAY-ALIAS-${crypto.randomUUID()}`,
+              alias: sourceName,
+              childId,
+              createdAt: new Date().toISOString(),
+            },
+          });
+        } catch (error) {
+          console.error('Nu s-a putut reține plătitorul.', error);
+        }
+      }
       setSelections(prev => {
+        const next = { ...prev };
+        for (const { id } of assignments) delete next[id];
+        return next;
+      });
+      setRemembered(prev => {
         const next = { ...prev };
         for (const { id } of assignments) delete next[id];
         return next;
@@ -224,6 +275,7 @@ export function useAssign(month: string): AssignData {
     summary,
     selectedCount,
     selectChild,
+    toggleRemember,
     fillSuggested,
     clearSelections,
     save,

@@ -148,6 +148,46 @@ describe('useAssign', () => {
     expect(result.current.selectedCount).toBe(0);
   });
 
+  it('save cu „Ține minte plătitorul” bifat creează un alias payer_aliases, cu textul din sursă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useAssign('2026-09'));
+
+    act(() => result.current.selectChild('p1', 'c1'));
+    act(() => result.current.toggleRemember('p1'));
+    expect(result.current.rows.find(row => row.paymentId === 'p1')?.remember).toBe(true);
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string) => {
+      expect(path).toBe('/api/payments-assign');
+      return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+    });
+    let aliasRequestBody: { type?: string; mode?: string; record?: { alias?: string; childId?: string; id?: string } } =
+      {};
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record');
+      aliasRequestBody = JSON.parse(options.body as string);
+      return jsonResponse({ state: fixtureState, revision: 3, updatedAt: '2026-09-23T10:05:01Z' });
+    });
+
+    await act(async () => {
+      await result.current.save();
+    });
+
+    expect(aliasRequestBody.type).toBe('payerAliases');
+    expect(aliasRequestBody.mode).toBe('create');
+    expect(aliasRequestBody.record?.alias).toBe('Andrei P.');
+    expect(aliasRequestBody.record?.childId).toBe('c1');
+    expect(aliasRequestBody.record?.id).toMatch(/^PAY-ALIAS-/);
+  });
+
+  it('checkbox-ul „Ține minte plătitorul” e dezactivat când achitarea nu are text de plătitor în sursă', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => useAssign('2026-09'));
+
+    // p2, din fixtură, are sourceName gol.
+    expect(result.current.rows.find(row => row.paymentId === 'p2')?.canRemember).toBe(false);
+    expect(result.current.rows.find(row => row.paymentId === 'p1')?.canRemember).toBe(true);
+  });
+
   it('save fără nicio selecție respinge cu eroare', async () => {
     await loadedSession();
     const { result } = renderHook(() => useAssign('2026-09'));

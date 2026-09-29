@@ -323,3 +323,123 @@ test('șterge definitiv o înregistrare arhivată, cu backup înainte', async t 
     `Ar trebui să existe o copie „inainte-ștergere definitivă” în backups/: ${backupFiles.join(', ')}`,
   );
 });
+
+test('creează un plătitor reținut (payerAliases) legat de un copil existent', async t => {
+  const app = await startApplication(t);
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
+  );
+  const created = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-1',
+      alias: 'Ion Popescu IBAN MD00XYZ',
+      childId: child.id,
+      createdAt: '2026-09-25T10:00:00.000Z',
+    },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(created.status, 200, created.body.error);
+  assert.deepEqual(
+    created.body.state.payerAliases.map(alias => alias.id),
+    ['PAY-ALIAS-1'],
+  );
+  assert.deepEqual(validateState(created.body.state), created.body.state);
+});
+
+test('refuză un plătitor reținut legat de un copil inexistent', async t => {
+  const app = await startApplication(t);
+  const state0 = await app.get('/api/state');
+  const result = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-1',
+      alias: 'Ion Popescu',
+      childId: 'ID-inexistent',
+      createdAt: '2026-09-25T10:00:00.000Z',
+    },
+    revision: state0.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /Copilul asociat nu există/);
+});
+
+// „Ține minte plătitorul” (11-de-rezolvat.md §9c) se poate bifa la fiecare achitare a aceluiași
+// plătitor — a doua creare cu exact același alias+copil nu trebuie să dubleze aliasul.
+test('bifarea repetată a aceluiași plătitor reținut nu creează un al doilea alias identic', async t => {
+  const app = await startApplication(t);
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
+  );
+  const first = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-1',
+      alias: 'Ion Popescu IBAN MD00XYZ',
+      childId: child.id,
+      createdAt: '2026-09-25T10:00:00.000Z',
+    },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(first.status, 200, first.body.error);
+
+  // Alt id, chiar text (diferă doar prin literă mare/mică și spații) — tot un duplicat.
+  const second = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-2',
+      alias: '  ion popescu iban md00xyz  ',
+      childId: child.id,
+      createdAt: '2026-09-26T10:00:00.000Z',
+    },
+    revision: first.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(second.status, 200, second.body.error);
+  assert.equal(second.body.state.payerAliases.length, 1, 'A doua creare identică e no-op, nu un al doilea alias.');
+  assert.deepEqual(validateState(second.body.state), second.body.state);
+});
+
+test('un plătitor reținut cu alt copil sau alt text nu e considerat duplicat', async t => {
+  const app = await startApplication(t);
+  const otherChild = { ...child, id: 'ID-2', name: 'Ion' };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [child, otherChild], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
+  );
+  const first = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-1',
+      alias: 'Ion Popescu IBAN MD00XYZ',
+      childId: child.id,
+      createdAt: '2026-09-25T10:00:00.000Z',
+    },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  const second = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: {
+      id: 'PAY-ALIAS-2',
+      alias: 'Ion Popescu IBAN MD00XYZ',
+      childId: otherChild.id,
+      createdAt: '2026-09-26T10:00:00.000Z',
+    },
+    revision: first.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(second.status, 200, second.body.error);
+  assert.equal(second.body.state.payerAliases.length, 2, 'Copil diferit -> alias diferit, nu duplicat.');
+});

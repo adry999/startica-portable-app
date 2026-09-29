@@ -198,6 +198,29 @@
   resize: vertical;
 }
 
+/* Plătitori reținuți (CF-2, 09-copii-fisa.md): aliasuri din payerAliases, cu × pentru ștergere. */
+.aliasRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-6) 0;
+}
+
+.aliasRow button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  padding: var(--space-4);
+}
+
+.aliasRow button:hover {
+  color: var(--raspberry);
+}
+
 /* Documente (CF-7, 09-copii-fisa.md): placeholder gol, nicio stocare reală încă. */
 .documentsGrid {
   display: grid;
