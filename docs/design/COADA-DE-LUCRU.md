@@ -537,7 +537,9 @@ Copiat din `design_final_startica/` (`Startica V2.zip`, șters după): 10 artboa
 
 `npm run check` (root, 1182/1182 + 2 skip) + webapp (typecheck curat, 897/897 teste) — verzi. Commit `6de566c`.
 
-Urmează punctul 1 (confirmarea rulării B1).
+## 2026-09-30 — PROMPT-CLAUDE-CODE-3.md, punctul 1 — B1 confirmat rulat — DONE
+
+`scripts/migrate/b1-fix-mixed-payments.mjs` a fost deja rulat cu `--execute` pe baza reală, la runda trecută (commit `865a705`), nu doar scris — coada nu spunea asta explicit, corectat aici. Reverificat acum: `scripts/diagnostic/b1-payment-methods.mjs` → **0 plăți cu tender necunoscut** din 954 totale (crescut de la 811 prin migrarea B3 care a adăugat 143 plăți noi, toate cu `method: 'Cash'` cunoscut). Decizia (b) — cele 7 pe Cash — confirmată aplicată, nimic de rulat din nou.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
