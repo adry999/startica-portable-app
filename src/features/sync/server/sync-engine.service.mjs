@@ -195,19 +195,24 @@ export function createSyncEngine({
             }
             outbox.remove(row.seq, row.changeId);
           } else if (result.status === 'conflict' && result.head) {
-            conflicts.insert({
-              kind: row.kind,
-              recordId: row.recordId,
-              localPayload: row.payload,
-              localUpdatedAt: row.createdAt,
-              remotePayload: result.head.payload,
-              remoteRevision: result.head.revision,
-              remoteUpdatedAt: result.head.updatedAt,
-              remoteDeviceId: result.head.updatedBy.id,
-              remoteDeviceName: result.head.updatedBy.name,
-              outboxSeq: row.seq,
-            });
-            outbox.park(row.seq, row.changeId);
+            // S-7: dacă rândul a fost deja coalescat (o editare nouă a sosit cât push-ul
+            // era în zbor — garda C-1), park() întoarce fals și rândul nu mai există sub
+            // acest seq/changeId — nu mai are rost un conflict care arată spre nimic
+            // (sync_conflicts n-are UNIQUE pe kind,record_id — s-ar aduna unul la fiecare ciclu).
+            if (outbox.park(row.seq, row.changeId)) {
+              conflicts.insert({
+                kind: row.kind,
+                recordId: row.recordId,
+                localPayload: row.payload,
+                localUpdatedAt: row.createdAt,
+                remotePayload: result.head.payload,
+                remoteRevision: result.head.revision,
+                remoteUpdatedAt: result.head.updatedAt,
+                remoteDeviceId: result.head.updatedBy.id,
+                remoteDeviceName: result.head.updatedBy.name,
+                outboxSeq: row.seq,
+              });
+            }
           }
         }
         // C-4: „superseded” rescrie o fișă locală prin depozitul brut — fila deschisă
@@ -313,8 +318,20 @@ export function createSyncEngine({
       try {
         for (const change of changes) {
           // Propriile modificări (reluate de pe server, ex. după un push aplicat de un
-          // alt lot) nu se aplică peste ele însele — le-am scris deja local.
-          if (change.device.id === deviceId) continue;
+          // alt lot, sau rândurile din instantaneul urcat la connect — writeSnapshot le
+          // atribuie tot dispozitivului curent) nu se aplică peste ele însele — le-am
+          // scris deja local. S-1: fără sync_state aici, prima editare ulterioară a
+          // aceleiași fișe pleacă cu baseRevision=0 și devine conflict cu sine (kind-urile
+          // CONFLICT_KIND). Scrierea e idempotentă — corectă și la reluarea unui pull.
+          if (change.device.id === deviceId) {
+            syncState.set(change.kind, change.recordId, {
+              serverRevision: change.revision,
+              updatedAt: change.changedAt,
+              updatedByDevice: change.device.id,
+              updatedByName: change.device.name,
+            });
+            continue;
+          }
           // C-3: o fișă cu un conflict nerezolvat (rând parcat) nu se suprascrie la pull —
           // varianta locală rămâne vizibilă până la alegerea utilizatorului (14c); doar
           // capul serverului din conflict și sync_state se actualizează cu ce a mai venit.

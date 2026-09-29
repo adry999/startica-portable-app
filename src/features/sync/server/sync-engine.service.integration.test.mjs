@@ -191,3 +191,65 @@ test('o modificare locală apărută în timpul unui push real către server nu 
   const snapshot = await realClient.downloadSnapshot(branchId);
   assert.equal(snapshot.records.payments[0].payload.amount, 150);
 });
+
+test('S-1: după urcarea instantaneului, prima editare a unei fișe existente se aplică, nu produce conflict cu sine', async t => {
+  const { origin } = await startRealServer(t);
+  const branchId = 'branch-s1';
+
+  const pairingClient = createSyncHttpClient({ serverUrl: origin, fetch: globalThis.fetch });
+  const device = await pairingClient.pair({ setupKey: SETUP_KEY, name: 'Calculator A', os: 'Windows 11' });
+  const client = createSyncHttpClient({ serverUrl: origin, token: device.token, fetch: globalThis.fetch });
+  await client.registerBranch({
+    id: branchId,
+    name: 'Filiala principală',
+    color: 'orange',
+    address: '',
+    createdAt: '2026-09-27T08:00:00.000Z',
+  });
+
+  // Reproducerea exactă a S-1 (connect() cu o filială nevidă — sync-connect.service.mjs
+  // readLocalSnapshot + uploadSnapshot): fiecare rând urcat e scris pe server cu
+  // updated_by = ACEST dispozitiv, la revizia 1.
+  await client.uploadSnapshot(branchId, {
+    entries: [
+      {
+        kind: 'children',
+        id: 'CHILD-1',
+        payload: { id: 'CHILD-1', name: 'Ana' },
+        updatedAt: '2026-09-27T08:00:00.000Z',
+      },
+    ],
+  });
+
+  const harness = createDeviceHarness({ branchId, deviceId: device.deviceId, deviceName: 'Calculator A', client });
+  // Rândul exista deja local înainte de connect (e chiar ce s-a urcat mai sus) — la fel ca
+  // orice filială reală, nu doar pe server.
+  harness.rawRecordRepository.save('children', { id: 'CHILD-1', name: 'Ana' });
+
+  // Primul ciclu al motorului, imediat după connect (decizia din create-application.mjs):
+  // outbox-ul e gol (nimic de urcat), pull-ul aduce înapoi propria schimbare din instantaneu.
+  await harness.engine.syncNow();
+  assert.equal(
+    /** @type {{ serverRevision: number }} */ (harness.syncState.get('children', 'CHILD-1'))?.serverRevision,
+    1,
+    'S-1: sync_state trebuie scris și pentru schimbarea proprie întoarsă de pull (nu doar sărită)',
+  );
+
+  // Prima editare a fișei deja urcate — fără fix, enqueue() calculează baseRevision=0
+  // (sync_state gol), serverul (revizia 1) o respinge ca „conflict”, cu autorul „Calculator A”.
+  harness.outbox.enqueue({
+    kind: 'children',
+    recordId: 'CHILD-1',
+    payload: { id: 'CHILD-1', name: 'Ana Popescu' },
+  });
+  await harness.engine.syncNow();
+
+  assert.equal(harness.conflicts.count(), 0, 'editarea nu trebuie să producă un conflict cu sine');
+  assert.equal(harness.outbox.countPending(), 0, 'editarea trebuie aplicată (applied), nu parcată');
+  const snapshotAfterEdit = await client.downloadSnapshot(branchId);
+  assert.equal(
+    snapshotAfterEdit.records.children[0].payload.name,
+    'Ana Popescu',
+    'editarea a ajuns pe server, nu doar local',
+  );
+});
