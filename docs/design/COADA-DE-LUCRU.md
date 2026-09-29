@@ -428,5 +428,19 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 874/874 teste — toate verzi. Commit `630b993`.
 - Urmează A6 (Asociere achitări).
 
+## 2026-09-29 — ALINIERE-DESIGN.md rescris de utilizator (sync 17:13) — reordonare coadă
+
+Coada rămasă s-a schimbat: `A3c-fix → A3e-undo → B1-rest → A3b → B3 → B2 → A6 → A7 → A8 → A9` (A6 nu mai e următorul). Semnalat conflict: o altă sesiune/echipă (worktree separat) redă în paralel muncă deja făcută și împinsă aici (23a/23b/23f Personal, A2/A3 Copii) — nu am atins acea sesiune, doar am confirmat cu `git status` că nu-mi afectează directorul de lucru.
+
+## 2026-09-29 — B1-rest — DONE
+
+Ultimele 2 locuri cu fallback „Altele" pe metodă de plată (Dashboard `cash-summary.mjs`, Raport contabil `accounting-report.mjs`) — o metodă nerezolvată nu mai intră în niciun total, rămâne doar în De rezolvat. `npm run check` (1170/1172 + 2 skip) verde. Commit `a8549de`.
+
+## 2026-09-29 — A3c-fix — DONE
+
+Scos complet marcarea în masă din Prezența · Ziua: `markGroupPresent`/`markAllUnmarkedPresent`, butoanele „Nemarcații (N) → prezenți" (antet + per-secțiune), toastul de acțiune în masă, `changesToMarkUnmarkedPresent` (domain) + cele 4 teste ale lor. Undo/istoric rămâne (era deja implementat complet — `AttendanceUndoControl`, Ctrl+Z, stivă de `HistoryEntry`); corectat un bug latent găsit pe drum: eticheta „Anulează” vs „Anulează până aici” pe rândurile din istoric era legată de flag-ul `bulk` (mereu fals acum) în loc de poziția rândului — orice rând care nu e cel mai recent desface și tot ce a venit după el, indiferent dacă acțiunea a fost vreodată „bulk”. `npm run check` (1170/1172 + 2 skip) + webapp 871/871 — verzi. Commit `6740fa4`.
+
+Urmează A3e-undo (Anulează/istoric în Prezența · Luna).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
