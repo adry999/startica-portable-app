@@ -13,6 +13,12 @@ describe('nextTimesheetCode', () => {
   it('un cod din afara ciclului (I, FP) se golește la următorul clic', () => {
     expect(nextTimesheetCode('FP')).toBe(null);
   });
+
+  it('zilele viitoare acceptă doar gol → CO → CM → gol, fără A', () => {
+    expect(nextTimesheetCode(null, { future: true })).toBe('CO');
+    expect(nextTimesheetCode('CO', { future: true })).toBe('CM');
+    expect(nextTimesheetCode('CM', { future: true })).toBe(null);
+  });
 });
 
 describe('summarizeTimesheetMonth', () => {
@@ -53,6 +59,20 @@ describe('summarizeTimesheetMonth', () => {
     const summary = summarizeTimesheetMonth({ staff, month: '2020-02', rows, todayStr: '2020-02-29', upTo: 'month' });
     expect(summary.co).toBe(1);
     expect(summary.worked).toBe(summary.workingDays - 1);
+  });
+
+  it('o zi viitoare marcată (concediu planificat) își arată codul, nu „future”, și e numărată', () => {
+    const rows = new Map<string, TimesheetRow>([
+      ['STF-1|2020-02-20', { id: 'TS-1', staffId: 'STF-1', date: '2020-02-20', code: 'CO' }],
+    ]);
+    const summary = summarizeTimesheetMonth({ staff, month: '2020-02', rows, todayStr: '2020-02-10', upTo: 'today' });
+    const marked = summary.cells.find(cell => cell.date === '2020-02-20');
+    expect(marked?.kind).toBe('CO');
+    expect(summary.co).toBe(1);
+
+    // O zi viitoare fără cod rămâne „future” (pastilă punctată, fără a fi numărată).
+    const unmarked = summary.cells.find(cell => cell.date === '2020-02-21');
+    expect(unmarked?.kind).toBe('future');
   });
 });
 

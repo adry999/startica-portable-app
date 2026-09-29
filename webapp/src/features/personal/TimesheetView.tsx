@@ -59,7 +59,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
     summary: summarizeTimesheetMonth({ staff: person, month, rows: timesheet.rows, todayStr, upTo: 'today' }),
   }));
   const dayCount = summaries[0]?.summary.cells.length ?? 0;
-  const gridTemplateColumns = `190px repeat(${dayCount}, minmax(0, 1fr)) 44px 36px 36px`;
+  const gridTemplateColumns = `190px repeat(${dayCount}, minmax(0, 1fr)) 44px 36px 36px 36px`;
 
   // Grupat pe departamente, ca 23a (24-personal.md #23b).
   const groupedByDepartment = departmentsSorted
@@ -72,7 +72,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
     .filter(group => group.rows.length > 0);
 
   function cellClick(staffId: string, date: string, currentCode: TimesheetCode | '' | undefined) {
-    const next = nextTimesheetCode((currentCode as TimesheetCode) || null);
+    const next = nextTimesheetCode((currentCode as TimesheetCode) || null, { future: date > todayStr });
     timesheet.mark([{ staffId, date, code: next }]);
   }
 
@@ -85,7 +85,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
       <FilterPills
         groups={[
           {
-            label: 'Departament',
+            label: '',
             value: departmentFilter,
             onChange: setDepartmentFilter,
             options: [
@@ -98,18 +98,55 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
             ],
           },
         ]}
+        trailing={
+          <span className={styles.hint}>
+            Toți lucrează implicit în zilele lucrătoare; se marchează doar excepțiile.
+          </span>
+        }
       />
+
+      <div className={styles.legend}>
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="worked" />
+          Lucrat
+        </span>
+        <div className={styles.legendRight}>
+          <span className={styles.legendItem}>
+            <span className={styles.legendSquare} data-kind="CO">
+              CO
+            </span>
+            Concediu de odihnă
+          </span>
+          <span className={styles.legendItem}>
+            <span className={styles.legendSquare} data-kind="CM">
+              CM
+            </span>
+            Concediu medical
+          </span>
+          <span className={styles.legendItem}>
+            <span className={styles.legendSquare} data-kind="A">
+              A
+            </span>
+            Absență
+          </span>
+        </div>
+      </div>
 
       <Card className={styles.tableCard}>
         <div className={styles.grid} style={{ gridTemplateColumns }}>
           <div className={styles.headCell}>Angajat</div>
           {summaries[0]?.summary.cells.map(cell => (
             <div key={cell.date} className={styles.headCell}>
-              {Number(cell.date.slice(8, 10))}
+              {cell.date === todayStr ? (
+                <span className={styles.todayPill}>{Number(cell.date.slice(8, 10))}</span>
+              ) : (
+                Number(cell.date.slice(8, 10))
+              )}
             </div>
           ))}
-          <div className={styles.headCell}>Lucrate</div>
+          <div className={styles.headCell}>Zile</div>
           <div className={styles.headCell}>CO</div>
+          <div className={styles.headCell}>CM</div>
           <div className={styles.headCell}>A</div>
 
           {groupedByDepartment.map(({ department, rows }) => (
@@ -130,7 +167,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                     <small>{personal.roleName(staff.roleId)}</small>
                   </div>
                   {summary.cells.map(cell => {
-                    const clickable = cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future';
+                    const clickable = cell.kind !== 'off' && cell.kind !== 'none';
                     return (
                       <div
                         key={cell.date}
@@ -150,18 +187,13 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                         tabIndex={clickable ? 0 : undefined}
                         aria-label={`${staff.name}: ${cell.date}`}
                       >
-                        {cell.kind && CELL_LABEL[cell.kind] ? (
-                          <span className={styles.pill} data-kind={cell.kind}>
-                            {CELL_LABEL[cell.kind]}
-                          </span>
-                        ) : (
-                          ''
-                        )}
+                        {cell.kind && CELL_LABEL[cell.kind] ? CELL_LABEL[cell.kind] : ''}
                       </div>
                     );
                   })}
                   <div className={`${styles.totalCell} ${styles.totalWorked}`}>{summary.worked}</div>
                   <div className={`${styles.totalCell} ${styles.totalCo}`}>{summary.co}</div>
+                  <div className={`${styles.totalCell} ${styles.totalCm}`}>{summary.cm}</div>
                   <div className={`${styles.totalCell} ${styles.totalA}`}>{summary.a}</div>
                 </Fragment>
               ))}
@@ -170,36 +202,9 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
         </div>
       </Card>
 
-      <div className={styles.legend}>
-        <span className={styles.legendItem}>
-          <span className={styles.legendSquare} data-kind="worked" />
-          Lucrat
-        </span>
-        <span className={styles.legendItem}>
-          <span className={styles.legendSquare} data-kind="CO">
-            CO
-          </span>
-          Concediu de odihnă
-        </span>
-        <span className={styles.legendItem}>
-          <span className={styles.legendSquare} data-kind="CM">
-            CM
-          </span>
-          Concediu medical
-        </span>
-        <span className={styles.legendItem}>
-          <span className={styles.legendSquare} data-kind="A">
-            A
-          </span>
-          Absență
-        </span>
-        <span className={styles.legendItem}>
-          <span className={styles.legendSquare} data-kind="off" />
-          Zi liberă
-        </span>
-      </div>
       <p className={styles.footnote}>
-        Clic pe o zi ciclează gol → CO → CM → A → gol. Zilele viitoare și cele libere nu se pot marca.
+        Weekend-urile și sărbătorile sunt gri. Zilele viitoare se pot marca dinainte (concediu planificat). Pontajul se
+        tipărește pe A4 orizontal pentru dosar.
       </p>
 
       <TimesheetPrintDialog

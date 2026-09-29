@@ -45,7 +45,7 @@
 }
 
 .headCell {
-  padding: var(--space-8);
+  padding: var(--space-10) var(--space-16);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -55,16 +55,25 @@
   text-align: center;
 }
 
+.todayPill {
+  display: inline-block;
+  min-width: 20px;
+  padding: 3px 0;
+  border-radius: 6px;
+  background: var(--orange);
+  color: var(--white);
+}
+
 .nameCell {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: var(--space-8);
+  padding: var(--space-6) var(--space-16);
   border-bottom: 1px solid var(--row-divider);
 }
 
 .nameCell strong {
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
   color: var(--slate);
 }
@@ -74,13 +83,18 @@
   color: var(--subtle);
 }
 
+/* 24-personal.md #23b: fiecare celulă e o singură pastilă (fundal + text), nu celulă + pastilă
+   suprapusă — altfel apar dungi vizuale între fundalul celulei și pastila codului. */
 .cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--row-divider);
+  height: 22px;
+  margin: 0 1px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--white);
   cursor: default;
 }
 
@@ -90,7 +104,7 @@
 
 .cell[data-kind='off'],
 .cell[data-kind='none'] {
-  background: var(--off-day);
+  background: var(--sand);
 }
 
 .cell[data-kind='worked'] {
@@ -98,38 +112,24 @@
 }
 
 .cell[data-kind='future'] {
+  background: none;
   border: 1px dashed var(--border);
 }
 
-/* 24-personal.md #23b: codurile (CO/CM/A) sunt o pastilă în celulă, nu toată celula colorată. */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 22px;
-  min-width: 22px;
-  margin: 0 1px;
-  padding: 0 4px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--white);
+.cell[data-kind='CO'] {
+  background: var(--yellow-bar);
 }
 
-.pill[data-kind='CO'] {
-  background: var(--yellow-ink);
-}
-
-.pill[data-kind='CM'] {
+.cell[data-kind='CM'] {
   background: var(--raspberry);
 }
 
-.pill[data-kind='A'] {
+.cell[data-kind='A'] {
   background: var(--muted);
 }
 
 .totalCell {
-  padding: var(--space-8);
+  padding: var(--space-6) var(--space-16);
   text-align: center;
   font-weight: 800;
   font-size: 13px;
@@ -145,17 +145,30 @@
   color: var(--yellow-ink);
 }
 
+.totalCm {
+  color: var(--pink-ink);
+}
+
 .totalA {
   color: var(--muted);
 }
 
+/* 24-personal.md #23b: legenda stă deasupra tabelului — „Lucrat” în stânga, codurile în dreapta. */
 .legend {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-16);
   font-size: 12px;
   color: var(--muted);
+}
+
+.legendRight {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-16);
 }
 
 .legendItem {
@@ -181,7 +194,7 @@
 }
 
 .legendSquare[data-kind='CO'] {
-  background: var(--yellow-ink);
+  background: var(--yellow-bar);
 }
 
 .legendSquare[data-kind='CM'] {
@@ -192,8 +205,10 @@
   background: var(--muted);
 }
 
-.legendSquare[data-kind='off'] {
-  background: var(--off-day);
+.hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
 }
 
 .footnote {

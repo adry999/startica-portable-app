@@ -10,13 +10,19 @@ import type { Staff, TimesheetCode, TimesheetMonthSummary, TimesheetRow } from '
 export const timesheetKey = (staffId: string, date: string): string => `${staffId}|${date}`;
 
 const CLICK_CYCLE: (TimesheetCode | '')[] = ['', 'CO', 'CM', 'A'];
+/** Zilele viitoare acceptă doar concediu planificat — fără A (absență constatabilă doar ≤ azi). */
+const FUTURE_CLICK_CYCLE: (TimesheetCode | '')[] = ['', 'CO', 'CM'];
 
-/** Ciclul din 23b: clic pe celulă merge gol → CO → CM → A → gol. */
-export function nextTimesheetCode(code: TimesheetCode | '' | null): TimesheetCode | null {
+/** Ciclul din 23b: clic pe celulă merge gol → CO → CM → A → gol (zilele viitoare sar peste A). */
+export function nextTimesheetCode(
+  code: TimesheetCode | '' | null,
+  options?: { future?: boolean },
+): TimesheetCode | null {
+  const cycle = options?.future ? FUTURE_CLICK_CYCLE : CLICK_CYCLE;
   const normalized = code || '';
-  const index = CLICK_CYCLE.indexOf(normalized);
-  const nextIndex = index === -1 ? 0 : (index + 1) % CLICK_CYCLE.length;
-  return (CLICK_CYCLE[nextIndex] || null) as TimesheetCode | null;
+  const index = cycle.indexOf(normalized);
+  const nextIndex = index === -1 ? 0 : (index + 1) % cycle.length;
+  return (cycle[nextIndex] || null) as TimesheetCode | null;
 }
 
 export function isStaffInBranch(staff: Pick<Staff, 'branchIds'>, branchId: string): boolean {
@@ -56,8 +62,11 @@ export function summarizeTimesheetMonth({
   const cells = monthDates(month).map(date => {
     if (date < staff.since || (staff.archivedAt && date > staff.archivedAt)) return { date, kind: 'none' as const };
     if (!isWorkingDay(date)) return { date, kind: 'off' as const };
-    if (upTo === 'today' && date > todayStr) return { date, kind: 'future' as const };
     const row = rows.get(timesheetKey(staff.id, date));
+    // O zi viitoare marcată (concediu planificat) își arată codul; doar cea goală rămâne „future”.
+    if (upTo === 'today' && date > todayStr) {
+      return { date, kind: (row ? row.code : 'future') as TimesheetMonthSummary['cells'][number]['kind'] };
+    }
     return { date, kind: (row ? row.code : '') as TimesheetMonthSummary['cells'][number]['kind'] };
   });
 

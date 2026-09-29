@@ -97,6 +97,38 @@ describe('TimesheetView', () => {
     expect(posted[0].changes).toEqual([{ staffId: 'STF-1', date: '2026-09-07', code: 'CO' }]);
   });
 
+  it('zilele viitoare ciclează doar gol → CO → CM → gol, fără A', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <TimesheetView month="2026-12" printDialogOpen={false} onPrintDialogClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    // 2026-12-07 e luni, zi lucrătoare, în viitor față de „azi” (2026-09-29 în acest mediu de test).
+    const cell = screen.getByRole('button', { name: 'Ana Popescu: 2026-12-07' });
+
+    vi.useFakeTimers();
+    act(() => fireEvent.click(cell));
+    expect(cell).toHaveTextContent('CO');
+
+    act(() => fireEvent.click(cell));
+    expect(cell).toHaveTextContent('CM');
+
+    act(() => fireEvent.click(cell));
+    expect(cell).toHaveTextContent('');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+
+    expect(posted).toHaveLength(1);
+    expect(posted[0].changes).toEqual([{ staffId: 'STF-1', date: '2026-12-07', code: null }]);
+  });
+
   it('nu tipărește până nu se încarcă datele grădiniței (M4)', async () => {
     await loadedSession();
     await act(() => reloadPersonal());
