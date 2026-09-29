@@ -381,5 +381,11 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - **Limitare de model de date, nu bug:** rândul „Educator Ala · vârste 2c 5l – 6a 9l” din spec cere ani+luni; `Group` are doar `ageMinYears`/`ageMaxYears` (ani întregi) — rămâne „vârste 2–6 ani”. Ar cere schimbare de schemă, nu doar UI.
 - `npm run check` (root) + webapp typecheck + 855/855 teste — toate verzi.
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A3d (Grupe · Carduri) — DONE
+
+- `GroupCardCompact.tsx`/`.module.css`: mâner ⋮⋮ mutat în flux (în `.headRow`, stânga numelui, opacitate .55, era absolut dreapta-sus cu `padding-right` pe nume); meniul ⋯ „Stickere pentru grupă” mutat lângă numărul de ocupare, 24×24 (era absolut, se putea suprapune cu mânerul); bara de ocupare fundal alb plin + radius pill pe umplere (era translucid, umplere fără radius propriu); inelul de drop `--orange` (era `--slate`).
+- Fără test dedicat pe componentă — acoperit indirect prin `GroupsPage.test.tsx` (48/48 verzi).
+- `npm run check` (root, 1169/1171 + 2 skip) + webapp typecheck + 855/855 teste — toate verzi.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
