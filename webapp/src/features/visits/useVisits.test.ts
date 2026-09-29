@@ -40,6 +40,8 @@ const fixtureState = {
       statusChangedAt: `${TODAY}T10:00:00.000Z`,
       history: [{ at: `${TODAY}T10:00:00.000Z`, status: 'Programată', date: TODAY, time: '10:00' }],
       desiredGroupId: null,
+      source: 'Recomandare',
+      postVisitNotes: 'Foarte interesată de grupa mare.',
       childId: '',
       archived: false,
     },
@@ -314,6 +316,13 @@ describe('useVisits', () => {
       expect(body.child.parent).toBe('Maria Popescu');
       expect(body.child.groupId).toBe('g1');
       expect(body.child.fee).toBe(1500);
+      expect(body.child.notes).toEqual([
+        expect.objectContaining({
+          text: 'Sursă: Recomandare\nFoarte interesată de grupa mare.',
+          date: TODAY,
+        }),
+      ]);
+      expect(body.child.notes[0].id).toMatch(/^NOTE-/);
       return jsonResponse({
         state: fixtureState,
         revision: 2,

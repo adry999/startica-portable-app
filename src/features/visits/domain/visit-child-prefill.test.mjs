@@ -3,6 +3,17 @@ import assert from 'node:assert/strict';
 import { buildChildPrefill } from './visit-child-prefill.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Visit} Visit */
+/** @typedef {import('#shared/contracts/record-types.mjs').ChildNote} ChildNote */
+
+const TODAY = '2026-09-29';
+
+/**
+ * @param {Record<string, unknown>} prefill
+ * @returns {ChildNote[]}
+ */
+function notesOf(prefill) {
+  return /** @type {ChildNote[]} */ (prefill.notes);
+}
 
 /**
  * @param {Record<string, unknown>} [overrides]
@@ -35,7 +46,7 @@ function buildVisit(overrides = {}) {
 test('mapează câmpurile vizitei pe câmpurile fișei copilului', () => {
   const visit = buildVisit();
 
-  const prefill = buildChildPrefill(visit);
+  const prefill = buildChildPrefill(visit, TODAY);
 
   assert.equal(prefill.name, visit.name);
   assert.equal(prefill.birthDate, visit.birthDate);
@@ -48,34 +59,56 @@ test('mapează câmpurile vizitei pe câmpurile fișei copilului', () => {
   assert.equal(prefill.healthNotes, visit.healthNotes);
 });
 
-test('notes combină sursa și observațiile după vizită pe rânduri separate când ambele există', () => {
+test('notes combină sursa și observațiile după vizită pe rânduri separate când ambele există, ca o notă datată azi', () => {
   const visit = buildVisit({ source: 'Recomandare', postVisitNotes: 'Foarte interesată de grupa mare.' });
 
-  const prefill = buildChildPrefill(visit);
+  const prefill = buildChildPrefill(visit, TODAY);
 
-  assert.equal(prefill.notes, 'Sursă: Recomandare\nFoarte interesată de grupa mare.');
+  const notes = notesOf(prefill);
+  assert.equal(Array.isArray(notes), true);
+  assert.equal(notes.length, 1);
+  assert.equal(notes[0].text, 'Sursă: Recomandare\nFoarte interesată de grupa mare.');
+  assert.equal(notes[0].date, TODAY);
+  assert.match(notes[0].id, /^NOTE-/);
 });
 
 test('notes conține doar sursa când observațiile după vizită lipsesc', () => {
   const visit = buildVisit({ source: 'Recomandare', postVisitNotes: '' });
 
-  assert.equal(buildChildPrefill(visit).notes, 'Sursă: Recomandare');
+  const prefill = buildChildPrefill(visit, TODAY);
+
+  const notes = notesOf(prefill);
+  assert.equal(notes.length, 1);
+  assert.equal(notes[0].text, 'Sursă: Recomandare');
 });
 
 test('notes conține doar observațiile după vizită când sursa lipsește', () => {
   const visit = buildVisit({ source: '', postVisitNotes: 'Foarte interesată de grupa mare.' });
 
-  assert.equal(buildChildPrefill(visit).notes, 'Foarte interesată de grupa mare.');
+  const prefill = buildChildPrefill(visit, TODAY);
+
+  const notes = notesOf(prefill);
+  assert.equal(notes.length, 1);
+  assert.equal(notes[0].text, 'Foarte interesată de grupa mare.');
 });
 
-test('notes este gol când nici sursa, nici observațiile după vizită nu există', () => {
+test('notes este o listă goală când nici sursa, nici observațiile după vizită nu există', () => {
   const visit = buildVisit({ source: '', postVisitNotes: '' });
 
-  assert.equal(buildChildPrefill(visit).notes, '');
+  assert.deepEqual(buildChildPrefill(visit, TODAY).notes, []);
 });
 
 test('notes ignoră câmpurile care conțin doar spații', () => {
   const visit = buildVisit({ source: '   ', postVisitNotes: '   ' });
 
-  assert.equal(buildChildPrefill(visit).notes, '');
+  assert.deepEqual(buildChildPrefill(visit, TODAY).notes, []);
+});
+
+test('fiecare apel generează un id de notă distinct', () => {
+  const visit = buildVisit({ source: 'Recomandare' });
+
+  const first = notesOf(buildChildPrefill(visit, TODAY))[0].id;
+  const second = notesOf(buildChildPrefill(visit, TODAY))[0].id;
+
+  assert.notEqual(first, second);
 });

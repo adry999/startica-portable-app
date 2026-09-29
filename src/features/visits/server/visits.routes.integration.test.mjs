@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
+import { buildChildPrefill } from '../domain/visit-child-prefill.mjs';
 
 // Testele lovesc rutele HTTP, nu funcția: acoperă și înregistrarea lor în createApplication.
 
@@ -79,6 +80,31 @@ test('înscrierea creează fișa copilului, marchează vizita Înscris și conse
   assert.equal(visitEntry.after.healthNotes, '');
   assert.equal(childEntry.action, 'adăugare');
   assert.equal(childEntry.recordId, 'CH-NOU');
+});
+
+test('înscrierea din vizită cu sursă și note post-vizită creează fișa cu o notă datată', async t => {
+  const { post } = await startApplication(t);
+  const sourceVisit = visit({ source: 'Recomandare', postVisitNotes: 'Foarte interesată de grupa mare.' });
+  const imported = await post('/api/import', importRequest(emptyImport({ visits: [sourceVisit] }), 0));
+  assert.equal(imported.status, 200, imported.body.error);
+
+  const prefill = buildChildPrefill(sourceVisit, '2026-09-20');
+  const child = { ...prefill, id: 'CH-NOU', status: 'Activ' };
+
+  const result = await post('/api/visits-enrol', {
+    visitId: 'VIZ-1',
+    child,
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 200, result.body.error);
+  const createdChild = result.body.state.children.find(c => c.id === 'CH-NOU');
+  assert.ok(createdChild, 'Fișa copilului a fost creată.');
+  assert.equal(createdChild.notes.length, 1);
+  assert.equal(createdChild.notes[0].text, 'Sursă: Recomandare\nFoarte interesată de grupa mare.');
+  assert.equal(createdChild.notes[0].date, '2026-09-20');
+  assert.match(createdChild.notes[0].id, /^NOTE-/);
 });
 
 test('refuză înscrierea pentru o vizită inexistentă (409)', async t => {

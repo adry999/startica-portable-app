@@ -116,7 +116,7 @@ export function useVisits(initialDate?: string): VisitsData {
     visit: Visit,
     overrides: { fee: string; groupId: string; attendanceDate: string },
   ): Promise<string> {
-    const prefill = buildChildPrefill(visit);
+    const prefill = buildChildPrefill(visit, todayValue);
     const child = {
       ...prefill,
       id: `ID-${crypto.randomUUID()}`,
