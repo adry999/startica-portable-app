@@ -81,9 +81,10 @@
 .allocationField input {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
+  padding: 11px 14px;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .removeRow {
