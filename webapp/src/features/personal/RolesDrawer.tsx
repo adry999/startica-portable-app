@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Drawer, useToast } from '@shared/ui';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useDirtyForm } from '@shared/state/dirty-forms';
-import type { Department, Role } from '@shared/personal/personal.types';
+import type { Department, PersonalSettings, Role } from '@shared/personal/personal.types';
 import styles from './RolesDrawer.module.css';
 
 export interface RolesDrawerProps {
@@ -10,12 +10,16 @@ export interface RolesDrawerProps {
   onClose: () => void;
 }
 
-/** Funcții (23e) — departamente și funcții editabile; o funcție cu angajați nu se poate șterge. */
+/** Funcții (23e) — departamente și funcții editabile; o funcție cu angajați nu se poate șterge.
+ * A3f (verificarea 5, ALINIERE-DESIGN.md): `annualLeaveDays`/`deductOnlyUnexcused` aveau deja
+ * rută + validare pe server (`/api/personal/settings`) și `usePersonal().saveSettings`, dar
+ * niciun loc în UI care să le editeze — adăugate aici, cel mai apropiat ecran de „setări Personal”. */
 export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
   const personal = usePersonal();
   const toast = useToast();
   const [departments, setDepartments] = useState<Department[]>(personal.departments);
   const [roles, setRoles] = useState<Role[]>(personal.roles);
+  const [settings, setSettings] = useState<PersonalSettings>(personal.settings);
   const [newDepartmentName, setNewDepartmentName] = useState('');
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDepartmentId, setNewRoleDepartmentId] = useState(personal.departments[0]?.id ?? '');
@@ -26,6 +30,7 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
     if (!open) return;
     setDepartments(personal.departments);
     setRoles(personal.roles);
+    setSettings(personal.settings);
     setNewRoleDepartmentId(current => current || personal.departments[0]?.id || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -77,10 +82,19 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
     setRoles(previous => previous.filter(role => role.id !== id));
   }
 
+  const settingsDirty = JSON.stringify(settings) !== JSON.stringify(personal.settings);
+  const settingsInvalid =
+    !Number.isInteger(settings.annualLeaveDays) || settings.annualLeaveDays < 0 || settings.annualLeaveDays > 365;
+
   async function save(): Promise<boolean> {
+    if (settingsInvalid) {
+      toast.show({ message: 'Zilele de concediu anual trebuie să fie un număr întreg între 0 și 365.' });
+      return false;
+    }
     setSaving(true);
     try {
       await personal.saveRoles(departments, roles);
+      if (settingsDirty) await personal.saveSettings(settings);
       toast.show({ message: 'Funcțiile au fost salvate.' });
       onClose();
       return true;
@@ -92,11 +106,12 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
     }
   }
 
-  // 13b: nesalvat înseamnă că departamentele/funcțiile de aici diferă de ultima stare confirmată.
+  // 13b: nesalvat înseamnă că departamentele/funcțiile/setările de aici diferă de ultima stare confirmată.
   const dirty =
     open &&
     (JSON.stringify(departments) !== JSON.stringify(personal.departments) ||
-      JSON.stringify(roles) !== JSON.stringify(personal.roles));
+      JSON.stringify(roles) !== JSON.stringify(personal.roles) ||
+      settingsDirty);
   useDirtyForm(dirty ? { label: 'o modificare la funcții', save } : null);
 
   return (
@@ -106,12 +121,39 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
       width={520}
       onClose={onClose}
       footer={
-        <Button onClick={() => void save()} disabled={saving}>
+        <Button onClick={() => void save()} disabled={saving || settingsInvalid}>
           Salvează
         </Button>
       }
     >
       <div className={styles.root}>
+        <div className={styles.settingsGroup}>
+          <p className={styles.settingsTitle}>Setări concedii și salarii</p>
+          <label className={styles.settingsField}>
+            Zile de concediu anual
+            <input
+              type="number"
+              min={0}
+              max={365}
+              value={settings.annualLeaveDays}
+              onChange={event =>
+                setSettings(previous => ({ ...previous, annualLeaveDays: Number(event.target.value) }))
+              }
+            />
+          </label>
+          <label className={styles.settingsCheckbox}>
+            <input
+              type="checkbox"
+              checked={settings.deductOnlyUnexcused}
+              onChange={event => setSettings(previous => ({ ...previous, deductOnlyUnexcused: event.target.checked }))}
+            />
+            Scade din salariu doar absențele nemotivate (A)
+          </label>
+          <p className={styles.settingsHint}>
+            Debifat: se scad și învoirile (I) și zilele fără plată (FP), nu doar absențele nemotivate.
+          </p>
+        </div>
+
         {departments
           .slice()
           .sort((a, b) => a.order - b.order)

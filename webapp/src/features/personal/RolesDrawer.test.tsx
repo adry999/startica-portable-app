@@ -5,7 +5,18 @@ import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { reloadPersonal } from '@shared/personal/usePersonal';
+import { __resetSyncStatusForTests } from '@shared/api/useSyncStatus';
 import { RolesDrawer } from './RolesDrawer';
+
+// usePersonal se abonează la useSyncStatus, care deschide un EventSource real spre
+// /api/sync/events dacă nu e stubuit (ca în useSyncStatus.test.ts) — fără asta, conexiunea
+// eșuează asincron și poate lovi mock-ul de fetch chiar în timpul cleanup-ului RTL, atribuind
+// eroarea testului curent la întâmplare (flaky, mai ales cu teste mai multe/mai lungi în fișier).
+class FakeEventSource {
+  onerror: (() => void) | null = null;
+  addEventListener() {}
+  close() {}
+}
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -33,21 +44,24 @@ const fixturePersonalState = {
 };
 
 function stubFetch() {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (path: string) => {
-      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
-      if (path === '/api/state')
-        return jsonResponse({
-          state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
-          revision: 1,
-          updatedAt: '2026-09-23T10:00:00Z',
-        });
-      if (path === '/api/health') return jsonResponse({});
-      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
-      throw new Error(`neașteptat: ${path}`);
-    }),
-  );
+  const mock = vi.fn(async (path: string, init?: { body?: string }) => {
+    if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
+    if (path === '/api/state')
+      return jsonResponse({
+        state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+        revision: 1,
+        updatedAt: '2026-09-23T10:00:00Z',
+      });
+    if (path === '/api/health') return jsonResponse({});
+    if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+    if (path === '/api/personal/roles')
+      return jsonResponse({ departments: fixturePersonalState.departments, roles: fixturePersonalState.roles });
+    if (path === '/api/personal/settings')
+      return jsonResponse({ settings: init?.body ? JSON.parse(init.body) : fixturePersonalState.settings });
+    throw new Error(`neașteptat: ${path}`);
+  });
+  vi.stubGlobal('fetch', mock);
+  return mock;
 }
 
 async function loadedSession() {
@@ -56,8 +70,15 @@ async function loadedSession() {
 }
 
 describe('RolesDrawer', () => {
-  beforeEach(() => stubFetch());
-  afterEach(() => vi.unstubAllGlobals());
+  beforeEach(() => {
+    __resetSyncStatusForTests();
+    vi.stubGlobal('EventSource', FakeEventSource as unknown as typeof EventSource);
+    stubFetch();
+  });
+  afterEach(() => {
+    __resetSyncStatusForTests();
+    vi.unstubAllGlobals();
+  });
 
   it('o funcție cu angajați nu are buton de ștergere activ', async () => {
     await loadedSession();
@@ -99,5 +120,54 @@ describe('RolesDrawer', () => {
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o modificare la funcții');
+  });
+
+  // A3f (verificarea 5, ALINIERE-DESIGN.md): backend + hook existau deja (`/api/personal/settings`,
+  // `usePersonal().saveSettings`), dar niciun câmp din UI nu le folosea — adăugate aici.
+  it('A3f: setările „Zile de concediu anual” și „doar absențe nemotivate” se salvează prin /api/personal/settings', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+    const fetchMock = stubFetch();
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    const daysInput = await screen.findByLabelText('Zile de concediu anual');
+    expect(daysInput).toHaveValue(28);
+    const checkbox = screen.getByLabelText(/Scade din salariu doar absențele nemotivate/);
+    expect(checkbox).toBeChecked();
+
+    await userEvent.clear(daysInput);
+    await userEvent.type(daysInput, '21');
+    await userEvent.click(checkbox);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    const settingsCall = fetchMock.mock.calls.find(([path]) => path === '/api/personal/settings');
+    expect(settingsCall).toBeDefined();
+    expect(JSON.parse((settingsCall![1] as { body: string }).body)).toEqual({
+      annualLeaveDays: 21,
+      deductOnlyUnexcused: false,
+    });
+  });
+
+  it('A3f: „Zile de concediu anual” în afara [0, 365] dezactivează Salvează', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    const daysInput = await screen.findByLabelText('Zile de concediu anual');
+    await userEvent.clear(daysInput);
+    await userEvent.type(daysInput, '400');
+
+    expect(screen.getByRole('button', { name: 'Salvează' })).toBeDisabled();
   });
 });
