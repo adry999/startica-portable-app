@@ -53,8 +53,11 @@ describe('buildChildRecord', () => {
     groupId: '',
     parent: 'Maria Popescu',
     phone: '0722000000',
+    parentRelation: '',
     parent2: '',
     phone2: '',
+    parent2Relation: '',
+    contractNumber: '',
     healthNotes: '',
     idnp: '',
     address: '',
@@ -68,6 +71,7 @@ describe('buildChildRecord', () => {
     dueDay: '10',
     feeHistoryText: '',
     statusHistoryText: '',
+    pickupPersons: [],
     notes: '',
   };
 

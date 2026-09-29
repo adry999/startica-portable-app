@@ -6,6 +6,16 @@ export { CHILD_STATUSES };
 
 export type ChildFeeCurrency = 'MDL' | 'EUR';
 
+/** Rândul editabil dintr-o persoană autorizată să ridice copilul (A3, Copii.dc.html#2b) —
+ * `id` local pentru listă/React key; normalizeRecord() atribuie unul stabil la submit dacă lipsește. */
+export interface PickupPersonDraft {
+  id: string;
+  name: string;
+  relation: string;
+  phone: string;
+  note: string;
+}
+
 export interface ChildFormValues {
   name: string;
   /** Nume/prenume separate (formularul „Copil nou”); `name` se recalculează din ele
@@ -17,8 +27,11 @@ export interface ChildFormValues {
   groupId: string;
   parent: string;
   phone: string;
+  parentRelation: string;
   parent2: string;
   phone2: string;
+  parent2Relation: string;
+  contractNumber: string;
   healthNotes: string;
   idnp: string;
   address: string;
@@ -32,6 +45,7 @@ export interface ChildFormValues {
   dueDay: string;
   feeHistoryText: string;
   statusHistoryText: string;
+  pickupPersons: PickupPersonDraft[];
 }
 
 interface FeeHistoryEntry {
@@ -65,8 +79,11 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
     groupId: child?.groupId ?? '',
     parent: child?.parent ?? '',
     phone: child?.phone ?? '',
+    parentRelation: child?.parentRelation ?? '',
     parent2: child?.parent2 ?? '',
     phone2: child?.phone2 ?? '',
+    parent2Relation: child?.parent2Relation ?? '',
+    contractNumber: child?.contractNumber ?? '',
     healthNotes: child?.healthNotes ?? '',
     idnp: child?.idnp ?? '',
     address: child?.address ?? '',
@@ -80,6 +97,13 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
     dueDay: String(child?.dueDay || 10),
     feeHistoryText: (child?.feeHistory ?? []).map(entry => `${entry.from} = ${entry.amount}`).join('\n'),
     statusHistoryText: (child?.statusHistory ?? []).map(entry => `${entry.from} = ${entry.status}`).join('\n'),
+    pickupPersons: (child?.pickupPersons ?? []).map(person => ({
+      id: person.id,
+      name: person.name,
+      relation: person.relation ?? '',
+      phone: person.phone ?? '',
+      note: person.note ?? '',
+    })),
   };
 }
 
@@ -128,10 +152,22 @@ export function buildChildRecord(previous: Child | null, id: string, values: Chi
     name,
     firstName,
     lastName,
+    contractNumber: values.contractNumber.trim(),
     parent: values.parent.trim(),
     phone: values.phone.trim(),
+    parentRelation: values.parentRelation.trim(),
     parent2: values.parent2.trim(),
     phone2: values.phone2.trim(),
+    parent2Relation: values.parent2Relation.trim(),
+    pickupPersons: values.pickupPersons
+      .filter(person => person.name.trim())
+      .map(person => ({
+        id: person.id,
+        name: person.name.trim(),
+        relation: person.relation.trim(),
+        phone: person.phone.trim(),
+        note: person.note.trim(),
+      })),
     healthNotes: values.healthNotes,
     idnp: values.idnp.trim(),
     address: values.address.trim(),

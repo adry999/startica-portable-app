@@ -34,9 +34,20 @@ describe('ChildFormDrawer', () => {
     render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getAllByLabelText('Nume')[0]).toBeInTheDocument();
     expect(screen.getByLabelText('Prenume')).toBeInTheDocument();
-    expect(screen.getByLabelText('IDNP')).toBeInTheDocument();
-    expect(screen.getByLabelText('Adresă')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salvează copilul' })).toBeInTheDocument();
+  });
+
+  it('15a: „Copil nou” nu arată IDNP/Adresă/secțiunile 5-6 — apar doar la editare, în „Alte date”', () => {
+    render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.queryByLabelText('IDNP')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Adresă')).not.toBeInTheDocument();
+    expect(screen.queryByText('5 · Alte date')).not.toBeInTheDocument();
+    expect(screen.queryByText('6 · Istoric (avansat)')).not.toBeInTheDocument();
+
+    const child = { id: 'C-1', name: 'Ana', parent: 'Maria' } as unknown as import('@contracts/record-types.mjs').Child;
+    render(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByText('5 · Alte date')).toBeInTheDocument();
+    expect(screen.getByText('6 · Istoric (avansat)')).toBeInTheDocument();
   });
 
   it('trimite valorile completate la click pe Salvează', async () => {
@@ -119,8 +130,10 @@ describe('ChildFormDrawer', () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Nume Vechi', firstName: '', lastName: '' }));
   });
 
-  it('IDNP acceptă doar cifre, limitat la 13', async () => {
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+  it('IDNP acceptă doar cifre, limitat la 13 (secțiunea „Alte date”, la editare)', async () => {
+    const child = { id: 'C-1', name: 'Ana', parent: 'Maria' } as unknown as import('@contracts/record-types.mjs').Child;
+    render(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    await userEvent.click(screen.getByText('5 · Alte date'));
     const idnpInput = screen.getByLabelText('IDNP');
     await userEvent.type(idnpInput, 'ab123456789012345cd');
     expect(idnpInput).toHaveValue('1234567890123');
@@ -140,7 +153,7 @@ describe('ChildFormDrawer', () => {
     );
 
     const chip = screen.getByRole('button', { name: /Fluturași/ });
-    expect(chip).toHaveTextContent('2 locuri libere');
+    expect(chip).toHaveTextContent('Fluturași · 2 locuri');
 
     await userEvent.click(chip);
     await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
@@ -163,7 +176,7 @@ describe('ChildFormDrawer', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByRole('button', { name: /Fluturași/ })).toHaveTextContent('2 locuri libere');
+    expect(screen.getByRole('button', { name: /Fluturași/ })).toHaveTextContent('Fluturași · 2 locuri');
   });
 
   it('15a: arată grupele compatibile cu vârsta calculată din data nașterii', async () => {
@@ -172,13 +185,13 @@ describe('ChildFormDrawer', () => {
     ];
     render(<ChildFormDrawer target="new" groups={groups} onSubmit={vi.fn()} onClose={vi.fn()} />);
 
-    expect(screen.queryByText('Grupe compatibile cu vârsta')).not.toBeInTheDocument();
+    expect(screen.queryByText(/se potrivește în grupele/)).not.toBeInTheDocument();
 
     const fourYearsAgo = new Date();
     fourYearsAgo.setFullYear(fourYearsAgo.getFullYear() - 4);
     await userEvent.type(screen.getByLabelText(/Data nașterii/), fourYearsAgo.toISOString().slice(0, 10));
 
-    expect(screen.getByText('Grupe compatibile cu vârsta')).toBeInTheDocument();
+    expect(screen.getByText(/se potrivește în grupele/)).toBeInTheDocument();
     expect(screen.getAllByText('Fluturași').length).toBeGreaterThanOrEqual(1);
   });
 });

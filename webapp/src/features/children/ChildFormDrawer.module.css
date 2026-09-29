@@ -14,17 +14,21 @@
 }
 
 .section legend {
-  padding: 0;
+  all: unset;
+  display: block;
 }
 
-/* 13-formulare.md #15a: titlurile celor 4 secțiuni numerotate. */
+/* Formulare.dc.html#15a: titlurile celor 4 secțiuni numerotate. */
 .sectionTitle {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   color: var(--orange-ink);
-  letter-spacing: 0.02em;
-  padding: 0;
+  letter-spacing: 0.08em;
+}
+
+.optional {
+  color: var(--subtle);
 }
 
 .grid3 {
@@ -39,25 +43,15 @@
   gap: 10px;
 }
 
-.compatGroups {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-}
-
-.compatBadge {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--orange-ink);
-  background: var(--orange-soft);
-  border-radius: var(--radius-pill, 999px);
-  padding: 2px var(--space-8);
+.hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
 }
 
 .parentRow {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.4fr 1fr 110px;
   gap: 10px;
 }
 
@@ -73,17 +67,49 @@
   cursor: pointer;
 }
 
+.dueDayField {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: 11px 14px;
+}
+
+.dueDayField span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--subtle);
+}
+
+.dueDayField input {
+  border: none;
+  padding: 0;
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dueDayField input:focus {
+  outline: none;
+}
+
+.dueDayField:focus-within {
+  border: 1.5px solid var(--orange);
+}
+
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
 }
 
 .presetCard {
-  border: 2px solid var(--input-border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--white);
-  padding: var(--space-8) var(--space-12);
+  padding: 12px 14px;
   text-align: left;
   cursor: pointer;
   font: inherit;
@@ -93,19 +119,19 @@
 }
 
 .presetCard.selected {
-  border-color: var(--orange);
+  border: 2px solid var(--orange);
   background: var(--orange-soft);
 }
 
 .presetCardName {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
   color: var(--slate);
 }
 
 .presetCardPrice {
   font-size: 12px;
-  color: var(--subtle);
+  color: var(--muted);
 }
 
 .groupChips {
@@ -122,10 +148,7 @@
   font: inherit;
   font-size: 13px;
   font-weight: 800;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.3;
+  white-space: nowrap;
   background: var(--neutral-soft);
   color: var(--slate);
 }
@@ -170,10 +193,57 @@
   color: var(--white);
 }
 
-.groupChipSpots {
-  font-size: 10px;
-  font-weight: 600;
-  opacity: 0.8;
+.details {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-12);
+}
+
+.detailsSummary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--orange-ink);
+}
+
+.detailsBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+}
+
+.pickupList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.pickupRow {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
+  gap: var(--space-8);
+  align-items: center;
+}
+
+.pickupRow input {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.removeRow {
+  border: none;
+  background: var(--neutral-soft);
+  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+  flex: none;
 }
 
 .field {
@@ -197,9 +267,11 @@
   resize: vertical;
 }
 
-.hint {
-  font-weight: 400;
-  color: var(--subtle);
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border: 1.5px solid var(--orange);
 }
 
 .notice {
@@ -207,4 +279,24 @@
   font-size: 12px;
   color: var(--subtle);
   font-weight: 400;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  width: 100%;
+}
+
+.footerNote {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.footerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  margin-left: auto;
 }
