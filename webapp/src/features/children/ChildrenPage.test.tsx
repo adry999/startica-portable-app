@@ -295,7 +295,8 @@ describe('ChildrenPage', () => {
     renderPage();
     await userEvent.click(screen.getByText('Andrei Popescu'));
 
-    expect(screen.getByText(/1\/15 copii · Educator —/)).toBeInTheDocument();
+    expect(screen.getByText(/1\/15 copii/)).toBeInTheDocument();
+    expect(screen.getByText(/Educator —/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Schimbă' }));
     expect(screen.getByRole('button', { name: 'Schimbă grupa' })).toBeInTheDocument();
@@ -335,7 +336,7 @@ describe('ChildrenPage', () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByRole('button', { name: '+ Adaugă copil' }));
-    expect(screen.getByRole('dialog', { name: 'Adaugă: copil' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Copil nou' })).toBeInTheDocument();
 
     await user.type(screen.getAllByLabelText('Nume')[0], 'Radu');
     await user.type(screen.getByLabelText('Prenume'), 'Ionescu');
@@ -357,7 +358,7 @@ describe('ChildrenPage', () => {
     await user.click(within(row).getByLabelText('Mai multe acțiuni'));
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
-    expect(screen.getByRole('dialog', { name: 'Editează: copil' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Editează copilul' })).toBeInTheDocument();
     // Fișă veche, fără firstName/lastName salvate: câmpurile pornesc goale (nu se
     // despică `name`-ul existent) — schimbarea numelui cere completarea ambelor.
     const lastNameInput = screen.getAllByLabelText('Nume')[0] as HTMLInputElement;

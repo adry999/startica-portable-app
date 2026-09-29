@@ -159,13 +159,70 @@
   font-size: 12px;
 }
 
-/* Note (CF-4, 09-copii-fisa.md): cea mai recentă pe --yellow-soft, restul pe --neutral-softer. */
+.parentNameCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.parentNameCol small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Date personale (28-fisa-copilului §6): grilă etichetă/valoare (Data nașterii, IDNP, Adresă,
+   Alergii). Etichetele și valorile alternează pe rânduri, o pereche pe rând. */
+.personalGrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 18px;
+  font-size: 14px;
+}
+
+.personalLabel {
+  color: var(--muted);
+}
+
+.personalValue {
+  font-weight: 700;
+  color: var(--slate);
+}
+
+/* Nu există un token identic cu #a3361f din design — cea mai apropiată nuanță existentă
+   e --coral-ink (#9a3f1c), ca să nu se introducă o culoare hex nouă (CLAUDE.md §Design). */
+.healthValue {
+  color: var(--coral-ink);
+}
+
+.divider {
+  height: 1px;
+  background: var(--row-divider);
+}
+
+.sectionSubtitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.sectionSubtitleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* Note (CF-4, 09-copii-fisa.md / A3 28-fisa-copilului): cea mai recentă pe --yellow-soft,
+   restul pe --neutral-softer; meta (dată/autor/ediție) + meniul ⋯ pe un rând sub text. */
 .noteRow {
   margin: 0 0 var(--space-8);
-  padding: var(--space-8) var(--space-10);
-  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
   background: var(--neutral-softer);
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.45;
   color: var(--slate);
 }
 
@@ -177,10 +234,21 @@
   background: var(--yellow-soft);
 }
 
-.noteDate {
-  font-weight: 700;
-  color: var(--muted);
-  margin-right: var(--space-6);
+.noteText {
+  margin: 0 0 4px;
+}
+
+.noteMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.noteRecent .noteMeta {
+  color: var(--yellow-ink);
 }
 
 .noteForm {
@@ -198,15 +266,10 @@
   resize: vertical;
 }
 
-/* Date personale (28-fisa-copilului): alergii/sănătate, doar dacă sunt completate. */
-.healthNote {
-  margin: var(--space-6) 0 0;
-  padding: var(--space-6) var(--space-8);
-  border-radius: var(--radius-sm);
-  background: var(--pink-soft);
-  color: var(--pink-ink);
-  font-size: 13px;
-  font-weight: 700;
+.noteFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
 }
 
 /* Plătitori reținuți (CF-2, 09-copii-fisa.md): aliasuri din payerAliases, cu × pentru ștergere. */
@@ -305,7 +368,7 @@
   flex: none;
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   background: var(--neutral-soft);
   color: var(--slate);
   display: flex;
@@ -313,7 +376,7 @@
   justify-content: center;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 16px;
+  font-size: 20px;
 }
 
 .groupSquareOrange {

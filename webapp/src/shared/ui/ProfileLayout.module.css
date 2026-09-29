@@ -88,8 +88,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: var(--space-20);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: var(--space-16);
   align-items: start;
 }
 
@@ -114,6 +114,7 @@
 
 .section {
   border-radius: var(--radius-lg);
+  padding: 20px 22px;
 }
 
 .sectionHead {

@@ -19,6 +19,7 @@ import {
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { useSyncStatus } from '@shared/api/useSyncStatus';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -30,7 +31,14 @@ import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
-import type { Child, ChildNote, PayerAlias, Payment, PaymentAllocation } from '@contracts/record-types.mjs';
+import type {
+  Child,
+  ChildNote,
+  PayerAlias,
+  PickupPerson,
+  Payment,
+  PaymentAllocation,
+} from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
 
@@ -60,12 +68,15 @@ export function ChildProfileView({
   const profileData = useChildProfile(childId, month);
   const session = useAppSession();
   const { rates } = useExchangeRates();
+  const sync = useSyncStatus();
   const toast = useToast();
   const navigate = useNavigate();
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [changingGroup, setChangingGroup] = useState(false);
   const [addingNote, setAddingNote] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
 
   if (profileData.status === 'loading') return <LoadingState />;
   if (profileData.status === 'failed')
@@ -96,7 +107,7 @@ export function ChildProfileView({
   async function addNote() {
     const text = noteText.trim();
     if (!text) return;
-    const note: ChildNote = { id: `NOTE-${crypto.randomUUID()}`, text, date: today() };
+    const note: ChildNote = { id: `NOTE-${crypto.randomUUID()}`, text, date: today(), author: sync.deviceName || '' };
     try {
       await session.mutate('/api/record', {
         type: 'children',
@@ -108,6 +119,50 @@ export function ChildProfileView({
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
+  }
+
+  async function saveNoteEdit(note: ChildNote) {
+    const text = editingNoteText.trim();
+    if (!text) return;
+    try {
+      await session.mutate('/api/record', {
+        type: 'children',
+        mode: 'update',
+        record: {
+          ...child,
+          notes: (child.notes ?? []).map(entry =>
+            entry.id === note.id ? { ...entry, text, updatedAt: new Date().toISOString() } : entry,
+          ),
+        } satisfies Child,
+      });
+      setEditingNoteId(null);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function setNoteDeleted(note: ChildNote, deletedAt: string | null) {
+    try {
+      await session.mutate('/api/record', {
+        type: 'children',
+        mode: 'update',
+        record: {
+          ...child,
+          notes: (child.notes ?? []).map(entry => (entry.id === note.id ? { ...entry, deletedAt } : entry)),
+        } satisfies Child,
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteNote(note: ChildNote) {
+    await setNoteDeleted(note, new Date().toISOString());
+    toast.show({
+      message: 'Notă ștearsă.',
+      actionLabel: 'Anulează',
+      onAction: () => void setNoteDeleted(note, null),
+    });
   }
 
   // CF-2 (09-copii-fisa.md): „Plătitorii reținuți se pot șterge din fișă” — ștergere directă,
@@ -161,28 +216,62 @@ export function ChildProfileView({
         }}
         left={
           <>
-            {/* CF-2 (09-copii-fisa.md): data nașterii e deja în hero ("Născut ..."), nu se
-                duplică aici — cardul arată doar IDNP/adresă, mereu vizibil (chiar dacă goale). */}
+            {/* CF-2 (09-copii-fisa.md), A3 (Copii.dc.html#2b): Date personale și Părinți sunt
+                acum un singur card — data nașterii rămâne și în hero ("Născut ..."), nu e conflict. */}
             <ProfileSection title="Date personale">
-              <div className={styles.parentContactRow}>
-                <strong>IDNP</strong>
-                <span>{child.idnp || '—'}</span>
+              <div className={styles.personalGrid}>
+                <span className={styles.personalLabel}>Data nașterii</span>
+                <span className={styles.personalValue}>{child.birthDate ? formatDate(child.birthDate) : '—'}</span>
+                <span className={styles.personalLabel}>IDNP</span>
+                <span className={styles.personalValue}>{child.idnp || '—'}</span>
+                <span className={styles.personalLabel}>Adresă</span>
+                <span className={styles.personalValue}>{child.address || '—'}</span>
+                {child.healthNotes && (
+                  <>
+                    <span className={styles.personalLabel}>Alergii, sănătate</span>
+                    <span className={`${styles.personalValue} ${styles.healthValue}`}>{child.healthNotes}</span>
+                  </>
+                )}
               </div>
-              <div className={styles.parentContactRow}>
-                <strong>Adresă</strong>
-                <span>{child.address || '—'}</span>
-              </div>
-              {child.healthNotes && <p className={styles.healthNote}>{child.healthNotes}</p>}
-            </ProfileSection>
 
-            <ProfileSection title="Părinți">
-              <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
-              {(child.parent2 || child.phone2) && (
+              <div className={styles.divider} />
+              <span className={styles.sectionSubtitle}>Părinți</span>
+              <ParentRow
+                name={child.parent}
+                relation={child.parentRelation}
+                phone={child.phone}
+                onAddPhone={() => setEditDrawerOpen(true)}
+              />
+              {(child.parent2 || child.phone2 || child.parent2Relation) && (
                 <ParentRow
                   name={child.parent2 || ''}
+                  relation={child.parent2Relation}
                   phone={child.phone2 || ''}
                   onAddPhone={() => setEditDrawerOpen(true)}
                 />
+              )}
+
+              <div className={styles.divider} />
+              <div className={styles.sectionSubtitleRow}>
+                <span className={styles.sectionSubtitle}>Pot ridica copilul</span>
+                <button type="button" className={styles.sectionLink} onClick={() => setEditDrawerOpen(true)}>
+                  + Adaugă
+                </button>
+              </div>
+              {(child.pickupPersons ?? []).length === 0 ? (
+                <p className={styles.notice}>Nimeni adăugat.</p>
+              ) : (
+                (child.pickupPersons ?? []).map((person: PickupPerson) => (
+                  <div key={person.id} className={styles.parentContactRow}>
+                    <div className={styles.parentNameCol}>
+                      <strong>{person.name}</strong>
+                      {(person.relation || person.note) && (
+                        <small>{[person.relation, person.note].filter(Boolean).join(' · ')}</small>
+                      )}
+                    </div>
+                    {person.phone && <span>{person.phone}</span>}
+                  </div>
+                ))
               )}
             </ProfileSection>
 
@@ -192,16 +281,15 @@ export function ChildProfileView({
                   {profileData.groupName.charAt(0).toUpperCase() || '—'}
                 </span>
                 <div className={styles.groupInfo}>
-                  <strong>{profileData.groupName}</strong>
+                  <strong>
+                    {profileData.groupName} · {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii
+                  </strong>
                   <small>
-                    {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii · Educator{' '}
-                    {profileData.group?.educator || '—'}
+                    Educator {profileData.group?.educator || '—'}
+                    {profileData.group?.ageMinYears != null || profileData.group?.ageMaxYears != null
+                      ? ` · vârste ${profileData.group?.ageMinYears ?? '0'}–${profileData.group?.ageMaxYears ?? '∞'} ani`
+                      : ''}
                   </small>
-                  {(profileData.group?.ageMinYears != null || profileData.group?.ageMaxYears != null) && (
-                    <small className={styles.groupAges}>
-                      vârste {profileData.group?.ageMinYears ?? '0'}–{profileData.group?.ageMaxYears ?? '∞'} ani
-                    </small>
-                  )}
                 </div>
                 {changingGroup ? (
                   <SearchSelect
@@ -247,6 +335,15 @@ export function ChildProfileView({
                     autoFocus
                     value={noteText}
                     onChange={event => setNoteText(event.target.value)}
+                    onKeyDown={event => {
+                      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                        event.preventDefault();
+                        void addNote();
+                      } else if (event.key === 'Escape') {
+                        setAddingNote(false);
+                        setNoteText('');
+                      }
+                    }}
                     placeholder="Scrie o notă…"
                   />
                   <Button type="submit" disabled={!noteText.trim()}>
@@ -254,53 +351,72 @@ export function ChildProfileView({
                   </Button>
                 </form>
               )}
-              {(child.notes ?? []).length === 0 ? (
-                <p>Nicio notă încă.</p>
-              ) : (
-                (child.notes ?? []).map((note, index) => (
-                  <p key={note.id} className={`${styles.noteRow} ${index === 0 ? styles.noteRecent : ''}`}>
-                    <span className={styles.noteDate}>{formatDate(note.date)}</span>
-                    {note.text}
-                  </p>
-                ))
-              )}
-            </ProfileSection>
-
-            <ProfileSection title="Plătitori reținuți">
-              <p className={styles.aliasIntro}>
-                Se adaugă automat din{' '}
-                <button type="button" onClick={() => onNavigate('assign')}>
-                  Asociere achitări
-                </button>{' '}
-                când bifezi „Ține minte plătitorul”.
-              </p>
-              {profileData.payerAliases.length === 0 ? (
-                <p>Niciun plătitor reținut încă.</p>
-              ) : (
-                profileData.payerAliases.map(alias => {
-                  const usageCount = profileData.payments.filter(
-                    payment => normalizePayerAlias(payment.sourceName || '') === normalizePayerAlias(alias.alias),
-                  ).length;
-                  return (
-                    <div key={alias.id} className={styles.aliasRow}>
-                      <span className={styles.aliasName}>
-                        <strong>{alias.alias}</strong>
-                        <small>
-                          din {formatDate(alias.createdAt.slice(0, 10))}
-                          {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
-                        </small>
-                      </span>
-                      <button
-                        type="button"
-                        aria-label={`Șterge ${alias.alias}`}
-                        onClick={() => void deleteAlias(alias)}
+              {(() => {
+                const visibleNotes = (child.notes ?? []).filter(note => !note.deletedAt);
+                if (visibleNotes.length === 0) return <p>Nicio notă încă.</p>;
+                return visibleNotes.map((note, index) => {
+                  if (editingNoteId === note.id) {
+                    return (
+                      <form
+                        key={note.id}
+                        className={styles.noteForm}
+                        onSubmit={event => {
+                          event.preventDefault();
+                          void saveNoteEdit(note);
+                        }}
                       >
-                        ×
-                      </button>
+                        <textarea
+                          rows={2}
+                          autoFocus
+                          value={editingNoteText}
+                          onChange={event => setEditingNoteText(event.target.value)}
+                          onKeyDown={event => {
+                            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                              event.preventDefault();
+                              void saveNoteEdit(note);
+                            } else if (event.key === 'Escape') {
+                              setEditingNoteId(null);
+                            }
+                          }}
+                        />
+                        <div className={styles.noteFormActions}>
+                          <Button type="button" variant="outline" onClick={() => setEditingNoteId(null)}>
+                            Renunță
+                          </Button>
+                          <Button type="submit" disabled={!editingNoteText.trim()}>
+                            Salvează
+                          </Button>
+                        </div>
+                      </form>
+                    );
+                  }
+                  return (
+                    <div key={note.id} className={`${styles.noteRow} ${index === 0 ? styles.noteRecent : ''}`}>
+                      <p className={styles.noteText}>{note.text}</p>
+                      <div className={styles.noteMeta}>
+                        <span>
+                          {formatDate(note.date)}
+                          {note.author ? ` · ${note.author}` : ''}
+                          {note.updatedAt ? ' · editată' : ''}
+                        </span>
+                        <RowMenu
+                          ariaLabel={`Acțiuni notă ${formatDate(note.date)}`}
+                          items={[
+                            {
+                              label: 'Editează',
+                              onClick: () => {
+                                setEditingNoteId(note.id);
+                                setEditingNoteText(note.text);
+                              },
+                            },
+                            { label: 'Șterge', danger: true, onClick: () => void deleteNote(note) },
+                          ]}
+                        />
+                      </div>
                     </div>
                   );
-                })
-              )}
+                });
+              })()}
             </ProfileSection>
           </>
         }
@@ -364,6 +480,43 @@ export function ChildProfileView({
                 + Încarcă
               </Button>
             </ProfileSection>
+
+            <ProfileSection title="Plătitori reținuți">
+              <p className={styles.aliasIntro}>
+                Transferurile de la ei se propun direct pentru {child.firstName || child.name} la{' '}
+                <button type="button" onClick={() => onNavigate('assign')}>
+                  Asociere achitări
+                </button>
+                .
+              </p>
+              {profileData.payerAliases.length === 0 ? (
+                <p>Niciun plătitor reținut încă.</p>
+              ) : (
+                profileData.payerAliases.map(alias => {
+                  const usageCount = profileData.payments.filter(
+                    payment => normalizePayerAlias(payment.sourceName || '') === normalizePayerAlias(alias.alias),
+                  ).length;
+                  return (
+                    <div key={alias.id} className={styles.aliasRow}>
+                      <span className={styles.aliasName}>
+                        <strong>{alias.alias}</strong>
+                        <small>
+                          din {formatDate(alias.createdAt.slice(0, 10))}
+                          {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
+                        </small>
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Șterge ${alias.alias}`}
+                        onClick={() => void deleteAlias(alias)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </ProfileSection>
           </>
         }
       />
@@ -379,10 +532,23 @@ export function ChildProfileView({
   );
 }
 
-function ParentRow({ name, phone, onAddPhone }: { name: string; phone: string; onAddPhone: () => void }) {
+function ParentRow({
+  name,
+  relation,
+  phone,
+  onAddPhone,
+}: {
+  name: string;
+  relation?: string;
+  phone: string;
+  onAddPhone: () => void;
+}) {
   return (
     <div className={styles.parentContactRow}>
-      <strong>{name || 'Necunoscut'}</strong>
+      <div className={styles.parentNameCol}>
+        <strong>{name || 'Necunoscut'}</strong>
+        {relation && <small>{relation}</small>}
+      </div>
       {phone ? (
         <span>{phone}</span>
       ) : (
