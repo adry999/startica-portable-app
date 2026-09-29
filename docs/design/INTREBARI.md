@@ -2,13 +2,21 @@
 
 Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
 
-## ⏳ Modulul 2 (Copii) — CF-2, fișa copilului: „Date personale” + „Plătitori reținuți” lipsesc din modelul de date
+## ⏳ Fișa copilului — relația (Mamă/Tată) pe cei 2 părinți + „persoane autorizate să ridice copilul” lipsesc din modelul de date
 
-Auditul (`AUDIT-UI-2026-09-28.md` CF-2) le marchează **[sigur]**, dar am verificat `record-types.d.mts`: `Child` are `birthDate` (deja afișat), dar **niciun câmp IDNP/adresă**, și **niciun concept `payer_aliases`** (plătitori reținuți) nu există nicăieri în cod — nici schemă, nici API, nici UI. Nu-s tweak-uri de UI, e o funcție nouă (schemă + backend + UI + ștergere alias).
+Mockup-ul (`Copii.dc.html`, cardul de contacte) arată sub fiecare nume de părinte eticheta relației („Tată”, „Mamă”), dar `Child` (`record-types.d.mts`) are doar `parent`/`phone`/`parent2`/`phone2` — două sloturi fixe de nume+telefon, fără câmp de relație. Mockup-ul nu arată o listă separată de „persoane autorizate să ridice copilul” (dincolo de cei 2 părinți), dar nici schema nu are un asemenea concept — dacă ar trebui adăugat e tot o decizie de produs, nu doar de UI.
 
-Decizie necesară: (a) adăugăm acum IDNP + adresă pe `Child` și un tabel/câmp nou pentru plătitori reținuți (plan tehnic separat, ca la EUR/BNM sau filiale), sau (b) le amânăm și Modulul 2 se închide fără cardurile astea două (rămân pe coadă, similar cu „Tipărește chitanța” mai sus)?
+Nu e un tweak de UI: fie (a) `parent`/`parent2` capătă un câmp `relation?: string` (schemă + migrare + formular + card), fie (b) rămân fără etichetă de relație (mockup-ul afișează un detaliu pe care spec-ul scris nu-l cere explicit — `09-copii-fisa.md` nu menționează „Mamă/Tată”), fie (c) se face un model mai mare (listă variabilă de contacte, fiecare cu relație + autorizare de ridicare) — schimbare de model separată de CF-4 (notele), deja semnalată în `COADA-DE-LUCRU.md` („Nume/Prenume separate pe Child și număr variabil de părinți”) ca rămasă pentru altă sesiune.
 
-Până la răspuns: Modulul 2 se închide fără „Date personale” (rămâne doar data nașterii, deja afișată în header) și fără „Plătitori reținuți" — restul din CF-1…CF-10 se face normal.
+Până la răspuns: cardul de contacte rămâne cum e (2 părinți, nume+telefon, fără relație, fără listă de persoane autorizate).
+
+## ⏳ Modulul 2 (Copii) — CF-2, fișa copilului: „Plătitori reținuți” lipsesc din modelul de date
+
+**Actualizat 2026-09-29:** „Date personale” (IDNP + adresă) s-a implementat între timp — `Child.idnp`/`Child.address` există în schemă, în `ChildFormDrawer` și în `ChildProfileView` (verificat direct în cod, nu doar din audit). Rămâne deschis doar „Plătitori reținuți”: niciun concept `payer_aliases` nu există în cod — nici schemă, nici API, nici UI. Nu e tweak de UI, e funcție nouă (schemă + backend + UI + ștergere alias).
+
+Decizie necesară: (a) adăugăm un tabel/câmp nou pentru plătitori reținuți (plan tehnic separat, ca la EUR/BNM sau filiale), sau (b) rămâne amânat definitiv?
+
+Până la răspuns: fișa copilului rămâne fără „Plătitori reținuți" — restul din CF-1…CF-10 e închis (vezi `COADA-DE-LUCRU.md`).
 
 ## ✅ Achitări — „Tipărește chitanța” (punctul 5) — confirmat amânat
 Rămâne amânat, se reia împreună cu ecranul 16b (`screens/15-tiparire.md`). Nimic de schimbat acum.
