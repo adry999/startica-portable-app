@@ -148,3 +148,12 @@ Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `no
 3. Retroactiv, inclusiv iunie–iulie 2026 — nu doar de-acum înainte.
 
 **Executat 30.09** (`scripts/migrate/b3-pool-expenses-to-payments.mjs --execute`, backup luat înainte): 143/143 migrate, 0 erori. Vezi `COADA-DE-LUCRU.md` pentru detalii și impactul retroactiv pe iunie/iulie 2026.
+
+## ⏳ Contrast buton primar — alb pe `--orange` (punctul 5, PROMPT-CLAUDE-CODE-3.md) — decizie deschisă
+
+Textul alb pe fundal `--orange` (butonul principal peste tot în aplicație) are contrast **2,4:1** — sub minimul WCAG AA pentru text normal (4,5:1) și chiar sub cel pentru text mare/bold (3:1). Nu e o decizie tehnică, e de brand: trei variante posibile:
+1. **`--orange-strong`** — o nădejde mai închisă a portocaliului, doar pentru fundalul butonului (text rămâne alb); celelalte folosiri ale `--orange` (badge-uri, bare, cercuri decorative) rămân neschimbate.
+2. **Text `--slate` (închis) pe `--orange`** — păstrează exact portocaliul de brand de peste tot, schimbă doar culoarea textului pe buton.
+3. **Excepție de brand, asumată** — se lasă cum e (alb pe `--orange`), consemnat ca abatere de la WCAG AA, acceptată explicit.
+
+Până la decizie: **nu se adaugă alte texte albe noi pe `--orange`** (evit să adâncesc problema în timp ce e deschisă). Nu blochează restul punctului 4 — design-system-ul se construiește mai departe, doar cu grijă la acest punct specific când se ajunge la `Button`-ul primar propriu-zis.
