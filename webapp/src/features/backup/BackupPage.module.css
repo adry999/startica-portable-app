@@ -12,6 +12,109 @@
   margin-bottom: var(--space-16);
 }
 
+/* Cardurile ①②③ de sus (10c) — stare generală a backup-ului. */
+.statusRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-14);
+  margin-bottom: var(--space-16);
+}
+
+.statusCard {
+  gap: var(--space-6);
+}
+
+.statusCardWarningYellow {
+  border: 2px solid var(--yellow);
+}
+
+.statusCardWarningPink {
+  border: 2px solid var(--pink);
+}
+
+.statusLabel {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mint-ink);
+}
+
+.statusCardWarningYellow .statusLabel {
+  color: var(--yellow-ink);
+}
+
+.statusCardWarningPink .statusLabel {
+  color: var(--pink-ink);
+}
+
+.statusHeadline {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.statusSubtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.statusCta {
+  align-self: flex-start;
+  margin-top: var(--space-4);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--white);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Grid 1.3fr/1fr sub cardurile de stare — lista de copii + import/export (10c). */
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.listCard,
+.excelCard {
+  margin-bottom: 0;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.backupRows {
+  display: flex;
+  flex-direction: column;
+}
+
+.backupRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
+  padding: var(--space-8) 0;
+  border-top: 1px solid var(--row-divider);
+  font-size: 14px;
+}
+
+.backupDate {
+  flex: 1;
+  font-weight: 800;
+}
+
+.backupSize {
+  color: var(--muted);
+}
+
 .tabsRow {
   display: flex;
   align-items: center;

@@ -1,8 +1,10 @@
-import type { FormEvent } from 'react';
-import { Badge, Button, Card, Drawer, SegmentedControl, useToast, type BadgeTone } from '@shared/ui';
-import { useAppSession } from '@shared/api/session';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Badge, Button, Card, Drawer, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
+import { requestJson, useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
-import { useBackup, type HealthTone } from './useBackup';
+import { formatDateTime } from '#shared/format/date-format.mjs';
+import { formatFileSize } from '#shared/format/file-size-format.mjs';
+import { useBackup, type BackupHealthView, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
 import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
@@ -17,6 +19,103 @@ const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yello
 
 type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync' | 'pool';
 
+// O zi în ms — același prag ca useBackup/useRestore pentru „vechi”.
+const STALE_AFTER_MS = 86400000;
+
+interface BackupListEntry {
+  name: string;
+  modified: string;
+  bytes?: number;
+}
+
+/** Lista propriu-zisă de copii (dată, mărime) pentru cardul „Copii de siguranță” — separată de
+ * useRestore, care încarcă aceeași listă doar când se deschide fereastra de restaurare. */
+function useBackupsList(active: boolean) {
+  const [entries, setEntries] = useState<BackupListEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    setLoading(true);
+    requestJson('/api/backups')
+      .then(data => {
+        if (!cancelled) setEntries(data as BackupListEntry[]);
+      })
+      .catch(() => {
+        if (!cancelled) setEntries([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [active]);
+
+  return { entries, loading };
+}
+
+function isStale(timestamp: string): boolean {
+  return !timestamp || Date.now() - new Date(timestamp).getTime() > STALE_AFTER_MS;
+}
+
+interface StatusCardView {
+  tone: CardTone;
+  warning: boolean;
+  label: string;
+  headline: string;
+  subtitle: string;
+}
+
+/** Cardurile ①②③ de sus (10c) — un ton per card, nu doar un singur status agregat. */
+function localBackupCard(health: BackupHealthView): StatusCardView {
+  if (health.localError) return { tone: 'pink', warning: true, label: '② Backup local', headline: 'Eșuat', subtitle: health.localError };
+  if (isStale(health.lastLocal))
+    return {
+      tone: 'yellow',
+      warning: true,
+      label: '② Backup local',
+      headline: 'Vechi sau lipsă',
+      subtitle: `Ultimul: ${formatDateTime(health.lastLocal)}`,
+    };
+  return {
+    tone: 'mint',
+    warning: false,
+    label: '② Backup local',
+    headline: `OK · ${formatDateTime(health.lastLocal)}`,
+    subtitle: `${health.permanentBackups.count} copii păstrate`,
+  };
+}
+
+function externalBackupCard(health: BackupHealthView): StatusCardView {
+  if (!health.externalDir)
+    return {
+      tone: 'yellow',
+      warning: true,
+      label: '③ Copie externă',
+      headline: 'Neconfigurată',
+      subtitle: 'Dacă se strică discul, datele se pierd.',
+    };
+  if (health.externalError)
+    return { tone: 'pink', warning: true, label: '③ Copie externă', headline: 'Eroare', subtitle: health.externalError };
+  if (isStale(health.lastExternal))
+    return {
+      tone: 'yellow',
+      warning: true,
+      label: '③ Copie externă',
+      headline: 'Verifică sincronizarea',
+      subtitle: `Ultima: ${formatDateTime(health.lastExternal)}`,
+    };
+  return {
+    tone: 'mint',
+    warning: false,
+    label: '③ Copie externă',
+    headline: `OK · ${formatDateTime(health.lastExternal)}`,
+    subtitle: `${health.externalBackups.count} copii păstrate`,
+  };
+}
+
 export function BackupPage() {
   const session = useAppSession();
   const backupData = useBackup();
@@ -28,6 +127,13 @@ export function BackupPage() {
   const [storedViewMode, setStoredViewMode] = usePersistedState<ViewMode | 'rates'>('view.backup', 'backup');
   const viewMode: ViewMode = storedViewMode === 'rates' ? 'curs' : storedViewMode;
   const setViewMode = (next: ViewMode) => setStoredViewMode(next);
+  const backupsList = useBackupsList(backupData.ready && viewMode === 'backup');
+  const externalDirInputRef = useRef<HTMLInputElement>(null);
+
+  function focusExternalDirInput() {
+    externalDirInputRef.current?.focus();
+    externalDirInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
 
   async function exportExcel() {
     try {
@@ -114,64 +220,116 @@ export function BackupPage() {
         <PoolSettings />
       ) : (
         <>
-          <Card className={styles.panel}>
-            <h3 className={styles.panelTitle}>Copii de siguranță</h3>
-            <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>
-            <div className={styles.details}>
-              {backupData.detailLines.map(line => (
-                <p key={line}>{line}</p>
+          {backupData.health && (
+            <div className={styles.statusRow}>
+              <Card tone="mint" className={styles.statusCard}>
+                <span className={styles.statusLabel}>① Date salvate</span>
+                <span className={styles.statusHeadline}>Salvare automată</span>
+                <span className={styles.statusSubtitle}>Bază: {backupData.health.database}</span>
+              </Card>
+              {[localBackupCard(backupData.health), externalBackupCard(backupData.health)].map(card => (
+                <Card
+                  key={card.label}
+                  tone={card.tone}
+                  className={[
+                    styles.statusCard,
+                    card.warning && card.tone === 'yellow' ? styles.statusCardWarningYellow : '',
+                    card.warning && card.tone === 'pink' ? styles.statusCardWarningPink : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <span className={styles.statusLabel}>{card.label}</span>
+                  <span className={styles.statusHeadline}>{card.headline}</span>
+                  <span className={styles.statusSubtitle}>{card.subtitle}</span>
+                  {card.label === '③ Copie externă' && card.warning && (
+                    <button type="button" className={styles.statusCta} onClick={focusExternalDirInput}>
+                      Alege un stick sau un folder
+                    </button>
+                  )}
+                </Card>
               ))}
             </div>
+          )}
 
-            <form className={styles.form} onSubmit={event => void saveSettings(event)}>
-              <label className={styles.field}>
-                Folder Google Drive sau altă destinație externă
-                <input
-                  value={backupData.externalDirInput}
-                  onChange={event => backupData.setExternalDirInput(event.target.value)}
-                  placeholder="G:\My Drive\Startica_Backup"
-                />
-              </label>
-              <p className={styles.hint}>
-                Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google Drive.
-                Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de zile. Cu
-                mai multe filiale, folosește un subfolder pe filială, ex. „G:\My Drive\Startica_Backup\Botanica” —
-                folderul de date sau backup al altei filiale nu poate fi folosit ca destinație externă.
+          <div className={styles.mainGrid}>
+            <Card className={styles.listCard}>
+              <div className={styles.listHeader}>
+                <h3 className={styles.panelTitle}>Copii de siguranță</h3>
+                <Button variant="outline" disabled={backupData.backupBusy} onClick={() => void backupNow()}>
+                  Backup acum
+                </Button>
+              </div>
+
+              {backupsList.loading && <p className={styles.notice}>Se încarcă…</p>}
+              {!backupsList.loading && backupsList.entries.length > 0 && (
+                <div className={styles.backupRows}>
+                  {backupsList.entries.map(entry => (
+                    <div className={styles.backupRow} key={entry.name}>
+                      <span className={styles.backupDate}>{formatDateTime(entry.modified)}</span>
+                      <span className={styles.backupSize}>
+                        {typeof entry.bytes === 'number' ? formatFileSize(entry.bytes) : '—'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>
+              <div className={styles.details}>
+                {backupData.detailLines.map(line => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+
+              <form className={styles.form} onSubmit={event => void saveSettings(event)}>
+                <label className={styles.field}>
+                  Folder Google Drive sau altă destinație externă
+                  <input
+                    ref={externalDirInputRef}
+                    value={backupData.externalDirInput}
+                    onChange={event => backupData.setExternalDirInput(event.target.value)}
+                    placeholder="G:\My Drive\Startica_Backup"
+                  />
+                </label>
+                <p className={styles.hint}>
+                  Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google
+                  Drive. Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de
+                  zile. Cu mai multe filiale, folosește un subfolder pe filială, ex. „G:\My Drive\Startica_Backup\Botanica”
+                  — folderul de date sau backup al altei filiale nu poate fi folosit ca destinație externă.
+                </p>
+                {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
+                <Button type="submit" disabled={backupData.settingsBusy}>
+                  Salvează și testează copia
+                </Button>
+              </form>
+
+              <div className={styles.toolbar}>
+                <Button variant="ghost" onClick={restore.openDialog}>
+                  Restaurare
+                </Button>
+                <Button variant="ghost" disabled={backupData.diagnosticBusy} onClick={() => void downloadDiagnostic()}>
+                  Raport de diagnostic
+                </Button>
+              </div>
+            </Card>
+
+            <Card className={styles.excelCard}>
+              <h3 className={styles.panelTitle}>Import și export</h3>
+              <p className={styles.notice}>
+                Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet
+                păstrează câmpurile și poate fi reimportat.
               </p>
-              {backupData.settingsError && <p className={styles.error}>{backupData.settingsError}</p>}
-              <Button type="submit" disabled={backupData.settingsBusy}>
-                Salvează și testează copia
-              </Button>
-            </form>
-
-            <div className={styles.toolbar}>
-              <Button variant="ghost" disabled={backupData.backupBusy} onClick={() => void backupNow()}>
-                Backup acum
-              </Button>
-              <Button variant="ghost" onClick={restore.openDialog}>
-                Restaurare
-              </Button>
-              <Button variant="ghost" disabled={backupData.diagnosticBusy} onClick={() => void downloadDiagnostic()}>
-                Raport de diagnostic
-              </Button>
-            </div>
-          </Card>
-
-          <Card className={styles.panel}>
-            <h3 className={styles.panelTitle}>Excel</h3>
-            <p className={styles.notice}>
-              Importul înlocuiește datele numai după previzualizare, confirmare și backup. Exportul complet păstrează
-              câmpurile și poate fi reimportat.
-            </p>
-            <div className={styles.toolbar}>
-              <Button variant="ghost" onClick={excel.importDialog.openDialog}>
-                Import Excel
-              </Button>
-              <Button variant="ghost" disabled={excel.exporting} onClick={() => void exportExcel()}>
-                Export Excel complet
-              </Button>
-            </div>
-          </Card>
+              <div className={styles.toolbar}>
+                <Button variant="ghost" onClick={excel.importDialog.openDialog}>
+                  Import Excel
+                </Button>
+                <Button variant="ghost" disabled={excel.exporting} onClick={() => void exportExcel()}>
+                  Export Excel complet
+                </Button>
+              </div>
+            </Card>
+          </div>
         </>
       )}
 
