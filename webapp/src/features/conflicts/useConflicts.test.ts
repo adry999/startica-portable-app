@@ -82,6 +82,24 @@ describe('useConflicts', () => {
     await waitFor(() => expect(result.current.conflicts).toHaveLength(1));
   });
 
+  it('B-6: resolve eșuat tot reîncarcă lista (poate fi deja învechită) și retrimite eroarea', async () => {
+    requestJsonMock
+      .mockResolvedValueOnce({ conflicts: CONFLICTS })
+      .mockResolvedValueOnce({ conflicts: [CONFLICTS[1], CONFLICTS[2]] });
+    mutateMock.mockReset().mockRejectedValue(new Error('Conflictul nu mai există — a fost rezolvat deja.'));
+    const { result } = renderHook(() => useConflicts());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await expect(result.current.resolve('CFL-1', 'remote')).rejects.toThrow(
+        'Conflictul nu mai există — a fost rezolvat deja.',
+      );
+    });
+
+    expect(requestJsonMock).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.conflicts).toHaveLength(2));
+  });
+
   it('resolve pentru un conflict „staff” trimite dataset: comun (Personal 24, decizia 9)', async () => {
     requestJsonMock
       .mockResolvedValueOnce({ conflicts: CONFLICTS })

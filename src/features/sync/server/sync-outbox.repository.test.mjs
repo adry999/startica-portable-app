@@ -107,6 +107,50 @@ test('park nu parchează rândul dacă a fost coalescat cu o modificare mai nou�
   assert.equal(outbox.pending().length, 1, 'rândul rămâne pending, nu parcat pentru un conflict vechi');
 });
 
+test('enqueue peste un rând parcat îi actualizează payload-ul, nu inserează un al doilea rând pending (B-3)', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana' } });
+  const [{ seq, changeId }] = outbox.pending();
+  outbox.park(seq, changeId);
+
+  // O editare locală cât timp fișa era parcată cu un conflict nerezolvat.
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana Popescu' } });
+
+  assert.equal(outbox.pending().length, 0, 'nu apare un al doilea rând pending');
+  assert.equal(outbox.parked().length, 1, 'rândul rămâne parcat, cu un singur rând pentru fișă');
+  const stillParked = outbox.findParked('children', 'CHILD-1');
+  assert.ok(stillParked);
+  assert.deepEqual(stillParked.payload, { id: 'CHILD-1', name: 'Ana Popescu' });
+
+  // unpark (rezolvarea conflictului) nu mai lovește UNIQUE constraint, pentru că nu
+  // există un al doilea rând pending pentru aceeași fișă.
+  outbox.unpark(seq, 9);
+  assert.equal(outbox.pending().length, 1);
+  assert.equal(outbox.parked().length, 0);
+});
+
+test('unpark cu payload nou suprascrie fișa parcată, ca la rezolvarea „păstrează local” (B-3)', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1', name: 'Ana' } });
+  const [{ seq, changeId }] = outbox.pending();
+  outbox.park(seq, changeId);
+
+  outbox.unpark(seq, 5, { id: 'CHILD-1', name: 'Ana curentă' });
+
+  const [reparked] = outbox.pending();
+  assert.deepEqual(reparked.payload, { id: 'CHILD-1', name: 'Ana curentă' });
+  assert.equal(reparked.baseRevision, 5);
+});
+
+test('findPending vede doar rândul pending, nu cel parcat', () => {
+  const { outbox } = createRepository();
+  outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1' } });
+  const [row] = outbox.pending();
+  outbox.park(row.seq, row.changeId);
+
+  assert.equal(outbox.findPending('children', 'CHILD-1'), undefined);
+});
+
 test('parked() și findParked() văd doar rândurile parcate', () => {
   const { outbox } = createRepository();
   outbox.enqueue({ kind: 'children', recordId: 'CHILD-1', payload: { id: 'CHILD-1' } });

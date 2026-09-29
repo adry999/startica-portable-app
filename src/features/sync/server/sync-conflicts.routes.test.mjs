@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { applySchema } from '#core/server/database/schema.mjs';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
 import { createRevisionTransaction } from '#core/server/persistence/revision-transaction.mjs';
 import { createRecordingAuditTrail } from '#test-support/recording-audit-trail.mjs';
@@ -105,7 +106,9 @@ test('păstrarea variantei de pe alt calculator scrie fișa lui, revizia și o i
   });
 
   assert.equal(envelope.ok, true);
-  assert.deepEqual(harness.rawRecordRepository.find('children', 'C-1'), remote);
+  // B-7: scrierea trece prin normalizeRecord, ca pull-ul — fișa scrisă are câmpurile
+  // completate cu valorile implicite ale schemei, nu doar cele patru din fixture.
+  assert.deepEqual(harness.rawRecordRepository.find('children', 'C-1'), normalizeRecord('children', remote));
   const stateEntry = harness.syncState.get('children', 'C-1');
   assert.ok(stateEntry);
   assert.equal(stateEntry.serverRevision, 5);
@@ -115,6 +118,45 @@ test('păstrarea variantei de pe alt calculator scrie fișa lui, revizia și o i
   const entry = harness.auditTrail.changes.find(c => c.action.startsWith('conflict:'));
   assert.ok(entry);
   assert.match(entry.action, /Calculator B/);
+});
+
+test('varianta de pe alt calculator cu formă nevalidă e respinsă cu 409, nu scrisă direct (B-7)', () => {
+  const harness = createHarness();
+  const invalidRemote = { id: 'id invalid cu spații', name: 'Ana' };
+  const { conflictId } = seedConflict(harness, { remotePayload: invalidRemote });
+
+  assert.throws(
+    () =>
+      harness.byPath['POST /api/sync/conflicts/resolve']({
+        body: { id: conflictId, choice: 'remote', revision: 0, requestId: 'req-0000000005' },
+      }),
+    /** @param {any} error */ error => error.status === 409,
+  );
+  assert.notDeepEqual(harness.rawRecordRepository.find('children', 'C-1'), invalidRemote, 'nu s-a scris nevalidat');
+  assert.ok(harness.conflicts.find(conflictId), 'conflictul rămâne nerezolvat, ca tranzacția să poată fi reluată');
+});
+
+test('o editare locală după parcare nu blochează rezolvarea și trimite fișa curentă (B-3)', () => {
+  const harness = createHarness();
+  const { conflictId } = seedConflict(harness);
+
+  // Cât timp conflictul era parcat, utilizatorul mai corectează o dată fișa Anei — exact
+  // scenariul din audit (P2), care înainte de fix ajungea într-un al doilea rând pending
+  // și făcea `unpark()` să arunce UNIQUE constraint failed.
+  const editedLocal = { id: 'C-1', name: 'Ana', phone: '061', healthNotes: 'Astm' };
+  harness.rawRecordRepository.save('children', editedLocal);
+  harness.outbox.enqueue({ kind: 'children', recordId: 'C-1', payload: editedLocal });
+
+  const envelope = harness.byPath['POST /api/sync/conflicts/resolve']({
+    body: { id: conflictId, choice: 'local', revision: 0, requestId: 'req-0000000003' },
+  });
+
+  assert.equal(envelope.ok, true, 'rezolvarea nu aruncă (fără UNIQUE constraint)');
+  const pending = harness.outbox.pending(10);
+  assert.equal(pending.length, 1, 'un singur rând pending, nu unul duplicat');
+  assert.deepEqual(pending[0].payload, editedLocal, 'trimite fișa curentă, nu payload-ul din momentul conflictului');
+  assert.equal(pending[0].baseRevision, 5, 'baza devine revizia pe care a văzut-o serverul');
+  assert.equal(harness.outbox.parked().length, 0);
 });
 
 test('păstrarea variantei locale re-trimite modificarea cu revizia serverului și intră în istoric', () => {

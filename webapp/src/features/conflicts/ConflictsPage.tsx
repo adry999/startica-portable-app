@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, EmptyState, LoadingState } from '@shared/ui';
+import { Card, EmptyState, LoadingState, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { kindLabel } from './field-labels';
 import { useConflicts } from './useConflicts';
@@ -9,6 +9,7 @@ import { ConflictDetail } from './ConflictDetail';
 export function ConflictsPage() {
   const { conflicts, loading, activeId, setActiveId, resolve } = useConflicts();
   const { state } = useAppSession();
+  const toast = useToast();
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
   if (loading) return <LoadingState />;
@@ -27,6 +28,10 @@ export function ConflictsPage() {
     setResolvingId(active.id);
     try {
       await resolve(active.id, choice);
+    } catch (error) {
+      // B-6: fără acest catch, un 404 („conflictul nu mai există” — rezolvat din altă
+      // filă) sau un 500 dispăreau doar în consolă; butonul părea că nu face nimic.
+      toast.show({ message: (error as Error).message });
     } finally {
       setResolvingId(null);
     }

@@ -1,6 +1,15 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ToastProvider } from '@shared/ui';
 import { ConflictsPage } from './ConflictsPage';
+
+function renderPage() {
+  return render(
+    <ToastProvider>
+      <ConflictsPage />
+    </ToastProvider>,
+  );
+}
 
 const resolveMock = vi.fn();
 const setActiveIdMock = vi.fn();
@@ -60,7 +69,7 @@ describe('ConflictsPage', () => {
   });
 
   it('lista și detaliul arată ambele variante cu rândurile diferite evidențiate', () => {
-    render(<ConflictsPage />);
+    renderPage();
     expect(screen.getByText('2 conflicte')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Popescu').length).toBeGreaterThan(0);
     expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -69,8 +78,19 @@ describe('ConflictsPage', () => {
   });
 
   it('alegerea unei variante trimite resolve pentru conflictul activ', () => {
-    render(<ConflictsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Păstrează varianta de pe Calculator B'));
     expect(resolveMock).toHaveBeenCalledWith('CFL-1', 'remote');
+  });
+
+  it('B-6: o rezolvare eșuată arată un toast cu eroarea, în loc să dispară tăcut', async () => {
+    resolveMock.mockReset().mockRejectedValue(new Error('Conflictul nu mai există — a fost rezolvat deja.'));
+    renderPage();
+
+    fireEvent.click(screen.getByText('Păstrează varianta de pe Calculator B'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Conflictul nu mai există — a fost rezolvat deja.');
+    });
   });
 });

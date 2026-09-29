@@ -23,20 +23,29 @@ function toChange(row) {
  * @param {{ now?: () => Date }} [options]
  */
 export function createSyncOutboxRepository(database, { now = () => new Date() } = {}) {
-  const findPendingStatement = database.prepare(
-    "SELECT seq,base_revision,payload FROM sync_outbox WHERE kind=? AND record_id=? AND status='pending'",
+  // B-3: caută orice rând ne-terminal (pending SAU parcat) pentru aceeași fișă — nu doar
+  // pending. O fișă parcată (conflict nerezolvat) care mai primește o editare locală
+  // trebuie să-și actualizeze payload-ul pe LOC, nu să primească un al doilea rând pending:
+  // indexul unic (kind,record_id) WHERE status='pending' nu ar opri inserarea (rândul vechi
+  // e 'parked', nu 'pending'), dar `unpark()` de la rezolvarea conflictului ar lovi apoi
+  // UNIQUE constraint, pentru că rândul nou ar fi deja pending.
+  const findActiveStatement = database.prepare(
+    "SELECT seq,base_revision,payload FROM sync_outbox WHERE kind=? AND record_id=? AND status IN ('pending','parked')",
   );
   const findServerRevisionStatement = database.prepare('SELECT server_revision FROM sync_state WHERE kind=? AND id=?');
   const insertStatement = database.prepare(
     "INSERT INTO sync_outbox(change_id,kind,record_id,base_revision,payload,created_at,status) VALUES(?,?,?,?,?,?,'pending')",
   );
-  const updatePendingStatement = database.prepare(
+  const updateExistingStatement = database.prepare(
     'UPDATE sync_outbox SET change_id=?,payload=?,created_at=? WHERE seq=?',
   );
   const pendingStatement = database.prepare("SELECT * FROM sync_outbox WHERE status='pending' ORDER BY seq LIMIT ?");
   const parkedStatement = database.prepare("SELECT * FROM sync_outbox WHERE status='parked' ORDER BY seq");
   const findParkedStatement = database.prepare(
     "SELECT * FROM sync_outbox WHERE kind=? AND record_id=? AND status='parked'",
+  );
+  const findPendingStatement = database.prepare(
+    "SELECT * FROM sync_outbox WHERE kind=? AND record_id=? AND status='pending'",
   );
   const countPendingStatement = database.prepare("SELECT COUNT(*) AS count FROM sync_outbox WHERE status='pending'");
   const markSentStatement = database.prepare("UPDATE sync_outbox SET status='sent' WHERE seq=?");
@@ -46,13 +55,16 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
   // sau „conflict” pentru payload-ul vechi ar șterge/parca payload-ul nou, nevăzut de server.
   const parkStatement = database.prepare("UPDATE sync_outbox SET status='parked' WHERE seq=? AND change_id=?");
   const unparkStatement = database.prepare("UPDATE sync_outbox SET status='pending',base_revision=? WHERE seq=?");
+  const unparkWithPayloadStatement = database.prepare(
+    "UPDATE sync_outbox SET status='pending',base_revision=?,payload=? WHERE seq=?",
+  );
   const removeStatement = database.prepare('DELETE FROM sync_outbox WHERE seq=? AND change_id=?');
 
   /**
    * @param {{ kind: string, recordId: string, payload: unknown | null }} change
    */
   function enqueue({ kind, recordId, payload }) {
-    const existingRow = findPendingStatement.get(kind, recordId);
+    const existingRow = findActiveStatement.get(kind, recordId);
     const serverRevisionRow = /** @type {{ server_revision: number } | undefined} */ (
       findServerRevisionStatement.get(kind, recordId)
     );
@@ -70,7 +82,9 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     const nowIso = now().toISOString();
     const coalescedPayload = /** @type {string | null} */ (coalesced.payload);
     if (existingRow)
-      updatePendingStatement.run(
+      // Actualizează rândul în starea lui curentă (pending rămâne pending, parcat rămâne
+      // parcat) — nu-i schimbă statusul.
+      updateExistingStatement.run(
         randomUUID(),
         coalescedPayload,
         nowIso,
@@ -95,6 +109,18 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     return row ? toChange(row) : undefined;
   }
 
+  /**
+   * B-3: la rezolvarea unui conflict cu „varianta de pe alt calculator”, un rând încă
+   * pending pentru aceeași fișă (o editare locală de care conflictul nu știa) trebuie
+   * șters — altfel pleacă la următorul push cu o revizie de bază depășită și redeschide
+   * conflictul chiar împotriva variantei tocmai acceptate.
+   * @param {string} kind @param {string} recordId
+   */
+  function findPending(kind, recordId) {
+    const row = findPendingStatement.get(kind, recordId);
+    return row ? toChange(row) : undefined;
+  }
+
   function countPending() {
     return /** @type {{ count: number }} */ (countPendingStatement.get()).count;
   }
@@ -112,9 +138,15 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     return parkStatement.run(seq, changeId).changes > 0;
   }
 
-  /** @param {number} seq @param {number} baseRevision */
-  function unpark(seq, baseRevision) {
-    unparkStatement.run(baseRevision, seq);
+  /**
+   * @param {number} seq @param {number} baseRevision
+   * @param {unknown} [payload] B-3: fișa curentă de retrimis, când e cunoscută (rezolvarea
+   *   unui conflict cu „varianta locală” trebuie să trimită fișa așa cum e acum, nu payload-ul
+   *   din momentul conflictului). Omis — păstrează payload-ul rândului (comportamentul vechi).
+   */
+  function unpark(seq, baseRevision, payload) {
+    if (payload === undefined) unparkStatement.run(baseRevision, seq);
+    else unparkWithPayloadStatement.run(baseRevision, payload === null ? null : JSON.stringify(payload), seq);
   }
 
   /**
@@ -125,5 +157,5 @@ export function createSyncOutboxRepository(database, { now = () => new Date() } 
     return removeStatement.run(seq, changeId).changes > 0;
   }
 
-  return { enqueue, pending, parked, findParked, countPending, markSent, park, unpark, remove };
+  return { enqueue, pending, parked, findParked, findPending, countPending, markSent, park, unpark, remove };
 }

@@ -57,8 +57,14 @@ export function useConflicts(): UseConflictsResult {
   const resolve = useCallback(
     async (id: string, choice: 'local' | 'remote') => {
       const dataset = conflicts.find(c => c.id === id)?.dataset ?? 'branch';
-      await session.mutate('/api/sync/conflicts/resolve', { id, choice, dataset });
-      await load();
+      try {
+        await session.mutate('/api/sync/conflicts/resolve', { id, choice, dataset });
+      } finally {
+        // B-6: reîncarcă lista și la eșec (404 „conflictul nu mai există” — rezolvat din
+        // altă filă —, sau 500), nu doar la succes: lista poate fi deja învechită. Eroarea
+        // tot urcă la apelant (ConflictsPage) după `finally`, pentru toast.
+        await load();
+      }
     },
     [session, load, conflicts],
   );

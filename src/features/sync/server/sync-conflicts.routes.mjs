@@ -1,4 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { diffFields } from '../domain/conflict-diff.mjs';
 
 const RESOLVE_ACTION = 'rezolvare conflict';
@@ -49,22 +50,52 @@ function listOf(conflicts, dataset) {
  *   getEngine: () => { noteLocalChange: () => void } | null,
  * }} repository
  * @param {{ id: string, choice: 'local' | 'remote' }} body
+ * @param {{ normalize?: boolean }} [options] `normalize: false` pentru setul comun (COMMON_KINDS,
+ *   ca în change-applier.mjs) — scriere brută, fără `normalizeRecord`.
  */
-function resolveOn({ conflicts, outbox, syncState, rawRecordRepository, auditTrail, getEngine }, body) {
+function resolveOn(
+  { conflicts, outbox, syncState, rawRecordRepository, auditTrail, getEngine },
+  body,
+  { normalize = true } = {},
+) {
   const conflict = conflicts.find(body.id);
   if (!conflict) fail('Conflictul nu mai există — a fost rezolvat deja.', 404);
   const outboxRow = outbox.findParked(conflict.kind, conflict.recordId);
 
   if (body.choice === 'remote') {
-    if (conflict.remotePayload === null) rawRecordRepository.remove(conflict.kind, conflict.recordId);
-    else rawRecordRepository.save(conflict.kind, /** @type {{ id: string }} */ (conflict.remotePayload));
+    if (conflict.remotePayload === null) {
+      rawRecordRepository.remove(conflict.kind, conflict.recordId);
+    } else if (normalize) {
+      // B-7: pull-ul (change-applier.mjs) normalizează orice payload venit de pe server
+      // înainte să-l scrie; rezolvarea unui conflict trebuie să facă la fel, altfel o
+      // variantă de la o versiune mai veche a aplicației (ex. `notes` text în loc de
+      // `ChildNote[]`) intră nevalidată în `records` și pică mai târziu la validateState/export.
+      let normalized;
+      try {
+        normalized = normalizeRecord(conflict.kind, conflict.remotePayload);
+      } catch (error) {
+        fail(
+          `Varianta de pe ${conflict.remoteDeviceName} nu poate fi aplicată (${/** @type {Error} */ (error).message}).`,
+          409,
+        );
+      }
+      rawRecordRepository.save(conflict.kind, normalized);
+    } else {
+      rawRecordRepository.save(conflict.kind, /** @type {{ id: string }} */ (conflict.remotePayload));
+    }
     syncState.set(conflict.kind, conflict.recordId, {
       serverRevision: conflict.remoteRevision,
       updatedAt: conflict.remoteUpdatedAt,
       updatedByDevice: conflict.remoteDeviceId,
       updatedByName: conflict.remoteDeviceName,
     });
+    // B-3: șterge atât rândul parcat cât și un eventual rând încă pending pentru aceeași
+    // fișă (o editare locală de care conflictul nu știa) — altfel ar pleca la următorul
+    // push cu o revizie de bază depășită și ar redeschide conflictul chiar împotriva
+    // variantei tocmai acceptate.
     if (outboxRow) outbox.remove(outboxRow.seq, outboxRow.changeId);
+    const stalePending = outbox.findPending(conflict.kind, conflict.recordId);
+    if (stalePending) outbox.remove(stalePending.seq, stalePending.changeId);
     auditTrail.recordChange({
       action: `conflict: păstrată varianta de pe ${conflict.remoteDeviceName}`,
       recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType} */ (conflict.kind),
@@ -73,13 +104,18 @@ function resolveOn({ conflicts, outbox, syncState, rawRecordRepository, auditTra
       after: conflict.remotePayload,
     });
   } else {
-    if (outboxRow) outbox.unpark(outboxRow.seq, conflict.remoteRevision);
+    // B-3: trimite fișa CURENTĂ (rawRecordRepository.find), nu payload-ul din momentul
+    // conflictului (row.payload/conflict.localPayload) — o editare locală făcută cât timp
+    // conflictul era parcat nu trebuie pierdută, nici retrimisă ca payload vechi care ar
+    // redeschide un conflict împotriva propriei editări mai noi.
+    const currentPayload = rawRecordRepository.find(conflict.kind, conflict.recordId) ?? null;
+    if (outboxRow) outbox.unpark(outboxRow.seq, conflict.remoteRevision, currentPayload);
     auditTrail.recordChange({
       action: 'conflict: păstrată varianta de pe acest calculator',
       recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType} */ (conflict.kind),
       recordId: conflict.recordId,
       before: conflict.remotePayload,
-      after: conflict.localPayload,
+      after: currentPayload,
     });
     getEngine()?.noteLocalChange();
   }
@@ -148,6 +184,9 @@ export function createSyncConflictsRoutes({
             getEngine: common.getEngine,
           },
           body,
+          // Setul comun (staff etc.) e scris brut, ca în change-applier.mjs — normalizeRecord
+          // nu cunoaște aceste kind-uri.
+          { normalize: false },
         );
         return { ok: true };
       });
