@@ -28,6 +28,10 @@
 
 .header {
   display: flex;
+  /* .card (Card.module.css) e flex-direction: column — fără să o suprascriem aici,
+     align-items: center centrează PersonCell/actions pe orizontală în loc să le
+     pună pe același rând, stânga/dreapta. */
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-20);
