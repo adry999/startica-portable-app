@@ -38,6 +38,11 @@ function buildData(overrides: Partial<AttendanceMonthData> = {}): AttendanceMont
     groupName: 'Fluturași',
     cycle: vi.fn(),
     setReason: vi.fn(),
+    history: [],
+    canUndo: false,
+    undoLast: vi.fn(),
+    undoUntil: vi.fn(),
+    undoAll: vi.fn(),
     ...overrides,
   };
 }

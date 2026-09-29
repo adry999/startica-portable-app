@@ -317,6 +317,66 @@ describe('AttendancePage · Ziua', () => {
     expect(posted[0].changes[0]).toMatchObject({ childId: 'c1', status: 'present' });
   });
 
+  it('A3e: istoricul lunii ține data celulei, „Anulează” pe cel mai recent, „Anulează până aici” pe restul', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('radio', { name: 'Luna' }));
+    await screen.findByText('Ana Popescu');
+
+    const cell15 = screen.getByRole('button', { name: 'Ana Popescu: 2026-09-15' });
+    const cell16 = screen.getByRole('button', { name: 'Ana Popescu: 2026-09-16' });
+    await user.click(cell15); // nemarcat -> prezent
+    await user.click(cell16); // nemarcat -> prezent
+    await waitForDebounce();
+    posted.length = 0;
+
+    await user.click(screen.getByLabelText('Istoricul zilei'));
+    expect(screen.getByText(/Ana Popescu 16\.09:/)).toBeInTheDocument();
+    expect(screen.getByText(/Ana Popescu 15\.09:/)).toBeInTheDocument();
+    const rows = [screen.getByText(/Ana Popescu 16\.09:/), screen.getByText(/Ana Popescu 15\.09:/)].map(node =>
+      node.closest('div')!,
+    );
+    expect(within(rows[0]).getByRole('button', { name: 'Anulează' })).toBeInTheDocument();
+    expect(within(rows[1]).getByRole('button', { name: 'Anulează până aici' })).toBeInTheDocument();
+
+    await user.click(within(rows[1]).getByRole('button', { name: 'Anulează până aici' }));
+    await waitForDebounce();
+
+    expect(posted).toHaveLength(1);
+    const restored = posted[0].changes.map(change => ({
+      childId: change.childId,
+      date: change.date,
+      status: change.status,
+    }));
+    expect(restored.sort((a, b) => a.date.localeCompare(b.date))).toEqual([
+      { childId: 'c1', date: '2026-09-15', status: null },
+      { childId: 'c1', date: '2026-09-16', status: null },
+    ]);
+  });
+
+  it('A3e: Ctrl+Z în Luna anulează ultima celulă schimbată', async () => {
+    const posted: PostedBatch[] = [];
+    stubFetch(posted);
+    await renderPage();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('radio', { name: 'Luna' }));
+    await screen.findByText('Ana Popescu');
+
+    await user.click(screen.getByRole('button', { name: 'Ana Popescu: 2026-09-15' }));
+    await waitForDebounce();
+    posted.length = 0;
+
+    await user.keyboard('{Control>}z{/Control}');
+    await waitForDebounce();
+
+    expect(posted).toHaveLength(1);
+    expect(posted[0].changes[0]).toMatchObject({ childId: 'c1', date: '2026-09-15', status: null });
+  });
+
   it('„Tipărește” și „Exportă” stau în antet, lângă MonthStepper, nu în bara de filtre', async () => {
     const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
     stubFetch([]);

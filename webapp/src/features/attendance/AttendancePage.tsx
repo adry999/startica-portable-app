@@ -37,20 +37,18 @@ export function AttendancePage({ month }: AttendancePageProps) {
   const monthData = useAttendanceMonth(monthKey);
   const activeData = mode === 'day' ? dayData : monthData;
 
-  // Ctrl+Z anulează ultima acțiune a zilei, indiferent unde e focusul pe pagină, doar cât timp
-  // suntem pe Ziua (nu are sens pe Luna).
+  // Ctrl+Z anulează ultima acțiune a filei active (A3c/A3e), indiferent unde e focusul pe pagină.
   useEffect(() => {
-    if (mode !== 'day') return;
     function onKeyDown(event: KeyboardEvent) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
-        dayData.undoLast();
+        activeData.undoLast();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, dayData.undoLast]);
+  }, [activeData.undoLast]);
   const saveIndicator = (
     <SaveIndicator
       saving={activeData.saving}
@@ -95,6 +93,13 @@ export function AttendancePage({ month }: AttendancePageProps) {
           value={monthKey}
           onPrev={() => setMonthKey(shiftMonth(monthKey, -1))}
           onNext={() => setMonthKey(current => (current >= CURRENT_MONTH ? current : shiftMonth(current, 1)))}
+        />
+        <AttendanceUndoControl
+          history={monthData.history}
+          canUndo={monthData.canUndo}
+          onUndoLast={monthData.undoLast}
+          onUndoUntil={monthData.undoUntil}
+          onUndoAll={monthData.undoAll}
         />
         <Button
           variant={isCurrentMonday ? 'primary' : 'outline'}
