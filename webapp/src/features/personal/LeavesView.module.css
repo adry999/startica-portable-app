@@ -1,22 +1,185 @@
-.root {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-12);
-}
-
 .notice {
   padding: var(--space-12) 0;
   color: var(--muted);
 }
 
-.toolbar {
+.card {
+  gap: 0;
+  padding: 0;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-20);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.legendBar {
+  width: 18px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--yellow-bar);
+}
+
+.legendBar[data-kind='cm'] {
+  background: var(--raspberry);
+}
+
+.legendBar[data-kind='planned'] {
+  background: var(--leave-planned);
+  border: 1.5px dashed var(--leave-planned-border);
+}
+
+.monthHeader,
+.row {
+  display: grid;
+  grid-template-columns: 220px 1fr 90px;
+  align-items: center;
+  gap: var(--space-12);
+  padding: 10px 22px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.monthHeader {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.staffCellHead {
+  padding-left: 2px;
+}
+
+.monthTrack {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  text-align: center;
+}
+
+.currentMonth {
+  color: var(--orange-ink);
+  background: var(--orange-soft);
+  border-radius: var(--radius-xs);
+}
+
+.remainingHead {
+  text-align: right;
+}
+
+.staffCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.name {
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track {
+  position: relative;
+  height: 20px;
+}
+
+.trackBands {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+
+.trackBands span:nth-child(odd) {
+  background: var(--sand-soft);
+}
+
+.trackBands span:nth-child(even) {
+  background: var(--sand);
+}
+
+.trackBars {
+  position: absolute;
+  inset: 0;
+}
+
+.leaveBar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  background: var(--yellow-bar);
+  cursor: pointer;
+}
+
+.leaveBar[data-type='CM'] {
+  background: var(--raspberry);
+}
+
+.leaveBar[data-planned] {
+  background: var(--leave-planned);
+  border: 1.5px dashed var(--leave-planned-border);
+}
+
+.remaining {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.remaining[data-negative] {
+  color: var(--pink-ink);
 }
 
 .warningBanner {
   background: var(--yellow-soft);
   border-radius: var(--radius-md);
+  margin: var(--space-16) 22px 22px;
   padding: var(--space-10) var(--space-14);
   font-size: 13px;
   color: var(--yellow-ink);
@@ -26,63 +189,6 @@
   margin: 0;
 }
 
-.tableCard {
-  padding: 0;
-  overflow: hidden;
-}
-
-.headRow,
-.row {
-  display: grid;
-  grid-template-columns: 220px 1fr 140px;
-  align-items: center;
-  padding: 10px 20px;
-  border-bottom: 1px solid var(--row-divider);
-}
-
-.headRow {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--subtle);
-}
-
-.trackHead {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  text-align: center;
-}
-
-.name {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.track {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 2px;
-}
-
-.trackCell {
-  height: 16px;
-  border-radius: 4px;
-  background: var(--off-day);
-}
-
-.trackCell[data-type='CO'] {
-  background: var(--yellow);
-}
-
-.trackCell[data-type='CM'] {
-  background: var(--pink);
-}
-
-.trackCell[data-planned] {
-  border: 1px dashed var(--slate);
-}
-
-.remaining {
-  text-align: right;
+.warningBanner p + p {
+  margin-top: var(--space-8);
 }

@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -44,7 +44,14 @@ function stubFetch() {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
       if (path === '/api/state')
         return jsonResponse({
-          state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+          state: {
+            children: [],
+            payments: [],
+            expenses: [],
+            groups: [{ id: 'GRP-1', name: 'Mars', capacity: null }],
+            categories: [],
+            visits: [],
+          },
           revision: 1,
           updatedAt: '2026-09-23T10:00:00Z',
         });
@@ -83,6 +90,39 @@ describe('LeavesView', () => {
     );
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    expect(screen.getByText(/Ana Popescu și Bogdan Rusu au concedii care se suprapun/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ana Popescu și Bogdan Rusu \(Mars\) au concediu suprapus 20–27 iulie\./),
+    ).toBeInTheDocument();
+  });
+
+  it('bara unui concediu e poziționată pe zilele lui, nu pe toată luna', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <LeavesView />
+      </ToastProvider>,
+    );
+
+    const bar = await screen.findByTitle('Ana Popescu: 6–27 iulie');
+    expect(bar).toHaveStyle({ left: `${((187 - 1) / 365) * 100}%`, width: `${(22 / 365) * 100}%` });
+  });
+
+  it('clic pe o bară deschide formularul în editare, cu opțiunea de ștergere', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <LeavesView />
+      </ToastProvider>,
+    );
+
+    const bar = await screen.findByTitle('Ana Popescu: 6–27 iulie');
+    act(() => fireEvent.click(bar));
+
+    expect(screen.getByText('Editează: concediu')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Șterge' })).toBeInTheDocument();
   });
 });

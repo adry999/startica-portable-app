@@ -31,3 +31,15 @@
   font-weight: 700;
   color: var(--slate);
 }
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.footerRight {
+  display: flex;
+  gap: var(--space-8);
+}

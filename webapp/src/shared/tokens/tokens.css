@@ -82,6 +82,10 @@
   --dashed-border-empty: #e0d5c2;
   /* Dashboard: bara „lună trecută” din progresul de completare a taxelor. */
   --orange-bar-past: #f6c98f;
+  /* Concedii (23f): bara „Planificat” (concediu viitor) — un galben mai deschis decât --yellow-bar,
+     cu bordură punctată, ca să se distingă de „Concediu” deja consumat, la fel de deschis la culoare. */
+  --leave-planned: #f0d77a;
+  --leave-planned-border: #b89a00;
 
   /* Tonurile grupelor (03-grupe.md §3/§5b.2) — fundal/text/bară per ton, 8 în total.
      galben/roz/verde/portocaliu refolosesc tokenii de bază de mai sus (bara galben/roz/verde e nouă). */

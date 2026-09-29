@@ -39,6 +39,57 @@ export function timesheetRowsForLeave(leave: Leave): { date: string; code: Leave
     .map(date => ({ date, code: leave.type }));
 }
 
+const MONTHS_RO = [
+  'ianuarie',
+  'februarie',
+  'martie',
+  'aprilie',
+  'mai',
+  'iunie',
+  'iulie',
+  'august',
+  'septembrie',
+  'octombrie',
+  'noiembrie',
+  'decembrie',
+];
+
+/** Ziua din an (1-indexată) a unei date — folosită pentru poziționarea barelor din Concedii (23f). */
+export function dayOfYear(date: string): number {
+  return daysBetween(`${date.slice(0, 4)}-01-01`, date) + 1;
+}
+
+/** Numărul de zile al unui an (365 sau 366) — cât de lată e pista din Concedii (23f). */
+export function daysInYear(year: string): number {
+  return daysBetween(`${year}-01-01`, `${Number(year) + 1}-01-01`);
+}
+
+/**
+ * Poziția (stânga/lățime, în procente din pistă) a barei unui concediu în anul afișat — un concediu
+ * poate începe sau se poate termina în afara anului (ex. 28 decembrie – 5 ianuarie), caz în care bara
+ * se taie la marginea anului.
+ */
+export function leaveYearBar(leave: Pick<Leave, 'from' | 'to'>, year: string): { leftPct: number; widthPct: number } {
+  const yearStart = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+  const from = leave.from < yearStart ? yearStart : leave.from;
+  const to = leave.to > yearEnd ? yearEnd : leave.to;
+  const total = daysInYear(year);
+  const startDay = dayOfYear(from);
+  const endDay = dayOfYear(to);
+  return { leftPct: ((startDay - 1) / total) * 100, widthPct: ((endDay - startDay + 1) / total) * 100 };
+}
+
+/** „15–27 iulie” / „28 iulie – 3 august” — intervalul unui concediu, pentru avertizarea de suprapunere (23f). */
+export function formatLeaveRange(from: string, to: string): string {
+  const fromMonth = Number(from.slice(5, 7));
+  const toMonth = Number(to.slice(5, 7));
+  const fromDay = Number(from.slice(8, 10));
+  const toDay = Number(to.slice(8, 10));
+  if (fromMonth === toMonth) return `${fromDay}–${toDay} ${MONTHS_RO[fromMonth - 1]}`;
+  return `${fromDay} ${MONTHS_RO[fromMonth - 1]} – ${toDay} ${MONTHS_RO[toMonth - 1]}`;
+}
+
 /** Concediile care se suprapun în timp pentru angajați din aceeași echipă de grupă (decizia 9j/23f). */
 export function overlappingLeavesInGroup(
   leaves: Leave[],
