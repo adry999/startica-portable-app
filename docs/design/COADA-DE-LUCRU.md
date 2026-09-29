@@ -405,5 +405,11 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 873/873 teste — toate verzi. Commit `a4927ec`.
 - **Rămâne din A3f:** 23l Candidați (verificări mici — căutare 360px, avatar 30px cu inițiale, telefon bold tabular-nums, notițe pe un rând cu ellipsis/„—", drawer 480px).
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A3f Personal (23l Candidați) — A3f COMPLET
+
+- **23l Candidați:** restul filei era deja corect din 0.8 (avatar 30 cu inițiale, telefon bold tabular-nums, notițe ellipsis + „—", drawer 480px cu Poziție+Vârstă / Unde locuiește+Telefon pe rânduri). Singura diferență: căutarea era `flex:1` (ca la Copii), spec cere 360px fix — `ListToolbarSearch` capătă un `className` opțional, forwardat la `SearchInput` (componentă shared, rămâne generică).
+- `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 873/873 teste — toate verzi. Commit `b80b8d9`.
+- **A3f Personal — COMPLET** (23a, 23b, 23c, 23f, 23l — toate restilizate/verificate față de spec). Urmează A4 Bazin.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
