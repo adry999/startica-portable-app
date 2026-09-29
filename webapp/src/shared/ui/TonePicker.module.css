@@ -1,0 +1,17 @@
+.row {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.active {
+  box-shadow: 0 0 0 1px var(--white);
+}

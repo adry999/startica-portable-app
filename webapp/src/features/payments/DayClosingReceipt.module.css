@@ -72,6 +72,14 @@
   gap: 8px;
 }
 
+/* `ServiceBadge` pe rândul unei achitări de Bazin/alt serviciu (B3, COMPONENTE.md §2) — Grădiniță
+   (implicit) nu-l arată deloc, ca bonul comun să rămână curat. */
+.payerCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .methodGrid {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,6 @@
 import { cents } from '#shared/domain/money.mjs';
 import { paymentTenders, allocations } from '#shared/domain/payment-allocations.mjs';
-import { childNameOf } from '#shared/domain/record-labels.mjs';
+import { childNameOf, serviceNameOf } from '#shared/domain/record-labels.mjs';
 import { stripDiacritics } from '#shared/format/text-search.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
@@ -108,6 +108,7 @@ function buildPaymentRow(payment, records) {
     payerLabel: payment.sourceName || childNameOf(payment, records.children),
     unassigned: !payment.childId,
     methods: paymentMethodNames(payment),
+    service: serviceNameOf(payment, records.services ?? []),
     amount: payment.amount,
     fxRate: payment.fxRate ?? null,
     fxRateSource: payment.fxRateSource ?? null,

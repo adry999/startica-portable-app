@@ -2,7 +2,8 @@ import { useAppSession } from '@shared/api/session';
 import { useKindergarten, type KindergartenSettings } from '@shared/api/useKindergarten';
 import { paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { cents } from '#shared/domain/money.mjs';
-import { childNameOf } from '#shared/domain/record-labels.mjs';
+import { childNameOf, serviceOf } from '#shared/domain/record-labels.mjs';
+import { DEFAULT_SERVICE_ID } from '#shared/domain/record-schema.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import type { Expense, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -12,6 +13,10 @@ export interface DayPaymentRow {
   id: string;
   payerLabel: string;
   amount: number;
+  /** Numele serviciului (B3) doar când NU e Grădiniță (implicit) — bonul rămâne curat în cazul comun. */
+  serviceLabel: string | null;
+  /** Tonul serviciului (`ServiceBadge`/COMPONENTE.md §2) — ignorat când `serviceLabel` e null. */
+  serviceTone: string;
 }
 
 export interface DayExpenseRow {
@@ -76,11 +81,16 @@ export function useDayClosingReceipt(date: string): DayClosingData {
   const dayPayments = records.payments.filter((payment: Payment) => payment.date === date && !payment.archived);
   const dayExpenses = records.expenses.filter((expense: Expense) => expense.date === date && !expense.archived);
 
-  const rows: DayPaymentRow[] = dayPayments.map((payment: Payment) => ({
-    id: payment.id,
-    payerLabel: payment.sourceName || childNameOf(payment, records.children),
-    amount: payment.amount,
-  }));
+  const rows: DayPaymentRow[] = dayPayments.map((payment: Payment) => {
+    const service = serviceOf(payment, records.services ?? []);
+    return {
+      id: payment.id,
+      payerLabel: payment.sourceName || childNameOf(payment, records.children),
+      amount: payment.amount,
+      serviceLabel: service.id === DEFAULT_SERVICE_ID ? null : service.name,
+      serviceTone: service.tone,
+    };
+  });
 
   const totalsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };
   const countsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };

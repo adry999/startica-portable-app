@@ -22,6 +22,18 @@ const state = {
       allocations: [],
       archived: false,
     },
+    {
+      id: 'p2',
+      date: '2026-09-24',
+      childId: '',
+      sourceName: 'Coceva Alisa',
+      amount: 2000,
+      method: 'Card',
+      tenders: [{ method: 'Card', amount: 2000 }],
+      allocations: [],
+      archived: false,
+      service: 'bazin',
+    },
   ],
   expenses: [
     {
@@ -75,5 +87,22 @@ describe('DayClosingReceipt', () => {
     expect(screen.getAllByText('9.600,00 lei').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Cheltuieli cash')).toBeInTheDocument();
     expect(screen.getByText('8.360,00 lei')).toBeInTheDocument();
+  });
+
+  it('arată numele serviciului înaintea plătitorului doar pentru achitările care nu sunt Grădiniță (B3)', async () => {
+    await loadedSession();
+    render(
+      <MemoryRouter initialEntries={['/achitari/bon-zi?zi=2026-09-24']}>
+        <Routes>
+          <Route path="/achitari/bon-zi" element={<DayClosingReceipt />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText('Bazin')).toBeInTheDocument();
+    expect(screen.getByText('Coceva Alisa')).toBeInTheDocument();
+    // Grădiniță (implicit) rămâne fără etichetă — doar numele plătitorului.
+    expect(screen.getByText('Bivol Ion')).toBeInTheDocument();
+    expect(screen.queryByText('Grădiniță')).not.toBeInTheDocument();
   });
 });

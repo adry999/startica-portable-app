@@ -67,6 +67,7 @@ describe('buildPaymentRecord', () => {
   const baseValues = {
     childId: 'c1',
     date: '2026-09-10',
+    service: 'gradinita',
     tenders: { Cash: '1500', Card: '', Transfer: '' },
     sourceName: '',
     reviewed: false,

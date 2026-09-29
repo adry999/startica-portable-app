@@ -162,6 +162,86 @@ describe('usePayments', () => {
     expect(result.current.rows.map(row => row.id)).toEqual(['p3']);
   });
 
+  describe('filtrul de serviciu (B3)', () => {
+    const servicesFixture = [
+      { id: 'gradinita', name: 'Grădiniță', order: 0, tone: 'orange', priceMode: 'free', system: true },
+      { id: 'bazin', name: 'Bazin', order: 1, tone: 'blue', priceMode: 'free', system: true },
+    ];
+    const bazinPayment = {
+      id: 'p6',
+      date: '2026-09-11',
+      childId: 'c1',
+      amount: 400,
+      method: 'Cash',
+      tenders: [{ method: 'Cash', amount: 400 }],
+      allocations: [],
+      archived: false,
+      service: 'bazin',
+    };
+
+    async function loadedSessionWithServices() {
+      const stateWithServices = {
+        ...fixtureState,
+        services: servicesFixture,
+        payments: [...fixtureState.payments, bazinPayment],
+      };
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string) => {
+          if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+          if (path === '/api/state')
+            return jsonResponse({ state: stateWithServices, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+          if (path === '/api/health') return jsonResponse({});
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+    }
+
+    it('implicit (Toate) achitările fără `service` numesc Grădiniță, iar lista Serviciu vine din records.services', async () => {
+      await loadedSessionWithServices();
+      const { result } = renderHook(() => usePayments());
+
+      expect(result.current.services.map(service => service.id)).toEqual(['gradinita', 'bazin']);
+      const p1Row = result.current.rows.find(row => row.id === 'p1');
+      expect(p1Row?.serviceId).toBe('gradinita');
+      expect(p1Row?.serviceLabel).toBe('Grădiniță');
+      const bazinRow = result.current.rows.find(row => row.id === 'p6');
+      expect(bazinRow?.serviceLabel).toBe('Bazin');
+    });
+
+    it('păstrează doar achitările serviciului ales', async () => {
+      await loadedSessionWithServices();
+      const { result } = renderHook(() => usePayments());
+
+      act(() => result.current.setService('bazin'));
+      expect(result.current.rows.map(row => row.id)).toEqual(['p6']);
+    });
+
+    it('se combină cu filtrul de metodă (ambele active îngustează suplimentar)', async () => {
+      await loadedSessionWithServices();
+      const { result } = renderHook(() => usePayments());
+
+      act(() => {
+        result.current.setService('bazin');
+        result.current.setMethod('Transfer');
+      });
+      // p6 e Cash, nu Transfer — niciun rezultat cu ambele filtre active.
+      expect(result.current.rows).toEqual([]);
+    });
+
+    it('spre deosebire de filtrul de metodă, filtrul de serviciu îngustează și cardurile de sumar', async () => {
+      await loadedSessionWithServices();
+      const { result } = renderHook(() => usePayments());
+
+      const cashFaraFiltru = result.current.summary.cash;
+      act(() => result.current.setService('bazin'));
+      expect(result.current.summary.cash).toBe(400);
+      expect(result.current.summary.cash).not.toBe(cashFaraFiltru);
+    });
+  });
+
   it('monthFrom păstrează doar achitările active din luna respectivă sau mai târziu', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
@@ -314,6 +394,7 @@ describe('usePayments', () => {
   const newPaymentValues = {
     childId: 'c2',
     date: '2026-09-20',
+    service: 'gradinita',
     tenders: { Cash: '', Card: '600', Transfer: '' },
     sourceName: '',
     reviewed: false,
@@ -348,6 +429,7 @@ describe('usePayments', () => {
     const duplicateValues = {
       childId: 'c1',
       date: '2026-09-10',
+      service: 'gradinita',
       tenders: { Cash: '1500', Card: '', Transfer: '' },
       sourceName: '',
       reviewed: false,
@@ -379,6 +461,7 @@ describe('usePayments', () => {
       result.current.updatePayment(previous, {
         childId: payment.childId,
         date: payment.date,
+        service: 'gradinita',
         tenders: { Cash: '1500', Card: '', Transfer: '' },
         sourceName: '',
         reviewed: false,

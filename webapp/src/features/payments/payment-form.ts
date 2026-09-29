@@ -1,4 +1,4 @@
-import { normalizeRecord } from '@domain/record-schema.mjs';
+import { normalizeRecord, DEFAULT_SERVICE_ID } from '@domain/record-schema.mjs';
 import { cents } from '@domain/money.mjs';
 import { paymentTenders } from '@domain/payment-allocations.mjs';
 import { firstUnpaidMonth } from '@domain/tuition-obligation.mjs';
@@ -16,6 +16,8 @@ export interface AllocationRowValues {
 export interface PaymentFormValues {
   childId: string;
   date: string;
+  /** Id dintr-un `Service` (B3, ALINIERE-DESIGN.md) — implicit `DEFAULT_SERVICE_ID` (Grădiniță). */
+  service: string;
   tenders: Record<string, string>;
   sourceName: string;
   reviewed: boolean;
@@ -43,6 +45,7 @@ export function defaultPaymentFormValues(
   today: string,
   defaultChildId = '',
   records?: RecordsSnapshot,
+  defaultService = DEFAULT_SERVICE_ID,
 ): PaymentFormValues {
   const tenders: Record<string, string> = {};
   for (const method of tenderMethodsFor(payment)) tenders[method] = '';
@@ -64,6 +67,7 @@ export function defaultPaymentFormValues(
   return {
     childId: payment?.childId || defaultChildId,
     date,
+    service: payment?.service || defaultService,
     tenders,
     sourceName: payment?.sourceName || payment?.childName || '',
     reviewed: Boolean(payment?.reviewed),
@@ -91,6 +95,7 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
     notes: values.notes,
     childId: values.childId,
     date: values.date,
+    service: values.service,
     amount: undefined,
     tenders,
     sourceName: values.sourceName,

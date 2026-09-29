@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readDirtyForms } from '@shared/state/dirty-forms';
@@ -34,6 +34,11 @@ const records = {
   groups: [],
   categories: [],
   visits: [],
+  charges: [],
+  services: [
+    { id: 'gradinita', name: 'Grădiniță', order: 0, tone: 'orange', priceMode: 'free', system: true },
+    { id: 'bazin', name: 'Bazin', order: 1, tone: 'blue', priceMode: 'free', system: true },
+  ],
 } as unknown as RecordsSnapshot;
 
 function renderDrawer() {
@@ -393,5 +398,55 @@ describe('PaymentFormDrawer', () => {
     await user.click(saveButton());
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.tenders.Cash).toBe('3000');
+  });
+
+  it('B3: câmpul Serviciu apare sub Copil, implicit pe Grădiniță', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    const serviceGroup = screen.getByRole('radiogroup', { name: 'Serviciu' });
+    expect(within(serviceGroup).getByRole('radio', { name: 'Grădiniță' })).toHaveAttribute('aria-checked', 'true');
+    expect(within(serviceGroup).getByRole('radio', { name: 'Bazin' })).toHaveAttribute('aria-checked', 'false');
+
+    await user.type(sumInput(), '500');
+    await user.click(saveButton());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ service: 'gradinita' }));
+  });
+
+  it('B3: la Bazin dispar scurtăturile de lună și apare „restul lunii” din charges', async () => {
+    // Aceeași formulă ca `today()` din calendar-month.mjs (ora locală, nu UTC) — data implicită
+    // a formularului trebuie să cadă în aceeași lună ca taxa de bazin din fixtură.
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const recordsWithCharge = {
+      ...records,
+      charges: [
+        {
+          id: `CHG-bazin-c1-${currentMonth}`,
+          childId: 'c1',
+          month: currentMonth,
+          kind: 'bazin',
+          label: `Bazin ${currentMonth}: 3 × 150 lei`,
+          amount: 450,
+          currency: 'MDL',
+          date: `${currentMonth}-15`,
+        },
+      ],
+    } as unknown as RecordsSnapshot;
+    const onSubmit = vi.fn().mockResolvedValue(true);
+    render(<PaymentFormDrawer target="new" records={recordsWithCharge} onSubmit={onSubmit} onClose={vi.fn()} />);
+    const user = userEvent.setup();
+
+    await pickChild(user, 'Andrei Popescu');
+    await user.click(screen.getByRole('radio', { name: 'Bazin' }));
+
+    expect(screen.queryByRole('button', { name: /luni ·/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^1 lună ·/ })).toBeNull();
+    const shortcut = screen.getByRole('button', { name: 'restul lunii · 450' });
+    await user.click(shortcut);
+    expect(sumInput().value).toBe('450');
+
+    await user.click(saveButton());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ service: 'bazin' }));
   });
 });

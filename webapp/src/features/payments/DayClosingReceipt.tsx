@@ -1,5 +1,5 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Button } from '@shared/ui';
+import { Button, ServiceBadge } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import { useDayClosingReceipt } from './useDayClosingReceipt';
@@ -41,7 +41,10 @@ export function DayClosingReceipt() {
           ) : (
             closing.rows.map(row => (
               <div key={row.id} className={styles.paymentRow}>
-                <span>{row.payerLabel}</span>
+                <span className={styles.payerCell}>
+                  {row.serviceLabel && <ServiceBadge service={{ name: row.serviceLabel, tone: row.serviceTone }} />}
+                  <span>{row.payerLabel}</span>
+                </span>
                 <strong>{formatMoney(row.amount)}</strong>
               </div>
             ))

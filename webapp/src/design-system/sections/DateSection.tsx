@@ -10,6 +10,8 @@ import {
   ProfileSection,
   RowMenu,
   SelectionBar,
+  ServiceBadge,
+  serviceTone,
   StatCard,
   type DataTableColumn,
 } from '@shared/ui';
@@ -61,6 +63,28 @@ export function DateSection() {
           <Badge tone="yellow">Parțial</Badge>
           <Badge tone="pink">Neachitat</Badge>
           <Badge tone="neutral">Neutral</Badge>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ServiceBadge"
+        importLine="import { ServiceBadge } from '@shared/ui';"
+        reference="Administrare.dc.html#10d (Servicii) · Achitari.dc.html#5a — tonul vine din `service.tone`"
+      >
+        <DemoRow label="serviciu">
+          <ServiceBadge service={{ name: 'Grădiniță', tone: 'orange' }} />
+          <ServiceBadge service={{ name: 'Bazin', tone: 'blue' }} />
+          <ServiceBadge service={{ name: 'Excursie', tone: 'purple' }} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="serviceTone"
+        importLine="import { serviceTone } from '@shared/ui';"
+        reference="Administrare.dc.html#10d — tonul unui serviciu, direct din `service.tone`"
+      >
+        <DemoRow label="rezultat">
+          <span>{serviceTone({ name: 'Bazin', tone: 'blue' })}</span>
         </DemoRow>
       </ComponentShowcase>
 

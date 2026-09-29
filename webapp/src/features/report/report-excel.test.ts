@@ -53,6 +53,7 @@ function fakeReport(): AccountingReport {
         payerLabel: 'Ion Popescu',
         unassigned: true,
         methods: ['Cash'],
+        service: 'Grădiniță',
         amount: 500,
         fxRate: null,
         fxRateSource: null,
@@ -68,6 +69,7 @@ function fakeReport(): AccountingReport {
         payerLabel: 'Ana Ionescu',
         unassigned: false,
         methods: ['Card'],
+        service: 'Bazin',
         amount: 1000,
         fxRate: 19.74,
         fxRateSource: 'bnm',
@@ -117,6 +119,17 @@ describe('report-excel', () => {
     const sum = rows.reduce((total, row) => total + Number(row.Lei), 0);
 
     expect(sum).toBe(report.expense);
+  });
+
+  it('foaia Încasări are coloana Serviciu cu numele serviciului fiecărei achitări (B3)', async () => {
+    const report = fakeReport();
+    const { workbook } = await buildAccountingReportWorkbook(report, {
+      includePayerNames: true,
+      includeEurDetails: true,
+    });
+
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(workbook.Sheets['Încasări']);
+    expect(rows.map(row => row.Serviciu)).toEqual(['Grădiniță', 'Bazin']);
   });
 
   it('cu includePayerNames oprit, coloana Plătitor nu apare în foaia Încasări', async () => {

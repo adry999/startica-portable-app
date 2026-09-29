@@ -498,6 +498,55 @@ describe('PaymentsPage', () => {
     expect(within(dialog).getByText(`Total: ${formatMoney(200)}`)).toBeInTheDocument();
   });
 
+  it('B3: coloana Serviciu arată pastila corectă și grupul FilterPills „Serviciu” filtrează rândurile', async () => {
+    const stateWithServices = {
+      ...fixtureState,
+      services: [
+        { id: 'gradinita', name: 'Grădiniță', order: 0, tone: 'orange', priceMode: 'free', system: true },
+        { id: 'bazin', name: 'Bazin', order: 1, tone: 'blue', priceMode: 'free', system: true },
+      ],
+      payments: [
+        ...fixtureState.payments,
+        {
+          id: 'p6',
+          date: '2026-09-12',
+          childId: 'c2',
+          amount: 250,
+          method: 'Cash',
+          tenders: [{ method: 'Cash', amount: 250 }],
+          allocations: [],
+          archived: false,
+          service: 'bazin',
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: stateWithServices, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(screen.getByRole('columnheader', { name: /Serviciu/ })).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByText('Grădiniță').length).toBeGreaterThan(0);
+    expect(within(table).getByText('Bazin')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Bazin' }));
+
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Maria Ionescu').length).toBeGreaterThan(0);
+  });
+
   it('badge-link „Neasociată →" navighează la Asociere achitări cu id-ul plății', async () => {
     await loadedSession();
     const user = userEvent.setup();

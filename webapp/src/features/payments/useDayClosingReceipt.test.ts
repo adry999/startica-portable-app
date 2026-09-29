@@ -152,4 +152,45 @@ describe('useDayClosingReceipt', () => {
     expect(result.current.cashExpensesTotal).toBe(1240);
     expect(result.current.inCasa).toBeCloseTo(9600 - 1240);
   });
+
+  it('serviceLabel (B3) e null pentru Grădiniță (implicit) și numele serviciului altfel', async () => {
+    const stateWithService = {
+      ...state,
+      payments: [
+        ...state.payments,
+        {
+          id: 'p5',
+          date: '2026-09-24',
+          childId: '',
+          sourceName: 'Bazin Ion',
+          amount: 2000,
+          method: 'Cash',
+          tenders: [{ method: 'Cash', amount: 2000 }],
+          allocations: [],
+          archived: false,
+          service: 'bazin',
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '2.0.0' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: stateWithService, revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { result } = renderHook(() => useDayClosingReceipt('2026-09-24'));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    expect(result.current.rows.find(row => row.payerLabel === 'Bivol Ion')?.serviceLabel).toBeNull();
+    expect(result.current.rows.find(row => row.payerLabel === 'Bazin Ion')?.serviceLabel).toBe('Bazin');
+  });
 });

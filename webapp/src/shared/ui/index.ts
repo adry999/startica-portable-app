@@ -26,6 +26,8 @@ export {
   type StatCardProps,
 } from './ProfileLayout';
 export { groupTone } from './group-tone';
+export { ServiceBadge, serviceTone, type ServiceBadgeInput, type ServiceBadgeProps } from './ServiceBadge';
+export { TonePicker, type TonePickerProps } from './TonePicker';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
 export { DayStepper, type DayStepperProps } from './DayStepper';
 export { RowMenu, type RowMenuItem, type RowMenuProps } from './RowMenu';

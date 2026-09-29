@@ -4,13 +4,14 @@ import { useSessionStatus } from '@shared/api/useSessionStatus';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { total } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
-import { childNameOf } from '#shared/domain/record-labels.mjs';
+import { childNameOf, serviceOf } from '#shared/domain/record-labels.mjs';
+import { DEFAULT_SERVICE_ID, DEFAULT_SERVICE_SEEDS } from '#shared/domain/record-schema.mjs';
 import { summarizePaymentsByMethod } from '#shared/ui/record-list-summary.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
-import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
+import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot, Service } from '@contracts/record-types.mjs';
 
 export type PaymentsStatus = 'loading' | 'ready' | 'failed';
 export type ArchiveFilter = 'active' | 'archived' | 'all';
@@ -44,6 +45,11 @@ export interface PaymentRowView {
   allocations: PaymentAllocationView[];
   total: number;
   archived: boolean;
+  /** Id-ul serviciului (B3) — 'gradinita' implicit; folosit la comparația cu filtrul Serviciu. */
+  serviceId: string;
+  serviceLabel: string;
+  /** Unul din cele 8 tonuri (`SERVICE_TONES`) — Bazin e 'blue', ca să pice exact pe `Badge tone="blue"`. */
+  serviceTone: string;
 }
 
 export interface PaymentsSummary {
@@ -72,6 +78,10 @@ export interface PaymentsData {
   setChildId: (value: string) => void;
   method: string;
   setMethod: (value: string) => void;
+  service: string;
+  setService: (value: string) => void;
+  /** Serviciile vizibile (nu `hidden`), sortate ca la Grupe — pentru grupul FilterPills „Serviciu”. */
+  services: Service[];
   groupFilter: string;
   setGroupFilter: (value: string) => void;
   monthFrom: string;
@@ -107,6 +117,7 @@ function countByMethod(payments: Payment[], method: string): number {
 }
 
 function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
+  const service = serviceOf(payment, records.services ?? []);
   return {
     id: payment.id,
     date: payment.date,
@@ -123,7 +134,17 @@ function buildRow(payment: Payment, records: RecordsSnapshot): PaymentRowView {
     })),
     total: payment.amount,
     archived: Boolean(payment.archived),
+    serviceId: service.id,
+    serviceLabel: service.name,
+    serviceTone: service.tone,
   };
+}
+
+/** Serviciile vizibile ale filialei, sortate ca la Grupe — cade pe Grădiniță+Bazin dacă
+ * instalarea/fixtura nu declară încă `services` (vezi `serviceOf`). */
+function visibleServices(services: Service[] | undefined): Service[] {
+  const list = services && services.length > 0 ? services : DEFAULT_SERVICE_SEEDS;
+  return sortByGroupOrder(list.filter(service => !service.hidden));
 }
 
 /**
@@ -140,6 +161,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const [search, setSearch] = useState('');
   const [childId, setChildId] = useState(initialChildId);
   const [method, setMethod] = useState('');
+  const [service, setService] = useState('');
   const [groupFilter, setGroupFilter] = useState('all');
   const [monthFrom, setMonthFrom] = useState('');
   const [monthTo, setMonthTo] = useState('');
@@ -209,6 +231,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
     setChildId,
     method,
     setMethod,
+    service,
+    setService,
     groupFilter,
     setGroupFilter,
     monthFrom,
@@ -235,6 +259,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
       rows: [],
       summary: EMPTY_SUMMARY,
       groups: [],
+      services: [],
       ...actions,
     };
   }
@@ -261,6 +286,9 @@ export function usePayments(initialChildId = ''): PaymentsData {
       (!includeMethod ||
         !method ||
         paymentTenders(payment).some((tender: PaymentTender) => tender.method === method)) &&
+      // Spre deosebire de Metodă (exclus din sumar, ca toate cele 3 carduri să rămână
+      // vizibile deodată), Serviciu filtrează și cardurile Cash/Card/Transfer (05-achitari.md §B3).
+      (!service || (payment.service || DEFAULT_SERVICE_ID) === service) &&
       matchesGroupFilter(payment) &&
       matchesRecordListSearch('payments', payment, records, normalizedSearch)
     );
@@ -272,6 +300,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const rows = filteredPayments.map(payment => buildRow(payment, records));
   const byMethod = summarizePaymentsByMethod(paymentsForSummary);
   const groups = sortByGroupOrder(records.groups);
+  const services = visibleServices(records.services);
 
   return {
     status: 'ready',
@@ -279,6 +308,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
     records,
     rows,
     groups,
+    services,
     summary: {
       count: rows.length,
       total: total(filteredPayments),

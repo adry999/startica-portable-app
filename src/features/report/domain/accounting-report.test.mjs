@@ -96,6 +96,18 @@ test('buildAccountingReport: achitările neasociate (fără copil) intră în ra
   assert.equal(report.paymentRows[0].payerLabel, 'Ion Popescu');
 });
 
+test('buildAccountingReport: fiecare rând de achitare are numele serviciului (B3) — implicit Grădiniță', () => {
+  const period = reportPeriodBounds('month', '2026-08');
+  const data = records({
+    payments: [payment({ id: 'PAY-1' }), payment({ id: 'PAY-2', service: 'bazin' })],
+  });
+
+  const report = buildAccountingReport(data, period);
+
+  assert.equal(report.paymentRows.find(row => row.id === 'PAY-1')?.service, 'Grădiniță');
+  assert.equal(report.paymentRows.find(row => row.id === 'PAY-2')?.service, 'Bazin');
+});
+
 test('buildAccountingReport: repartizarea pe metodă adună tenders, nu achitări (o achitare cu 2 metode contează la ambele)', () => {
   const period = reportPeriodBounds('month', '2026-08');
   const data = records({

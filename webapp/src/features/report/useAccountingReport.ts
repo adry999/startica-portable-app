@@ -50,6 +50,8 @@ export interface ReportPaymentRow {
   payerLabel: string;
   unassigned: boolean;
   methods: string[];
+  /** Numele serviciului (B3, ALINIERE-DESIGN.md §B3) — „Grădiniță" implicit, „Bazin" sau un serviciu liber. */
+  service: string;
   amount: number;
   fxRate: number | null;
   fxRateSource: 'bnm' | 'manual' | null;

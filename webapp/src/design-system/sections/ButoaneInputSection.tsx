@@ -10,8 +10,10 @@ import {
   SearchSelect,
   SegmentedControl,
   Toggle,
+  TonePicker,
   type FilterPillGroup,
 } from '@shared/ui';
+import { SERVICE_TONES } from '@domain/record-schema.mjs';
 import { shiftMonth } from '@shared/format/month-shift';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
@@ -32,6 +34,7 @@ export function ButoaneInputSection() {
   const [day, setDay] = useState(DEMO_DAY);
   const [toggleOn, setToggleOn] = useState(true);
   const [toggleOff, setToggleOff] = useState(false);
+  const [toneValue, setToneValue] = useState<string>(SERVICE_TONES[0]);
 
   const filterGroups: FilterPillGroup<string>[] = [
     {
@@ -162,6 +165,16 @@ export function ButoaneInputSection() {
       >
         <DemoRow label="control">
           <FilterPills groups={filterGroups} trailing={`${DEMO_GROUPS.length} grupe`} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TonePicker"
+        importLine="import { TonePicker } from '@shared/ui';"
+        reference="Administrare.dc.html#10d (Serviciu nou) · Grupe.dc.html#4c — 8 pătrate de ton, selectat = border 2px `-ink`"
+      >
+        <DemoRow label="control">
+          <TonePicker ariaLabel="Culoare" tones={SERVICE_TONES} value={toneValue} onChange={setToneValue} />
         </DemoRow>
       </ComponentShowcase>
 

@@ -11,6 +11,7 @@ import {
   SearchInput,
   SegmentedControl,
   SelectionBar,
+  ServiceBadge,
   groupTone,
   useToast,
   type BadgeTone,
@@ -129,6 +130,14 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
   const activeFilterChips: { key: string; label: string; onClear: () => void }[] = [];
   if (data.method)
     activeFilterChips.push({ key: 'method', label: `Metodă: ${data.method}`, onClear: () => data.setMethod('') });
+  if (data.service) {
+    const serviceLabel = data.services.find(service => service.id === data.service)?.name ?? data.service;
+    activeFilterChips.push({
+      key: 'service',
+      label: `Serviciu: ${serviceLabel}`,
+      onClear: () => data.setService(''),
+    });
+  }
   if (data.groupFilter !== 'all') {
     const groupLabel =
       data.groupFilter === 'none' ? 'Fără grupă' : (data.groups.find(g => g.id === data.groupFilter)?.name ?? '');
@@ -154,6 +163,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
 
   function resetFilters() {
     data.setMethod('');
+    data.setService('');
     data.setGroupFilter('all');
     data.setArchiveFilter('active');
     data.setMonthFrom('');
@@ -212,6 +222,19 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                 { value: 'Cash', label: 'Cash', tone: METHOD_TONE.Cash as PillTone },
                 { value: 'Card', label: 'Card', tone: METHOD_TONE.Card as PillTone },
                 { value: 'Transfer', label: 'Transfer', tone: METHOD_TONE.Transfer as PillTone },
+              ],
+            },
+            {
+              label: 'Serviciu',
+              value: data.service,
+              onChange: data.setService,
+              options: [
+                { value: '', label: 'Toate', tone: 'neutral' },
+                ...data.services.map(service => ({
+                  value: service.id,
+                  label: service.name,
+                  tone: service.tone as PillTone,
+                })),
               ],
             },
             {
@@ -322,6 +345,12 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                 ) : (
                   row.childLabel
                 ),
+            },
+            {
+              key: 'service',
+              header: 'Serviciu',
+              sortValue: row => row.serviceLabel,
+              render: row => <ServiceBadge service={{ name: row.serviceLabel, tone: row.serviceTone }} />,
             },
             {
               key: 'sourceName',

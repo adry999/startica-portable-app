@@ -50,6 +50,7 @@ function paymentSheetRows(report: AccountingReport, options: ReportExportOptions
       Copil: row.childLabel,
     };
     if (options.includePayerNames) record['Plătitor'] = row.payerLabel;
+    record['Serviciu'] = row.service;
     record['Metodă'] = row.methods.join(', ');
     record['Lei'] = row.amount;
     if (options.includeEurDetails) {

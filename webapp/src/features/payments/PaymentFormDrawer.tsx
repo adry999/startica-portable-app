@@ -7,6 +7,8 @@ import { formatRate } from '#shared/format/rate-format.mjs';
 import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
+import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from '@domain/record-schema.mjs';
+import { sortByGroupOrder } from '@shared/format/group-order';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { defaultPaymentFormValues, tenderMethodsFor, totalOfTenders, type PaymentFormValues } from './payment-form';
 import type { Child, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -17,6 +19,8 @@ export interface PaymentFormDrawerProps {
   records: RecordsSnapshot;
   /** Copil presetat la creare (ex. „+ Plată" din fișa copilului) — rămâne editabil în formular. */
   defaultChildId?: string;
+  /** Serviciul presetat la creare (B3) — „+ Plată” pornește cu Grădiniță, „Încasează” din Bazin cu Bazin. */
+  defaultService?: string;
   /** C1: întoarce succesul real al salvării (true doar după mutate reușit) — save() din
    * dirty-forms (13b) și garda „Salvează și schimbă” a filialei se bazează pe asta. */
   onSubmit: (values: PaymentFormValues) => Promise<boolean>;
@@ -24,10 +28,17 @@ export interface PaymentFormDrawerProps {
 }
 
 /** Tenders dinamice, alocări pe lună + 3 sincronizări automate. */
-export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubmit, onClose }: PaymentFormDrawerProps) {
+export function PaymentFormDrawer({
+  target,
+  records,
+  defaultChildId = '',
+  defaultService = DEFAULT_SERVICE_ID,
+  onSubmit,
+  onClose,
+}: PaymentFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
   const [values, setValues] = useState<PaymentFormValues>(() =>
-    defaultPaymentFormValues(editing, todayFn(), defaultChildId, records),
+    defaultPaymentFormValues(editing, todayFn(), defaultChildId, records, defaultService),
   );
   // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
   const initialValuesRef = useRef(values);
@@ -68,6 +79,22 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const isEurChild = feeEntry?.currency === 'EUR';
   const unpaidMonth = selectedChild ? firstUnpaidMonth(selectedChild, records.payments) : null;
   const groupLabel = records.groups.find(group => group.id === selectedChild?.groupId)?.name ?? 'Fără grupă';
+
+  // Serviciile active (nu ascunse), în ordinea din 10d — ca la Group.order (15b).
+  const serviceOptions = sortByGroupOrder(records.services ?? [])
+    .filter(service => !service.hidden)
+    .map(service => ({ value: service.id, label: service.name }));
+  const isGradinitaService = values.service === DEFAULT_SERVICE_ID;
+  const isBazinService = values.service === POOL_SERVICE_ID;
+  // „Restul lunii” (Bazin, 15b) — din `charges` (taxa lunii curente, generată la închiderea
+  // lunii); dacă luna curentă încă nu are o taxă de bazin calculată, scurtătura nu apare.
+  const currentMonthCharge =
+    isBazinService && selectedChild
+      ? (records.charges ?? []).find(
+          charge =>
+            charge.childId === selectedChild.id && charge.kind === 'bazin' && charge.month === values.date.slice(0, 7),
+        )
+      : null;
 
   const { rates } = useExchangeRates();
   const bnmRate = eurToMdlRate(rates, values.date);
@@ -259,6 +286,18 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           )}
         </div>
 
+        {serviceOptions.length > 0 && (
+          <div className={styles.field}>
+            Serviciu
+            <SegmentedControl
+              ariaLabel="Serviciu"
+              value={values.service}
+              onChange={service => setValues(previous => ({ ...previous, service }))}
+              options={serviceOptions}
+            />
+          </div>
+        )}
+
         <div className={styles.field}>
           Sumă
           {splitByMethod ? (
@@ -297,7 +336,8 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
               Împarte pe metode
             </button>
           )}
-          {feeEntry && !isEurChild && !splitByMethod && (
+          {/* Scurtăturile de lună țin de taxa lunară — au sens doar la serviciul Grădiniță (B3). */}
+          {feeEntry && !isEurChild && !splitByMethod && isGradinitaService && (
             <div className={styles.shortcuts}>
               {[1, 2, 3].map(months => {
                 const amount = feeEntry.amount * months;
@@ -313,6 +353,22 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
                   </button>
                 );
               })}
+            </div>
+          )}
+          {/* Bazin (B3): „restul lunii · X lei”, din taxa de bazin deja calculată pentru luna curentă. */}
+          {currentMonthCharge && !splitByMethod && (
+            <div className={styles.shortcuts}>
+              <button
+                type="button"
+                className={
+                  Number(values.tenders[activeMethod]) === currentMonthCharge.amount
+                    ? `${styles.shortcut} ${styles.shortcutActive}`
+                    : styles.shortcut
+                }
+                onClick={() => setTender(activeMethod, String(currentMonthCharge.amount))}
+              >
+                restul lunii · {new Intl.NumberFormat('ro-RO').format(currentMonthCharge.amount)}
+              </button>
             </div>
           )}
           {isEurChild && (
