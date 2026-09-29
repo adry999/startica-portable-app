@@ -34,6 +34,7 @@ function basePayment(overrides = {}) {
     childId: '',
     month: '',
     method: 'Cash',
+    service: 'gradinita',
     amount: 0,
     allocations: [],
     ...overrides,

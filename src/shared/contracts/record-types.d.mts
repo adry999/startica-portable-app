@@ -1,5 +1,5 @@
 export type RecordType =
-  'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits' | 'charges' | 'payerAliases';
+  'children' | 'payments' | 'expenses' | 'groups' | 'categories' | 'visits' | 'charges' | 'payerAliases' | 'services';
 
 /** YYYY-MM */
 export type MonthKey = string;
@@ -97,6 +97,8 @@ export interface Payment {
   group?: string;
   month: MonthKey | '';
   method: string;
+  /** Id dintr-un `Service` (B3, ALINIERE-DESIGN.md) — implicit 'gradinita', vezi normalizeRecord(). */
+  service: string;
   tenders?: PaymentTender[];
   amount: number;
   /** Implicit 'MDL' dacă lipsește — vezi normalizeRecord(). */
@@ -215,6 +217,25 @@ export interface Charge {
   date: DateKey;
 }
 
+/** Un serviciu pe care se poate face o achitare (B3, ALINIERE-DESIGN.md) — Grădiniță și Bazin
+ * sunt `system: true` (id fix, nu se șterg/redenumesc id-ul — taxa lunară și Bazinul depind de
+ * ele); restul sunt servicii libere, adăugate din Backup și setări → Servicii (10d). */
+export interface Service {
+  id: string;
+  name: string;
+  /** Poziția în listă (10d) — lipsă = ordinea de creare (fallback la citire, ca la Group.order). */
+  order?: number;
+  /** Una din cele 8 chei de ton (ca Group.tone) — culoarea pastilei serviciului. */
+  tone: string;
+  priceMode: 'free' | 'fixed';
+  /** Doar când priceMode === 'fixed'. */
+  price?: number;
+  /** Ascuns = nu mai apare în Achitare nouă, rămâne în filtre și în istoricul plăților existente. */
+  hidden?: boolean;
+  /** Grădiniță/Bazin — nu se șterg, id-ul nu se schimbă (taxa/Bazinul depind de el). */
+  system: boolean;
+}
+
 /** Un plătitor reținut (Asociere achitări, 11-de-rezolvat.md §9c / fișa copilului, 09-copii-fisa.md
  * — decizia 25 sept. 2026): leagă textul plătitorului din extrasul bancar de un copil, ca sugestia
  * să apară primă, cu motivul „Plătitor reținut”, la următoarea achitare de la același plătitor. */
@@ -238,6 +259,8 @@ export interface RecordsSnapshot {
   charges?: Charge[];
   /** Opțional în tipul TS, din același motiv ca `charges`. */
   payerAliases?: PayerAlias[];
+  /** Opțional în tipul TS, din același motiv ca `charges`; serverul îl trimite mereu, seedat cu Grădiniță+Bazin. */
+  services?: Service[];
 }
 
 export interface RecordByType {
@@ -249,4 +272,5 @@ export interface RecordByType {
   visits: Visit;
   charges: Charge;
   payerAliases: PayerAlias;
+  services: Service;
 }

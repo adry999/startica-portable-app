@@ -1,4 +1,4 @@
-import { TYPES, emptyState } from './record-schema.mjs';
+import { TYPES, emptyState, missingDefaultServiceSeeds } from './record-schema.mjs';
 import { missingDefaultCategorySeeds, missingExpenseOnlyCategorySeeds } from './expense-categories.mjs';
 import { today } from './calendar-month.mjs';
 
@@ -65,6 +65,14 @@ export function upgradeSnapshot(input) {
   // (backup vechi, dinainte ca ele să fie înregistrări reale) sau cu cheltuieli a căror
   // categorie era doar text — completate aici, ca nimic să nu rămână „în aer” și fără
   // să depindă de faptul că filiala a fost deja deschisă o dată după actualizare.
+  // Un backup/export dinainte de B3 nu are `services` — Grădiniță/Bazin lipsesc, dar orice
+  // plată din el se normalizează cu `service: 'gradinita'` (record-schema.mjs); fără semințe
+  // aici, ar rămâne o referință moartă până la prima deschidere a filialei (seedServices).
+  const defaultServiceSeeds = missingDefaultServiceSeeds(snapshot);
+  for (const seed of defaultServiceSeeds) snapshot.services.push(seed);
+  if (defaultServiceSeeds.length)
+    notes.push(`Servicii implicite completate: ${defaultServiceSeeds.length} (Grădiniță/Bazin, dacă lipseau).`);
+
   const defaultSeeds = missingDefaultCategorySeeds(snapshot);
   for (const seed of defaultSeeds) snapshot.categories.push(seed);
   const migratedSeeds = missingExpenseOnlyCategorySeeds(snapshot);

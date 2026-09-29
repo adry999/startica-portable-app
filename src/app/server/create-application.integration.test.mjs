@@ -167,9 +167,14 @@ test('Migrarea bazei vechi păstrează datele și creează copie înainte de mig
   old.close();
   const app = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
   const migrated = app.envelope().state;
-  // Categoriile de cheltuieli implicite (cu „General”) se creează la prima deschidere a bazei migrate.
-  assert.deepEqual({ ...migrated, categories: [] }, { ...state, visits: [], charges: [], payerAliases: [] });
+  // Categoriile de cheltuieli și serviciile implicite (Grădiniță/Bazin) se creează la prima deschidere a bazei migrate.
+  assert.deepEqual(
+    { ...migrated, categories: [], services: [] },
+    { ...state, visits: [], charges: [], payerAliases: [], services: [] },
+  );
   assert.ok(migrated.categories.some(category => category.id === 'CAT-general' && category.name === 'General'));
+  assert.ok(migrated.services.some(service => service.id === 'gradinita'));
+  assert.ok(migrated.services.some(service => service.id === 'bazin'));
   assert.ok(readdirSync(join(dir, 'backups')).some(f => f.includes('migrare')));
   app.closeSync();
   if (

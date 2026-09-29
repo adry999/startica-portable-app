@@ -29,6 +29,7 @@ function unassignedPayment(id, sourceName) {
     childId: '',
     sourceName,
     method: 'Cash',
+    service: 'gradinita',
     amount: 1500,
     allocations: [{ month: SEPTEMBER, amount: 1500 }],
     month: SEPTEMBER,

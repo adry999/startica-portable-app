@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { emptyState } from './record-schema.mjs';
 import { upgradeSnapshot } from './record-snapshot-upgrade.mjs';
 import { DEFAULT_EXPENSE_CATEGORY_SEEDS } from './expense-categories.mjs';
+import { DEFAULT_SERVICE_SEEDS } from './record-schema.mjs';
 import { today } from './calendar-month.mjs';
 
 test('un copil cu câmp text group primește o grupă nouă și groupId', () => {
@@ -18,7 +19,10 @@ test('un copil cu câmp text group primește o grupă nouă și groupId', () => 
   assert.equal(snapshot.groups[0].name, 'Fluturași');
   assert.equal(snapshot.children[0].groupId, snapshot.groups[0].id);
   assert.ok(!('group' in snapshot.children[0]));
-  assert.deepEqual(notes, ['Format vechi, actualizat: 1 grupă creată din câmpul text al copiilor.']);
+  assert.deepEqual(notes, [
+    'Format vechi, actualizat: 1 grupă creată din câmpul text al copiilor.',
+    'Servicii implicite completate: 2 (Grădiniță/Bazin, dacă lipseau).',
+  ]);
 });
 
 test('doi copii cu același nume de grupă text primesc aceeași grupă', () => {
@@ -38,7 +42,10 @@ test('doi copii cu același nume de grupă text primesc aceeași grupă', () => 
   assert.equal(snapshot.children[0].groupId, snapshot.groups[0].id);
   assert.equal(snapshot.children[1].groupId, snapshot.groups[0].id);
   assert.equal(snapshot.children[2].groupId, null);
-  assert.deepEqual(notes, ['Format vechi, actualizat: 1 grupă creată din câmpul text al copiilor.']);
+  assert.deepEqual(notes, [
+    'Format vechi, actualizat: 1 grupă creată din câmpul text al copiilor.',
+    'Servicii implicite completate: 2 (Grădiniță/Bazin, dacă lipseau).',
+  ]);
 });
 
 test('un instantaneu app_state fără listele groups și categories este acceptat, iar categoriile implicite se completează', () => {
@@ -57,6 +64,7 @@ test('un tip de înregistrare necunoscut este ignorat, cu o notă, nu aruncă', 
   assert.deepEqual(snapshot.categories, DEFAULT_EXPENSE_CATEGORY_SEEDS);
   assert.deepEqual(notes, [
     'Tip necunoscut ignorat: archive (2 înregistrări).',
+    'Servicii implicite completate: 2 (Grădiniță/Bazin, dacă lipseau).',
     `Categorii implicite completate: ${DEFAULT_EXPENSE_CATEGORY_SEEDS.length} (inclusiv „General”, dacă lipsea).`,
   ]);
 });
@@ -67,6 +75,7 @@ test('un instantaneu deja în formatul curent, cu toate categoriile implicite pr
     groups: [{ id: 'GRP-1', name: 'Fluturași', capacity: null }],
     children: [{ id: 'C1', name: 'Ana', groupId: 'GRP-1' }],
     categories: [{ id: 'CAT-general', name: 'General' }],
+    services: DEFAULT_SERVICE_SEEDS,
   };
 
   const { snapshot, notes } = upgradeSnapshot(current);
@@ -126,5 +135,5 @@ test('un copil cu notes deja listă (format nou) nu se modifică', () => {
   const { snapshot, notes } = upgradeSnapshot(input);
 
   assert.deepEqual(snapshot.children[0].notes, existing);
-  assert.deepEqual(notes, []);
+  assert.deepEqual(notes, ['Servicii implicite completate: 2 (Grădiniță/Bazin, dacă lipseau).']);
 });

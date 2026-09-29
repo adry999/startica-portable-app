@@ -11,7 +11,16 @@ test('assertRecordReferencesExist: refuză o plată cu copil inexistent', () => 
 });
 
 test('assertRecordReferencesExist: acceptă o plată neasociată (childId gol)', () => {
-  assert.doesNotThrow(() => assertRecordReferencesExist('payments', { childId: '' }, () => false));
+  assert.doesNotThrow(() =>
+    assertRecordReferencesExist('payments', { childId: '', service: 'gradinita' }, type => type === 'services'),
+  );
+});
+
+test('assertRecordReferencesExist: refuză o plată cu un serviciu inexistent', () => {
+  assert.throws(
+    () => assertRecordReferencesExist('payments', { childId: '', service: 'S1' }, () => false),
+    /Serviciul nu există\./,
+  );
 });
 
 test('assertRecordReferencesExist: acceptă o plată cu copil existent', () => {

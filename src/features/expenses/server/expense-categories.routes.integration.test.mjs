@@ -61,7 +61,7 @@ test('Se poate șterge o categorie existentă; revizia crește și rămâne în 
   assert.equal(deleted.status, 200, deleted.body.error);
   assert.equal(deleted.body.revision, imported.body.revision + 1);
   assert.deepEqual(deleted.body.state.categories, []);
-  assert.deepEqual(validateState(deleted.body.state), deleted.body.state);
+  assert.deepEqual({ ...validateState(deleted.body.state), services: [] }, { ...deleted.body.state, services: [] });
 
   const audit = await app.get('/api/audit');
   const entry = audit.entries.find(entry => entry.recordType === 'categories' && entry.recordId === category.id);

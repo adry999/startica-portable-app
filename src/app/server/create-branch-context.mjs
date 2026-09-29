@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { createRecordRepository } from '#core/server/persistence/record-repository.mjs';
+import { seedServices } from '#features/services/index.server.mjs';
 import { createRevisionTransaction } from '#core/server/persistence/revision-transaction.mjs';
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { createAuditLogRepository, createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
@@ -147,6 +148,12 @@ export function createBranchContext({
 
   const rawRecordRepository = createRecordRepository(db);
   const auditLogRepository = createAuditLogRepository(db);
+
+  // Semințele Grădiniță/Bazin (B3) trebuie să existe înainte ca vreo achitare să se poată
+  // salva (validarea cere un `service` existent) — sincron, aici, nu în rutele Servicii
+  // (care nu există încă la fiecare pornire dacă nimeni nu a deschis fila), la fel ca
+  // seedExpenseCategories. Depozitul brut (fără outbox), vezi service-seeding.mjs.
+  seedServices({ database: db, recordRepository: rawRecordRepository });
 
   // Sincronizare (Faza 2 a planului): trei depozite noi pe baza acestei filiale și
   // o singură verificare de activare (sync.json există), partajată de depozitul

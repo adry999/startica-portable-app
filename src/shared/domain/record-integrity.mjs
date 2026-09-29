@@ -13,6 +13,7 @@
 export function assertRecordReferencesExist(type, record, recordExists) {
   if (type === 'payments' && record.childId && !recordExists('children', record.childId))
     throw new Error('Copilul asociat nu există.');
+  if (type === 'payments' && !recordExists('services', record.service)) throw new Error('Serviciul nu există.');
   if (type === 'children' && record.groupId && !recordExists('groups', record.groupId))
     throw new Error('Grupa asociată nu există.');
   if (type === 'visits' && record.childId && !recordExists('children', record.childId))
@@ -27,7 +28,7 @@ export function assertRecordReferencesExist(type, record, recordExists) {
 /**
  * @param {RecordType} type
  * @param {any} record
- * @param {Pick<RecordsSnapshot, 'groups' | 'categories'>} records
+ * @param {Pick<RecordsSnapshot, 'groups' | 'categories' | 'services'>} records
  */
 export function assertUniqueName(type, record, records) {
   if (type === 'groups') {
@@ -41,5 +42,11 @@ export function assertUniqueName(type, record, records) {
       c => c.id !== record.id && c.name.toLocaleLowerCase('ro-RO') === record.name.toLocaleLowerCase('ro-RO'),
     );
     if (clash) throw new Error('Există deja o categorie cu acest nume.');
+  }
+  if (type === 'services') {
+    const clash = (records.services ?? []).some(
+      s => s.id !== record.id && s.name.toLocaleLowerCase('ro-RO') === record.name.toLocaleLowerCase('ro-RO'),
+    );
+    if (clash) throw new Error('Există deja un serviciu cu acest nume.');
   }
 }

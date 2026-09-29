@@ -10,6 +10,7 @@ export const RECORD_KINDS = [
   'visits',
   'charges',
   'payerAliases',
+  'services',
 ];
 export const SENSITIVE_FIELDS = { visits: ['healthNotes'], children: ['healthNotes'] };
 

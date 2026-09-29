@@ -5,7 +5,24 @@ import { TENDER_METHODS, normalizeTenderMethod } from './payment-allocations.mjs
 // `payerAliases` = tabelul „payer_aliases” din decizia 25 sept. 2026 (docs/design/README.md
 // „Decizii funcții noi”) — numele e camelCase aici ca toate celelalte tipuri din TYPES, nu
 // snake_case ca în textul deciziei.
-export const TYPES = ['children', 'payments', 'expenses', 'groups', 'categories', 'visits', 'charges', 'payerAliases'];
+export const TYPES = [
+  'children',
+  'payments',
+  'expenses',
+  'groups',
+  'categories',
+  'visits',
+  'charges',
+  'payerAliases',
+  'services',
+];
+// Serviciul implicit al unei achitări (B3) — Grădiniță, mereu prezent, `system: true`.
+export const DEFAULT_SERVICE_ID = 'gradinita';
+export const POOL_SERVICE_ID = 'bazin';
+// Cele 8 tonuri de pastilă din PillTone (webapp/src/shared/ui/FilterPills.tsx) — copiate aici
+// ca record-schema.mjs (shared, server+web) să nu importe din webapp/.
+export const SERVICE_TONES = ['orange', 'mint', 'yellow', 'pink', 'teal', 'blue', 'purple', 'coral'];
+export const SERVICE_PRICE_MODES = ['free', 'fixed'];
 // Tipurile de taxă suplimentară dintr-un `charges` (decizia 4, 2026-09-27-personal-bazin.md) — azi
 // doar Bazin; un al doilea modul cu taxe suplimentare adaugă aici, nu inventează alt kind.
 export const CHARGE_KINDS = ['bazin'];
@@ -22,7 +39,7 @@ export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Î
 // staff-ul e comun (baza „comun”), grupa e a filialei — de-aia trăiește pe `records`, nu ca kind separat.
 export const GROUP_TEAM_ROLES = ['principal', 'asistent', 'inlocuitor'];
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
-/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[], payerAliases: any[] }} */
+/** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[], payerAliases: any[], services: any[] }} */
 export const emptyState = () => ({
   children: [],
   payments: [],
@@ -32,7 +49,22 @@ export const emptyState = () => ({
   visits: [],
   charges: [],
   payerAliases: [],
+  services: [],
 });
+
+// Cele 2 servicii de sistem (B3) — id fix, nu se șterg/redenumesc; taxa lunară și Bazinul
+// depind de ele. O instalare nouă pornește cu ele; una existentă le primește la deschidere
+// (vezi seedServices în #features/services/server, ca la missingDefaultCategorySeeds).
+/** @type {import('#shared/contracts/record-types.mjs').Service[]} */
+export const DEFAULT_SERVICE_SEEDS = [
+  { id: DEFAULT_SERVICE_ID, name: 'Grădiniță', order: 0, tone: 'orange', priceMode: 'free', system: true },
+  { id: POOL_SERVICE_ID, name: 'Bazin', order: 1, tone: 'blue', priceMode: 'free', system: true },
+];
+/** Semințele lipsă dintr-un instantaneu (instalare existentă fără `services`, sau import vechi). */
+export function missingDefaultServiceSeeds(state) {
+  const existingIds = new Set((state.services ?? []).map(service => service.id));
+  return DEFAULT_SERVICE_SEEDS.filter(seed => !existingIds.has(seed.id));
+}
 // Câmpurile per tip care duc date medicale în clar: excluse din export
 // (stripSensitiveFields) și redactate în istoric (redactSensitiveFields). O
 // intrare nouă în TYPES cu un câmp sensibil trebuie adăugată aici.
@@ -120,6 +152,7 @@ const FIELDS = {
     'group',
     'month',
     'method',
+    'service',
     'tenders',
     'amount',
     'currency',
@@ -183,6 +216,8 @@ const FIELDS = {
   // apară primă, cu motivul „Plătitor reținut”, la următoarea achitare de la același plătitor.
   // Fără arhivare — se șterge direct din fișa copilului (09-copii-fisa.md).
   payerAliases: new Set(['id', 'alias', 'childId', 'createdAt']),
+  // Un serviciu pe care se poate face o achitare (B3) — Grădiniță/Bazin sunt `system: true`.
+  services: new Set(['id', 'name', 'order', 'tone', 'priceMode', 'price', 'hidden', 'system']),
 };
 export function normalizeRecord(type, input) {
   requireThat(
@@ -482,6 +517,19 @@ export function normalizeRecord(type, input) {
       typeof record.createdAt === 'string' && !Number.isNaN(Date.parse(record.createdAt)),
       'Data creării este invalidă.',
     );
+  } else if (type === 'services') {
+    text(record.name, 'Nume', true);
+    record.name = record.name.trim();
+    requireThat(SERVICE_TONES.includes(record.tone), `Ton necunoscut: folosește ${SERVICE_TONES.join(', ')}.`);
+    requireThat(
+      SERVICE_PRICE_MODES.includes(record.priceMode),
+      `Mod de preț necunoscut: folosește ${SERVICE_PRICE_MODES.join(', ')}.`,
+    );
+    if (record.priceMode === 'fixed') requireAmount(record.price, 'Preț');
+    else delete record.price;
+    record.hidden = !!record.hidden;
+    record.system = !!record.system;
+    if (record.order !== undefined) requireThat(Number.isFinite(record.order), 'Ordine invalidă.');
   } else {
     requireThat(dateOK(record.date), 'Data operațiunii este invalidă.');
     if (type === 'payments' && record.tenders !== undefined) {
@@ -527,6 +575,8 @@ export function normalizeRecord(type, input) {
           'Numărul confirmării de plată este invalid.',
         );
       record.method ||= 'Cash';
+      record.service ||= DEFAULT_SERVICE_ID;
+      text(record.service, 'Serviciu', true);
       record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');
       const seen = new Set();

@@ -1,5 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { validateState } from '#shared/domain/record-schema.mjs';
+import { validateState, missingDefaultServiceSeeds, normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { buildImportReport } from '../domain/import-report.mjs';
 import { planFinancialHistoryImport } from './financial-history-import.mjs';
 
@@ -72,6 +72,10 @@ export function createDataTransferRoutes({
       handle: ({ body }) => {
         if (body.confirm !== FULL_IMPORT_CONFIRMATION) fail('Confirmă importul.');
         const state = validateState(body.state);
+        // Un import (bază veche/parțială, fără `services`) nu trece prin seedServices ca la
+        // pornirea filialei — fără asta, o editare ulterioară a unei plăți ar eșua la
+        // verificarea de existență a serviciului (record-integrity.mjs).
+        for (const seed of missingDefaultServiceSeeds(state)) state.services.push(normalizeRecord('services', seed));
         return runRevisionTransaction(body, { action: 'import', backupBefore: true }, () =>
           replaceAllRecords(state, 'import'),
         );
