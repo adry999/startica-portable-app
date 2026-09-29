@@ -21,6 +21,10 @@ export interface ChildNote {
 export interface Child {
   id: string;
   name: string;
+  /** Nume/prenume separate (formularul „Copil nou”); `name` rămâne sursa unică pentru
+   * căutare/sortare/inițiale/CSV/Excel/chitanțe — vezi normalizeRecord(). */
+  firstName?: string;
+  lastName?: string;
   contractNumber?: string;
   parent: string;
   phone: string;
@@ -28,6 +32,9 @@ export interface Child {
   phone2?: string;
   /** Sensibil (SENSITIVE_FIELDS): exclus din export, redactat în istoric, golit la 12 luni de la archivedAt. */
   healthNotes?: string;
+  /** IDNP, exact 13 cifre (CF-2, 09-copii-fisa.md). */
+  idnp?: string;
+  address?: string;
   birthDate?: DateKey;
   contractDate?: DateKey;
   attendanceDate?: DateKey;

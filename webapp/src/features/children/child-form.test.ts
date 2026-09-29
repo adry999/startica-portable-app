@@ -46,6 +46,8 @@ describe('defaultChildFormValues', () => {
 describe('buildChildRecord', () => {
   const baseValues = {
     name: 'Andrei Popescu',
+    firstName: '',
+    lastName: '',
     birthDate: '2020-05-01',
     status: 'Activ',
     groupId: '',
@@ -54,6 +56,8 @@ describe('buildChildRecord', () => {
     parent2: '',
     phone2: '',
     healthNotes: '',
+    idnp: '',
+    address: '',
     contractDate: '2026-01-05',
     attendanceDate: '2026-01-10',
     withdrawalDate: '',
@@ -124,5 +128,34 @@ describe('buildChildRecord', () => {
     const record = buildChildRecord(null, 'ID-1', { ...baseValues, fee: '' });
     expect(record.fee).toBeNull();
     expect(record.feeHistory).toEqual([]);
+  });
+
+  it('completarea Nume+Prenume recalculează name ca "lastName firstName"', () => {
+    const record = buildChildRecord(null, 'ID-1', { ...baseValues, lastName: 'Popescu', firstName: 'Andrei' });
+    expect(record.name).toBe('Popescu Andrei');
+    expect(record.firstName).toBe('Andrei');
+    expect(record.lastName).toBe('Popescu');
+  });
+
+  it('editarea unei fișe vechi fără firstName/lastName nu modifică name existent', () => {
+    const previous = buildChildRecord(null, 'ID-1', baseValues);
+    expect(previous.name).toBe('Andrei Popescu');
+    const record = buildChildRecord(previous, 'ID-1', reopenedValues(previous));
+    expect(record.name).toBe('Andrei Popescu');
+    expect(record.firstName).toBe('');
+    expect(record.lastName).toBe('');
+  });
+
+  it('completarea unui singur câmp (firstName sau lastName) nu suprascrie name-ul existent', () => {
+    const previous = buildChildRecord(null, 'ID-1', baseValues);
+    const record = buildChildRecord(previous, 'ID-1', { ...reopenedValues(previous), firstName: 'Ion' });
+    expect(record.name).toBe('Andrei Popescu');
+    expect(record.firstName).toBe('Ion');
+  });
+
+  it('idnp și address se transmit trimmed în înregistrare', () => {
+    const record = buildChildRecord(null, 'ID-1', { ...baseValues, idnp: ' 2001234567890 ', address: ' Str. X 1 ' });
+    expect(record.idnp).toBe('2001234567890');
+    expect(record.address).toBe('Str. X 1');
   });
 });

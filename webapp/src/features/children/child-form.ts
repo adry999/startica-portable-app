@@ -8,6 +8,10 @@ export type ChildFeeCurrency = 'MDL' | 'EUR';
 
 export interface ChildFormValues {
   name: string;
+  /** Nume/prenume separate (formularul „Copil nou”); `name` se recalculează din ele
+   * la submit doar când ambele sunt completate — vezi buildChildRecord(). */
+  firstName: string;
+  lastName: string;
   birthDate: string;
   status: string;
   groupId: string;
@@ -16,6 +20,8 @@ export interface ChildFormValues {
   parent2: string;
   phone2: string;
   healthNotes: string;
+  idnp: string;
+  address: string;
   contractDate: string;
   attendanceDate: string;
   withdrawalDate: string;
@@ -50,6 +56,10 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
   const month = defaultHistoryMonth(child, today);
   return {
     name: child?.name ?? '',
+    // Fișă veche fără firstName/lastName: câmpurile pornesc goale, nu se încearcă
+    // despărțirea lui `name` (nume românești nu se despart fiabil după un tipar fix).
+    firstName: child?.firstName ?? '',
+    lastName: child?.lastName ?? '',
     birthDate: child?.birthDate ?? '',
     status: child?.status ?? 'Activ',
     groupId: child?.groupId ?? '',
@@ -58,6 +68,8 @@ export function defaultChildFormValues(child: Child | null, today: string): Chil
     parent2: child?.parent2 ?? '',
     phone2: child?.phone2 ?? '',
     healthNotes: child?.healthNotes ?? '',
+    idnp: child?.idnp ?? '',
+    address: child?.address ?? '',
     contractDate: child?.contractDate ?? '',
     attendanceDate: child?.attendanceDate ?? '',
     withdrawalDate: child?.withdrawalDate ?? '',
@@ -103,15 +115,26 @@ export function buildChildRecord(previous: Child | null, id: string, values: Chi
     status: value,
   }));
 
+  const firstName = values.firstName.trim();
+  const lastName = values.lastName.trim();
+  // `name` rămâne sursa unică pentru căutare/sortare/inițiale/CSV/Excel/chitanțe (mirror al
+  // aceleiași reguli din normalizeRecord): recalculat doar când ambele câmpuri sunt completate,
+  // ca să nu mutileze un nume vechi editat manual când operatorul atinge doar unul din ele.
+  const name = firstName && lastName ? `${lastName} ${firstName}`.trim() : values.name.trim();
+
   const record: Partial<Child> & Record<string, unknown> = {
     ...previous,
     id: previous?.id ?? id,
-    name: values.name.trim(),
+    name,
+    firstName,
+    lastName,
     parent: values.parent.trim(),
     phone: values.phone.trim(),
     parent2: values.parent2.trim(),
     phone2: values.phone2.trim(),
     healthNotes: values.healthNotes,
+    idnp: values.idnp.trim(),
+    address: values.address.trim(),
     groupId: values.groupId || null,
     birthDate: values.birthDate,
     contractDate: values.contractDate,

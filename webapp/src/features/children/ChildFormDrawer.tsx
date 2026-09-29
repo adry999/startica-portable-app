@@ -53,6 +53,20 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
     setValues(previous => ({ ...previous, [key]: value }));
   }
 
+  // `name` rămâne sursa unică pentru căutare/sortare/inițiale/CSV/Excel/chitanțe (aceeași
+  // regulă ca în normalizeRecord/buildChildRecord): se recalculează aici, la fiecare tastă, doar
+  // când ambele câmpuri sunt completate, ca orice previzualizare din formular să vadă name-ul
+  // corect înainte de submit, nu doar înregistrarea trimisă la server.
+  function setNamePart(part: 'firstName' | 'lastName', value: string) {
+    setValues(previous => {
+      const next = { ...previous, [part]: value };
+      const firstName = next.firstName.trim();
+      const lastName = next.lastName.trim();
+      if (firstName && lastName) next.name = `${lastName} ${firstName}`.trim();
+      return next;
+    });
+  }
+
   async function handleSubmit(): Promise<boolean> {
     if (submitting) return false;
     setSubmitting(true);
@@ -94,8 +108,33 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>1 · Copil</legend>
           <label className={styles.field}>
-            Nume copil
-            <input required value={values.name} onChange={event => setField('name', event.target.value)} />
+            Nume
+            <input
+              required={!editing}
+              value={values.lastName}
+              onChange={event => setNamePart('lastName', event.target.value)}
+            />
+          </label>
+          <label className={styles.field}>
+            Prenume
+            <input
+              required={!editing}
+              value={values.firstName}
+              onChange={event => setNamePart('firstName', event.target.value)}
+            />
+          </label>
+          <label className={styles.field}>
+            IDNP
+            <input
+              inputMode="numeric"
+              maxLength={13}
+              value={values.idnp}
+              onChange={event => setField('idnp', event.target.value.replace(/\D/g, '').slice(0, 13))}
+            />
+          </label>
+          <label className={styles.field}>
+            Adresă
+            <input value={values.address} onChange={event => setField('address', event.target.value)} />
           </label>
           <label className={styles.field}>
             Data nașterii

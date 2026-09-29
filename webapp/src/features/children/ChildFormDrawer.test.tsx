@@ -32,7 +32,10 @@ describe('ChildFormDrawer', () => {
 
   it('arată câmpurile și butonul de salvare pentru un copil nou', () => {
     render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
-    expect(screen.getByLabelText('Nume copil')).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Nume')[0]).toBeInTheDocument();
+    expect(screen.getByLabelText('Prenume')).toBeInTheDocument();
+    expect(screen.getByLabelText('IDNP')).toBeInTheDocument();
+    expect(screen.getByLabelText('Adresă')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salvează copilul' })).toBeInTheDocument();
   });
 
@@ -40,22 +43,26 @@ describe('ChildFormDrawer', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
-    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
-    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Maria Popescu');
+    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
+    await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
+    await userEvent.type(screen.getAllByLabelText('Nume')[1], 'Maria Popescu');
     await userEvent.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Ana Popescu' }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Popescu Ana', firstName: 'Ana', lastName: 'Popescu' }),
+    );
   });
 
   it('trimite formularul la submit (echivalent cu Enter într-un câmp)', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const { container } = render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
-    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
-    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Maria Popescu');
+    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
+    await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
+    await userEvent.type(screen.getAllByLabelText('Nume')[1], 'Maria Popescu');
     fireEvent.submit(container.querySelector('form')!);
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Ana Popescu' }));
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Popescu Ana' }));
   });
 
   it('apelează onSubmit o singură dată la dublu-click rapid pe Salvează', async () => {
@@ -68,8 +75,9 @@ describe('ChildFormDrawer', () => {
     );
     render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
-    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
-    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Maria Popescu');
+    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
+    await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
+    await userEvent.type(screen.getAllByLabelText('Nume')[1], 'Maria Popescu');
     const saveButton = screen.getByRole('button', { name: 'Salvează copilul' });
 
     await userEvent.click(saveButton);
@@ -85,13 +93,37 @@ describe('ChildFormDrawer', () => {
 
     expect(readDirtyForms()).toEqual([]);
 
-    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
+    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
+    await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o fișă de copil');
 
     await expect(dirtyForm.save()).resolves.toBe(true);
     expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it('editarea unei fișe vechi (fără firstName/lastName) nu cere Nume/Prenume și păstrează name', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const child = {
+      id: 'C-1',
+      name: 'Nume Vechi',
+      parent: 'Maria',
+    } as unknown as import('@contracts/record-types.mjs').Child;
+    render(<ChildFormDrawer target={child} groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+
+    expect(screen.getAllByLabelText('Nume')[0]).toHaveValue('');
+    expect(screen.getByLabelText('Prenume')).toHaveValue('');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează copilul' }));
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ name: 'Nume Vechi', firstName: '', lastName: '' }));
+  });
+
+  it('IDNP acceptă doar cifre, limitat la 13', async () => {
+    render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    const idnpInput = screen.getByLabelText('IDNP');
+    await userEvent.type(idnpInput, 'ab123456789012345cd');
+    expect(idnpInput).toHaveValue('1234567890123');
   });
 
   it('15a: chip-ul de grupă arată locurile libere și selectează grupa la click', async () => {
@@ -111,8 +143,9 @@ describe('ChildFormDrawer', () => {
     expect(chip).toHaveTextContent('2 locuri libere');
 
     await userEvent.click(chip);
-    await userEvent.type(screen.getByLabelText('Nume copil'), 'Ana Popescu');
-    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Maria Popescu');
+    await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
+    await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
+    await userEvent.type(screen.getAllByLabelText('Nume')[1], 'Maria Popescu');
     await userEvent.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ groupId: 'G-1' }));

@@ -150,6 +150,19 @@ export function ChildProfileView({
         }}
         left={
           <>
+            {/* CF-2 (09-copii-fisa.md): data nașterii e deja în hero ("Născut ..."), nu se
+                duplică aici — cardul arată doar IDNP/adresă, mereu vizibil (chiar dacă goale). */}
+            <ProfileSection title="Date personale">
+              <div className={styles.parentContactRow}>
+                <strong>IDNP</strong>
+                <span>{child.idnp || '—'}</span>
+              </div>
+              <div className={styles.parentContactRow}>
+                <strong>Adresă</strong>
+                <span>{child.address || '—'}</span>
+              </div>
+            </ProfileSection>
+
             <ProfileSection title="Părinți">
               <ParentRow name={child.parent} phone={child.phone} onAddPhone={() => setEditDrawerOpen(true)} />
               {(child.parent2 || child.phone2) && (

@@ -363,6 +363,36 @@ test('children.healthNotes trece prin normalizare ca orice câmp text opțional'
   assert.equal(normalizeRecord('children', child()).healthNotes, undefined);
 });
 
+test('normalizeRecord(children) recalculează name din lastName+firstName când ambele sunt trimise', () => {
+  const record = normalizeRecord('children', { ...child(), firstName: ' Maria ', lastName: ' Popescu ' });
+  assert.equal(record.name, 'Popescu Maria');
+  assert.equal(record.firstName, 'Maria');
+  assert.equal(record.lastName, 'Popescu');
+});
+
+test('normalizeRecord(children) nu atinge name când e trimis un singur câmp firstName/lastName (fișă veche)', () => {
+  const record = normalizeRecord('children', { ...child(), name: 'Nume Vechi', firstName: 'Ion' });
+  assert.equal(record.name, 'Nume Vechi');
+  assert.equal(record.firstName, 'Ion');
+  assert.equal(normalizeRecord('children', child()).firstName, undefined);
+  assert.equal(normalizeRecord('children', child()).lastName, undefined);
+});
+
+test('normalizeRecord(children) validează IDNP-ul ca exact 13 cifre, tratând golul ca absent', () => {
+  const withIdnp = normalizeRecord('children', { ...child(), idnp: '2001234567890' });
+  assert.equal(withIdnp.idnp, '2001234567890');
+  assert.throws(() => normalizeRecord('children', { ...child(), idnp: '123' }), /IDNP/);
+  assert.throws(() => normalizeRecord('children', { ...child(), idnp: 'abcdefghijklm' }), /IDNP/);
+  assert.equal(normalizeRecord('children', { ...child(), idnp: '' }).idnp, undefined);
+  assert.equal(normalizeRecord('children', child()).idnp, undefined);
+});
+
+test('children.address trece prin normalizare ca orice câmp text opțional, trimmed', () => {
+  const withAddress = normalizeRecord('children', { ...child(), address: '  Str. Ștefan cel Mare 1  ' });
+  assert.equal(withAddress.address, 'Str. Ștefan cel Mare 1');
+  assert.equal(normalizeRecord('children', child()).address, undefined);
+});
+
 test('stripSensitiveFields elimină healthNotes din vizite și copii, fără să atingă alte tipuri', () => {
   const stripped = stripSensitiveFields('visits', { ...visit(), healthNotes: 'Alergie' });
   assert.ok(!('healthNotes' in stripped));

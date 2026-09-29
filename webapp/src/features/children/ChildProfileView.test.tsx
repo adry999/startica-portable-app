@@ -23,6 +23,8 @@ const child = {
   attendanceDate: '2022-09-01',
   archived: false,
   notes: [{ id: 'NOTE-1', text: 'notă veche', date: '2026-01-01' }] as { id: string; text: string; date: string }[],
+  idnp: undefined as string | undefined,
+  address: undefined as string | undefined,
 };
 
 function fixtureState(overrides: Partial<typeof child> = {}) {
@@ -125,5 +127,25 @@ describe('ChildProfileView', () => {
     await screen.findByText('notă veche');
     expect(screen.getByText('Documente')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+ Încarcă' })).toBeDisabled();
+  });
+
+  it('cardul Date personale arată IDNP și adresă când sunt completate (CF-2)', async () => {
+    currentState = fixtureState({ idnp: '2001234567890', address: 'Str. Ștefan cel Mare 1' });
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(screen.getByText('Date personale')).toBeInTheDocument();
+    expect(screen.getByText('2001234567890')).toBeInTheDocument();
+    expect(screen.getByText('Str. Ștefan cel Mare 1')).toBeInTheDocument();
+  });
+
+  it('cardul Date personale rămâne vizibil, cu „—”, când IDNP și adresa lipsesc (CF-2)', async () => {
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(screen.getByText('Date personale')).toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(2);
   });
 });

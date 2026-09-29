@@ -75,12 +75,16 @@ const FIELDS = {
   children: new Set([
     'id',
     'name',
+    'firstName',
+    'lastName',
     'contractNumber',
     'parent',
     'phone',
     'parent2',
     'phone2',
     'healthNotes',
+    'idnp',
+    'address',
     'birthDate',
     'contractDate',
     'attendanceDate',
@@ -211,6 +215,9 @@ export function normalizeRecord(type, input) {
     'healthNotes',
     'postVisitNotes',
     'educator',
+    'firstName',
+    'lastName',
+    'address',
   ])
     // `notes` la `children` e o listă de note cu dată (CF-4, 09-copii-fisa.md), nu text liber —
     // validată mai jos, împreună cu feeHistory/statusHistory.
@@ -218,6 +225,19 @@ export function normalizeRecord(type, input) {
   if (type === 'children') {
     text(record.name, 'Nume copil', true);
     record.name = record.name.trim();
+    if (record.firstName !== undefined) record.firstName = record.firstName.trim();
+    if (record.lastName !== undefined) record.lastName = record.lastName.trim();
+    // `name` rămâne sursa unică pentru căutare/sortare/inițiale/CSV/Excel/chitanțe: dacă
+    // formularul „Copil nou” trimite ambele câmpuri, `name` se recalculează din ele; dacă
+    // e trimis doar unul, nu se atinge `name` (ar putea mutila un nume scris manual).
+    if (record.firstName && record.lastName) record.name = `${record.lastName} ${record.firstName}`.trim();
+    if (record.idnp !== undefined) {
+      text(record.idnp, 'IDNP');
+      record.idnp = record.idnp.trim();
+      if (record.idnp === '') delete record.idnp;
+      else requireThat(/^\d{13}$/.test(record.idnp), 'IDNP: trebuie să aibă exact 13 cifre.');
+    }
+    if (record.address !== undefined) record.address = record.address.trim();
     record.status ||= 'Activ';
     text(record.status, 'Statut', true);
     requireThat(CHILD_STATUSES.includes(record.status), `Statut: folosește ${CHILD_STATUSES.join(', ')}.`);

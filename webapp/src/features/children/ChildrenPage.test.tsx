@@ -337,8 +337,9 @@ describe('ChildrenPage', () => {
     await user.click(screen.getByRole('button', { name: '+ Adaugă copil' }));
     expect(screen.getByRole('dialog', { name: 'Adaugă: copil' })).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Nume copil'), 'Radu Ionescu');
-    await user.type(screen.getAllByLabelText('Nume')[0], 'Vasile Ionescu');
+    await user.type(screen.getAllByLabelText('Nume')[0], 'Radu');
+    await user.type(screen.getByLabelText('Prenume'), 'Ionescu');
+    await user.type(screen.getAllByLabelText('Nume')[1], 'Vasile Ionescu');
     await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
     expect(await screen.findByText('Copil adăugat.')).toBeInTheDocument();
@@ -357,10 +358,14 @@ describe('ChildrenPage', () => {
     await user.click(within(row).getByRole('button', { name: 'Editează' }));
 
     expect(screen.getByRole('dialog', { name: 'Editează: copil' })).toBeInTheDocument();
-    const nameInput = screen.getByLabelText('Nume copil') as HTMLInputElement;
-    expect(nameInput.value).toBe('Andrei Popescu');
-    await user.clear(nameInput);
-    await user.type(nameInput, 'Andrei Popescu-Ilie');
+    // Fișă veche, fără firstName/lastName salvate: câmpurile pornesc goale (nu se
+    // despică `name`-ul existent) — schimbarea numelui cere completarea ambelor.
+    const lastNameInput = screen.getAllByLabelText('Nume')[0] as HTMLInputElement;
+    const firstNameInput = screen.getByLabelText('Prenume') as HTMLInputElement;
+    expect(lastNameInput.value).toBe('');
+    expect(firstNameInput.value).toBe('');
+    await user.type(lastNameInput, 'Andrei');
+    await user.type(firstNameInput, 'Popescu-Ilie');
     await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
     expect(await screen.findByText('Fișă actualizată.')).toBeInTheDocument();
