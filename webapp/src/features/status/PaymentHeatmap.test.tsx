@@ -10,6 +10,7 @@ const rows: HeatRowView[] = [
     id: 'c1',
     name: 'Andrei Popescu',
     archived: false,
+    groupId: null,
     cells: [
       { month: '2026-09', kind: 'unpaid' },
       { month: '2026-10', kind: 'paid' },
@@ -22,6 +23,7 @@ const rows: HeatRowView[] = [
     id: 'c2',
     name: 'Maria Ionescu',
     archived: false,
+    groupId: null,
     cells: [
       { month: '2026-09', kind: 'partial' },
       { month: '2026-10', kind: 'paid' },

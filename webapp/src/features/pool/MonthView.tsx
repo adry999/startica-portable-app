@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Card, ConfirmDeleteDialog, Drawer, RowMenu, useToast } from '@shared/ui';
+import { Badge, Button, Card, ConfirmDeleteDialog, Drawer, RowMenu, useToast, groupTone } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
 import { endBooking } from '@shared/pool/usePool';
 import type { ChildMonthRow, CoachMonthRow } from '@shared/pool/usePool';
+import type { Group } from '@contracts/record-types.mjs';
 import styles from './MonthView.module.css';
 
 export interface MonthViewProps {
   month: string;
   children: ChildMonthRow[];
+  groups?: Group[];
   coaches: CoachMonthRow[];
   closing: { month: string; closedAt: string } | null;
   unmarked: number;
@@ -40,6 +42,7 @@ const MONTH_NAMES_LOWER = [
 export function MonthView({
   month,
   children,
+  groups = [],
   coaches,
   closing,
   unmarked,
@@ -128,10 +131,17 @@ export function MonthView({
             <span>Plată</span>
             <span></span>
           </div>
-          {children.map(row => (
+          {children.map(row => {
+            const tone = groupTone(row.child?.groupId ?? null, groups);
+            return (
             <div className={styles.tableRow} key={row.childId}>
               <div className={styles.childCell}>
-                <span className={styles.childAvatar}>{initials(row.child?.name ?? row.childId)}</span>
+                <span
+                  className={styles.childAvatar}
+                  style={{ background: `var(--${tone}-soft, var(--neutral-soft))`, color: `var(--${tone}-ink, var(--subtle))` }}
+                >
+                  {initials(row.child?.name ?? row.childId)}
+                </span>
                 <span className={styles.childName}>{row.child?.name ?? row.childId}</span>
               </div>
               <span className={styles.center}>{row.scheduled}</span>
@@ -155,7 +165,8 @@ export function MonthView({
                 />
               </span>
             </div>
-          ))}
+            );
+          })}
           {children.length === 0 && <div className={styles.empty}>Nicio programare în luna asta.</div>}
         </Card>
 

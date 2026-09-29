@@ -27,6 +27,7 @@ import {
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import type { ViewKey } from '@shared/view-key';
+import type { ToneableGroup } from '@shared/ui/group-tone';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.mjs';
@@ -307,7 +308,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
             onNotifyAll={openBannerNotify}
           />
         ) : (
-          <YearView data={yearData} smsConfigured={smsConfigured} onNotifyYear={openYearNotify} />
+          <YearView data={yearData} groups={statusData.groups} smsConfigured={smsConfigured} onNotifyYear={openYearNotify} />
         )}
       </div>
 
@@ -552,10 +553,12 @@ function MonthView({
 
 function YearView({
   data,
+  groups,
   smsConfigured,
   onNotifyYear,
 }: {
   data: SchoolYearData;
+  groups: ToneableGroup[];
   smsConfigured: boolean;
   onNotifyYear: () => void;
 }) {
@@ -607,7 +610,7 @@ function YearView({
             ariaLabel="Caută copil"
           />
         </div>
-        <PaymentHeatmap rows={data.rows} monthLabels={data.monthLabels} currentMonth={data.currentMonth} />
+        <PaymentHeatmap rows={data.rows} groups={groups} monthLabels={data.monthLabels} currentMonth={data.currentMonth} />
       </Card>
     </>
   );

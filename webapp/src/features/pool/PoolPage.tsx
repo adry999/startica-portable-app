@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Button, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { today, shiftDays } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { shiftMonth } from '@shared/format/month-shift';
 import { usePoolWeek, usePoolMonth, usePoolSettings } from '@shared/pool/usePool';
 import { weekOf } from '#features/pool/index.web.mjs';
+import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { WeekView } from './WeekView';
 import { MonthView } from './MonthView';
 import { BookingDrawer } from './BookingDrawer';
@@ -35,6 +37,8 @@ export function PoolPage({ month }: PoolPageProps) {
   const settings = usePoolSettings();
   const week = usePoolWeek(weekDate);
   const monthData = usePoolMonth(monthKey);
+  const session = useAppSession();
+  const groups = (session.state.state as RecordsSnapshot).groups;
 
   useTopbarActions(
     <>
@@ -90,12 +94,14 @@ export function PoolPage({ month }: PoolPageProps) {
         <WeekView
           days={week.days}
           stats={week.stats}
+          groups={groups}
           onCycle={(bookingId, date, next) => void week.markSession(bookingId, date, next)}
         />
       ) : (
         <MonthView
           month={monthKey}
           children={monthData.children}
+          groups={groups}
           coaches={monthData.coaches}
           closing={monthData.closing}
           unmarked={monthData.unmarked}

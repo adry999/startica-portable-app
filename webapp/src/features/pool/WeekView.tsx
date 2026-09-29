@@ -1,8 +1,9 @@
-import { Card } from '@shared/ui';
+import { Card, groupTone } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
 import type { PoolSessionStatus } from '#features/pool/pool.types.d.mts';
 import type { WeekDay, WeekStats } from '@shared/pool/usePool';
+import type { Group } from '@contracts/record-types.mjs';
 import styles from './WeekView.module.css';
 
 // Trecut/azi: nemarcat → prezent → lipsă → motivat → nemarcat. Viitor: programat → anulat → programat
@@ -42,11 +43,12 @@ function dayName(date: string): string {
 export interface WeekViewProps {
   days: WeekDay[];
   stats: WeekStats;
+  groups?: Group[];
   onCycle: (bookingId: string, date: string, next: PoolSessionStatus | null) => void;
 }
 
 /** Grila săptămânii (22a): oră × zi, clic ciclează Prezent → Lipsă → Motivat → nemarcat. */
-export function WeekView({ days, stats, onCycle }: WeekViewProps) {
+export function WeekView({ days, stats, groups = [], onCycle }: WeekViewProps) {
   const times = [...new Set(days.flatMap(day => day.slots.map(slot => slot.time)))].sort();
   const todayKey = today();
 
@@ -118,6 +120,7 @@ export function WeekView({ days, stats, onCycle }: WeekViewProps) {
                     const next = clickable ? NEXT_STATE[entry.state] : 'present';
                     const name = entry.child?.name ?? entry.booking.childId;
                     const dotTone = DOT_TONE[entry.state] ?? 'dotUnmarked';
+                    const tone = groupTone(entry.child?.groupId ?? null, groups);
                     return (
                       <button
                         key={entry.booking.id}
@@ -126,7 +129,12 @@ export function WeekView({ days, stats, onCycle }: WeekViewProps) {
                         className={`${styles.tile} ${styles[entry.state] ?? ''}`}
                         onClick={() => clickable && onCycle(entry.booking.id, day.date, next)}
                       >
-                        <span className={styles.avatar}>{initials(name)}</span>
+                        <span
+                          className={styles.avatar}
+                          style={{ background: `var(--${tone}-soft, var(--neutral-soft))`, color: `var(--${tone}-ink, var(--subtle))` }}
+                        >
+                          {initials(name)}
+                        </span>
                         <span className={styles.tileName}>{name}</span>
                         {STATE_LABEL[entry.state] && (
                           <span className={styles.tileState}>{STATE_LABEL[entry.state]}</span>

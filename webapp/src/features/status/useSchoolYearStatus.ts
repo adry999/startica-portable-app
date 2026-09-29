@@ -24,6 +24,7 @@ export interface HeatRowView {
   id: string;
   name: string;
   archived: boolean;
+  groupId: string | null;
   cells: { month: string; kind: HeatCellKind }[];
   sold: number;
   soldCurrency: Currency;
@@ -129,6 +130,7 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
       id: row.child.id,
       name: row.child.name,
       archived: Boolean(row.child.archived),
+      groupId: row.child.groupId ?? null,
       cells: row.cells,
       sold: row.sold.amount,
       soldCurrency: row.sold.currency as Currency,
