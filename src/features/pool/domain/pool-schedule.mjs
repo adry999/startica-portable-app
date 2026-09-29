@@ -67,3 +67,29 @@ export function seatsTaken(bookings, weekday, time, onDate, excludeBookingId = '
       (!booking.endDate || booking.endDate >= onDate),
   ).length;
 }
+
+/**
+ * Câte programări existente s-ar suprapune vreodată cu o programare candidat, pe același slot
+ * (zi a săptămânii + oră) — folosit la verificarea de capacitate înainte de a crea o programare
+ * nouă (A-5). `seatsTaken` verifică un singur punct în timp (`onDate`); două programări recurente
+ * pot porni în zile diferite și totuși ajunge să coexiste — ex. A pornește în octombrie, B (nouă)
+ * pornește în septembrie, fără dată de sfârșit la niciuna: din octombrie încolo ambele ar avea loc
+ * în același slot, deci trebuie numărate ca suprapuse chiar dacă la data de start a lui B, A încă
+ * nu începuse.
+ * @param {import('../pool.types.d.mts').PoolBooking[]} bookings
+ * @param {number} weekday @param {string} time
+ * @param {{ startDate: string, endDate: string | null }} range intervalul programării candidat
+ * @param {string} [excludeBookingId]
+ */
+export function seatsTakenOverlapping(bookings, weekday, time, range, excludeBookingId = '') {
+  const candidateEnd = range.endDate ?? '9999-12-31';
+  return bookings.filter(
+    booking =>
+      !booking.archivedAt &&
+      booking.id !== excludeBookingId &&
+      booking.weekday === weekday &&
+      booking.time === time &&
+      booking.startDate <= candidateEnd &&
+      (!booking.endDate || booking.endDate >= range.startDate),
+  ).length;
+}

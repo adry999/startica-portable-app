@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { expandBooking, weekOf, weekdayOf, sessionStateFor, sessionsByKeyOf, seatsTaken } from './pool-schedule.mjs';
+import {
+  expandBooking,
+  weekOf,
+  weekdayOf,
+  sessionStateFor,
+  sessionsByKeyOf,
+  seatsTaken,
+  seatsTakenOverlapping,
+} from './pool-schedule.mjs';
 
 test('o programare de marți produce datele lunii fără sărbătorile legale și în intervalul ei', () => {
   // Septembrie 2026: 1 sept (marți) e zi lucrătoare, fără sărbători legale în lună.
@@ -134,4 +142,39 @@ test('seatsTaken numără doar programările active pe slotul și data cerută',
   assert.equal(seatsTaken(bookings, 2, '09:00', '2026-09-15'), 1); // PB-2 s-a terminat (endDate 09-10), PB-4 e arhivată
   assert.equal(seatsTaken(bookings, 2, '09:00', '2026-09-05'), 2); // PB-1 și PB-2 încă active
   assert.equal(seatsTaken(bookings, 2, '09:00', '2026-09-05', 'PB-1'), 1); // exclude programarea proprie (editare)
+});
+
+test('seatsTakenOverlapping numără programările care s-ar suprapune vreodată, nu doar la data de start (A-5)', () => {
+  /** @type {import('../pool.types.d.mts').PoolBooking[]} */
+  const bookingStartingInOctober = [
+    {
+      id: 'PB-A',
+      childId: 'C-A',
+      coachId: 'STF-1',
+      weekday: 2,
+      time: '09:00',
+      startDate: '2026-10-05',
+      endDate: null,
+      archivedAt: null,
+      updatedAt: '',
+    },
+  ];
+  // B pornește înainte de A (28 septembrie); la data ei de start, A încă nu exista — dar din
+  // octombrie încolo ambele ar avea loc în același slot, cu o capacitate de 1 loc.
+  assert.equal(
+    seatsTakenOverlapping(bookingStartingInOctober, 2, '09:00', { startDate: '2026-09-28', endDate: null }),
+    1,
+  );
+  // O programare terminată înainte ca cealaltă să înceapă nu se suprapune.
+  const endedBeforeOctober = [{ ...bookingStartingInOctober[0], id: 'PB-B', endDate: '2026-09-30' }];
+  assert.equal(seatsTakenOverlapping(endedBeforeOctober, 2, '09:00', { startDate: '2026-10-05', endDate: null }), 0);
+  // Excludere pe id propriu (editarea unei programări existente) și pe slot diferit.
+  assert.equal(
+    seatsTakenOverlapping(bookingStartingInOctober, 2, '09:00', { startDate: '2026-09-28', endDate: null }, 'PB-A'),
+    0,
+  );
+  assert.equal(
+    seatsTakenOverlapping(bookingStartingInOctober, 3, '09:00', { startDate: '2026-09-28', endDate: null }),
+    0,
+  );
 });

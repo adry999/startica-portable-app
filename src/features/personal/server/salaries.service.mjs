@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { sha256Hex } from '#core/server/persistence/content-digest.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
@@ -418,11 +419,77 @@ export function createCoachPaymentWriter({ personalRepository, branchId, recordR
    * Scrie plata antrenorului dacă nu e deja plătit — idempotent, apelabil de câte ori se
    * reînchide luna. Fără cheltuială când suma netă e 0 (avansurile acoperă tot): nimic de plătit
    * încă nu înseamnă „plătit", luna rămâne deschisă pentru acel antrenor la reînchidere.
+   *
+   * A-4: o reînchidere poate recalcula prezențele antrenorului (o ședință corectată) — `gross`
+   * nou nu mai coincide cu plata deja scrisă. Id-ul de plată (`salary_payments`) rămâne același
+   * (avansurile deja scăzute rămân legate de el, nu se scad a doua oară), dar cheltuiala veche se
+   * arhivează și se scrie una nouă — același tipar ca `removeAdvance` mai sus (arhivare, nu
+   * ștergere/suprascriere pe loc, ca istoricul cheltuielilor să rămână corect).
    * @param {{ staffId: string, month: string, gross: number, date: string, method: string }} input
    * @returns {{ paid: boolean, expenseId?: string }}
    */
   function payCoach({ staffId, month, gross, date, method }) {
-    if (validPayment(staffId, month)) return { paid: false };
+    const existing = validPayment(staffId, month);
+    if (existing) {
+      // Avansurile deja scăzute la această plată nu se recalculează — rămân legate de același
+      // paymentId, care nu se schimbă la o corecție (decizia „o singură dată”, ca la restul serviciului).
+      const advancesTotal = existing.advances.reduce((sum, advanceId) => {
+        const advance = personalRepository.kinds.find('advances', advanceId);
+        return sum + (advance ? advance.amount : 0);
+      }, 0);
+      const net = Math.max(0, Math.round((gross - advancesTotal) * 100) / 100);
+      if (net === existing.amount) return { paid: false }; // nicio schimbare — reînchidere no-op
+      const oldExpense = recordRepository.find('expenses', existing.expenseId);
+      if (oldExpense && !oldExpense.archived) {
+        const archived = { ...oldExpense, archived: true, archivedAt: new Date().toISOString() };
+        recordRepository.save('expenses', archived);
+        auditTrail.recordChange({
+          action: 'arhivare',
+          recordType: 'expenses',
+          recordId: oldExpense.id,
+          before: oldExpense,
+          after: archived,
+        });
+      }
+      if (net <= 0) {
+        // Corecția a dus suma la zero (sau sub) — nimic de plătit: cheltuiala veche rămâne
+        // arhivată, iar rândul de plată dispare, ca luna să rămână „neplătită” pentru acest
+        // antrenor la o reînchidere ulterioară (aceeași regulă ca la prima plată, mai jos).
+        personalRepository.kinds.remove('salary_payments', existing.id);
+        return { paid: false };
+      }
+      const expenseId = `EXP-bazin-${staffId}-${month}-${crypto.randomUUID()}`;
+      const expense = normalizeRecord('expenses', {
+        id: expenseId,
+        date,
+        category: expenseCategoryName(),
+        method,
+        description: `Salariu bazin ${month}`,
+        amount: net,
+      });
+      recordRepository.save('expenses', expense);
+      auditTrail.recordChange({
+        action: 'adăugare',
+        recordType: 'expenses',
+        recordId: expense.id,
+        before: null,
+        after: expense,
+      });
+      auditTrail.recordChange({
+        action: 'personal: plată salariu (corectată)',
+        recordType: null,
+        recordId: existing.id,
+        before: null,
+        after: { staffId, month, branchId },
+      });
+      personalRepository.kinds.save('salary_payments', {
+        ...existing,
+        amount: net,
+        expenseId,
+        paidAt: new Date().toISOString(),
+      });
+      return { paid: true, expenseId };
+    }
     if (!(gross > 0)) return { paid: false };
     const undeducted = undeductedAdvances(month, staffId);
     const advancesTotal = undeducted.reduce((sum, advance) => sum + advance.amount, 0);

@@ -164,3 +164,78 @@ test('avansul antrenorului se scade o singură dată și rămâne scăzut la re�
   // Reînchiderea nu mai scade avansul a doua oară (rămâne legat de aceeași plată).
   assert.equal(personalRepository.kinds.find('advances', 'ADV-1').deductedBy, paymentId);
 });
+
+test('A-4: reînchiderea după corectarea unei ședințe rescrie și plata antrenorului, nu doar taxa copilului', t => {
+  const { service, recordRepository, poolRepository, personalRepository } = harness(t);
+  seedBookingAndSessions(poolRepository, ['2026-09-01', '2026-09-08', '2026-09-15', '2026-09-22', '2026-09-29']);
+
+  const first = service.closeMonth({
+    month: '2026-09',
+    method: 'cash',
+    date: '2026-09-30',
+    revision: 0,
+    requestId: 'req-1',
+  });
+  assert.equal(first.coaches, 1);
+  assert.equal(recordRepository.find('charges', 'CHG-bazin-C-1-2026-09').amount, 750); // 5 × 150
+
+  const paymentId = personalRepository.salaryPaymentId('STF-1', '2026-09', BRANCH_ID);
+  const paymentAfterFirst = personalRepository.kinds.find('salary_payments', paymentId);
+  assert.equal(paymentAfterFirst.amount, 300); // 5 prezențe × 60 (per_child, un singur copil)
+  const firstExpenseId = paymentAfterFirst.expenseId;
+  assert.equal(recordRepository.find('expenses', firstExpenseId).amount, 300);
+
+  // Corecție: ședința din 29 septembrie a fost marcată greșit „Prezent” — de fapt copilul a fost
+  // motivat. Taxa copilului trebuie să scadă, iar plata antrenorului nu mai are acea ședință.
+  poolRepository.applySessionChanges(
+    [{ bookingId: 'PB-1', date: '2026-09-29', status: 'excused' }],
+    () => '2026-10-01T00:00:00Z',
+  );
+
+  const second = service.closeMonth({
+    month: '2026-09',
+    method: 'cash',
+    date: '2026-10-01',
+    revision: 1,
+    requestId: 'req-2',
+  });
+  assert.equal(recordRepository.find('charges', 'CHG-bazin-C-1-2026-09').amount, 600); // 4 × 150
+  // Înainte de fix, payCoach vedea `validPayment` deja plătit și ieșea fără să scrie nimic —
+  // `coaches` rămânea 0 la reînchidere chiar dacă suma s-a schimbat. Acum se rescrie.
+  assert.equal(second.coaches, 1);
+
+  const paymentAfterSecond = personalRepository.kinds.find('salary_payments', paymentId);
+  // Același id de plată — un eventual avans deja scăzut rămâne legat corect (nu se scade a doua oară).
+  assert.equal(paymentAfterSecond.id, paymentId);
+  assert.equal(paymentAfterSecond.amount, 240); // 4 prezențe × 60
+
+  const oldExpense = recordRepository.find('expenses', firstExpenseId);
+  assert.equal(oldExpense.archived, true); // cheltuiala veche (300 lei) arhivată, nu ștearsă
+
+  const newExpense = recordRepository.find('expenses', paymentAfterSecond.expenseId);
+  assert.notEqual(newExpense.id, firstExpenseId);
+  assert.equal(newExpense.amount, 240);
+  assert.ok(!newExpense.archived);
+
+  // Nicio cheltuială vie duplicată pentru acest antrenor — doar cea nouă e nearhivată.
+  const liveCoachExpenses = recordRepository
+    .readSnapshot()
+    .expenses.filter(expense => expense.id.startsWith('EXP-bazin-STF-1-2026-09') && !expense.archived);
+  assert.equal(liveCoachExpenses.length, 1);
+
+  // O a treia reînchidere fără nicio altă corecție e no-op — nu mai scrie o cheltuială nouă.
+  const third = service.closeMonth({
+    month: '2026-09',
+    method: 'cash',
+    date: '2026-10-01',
+    revision: 2,
+    requestId: 'req-3',
+  });
+  assert.equal(third.coaches, 0);
+  assert.equal(
+    recordRepository
+      .readSnapshot()
+      .expenses.filter(expense => expense.id.startsWith('EXP-bazin-STF-1-2026-09') && !expense.archived).length,
+    1,
+  );
+});

@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { dateOK, monthOK, today as localToday } from '#shared/domain/calendar-month.mjs';
+import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
 import {
   POOL_SETTINGS_KEY,
   POOL_SETTINGS_SEED,
@@ -8,7 +9,13 @@ import {
   normalizePoolSettings,
   parsePoolSettings,
 } from '../domain/pool-settings.mjs';
-import { weekOf, weekdayOf, sessionStateFor, sessionsByKeyOf, seatsTaken } from '../domain/pool-schedule.mjs';
+import {
+  weekOf,
+  weekdayOf,
+  sessionStateFor,
+  sessionsByKeyOf,
+  seatsTakenOverlapping,
+} from '../domain/pool-schedule.mjs';
 import { childMonth, coachPayForMonth, countUnmarkedPastSessions } from '../domain/pool-month.mjs';
 import { createPoolClosingService } from './pool-closing.service.mjs';
 
@@ -77,7 +84,10 @@ export function createPoolRoutes({
     const months = [...new Set(dates.map(d => d.slice(0, 7)))];
     const sessions = months.flatMap(month => poolRepository.sessionsForMonth(month));
     const sessionsByKey = sessionsByKeyOf(sessions);
-    const bookings = poolRepository.listBookings();
+    // includeArchived: true (ca la getMonth) — o programare oprită cu o dată de sfârșit în
+    // viitor nu mai e arhivată imediat (vezi mai jos, la oprirea programării), iar cele oprite
+    // cu adevărat rămân corect ascunse de filtrarea pe interval de mai jos (A-3).
+    const bookings = poolRepository.listBookings({ includeArchived: true });
     const { children } = recordRepository.readSnapshot();
     const todayStr = today();
     const times = [];
@@ -99,7 +109,13 @@ export function createPoolRoutes({
       excused = 0;
     const days = dates.map(date => {
       const weekday = weekdayOf(date);
+      // Zilele legale nelucrătoare nu au ședințe (precedentul attendance-month.mjs, `off`) — la
+      // fel cum `expandBooking` le exclude din Luna/plata antrenorului/bonul de 58mm; altfel
+      // Săptămâna ar arăta și lăsa marcate ședințe-fantomă pe care restul aplicației nu le
+      // numără niciodată (A-1).
+      const off = !isWorkingDay(date);
       const slots = times.map(time => {
+        if (off) return { time, entries: [] };
         const entries = bookings
           .filter(
             booking =>
@@ -120,7 +136,7 @@ export function createPoolRoutes({
           });
         return { time, entries };
       });
-      return { date, slots };
+      return { date, off, slots };
     });
     return { days, stats: { scheduled, present, absent, excused } };
   }
@@ -132,11 +148,15 @@ export function createPoolRoutes({
       const existing = poolRepository.findBooking(body.id);
       if (!existing) fail('Programarea nu mai există.', 409);
       if (body.endDate !== null && !dateOK(body.endDate)) fail('Dată de sfârșit invalidă.');
+      // Arhivată doar când data de sfârșit a trecut deja (A-3) — o programare oprită cu o dată
+      // de sfârșit în viitor tot are ședințe de marcat până atunci; `listBookings({ includeArchived: true })`
+      // din getWeek/getMonth ține cont de asta prin filtrarea pe interval, nu prin `archivedAt`.
+      const archivedAt = body.endDate && body.endDate < today() ? new Date().toISOString() : existing.archivedAt;
       return {
         booking: poolRepository.saveBooking({
           ...existing,
           endDate: body.endDate,
-          archivedAt: body.endDate ? new Date().toISOString() : existing.archivedAt,
+          archivedAt,
           updatedAt: new Date().toISOString(),
         }),
       };
@@ -152,7 +172,15 @@ export function createPoolRoutes({
     const settings = readSettings();
     if (!settings) fail('Bazinul nu este configurat pentru această filială.');
     if (settings.seatsPerSlot !== null) {
-      const taken = seatsTaken(poolRepository.listBookings(), input.weekday, input.time, input.startDate, input.id);
+      // Suprapunere de intervale, nu un singur punct (A-5) — două programări recurente pot porni
+      // în zile diferite și tot ajunge să coexiste pe același slot mai târziu.
+      const taken = seatsTakenOverlapping(
+        poolRepository.listBookings(),
+        input.weekday,
+        input.time,
+        { startDate: input.startDate, endDate: input.endDate ?? null },
+        input.id,
+      );
       if (taken >= settings.seatsPerSlot) fail('Nu mai sunt locuri libere la ora aleasă.');
     }
     const id = typeof input.id === 'string' && input.id ? input.id : `PB-${crypto.randomUUID()}`;
@@ -179,6 +207,9 @@ export function createPoolRoutes({
       if (typeof change?.bookingId !== 'string' || !poolRepository.findBooking(change.bookingId))
         fail('Programare inexistentă.');
       if (typeof change.date !== 'string' || !dateOK(change.date)) fail('Zi invalidă.');
+      // Bazinul nu are ședințe în zile legale nelucrătoare (A-1) — aceeași regulă ca
+      // `expandBooking`, care nu le numără niciodată la Luna/plata antrenorului/bonul de 58mm.
+      if (!isWorkingDay(change.date)) fail('Bazinul nu are ședințe în această zi (weekend sau sărbătoare legală).');
       if (change.status !== null && !SESSION_STATUSES.includes(change.status)) fail('Stare invalidă.');
       if (change.date > todayStr && change.status !== null && change.status !== 'cancelled')
         fail('Ziua viitoare acceptă doar anularea.');
@@ -198,21 +229,25 @@ export function createPoolRoutes({
     const sessions = poolRepository.sessionsForMonth(month);
     const { children } = recordRepository.readSnapshot();
     const childIds = [...new Set(bookings.map(booking => booking.childId))];
-    const childRows = childIds.map(childId => {
-      const childBookings = bookings.filter(booking => booking.childId === childId);
-      const bookingIds = new Set(childBookings.map(booking => booking.id));
-      const row = childMonth({ bookings: childBookings, sessions, month, settings, todayStr });
-      return {
-        childId,
-        child: children.find(child => child.id === childId) ?? null,
-        ...row,
-        charged: !!recordRepository.find('charges', `CHG-bazin-${childId}-${month}`),
-        // Programările și ședințele copilului — folosite de bonul de 58mm (Task 11), ca
-        // rândul agregat de mai sus să nu ceară un al doilea apel de rețea pentru detaliu.
-        bookings: childBookings,
-        sessions: sessions.filter(session => bookingIds.has(session.bookingId)),
-      };
-    });
+    const childRows = childIds
+      .map(childId => {
+        const childBookings = bookings.filter(booking => booking.childId === childId);
+        const bookingIds = new Set(childBookings.map(booking => booking.id));
+        const row = childMonth({ bookings: childBookings, sessions, month, settings, todayStr });
+        return {
+          childId,
+          child: children.find(child => child.id === childId) ?? null,
+          ...row,
+          charged: !!recordRepository.find('charges', `CHG-bazin-${childId}-${month}`),
+          // Programările și ședințele copilului — folosite de bonul de 58mm (Task 11), ca
+          // rândul agregat de mai sus să nu ceară un al doilea apel de rețea pentru detaliu.
+          bookings: childBookings,
+          sessions: sessions.filter(session => bookingIds.has(session.bookingId)),
+        };
+      })
+      // A-6: un copil care a avut vreodată o programare, dar n-are nicio ședință programată în
+      // luna cerută (programare arhivată de mult, sau oprită înainte de lună), nu apare în listă.
+      .filter(row => row.scheduled > 0);
     const coachRows = listCoaches().map(coach => ({
       coachId: coach.id,
       coach,

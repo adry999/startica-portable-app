@@ -10,7 +10,7 @@ import { createImmediateRevisionTransaction } from '#test-support/immediate-revi
 import { createRecordingAuditTrail } from '#test-support/recording-audit-trail.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
 import { createPersonalRepository } from './personal.repository.mjs';
-import { createSalariesService } from './salaries.service.mjs';
+import { createSalariesService, createCoachPaymentWriter } from './salaries.service.mjs';
 
 const BRANCH_ID = 'branch-A';
 const OTHER_BRANCH_ID = 'branch-B';
@@ -496,4 +496,68 @@ test('cheltuiala de salariu și avansul nu poartă numele angajatului, iar Istor
   const paymentAudit = auditTrail.changes.find(change => change.action === 'personal: plată salariu');
   assert.ok(paymentAudit);
   assert.equal(/** @type {{ amount?: number }} */ (paymentAudit?.after)?.amount, undefined);
+});
+
+// --- A-4: o reînchidere care schimbă suma brută a antrenorului nu rămâne înghețată la prima plată -
+
+test('payCoach: o sumă nouă arhivează cheltuiala veche și scrie una nouă, cu același id de plată (A-4)', t => {
+  const branchDb = new DatabaseSync(':memory:');
+  applySchema(branchDb);
+  t.after(() => branchDb.close());
+  const recordRepository = createRecordRepository(branchDb);
+  recordRepository.save('categories', normalizeRecord('categories', { id: 'CAT-salarii', name: 'Salarii' }));
+  const auditTrail = createRecordingAuditTrail();
+
+  const commonDb = new DatabaseSync(':memory:');
+  applySchema(commonDb);
+  t.after(() => commonDb.close());
+  const settings = createSettingsRepository(commonDb);
+  const personalRepository = createPersonalRepository({
+    kinds: createKindRepository(commonDb),
+    readSetting: /** @type {(key: string) => string} */ (settings.setting),
+    writeSetting: settings.setSetting,
+  });
+  const coachRoleId = personalRepository.roles().find(role => role.name === 'Antrenor bazin')?.id;
+  personalRepository.saveStaff(
+    { id: 'STF-coach', name: 'Antrenor unu', roleId: coachRoleId, branchIds: [BRANCH_ID], since: '2026-01-01' },
+    'create',
+  );
+  const { payCoach } = createCoachPaymentWriter({
+    personalRepository,
+    branchId: BRANCH_ID,
+    recordRepository,
+    auditTrail,
+  });
+
+  const first = payCoach({ staffId: 'STF-coach', month: '2026-09', gross: 300, date: '2026-09-30', method: 'cash' });
+  assert.equal(first.paid, true);
+  const paymentId = personalRepository.salaryPaymentId('STF-coach', '2026-09', BRANCH_ID);
+  const firstPayment = personalRepository.kinds.find('salary_payments', paymentId);
+  assert.equal(firstPayment.amount, 300);
+  const firstExpense = recordRepository.find('expenses', firstPayment.expenseId);
+  assert.equal(firstExpense.amount, 300);
+
+  // Reînchidere după corectarea unei ședințe: suma brută nouă e mai mică (240 în loc de 300).
+  const second = payCoach({ staffId: 'STF-coach', month: '2026-09', gross: 240, date: '2026-09-30', method: 'cash' });
+  assert.equal(second.paid, true);
+
+  const oldExpense = recordRepository.find('expenses', firstPayment.expenseId);
+  assert.equal(oldExpense.archived, true);
+
+  const updatedPayment = personalRepository.kinds.find('salary_payments', paymentId);
+  assert.equal(updatedPayment.id, paymentId); // același id — avansurile deja scăzute rămân legate corect
+  assert.equal(updatedPayment.amount, 240);
+  const newExpense = recordRepository.find('expenses', updatedPayment.expenseId);
+  assert.notEqual(newExpense.id, firstExpense.id);
+  assert.equal(newExpense.amount, 240);
+  assert.ok(!newExpense.archived);
+
+  // Nicio cheltuială vie duplicată.
+  const liveExpenses = recordRepository.readSnapshot().expenses.filter(expense => !expense.archived);
+  assert.equal(liveExpenses.length, 1);
+
+  // O a treia „reînchidere” cu aceeași sumă e no-op — idempotență la sumă neschimbată.
+  const third = payCoach({ staffId: 'STF-coach', month: '2026-09', gross: 240, date: '2026-09-30', method: 'cash' });
+  assert.equal(third.paid, false);
+  assert.equal(recordRepository.readSnapshot().expenses.filter(expense => !expense.archived).length, 1);
 });
