@@ -23,7 +23,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-8);
   font-size: 13px;
   font-weight: 700;
   color: var(--slate);
@@ -34,9 +34,10 @@
 .field textarea {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
+  padding: 11px 14px;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
   resize: vertical;
 }
 
@@ -182,7 +183,7 @@
   border: none;
   background: var(--neutral-soft);
   border-radius: var(--radius-pill);
-  padding: var(--space-4) var(--space-12);
+  padding: 5px var(--space-12);
   font-size: 12px;
   font-weight: 800;
   color: var(--slate);
@@ -215,7 +216,6 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--success-dot);
   flex: none;
 }
 
@@ -231,5 +231,29 @@
 .autoStatus {
   font-size: 12px;
   font-weight: 800;
+}
+
+/* Punctul + eticheta urmează starea repartizării (15b): achitat complet/avans = mint,
+   plată parțială = galben (#e0b400 nu are token exact, --yellow-bar e cel mai apropiat),
+   neachitat = --raspberry (#e9527c, potrivire exactă). */
+.mint {
+  background: var(--mint-bar);
+}
+.autoStatus.mint {
+  background: none;
   color: var(--mint-ink);
+}
+.yellow {
+  background: var(--yellow-bar);
+}
+.autoStatus.yellow {
+  background: none;
+  color: var(--yellow-ink);
+}
+.pink {
+  background: var(--raspberry);
+}
+.autoStatus.pink {
+  background: none;
+  color: var(--pink-ink);
 }

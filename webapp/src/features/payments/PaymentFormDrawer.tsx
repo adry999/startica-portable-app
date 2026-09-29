@@ -40,6 +40,8 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const [allocationMode, setAllocationMode] = useState<'auto' | 'manual'>(
     values.allocations.length > 1 ? 'manual' : 'auto',
   );
+  // Observațiile pornesc ascunse în spatele unui link (15b) — deschise direct dacă există deja text.
+  const [notesOpen, setNotesOpen] = useState(() => Boolean(values.notes));
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual.
@@ -197,6 +199,14 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
     return 'achitat complet';
   }
 
+  // Punctul + eticheta urmează starea (15b): achitat complet/avans = mint, plată parțială =
+  // galben, neachitat = roz.
+  function allocationTone(status: string | null): string {
+    if (status === 'plată parțială') return styles.yellow;
+    if (status === 'neachitat') return styles.pink;
+    return styles.mint;
+  }
+
   return (
     <Drawer
       open={target !== null}
@@ -349,27 +359,23 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           )}
         </div>
 
-        <label className={styles.field}>
-          Nume din sursă / plătitor
-          <input
-            value={values.sourceName}
-            onChange={event => setValues(p => ({ ...p, sourceName: event.target.value }))}
-          />
-        </label>
-
         <div className={styles.field}>
           {allocationMode === 'auto' ? (
             <>
               Se repartizează automat
               <div className={styles.autoList}>
-                {values.allocations.map(row => (
-                  <div key={row.id} className={styles.autoRow}>
-                    <span className={styles.autoDot} />
-                    <span className={styles.autoMonth}>{formatMonthLabel(row.month)}</span>
-                    <span className={styles.autoAmount}>{formatMoney(Number(row.amount) || 0, balanceCurrency)}</span>
-                    {allocationStatus(row) && <span className={styles.autoStatus}>{allocationStatus(row)}</span>}
-                  </div>
-                ))}
+                {values.allocations.map(row => {
+                  const status = allocationStatus(row);
+                  const tone = allocationTone(status);
+                  return (
+                    <div key={row.id} className={styles.autoRow}>
+                      <span className={`${styles.autoDot} ${tone}`} />
+                      <span className={styles.autoMonth}>{formatMonthLabel(row.month)}</span>
+                      <span className={styles.autoAmount}>{formatMoney(Number(row.amount) || 0, balanceCurrency)}</span>
+                      {status && <span className={`${styles.autoStatus} ${tone}`}>{status}</span>}
+                    </div>
+                  );
+                })}
               </div>
               <button type="button" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
                 Repartizează manual
@@ -427,6 +433,15 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           )}
         </div>
 
+        <label className={styles.field}>
+          Plătitor
+          <input
+            placeholder="Numele din extras, dacă diferă de părinte"
+            value={values.sourceName}
+            onChange={event => setValues(p => ({ ...p, sourceName: event.target.value }))}
+          />
+        </label>
+
         {editing?.verification && (
           <fieldset className={styles.section}>
             <legend>Verificare import</legend>
@@ -442,14 +457,21 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           </fieldset>
         )}
 
-        <label className={styles.field}>
-          Observații
-          <textarea
-            rows={3}
-            value={values.notes}
-            onChange={event => setValues(p => ({ ...p, notes: event.target.value }))}
-          />
-        </label>
+        {notesOpen ? (
+          <label className={styles.field}>
+            Observații
+            <textarea
+              rows={3}
+              autoFocus
+              value={values.notes}
+              onChange={event => setValues(p => ({ ...p, notes: event.target.value }))}
+            />
+          </label>
+        ) : (
+          <button type="button" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
+            + Adaugă observație
+          </button>
+        )}
       </form>
     </Drawer>
   );

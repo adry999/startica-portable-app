@@ -361,6 +361,26 @@ describe('PaymentFormDrawer', () => {
     expect(readDirtyForms()).toEqual([]);
   });
 
+  it('A3b: „Plătitor” cu placeholder, „Observații” ascunse în spatele unui link', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    expect(screen.queryByLabelText('Observații')).not.toBeInTheDocument();
+    const payerInput = screen.getByLabelText('Plătitor');
+    expect(payerInput).toHaveAttribute('placeholder', 'Numele din extras, dacă diferă de părinte');
+    await user.type(payerInput, 'Ion Pop');
+
+    await user.click(screen.getByRole('button', { name: '+ Adaugă observație' }));
+    await user.type(screen.getByLabelText('Observații'), 'Plătit prin cineva de încredere');
+
+    await pickChild(user, 'Andrei Popescu');
+    await user.click(saveButton());
+
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.sourceName).toBe('Ion Pop');
+    expect(submitted.notes).toBe('Plătit prin cineva de încredere');
+  });
+
   it('scurtăturile de lună precompletează suma din taxa copilului', async () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
