@@ -76,3 +76,15 @@ test('Un plătitor reținut (payerAliases) apare primul, cu motivul „Plătitor
   assert.equal(ranked[0].id, 'B', 'Plătitorul reținut domină o simplă potrivire de nume a altui copil.');
   assert.equal(ranked.find(s => s.id === 'A')?.reasons[0], 'nume în sursă: mark', 'A rămâne doar coincidență de nume.');
 });
+
+test('P-1: potrivirea alias-ului ignoră spații multiple, punctuație finală și diacritice/majuscule', () => {
+  const children = [{ id: 'B', name: 'Taburceanu Stefan' }];
+  const empty = new Map();
+  const payerAliases = [
+    { id: 'PAY-ALIAS-3', alias: 'Ştefan Rusu', childId: 'B', createdAt: '2026-01-01T00:00:00.000Z' },
+  ];
+  for (const sourceName of ['Ștefan Rusu', 'ŞTEFAN RUSU', ' stefan rusu ', 'Stefan  Rusu', 'Stefan Rusu.']) {
+    const suggestions = suggestChildren({ sourceName, amount: 100, allocations: [] }, children, empty, payerAliases);
+    assert.equal(suggestions[0]?.reasons[0], 'Plătitor reținut', `nu a potrivit „${sourceName}”`);
+  }
+});

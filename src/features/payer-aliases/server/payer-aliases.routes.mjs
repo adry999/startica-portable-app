@@ -19,6 +19,7 @@ export function createPayerAliasesRoutes({ recordRepository, auditTrail, runRevi
       /** @param {{ body: PayerAliasDeleteRequest }} request */
       handle: ({ body }) =>
         runRevisionTransaction(body, { action: TRANSACTION_ACTION, backupBefore: false }, () => {
+          if (typeof body.id !== 'string' || !body.id) fail('ID invalid.', 400);
           const alias = recordRepository.find('payerAliases', body.id);
           if (!alias) fail('Plătitorul reținut nu mai există.', 409);
           recordRepository.remove('payerAliases', body.id);

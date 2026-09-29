@@ -409,6 +409,32 @@ test('bifarea repetată a aceluiași plătitor reținut nu creează un al doilea
   assert.deepEqual(validateState(second.body.state), second.body.state);
 });
 
+test('P-2: aceeași scriere cu altă diacritică (ș vs ş) e tot un duplicat', async t => {
+  const app = await startApplication(t);
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
+  );
+  const first = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: { id: 'PAY-ALIAS-1', alias: 'Ştefan Rusu', childId: child.id, createdAt: '2026-09-25T10:00:00.000Z' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(first.status, 200, first.body.error);
+
+  const second = await app.post('/api/record', {
+    type: 'payerAliases',
+    mode: 'create',
+    record: { id: 'PAY-ALIAS-2', alias: 'Ștefan Rusu', childId: child.id, createdAt: '2026-09-26T10:00:00.000Z' },
+    revision: first.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(second.status, 200, second.body.error);
+  assert.equal(second.body.state.payerAliases.length, 1, 'ş și ș trebuie tratate ca același text.');
+});
+
 test('un plătitor reținut cu alt copil sau alt text nu e considerat duplicat', async t => {
   const app = await startApplication(t);
   const otherChild = { ...child, id: 'ID-2', name: 'Ion' };

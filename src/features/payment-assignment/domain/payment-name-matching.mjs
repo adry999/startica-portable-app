@@ -1,6 +1,6 @@
 import { cents } from '#shared/domain/money.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
-import { stripDiacritics } from '#shared/format/text-search.mjs';
+import { stripDiacritics, normalizePayerAlias } from '#shared/format/text-search.mjs';
 
 /** @typedef {import('../payment-assignment.types.mjs').ChildSuggestion} ChildSuggestion */
 
@@ -80,7 +80,7 @@ const REMEMBERED_PAYER_REASON = 'Plătitor reținut';
  */
 export function suggestChildren(payment, children, index, payerAliases = [], limit = 5) {
   const sourceTokens = new Set([...nameTokens(payment.sourceName), ...nameTokens(payment.childName)]);
-  const sourceAlias = strip(payment.sourceName || '').trim();
+  const sourceAlias = normalizePayerAlias(payment.sourceName || '');
   const months = allocations(payment).map(a => a.month);
   const amount = cents(payment.amount);
   const scored = [];
@@ -91,7 +91,7 @@ export function suggestChildren(payment, children, index, payerAliases = [], lim
 
     const isRememberedPayer =
       sourceAlias !== '' &&
-      payerAliases.some(alias => alias.childId === child.id && strip(alias.alias).trim() === sourceAlias);
+      payerAliases.some(alias => alias.childId === child.id && normalizePayerAlias(alias.alias) === sourceAlias);
     if (isRememberedPayer) {
       score += REMEMBERED_PAYER_SCORE;
       reasons.push(REMEMBERED_PAYER_REASON);

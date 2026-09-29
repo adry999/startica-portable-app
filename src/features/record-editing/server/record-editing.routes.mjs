@@ -1,4 +1,5 @@
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
+import { normalizePayerAlias } from '#shared/format/text-search.mjs';
 import { assertRecordReferencesExist, assertUniqueName } from '#shared/domain/record-integrity.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
 
@@ -43,9 +44,9 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
       // simultan, prin sincronizarea setului comun.
       if (request.type === 'payerAliases' && request.mode === 'create') {
         const alias = /** @type {import('#shared/contracts/record-types.mjs').PayerAlias} */ (record);
-        const normalizedAlias = alias.alias.toLocaleLowerCase('ro-RO');
+        const normalizedAlias = normalizePayerAlias(alias.alias);
         const isDuplicate = (recordRepository.readSnapshot().payerAliases ?? []).some(
-          other => other.childId === alias.childId && other.alias.toLocaleLowerCase('ro-RO') === normalizedAlias,
+          other => other.childId === alias.childId && normalizePayerAlias(other.alias) === normalizedAlias,
         );
         if (isDuplicate) return;
       }

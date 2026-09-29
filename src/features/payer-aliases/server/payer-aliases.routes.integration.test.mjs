@@ -50,3 +50,16 @@ test('refuză ștergerea unui plătitor reținut inexistent (409)', async t => {
   assert.equal(deleted.status, 409);
   assert.match(deleted.body.error, /nu mai există/);
 });
+
+test('P-3: ștergerea cu id lipsă sau nevalid dă 400, nu 500', async t => {
+  const app = await startApplication(t);
+  const state0 = await app.get('/api/state');
+  for (const id of [undefined, null, '', 42]) {
+    const deleted = await app.post('/api/payer-alias-delete', {
+      id,
+      revision: state0.revision,
+      requestId: randomUUID(),
+    });
+    assert.equal(deleted.status, 400, `id=${JSON.stringify(id)}`);
+  }
+});
