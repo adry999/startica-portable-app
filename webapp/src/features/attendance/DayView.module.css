@@ -35,7 +35,9 @@
   border-right: 1px solid var(--row-divider);
 }
 
-.counter:last-of-type {
+/* .presentRate e tot <span>, deci e el „:last-of-type", nu ultimul .counter (18a) —
+   poziția e fixă (4 contoare + presentRate), de-aia :nth-last-child(2). */
+.counter:nth-last-child(2) {
   border-right: none;
 }
 
@@ -82,7 +84,8 @@
   color: var(--mint-ink);
 }
 .counterAbsent .counterValue {
-  color: var(--raspberry);
+  /* Textul stării folosește -ink (18a); punctul (.counterDot) rămâne --raspberry. */
+  color: var(--pink-ink);
 }
 .counterExcused .counterValue {
   color: var(--yellow-ink);
@@ -186,7 +189,8 @@
 .sectionMeta {
   font-size: 13px;
   font-weight: 700;
-  color: var(--muted);
+  /* #5b666e din 18a — niciun token exact (--muted e #6b7780), la fel ca la Pontaj (A8, 23b). */
+  color: #5b666e;
 }
 
 /* Numele grupei trece în -ink-ul tonului secțiunii lui (A3c: fără buton la dreapta a antetului). */
@@ -345,7 +349,8 @@
   color: var(--mint-ink);
 }
 .tileStatusAbsent {
-  color: var(--raspberry);
+  /* Textul stării folosește -ink (18a); .markAbsent (punctul) rămâne --raspberry. */
+  color: var(--pink-ink);
 }
 .tileStatusExcused {
   color: var(--yellow-ink);
