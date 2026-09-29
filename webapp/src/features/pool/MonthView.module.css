@@ -9,85 +9,242 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-16);
-}
-
-.statValue {
-  font-family: var(--font-heading);
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--slate);
+  padding: var(--space-16) var(--space-20);
 }
 
 .statLabel {
   font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--subtle);
+}
+
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--slate);
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tableToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tableTitle {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.tableHead,
+.tableRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 60px 60px 60px 60px 100px 110px 32px;
+  gap: var(--space-8);
+  align-items: center;
+  padding: 10px 20px;
+}
+
+.tableHead {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  border-bottom: 1px solid var(--border);
+}
+
+.tableRow {
+  font-size: 14px;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.center {
   text-align: center;
 }
 
-.table {
-  padding: 0;
+.right {
+  text-align: right;
+}
+
+.childCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.childAvatar {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--neutral-soft);
+  color: var(--subtle);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.childName {
+  font-weight: 800;
+  white-space: nowrap;
   overflow: hidden;
-  margin-bottom: var(--space-20);
+  text-overflow: ellipsis;
 }
 
-.table table {
-  width: 100%;
-  border-collapse: collapse;
+.present {
+  color: var(--mint-ink);
+  font-weight: 800;
 }
 
-.table th {
-  text-align: left;
-  font-size: 12px;
-  color: var(--muted);
-  padding: var(--space-12);
-  border-bottom: 1px solid var(--row-divider);
+.absent {
+  color: var(--pink-ink);
+  font-weight: 800;
 }
 
-.table td {
-  padding: var(--space-12);
-  font-size: 13px;
-  border-bottom: 1px solid var(--row-divider);
+.excused {
+  color: var(--yellow-ink);
+  font-weight: 800;
+}
+
+.amount {
+  font-weight: 800;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: center;
 }
 
 .empty {
+  padding: var(--space-20);
   text-align: center;
   color: var(--subtle);
 }
 
-.coaches {
+.side {
   display: flex;
+  flex-direction: column;
   gap: var(--space-16);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-20);
 }
 
 .coachCard {
-  min-width: 220px;
-  padding: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: 20px 22px;
 }
 
-.coachCard h4 {
-  margin: 0 0 var(--space-4);
+.coachHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
 }
 
-.coachCard p {
-  margin: 0;
-  font-size: 13px;
+.coachAvatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coachHeadText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.coachHeadText strong {
+  font-size: 16px;
+}
+
+.coachRole {
+  font-size: 12px;
   color: var(--muted);
 }
 
-.coachAmount {
+.coachStats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-6) 14px;
+  font-size: 14px;
+  padding: var(--space-12) 0;
+  border-top: 1px solid var(--row-divider);
+  border-bottom: 1px solid var(--row-divider);
+  color: var(--muted);
+}
+
+.coachStatValue {
   font-weight: 800;
-  color: var(--slate) !important;
-  font-size: 18px;
+  text-align: right;
+  color: var(--slate);
+}
+
+.coachSalary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.coachSalary > span:first-child {
+  font-weight: 800;
+}
+
+.coachAmount {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--slate);
+}
+
+.coachNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.infoCard {
+  padding: 14px 16px;
+  border-radius: var(--radius-md-lg);
+  background: var(--yellow-soft);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .closeRow {
   display: flex;
-  align-items: center;
-  gap: var(--space-16);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
 }
 
 .notice {
