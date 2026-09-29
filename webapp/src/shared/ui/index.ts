@@ -2,6 +2,7 @@ export { BnmRateLink, type BnmRateLinkProps } from './BnmRateLink';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Card, type CardProps, type CardTone } from './Card';
+export { Checkbox, type CheckboxProps } from './Checkbox';
 export { SearchInput, type SearchInputProps } from './SearchInput';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Toggle, type ToggleProps } from './Toggle';

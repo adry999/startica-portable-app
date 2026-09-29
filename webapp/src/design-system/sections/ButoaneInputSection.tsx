@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Button,
+  Checkbox,
   DayStepper,
   FilterPills,
   groupTone,
@@ -34,6 +35,8 @@ export function ButoaneInputSection() {
   const [day, setDay] = useState(DEMO_DAY);
   const [toggleOn, setToggleOn] = useState(true);
   const [toggleOff, setToggleOff] = useState(false);
+  const [checkboxOn, setCheckboxOn] = useState(true);
+  const [checkboxOff, setCheckboxOff] = useState(false);
   const [toneValue, setToneValue] = useState<string>(SERVICE_TONES[0]);
 
   const filterGroups: FilterPillGroup<string>[] = [
@@ -155,6 +158,20 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <Toggle checked={true} onChange={() => {}} ariaLabel="Comutator dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Checkbox"
+        importLine="import { Checkbox } from '@shared/ui';"
+        reference="COMPONENTE.md §25c · Achitare nouă 15b „Trimite confirmare…prin SMS”"
+      >
+        <DemoRow label="control">
+          <Checkbox checked={checkboxOn} onChange={setCheckboxOn} ariaLabel="Trimite confirmare prin SMS" />
+          <Checkbox checked={checkboxOff} onChange={setCheckboxOff} ariaLabel="Trimite confirmare prin SMS" />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <Checkbox checked={false} onChange={() => {}} ariaLabel="Bifă dezactivată" disabled />
         </DemoRow>
       </ComponentShowcase>
 
