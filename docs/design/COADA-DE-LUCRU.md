@@ -448,5 +448,11 @@ Prezența · Luna nu avea deloc mecanismul anulabil din Ziua. Adăugat în `useA
 
 Urmează A3b (Achitare nouă, 15b).
 
+## 2026-09-29 — A3b — DONE
+
+`.field` gap 8 (era 4), input padding 11/14 + font 15/600 (era 8/12, 13px), scurtăturile de lună padding 5/12. „Nume din sursă / plătitor” → „Plătitor” cu placeholder, mutat după repartizare. „Observații” ascunse în spatele unui link „+ Adaugă observație” (deschis direct dacă are deja text). Repartizarea automată: punctul + eticheta urmează starea (mint/galben/roz), înainte totul era mint. Neatins deliberat: bifa „Trimite confirmare părintelui” — deja în `INTREBARI.md` ca întrebare deschisă (SMS vs Telegram), nu există în backend. `npm run check` (1170/1172 + 2 skip) + webapp 874/874 — verzi. Commit `488a584`.
+
+Urmează B3 (Serviciu pe achitare + migrare bazin) și B2 (ștergere în masă din arhivă) — ambele opriri de confirmare cu utilizatorul înainte de implementare (migrare de date financiare, respectiv ștergere definitivă).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
