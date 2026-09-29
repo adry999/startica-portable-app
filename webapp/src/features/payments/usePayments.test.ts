@@ -213,7 +213,7 @@ describe('usePayments', () => {
     expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
   });
 
-  it('summary.other include achitările cu o metodă în afara Cash/Card/Transfer', async () => {
+  it('summary nu bagă o metodă în afara Cash/Card/Transfer în niciun total (B1 — nu există „Altele”)', async () => {
     const extraPayment = {
       id: 'p6',
       date: '2026-09-15',
@@ -224,12 +224,12 @@ describe('usePayments', () => {
       allocations: [{ month: '2026-09', amount: 250 }],
       archived: false,
     };
-    const stateWithAltele = { ...fixtureState, payments: [...fixtureState.payments, extraPayment] };
+    const stateWithUnknownMethod = { ...fixtureState, payments: [...fixtureState.payments, extraPayment] };
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
       if (path === '/api/state')
-        return jsonResponse({ state: stateWithAltele, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        return jsonResponse({ state: stateWithUnknownMethod, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
       if (path === '/api/health') return jsonResponse({});
       throw new Error(`neașteptat: ${path}`);
     });
@@ -237,7 +237,7 @@ describe('usePayments', () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
 
-    expect(result.current.summary.other).toBe(250);
+    expect(result.current.summary).not.toHaveProperty('other');
     expect(result.current.summary.cash).toBe(1800);
     expect(result.current.summary.card).toBe(500);
     expect(result.current.summary.transfer).toBe(1000);

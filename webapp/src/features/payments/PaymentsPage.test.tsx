@@ -401,8 +401,8 @@ describe('PaymentsPage', () => {
     expect(await screen.findByText('Achitare ștearsă definitiv.')).toBeInTheDocument();
   });
 
-  it('arată un card „Altele" pentru o metodă în afara Cash/Card/Transfer', async () => {
-    const stateWithRevolut = {
+  it('B1: o plată mixtă (Cash + Card) se editează despărțit pe metode, fără „Altele”', async () => {
+    const stateWithMixedPayment = {
       ...fixtureState,
       payments: [
         ...fixtureState.payments,
@@ -411,8 +411,11 @@ describe('PaymentsPage', () => {
           date: '2026-09-15',
           childId: 'c2',
           amount: 200,
-          method: 'Revolut',
-          tenders: [{ method: 'Revolut', amount: 200 }],
+          method: 'Cash + Card',
+          tenders: [
+            { method: 'Cash', amount: 120 },
+            { method: 'Card', amount: 80 },
+          ],
           allocations: [],
           archived: false,
         },
@@ -423,7 +426,7 @@ describe('PaymentsPage', () => {
       vi.fn(async (path: string) => {
         if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
         if (path === '/api/state')
-          return jsonResponse({ state: stateWithRevolut, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+          return jsonResponse({ state: stateWithMixedPayment, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         throw new Error(`neașteptat: ${path}`);
@@ -432,9 +435,19 @@ describe('PaymentsPage', () => {
 
     await loadedSession();
     renderPage();
+    const user = userEvent.setup();
 
-    const altelesCard = screen.getByText('Altele').closest('div') as HTMLElement;
-    expect(within(altelesCard).getByText(formatMoney(200))).toBeInTheDocument();
+    expect(screen.queryByText('Altele')).not.toBeInTheDocument();
+
+    const table = screen.getByRole('table');
+    const row = within(table).getByText('Maria Ionescu').closest('tr')!;
+    await user.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await user.click(within(row).getByRole('button', { name: 'Editează' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Editează achitarea' });
+    expect((within(dialog).getByLabelText('Cash') as HTMLInputElement).value).toBe('120');
+    expect((within(dialog).getByLabelText('Card') as HTMLInputElement).value).toBe('80');
+    expect(within(dialog).getByText(`Total: ${formatMoney(200)}`)).toBeInTheDocument();
   });
 
   it('badge-link „Neasociată →" navighează la Asociere achitări cu id-ul plății', async () => {

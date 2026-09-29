@@ -1,5 +1,6 @@
 import { monthOK, dateOK } from './calendar-month.mjs';
 import { cents } from './money.mjs';
+import { TENDER_METHODS, normalizeTenderMethod } from './payment-allocations.mjs';
 
 // `payerAliases` = tabelul „payer_aliases” din decizia 25 sept. 2026 (docs/design/README.md
 // „Decizii funcții noi”) — numele e camelCase aici ca toate celelalte tipuri din TYPES, nu
@@ -442,7 +443,8 @@ export function normalizeRecord(type, input) {
       for (const part of record.tenders) {
         requireThat(part && typeof part === 'object', 'Componentă de achitare invalidă.');
         text(part.method, 'Metoda de achitare', true);
-        part.method = part.method.trim();
+        part.method = normalizeTenderMethod(part.method);
+        requireThat(TENDER_METHODS.includes(part.method), `Metodă de achitare necunoscută: ${part.method}.`);
         requireThat(!methods.has(part.method.toLowerCase()), 'Metodă de achitare repetată.');
         methods.add(part.method.toLowerCase());
         requireAmount(part.amount, 'Suma ' + part.method);

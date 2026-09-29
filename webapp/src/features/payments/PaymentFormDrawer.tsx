@@ -54,6 +54,11 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
   const [activeMethod, setActiveMethod] = useState(
     () => methods.find(method => Number(values.tenders[method]) > 0) ?? methods[0],
   );
+  // B1: o plată mixtă (Cash + Card, de ex.) are nevoie de mai mult de o metodă completată
+  // simultan — la editarea unei asemenea plăți pornim direct despărțit.
+  const [splitByMethod, setSplitByMethod] = useState(
+    () => methods.filter(method => Number(values.tenders[method]) > 0).length > 1,
+  );
   const totalAmount = totalOfTenders(values.tenders);
 
   const selectedChild = records.children.find((c: Child) => c.id === values.childId);
@@ -246,19 +251,43 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
 
         <div className={styles.field}>
           Sumă
-          <div className={styles.sumBox}>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              aria-label="Sumă"
-              className={styles.sumInput}
-              value={values.tenders[activeMethod] ?? ''}
-              onChange={event => setTender(activeMethod, event.target.value)}
-            />
-            <span className={styles.sumCurrency}>lei</span>
-          </div>
-          {feeEntry && !isEurChild && (
+          {splitByMethod ? (
+            <div className={styles.allocationRows}>
+              {methods.map(method => (
+                <label key={method} className={styles.allocationField}>
+                  {method}
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={values.tenders[method] ?? ''}
+                    onChange={event => setTender(method, event.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.sumBox}>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                aria-label="Sumă"
+                className={styles.sumInput}
+                value={values.tenders[activeMethod] ?? ''}
+                onChange={event => setTender(activeMethod, event.target.value)}
+              />
+              <span className={styles.sumCurrency}>lei</span>
+            </div>
+          )}
+          {splitByMethod ? (
+            <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>
+          ) : (
+            <button type="button" className={styles.linkButton} onClick={() => setSplitByMethod(true)}>
+              Împarte pe metode
+            </button>
+          )}
+          {feeEntry && !isEurChild && !splitByMethod && (
             <div className={styles.shortcuts}>
               {[1, 2, 3].map(months => {
                 const amount = feeEntry.amount * months;
@@ -302,20 +331,22 @@ export function PaymentFormDrawer({ target, records, defaultChildId = '', onSubm
           )}
         </div>
 
-        <div className={styles.grid2}>
+        <div className={splitByMethod ? undefined : styles.grid2}>
           <label className={styles.field}>
             Data
             <input type="date" required value={values.date} onChange={event => setDate(event.target.value)} />
           </label>
-          <div className={styles.field}>
-            Metodă
-            <SegmentedControl
-              ariaLabel="Metodă"
-              value={activeMethod}
-              onChange={selectMethod}
-              options={methods.map(method => ({ value: method, label: method }))}
-            />
-          </div>
+          {!splitByMethod && (
+            <div className={styles.field}>
+              Metodă
+              <SegmentedControl
+                ariaLabel="Metodă"
+                value={activeMethod}
+                onChange={selectMethod}
+                options={methods.map(method => ({ value: method, label: method }))}
+              />
+            </div>
+          )}
         </div>
 
         <label className={styles.field}>

@@ -1,8 +1,33 @@
 export function allocations(p) {
   return p.allocations ?? (p.month ? [{ month: p.month, amount: p.amount }] : []);
 }
+
+export const TENDER_METHODS = ['Cash', 'Card', 'Transfer'];
+
+// Alias-uri văzute în date vechi/importate (fără diacritice, minuscule) — B1: nu mai există
+// „Altele”, deci orice text nou trebuie să cadă pe una din cele 3 metode sau să rămână
+// nerecunoscut explicit (nu ghicit) pentru copiii de mai jos.
+const TENDER_METHOD_ALIASES = {
+  cash: 'Cash',
+  numerar: 'Cash',
+  card: 'Card',
+  'card bancar': 'Card',
+  pos: 'Card',
+  transfer: 'Transfer',
+  'transfer bancar': 'Transfer',
+  virament: 'Transfer',
+};
+
+/** Case/diacritice-insensitiv; metodele necunoscute rămân neschimbate (trimise), ca să fie vizibile ca atare, nu ghicite. */
+export function normalizeTenderMethod(method) {
+  const raw = String(method ?? '').trim();
+  const key = raw.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return TENDER_METHOD_ALIASES[key] ?? raw;
+}
+
 export function paymentTenders(p) {
-  return p.tenders ?? [{ method: p.method || 'Cash', amount: p.amount || 0 }];
+  const tenders = p.tenders ?? [{ method: p.method || 'Cash', amount: p.amount || 0 }];
+  return tenders.map(tender => ({ ...tender, method: normalizeTenderMethod(tender.method) }));
 }
 // Moneda efectivă a repartizărilor unei plăți: EUR când plata are amountEur
 // îngheţat la salvare (taxa copilului era EUR la data plății, spec 16 regula

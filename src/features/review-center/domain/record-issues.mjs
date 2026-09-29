@@ -1,5 +1,5 @@
 import { cents } from '#shared/domain/money.mjs';
-import { allocations } from '#shared/domain/payment-allocations.mjs';
+import { allocations, paymentTenders, TENDER_METHODS } from '#shared/domain/payment-allocations.mjs';
 import { STATUS_HISTORY_VALUES } from '#shared/domain/record-schema.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
@@ -45,6 +45,10 @@ export function findRecordIssues(records) {
       add('payments', payment, 'Avans nerepartizat');
     if (payment.verification && !/^OK$/i.test(payment.verification.trim()) && !payment.reviewed)
       add('payments', payment, `Verificare import: ${payment.verification}`);
+    // B1: date vechi cu metodă în afara Cash/Card/Transfer (fără tenders[] care să dea suma pe
+    // fiecare) — nu se ghicește automat, se rezolvă manual din formularul de achitare (§ „Împarte pe metode”).
+    if (paymentTenders(payment).some(tender => !TENDER_METHODS.includes(tender.method)))
+      add('payments', payment, 'Plată mixtă: împarte suma pe Cash / Card / Transfer');
     const fingerprint = JSON.stringify([
       payment.childId || payment.sourceName || payment.childName,
       payment.date,

@@ -1,11 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { allocations, paymentIndex, paymentTenders } from './payment-allocations.mjs';
+import { allocations, normalizeTenderMethod, paymentIndex, paymentTenders } from './payment-allocations.mjs';
 import { normalizeRecord } from './record-schema.mjs';
 
 test('O achitare veche fără componente are o singură metodă', () => {
   const legacy = { id: 'P2', date: '2026-09-08', amount: 200, method: 'Transfer' };
   assert.deepEqual(paymentTenders(legacy), [{ method: 'Transfer', amount: 200 }]);
+});
+
+test('normalizeTenderMethod recunoaște alias-uri fără diacritice, case-insensitiv', () => {
+  assert.equal(normalizeTenderMethod('numerar'), 'Cash');
+  assert.equal(normalizeTenderMethod('Card bancar'), 'Card');
+  assert.equal(normalizeTenderMethod('VIRAMENT'), 'Transfer');
+  assert.equal(normalizeTenderMethod('transfer bancar'), 'Transfer');
+});
+
+test('normalizeTenderMethod lasă neschimbată o metodă cu adevărat necunoscută (B1 — nu ghicește)', () => {
+  assert.equal(normalizeTenderMethod('Mixtă'), 'Mixtă');
+  assert.equal(normalizeTenderMethod('De verificat'), 'De verificat');
+});
+
+test('paymentTenders normalizează metoda unei plăți vechi cu grafie diferită', () => {
+  const legacy = { id: 'P3', date: '2026-09-08', amount: 200, method: 'numerar' };
+  assert.deepEqual(paymentTenders(legacy), [{ method: 'Cash', amount: 200 }]);
 });
 
 test('allocations returnează array-ul explicit când există', () => {

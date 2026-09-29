@@ -30,7 +30,11 @@ export interface PaymentFormValues {
 }
 
 export function tenderMethodsFor(payment: Payment | null): string[] {
-  const existing = payment ? paymentTenders(payment).map((tender: PaymentTender) => tender.method) : [];
+  const existing = payment
+    ? paymentTenders(payment)
+        .map((tender: PaymentTender) => tender.method)
+        .filter((method: string) => DEFAULT_TENDER_METHODS.includes(method))
+    : [];
   return [...new Set([...DEFAULT_TENDER_METHODS, ...existing])];
 }
 
@@ -98,7 +102,17 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
   }) as Payment;
 }
 
+/** Semnătura tenders-urilor unei plăți, normalizată și fără ordine — independentă de cum a fost
+ * scris `method` istoric (B1: „Cash + Card” vs. „Card + Cash” tot un duplicat). */
+function tenderSignature(payment: Payment): string {
+  return paymentTenders(payment)
+    .map((tender: PaymentTender) => `${tender.method}:${cents(tender.amount)}`)
+    .sort()
+    .join('|');
+}
+
 export function findDuplicatePayment(records: RecordsSnapshot, record: Payment): Payment | null {
+  const signature = tenderSignature(record);
   return (
     records.payments.find(
       payment =>
@@ -106,7 +120,7 @@ export function findDuplicatePayment(records: RecordsSnapshot, record: Payment):
         payment.childId === record.childId &&
         payment.date === record.date &&
         cents(payment.amount) === cents(record.amount) &&
-        payment.method === record.method,
+        tenderSignature(payment) === signature,
     ) ?? null
   );
 }

@@ -30,14 +30,14 @@ test('summarizePaymentsByMethod însumează pe metodă, în lei', () => {
     }),
     basePayment({ method: 'Transfer', amount: 30 }),
   ];
-  assert.deepEqual(summarizePaymentsByMethod(payments), { Cash: 150, Card: 25.5, Transfer: 30, Altele: 0 });
+  assert.deepEqual(summarizePaymentsByMethod(payments), { Cash: 150, Card: 25.5, Transfer: 30 });
 });
 
-test('summarizePaymentsByMethod pune metodele necunoscute la Altele', () => {
+test('summarizePaymentsByMethod nu bagă metodele necunoscute în niciun total (B1 — nu există „Altele”)', () => {
   const payments = [basePayment({ tenders: [{ method: 'Cripto', amount: 10 }] })];
-  assert.deepEqual(summarizePaymentsByMethod(payments), { Cash: 0, Card: 0, Transfer: 0, Altele: 10 });
+  assert.deepEqual(summarizePaymentsByMethod(payments), { Cash: 0, Card: 0, Transfer: 0 });
 });
 
 test('summarizePaymentsByMethod pe listă goală întoarce toate metodele pe zero', () => {
-  assert.deepEqual(summarizePaymentsByMethod([]), { Cash: 0, Card: 0, Transfer: 0, Altele: 0 });
+  assert.deepEqual(summarizePaymentsByMethod([]), { Cash: 0, Card: 0, Transfer: 0 });
 });

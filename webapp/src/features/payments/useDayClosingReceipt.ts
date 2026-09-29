@@ -24,7 +24,6 @@ export interface DayMethodTotals {
   Cash: number;
   Card: number;
   Transfer: number;
-  Altele: number;
 }
 
 export interface DayClosingData {
@@ -41,7 +40,7 @@ export interface DayClosingData {
   kindergarten: KindergartenSettings | null;
 }
 
-const EMPTY_TOTALS: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
+const EMPTY_TOTALS: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };
 
 // „Joi, 24.09.2026" — ziua săptămânii scrisă, data numerică, ca pe bonul de închidere a zilei (24b).
 function dayLabelOf(date: string): string {
@@ -83,11 +82,12 @@ export function useDayClosingReceipt(date: string): DayClosingData {
     amount: payment.amount,
   }));
 
-  const totalsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
-  const countsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0, Altele: 0 };
+  const totalsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };
+  const countsByMethod: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };
   for (const payment of dayPayments) {
     for (const tender of paymentTenders(payment)) {
-      const method = (Object.hasOwn(totalsByMethod, tender.method) ? tender.method : 'Altele') as keyof DayMethodTotals;
+      if (!Object.hasOwn(totalsByMethod, tender.method)) continue;
+      const method = tender.method as keyof DayMethodTotals;
       totalsByMethod[method] += cents(tender.amount);
       countsByMethod[method] += 1;
     }

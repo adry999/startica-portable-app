@@ -100,8 +100,15 @@ test('Doi părinți opționali și achitare mixtă se normalizează', () => {
       { method: 'Card', amount: 1 },
       { method: 'card', amount: 2 },
     ],
+    [{ method: 'Mixtă', amount: 100 }],
   ])
     assert.throws(() => normalizeRecord('payments', { ...mixedPayment, tenders }));
+  // B1: alias-urile cunoscute (fără diacritice/case) se normalizează, nu se resping.
+  const normalizedMethod = normalizeRecord('payments', {
+    ...mixedPayment,
+    tenders: [{ method: 'numerar', amount: 1500.3 }],
+  });
+  assert.equal(normalizedMethod.method, 'Cash');
   assert.throws(() => normalizeRecord('payments', { ...mixedPayment, amount: 999 }));
   assert.throws(() =>
     normalizeRecord('payments', { ...mixedPayment, allocations: [{ month: '2026-09', amount: 1600 }] }),

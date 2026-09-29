@@ -5,7 +5,7 @@ import { today } from '@domain/calendar-month.mjs';
 import { useDayClosingReceipt } from './useDayClosingReceipt';
 import styles from './DayClosingReceipt.module.css';
 
-const METHOD_ORDER: ('Cash' | 'Card' | 'Transfer' | 'Altele')[] = ['Cash', 'Card', 'Transfer', 'Altele'];
+const METHOD_ORDER: ('Cash' | 'Card' | 'Transfer')[] = ['Cash', 'Card', 'Transfer'];
 
 /** Bonul de închidere a zilei (24b) — plățile zilei, totalul pe metodă, cheltuielile cash și suma din casă. */
 export function DayClosingReceipt() {

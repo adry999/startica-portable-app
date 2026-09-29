@@ -1,5 +1,22 @@
 # Întrebări / decizii blocate
 
+## ⏳ B1 — diagnosticul plăților mixte (rezultatul scriptului, înainte de migrare)
+
+Rulat `scripts/diagnostic/b1-payment-methods.mjs` (doar citire) pe `Startica_Date/startica.db`: **811 plăți totale, 7 cu tender necunoscut** (`→ „Altele”`). Nicio valoare brută nu e `numerar`/`card bancar`/`virament` (adică `normalizeTenderMethod()` din pasul 2 nu rezolvă niciuna din cele 7) și **niciuna nu are câmpuri brute cu suma pe metodă** (`cash`/`card`/`cashAmount`/`cardAmount`/`transferAmount` — toate lipsă), deci migrarea automată din pasul 3 nu are ce folosi ca sursă:
+
+| id | dată | copil | `method` brut | sumă |
+|---|---|---|---|---|
+| PAY-0055 | 2025-04-09 | (fără) | „Mixtă” | 12 000 |
+| PAY-0447 | 2026-03-02 | CSV-71 | „De verificat” | 2 100 |
+| PAY-0452 | 2026-03-02 | (fără) | „Mixtă” | 12 000 |
+| PAY-0558 | 2026-05-04 | CSV-56 | „De verificat” | 13 105 |
+| PAY-0574 | 2026-05-08 | CSV-31 | „De verificat” | 13 121 |
+| PAY-0575 | 2026-05-08 | CSV-51 | „De verificat” | 13 121 |
+| PAY-0783 | 2026-08-24 | CSV-95 | „Mixtă” | 13 033 |
+
+Toate cele 7 intră deci în **De rezolvat** cu „Plată mixtă: împarte suma pe Cash / Card” (pasul 3, varianta „nu au → De rezolvat”), nu printr-o migrare automată. Decizie necesară: (a) confirmă că da, aceste 7 merg în De rezolvat și rămân cu tender-ul vechi (`method` brut păstrat pe rând, doar afișarea din UI nu le mai pune la „Altele” fals-liniștitor, ci le arată clar ca „de rezolvat”) până le împarte cineva manual, sau (b) vrei să le atribui provizoriu integral pe o singură metodă (ex. Cash) ca să dispară complet „Altele” chiar și înainte de rezolvarea manuală? Implementarea continuă cu varianta (a) până la răspuns — e cea descrisă la pasul 3 din B1.
+
+
 Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
 
 ## ⏳ Fișa copilului — relația (Mamă/Tată) pe cei 2 părinți + „persoane autorizate să ridice copilul” lipsesc din modelul de date

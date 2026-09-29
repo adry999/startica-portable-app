@@ -51,9 +51,9 @@ describe('defaultPaymentFormValues', () => {
 });
 
 describe('tenderMethodsFor', () => {
-  it('include metoda existentă chiar dacă nu e Cash/Card/Transfer', () => {
+  it('B1: nu mai oferă în SegmentedControl o metodă în afara Cash/Card/Transfer', () => {
     const payment = { tenders: [{ method: 'Revolut', amount: 100 }] } as unknown as Payment;
-    expect(tenderMethodsFor(payment)).toEqual(['Cash', 'Card', 'Transfer', 'Revolut']);
+    expect(tenderMethodsFor(payment)).toEqual(['Cash', 'Card', 'Transfer']);
   });
 });
 
@@ -119,5 +119,35 @@ describe('findDuplicatePayment', () => {
   it('ignoră plățile arhivate și pe cele cu o sumă diferită', () => {
     const differentAmount = { childId: 'c1', date: '2026-09-10', amount: 999, method: 'Cash' } as Payment;
     expect(findDuplicatePayment(records, differentAmount)).toBeNull();
+  });
+
+  it('B1: recunoaște duplicatul unei plăți mixte indiferent de ordinea metodelor', () => {
+    const mixedRecords = {
+      payments: [
+        {
+          id: 'p3',
+          childId: 'c1',
+          date: '2026-09-10',
+          amount: 200,
+          method: 'Cash + Card',
+          tenders: [
+            { method: 'Cash', amount: 120 },
+            { method: 'Card', amount: 80 },
+          ],
+          archived: false,
+        },
+      ],
+    } as unknown as RecordsSnapshot;
+    const candidate = {
+      childId: 'c1',
+      date: '2026-09-10',
+      amount: 200,
+      method: 'Card + Cash',
+      tenders: [
+        { method: 'Card', amount: 80 },
+        { method: 'Cash', amount: 120 },
+      ],
+    } as Payment;
+    expect(findDuplicatePayment(mixedRecords, candidate)?.id).toBe('p3');
   });
 });

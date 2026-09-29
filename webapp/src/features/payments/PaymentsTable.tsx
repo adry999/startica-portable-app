@@ -398,12 +398,6 @@ function SummaryCards({ summary, method }: { summary: PaymentsData['summary']; m
         <p className={styles.summaryLabel}>Transfer · {summary.transferCount}</p>
         <strong className={styles.summaryValue}>{formatMoney(summary.transfer)}</strong>
       </Card>
-      {summary.other > 0 && (
-        <Card tone="dashed" className={styles.summaryCard}>
-          <p className={styles.summaryLabel}>Altele</p>
-          <strong className={styles.summaryValue}>{formatMoney(summary.other)}</strong>
-        </Card>
-      )}
     </div>
   );
 }

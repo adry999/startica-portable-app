@@ -52,7 +52,6 @@ export interface PaymentsSummary {
   cash: number;
   card: number;
   transfer: number;
-  other: number;
   /** Numărul de achitări cu un tender pe metoda respectivă — pentru eticheta cardului
    * („Cash · 9”), neafectat de filtrul Metodă, la fel ca suma (05-achitari.md §3). */
   cashCount: number;
@@ -95,7 +94,6 @@ const EMPTY_SUMMARY: PaymentsSummary = {
   cash: 0,
   card: 0,
   transfer: 0,
-  other: 0,
   cashCount: 0,
   cardCount: 0,
   transferCount: 0,
@@ -275,7 +273,6 @@ export function usePayments(initialChildId = ''): PaymentsData {
       cash: byMethod.Cash,
       card: byMethod.Card,
       transfer: byMethod.Transfer,
-      other: byMethod.Altele,
       cashCount: countByMethod(paymentsForSummary, 'Cash'),
       cardCount: countByMethod(paymentsForSummary, 'Card'),
       transferCount: countByMethod(paymentsForSummary, 'Transfer'),
