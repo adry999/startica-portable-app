@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   LoadingState,
-  PersonCell,
   SegmentedControl,
   SmsConfirmDialog,
   useToast,
@@ -12,6 +11,7 @@ import {
   type PillTone,
   type SmsRecipientView,
 } from '@shared/ui';
+import { initials } from '@shared/format/initials';
 import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
@@ -209,15 +209,25 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                         setEditingText(false);
                       }}
                     >
-                      <PersonCell
-                        name={parentName}
-                        sub={
-                          <>
+                      {/* Bazin.dc.html#8a: avatar 40 în ton — mai mare decât PersonCell 'md' (30),
+                          nesuportat de variantele existente (md/lg) — celulă proprie, ca la Echipa. */}
+                      <span className={styles.parentCell}>
+                        <span
+                          className={styles.parentAvatar}
+                          style={{
+                            background: `var(--${toneForLabel(row.label)}-soft, var(--neutral-soft))`,
+                            color: `var(--${toneForLabel(row.label)}-ink, var(--subtle))`,
+                          }}
+                        >
+                          {initials(parentName)}
+                        </span>
+                        <span className={styles.parentText}>
+                          <strong className={styles.parentName}>{parentName}</strong>
+                          <small className={styles.parentSub}>
                             pentru <strong>{row.name}</strong> · {row.termLabel}
-                          </>
-                        }
-                        tone={toneForLabel(row.label)}
-                      />
+                          </small>
+                        </span>
+                      </span>
                       <span className={styles.rowMeta}>
                         <span className={row.late ? styles.sumLate : styles.sumNeutral}>{formatMoney(row.rest)}</span>
                         {notifiedToday && <Badge tone="mint">Notificat azi</Badge>}
