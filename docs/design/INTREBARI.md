@@ -1,6 +1,6 @@
 # Întrebări / decizii blocate
 
-## ⏳ B1 — diagnosticul plăților mixte (rezultatul scriptului, înainte de migrare)
+## ✅ B1 — diagnosticul plăților mixte — rezolvat, decizie (b) Cash provizoriu
 
 Rulat `scripts/diagnostic/b1-payment-methods.mjs` (doar citire) pe `Startica_Date/startica.db`: **811 plăți totale, 7 cu tender necunoscut** (`→ „Altele”`). Nicio valoare brută nu e `numerar`/`card bancar`/`virament` (adică `normalizeTenderMethod()` din pasul 2 nu rezolvă niciuna din cele 7) și **niciuna nu are câmpuri brute cu suma pe metodă** (`cash`/`card`/`cashAmount`/`cardAmount`/`transferAmount` — toate lipsă), deci migrarea automată din pasul 3 nu are ce folosi ca sursă:
 
@@ -15,6 +15,8 @@ Rulat `scripts/diagnostic/b1-payment-methods.mjs` (doar citire) pe `Startica_Dat
 | PAY-0783 | 2026-08-24 | CSV-95 | „Mixtă” | 13 033 |
 
 Toate cele 7 intră deci în **De rezolvat** cu „Plată mixtă: împarte suma pe Cash / Card” (pasul 3, varianta „nu au → De rezolvat”), nu printr-o migrare automată. Decizie necesară: (a) confirmă că da, aceste 7 merg în De rezolvat și rămân cu tender-ul vechi (`method` brut păstrat pe rând, doar afișarea din UI nu le mai pune la „Altele” fals-liniștitor, ci le arată clar ca „de rezolvat”) până le împarte cineva manual, sau (b) vrei să le atribui provizoriu integral pe o singură metodă (ex. Cash) ca să dispară complet „Altele” chiar și înainte de rezolvarea manuală? Implementarea continuă cu varianta (a) până la răspuns — e cea descrisă la pasul 3 din B1.
+
+**Rezolvat 29.09, 23:19** (vezi `RASPUNSURI.md`): varianta **(b)** — cele 7 se atribuie provizoriu integral pe Cash, ca să dispară din „De rezolvat” înainte de rezolvarea manuală. Execuția (scriptul pe baza reală) se face separat, în paralel — nu mai e nevoie de alt cod, doar de rulare.
 
 
 Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
@@ -57,8 +59,10 @@ Nu se ia niciuna din cele două variante descrise inițial mai jos întocmai. Mo
 _(istoric — descrierea inițială a conflictului, păstrată pentru context)_
 Backend-ul deja cherry-pick-uit implementează monedă dublă simplă (`currency: 'MDL'|'EUR'` liber pe fiecare taxă/plată). `16-planuri-eur.md` descria inițial un model diferit (planuri fixe EUR, `plan_id`, `amount_mdl`/`fx_rate`/`amount_eur`). Rezolvat prin modelul (b) de mai sus — nu s-a ales niciuna din variantele „totul sau nimic” inițiale.
 
-## Folder străin la rădăcina proiectului — `Startica V2/` + `Startica V2.zip`
+## ✅ Folder străin la rădăcina proiectului — `Startica V2.zip` — șters
 Găsite netrasate la rădăcina repo-ului (nu în `docs/design/`), 60 de fișiere sub `Startica V2/design/{screens,web}/`. `docs/design/` însuși e deja actualizat (RASPUNSURI.md, screens/*.md, *.dc.html — toate modificate) — par resturi de la dezarhivarea sincronizării, nu conținut încă neaplicat. **Nu le-am şters** — doar excluse din `npm run check` (`.prettierignore`) ca să nu blocheze verificarea. Dacă sunt într-adevăr resturi, se pot şterge cu `rm -rf "Startica V2" "Startica V2.zip"`; dacă sunt ceva în lucru, spune ce.
+
+**Rezolvat 29.09, 23:19:** erau resturi, confirmat de utilizator. `Startica V2.zip` șters de la rădăcina repo-ului (folderul `Startica V2/` nu exista deja).
 
 ## ✅ Situația plăților — comentariul din `useStatus.ts` (punctul 7) — rezolvat, de implementat
 Comentariul „fără filtre — situația unei luni trebuie să rămână completă” e depășit. Designul 7a are intenționat pastilele Grupa. Intenția se păstrează altfel: filtrul restrânge **doar tabelul**, cardurile de sus rămân mereu pe toată luna (ca la Achitări). Comentariul se rescrie în acest sens.
@@ -83,33 +87,41 @@ Planul le listează cu recomandarea pe care o și urmează în cod; mutate aici 
 
 Nu blochează nimic din Task 12 (sincronizarea setului comun) — consemnate aici doar ca să nu rămână doar în planul tehnic.
 
-## A3f — cele 5 verificări de logică salarii (ALINIERE-DESIGN.md, utilizatorul spunea „salariile nu sunt în logica din cod”)
+## ✅ A3f — cele 5 verificări de logică salarii — toate 5 rezolvate
 Verificat cod + teste, nu doar citit. Rezultat: 4 din 5 erau deja corecte; 1 (#5) era un gol real, fixat (vezi commit `fix(personal): loc în UI pentru annualLeaveDays/deductOnlyUnexcused`).
 
 1. **`readCoachPayForMonth` injectat la pornire?** ✅ Da — `src/app/server/create-branch-context.mjs:282` îl construiește (citește setările Bazinului + `bookings`/`sessions` prin `coachPayForMonth`) și îl pasează la `createPersonalRoutes` (linia ~355), care îl dă mai departe la `salaries.routes.mjs` → `salaries.service.mjs`. Antrenorii mod `bazin` NU rămân „de închis”; `rowForStaff` îl apelează direct (`salaries.service.mjs:99`).
 2. **Plata creează cheltuiala „Salariu <lună> · <nume>”, minus avansuri, marchează avansurile scăzute?** ⚠️ Parțial altfel, DELIBERAT — cheltuiala se creează la categoria Salarii, suma = brut minus avansurile nescăzute (`row.net`), și avansurile chiar se marchează `deductedAt`/`deductedBy` în aceeași tranzacție atomică (`salaries.service.mjs`, funcția `pay()`). **Diferență față de textul din spec:** descrierea e `Salariu <lună>` **fără numele angajatului** — comentariul din cod (m11, `24-personal:37`) spune explicit că e intenționat: cheltuiala e vizibilă în Cheltuieli/Istoric fără PIN, iar identitatea angajatului trebuie să rămână „în spatele cortinei”. Nu am schimbat asta ca să respect spec-ul literal — pare o decizie de confidențialitate deja luată. **Întrebare pentru tine:** rămâne așa, sau chiar vrei numele în descriere (caz în care suma unui salariu individual ar deveni vizibilă oricui vede Cheltuielile, fără PIN)?
+
+**Rezolvat 29.09, 23:19:** rămâne așa — descriere generică „Salariu <lună>”, fără nume. Nimic de schimbat.
 3. **Avansul intră în Cheltuieli în ziua dării, fără dublare la plată?** ✅ Da — `giveAdvance()` creează cheltuiala imediat, cu `date` = ziua dării. La `pay()`, avansurile NU se re-cheltuiesc — doar se marchează `deductedAt`, iar cheltuiala nouă a plății e doar pentru `row.net` (brutul minus avansuri). Confirmat și prin comentariile M1/M11 din cod.
 4. **Salariul se vede pe fișa angajatului (23j) după PIN?** ⚠️ Parțial altfel — `StaffProfilePage.tsx:168-172` arată cardul „Salariu” mereu mascat (`•••••`) cu link „Vezi cu PIN →” care **navighează către fila Salarii** (`/personal?tab=salarii`, ea însăși în spatele PIN-ului), nu dezvăluie suma inline pe fișă după introducerea PIN-ului. Criteriul „Salariile nu se văd fără PIN” (spec 24, §7) e respectat; dacă vrei dezvăluire inline pe fișă (nu doar redirecționare), e un punct separat de implementat — spune dacă îl vrei.
+
+**Rezolvat 29.09, 23:19:** rămâne doar link către fila Salarii, fără dezvăluire inline pe fișă. Nimic de schimbat.
 5. **Loc în UI pentru `deductOnlyUnexcused`/`annualLeaveDays`?** ❌ → ✅ FIXAT. Backend-ul (`/api/personal/settings`, validare completă în `personal.repository.mjs`) și hook-ul (`usePersonal().saveSettings`) existau deja, complet funcționale — dar `saveSettings` nu era apelat din nicăieri în UI. Adăugat în drawer-ul „Funcții” (`RolesDrawer.tsx`, 23e): câmp numeric (0-365) + bifă, cu validare și testare (2 teste noi).
 
-## A4 Bazin — rândul „Antrenor: <nume>” din 22a cu mai mulți antrenori
+## ✅ A4 Bazin — rândul „Antrenor: <nume>” din 22a cu mai mulți antrenori — confirmat
 Spec (`ALINIERE-DESIGN.md`, 22a rând info) arată mockup-ul cu un singur antrenor: „Antrenor: **Rusu Vlad**” stânga, legenda dreapta. Codul (`pool_bookings.coachId`) permite mai mulți antrenori pe aceeași filială. Implementat: rândul arată toți antrenorii configurați, uniți prin virgulă („Antrenor: Rusu Vlad, Ion Pop”); dacă nu e niciun antrenor configurat încă, rândul dispare (rămâne doar legenda, dreapta). Nu am găsit alt loc în spec care să lămurească formatul pentru mai mulți — dacă vrei alt format (listă pe rânduri, doar primul + „și încă N”, etc.), spune și schimb.
 
-## A6 — Asociere achitări: pragul „scor” pentru cele 3 trepte de potrivire
+**Rezolvat 29.09, 23:19:** confirmat formatul cu virgulă, cum e deja implementat. Nimic de schimbat.
+
+## ✅ A6 — Asociere achitări: pragul „scor” pentru cele 3 trepte de potrivire — confirmat ≥2
 
 Spec (`ALINIERE-DESIGN.md` A6) cere „scor 12px/800” pe cardul de sugestie; `11-de-rezolvat.md` §9c descrie 3 trepte calitative (Mare/Posibil/Slab, mint/galben/neutral), fără prag numeric. `suggestChildren()` (`payment-name-matching.mjs`) calculează deja un scor intern (nume potrivit = +3, sumă = taxa exactă pe N luni = +2, toate lunile neachitate = +2, parțial = +1, plătitor reținut = +1000) — dar acest scor n-a fost gândit ca prag de afișare, doar ca ordine de sortare a sugestiilor. Implementat: `nameMatch` → „Potrivire mare” (mint); fără nume, `score ≥ 2` → „Posibil” (galben); `score < 2` (adică exact 1, un singur indiciu slab) → „Slab” (neutru). Nu am arătat scorul brut (ar fi confuz — un plătitor reținut ar arăta „1000”). Pragul „2” e o alegere rezonabilă, nu vine din spec — dacă vrei alt prag sau alt mod de afișare a scorului, spune și schimb.
 
-## A7 — Backup și setări (10c) / Notificări (10b): 3 goluri care sunt funcții noi, nu restilizare
+**Rezolvat 29.09, 23:19:** pragul ≥2 rămâne așa cum e implementat. Nimic de schimbat.
+
+## ✅ A7 — Backup și setări (10c) / Notificări (10b): 3 goluri — toate scoase din design
 
 Ecranele erau deja aproape identice cu spec-ul (grid-uri, radius, Toggle 46×26 `--orange`, „Fără Rezumat săptămânal” — toate deja corecte). Am corectat doar ce era pur vizual (padding/radius cardurilor ①②③, „Startica v” înaintea versiunii). 3 lucruri din spec nu există deloc în cod și sunt funcții noi, nu tweak-uri — nu le-am construit fără confirmare:
 
-1. **„Probleme la backup” (10b)** — al 4-lea comutator din listă (Restanțe/Zile de naștere/Vizite/**Probleme la backup**). Nu există `backupProblemsEnabled` în `notification-preferences.mjs` și nicio verificare periodică a stării backup-ului care să trimită un mesaj Telegram la eșec. Ar cere: câmp nou în schemă + o sarcină (job) care verifică `useBackup`/`backupData.health` și trimite mesaj.
-2. **„Zonă periculoasă” (10c, border `--pink`)** — spec-ul cere un card cu o acțiune distructivă lângă cardul Grădinița, dar nu spune care acțiune. N-am găsit nicio funcție distructivă existentă de mutat acolo (ștergere totală a filialei? resetare?) — nu am inventat una.
-3. **„Importă copii din CSV” (`ChildrenCsvDialog`, 10c → Import și export)** — nu există deloc în webapp (doar Excel: `useExcelTransfer`, „Import Excel”/„Export Excel complet”). Ar cere un dialog nou + o rută de parsare CSV pe server.
+1. **„Probleme la backup” (10b)** — al 4-lea comutator din listă (Restanțe/Zile de naștere/Vizite/**Probleme la backup**). Nu există `backupProblemsEnabled` în `notification-preferences.mjs` și nicio verificare periodică a stării backup-ului care să trimită un mesaj Telegram la eșec. Ar cere: câmp nou în schemă + o sarcină (job) care verifică `useBackup`/`backupData.health` și trimite mesaj. **Rezolvat 29.09, 23:19: scos din design, nu se construiește.**
+2. **„Zonă periculoasă” (10c, border `--pink`)** — spec-ul cere un card cu o acțiune distructivă lângă cardul Grădinița, dar nu spune care acțiune. N-am găsit nicio funcție distructivă existentă de mutat acolo (ștergere totală a filialei? resetare?) — nu am inventat una. **Rezolvat 29.09, 23:19: scoasă din design, nu se adaugă nicio acțiune distructivă.**
+3. **„Importă copii din CSV” (`ChildrenCsvDialog`, 10c → Import și export)** — nu există deloc în webapp (doar Excel: `useExcelTransfer`, „Import Excel”/„Export Excel complet”). Ar cere un dialog nou + o rută de parsare CSV pe server. **Rezolvat 29.09, 23:19: rămâne doar Excel, CSV nu se construiește.**
 
 **Divergență deliberată, nu bug:** dreapta grid-ului din 10c (spec: cardul „Grădinița” + zona periculoasă) e azi cardul „Import și export” — pentru că „Grădinița” a devenit între timp propria filă completă (16a, `KindergartenSettings`), nu mai încape ca rezumat mic lângă listă. N-am mutat-o înapoi.
 
-## B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin
+## ⏳ B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin — decizii luate 29.09, migrare încă neexecutată
 
 Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (nou, doar citire — `DatabaseSync(..., { readOnly: true })`) pe ambele baze active:
 
@@ -124,3 +136,8 @@ Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (nou, doar citire — `DatabaseS
 3. Rulez migrarea și pe iunie-iulie 2026 (adică pe date deja „istorice”, posibil deja incluse în rapoarte închise ale lunilor respective), sau doar de-acum înainte (păstrăm istoricul cum e, migrăm doar noile cheltuieli de bazin)? Dacă migrăm și istoricul, `COADA-DE-LUCRU.md` trebuie să noteze diferența pe fiecare lună afectată (cf. §B3, pasul 4) — Dashboard/Raport contabil pentru iunie și iulie 2026 s-ar schimba retroactiv.
 
 Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `node scripts/diagnostic/b3-pool-expenses.mjs`; n-am dus-o toată aici ca să nu îngroape restul fișierului. Nimic scris, nicio migrare încă — aștept răspuns.
+
+**Rezolvat 29.09, 23:19** (vezi `RASPUNSURI.md`) — trei decizii confirmate; migrarea propriu-zisă (câmpul `Payment.service`, kind-ul `services`, scrierea celor 143 rânduri, notele de diferență lunară în `COADA-DE-LUCRU.md`) rămâne un task separat, mai mare, executat ulterior:
+1. Toate cele 143 sunt încasări reale de bazin — confirmat, fără verificare manuală rând cu rând.
+2. Metoda la migrare: **Cash** (niciuna din cele 143 n-are metodă înregistrată).
+3. Retroactiv, inclusiv iunie–iulie 2026 — nu doar de-acum înainte.

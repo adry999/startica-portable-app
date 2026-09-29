@@ -10,12 +10,12 @@
 
 ## 10b — Notificări (`notifications/NotificationsPage.tsx`)
 - **Antet:** `Notificări  ADMINISTRARE` · comutator `Canale · Mesaje SMS · Șabloane` (ultimele două: spec 14).
-- **Canale:** card Telegram mint (cont, ultimul mesaj, Schimbă contul / Deconectează) + listă de comutatoare (activ `--orange`): Restanțe, Zile de naștere, Vizite, Probleme la backup, fiecare cu descriere 13px și programare. **Fără** „Rezumat săptămânal”.
+- **Canale:** card Telegram mint (cont, ultimul mesaj, Schimbă contul / Deconectează) + listă de comutatoare (activ `--orange`): Restanțe, Zile de naștere, Vizite, Probleme la backup, fiecare cu descriere 13px și programare. **Fără** „Rezumat săptămânal”. **Descope 29.09 (`INTREBARI.md`/`RASPUNSURI.md` §A7): „Probleme la backup” nu se construiește** — comutatorul rămâne doar în mockup, nu se adaugă în cod.
 
 ## 10c — Backup și setări (`backup/BackupPage.tsx`)
 - **Antet:** `Backup și setări  ADMINISTRARE` · comutator `Backup · Import și export · Grădinița` · „Startica v2.0.0” 13px `--subtle`.
-- **Backup:** 3 carduri pas ①②③ (Date salvate mint · Backup local mint · Copie externă: avertizare yellow cu border 2px `--yellow` + CTA „Alege un stick sau un folder”); lista copiilor de siguranță (dată, mărime, automat/manual, Restaurează) + „Fă un backup acum”; „Zonă periculoasă” cu border `--pink`.
-- **Import și export:** **singurul loc** cu „Importă copii din CSV” (`ChildrenCsvDialog`) + import/export Excel.
+- **Backup:** 3 carduri pas ①②③ (Date salvate mint · Backup local mint · Copie externă: avertizare yellow cu border 2px `--yellow` + CTA „Alege un stick sau un folder”); lista copiilor de siguranță (dată, mărime, automat/manual, Restaurează) + „Fă un backup acum”; „Zonă periculoasă” cu border `--pink`. **Descope 29.09 (`INTREBARI.md`/`RASPUNSURI.md` §A7): „Zonă periculoasă” nu se construiește** — nicio acțiune distructivă nu se adaugă acolo.
+- **Import și export:** **singurul loc** cu „Importă copii din CSV” (`ChildrenCsvDialog`) + import/export Excel. **Descope 29.09 (`INTREBARI.md`/`RASPUNSURI.md` §A7): rămâne doar Excel** — „Importă copii din CSV” nu se construiește.
 - **Butonul „Reîncarcă”** se mută aici, din antetul global.
 
 ## 16a — Grădinița (filă în Backup și setări)
@@ -26,5 +26,5 @@
 
 ## Criterii de acceptare
 - [ ] Versiunea afișată e v2.0.0 (sidebar + Backup)
-- [ ] Import CSV există doar în Backup și setări → Import și export
+- [ ] ~~Import CSV există doar în Backup și setări → Import și export~~ — descope 29.09, rămâne doar Excel (vezi `INTREBARI.md`/`RASPUNSURI.md` §A7)
 - [ ] Fără „Anulează” în Istoric și fără „Rezumat săptămânal” în Notificări

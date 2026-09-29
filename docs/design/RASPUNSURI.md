@@ -57,3 +57,32 @@ Spec-ul e aprobat, cu răspunsurile de mai jos.
 15. Confirmarea de plată (`screens/15-tiparire.md`): A5 și A4 în două părți; partea părintelui după 16g (decis).
 
 Prima pornire (`22`) nu se face decât la cerere. Filialele și sincronizarea (Faza 6) rămân excluse până la un mesaj explicit.
+
+## 2026-09-29, 23:19 — al doilea lot de decizii
+
+Răspunsuri la punctele deschise în `INTREBARI.md` la sync-ul de 29.09. Detaliul rămâne acolo, lângă fiecare întrebare (marcate ✅ „Rezolvat 29.09, 23:19”).
+
+**A3f — descrierea cheltuielii de salariu (#2).** Rămâne generică „Salariu <lună>”, fără numele angajatului. Nimic de schimbat.
+
+**A3f — salariul pe fișa angajatului (#4).** Rămâne link „Vezi cu PIN →” către fila Salarii; nu se adaugă dezvăluire inline pe fișă.
+
+**A4 Bazin — „Antrenor:” cu mai mulți antrenori.** Confirmat: separare prin virgulă, cum e deja implementat. Nimic de schimbat.
+
+**Notificări către părinți.** Rămân pe SMS (sms.md); nu se revine la Telegram nicăieri. Confirmă decizia deja luată și aplicată în cod (pivotul din roadmap 2026-09-26, „SMS conectat” în De notificat) — nu e o întrebare deschisă în `INTREBARI.md`, doar o confirmare.
+
+**B1 — cele 7 plăți „Mixtă/De verificat”.** Varianta **(b)**: provizoriu, integral pe Cash, ca să dispară din „De rezolvat” înainte de rezolvarea manuală. Execuția (scriptul de migrare pe baza reală) se face separat, în paralel cu acest răspuns.
+
+**B3 — cele 143 cheltuieli de bazin.** Trei decizii; migrarea propriu-zisă (câmpul `Payment.service`, kind-ul `services`, scrierea celor 143 rânduri, notele de diferență lunară) rămâne un task separat, mai mare, executat ulterior:
+1. Toate cele 143 sunt încasări reale de bazin — fără verificare manuală rând cu rând.
+2. Metoda la migrare: Cash (niciuna din cele 143 n-are metodă înregistrată).
+3. Retroactiv, inclusiv iunie–iulie 2026, nu doar de-acum înainte.
+
+**A6 — pragul „Posibil” ≥ 2.** Confirmat, rămâne așa cum e implementat.
+
+**A7 — „Probleme la backup”.** Scos din design, nu se construiește.
+
+**A7 — „Zonă periculoasă”.** Scoasă din design, nu se adaugă nicio acțiune distructivă.
+
+**A7 — „Importă copii din CSV”.** Rămâne doar Excel, CSV nu se construiește.
+
+**Folder străin la rădăcina proiectului.** `Startica V2.zip` era rest de la dezarhivare, deja extras și aplicat în `docs/design/`. Șters de la rădăcina repo-ului.
