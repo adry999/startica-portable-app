@@ -547,3 +547,53 @@ test('taxa de bazin în lei se convertește în euro la cursul zilei închiderii
   assert.equal(result.expected, 510);
   assert.equal(result.rest, 510);
 });
+
+test('B3: o plată de Bazin nu scade taxa Grădiniței, și invers, cu sau fără index', () => {
+  const mdlChild = normalizeRecord('children', {
+    id: 'C-B3',
+    name: 'Ana',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  const bazinCharge = normalizeRecord('charges', {
+    id: 'CHG-bazin-C-B3-2026-09',
+    childId: 'C-B3',
+    month: '2026-09',
+    kind: 'bazin',
+    label: 'Bazin septembrie: 6 × 150 lei',
+    amount: 900,
+    date: '2026-09-30',
+  });
+  const bazinPayment = normalizeRecord('payments', {
+    id: 'PAY-bazin-C-B3',
+    childId: 'C-B3',
+    date: '2026-09-10',
+    amount: 900,
+    method: 'Cash',
+    service: 'bazin',
+    allocations: [{ month: '2026-09', amount: 900 }],
+  });
+  const gradinitaPayment = normalizeRecord('payments', {
+    id: 'PAY-gradinita-C-B3',
+    childId: 'C-B3',
+    date: '2026-09-05',
+    amount: 500,
+    method: 'Cash',
+    service: 'gradinita',
+    allocations: [{ month: '2026-09', amount: 500 }],
+  });
+  const payments = [bazinPayment, gradinitaPayment];
+  const charges = [bazinCharge];
+
+  const direct = obligation(mdlChild, '2026-09', payments, charges, '2026-09-30');
+  // 2000 (taxă) + 900 (bazin) = 2900 obligație; achitat 500 (grădiniță) + 900 (bazin) = 1400.
+  assert.equal(direct.expected, 2900);
+  assert.equal(direct.paid, 1400);
+  assert.equal(direct.rest, 1500);
+
+  const index = paymentIndex(payments, '2026-09-30');
+  const viaIndex = obligation(mdlChild, '2026-09', [], charges, '2026-09-30', index);
+  assert.equal(viaIndex.paid, 1400);
+  assert.equal(viaIndex.rest, 1500);
+});

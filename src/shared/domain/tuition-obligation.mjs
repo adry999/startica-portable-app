@@ -2,6 +2,7 @@ import { today, shiftDays, daysBetween } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 import { allocations, allocationCurrency } from './payment-allocations.mjs';
 import { eurToMdlRate, convertAmount } from './exchange-rates.mjs';
+import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from './record-schema.mjs';
 
 // Cu câte zile înainte de scadență trece eticheta pe „Scadent în curând”.
 const NOTICE_DAYS = 3;
@@ -66,9 +67,17 @@ export function obligation(child, month, payments, charges, asOf = today(), inde
         .flatMap(p =>
           allocations(p)
             .filter(a => a.month === month)
-            .map(a => ({ amount: a.amount, currency: allocationCurrency(p), date: p.date })),
+            .map(a => ({ amount: a.amount, currency: allocationCurrency(p), date: p.date, service: p.service })),
         );
-  const paid = sumEntriesInCurrency(paidEntries, feeCurrency, rates);
+  // Serviciile (B3): o plată de Bazin nu scade taxa Grădiniței și invers — fiecare linie
+  // (taxa lunii / taxele suplimentare) e acoperită doar de plățile serviciului ei. O plată
+  // fără `service` (index/fixturi vechi) se tratează ca Grădiniță, ca înainte de B3. Un
+  // serviciu nesistem (nou, liber) nu are obligație — plățile lui nu scad nimic aici.
+  const feePaidEntries = paidEntries.filter(e => (e.service ?? DEFAULT_SERVICE_ID) === DEFAULT_SERVICE_ID);
+  const chargesPaidEntries = paidEntries.filter(e => e.service === POOL_SERVICE_ID);
+  const feePaid = sumEntriesInCurrency(feePaidEntries, feeCurrency, rates);
+  const chargesPaid = chargesPaidEntries.length ? sumEntriesInCurrency(chargesPaidEntries, feeCurrency, rates) : 0;
+  const paid = feePaid === null || chargesPaid === null ? null : Math.round((feePaid + chargesPaid) * 100) / 100;
   const childCharges = (charges || []).filter(c => c.childId === child.id && c.month === month);
   const chargesTotal = childCharges.length ? sumEntriesInCurrency(childCharges, feeCurrency, rates) : 0;
   const unknown = (!inactive && (!start || !status || fee === null)) || paid === null || chargesTotal === null;
