@@ -1,5 +1,7 @@
 # 23 — Bazin (programări, prezență, încasări, salariu antrenor)
 
+> **Actualizat 29.09.2026:** Încasările de bazin sunt achitări cu serviciul „Bazin” (B3). Prezentarea se reface după A4. Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Bazin.dc.html#22a`–`#22d`. **Nou.** Per filială.
 
 ## Date

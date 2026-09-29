@@ -2,17 +2,30 @@
 
 Verificat pe `master-v2` @ b84d7df, pagină cu pagină, contra `.dc.html` din `docs/design/`. Detaliile complete sunt în `docs/design/VERIFICARE-DESIGN.md`.
 
-**Sync 29.09 14:54:** după b84d7df au intrat 14 commituri care ating fișierele din A1–A7 (Drawer, ChildFormDrawer, ChildProfileView, ProfileLayout, Bazin, NotifyPage, AssignPage, BackupPage, Situația, Pontaj, DayView). Verificat rapid: **A1 Drawer — făcut** (padding 24/30, 22/30, 18/30, linii). **A5 De notificat — structură făcută** (2 coloane, coadă + mesaj). **A3 — parțial**: acțiunile antetului sunt pe un rând, dar grila e încă `360px minmax(0,1fr)` (trebuie `minmax(0,1fr) minmax(0,1.35fr)`). `Child.firstName/lastName`, `idnp`, `address` și `payer_aliases` există deja. Restul nu e verificat — la fiecare punct compară întâi cu codul actual și bifează ce e deja făcut.
+## Stadiu la sync 29.09 17:13 (41 commituri după b84d7df, citit din `COADA-DE-LUCRU.md`)
+
+**Închise în cod:** B1 (fără „Altele”, normalizare, split pe metode) · A1 · A2 · A3 · A3d · A3f (23a/b/c/f/l) · A4 · A5 · schema spec 28 (`parentRelation`, `pickupPersons`, note cu autor/editare/ștergere).
+
+**Lucrate pe un design vechi.** Claude Code a raportat că `docs/design/Prezenta.dc.html`, `Formulare.dc.html` și `Dashboard.dc.html` din repo erau versiunile vechi (pachetul nu fusese copiat). A lucrat din text. După copierea pachetului de acum, **re-verifică vizual A2, A3c, A3e** față de artboard-uri.
+
+**Rămase / redeschise, în ordinea de lucru:**
+1. **A3c-fix** — codul are încă marcarea în masă (`markGroupPresent`, `markAllUnmarkedPresent`, butonul „Nemarcații → prezenți”, toastul de grup). **Se scot complet** (decizie 29.09, vezi A3c). Undo/istoric rămâne; se scot doar intrările `bulk`.
+2. **A3e-undo** — Anulează / istoric / Ctrl+Z în Prezența · Luna (lipsește; `HistoryEntry` trebuie să poarte `date` pe lângă `childId`).
+3. **B1-rest** — cele 7 plăți din `INTREBARI.md`: varianta **(a)** confirmată — rămân în De rezolvat până le împarte cineva. Scoate și fallback-ul „Altele” din `cash-summary.mjs` (Dashboard) și `accounting-report.mjs` (Raport contabil): o plată nerezolvată nu intră în nicio metodă, apare doar în De rezolvat.
+4. **A3b** — Achitare nouă (15b): spațierea câmpurilor, „Plătitor” după repartizare, „+ Adaugă observație”, culorile repartizării pe stare, bifa de confirmare în subsol. Neînceput.
+5. **B3** — Serviciu pe achitare + filă Servicii (10d) + mutarea încasărilor de bazin. Neînceput. Întâi diagnosticul.
+6. **B2** — Șterge definitiv din arhivă (15h). Neînceput.
+7. **A6** Asociere achitări · **A7** Backup și setări / Notificări · **A8** diferențe mici · **A9** Documente (plan tehnic întâi). Neîncepute.
+
+**Deschise în `INTREBARI.md`, răspuns utilizator de adăugat în `RASPUNSURI.md`:** descrierea cheltuielii de salariu fără nume (A3f #2), dezvăluirea salariului inline pe 23j (#4), formatul „Antrenor:” cu mai mulți antrenori (A4), SMS în loc de Telegram în De notificat și în bifa din 15b (A5). Până la răspuns rămâne cum e în cod.
 
 ## Înainte de început
-Copiază din pachetul `actualizare-docs-design/` și din rădăcina proiectului de design în `docs/design/` (suprascrie):
-- `ALINIERE-DESIGN.md` (acest fișier), `VERIFICARE-DESIGN.md`
-- `screens/28-fisa-copilului-date.md`, `screens/29-copil-nou-diferente.md`
-- `Copii.dc.html` (2b actualizat + 2a cu „+1” la al doilea părinte)
-- `Dashboard.dc.html` (curs €, grafic încasări/cheltuieli), `Grupe.dc.html` (tragere grupe), `Formulare.dc.html` (15b: Plătitor, + Adaugă observație), `Prezenta.dc.html` (18a nou: contoare compacte, grupe în chenar)
+Pachetul `design_final_startica/` se copiază în `docs/design/` (vezi `README.md` → „Cum se pune în repo”). Citește întâi `DECIZII.md`; pentru culori și tipografie folosește `TOKENS.md`, pentru lista artboard-urilor `ECRANE.md`.
 
 ## Ordinea de lucru
-A1 → A2 → A3 → A3b → A3c (+undo) → A3e → A3d → A3f (Personal) → **B1 (bug plăți mixte — poate merge în paralel, e logică, nu UI)** → A4 → A5 → A6 → A7 → A8 → A9.
+Re-verificare vizuală A2/A3c/A3e → A3c-fix (scoate marcarea în masă) → A3e-undo → B1-rest → A3b → B3 → B2 → A6 → A7 → A8 → A9.
+
+(Istoric: A1, A2, A3, A3d, A3f, A4, A5, B1 închise pe 29.09.)
 
 ## Reguli
 - Referința vizuală e mereu `.dc.html`-ul numit la fiecare punct. Deschide-l, citește valorile inline (padding, radius, font, culori) și folosește tokenii existenți din `tokens.css`. Nu inventa tokeni noi dacă există unul apropiat.
@@ -74,12 +87,13 @@ Referință: `Prezenta.dc.html#18a` (actualizat 29.09).
 - **Cele 4 carduri dispar.** În locul lor, un singur card alb (padding `12px 18px`, radius 18, border `--border`, gap 10): pe rândul 1 patru contoare orizontale — punct 10px în culoarea stării (nemarcați = cerc gol border 1.5px `#c9c4ba`), număr Baloo 22/800 în `-ink`-ul stării (0 = `#c9c4ba`), eticheta 13px/700 `--muted`; separate prin `border-right:1px solid #f3eee5`, padding-right 18. Dreapta: „N% prezenți azi” 13px/800 `--mint-ink`. Rândul 2: bară 6px radius pill, segmentată proporțional (prezenți `#3f9a6b`, absenți `#e9527c`, motivați `#e0b400`, nemarcați gol pe `#f1ece2`).
 - **Legenda** (Prezent/Absent/Motivat) din bara de filtre dispare — contoarele o înlocuiesc. „Foi pe săptămână” rămâne la dreapta (`margin-left:auto`).
 - **Grupa = un chenar în culoarea grupei.** Fiecare secțiune: fundal `-soft` al tonului grupei, `border:1.5px solid` ton mediu (Mars `#f6d3ad`, Soare `#c6e6d3`, Luna `#f6e3a6`, Stele `#f6c6d5`), radius 22, padding `14px 16px 16px`, gap 12. Între secțiuni gap 18.
-- **Antet secțiune:** numele grupei Baloo 19/800 în `-ink` (nu Badge), apoi „N din M prezenți · K nemarcați” 13px/700 `#5b666e`; dreapta buton pastilă `5px 12px`, fundal `rgba(255,255,255,.75)`, 12px/800 în `-ink`-ul grupei: „Nemarcații (K) → prezenți”; la K = 0 textul „Toți sunt marcați” `#9aa3a9`, dezactivat.
+- **Antet secțiune:** numele grupei Baloo 19/800 în `-ink` (nu Badge), apoi „N din M prezenți · K nemarcați” 13px/700 `#5b666e`. Nimic la dreapta.
+- **DECIZIE 29.09 — fără marcare în masă.** Se scot complet: butonul din antet „Nemarcații (N) → prezenți” (`markAllUnmarkedPresent`), acțiunea de pe grupă (`markGroupPresent`, `sectionAction`), toastul de acțiune în masă și testele lor. Fiecare copil se marchează manual (Prezent → Absent → Motivat → Nemarcat); cine nu e atins rămâne **nemarcat** (nu prezent implicit). Specul `19-prezenta.md` (secțiunile despre „Toți nemarcații → prezenți”, „Toți prezenți” pe grupă și criteriul aferent) e înlocuit de acest punct.
 - **Placa copilului:** avatar **38** (acum 32), fundal = ton puțin mai închis decât secțiunea (Mars `#f8dcbc`, Soare `#cfe9da`…), Baloo 14/800; numele 13px/**800**; starea **sub nume**, 11px/800 în culoarea stării (acum e pe același rând, `--muted`). Prezent: fundal `#f3faf6`, border `#bfe3cf` (mai deschis decât `--mint`). Nemarcat: alb, border `--border`.
-- **Antet pagină — LIPSESC ÎN COD (prioritar, raportat de utilizator 29.09):** grupul „↶ Anulează | N ▾” (Ctrl+Z; ▾ deschide „Modificări azi” cu fiecare acțiune, oră, „Anulează” / „Anulează până aici”, „Anulează tot”) și toastul slate după o acțiune în masă („12 copii marcați prezenți · grupa Mars” + „↶ Anulează”). Indicatorul de salvare stă imediat după titlu.
-  - Implementare: `useAttendanceDay` ține o stivă `history: {label, time, prev: Map<childId, status|null>, bulk}` pentru ziua afișată; fiecare `cycle`, `setReason`, `markGroupPresent`, `markAllUnmarkedPresent` împinge o intrare. „Anulează” = scrie înapoi `prev` prin aceeași mutație (nu ștergere locală), ca să treacă prin sync și Istoric. „Anulează până aici” = pop până la index. Stiva se golește la schimbarea zilei. Ctrl+Z pe pagină = ultima intrare.
+- **Antet pagină — LIPSESC ÎN COD (prioritar, raportat de utilizator 29.09):** grupul „↶ Anulează | N ▾” (Ctrl+Z; ▾ deschide „Modificări azi” cu fiecare acțiune, oră, „Anulează” / „Anulează până aici”, „Anulează tot”). Indicatorul de salvare stă imediat după titlu.
+  - Implementare: `useAttendanceDay` ține o stivă `history: {label, time, prev: Map<childId, status|null>, bulk}` pentru ziua afișată; fiecare `cycle` și `setReason` împinge o intrare. „Anulează” = scrie înapoi `prev` prin aceeași mutație (nu ștergere locală), ca să treacă prin sync și Istoric. „Anulează până aici” = pop până la index. Stiva se golește la schimbarea zilei. Ctrl+Z pe pagină = ultima intrare.
   - Același mecanism în Luna (18b) pentru clicurile din grilă.
-  - Test: marchez 3 copii, „Nemarcații → prezenți” pe o grupă, Anulează → doar grupa revine; „Anulează tot” → starea de la intrarea pe zi.
+  - Test: marchez 3 copii, Anulează → doar ultimul revine; „Anulează până aici” pe primul → toți trei revin; „Anulează tot” → starea de la intrarea pe zi.
 - **Lipsește în cod:** nota de jos (fundal `--yellow-soft`, radius 14): „**Motivat** cere un motiv scurt…”.
 - Spațiere: `.root` gap **18** (acum 12).
 - Criterii: la 1440px, primul copil apare deasupra liniei de 400px; fiecare grupă se distinge prin chenar; undo/istoric funcționează ca în 18a.
@@ -185,7 +199,7 @@ Referință: `Administrare.dc.html#10c`, `#10b`.
 ## A8. Diferențe mici (un singur commit)
 - **Antet (toate modulele):** eyebrow-ul nu mai conține filiala („Organizare”, nu „Organizare · Filiala 1 Buiucani”). Filiala apare doar în butonul-dropdown de filiale din meniul lateral. Actualizează și `screens/17-filiale.md`.
 - **Dashboard:** valorile Cheltuieli / Diferență / Avansuri 30px (doar Încasări 36); textul CTA din „Necesită atenție” 13px.
-- **Dashboard · curs €** (există în cod, adăugat acum în design): pastilă între căutare și selectorul de lună — cerc 30 `--mint-soft` cu „€” `--mint-ink`, „19,92 lei” Baloo 15/800, sub el „Curs BNR · azi” 11px/700 `#9aa3a9`; padding `6px 14px 6px 6px`, radius pill, border `--border`. Click = comportamentul actual din cod.
+- **Dashboard · curs €** (există în cod, adăugat acum în design): pastilă între căutare și selectorul de lună — cerc 30 `--mint-soft` cu „€” `--mint-ink`, „19,92 lei” Baloo 15/800, sub el „**Curs BNM** · azi” 11px/700 `#9aa3a9`, apoi „↗” 13px/800 `#9aa3a9`; padding `6px 12px 6px 6px`, radius pill, border `--border`. **Toată pastila e link spre `https://www.bnm.md/`** (tab nou, `rel="noopener"`), ca să se verifice rapid cursul. Peste tot în aplicație se scrie **BNM**, niciodată „BNR” — caută și înlocuiește în cod și în texte.
 - **Dashboard · Evoluția încasărilor:** două coloane pe lună, una lângă alta (gap 3): Încasări `#f6c98f` (luna curentă `--orange`) și Cheltuieli `#a8d8be` (luna curentă `#5fb58a`); fiecare max. 13px lățime, radius `6px 6px 2px 2px`; lună fără date = 4–6px `#f1ece2`. Comutatorul Încasări/Cheltuieli dispare, în locul lui legenda cu pătrate 10px. Tooltip pe lună: „<Lună> · diferență X lei”. Aceeași scală pentru ambele serii.
 - **Copii 2a:** scoate pastila „Scadent”; antet coloană „Părinte · telefon”; sub nume „Contract #N · vârstă”. Coloana arată contactul principal (nume + telefon); dacă există al doilea părinte, insignă „+1” (11px/800, `#f4f1ea`, pill) lângă nume, cu tooltip „Al doilea părinte: <nume> · <telefon>”. Căutarea găsește și după al doilea părinte.
 - **Grupe 4a/4b · mutarea grupelor:** în timpul tragerii, cardul sursă devine loc gol (opacity .45, border 2px dashed în tonul grupei); imaginea de tragere e o copie a cardului rotită −2°, border 2px `--orange`, umbră `0 18px 36px rgba(58,71,80,.22)` (ca la copii); ținta primește inel `0 0 0 3px var(--orange)`. Tranziție 120ms pe umbră/opacitate.
@@ -210,6 +224,31 @@ Raportat 29.09: în Achitări apare cardul „Altele”; o plată mixtă (parte 
   6. `findDuplicatePayment` compară `payment.method` (câmp vechi) — trece pe tenders normalizate.
   7. Plata mixtă nouă (15b): „Metodă” rămâne un singur câmp; link mic „Împarte pe metode” sub Sumă deschide două/trei rânduri Cash/Card/Transfer cu sumă, totalul trebuie să dea Suma. (Modelul `tenders[]` o suportă deja.)
 - Criterii: Cash + Card + Transfer = Total pe orice filtru; „Altele” nu mai apare nicăieri; testul „arată un card Altele…” din `PaymentsPage.test.tsx` se înlocuiește cu unul care verifică împărțirea unei plăți mixte; închiderea zilei pe bon dă aceleași sume.
+
+## B2. Ștergere în masă din arhivă (15h) — `shared/ui/SelectionBar`, `ConfirmDeleteDialog`, Copii / Achitări / Cheltuieli / Vizite
+Referință: `Formulare.dc.html#15h`. Cerut 29.09.
+- Cu filtrul „Arhivate”, bara de selecție arată: „N selectați” · Dezarhivează · Exportă · **Șterge definitiv** (pastilă `#e9527c`, text alb) · „Anulează selecția ×”. În „Active” rămâne doar „Arhivează”. În „Toate”, „Șterge definitiv” apare doar când **toate** rândurile selectate sunt arhivate (altfel ascuns).
+- Confirmare: `ConfirmDeleteDialog` existent („Scrie ȘTERGE”), titlu „Ștergi definitiv N <copii|achitări|cheltuieli|vizite>?”, lista numelor (max. 5 + „și încă N”), ce se șterge odată cu ele, buton `--pink-ink` „Șterge N …”.
+- Ce se întâmplă cu legăturile: **Copil** → se șterg prezența, notele, documentele, plătitorii reținuți; achitările rămân, cu copil neasociat (apar în Asociere achitări). **Achitare** → se șterg repartizările ei; obligația lunii se recalculează. **Cheltuială** și **Vizită** → doar înregistrarea.
+- Backend: o singură mutație pe lot (`/api/record-delete` cu `ids[]` sau un endpoint nou de lot), într-o tranzacție; refuză orice id care nu e arhivat (409). Intră în Istoric ca o intrare per înregistrare, și în outbox-ul de sincronizare.
+- Criterii: selectez 3 arhivate → Șterge definitiv → scriu ȘTERGE → dispar din listă și din Istoric apar 3 ștergeri; un rând activ în selecție ascunde butonul; testul de backend refuză ștergerea unui neachivat.
+
+## B3. Serviciu pe achitare + mutarea încasărilor de bazin din Cheltuieli — decis 29.09
+Referință: `Achitari.dc.html#5a` (pastila + filtrul Serviciu), `Formulare.dc.html#15b` (câmpul Serviciu).
+- **Model:** `Payment.service: string` (id din lista de servicii), obligatoriu, implicit `gradinita`. Kind nou `services` (`id`, `name`, `order`, `tone` din cele 8 tonuri, `priceMode: 'free'|'fixed'`, `price?`, `hidden`, `system: boolean`), per filială, sincronizat. Pornește cu **Grădiniță** și **Bazin** (`system: true` — nu se șterg, nu se redenumesc id-urile, pentru că taxa și Bazinul depind de ele).
+- **Servicii noi (10d, `Administrare.dc.html#10d`):** filă „Servicii” în Backup și setări. Listă cu mâner de reordonare, pastila în tonul serviciului, „implicit” la Grădiniță, numărul de achitări, stare Activ/Ascuns, „Editează”. „+ Serviciu” deschide Drawer 480: Nume (obligatoriu, unic), Culoare (8 tonuri), Suma la achitare (Liberă / Preț fix + preț), previzualizarea pastilei. Un serviciu cu achitări nu se șterge, doar se ascunde (nu mai apare în Achitare nouă, rămâne în filtre și în istoricul plăților). Serviciile nesistem nu au obligație: nu intră în „Rest de plată” și nici în Situația plăților, doar în Achitări, Dashboard (Încasări) și Raport contabil.
+- **O achitare = un serviciu.** Dacă părintele plătește și grădinița, și bazinul, se fac două achitări. Repartizările unei achitări sunt toate pe serviciul ei.
+- **Obligația:** serviciul Grădiniță acoperă taxa lunară (`feeHistory`); Bazin acoperă `charges` de bazin (rândurile din Bazin/Situația/fișă). `obligation()` filtrează plățile după serviciu, ca o plată de bazin să nu scadă taxa grădiniței și invers.
+- **Migrare (cu backup + Istoric, o singură dată):**
+  1. Toate achitările existente primesc `service: 'gradinita'`.
+  2. Cheltuielile care sunt de fapt încasări de bazin (categoria Bazin / descrierea conține „bazin”) — **întâi scriptul de diagnostic doar citire**, listă în `INTREBARI.md` cu dată, sumă, descriere, metodă; utilizatorul confirmă lista.
+  3. După confirmare: fiecare devine o **achitare fără copil** (`childId: ''`, `service: 'bazin'`, aceeași dată, sumă, metodă, `sourceName` = descrierea), iar cheltuiala se arhivează cu nota „mutată la Achitări · <id>”. Apar în **Asociere achitări**, unde se potrivesc cu copiii (sugestiile iau în calcul doar copiii cu programări la bazin în luna respectivă).
+  4. Totalurile Dashboard/Raport contabil se schimbă: acele sume trec din Cheltuieli în Încasări. Notează în `COADA-DE-LUCRU.md` diferența pe fiecare lună afectată.
+- **UI:**
+  - 15b: câmp „Serviciu” (SegmentedControl, cu serviciile din listă) sub Copil. „+ Plată” din fișă pornește cu Grădiniță; „Încasează” din Bazin pornește cu Bazin. Scurtăturile 1/2/3 luni apar doar la Grădiniță; la Bazin, scurtătura e „restul lunii · X lei” din `charges`.
+  - 5a: **coloană separată „Serviciu”**, după Copil (grid `44px 0.9fr 1.6fr 0.9fr 1.4fr 0.8fr 1fr 1.1fr 48px`): pastilă 12px/800, `4px 10px`, ca la Metodă — Grădiniță `--neutral-soft`/`#5b666e`, Bazin `--blue-soft`/`--blue-ink`; coloana se poate sorta; grup nou în FilterPills „Serviciu: Toate / Grădiniță / Bazin”. Cardurile Cash/Card/Transfer respectă filtrul Serviciu.
+  - Bonul de zi, Raportul contabil și exportul primesc coloana Serviciu.
+- Criterii: o plată de bazin nu scade taxa grădiniței; Asociere achitări arată încasările de bazin mutate; după migrare nicio cheltuială activă nu mai e încasare de bazin; testele `usePayments`/`obligation` acoperă filtrarea pe serviciu.
 
 ## A9. Documente pe fișă (backend + UI) — după A3
 Spec `screens/28-fisa-copilului-date.md`: PDF/JPG/PNG ≤ 10 MB, stocare pe server, sincronizate, stare descărcare vizibilă. Kind separat de `children` (ca notele și `payer_aliases`), endpointuri upload/download cu validare tip+mărime. UI: grilă 3 col, rând fișier padding `10px 12px` radius 14 fundal `--cream` border `#f1e8d6`, icon tip 34×40 radius 8, nume 13/800 ellipsis, dată/stare 11px.

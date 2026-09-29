@@ -45,7 +45,7 @@
         <div style="display:flex;align-items:flex-end;gap:16px;padding-bottom:10px;border-bottom:2px solid #ef8a1d">
           <img src="web/assets/startica-logo.svg" alt="Startica" style="height:28px;width:auto"></img>
           <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;border-left:1px solid #ede7dc"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1.1">Prezența · Grupa {{ pvName }} · {{ wkTitle }}</span><span style="font-size:11px;color:#3a4750"><b>Educator principal:</b> {{ pvEdu }}{{ pvAsist }} · {{ pvMeta }}</span></div>
-          <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:10px;color:#3a4750"><span style="font-weight:800">Filiala Centru</span><span>Scrie: <b>✓</b> prezent · <b>A</b> absent · <b>M</b> motivat</span></div>
+          <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:10px;color:#3a4750"><span style="font-weight:800">Filiala Buiucani</span><span>Scrie: <b>✓</b> prezent · <b>A</b> absent · <b>M</b> motivat</span></div>
         </div>
         <div style="display:flex;flex-direction:column">
           <div style="display:grid;grid-template-columns:{{ wkCols }};border-bottom:1.5px solid #3a4750;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#3a4750"><span style="padding:6px 0;align-self:end">Nr.</span><span style="padding:6px 8px;align-self:end">Copil</span><sc-if value="{{ wkInfo }}" hint-placeholder-val="{{ true }}"><span style="padding:6px 8px;align-self:end">Alergii · detalii importante</span></sc-if><sc-for list="{{ wkDays }}" as="d" hint-placeholder-count="5"><span style="padding:4px 0;border-left:1px solid #3a4750;text-align:center;display:flex;flex-direction:column;line-height:1.25">{{ d.name }}<span style="font-weight:700;letter-spacing:0">{{ d.date }}</span></span></sc-for></div>
@@ -86,9 +86,9 @@
 </section>
 <section style="padding:32px 72px 96px;display:flex;flex-direction:column;gap:32px">
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
-    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><span style="font-weight:800;color:#3a4750">Prezența</span><a href="Bazin.dc.html">Bazin</a><a href="Vizite.dc.html">Vizite</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Bon 58mm.dc.html">Bon 58 mm</a><a href="Incarcare.dc.html">Încărcare</a><a href="Prima pornire.dc.html">Prima pornire</a><a href="Responsive.dc.html">Ecrane mici</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Prezența</h1>
-    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Pagină nouă în meniu, sub Grupe. <a href="#18a">18a</a>: ziua de azi, pe grupe. Un clic pe copil îi schimbă starea: Prezent → Absent → Motivat → nemarcat. Fiecare acțiune se poate anula: „↶ Anulează” (Ctrl+Z) sau lista „Modificări azi” din antet, cu „Anulează până aici”. „Toți nemarcații → prezenți” atinge doar nemarcații și lasă un toast cu Anulează, care nu dispare singur. <a href="#18b">18b</a>: luna unei grupe, pe zile, pentru o privire de ansamblu și pentru tipărit. Prezența nu schimbă taxa; e doar evidență.</p>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Pagină nouă în meniu, sub Grupe. <a href="#18a">18a</a>: ziua de azi, pe grupe. Un clic pe copil îi schimbă starea: Prezent → Absent → Motivat → nemarcat. Fiecare acțiune se poate anula: „↶ Anulează” (Ctrl+Z) sau lista „Modificări azi” din antet, cu „Anulează până aici”. Nu există marcare în masă: fiecare copil se marchează manual, iar cine nu e marcat rămâne nemarcat. <a href="#18b">18b</a>: luna unei grupe, pe zile, pentru o privire de ansamblu și pentru tipărit. Prezența nu schimbă taxa; e doar evidență.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
@@ -120,29 +120,33 @@
                 </div>
               </sc-if>
             </div>
-            <span onClick="{{ markAll }}" style="padding:8px 18px;border-radius:999px;background:{{ markAllBg }};color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:{{ markAllSh }};white-space:nowrap;cursor:{{ markAllCur }};user-select:none">{{ markAllLbl }}</span>
-          </header>
+                      </header>
           <div style="padding:28px 40px 40px;display:flex;flex-direction:column;gap:18px">
-            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
-              <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
-                <div style="padding:16px 20px;border-radius:20px;background:{{ s.bg }};border:1px solid {{ s.bd }};display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:{{ s.fg }}">{{ s.l }}</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;line-height:1.1">{{ s.v }}</span></div>
-              </sc-for>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:12px 18px;background:#fff;border-radius:18px;border:1px solid #ede7dc">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:8px;padding:2px 18px 2px 0;margin-right:10px;border-right:{{ s.sep }}"><span style="width:10px;height:10px;border-radius:50%;background:{{ s.dot }};border:1.5px solid {{ s.dotBd }};box-sizing:border-box"></span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;line-height:1;color:{{ s.num }}">{{ s.v }}</span><span style="font-size:13px;font-weight:700;color:#6b7780">{{ s.l }}</span></div>
+                </sc-for>
+                <span style="margin-left:auto;font-size:13px;font-weight:800;color:#2e6b4c">{{ pctLbl }}</span>
+              </div>
+              <div style="display:flex;height:6px;border-radius:99px;overflow:hidden;background:#f1ece2">
+                <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4"><span style="width:{{ s.w }}%;background:{{ s.bar }}"></span></sc-for>
+              </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;background:#fff;border-radius:18px;border:1px solid #ede7dc">
               <span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Grupa</span>
               <sc-for list="{{ pills }}" as="p" hint-placeholder-count="5">
                 <span onClick="{{ p.pick }}" style="padding:6px 14px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ p.label }}</span>
               </sc-for>
-              <span style="margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:#6b7780"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#3f9a6b"></span>Prezent</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#e9527c"></span>Absent</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#e0b400"></span>Motivat</span></span>
-              <a href="#18c" style="margin-left:8px;padding:6px 14px;border-radius:999px;background:#fff;border:1.5px solid #ef8a1d;color:#a34f00;font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">Foi pe săptămână</a>
+              <a href="#18c" style="margin-left:auto;padding:6px 14px;border-radius:999px;background:#fff;border:1.5px solid #ef8a1d;color:#a34f00;font-weight:800;font-size:13px;text-decoration:none;white-space:nowrap">Foi pe săptămână</a>
             </div>
             <sc-for list="{{ groups }}" as="g" hint-placeholder-count="2">
-              <div style="display:flex;flex-direction:column;gap:10px">
-                <div style="display:flex;align-items:center;gap:10px;padding:0 4px"><span style="font-size:12px;font-weight:800;padding:4px 12px;border-radius:999px;background:{{ g.bg }};color:{{ g.fg }}">{{ g.name }}</span><span style="font-size:13px;color:#6b7780">{{ g.summary }}</span><span onClick="{{ g.allPresent }}" style="margin-left:auto;font-size:13px;font-weight:800;color:#a34f00;cursor:pointer">Toată grupa prezentă</span></div>
+              <div style="display:flex;flex-direction:column;gap:12px;padding:14px 16px 16px;border-radius:22px;background:{{ g.bg }};border:1.5px solid {{ g.bd }}">
+                <div style="display:flex;align-items:baseline;gap:10px;padding:0 4px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:19px;color:{{ g.fg }}">{{ g.name }}</span><span style="font-size:13px;font-weight:700;color:#5b666e">{{ g.summary }}</span></div>
                 <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px">
                   <sc-for list="{{ g.kids }}" as="k" hint-placeholder-count="10">
                     <div onClick="{{ k.cycle }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:{{ k.bg }};border:1.5px solid {{ k.bd }};cursor:pointer;user-select:none">
-                      <span style="width:38px;height:38px;border-radius:50%;background:{{ g.bg }};color:{{ g.fg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:14px;flex-shrink:0;opacity:{{ k.op }}">{{ k.ini }}</span>
+                      <span style="width:38px;height:38px;border-radius:50%;background:{{ g.avBg }};color:{{ g.fg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:14px;flex-shrink:0;opacity:{{ k.op }}">{{ k.ini }}</span>
                       <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.name }}</span><span style="font-size:11px;font-weight:800;color:{{ k.fg }}">{{ k.label }}</span></div>
                       <span style="width:22px;height:22px;border-radius:50%;background:{{ k.dot }};border:1.5px solid {{ k.dotBd }};color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ k.mark }}</span>
                     </div>
@@ -150,7 +154,7 @@
                 </div>
               </div>
             </sc-for>
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:#fdf3d2;font-size:13px"><span style="font-weight:800">Motivat</span><span style="color:#5b666e">cere un motiv scurt (boală, concediu cu părinții). Motivul apare în fișa copilului, la Prezență.</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:#fdf3d2;font-size:13px"><span style="font-weight:800">Fiecare copil se marchează separat.</span><span style="color:#5b666e">Un clic: Prezent → Absent → Motivat → Nemarcat. Cine nu e marcat rămâne nemarcat. Motivat cere un motiv scurt (boală, concediu cu părinții). Motivul apare în fișa copilului, la Prezență.</span></div>
           </div>
         </main>
       </div>
@@ -269,19 +273,19 @@ class Component extends DCLogic {
     };
   }
   renderVals() {
-    const T = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'], Luna: ['#fdf3d2', '#7a5d00'], Stele: ['#fce9ef', '#b0284f'] };
+    const T = { Mars: ['#fcead3', '#a34f00', '#f6d3ad', '#f8dcbc'], Soare: ['#e7f4ec', '#2e6b4c', '#c6e6d3', '#cfe9da'], Luna: ['#fdf3d2', '#7a5d00', '#f6e3a6', '#f8e7b0'], Stele: ['#fce9ef', '#b0284f', '#f6c6d5', '#f8d0dd'] };
     const roster = {
       Mars: ['Avram Maria', 'Bivol Eva', 'Conea Timur', 'Cujba Ovidiu', 'Hudic Amedeia', 'Lungu Matei', 'Muradu Letizia', 'Popa David', 'Rusu Ana', 'Ursu Sofia'],
       Soare: ['Bagnyuk Timur', 'Brinza Iustina', 'Bivol Rares', 'Coceva Alisa', 'Ciobanu Luca', 'Dodon Mira', 'Gutu Andrei', 'Istrati Ema', 'Moraru Tudor', 'Sirbu Iana']
     };
-    const seed = { 'Conea Timur': 'a', 'Rusu Ana': 'm', 'Popa David': '', 'Ursu Sofia': '', 'Dodon Mira': 'a', 'Istrati Ema': '', 'Moraru Tudor': 'm', 'Sirbu Iana': '' };
+    const seed = { 'Avram Maria': 'p', 'Bivol Eva': 'p', 'Cujba Ovidiu': 'p', 'Hudic Amedeia': 'p', 'Lungu Matei': 'p', 'Muradu Letizia': 'p', 'Conea Timur': 'a', 'Rusu Ana': 'm', 'Bagnyuk Timur': 'p', 'Brinza Iustina': 'p', 'Bivol Rares': 'p', 'Coceva Alisa': 'p', 'Ciobanu Luca': 'p', 'Gutu Andrei': 'p', 'Dodon Mira': 'a', 'Moraru Tudor': 'm' };
     const S = { p: ['Prezent', '#f3faf6', '#bfe3cf', '#2e6b4c', '#3f9a6b', '#3f9a6b', '✓', 1], a: ['Absent', '#fce9ef', '#f3a6be', '#b0284f', '#e9527c', '#e9527c', '×', .55], m: ['Motivat', '#fdf3d2', '#f0d77a', '#7a5d00', '#e0b400', '#e0b400', 'M', .55], '': ['Nemarcat', '#fff', '#ede7dc', '#9aa3a9', '#fff', '#c9c4ba', '', 1] };
     const next = { p: 'a', a: 'm', m: '', '': 'p' };
-    const get = n => this.state.st[n] ?? (n in seed ? seed[n] : 'p');
+    const get = n => this.state.st[n] ?? (n in seed ? seed[n] : '');
     const SL = { p: 'Prezent', a: 'Absent', m: 'Motivat', '': 'Nemarcat' };
     const set = (names, v, bulkLabel) => (this.pulseSave(), this.setState(s => {
       const st = { ...s.st }, prev = {}, from = {};
-      names.forEach(n => { prev[n] = s.st[n]; from[n] = s.st[n] ?? (n in seed ? seed[n] : 'p'); st[n] = typeof v === 'function' ? v(n) : v; });
+      names.forEach(n => { prev[n] = s.st[n]; from[n] = s.st[n] ?? (n in seed ? seed[n] : ''); st[n] = typeof v === 'function' ? v(n) : v; });
       const one = names.length === 1 ? names[0] : null;
       const label = bulkLabel ?? (one + ': ' + SL[from[one]] + ' → ' + SL[st[one]]);
       const d = new Date(), time = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
@@ -306,11 +310,13 @@ class Component extends DCLogic {
       markAll: () => bulk(all, 'toate grupele'), nmCount: cnt(''), markAllLbl: cnt('') ? 'Nemarcații (' + cnt('') + ') → prezenți' : 'Toți sunt marcați',
       markAllBg: cnt('') ? '#ef8a1d' : '#c9c4ba', markAllSh: cnt('') ? '0 4px 10px rgba(239,138,29,.28)' : 'none', markAllCur: cnt('') ? 'pointer' : 'default'
     };
-    const stats = [['Prezenți', cnt('p'), '#e7f4ec', '#e7f4ec', '#2e6b4c'], ['Absenți', cnt('a'), '#fff', '#ede7dc', '#b0284f'], ['Motivați', cnt('m'), '#fff', '#ede7dc', '#7a5d00'], ['Nemarcați', cnt(''), '#fff', '#ede7dc', '#6b7780']].map(([l, v, bg, bd, fg]) => ({ l, v: String(v), bg, bd, fg }));
+    const tot = all.length;
+    const stats = [['prezenți', cnt('p'), '#3f9a6b', '#3f9a6b', '#2e6b4c', '#3f9a6b'], ['absenți', cnt('a'), '#e9527c', '#e9527c', '#b0284f', '#e9527c'], ['motivați', cnt('m'), '#e0b400', '#e0b400', '#7a5d00', '#e0b400'], ['nemarcați', cnt(''), '#fff', '#c9c4ba', '#3a4750', 'transparent']].map(([l, v, dot, dotBd, num, bar], i) => ({ l, v: String(v), dot, dotBd, num: v ? num : '#c9c4ba', bar, w: tot ? (v / tot * 100).toFixed(1) : 0, sep: i < 3 ? '1px solid #f3eee5' : 'none' }));
+    const pctLbl = Math.round(cnt('p') / tot * 100) + '% prezenți azi';
     const pills = [['all', 'Toate', '#f4f1ea', '#3a4750'], ...Object.keys(roster).map(k => [k, k, T[k][0], T[k][1]])].map(([k, label, bg, fg]) => ({ label, bg: this.state.g === k ? '#3a4750' : bg, fg: this.state.g === k ? '#fff' : fg, pick: () => this.setState({ g: k }) }));
     const groups = Object.entries(roster).filter(([k]) => this.state.g === 'all' || this.state.g === k).map(([name, kids]) => {
       const pr = kids.filter(n => get(n) === 'p').length, nm = kids.filter(n => get(n) === '').length;
-      return { name, bg: T[name][0], fg: T[name][1], summary: pr + ' din ' + kids.length + ' prezenți' + (nm ? ' · ' + nm + ' nemarcați' : ''), allPresent: () => bulk(kids, 'grupa ' + name),
+      return { name, bg: T[name][0], fg: T[name][1], bd: T[name][2], avBg: T[name][3], summary: pr + ' din ' + kids.length + ' prezenți' + (nm ? ' · ' + nm + ' nemarcați' : ''), allPresent: () => bulk(kids, 'grupa ' + name), actLbl: nm ? 'Nemarcații (' + nm + ') → prezenți' : 'Toți sunt marcați', actFg: nm ? T[name][1] : '#9aa3a9', actCur: nm ? 'pointer' : 'default',
         kids: kids.map(n => { const s = S[get(n)]; return { name: n, ini: n.split(' ').map(w => w[0]).join('').slice(0, 2), label: s[0], bg: s[1], bd: s[2], fg: s[3], dot: s[4], dotBd: s[5], mark: s[6], op: s[7], cycle: () => set([n], next[get(n)]) }; }) };
     });
     const wk = d => { const w = new Date(2026, 8, d).getDay(); return w === 0 || w === 6; };
@@ -328,7 +334,7 @@ class Component extends DCLogic {
       });
       return { name, cells, total: t + '/' + w };
     });
-    return { ...this.wk2(), ...undoVals, ...saveVals, stats, pills, groups, days, month, dayTotals: Array.from({ length: 30 }, (_, i) => wk(i + 1) || i + 1 > 24 ? '' : String(dayTotals[i] || 0)) };
+    return { ...this.wk2(), ...undoVals, ...saveVals, stats, pctLbl, pills, groups, days, month, dayTotals: Array.from({ length: 30 }, (_, i) => wk(i + 1) || i + 1 > 24 ? '' : String(dayTotals[i] || 0)) };
   }
 }
 </script>

@@ -20,7 +20,7 @@ Implementează exact arborele de componente și CSS-ul din spec. Nu inventa elem
 Rulează npm run typecheck && npm test în webapp/.
 Bifează fiecare criteriu de acceptare din spec și raportează-le pe cele nebifate.
 ```
-**Un ecran per sesiune.** Dacă spec-ul și `.dc.html` nu se potrivesc, spec-ul are prioritate. Notează diferența în mesajul de commit.
+**Un ecran per sesiune.** Ordinea de prioritate la conflict: `DECIZII.md` > `ALINIERE-DESIGN.md` > artboard-ul `.dc.html` > spec-ul din acest folder. Notează diferența în mesajul de commit.
 
 ## Index
 | # | Ecran | Referință | Spec |
@@ -63,3 +63,8 @@ Pentru ca Claude Code să găsească singur spec-urile, copiază `CLAUDE-md-snip
 - `03-grupe.md` — **rescris (v2)** pentru 7+ grupe: Tabla implicită, „+ Grupă nouă” în antet (4a, 4b). Varianta 3a/3b a fost scoasă.
 - `26-foaie-saptamana.md` — foaia de prezență pe săptămână, A4 orizontal, câte una pe grupă (18c, 18d)
 - `27-componente-comune.md` — PersonCell, DataTable.groupBy, ListToolbar, ProfileLayout: Copii și Personal folosesc aceleași piese
+
+## Adăugate 29.09.2026
+- `28-fisa-copilului-date.md` — modelul de date al fișei (alergii, relații, persoane autorizate, note, documente)
+- `29-copil-nou-diferente.md` — diferențele 15a față de cod
+- Specurile 02, 03, 05, 06, 08, 09, 13, 17, 19, 20, 23, 24 au un bloc „Actualizat 29.09.2026” sus.

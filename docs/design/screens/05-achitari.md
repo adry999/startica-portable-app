@@ -1,5 +1,7 @@
 # 05 — Achitări (Tabel / Pe luni)
 
+> **Actualizat 29.09.2026:** Fără cardul/bucket-ul „Altele” (B1). Coloană și filtru nou „Serviciu” (B3). Ștergere definitivă din „Arhivate” (B2). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Achitari.dc.html#5a` (Tabel) și `#5b` (Pe luni). **Depinde de:** `00-comun.md` A, B, D, E.
 
 ## 1. Fișiere

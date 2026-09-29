@@ -1,5 +1,7 @@
 # 02 — Copii → listă
 
+> **Actualizat 29.09.2026:** Coloana „Părinte · telefon”: contact principal + insignă „+1” (DECIZII 8, ALINIERE A8). Bara de selecție în „Arhivate”: Dezarhivează + Șterge definitiv (B2). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Copii.dc.html#2a`. **Depinde de:** `00-comun.md` A, B, C, E.
 
 ## 1. Fișiere

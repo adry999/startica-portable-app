@@ -10,7 +10,7 @@
 <helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
 <section style="padding:64px 72px 48px;display:flex;flex-direction:column;gap:32px">
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
-    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><span style="font-weight:800;color:#3a4750">Copii</span><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Bazin.dc.html">Bazin</a><a href="Vizite.dc.html">Vizite</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Bon 58mm.dc.html">Bon 58 mm</a><a href="Incarcare.dc.html">Încărcare</a><a href="Prima pornire.dc.html">Prima pornire</a><a href="Responsive.dc.html">Ecrane mici</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Copii — listă</h1>
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#2a">2a</a>: tabel curățat, acțiunile ascunse în „⋯”, click pe rând deschide fișa.</p>
   </div>
@@ -49,7 +49,7 @@
                 <div onClick="{{ k.open }}" style="display:grid;grid-template-columns:44px 2fr 2fr 1fr 0.9fr 1.3fr 48px;align-items:center;padding:12px 20px;border-bottom:1px solid #f3eee5;background:{{ k.rowBg }};cursor:pointer">
                   <span style="width:16px;height:16px;border-radius:5px;border:1.5px solid {{ k.cbBorder }};background:{{ k.cbBg }};color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ k.cbMark }}</span>
                   <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:38px;height:38px;border-radius:50%;background:{{ k.avBg }};color:{{ k.avFg }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">{{ k.ini }}</span><div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:14px">{{ k.name }}</span><span style="font-size:12px;color:#9aa3a9">Contract #{{ k.nr }} · {{ k.age }}</span></div></div>
-                  <div style="display:flex;flex-direction:column"><span style="font-size:14px">{{ k.parent }}</span><span style="font-size:12px;color:#6b7780">{{ k.phone }}</span></div>
+                  <div title="{{ k.p2tip }}" style="display:flex;flex-direction:column;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><span style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.parent }}</span><sc-if value="{{ k.hasP2 }}"><span style="flex-shrink:0;font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#f4f1ea;color:#6b7780">+1</span></sc-if></div><span style="font-size:12px;color:#6b7780">{{ k.phone }}</span></div>
                   <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ k.gBg }};color:{{ k.gFg }}">{{ k.group }}</span>
                   <span style="font-size:14px;color:#6b7780">ziua {{ k.due }}</span>
                   <span style="justify-self:start;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ k.pBg }};color:{{ k.pFg }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ k.pFg }}"></span>{{ k.pay }}</span>
@@ -286,19 +286,19 @@ class Component extends DCLogic {
     const pay = { 'Achitat': ['#e7f4ec', '#2e6b4c'], 'Parțial': ['#fdf3d2', '#7a5d00'], 'Neachitat': ['#fce9ef', '#b0284f'], 'Scadent 26 sep': ['#f4f1ea', '#6b7780'] };
     const raw = [
       [3, 'Cerba Alexander', '4 ani', 'Cerba Pavel', '068 833 888', 'Mars', 26, 'Scadent 26 sep'],
-      [1, 'Hudic Amedeia', '5 ani', 'Hudic Nicolae / Daniela', '684 104 11', 'Mars', 14, 'Achitat'],
-      [57, 'Avram Maria', '3 ani', 'Avram Valentin', '691 115 46', 'Soare', 6, 'Parțial'],
+      [1, 'Hudic Amedeia', '5 ani', 'Hudic Nicolae', '684 104 11', 'Mars', 14, 'Achitat', 'Hudic Daniela · 684 104 12'],
+      [57, 'Avram Maria', '3 ani', 'Avram Valentin', '691 115 46', 'Soare', 6, 'Parțial', 'Avram Cristina · 691 115 47'],
       [78, 'Bagnyuk Timur', '4 ani', 'Bagnyuk Iulia', '790 537 80', 'Fără grupă', 21, 'Neachitat'],
       [34, 'Balan Ilinca', '3 ani', 'Balan Lilia', '610 004 44', 'Fără grupă', 29, 'Achitat'],
       [21, 'Balanuta Vera', '5 ani', 'Balanuta Dumitru', '693 333 09', 'Fără grupă', 9, 'Achitat'],
-      [44, 'Coceva Alisa', '4 ani', 'Coceva Elena', '069 214 552', 'Mars', 15, 'Achitat'],
+      [44, 'Coceva Alisa', '4 ani', 'Coceva Elena', '069 214 552', 'Mars', 15, 'Achitat', 'Coceva Ion · 069 214 553'],
       [45, 'Conea Timur', '6 ani', 'Conea Andrei', '079 331 870', 'Mars', 20, 'Neachitat']
     ];
     const sel = [1, 3];
-    const kids = raw.map(([nr, name, age, parent, phone, group, due, p], i) => {
+    const kids = raw.map(([nr, name, age, parent, phone, group, due, p, p2], i) => {
       const ini = name.split(' ').map(s => s[0]).join('');
       const on = sel.includes(i);
-      return { open: () => { window.location.hash = '2b'; }, nr, name, age, parent, phone, group, due, pay: p, ini,
+      return { open: () => { window.location.hash = '2b'; }, nr, name, age, parent, phone, group, due, pay: p, ini, hasP2: !!p2, p2tip: p2 ? 'Al doilea părinte: ' + p2 : '',
         avBg: av[i % 4][0], avFg: av[i % 4][1], gBg: grp[group][0], gFg: grp[group][1], pBg: pay[p][0], pFg: pay[p][1],
         rowBg: on ? '#fffaf0' : (i === 5 ? '#fffaf0' : '#fff'), cbBorder: on ? '#ef8a1d' : '#c9c4ba', cbBg: on ? '#ef8a1d' : '#fff', cbMark: on ? '✓' : '',
         dotsBg: i === 5 ? '#f4f1ea' : 'transparent', listBg: i === 0 ? '#fcead3' : 'transparent' };

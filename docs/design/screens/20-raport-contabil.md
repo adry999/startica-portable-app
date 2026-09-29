@@ -1,5 +1,7 @@
 # 20 — Raport pentru contabil
 
+> **Actualizat 29.09.2026:** Rândurile de încasări primesc coloana Serviciu (B3). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Raport contabil.dc.html#19a`, `#19b`. **Nou.** Doar citire; nu creează date.
 
 ## Meniu

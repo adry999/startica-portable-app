@@ -1,5 +1,7 @@
 # 08 — Dashboard
 
+> **Actualizat 29.09.2026:** Pastila „Curs BNM” e link spre bnm.md; graficul are încasări + cheltuieli pe lună, fără comutator (DECIZII 3, 6, 7; ALINIERE A8). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Dashboard.dc.html#1a`. **Depinde de:** `00-comun.md` A, C. Detaliile vizuale sunt în `CORECTII-master-v2.md` (carduri KPI).
 
 ## 1. Fișiere

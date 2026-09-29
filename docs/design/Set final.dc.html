@@ -11,8 +11,8 @@
 <div style="max-width:1180px;margin:0 auto;padding:56px 32px 96px;display:flex;flex-direction:column;gap:28px">
   <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
     <img src="web/assets/startica-logo.svg" alt="Startica" style="height:52px"></img>
-    <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:280px"><h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1">Set final · stadiu</h1><span style="font-size:15px;color:#6b7780;text-wrap:pretty">Totul pe module, în ordinea din meniul lateral. Pentru fiecare ecran: unde e designul, ce specificație are pentru Claude Code și dacă există deja în cod (master-v2).</span></div>
-    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 28.09.2026, 09:45 (master-v2) · design la zi 28.09.2026</span>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:280px"><h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;margin:0;line-height:1">Set final · stadiu</h1><span style="font-size:15px;color:#6b7780;text-wrap:pretty">Totul pe module, în ordinea din meniul lateral. Pentru fiecare ecran: unde e designul, punctul din ALINIERE-DESIGN.md și ce mai lipsește în cod (master-v2).</span></div>
+    <span style="font-size:13px;color:#9aa3a9;font-weight:700">Cod verificat: 29.09.2026, 14:54 (master-v2) · design final 29.09.2026 · coada: ALINIERE-DESIGN.md</span>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
@@ -48,6 +48,7 @@
       <a href="Incarcare.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:13px;color:#3a4750"><b style="min-width:26px;height:26px;border-radius:8px;background:#9aa3a9;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-size:14px">21</b>Încărcare</a>
       <a href="Bazin.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:13px;color:#3a4750"><b style="min-width:26px;height:26px;border-radius:8px;background:#ef8a1d;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-size:14px">22</b>Bazin</a>
       <a href="Personal.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:13px;color:#3a4750"><b style="min-width:26px;height:26px;border-radius:8px;background:#ef8a1d;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-size:14px">23</b>Personal</a>
+      <a href="Bon 58mm.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-size:13px;color:#3a4750"><b style="min-width:26px;height:26px;border-radius:8px;background:#ef8a1d;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-size:14px">24</b>Bon 58 mm</a>
     </div>
   </div>
 
@@ -56,14 +57,14 @@
     <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
       <span onClick="{{ f.pick }}" style="padding:6px 14px;border-radius:999px;background:{{ f.bg }};color:{{ f.fg }};font-size:13px;font-weight:800;cursor:pointer">{{ f.label }}</span>
     </sc-for>
-    <span style="margin-left:auto;font-size:13px;color:#6b7780">Specificațiile sunt în <b>screens/</b> din pachet</span>
+    <span style="margin-left:auto;font-size:13px;color:#6b7780">Punctele (A1…B2) sunt în <b>ALINIERE-DESIGN.md</b></span>
   </div>
 
   <sc-for list="{{ modules }}" as="m" hint-placeholder-count="5">
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:{{ m.marker }}"></span><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6b7780">{{ m.label }}</span></div>
       <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
-        <div style="display:grid;grid-template-columns:1.3fr 2.2fr 0.8fr 1fr 1.9fr;gap:14px;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Ecran</span><span>Design</span><span>Spec</span><span>În cod</span><span>Ce lipsește</span></div>
+        <div style="display:grid;grid-template-columns:1.3fr 2.2fr 0.8fr 1fr 1.9fr;gap:14px;padding:10px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Ecran</span><span>Design</span><span>Punct</span><span>În cod</span><span>Ce lipsește</span></div>
         <sc-for list="{{ m.items }}" as="s" hint-placeholder-count="3">
           <div style="display:grid;grid-template-columns:1.3fr 2.2fr 0.8fr 1fr 1.9fr;gap:14px;align-items:center;padding:12px 20px;border-bottom:1px solid #f3eee5">
             <div style="display:flex;flex-direction:column;min-width:0"><span style="font-weight:800;font-size:15px">{{ s.name }}</span><span style="font-size:12px;color:#9aa3a9">{{ s.sub }}</span></div>
@@ -91,54 +92,53 @@ class Component extends DCLogic {
     const it = (name, sub, links, spec, code, todo) => ({ name, sub, links, spec, code: C[code][0], cBg: C[code][1], cFg: C[code][2], key: code, todo });
     const all = [
       { label: 'Comune (toate ecranele)', marker: '#9aa3a9', items: [
-        it('Meniu lateral', 'versiunea v2.0.0', [L('a', 'Sidebar', 'Sidebar.dc.html')], '00 · 17', 'ok', 'Logo singur sus (46 px); versiunea lângă „Backup și setări”; selectorul de filială'),
-        it('Antet compact, bara de filtre, culori grupe', 'Topbar, FilterPills, groupTone', [L('2a', 'exemplu în Copii', 'Copii.dc.html#2a')], '00', 'ok', 'Făcut: FilterPills, groupTone, useTopbarTitle, MonthStepper, RowMenu, SelectionBar. Lipsesc: Button și SearchInput comune'),
-        it('Formulare și stări', 'panouri laterale, confirmări, liste goale', [L('15a–15c', 'formulare', 'Formulare.dc.html#15a'), L('15d–15f', 'stări', 'Formulare.dc.html#15d'), L('15g', 'scroll subțire', 'Formulare.dc.html#15g')], '13', 'partial', 'Făcut: RowMenu, SelectionBar, ConfirmDeleteDialog „Scrie ȘTERGE”, toast Anulează în Achitări. Lipsesc: toast la arhivare în Vizite, ScrollArea (15g), dropdown filială prin portal'),
-        it('Încărcare', 'pornire, între pagini, prea lent', [L('21a', 'pornire', 'Incarcare.dc.html#21a'), L('21b', 'între pagini', 'Incarcare.dc.html#21b'), L('21c', 'prea lent', 'Incarcare.dc.html#21c')], '21', 'ok', 'Făcut: splash, schelet, ecran după 15 s. De verificat vizual'),
-        it('Ecrane mai mici', 'doar 900–1279 px', [L('17a', 'Dashboard', 'Responsive.dc.html#17a'), L('17b', 'meniu deschis', 'Responsive.dc.html#17b')], 'README', 'missing', 'Sidebar overlay cu ☰')
+        it('Meniu lateral', 'selector de filială, sincronizare', [L('a', 'Sidebar', 'Sidebar.dc.html')], '00 · 17', 'ok', 'Aliniat. Filiala apare doar aici, nu în eyebrow-ul modulelor (A8)'),
+        it('Antet, filtre, culori grupe', 'Topbar, FilterPills, groupTone (8 tonuri)', [L('2a', 'exemplu în Copii', 'Copii.dc.html#2a')], '00', 'ok', 'Eyebrow = grupa din meniu: Evidență / Contabilitate / De rezolvat / Administrare'),
+        it('Panou lateral comun', 'Drawer', [L('15a', 'copil nou', 'Formulare.dc.html#15a'), L('15b', 'achitare', 'Formulare.dc.html#15b'), L('15c', 'cheltuială', 'Formulare.dc.html#15c')], 'A1 · A2 · A3b', 'partial', 'Drawer făcut. Copil nou: 4 secțiuni, restul din fișă (A2). Achitare nouă: spațiere, Plătitor, „+ Adaugă observație”, bifa de confirmare (A3b)'),
+        it('Stări și confirmări', 'liste goale, scroll, ștergere', [L('15d–15f', 'stări', 'Formulare.dc.html#15d'), L('15g', 'scroll', 'Formulare.dc.html#15g'), L('15h', 'ștergere din arhivă', 'Formulare.dc.html#15h')], '13 · B2', 'partial', 'Făcut: ConfirmDeleteDialog, ScrollArea. Lipsește: selecție în „Arhivate” → Șterge definitiv (B2)'),
+        it('Încărcare', 'pornire, între pagini, prea lent', [L('21a', 'pornire', 'Incarcare.dc.html#21a'), L('21b', 'între pagini', 'Incarcare.dc.html#21b'), L('21c', 'prea lent', 'Incarcare.dc.html#21c')], '21 · A8', 'ok', 'Cercurile decorative, rândul sub bară, titlul 21c (A8)'),
+        it('Ecrane mai mici', '900–1279 px', [L('17a', 'Dashboard', 'Responsive.dc.html#17a'), L('17b', 'meniu deschis', 'Responsive.dc.html#17b')], 'README', 'missing', 'Meniu suprapus cu ☰')
       ] },
-      { label: 'Principal', marker: '#f9d257', items: [
-        it('Dashboard', '', [L('1a', 'ecran', 'Dashboard.dc.html#1a'), L('12f', 'pastila curs', 'Planuri si curs.dc.html#12f')], '08 · 16', 'ok', 'Făcut: „Vezi calendarul →”. Lipsește: pastila cu cursul'),
-        it('Copii', 'listă', [L('2a', 'listă', 'Copii.dc.html#2a')], '02', 'ok', 'Făcut: FilterPills Grupă + Plată, groupTone pe avatare și badge, RowMenu, SelectionBar. De verificat vizual'),
-        it('Fișa copilului', '', [L('2b', 'fișa', 'Copii.dc.html#2b'), L('12d', 'sume în €', 'Planuri si curs.dc.html#12d')], '09 · 16', 'ok', 'Rest în €, plan, plătitori reținuți'),
-        it('Zile de naștere', 'pagină în Copii', [L('2c', 'calendar', 'Copii.dc.html#2c')], '01', 'ok', 'Făcut după spec: pastile, antet, max 2 + „+N copii”, zile trecute, weekend, click → fișa. De verificat vizual'),
-        it('Grupe', 'Tablă / Carduri · v2 pentru 7+ grupe', [L('4b', 'tablă · implicit', 'Grupe.dc.html#4b'), L('4a', 'carduri', 'Grupe.dc.html#4a'), L('4c', 'grupă nouă', 'Grupe.dc.html#4c')], '03 v2', 'partial', 'În cod e varianta veche (3a/3b). De refăcut după 03 v2: Tabla implicită, pool fixat + tile-uri 2 col, carduri compacte 4 col, „+ Grupă nouă” în antet, 7 tonuri'),
-        it('Vizite', '', [L('4a', 'calendar + tabel', 'Vizite.dc.html#4a')], '04', 'ok', 'Făcut: tabel, FilterPills Statut, meniu ⋯ (RowMenu). De verificat vizual'),
-        it('Personal', 'Echipa / Pontaj / Salarii · nou', [L('23a', 'echipa', 'Personal.dc.html#23a'), L('23b', 'pontaj', 'Personal.dc.html#23b'), L('23c', 'salarii', 'Personal.dc.html#23c'), L('23d', 'PIN', 'Personal.dc.html#23d')], '24', 'ok', 'Făcut: echipa, pontaj + tipărire, salarii, avansuri, concedii, PIN, echipa pe grupă. De verificat vizual'),
-        it('Bazin', 'Săptămâna / Luna · nou', [L('22a', 'săptămâna', 'Bazin.dc.html#22a'), L('22b', 'programare', 'Bazin.dc.html#22b'), L('22c', 'luna + antrenor', 'Bazin.dc.html#22c'), L('22d', 'setări', 'Bazin.dc.html#22d')], '23', 'partial', 'Plan scris, eticheta de bon. Lipsește ecranul: programări recurente, prezența la bazin, rândul „Bazin” în obligație, salariul antrenorului'),
-        it('Prezența', 'Ziua / Luna · nou', [L('18a', 'ziua', 'Prezenta.dc.html#18a'), L('18b', 'luna', 'Prezenta.dc.html#18b')], '19', 'partial', 'Făcut: Ziua, Luna, motivul. Bug: „Toată grupa prezentă” suprascrie Absent/Motivat. Lipsesc: anulare + istoric, indicator de salvare'),
-        it('Foaia săptămânii', 'A4 orizontal, câte una pe grupă · nou', [L('18c', 'fereastra', 'Prezenta.dc.html#18c'), L('18d', 'foaia', 'Prezenta.dc.html#18d')], '26', 'missing', 'Tot: butonul din Prezența, fereastra, ruta /prezenta/foi, 16 rânduri, fără date de contact')
+      { label: 'Evidență', marker: '#f9d257', items: [
+        it('Dashboard', '', [L('1a', 'ecran', 'Dashboard.dc.html#1a')], '08 · A8', 'partial', 'Pastila curs € lângă căutare; grafic încasări + cheltuieli pe lună, fără comutator; cifre 30px'),
+        it('Copii', 'listă', [L('2a', 'listă', 'Copii.dc.html#2a')], '02 · A8', 'ok', 'Contact principal + „+1” la al doilea părinte; fără pastila „Scadent”'),
+        it('Fișa copilului', '', [L('2b', 'fișa', 'Copii.dc.html#2b'), L('12d', 'sume în €', 'Planuri si curs.dc.html#12d')], '28 · A3', 'partial', 'Grila 1fr/1.35fr; Date personale cu alergii, părinți cu relație, „Pot ridica copilul”; note cu autor, editare, ștergere; documente (A9)'),
+        it('Zile de naștere', 'pagină în Copii', [L('2c', 'calendar', 'Copii.dc.html#2c')], '01', 'ok', 'De verificat vizual'),
+        it('Grupe', 'Tablă / Carduri', [L('4b', 'tablă', 'Grupe.dc.html#4b'), L('4a', 'carduri', 'Grupe.dc.html#4a'), L('4c', 'grupă nouă', 'Grupe.dc.html#4c')], '03 · A3d', 'ok', 'Mânerul ⋮⋮ lângă nume; tragerea cu copie rotită și loc gol punctat; inel portocaliu pe țintă'),
+        it('Prezența', 'Ziua / Luna', [L('18a', 'ziua', 'Prezenta.dc.html#18a'), L('18b', 'luna', 'Prezenta.dc.html#18b')], '19 · A3c · A3e', 'partial', 'Lipsesc: Anulează + istoric, Ctrl+Z. Scos: marcarea în masă. Bandă compactă sus, grupe în chenar colorat. Luna nu seamănă cu 18b'),
+        it('Foaia săptămânii', 'A4, câte una pe grupă', [L('18c', 'fereastra', 'Prezenta.dc.html#18c'), L('18d', 'foaia', 'Prezenta.dc.html#18d')], '26', 'ok', 'Făcut. De comparat vizual cu 18d'),
+        it('Bazin', 'Săptămâna / Luna / Setări', [L('22a', 'săptămâna', 'Bazin.dc.html#22a'), L('22b', 'programare', 'Bazin.dc.html#22b'), L('22c', 'luna', 'Bazin.dc.html#22c'), L('22d', 'setări', 'Bazin.dc.html#22d')], '23 · A4', 'ok', 'Logica gata. De refăcut prezentarea după 22a–22c'),
+        it('Bon 58 mm', 'bazin', [L('24a', 'bon', 'Bon 58mm.dc.html')], '23', 'ok', 'Făcut'),
+        it('Vizite', '', [L('4a', 'calendar + tabel', 'Vizite.dc.html#4a')], '04 · A8', 'ok', 'Calendar: gap 6, celulă 6/8, radius 12'),
+        it('Personal', 'Echipa / Pontaj / Concedii / Salarii / Candidați', [L('23a', 'echipa', 'Personal.dc.html#23a'), L('23b', 'pontaj', 'Personal.dc.html#23b'), L('23f', 'concedii', 'Personal.dc.html#23f'), L('23c', 'salarii', 'Personal.dc.html#23c'), L('23l', 'candidați', 'Personal.dc.html#23l')], '24 · A3f', 'partial', 'Pontaj: celule-pastilă, CO, coloana CM. Concedii: bare pe zile, editare. Salarii: lună, Blochează, confirmare, 5 verificări de logică')
       ] },
       { label: 'Contabilitate', marker: '#a8d8be', items: [
-        it('Planuri în EUR și curs BNM', 'regula de calcul', [L('12a–12g', 'toate', 'Planuri si curs.dc.html')], '16', 'partial', 'Făcut: backend, fila Curs valutar (12a), achitarea în lei → € (12b). Lipsesc: monedă pe taxă (12g), sume în € în fișă/Situația, pastila curs; cursul cu 4 zecimale, fxRateSource'),
-        it('Achitări', 'Tabel / Pe luni', [L('5a', 'tabel', 'Achitari.dc.html#5a'), L('5b', 'pe luni', 'Achitari.dc.html#5b')], '05', 'ok', 'Făcut: FilterPills Metodă + Grupă, coloana Plătitor, carduri pe metode. Lipsește: Tipărește confirmarea (cu 16b)'),
-        it('Achitare nouă', 'panou lateral', [L('15b', 'formular', 'Formulare.dc.html#15b'), L('12b', 'lei → €', 'Planuri si curs.dc.html#12b')], '13 · 16', 'ok', 'Făcut: lei → € la cursul zilei, curs manual pe plată, repartizare în €. Lipsește fxRateSource, titlul „Achitare nouă”'),
-        it('Cheltuieli', 'Tabel / Pe zile', [L('6a', 'tabel', 'Cheltuieli.dc.html#6a'), L('6b', 'pe zile', 'Cheltuieli.dc.html#6b'), L('15c', 'formular', 'Formulare.dc.html#15c')], '06', 'ok', 'Făcut: FilterPills Categorie + Metodă, câmpul method, antet compact'),
-        it('Situația plăților', 'Lună / An școlar', [L('7a', 'lună', 'Situatia.dc.html#7a'), L('7b', 'an școlar', 'Situatia.dc.html#7b'), L('12c', 'sume în €', 'Planuri si curs.dc.html#12c')], '07 · 16', 'ok', 'Făcut: carduri, An școlar, pastilele Grupa, sume în €. De verificat vizual'),
-        it('Notificare SMS', 'din Situația plăților', [L('7c', 'un părinte', 'Situatia.dc.html#7c'), L('7e', 'personalizat', 'Situatia.dc.html#7e'), L('7d', 'toți', 'Situatia.dc.html#7d')], '07 · 14', 'ok', 'Făcut P1: un părinte, personalizat, toți, confirmarea. De verificat vizual'),
-        it('De notificat', '', [L('8a', 'coadă', 'De notificat.dc.html#8a')], '10', 'ok', 'Rând activ, previzualizare'),
-        it('Raport contabil', 'Lună / Trimestru / An · nou', [L('19a', 'luna', 'Raport contabil.dc.html#19a'), L('19b', 'export', 'Raport contabil.dc.html#19b')], '20', 'ok', 'Făcut: pagina, totaluri, EUR cu curs salvat. De corectat: „Total lună / trimestru / an”. Selectorul de filială din export după Faza 6')
+        it('Achitări', 'Tabel / Pe luni', [L('5a', 'tabel', 'Achitari.dc.html#5a'), L('5b', 'pe luni', 'Achitari.dc.html#5b')], '05 · B1', 'partial', 'BUG: plățile mixte cad la „Altele”. Cash + Card + Transfer = total; „Altele” dispare'),
+        it('Planuri în EUR și curs BNM', '', [L('12a–12g', 'toate', 'Planuri si curs.dc.html')], '16', 'ok', 'Făcut'),
+        it('Cheltuieli', 'Tabel / Pe zile', [L('6a', 'tabel', 'Cheltuieli.dc.html#6a'), L('6b', 'pe zile', 'Cheltuieli.dc.html#6b')], '06 · A8', 'ok', 'KPI 1fr 2.2fr'),
+        it('Situația plăților', 'Lună / An școlar + SMS', [L('7a', 'lună', 'Situatia.dc.html#7a'), L('7b', 'an școlar', 'Situatia.dc.html#7b'), L('7c–7e', 'SMS', 'Situatia.dc.html#7c')], '07 · A8', 'ok', 'Avatar în hartă, cifre 44px'),
+        it('De notificat', '', [L('8a', 'coadă', 'De notificat.dc.html#8a')], '10 · A5', 'ok', 'Structura pe 2 coloane făcută; de verificat vizual'),
+        it('Raport contabil', 'Lună / Trimestru / An', [L('19a', 'luna', 'Raport contabil.dc.html#19a'), L('19b', 'export', 'Raport contabil.dc.html#19b')], '20', 'ok', 'Făcut')
       ] },
       { label: 'De rezolvat', marker: '#f3a6be', items: [
-        it('Taxe și grupe', '', [L('9a', 'tabel', 'De rezolvat.dc.html#9a'), L('12g', 'plan + taxă €', 'Planuri si curs.dc.html#12g')], '11 · 16', 'partial', 'Coloanele Plan și Taxă lunară €'),
-        it('De verificat', '', [L('9b', 'pe rând', 'De rezolvat.dc.html#9b')], '11', 'ok', 'Tasta S, progres'),
-        it('Asociere achitări', '', [L('9c', 'sugestii', 'De rezolvat.dc.html#9c')], '11', 'partial', '„Ține minte plătitorul” (payer_aliases)')
+        it('Taxe și grupe', '', [L('9a', 'tabel', 'De rezolvat.dc.html#9a')], '11', 'ok', 'Făcut'),
+        it('De verificat', '', [L('9b', 'pe rând', 'De rezolvat.dc.html#9b')], '11', 'ok', 'Făcut'),
+        it('Asociere achitări', '', [L('9c', 'sugestii', 'De rezolvat.dc.html#9c')], '11 · A6', 'partial', 'Plătitori reținuți făcuți. De verificat: lista + cardul cu sugestii în locul tabelului')
       ] },
       { label: 'Administrare', marker: '#c9c4ba', items: [
-        it('Istoric', '', [L('10a', 'pe zile', 'Administrare.dc.html#10a')], '12', 'ok', 'Diferențe vechi → nou'),
-        it('Notificări', 'file: Canale · Mesaje SMS · Șabloane', [L('10b', 'canale', 'Administrare.dc.html#10b'), L('11a', 'mesaje SMS', 'Sms.dc.html#11a'), L('11b', 'șabloane', 'Sms.dc.html#11b')], '12 · 14', 'partial', 'Filele Mesaje SMS și Șabloane'),
-        it('Backup și setări', 'file: Backup · Import și export · Grădinița · Planuri și curs', [L('10c', 'backup + import', 'Administrare.dc.html#10c'), L('16a', 'grădinița', 'Tiparire.dc.html#16a'), L('12a', 'planuri și curs', 'Planuri si curs.dc.html#12a')], '12 · 16', 'partial', 'Filele Grădinița și Planuri și curs; Import CSV mutat aici')
-      ] },
-      { label: 'Filiale', marker: '#3f9a6b', items: [
-        it('Două filiale', 'selector în meniul lateral', [L('13a', 'selector', 'Filiale.dc.html#13a'), L('13b', 'nesalvat', 'Filiale.dc.html#13b'), L('13c', 'administrare', 'Filiale.dc.html#13c')], '17', 'ok', 'Făcut: baze separate, selector, dialog nesalvat, fila Filiale, „Ambele” în raport. De corectat: dropdown-ul prin portal (FEEDBACK 2a)'),
-        it('Sincronizare', 'server comun, lucru offline, conflicte', [L('14a', 'stări meniu', 'Sincronizare.dc.html#14a'), L('14b', 'setări', 'Sincronizare.dc.html#14b'), L('14c', 'conflicte', 'Sincronizare.dc.html#14c')], '18', 'partial', 'Făcut: sync-server, outbox, conflicte, cardul din meniu. De verificat vizual: setări 14b și conflicte 14c')
-      ] },
-      { label: 'Prima pornire', marker: '#f9d257', items: [
-        it('Expert de pornire', '5 pași · nou', [L('20a', 'grădinița', 'Prima pornire.dc.html#20a'), L('20b', 'import', 'Prima pornire.dc.html#20b'), L('20c', 'gata', 'Prima pornire.dc.html#20c')], '22', 'missing', 'Tot: rută /bun-venit când baza e goală, pașii refolosesc ecranele din Setări')
+        it('Istoric', '', [L('10a', 'pe zile', 'Administrare.dc.html#10a')], '12', 'ok', 'Aliniat'),
+        it('Notificări', 'Canale · Mesaje SMS · Șabloane', [L('10b', 'canale', 'Administrare.dc.html#10b'), L('11a', 'mesaje', 'Sms.dc.html#11a'), L('11b', 'șabloane', 'Sms.dc.html#11b')], '12 · 14 · A7', 'partial', 'Grila 1fr / 1.3fr'),
+        it('Backup și setări', 'Backup · Import · Grădinița · Planuri · Bazin · Sincronizare', [L('10c', 'backup', 'Administrare.dc.html#10c'), L('16a', 'grădinița', 'Tiparire.dc.html#16a'), L('14b', 'sincronizare', 'Sincronizare.dc.html#14b')], '12 · A7', 'partial', 'Cele 3 carduri de stare; lista copiilor de siguranță; cardul periculos'),
+        it('Filiale', '', [L('13a', 'selector', 'Filiale.dc.html#13a'), L('13b', 'nesalvat', 'Filiale.dc.html#13b'), L('13c', 'administrare', 'Filiale.dc.html#13c')], '17', 'ok', 'Făcut'),
+        it('Sincronizare și conflicte', '', [L('14a', 'meniu', 'Sincronizare.dc.html#14a'), L('14b', 'setări', 'Sincronizare.dc.html#14b'), L('14c', 'conflicte', 'Sincronizare.dc.html#14c')], '18 · A8', 'ok', 'Motor verificat live. 14b coloana dreaptă 380px; 14c font titlu')
       ] },
       { label: 'Documente tipărite', marker: '#ef8a1d', items: [
-        it('Confirmare de plată', 'A5 sau A4 în două părți', [L('16b', 'A5', 'Tiparire.dc.html#16b'), L('16g', 'A4 1/3 + 2/3 · ales', 'Tiparire.dc.html#16g'), L('12e', 'sume lei + €', 'Planuri si curs.dc.html#12e')], '15 · 16', 'ok', 'Făcut: A4 în două părți (16g), ruta confirmării. De verificat vizual'),
-        it('Situația tipărită', 'A4 orizontal', [L('16c', 'raport', 'Tiparire.dc.html#16c')], '15', 'ok', 'Făcut: StatusPrint + opțiuni de tipărire (fără „Pagina N din M”)')
+        it('Confirmare de plată', 'A4 în două părți', [L('16g', 'A4 1/3 + 2/3', 'Tiparire.dc.html#16g'), L('12e', 'lei + €', 'Planuri si curs.dc.html#12e')], '15', 'ok', 'Făcut'),
+        it('Situația tipărită', 'A4 orizontal', [L('16c', 'raport', 'Tiparire.dc.html#16c')], '15', 'ok', 'Făcut'),
+        it('Pontaj tipărit', 'A4 orizontal', [L('23k', 'pontaj', 'Personal.dc.html#23k')], '24', 'ok', 'Făcut')
+      ] },
+      { label: 'Prima pornire', marker: '#f9d257', items: [
+        it('Expert de pornire', 'opțional', [L('20a', 'grădinița', 'Prima pornire.dc.html#20a'), L('20b', 'import', 'Prima pornire.dc.html#20b'), L('20c', 'gata', 'Prima pornire.dc.html#20c')], '22', 'missing', 'Neînceput (opțional)')
       ] }
     ];
     const f = this.state.f;

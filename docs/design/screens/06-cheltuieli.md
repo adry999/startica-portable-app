@@ -1,5 +1,7 @@
 # 06 — Cheltuieli (Tabel / Pe zile)
 
+> **Actualizat 29.09.2026:** Încasările de bazin înregistrate greșit aici se mută la Achitări (B3). Ștergere definitivă din „Arhivate” (B2). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Cheltuieli.dc.html#6a` (Tabel) și `#6b` (Pe zile). **Depinde de:** `00-comun.md` A, B, D, E.
 
 ## 1. Fișiere

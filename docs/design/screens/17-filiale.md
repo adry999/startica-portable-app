@@ -1,5 +1,7 @@
 # 17 — Două filiale (selector în meniul lateral)
 
+> **Actualizat 29.09.2026:** **Eyebrow-ul antetului NU mai conține filiala** (DECIZII 2). Linia „Eyebrow-ul antetului conține numele filialei” de mai jos e anulată. Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Filiale.dc.html#13a`, `#13b`, `#13c`; `Sidebar.dc.html` (selectorul din capul meniului). **Depinde de:** `00-comun.md`.
 
 ## Regula

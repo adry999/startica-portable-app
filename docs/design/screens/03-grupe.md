@@ -1,5 +1,7 @@
 # 03 — Grupe (Tablă / Carduri) · v2, 28.09.2026
 
+> **Actualizat 29.09.2026:** Tragerea grupelor: copie rotită, loc gol punctat, inel portocaliu (DECIZII 13, ALINIERE A8). Carduri 4a: mânerul lângă nume (A3d). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Grupe.dc.html#4b` (Tablă, implicit) și `#4a` (Carduri). Înlocuiește varianta veche 3a/3b (scoasă din design). **Depinde de:** `00-comun.md` A, C, D.
 
 De ce v2: cu 6–8 grupe, coloanele din 3b nu mai încap, iar cardurile mari din 3a ocupă 3 rânduri. v2 e gândit pentru 7 grupe și ~100 de copii.

@@ -1,5 +1,7 @@
 # 09 — Copii → fișa copilului
 
+> **Actualizat 29.09.2026:** Înlocuit în mare parte de ALINIERE A3 + screens/28-fisa-copilului-date.md (grilă, Date personale, părinți cu relație, Pot ridica copilul, note cu autor, documente). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Copii.dc.html#2b`. **Depinde de:** `00-comun.md` A, C.
 
 ## 1. Fișiere
@@ -37,7 +39,7 @@ Titlul din antet rămâne „Copii” (`VIEW_TITLES`). În conținut, primul râ
 ```
 
 ## 4. Criterii de acceptare
-- [x] Fișa e pagină (`/copii/:id`), nu dialog
-- [x] Culoarea headerului vine din grupa copilului (`groupTone`)
-- [x] „+ Plată” deschide formularul de achitare cu copilul precompletat
-- [x] Plătitorii reținuți se pot șterge din fișă (CF-2, construit 29 sept. 2026: `payerAliases` — cardul „Plătitori reținuți” + `POST /api/payer-alias-delete`, testat)
+- [ ] Fișa e pagină (`/copii/:id`), nu dialog
+- [ ] Culoarea headerului vine din grupa copilului (`groupTone`)
+- [ ] „+ Plată” deschide formularul de achitare cu copilul precompletat
+- [ ] Plătitorii reținuți se pot șterge din fișă

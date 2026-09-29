@@ -10,7 +10,7 @@
 <helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
 <section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
-    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Bazin.dc.html">Bazin</a><a href="Vizite.dc.html">Vizite</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><span style="font-weight:800;color:#3a4750">Administrare</span><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Bon 58mm.dc.html">Bon 58 mm</a><a href="Incarcare.dc.html">Încărcare</a><a href="Prima pornire.dc.html">Prima pornire</a><a href="Responsive.dc.html">Ecrane mici</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Administrare</h1>
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#10a">10a</a>: istoric pe zile, cu ce s-a schimbat exact. <a href="#10b">10b</a>: notificări Telegram cu comutatoare pe tip. <a href="#10c">10c</a>: starea backupului pe primul loc, cu pasul lipsă evidențiat.</p>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:12px 16px;background:#fff;border:1px solid #ede7dc;border-radius:18px">
@@ -124,6 +124,63 @@
       </div>
     </div>
 
+
+    <div id="10d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">10d</span><span style="font-size:16px;font-weight:700">Servicii · filă în Backup și setări, cu panoul „Serviciu nou”</span></div>
+      <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap">
+        <div style="width:860px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden;box-shadow:0 20px 50px rgba(58,71,80,.1)">
+          <div style="display:flex;align-items:center;gap:12px;padding:16px 20px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Servicii</span><span style="font-size:13px;color:#6b7780">Ce poate plăti un părinte. Fiecare achitare are un serviciu.</span></div>
+            <span style="padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;box-shadow:0 4px 10px rgba(239,138,29,.28)">+ Serviciu</span>
+          </div>
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) 150px 120px 90px;gap:12px;padding:8px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-top:1px solid #ede7dc"><span></span><span>Serviciu</span><span>Achitări</span><span>Stare</span><span></span></div>
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) 150px 120px 90px;gap:12px;align-items:center;padding:12px 20px;border-top:1px solid #f3eee5;font-size:14px;opacity:1">
+                <span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;cursor:grab">⋮⋮</span>
+                <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#f4f1ea;color:#5b666e">Grădiniță</span><span style="font-size:11px;font-weight:800;color:#9aa3a9">implicit</span><span style="font-size:12px;color:#9aa3a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">taxa lunară din plan</span></div>
+                <span style="color:#6b7780">1.284 · din 2024</span>
+                <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Activ</span>
+                <span style="justify-self:end;font-weight:800;color:#a34f00">Editează</span>
+              </div>
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) 150px 120px 90px;gap:12px;align-items:center;padding:12px 20px;border-top:1px solid #f3eee5;font-size:14px;opacity:1">
+                <span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;cursor:grab">⋮⋮</span>
+                <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#e4eef6;color:#2c5a80">Bazin</span><span style="font-size:12px;color:#9aa3a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">ședințele din Bazin</span></div>
+                <span style="color:#6b7780">96 · din sep 2026</span>
+                <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Activ</span>
+                <span style="justify-self:end;font-weight:800;color:#a34f00">Editează</span>
+              </div>
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) 150px 120px 90px;gap:12px;align-items:center;padding:12px 20px;border-top:1px solid #f3eee5;font-size:14px;opacity:1">
+                <span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;cursor:grab">⋮⋮</span>
+                <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#eee8f6;color:#5b3f86">Cercuri</span><span style="font-size:12px;color:#9aa3a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">sumă liberă</span></div>
+                <span style="color:#6b7780">0</span>
+                <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Activ</span>
+                <span style="justify-self:end;font-weight:800;color:#a34f00">Editează</span>
+              </div>
+          <div style="display:grid;grid-template-columns:24px minmax(0,1fr) 150px 120px 90px;gap:12px;align-items:center;padding:12px 20px;border-top:1px solid #f3eee5;font-size:14px;opacity:.55">
+                <span style="color:#c9c4ba;font-weight:800;letter-spacing:-2px;cursor:grab">⋮⋮</span>
+                <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fbe6dc;color:#9a3f1c">Excursii</span><span style="font-size:12px;color:#9aa3a9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">sumă liberă</span></div>
+                <span style="color:#6b7780">12 · 2025</span>
+                <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#f4f1ea;color:#6b7780">Ascuns</span>
+                <span style="justify-self:end;font-weight:800;color:#a34f00">Editează</span>
+              </div>
+          <div style="padding:12px 20px 16px;border-top:1px solid #f3eee5;font-size:12px;color:#6b7780;line-height:1.5">Ordinea de aici e ordinea din Achitare nouă și din filtrul din Achitări. Un serviciu cu achitări nu se șterge, doar se ascunde: achitările vechi îl păstrează, dar nu mai apare la achitări noi.</div>
+        </div>
+        <div style="width:480px;background:#fff;border-radius:24px;box-shadow:-20px 0 60px rgba(58,71,80,.2);display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:12px;padding:24px 30px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">Serviciu nou</span><span style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-weight:800">×</span></div>
+          <div style="padding:22px 30px;display:flex;flex-direction:column;gap:18px">
+            <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Nume<span style="padding:11px 14px;border-radius:12px;border:1.5px solid #ef8a1d;font-size:15px;font-weight:600">Cercuri</span></label>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:700">Culoare
+              <div style="display:flex;gap:8px"><span style="width:32px;height:32px;border-radius:10px;background:#f4f1ea;border:2px solid transparent"></span><span style="width:32px;height:32px;border-radius:10px;background:#e4eef6"></span><span style="width:32px;height:32px;border-radius:10px;background:#eee8f6;border:2px solid #5b3f86;box-sizing:border-box"></span><span style="width:32px;height:32px;border-radius:10px;background:#fbe6dc"></span><span style="width:32px;height:32px;border-radius:10px;background:#dff1f0"></span><span style="width:32px;height:32px;border-radius:10px;background:#fdf3d2"></span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:700">Suma la achitare
+              <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:14px"><span style="flex:1;text-align:center;padding:8px 0;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Liberă</span><span style="flex:1;text-align:center;padding:8px 0;color:#6b7780">Preț fix</span></div>
+              <span style="font-size:12px;font-weight:600;color:#6b7780">Liberă = se scrie suma la fiecare achitare. Preț fix = Achitare nouă propune suma (se poate schimba).</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:#f7f4ee;font-size:13px;color:#5b666e;line-height:1.5"><b style="color:#3a4750">Previzualizare</b><span style="display:flex;align-items:center;gap:8px">În Achitări: <span style="font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#eee8f6;color:#5b3f86">Cercuri</span></span></div>
+          </div>
+          <div style="padding:18px 30px;border-top:1px solid #ede7dc;display:flex;align-items:center;gap:10px"><span style="font-size:13px;color:#6b7780">Grădiniță și Bazin nu se pot șterge.</span><span style="margin-left:auto;padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span><span style="padding:11px 22px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 </x-dc>

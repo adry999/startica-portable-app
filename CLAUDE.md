@@ -1,12 +1,13 @@
 ## Design
-
-Specificațiile de design sunt în docs/design/.
-Înainte de orice modificare de UI într-un ecran din webapp/src/features/<modul> sau webapp/src/app/shell:
-1. Citește docs/design/screens/README.md și găsește spec-ul ecranului în tabelul Index.
-2. Citește docs/design/screens/00-comun.md și spec-ul ecranului.
-3. Dacă ecranul nu are spec, caută secțiunea lui în docs/design/README.md.
-4. Referința vizuală e fișierul .dc.html din spec (id-ul artboard-ului). Se deschide cu `npx serve docs/design`.
-5. Spec-ul are prioritate față de .dc.html. Nu adăuga elemente care nu apar în spec.
-6. Folosește componentele din @shared/ui și variabilele din tokens.css; nu scrie culori hex noi.
-7. Un ecran per sesiune. La final: npm run typecheck && npm test în webapp/, apoi bifează
-   criteriile de acceptare din spec și raportează ce a rămas nebifat.
+Designul final e în docs/design/. Ordinea de citire, înainte de orice modificare de UI:
+1. docs/design/DECIZII.md — deciziile de produs; au prioritate față de orice altceva.
+2. docs/design/ALINIERE-DESIGN.md — coada de lucru cu valorile exacte pe ecran (A1…B3).
+3. docs/design/TOKENS.md — culori, tipografie, raze, umbre → tokenii din tokens.css.
+3b. docs/design/COMPONENTE.md — ce componentă din @shared/ui se folosește pentru fiecare tipar; componentele noi se extrag la prima folosire.
+4. docs/design/ECRANE.md — inventarul artboard-urilor; referința vizuală e <Fișier>.dc.html#<id>.
+5. docs/design/screens/<NN>.md — spec-ul detaliat al ecranului (unde ALINIERE nu spune altfel).
+Se deschide cu `npx serve docs/design` și se compară la 1440px.
+Reguli: folosește @shared/ui și tokens.css, nu hex nou; nu adăuga elemente care nu apar în design;
+un punct = un commit; npm run check + cd webapp && npm run typecheck && npm test verzi;
+întrebările de business în INTREBARI.md, apoi treci mai departe.
+Prioritate la conflict: DECIZII > ALINIERE > artboard .dc.html > screens/*.md > README vechi.

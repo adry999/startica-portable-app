@@ -1,5 +1,7 @@
 # 24 — Personal
 
+> **Actualizat 29.09.2026:** Pontaj, Concedii, Salarii: vezi ALINIERE A3f (celule-pastilă, CO #e0b400, coloana CM, zile viitoare CO/CM, concedii pe zile, stepper + Blochează la Salarii). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Personal.dc.html#23a`–`#23l`. **Nou.** Acces: doar administratorul. Salariile cer PIN.
 
 ## Date

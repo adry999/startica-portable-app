@@ -1,5 +1,7 @@
 # 19 — Prezența (ziua · luna)
 
+> **Actualizat 29.09.2026:** **Marcarea în masă e scoasă** (DECIZII 14): nu există „Toți nemarcații → prezenți” și nici „Toată grupa prezentă”; secțiunile și criteriul despre ele de mai jos sunt anulate. Sus: bandă compactă; grupe în chenar colorat; Luna după A3e. Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Prezenta.dc.html#18a`, `#18b`. **Nou.** Prezența e doar evidență și nu modifică taxa.
 
 ## Date

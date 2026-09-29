@@ -1,5 +1,7 @@
 # 13 — Formulare și stări (15a–15f)
 
+> **Actualizat 29.09.2026:** 15a: 4 secțiuni, restul din fișă (A2, DECIZII 9). 15b: Serviciu, Plătitor, „+ Adaugă observație”, bifa de confirmare (A3b, B3). 15h nou: ștergere din arhivă (B2). Unde textul de mai jos contrazice `DECIZII.md` sau `ALINIERE-DESIGN.md`, acelea au prioritate.
+
 **Referință:** `Formulare.dc.html#15a`–`#15f`. **Depinde de:** `Drawer`, `Toast` din `@shared/ui`.
 
 ## Panou lateral (Drawer) — comun pentru 15a și 15b

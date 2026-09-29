@@ -10,7 +10,7 @@
 <helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
 <section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
-    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Incarcare.dc.html">Încărcare</a><a href="Responsive.dc.html">Ecrane mici</a><a href="Prima pornire.dc.html">Prima pornire</a></div>
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><span style="font-weight:800;color:#3a4750">Dashboard</span><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Bazin.dc.html">Bazin</a><a href="Vizite.dc.html">Vizite</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Planuri si curs.dc.html">Planuri și curs</a><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Bon 58mm.dc.html">Bon 58 mm</a><a href="Incarcare.dc.html">Încărcare</a><a href="Prima pornire.dc.html">Prima pornire</a><a href="Responsive.dc.html">Ecrane mici</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Dashboard</h1>
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#1a">1a</a> păstrează structura actuală, dar ierarhizează cifrele și sarcinile.</p>
   </div>
@@ -23,10 +23,15 @@
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0">
-              <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Privire de ansamblu</span>
-              <h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Rezumatul lunii</h2>
+              <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9;white-space:nowrap">Privire de ansamblu</span>
+              <h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1;white-space:nowrap">Rezumatul lunii</h2>
             </div>
-            <div style="width:300px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9"><span style="flex:1">Caută copil, părinte, achitare…</span><span style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f4f1ea;color:#6b7780">Ctrl K</span></div>
+            <div style="width:260px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9"><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Caută copil, părinte, achitare…</span><span style="font-size:11px;font-weight:800;padding:2px 6px;border-radius:6px;background:#f4f1ea;color:#6b7780">Ctrl K</span></div>
+            <a href="https://www.bnm.md/" target="_blank" rel="noopener" title="Curs oficial BNM · deschide bnm.md" style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:999px;background:#fff;border:1px solid #ede7dc;cursor:pointer;white-space:nowrap;color:#3a4750;text-decoration:none;font-weight:400" style-hover="border-color:#d9cfbf;color:#3a4750">
+              <span style="width:30px;height:30px;border-radius:50%;background:#e7f4ec;color:#2e6b4c;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px">€</span>
+              <div style="display:flex;flex-direction:column;line-height:1.1"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px">19,92 lei</span><span style="font-size:11px;color:#9aa3a9;font-weight:700">Curs BNM · azi</span></div>
+              <span style="font-size:13px;font-weight:800;color:#9aa3a9">↗</span>
+            </a>
             <div style="display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:#fdf3d2;border:1px solid #f6e3a6">
               <span style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:#fff;cursor:pointer">‹</span>
               <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;padding:0 10px">Septembrie 2026</span>
@@ -64,11 +69,11 @@
               <div style="background:#fff;border-radius:22px;padding:24px 26px;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:20px">
                 <div style="display:flex;align-items:flex-end;justify-content:space-between">
                   <div><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Evoluția încasărilor</h3><span style="font-size:13px;color:#6b7780">Ultimele 12 luni</span></div>
-                  <div style="display:flex;gap:4px;padding:3px;border-radius:999px;background:#f4f1ea;font-size:12px;font-weight:700"><span style="padding:4px 12px;border-radius:999px;background:#fff">Încasări</span><span style="padding:4px 12px;color:#6b7780">Cheltuieli</span></div>
+                  <div style="display:flex;gap:14px;font-size:12px;font-weight:700;color:#5b666e"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#ef8a1d"></span>Încasări</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#5fb58a"></span>Cheltuieli</span></div>
                 </div>
                 <div style="display:flex;align-items:flex-end;gap:14px;height:190px;border-bottom:1px solid #ede7dc;padding:0 6px">
                   <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12">
-                    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%"><span style="width:100%;max-width:34px;height:{{ b.h }}px;border-radius:10px 10px 4px 4px;background:{{ b.c }}"></span></div>
+                    <div title="{{ b.tip }}" style="flex:1;display:flex;align-items:flex-end;justify-content:center;gap:3px;height:100%"><span style="width:100%;max-width:13px;height:{{ b.h }}px;border-radius:6px 6px 2px 2px;background:{{ b.c }}"></span><span style="width:100%;max-width:13px;height:{{ b.eh }}px;border-radius:6px 6px 2px 2px;background:{{ b.ec }}"></span></div>
                   </sc-for>
                 </div>
                 <div style="display:flex;gap:14px;padding:0 6px;margin-top:-10px">
@@ -120,7 +125,8 @@ class Component extends DCLogic {
     const m = ['Oct', 'Nov', 'Dec', 'Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep'];
     const h = [0, 0, 0, 0, 0, 0, 0, 0, 150, 152, 152, 170];
     const c = ['#a8d8be', '#f9d257', '#a8d8be', '#ef8a1d'];
-    const bars = m.map((x, i) => ({ m: x, h: h[i] || 6, c: h[i] ? (i === 11 ? '#ef8a1d' : '#f6c98f') : '#f1ece2', lc: i === 11 ? '#a34f00' : '#9aa3a9', lw: i === 11 ? 800 : 600 }));
+    const e = [0, 0, 0, 0, 0, 0, 0, 0, 58, 61, 55, 0];
+    const bars = m.map((x, i) => ({ m: x, h: h[i] || 6, c: h[i] ? (i === 11 ? '#ef8a1d' : '#f6c98f') : '#f1ece2', eh: e[i] || 4, ec: e[i] ? (i === 11 ? '#5fb58a' : '#a8d8be') : '#f1ece2', tip: x + ' · diferență ' + Math.round((h[i] - e[i]) * 1393).toLocaleString('ro-RO') + ' lei', lc: i === 11 ? '#a34f00' : '#9aa3a9', lw: i === 11 ? 800 : 600 }));
     const barsMini = bars.map(b => ({ h: Math.max(4, Math.round(b.h * 0.36)), c: b.c }));
     const av = [['#fcead3', '#a34f00'], ['#e7f4ec', '#2e6b4c'], ['#fce9ef', '#b0284f']];
     const soon = [
