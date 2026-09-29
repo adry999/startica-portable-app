@@ -94,3 +94,19 @@ Verificat cod + teste, nu doar citit. Rezultat: 4 din 5 erau deja corecte; 1 (#5
 
 ## A4 Bazin — rândul „Antrenor: <nume>” din 22a cu mai mulți antrenori
 Spec (`ALINIERE-DESIGN.md`, 22a rând info) arată mockup-ul cu un singur antrenor: „Antrenor: **Rusu Vlad**” stânga, legenda dreapta. Codul (`pool_bookings.coachId`) permite mai mulți antrenori pe aceeași filială. Implementat: rândul arată toți antrenorii configurați, uniți prin virgulă („Antrenor: Rusu Vlad, Ion Pop”); dacă nu e niciun antrenor configurat încă, rândul dispare (rămâne doar legenda, dreapta). Nu am găsit alt loc în spec care să lămurească formatul pentru mai mulți — dacă vrei alt format (listă pe rânduri, doar primul + „și încă N”, etc.), spune și schimb.
+
+## B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin
+
+Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (nou, doar citire — `DatabaseSync(..., { readOnly: true })`) pe ambele baze active:
+
+- `Comun/Startica_Date/startica.db` — 0 cheltuieli în total (normal, „Comun” nu ține date financiare per filială).
+- `Startica_Date/startica.db` — **143 cheltuieli** cu categoria exact „Bazin” (nearhivate), nicio potrivire suplimentară după descriere. Toate din **2026-06-02 până în 2026-07-31**. Sumă totală **113.250,00 lei** (53.250 în iunie, 60.000 în iulie). Sume individuale între 300 și 10.000 lei (majoritatea 600 — o ședință; câteva mai mari, posibil mai multe ședințe plătite deodată).
+
+**Găsit pe drum, nu era anticipat în plan:** niciuna din cele 143 nu are `description` sau `method` completate (ambele goale/null la toate). Planul din §B3 zice că migrarea le-ar duce la o achitare cu `method` = metoda cheltuielii și `sourceName` = descrierea — dar aici n-ar avea nici una, nici alta. Migrarea ar trebui fie să ceară o metodă implicită (Cash?), fie să lase `method` needitat și utilizatorul completează manual din Asociere achitări.
+
+**Întrebări pentru tine, înainte de orice scriere:**
+1. Confirmi că toate cele 143 chiar sunt încasări de bazin (nu cheltuieli reale de întreținere a bazinului, gen reparații/produse chimice) — categoria „Bazin” pare folosită exclusiv pentru încasări, dar nu am cum să verific asta din date; ai tu contextul.
+2. Ce metodă de plată presupunem la migrare, dat fiind că nu e înregistrată nicăieri (Cash implicit? sau lăsăm necompletat și le rezolvi manual din Asociere achitări, una câte una)?
+3. Rulez migrarea și pe iunie-iulie 2026 (adică pe date deja „istorice”, posibil deja incluse în rapoarte închise ale lunilor respective), sau doar de-acum înainte (păstrăm istoricul cum e, migrăm doar noile cheltuieli de bazin)? Dacă migrăm și istoricul, `COADA-DE-LUCRU.md` trebuie să noteze diferența pe fiecare lună afectată (cf. §B3, pasul 4) — Dashboard/Raport contabil pentru iunie și iulie 2026 s-ar schimba retroactiv.
+
+Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `node scripts/diagnostic/b3-pool-expenses.mjs`; n-am dus-o toată aici ca să nu îngroape restul fișierului. Nimic scris, nicio migrare încă — aștept răspuns.
