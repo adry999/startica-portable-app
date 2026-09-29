@@ -95,6 +95,7 @@ export function PoolPage({ month }: PoolPageProps) {
           days={week.days}
           stats={week.stats}
           groups={groups}
+          coaches={settings.coaches}
           onCycle={(bookingId, date, next) => void week.markSession(bookingId, date, next)}
         />
       ) : (

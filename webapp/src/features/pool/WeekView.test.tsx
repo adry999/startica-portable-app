@@ -64,4 +64,22 @@ describe('WeekView', () => {
     await userEvent.click(screen.getByRole('button', { name: /Maria/ }));
     expect(onCycle).toHaveBeenCalledWith('PB-1', '2026-09-08', null);
   });
+
+  it('arată „Antrenor: <nume>” în rândul de sub carduri (22a) doar dacă există antrenori', () => {
+    const onCycle = vi.fn();
+    const { rerender } = render(
+      <WeekView days={[]} stats={{ scheduled: 0, present: 0, absent: 0, excused: 0 }} onCycle={onCycle} />,
+    );
+    expect(screen.queryByText(/Antrenor:/)).not.toBeInTheDocument();
+
+    rerender(
+      <WeekView
+        days={[]}
+        stats={{ scheduled: 0, present: 0, absent: 0, excused: 0 }}
+        coaches={[{ id: 'STF-1', name: 'Rusu Vlad' }]}
+        onCycle={onCycle}
+      />,
+    );
+    expect(screen.getByText('Rusu Vlad')).toBeInTheDocument();
+  });
 });

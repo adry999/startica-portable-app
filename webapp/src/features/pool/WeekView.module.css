@@ -43,6 +43,23 @@
   color: var(--slate);
 }
 
+/* 22a rând info: antrenorul stânga, legenda dreapta. */
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.coachLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.coachLabel strong {
+  color: var(--slate);
+}
+
 .legend {
   display: flex;
   align-items: center;
@@ -50,7 +67,7 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
-  padding: 0 4px;
+  margin-left: auto;
 }
 
 .legendItem {

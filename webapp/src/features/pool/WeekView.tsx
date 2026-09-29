@@ -44,11 +44,13 @@ export interface WeekViewProps {
   days: WeekDay[];
   stats: WeekStats;
   groups?: Group[];
+  /** Antrenorii filialei (22a, rândul de sub carduri: „Antrenor: Nume”) — omis dacă nu e niciunul. */
+  coaches?: { id: string; name: string }[];
   onCycle: (bookingId: string, date: string, next: PoolSessionStatus | null) => void;
 }
 
 /** Grila săptămânii (22a): oră × zi, clic ciclează Prezent → Lipsă → Motivat → nemarcat. */
-export function WeekView({ days, stats, groups = [], onCycle }: WeekViewProps) {
+export function WeekView({ days, stats, groups = [], coaches = [], onCycle }: WeekViewProps) {
   const times = [...new Set(days.flatMap(day => day.slots.map(slot => slot.time)))].sort();
   const todayKey = today();
 
@@ -73,23 +75,30 @@ export function WeekView({ days, stats, groups = [], onCycle }: WeekViewProps) {
         </Card>
       </div>
 
-      <div className={styles.legend}>
-        <span className={styles.legendItem}>
-          <span className={`${styles.legendDot} ${styles.dotPresent}`} />
-          Venit
-        </span>
-        <span className={styles.legendItem}>
-          <span className={`${styles.legendDot} ${styles.dotAbsent}`} />
-          Lipsă
-        </span>
-        <span className={styles.legendItem}>
-          <span className={`${styles.legendDot} ${styles.dotExcused}`} />
-          Motivat
-        </span>
-        <span className={styles.legendItem}>
-          <span className={`${styles.legendDot} ${styles.dotUnmarked}`} />
-          De marcat
-        </span>
+      <div className={styles.infoRow}>
+        {coaches.length > 0 && (
+          <span className={styles.coachLabel}>
+            Antrenor: <strong>{coaches.map(coach => coach.name).join(', ')}</strong>
+          </span>
+        )}
+        <div className={styles.legend}>
+          <span className={styles.legendItem}>
+            <span className={`${styles.legendDot} ${styles.dotPresent}`} />
+            Venit
+          </span>
+          <span className={styles.legendItem}>
+            <span className={`${styles.legendDot} ${styles.dotAbsent}`} />
+            Lipsă
+          </span>
+          <span className={styles.legendItem}>
+            <span className={`${styles.legendDot} ${styles.dotExcused}`} />
+            Motivat
+          </span>
+          <span className={styles.legendItem}>
+            <span className={`${styles.legendDot} ${styles.dotUnmarked}`} />
+            De marcat
+          </span>
+        </div>
       </div>
 
       <div className={styles.grid} style={{ gridTemplateColumns: `72px repeat(${days.length}, 1fr)` }}>
