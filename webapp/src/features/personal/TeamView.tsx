@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, DataTable, FilterPills, ListToolbar, LoadingState, type PillTone } from '@shared/ui';
+import { Button, DataTable, LoadingState, SearchInput, type PillTone } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import { RolesDrawer } from './RolesDrawer';
-import { buildStaffColumns } from './staffColumns';
+import { buildStaffColumns, isAwayToday } from './staffColumns';
 import type { Staff, TimesheetRow } from '@shared/personal/personal.types';
 import type { Group } from '@contracts/record-types.mjs';
 import styles from './TeamView.module.css';
@@ -81,35 +81,53 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
     branchIds,
     roleName: roleId => personal.roleName(roleId),
     todayCodes,
+    departmentTone: roleId => departmentTone.get(personal.roleDepartmentId(roleId) ?? '') ?? 'neutral',
   });
+
+  const onLeaveCount = filteredStaff.filter(person =>
+    isAwayToday(todayCodes.get(person.id) as TimesheetRow['code'] | undefined),
+  ).length;
+  const staffCountLabel = `${filteredStaff.length} angajat${filteredStaff.length === 1 ? '' : 'i'}`;
+  const departmentOptions: { value: string; label: string; tone: PillTone }[] = [
+    { value: 'all', label: 'Toate', tone: 'neutral' },
+    ...departmentsSorted.map(department => ({
+      value: department.id,
+      label: department.name,
+      tone: departmentTone.get(department.id) ?? ('neutral' as PillTone),
+    })),
+  ];
 
   return (
     <div className={styles.root}>
-      <ListToolbar
-        search={{ value: search, onChange: setSearch, ariaLabel: 'Caută angajat', placeholder: 'Caută angajat' }}
-      >
+      <div className={styles.toolbar} role="toolbar">
+        <SearchInput
+          className={styles.search}
+          value={search}
+          onChange={setSearch}
+          ariaLabel="Caută angajat"
+          placeholder="Caută angajat"
+        />
+        <div role="radiogroup" aria-label="Departament" className={styles.pillGroup}>
+          {departmentOptions.map(option => (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={option.value === departmentFilter}
+              className={`${styles.pill} ${styles[option.tone]} ${option.value === departmentFilter ? styles.pillActive : ''}`}
+              onClick={() => setDepartmentFilter(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <span className={styles.trailing}>
+          {staffCountLabel} · {onLeaveCount} în concediu azi
+        </span>
         <Button variant="outline" onClick={() => setRolesOpen(true)}>
           Funcții
         </Button>
-      </ListToolbar>
-
-      <FilterPills
-        groups={[
-          {
-            label: 'Departament',
-            value: departmentFilter,
-            onChange: setDepartmentFilter,
-            options: [
-              { value: 'all', label: 'Toate', tone: 'neutral' as PillTone },
-              ...departmentsSorted.map(department => ({
-                value: department.id,
-                label: department.name,
-                tone: departmentTone.get(department.id) ?? ('neutral' as PillTone),
-              })),
-            ],
-          },
-        ]}
-      />
+      </div>
 
       <DataTable
         columns={columns}
