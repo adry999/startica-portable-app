@@ -420,5 +420,13 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 874/874 teste — toate verzi. Commit `7c3246e`.
 - Urmează A5 (De notificat).
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A5 De notificat — DONE
+
+- Layout pe 2 coloane (coadă + previzualizare mesaj) era deja construit — nu tabelul vechi cu 11 coloane/4 carduri descris ca „de dispărut” în spec, deci acea parte era deja făcută.
+- Fixat: avatar părinte 40px în ton (era 30, `PersonCell` nu are variantă de 40 — celulă proprie în rând, ca la Echipa 23a); gap conținut 16px (era 18); radius carduri 22 (era 24, implicit din `Card`).
+- Neschimbat, deliberat: pastilele „SMS conectat” / „Trimite tuturor” rămân așa, nu „Telegram conectat” / „Trimite toate” din spec — pivotul de arhitectură (sms.md în loc de Telegram) e deja făcut și documentat (roadmap 2026-09-26), nu o abatere de restilizat.
+- `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 874/874 teste — toate verzi. Commit `630b993`.
+- Urmează A6 (Asociere achitări).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
