@@ -1,5 +1,6 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
@@ -89,11 +90,13 @@ function stubFetch(state: unknown) {
   );
 }
 
-function renderPage() {
+function renderPage(initialRoute = '/asociere-achitari') {
   return render(
-    <ToastProvider>
-      <AssignPage month="2026-09" />
-    </ToastProvider>,
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <ToastProvider>
+        <AssignPage month="2026-09" />
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -131,6 +134,13 @@ describe('AssignPage', () => {
 
     expect(screen.getByText('Andrei P.')).toBeInTheDocument();
     expect(screen.getByText('nu se scad din datoria nimănui')).toBeInTheDocument();
+  });
+
+  it('deschide direct achitarea din ?id= (link din Situația plăților)', async () => {
+    await loadedSession();
+    renderPage('/asociere-achitari?id=p2');
+
+    expect(screen.getByText('Achitare selectată · 05.09.2026')).toBeInTheDocument();
   });
 
   it('"Completează cu prima sugestie" alege copilul potrivit după nume', async () => {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Card, EmptyState, LoadingState, ScrollArea, SearchInput, useToast, useTopbarActions } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -27,7 +28,8 @@ function splitSuggestionLabel(label: string): { name: string; reason: string } {
 export function AssignPage({ month }: AssignPageProps) {
   const assignData = useAssign(month);
   const toast = useToast();
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [activeId, setActiveId] = useState<string | null>(() => searchParams.get('id'));
   const [search, setSearch] = useState('');
 
   const totalAmount = assignData.rows.reduce((sum, row) => sum + row.amount, 0);
