@@ -529,5 +529,15 @@ Nimic deschis în „De discutat cu utilizatorul” de mai jos. `npm run check` 
 
 Cele 143 achitări rămân neasociate unui copil (`childId: ''`) — apar în **Asociere achitări** (64 achitări neasociate în total la data migrării, incluzându-le), unde urmează să fie potrivite manual cu copiii.
 
+## 2026-09-30 — PROMPT-CLAUDE-CODE-3.md, punctul 0 — pachetul de design system — DONE
+
+Copiat din `design_final_startica/` (`Startica V2.zip`, șters după): 10 artboard-uri `.dc.html` noi (DS Fundamente/Fundamente 2/Componente/Componente 2/Tabel și filtre/Componente formular/Încărcare și stări/Date și grafice/Tipare de pagină/Diverse), `DS-IMPLEMENTARE.md`, `AUDIT-DESIGN-COD.md`, `COMPONENTE.md` extins cu §0–§0i (spec-ul complet al componentelor de design system — Field/TextInput/Select/DataTable/FilterMenu/Popover etc.), `ECRANE.md` la zi, plus `Administrare.dc.html` (10e, fără Zonă periculoasă), `Personal.dc.html` (23m respins), `De notificat.dc.html` („SMS conectat”), `Formulare.dc.html` (15b „…prin SMS”), `Sms.dc.html` (11c/11d). Secțiunea „Design system” din `CLAUDE-md-snippet.md` adăugată în `CLAUDE.md`.
+
+**Descoperire la copiere:** suprascrierea a șters 2 note „Descope 29.09” (deciziile de a nu construi „Probleme la backup”/„Zonă periculoasă”/Import CSV) din `ALINIERE-DESIGN.md` și `screens/12-administrare.md` — restaurate, deciziile rămân valide (reconfirmate chiar în `PROMPT-CLAUDE-CODE-3.md` §„Nu se face”).
+
+`npm run check` (root, 1182/1182 + 2 skip) + webapp (typecheck curat, 897/897 teste) — verzi. Commit `6de566c`.
+
+Urmează punctul 1 (confirmarea rulării B1).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
