@@ -66,20 +66,20 @@ export function GroupCardCompact({
         onDropGroup(event.dataTransfer.getData(GROUP_DRAG_TYPE));
       }}
     >
-      <span className={styles.handle} aria-hidden="true">
-        ⋮⋮
-      </span>
-      {onOpenStickers && (
-        <div className={styles.menu}>
-          <RowMenu
-            items={[{ label: 'Stickere pentru grupă', onClick: onOpenStickers }]}
-            ariaLabel={`Acțiuni grupa ${group.name}`}
-          />
-        </div>
-      )}
       <div className={styles.headRow}>
+        <span className={styles.handle} aria-hidden="true">
+          ⋮⋮
+        </span>
         <p className={styles.name}>{group.name}</p>
         <strong className={styles.occupancy}>{group.occupancyLabel}</strong>
+        {onOpenStickers && (
+          <div className={styles.menu}>
+            <RowMenu
+              items={[{ label: 'Stickere pentru grupă', onClick: onOpenStickers }]}
+              ariaLabel={`Acțiuni grupa ${group.name}`}
+            />
+          </div>
+        )}
       </div>
       <div className={styles.bar}>
         {group.capacity != null && (
