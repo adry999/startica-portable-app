@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="DS Fundamente.dc.html">DS · Fundamente</a><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="DS Componente.dc.html">DS · Componente</a><span style="font-weight:800;color:#3a4750">DS · Formular</span><a href="Formulare.dc.html">Formulare</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare și stări</a><a href="DS Date si grafice.dc.html">DS · Date și grafice</a><a href="DS Tipare de pagina.dc.html">DS · Tipare de pagină</a><a href="DS Diverse.dc.html">DS · Diverse</a><a href="DS Fundamente 2.dc.html">DS · Fundamente 2</a><a href="DS Componente 2.dc.html">DS · Componente 2</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Componente de formular</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un singur set de câmpuri pentru toată aplicația. Fiecare câmp din panouri, dialoguri, setări și bare de filtre se construiește din piesele de mai jos, cu aceleași valori. <a href="#25a">25a</a> anatomia și stările. <a href="#25b">25b</a> tipurile de câmp. <a href="#25c">25c</a> alegeri (bifă, radio, comutator, segmented, pastile, carduri). <a href="#25d">25d</a> suma mare și căutarea cu listă. <a href="#25e">25e</a> mărimea mică, pentru filtre și rânduri de setări. <a href="#25f">25f</a> un panou întreg construit doar din aceste piese.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="25a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">25a</span><span style="font-size:16px;font-weight:700">Field · anatomie și stări · TextInput</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:28px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13px;font-weight:700">Numele părintelui <span style="font-weight:600;color:#9aa3a9">· opțional</span></span>
+            <span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:15px;font-weight:600;color:#9aa3a9">ex. Balan Lilia</span>
+            <span style="font-size:12px;color:#6b7780">Apare pe confirmarea de plată.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.5;color:#5b666e">
+            <span><b style="color:#3a4750">Etichetă</b> 13/700, gap 8 până la câmp. Câmpurile obligatorii nu se marchează; cele opționale primesc „· opțional” 13/600 <code>--subtle</code>.</span>
+            <span><b style="color:#3a4750">Câmp</b> <code>11px 14px</code>, radius 12, border 1px <code>--input-border</code>, 15/600.</span>
+            <span><b style="color:#3a4750">Ajutor</b> 12px <code>--muted</code>. Când apare eroarea, o înlocuiește.</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 20px">
+          <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">{{ s.tag }}</span>
+              <span style="font-size:13px;font-weight:700;color:{{ s.lab }}">Telefon</span>
+              <span style="padding:{{ s.pad }};border-radius:12px;border:{{ s.bd }};background:{{ s.bg }};box-shadow:{{ s.ring }};font-size:15px;font-weight:600;color:{{ s.fg }}">{{ s.val }}</span>
+              <span style="font-size:12px;font-weight:{{ s.hw }};color:{{ s.hc }}">{{ s.hint }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div id="25b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">25b</span><span style="font-size:16px;font-weight:700">Tipuri de câmp</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px 20px">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Select</span><span style="font-size:13px;font-weight:700">Relația</span><span style="display:flex;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600">Mamă<span style="margin-left:auto;color:#6b7780;font-size:12px">▾</span></span><span style="font-size:12px;color:#6b7780">Pentru 2–8 opțiuni fixe. Peste 8, folosește SearchSelect.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">NumberInput · sufix</span><span style="font-size:13px;font-weight:700">Capacitate</span><span style="display:flex;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">18<span style="margin-left:auto;color:#9aa3a9;font-size:14px;font-weight:700">copii</span></span><span style="font-size:12px;color:#6b7780">Fără săgețile native. Sufixul e text, nu parte din valoare.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">DateInput</span><span style="font-size:13px;font-weight:700">Data nașterii</span><span style="display:flex;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">14.03.2022<span style="margin-left:auto;color:#6b7780;font-size:13px;font-weight:700">4 ani</span></span><span style="font-size:12px;color:#6b7780">Format zz.ll.aaaa. În dreapta, opțional, un rezultat calculat.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">PhoneInput</span><span style="font-size:13px;font-weight:700">Telefon</span><span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">069 123 456</span><span style="font-size:12px;font-weight:800;color:#2e6b4c">✓ +373 69 123 456</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">MonthInput</span><span style="font-size:13px;font-weight:700">Valabil din</span><span style="display:flex;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600">Octombrie 2026<span style="margin-left:auto;color:#6b7780;font-size:12px">▾</span></span><span style="font-size:12px;color:#6b7780">Deschide același popover ca MonthPicker.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">PinInput</span><span style="font-size:13px;font-weight:700">PIN</span><div style="display:flex;gap:8px"><span style="width:44px;height:50px;border-radius:12px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800">•</span><span style="width:44px;height:50px;border-radius:12px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800">•</span><span style="width:44px;height:50px;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3"></span><span style="width:44px;height:50px;border-radius:12px;border:1.5px solid #ede7dc"></span></div><span style="font-size:12px;color:#6b7780">Ca în 23d, în format mai mic pentru setări.</span></div>
+        <div style="grid-column:1 / span 2;display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">TextArea</span><span style="font-size:13px;font-weight:700">Notă</span><span style="min-height:96px;box-sizing:border-box;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:15px;font-weight:600;line-height:1.5">Vine luni cu bunica, iar tatăl o ia la 17:00.</span><span style="display:flex;justify-content:space-between;font-size:12px;color:#6b7780"><span>Se mărește odată cu textul, până la 240px.</span><span>47 / 500</span></span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">FileInput</span><span style="font-size:13px;font-weight:700">Fișier Excel</span><span style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 14px;border-radius:12px;border:1.5px dashed #e0d5c2;background:#fffaf0;font-size:13px;font-weight:700;text-align:center">Trage fișierul aici<span style="font-weight:800;color:#a34f00">sau alege de pe calculator</span></span><span style="font-size:12px;color:#6b7780">.xlsx, .xls · până la 10 MB</span></div>
+      </div>
+    </div>
+
+    <div id="25c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">25c</span><span style="font-size:16px;font-weight:700">Alegeri</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 24px">
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Checkbox</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</span>Planificat</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:5px;border:1.5px solid #c9c4ba;background:#fff"></span>Ține minte plătitorul</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#9aa3a9"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:5px;border:1.5px solid #ede7dc;background:#f4f1ea"></span>Telegram neconectat</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Radio</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:50%;border:5px solid #ef8a1d;background:#fff"></span>Toată echipa</span>
+          <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:50%;border:1.5px solid #c9c4ba;background:#fff"></span>Un singur angajat</span>
+          <span style="font-size:12px;color:#6b7780">Doar în dialoguri de tipar și export. În formulare se folosește segmented-ul.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Toggle</span>
+          <span style="display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700"><span style="width:46px;height:26px;border-radius:999px;background:#ef8a1d;display:flex;align-items:center;justify-content:flex-end;padding:3px;box-sizing:border-box"><span style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></span></span>Restanțe</span>
+          <span style="display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700"><span style="width:46px;height:26px;border-radius:999px;background:#ede7dc;display:flex;align-items:center;padding:3px;box-sizing:border-box"><span style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></span></span>Bazin</span>
+          <span style="font-size:12px;color:#6b7780">Pentru setări care se aplică imediat. Existent: <code>Toggle</code>.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">SegmentedControl · field</span><span style="font-size:13px;font-weight:700">Metodă</span>
+          <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700"><span style="flex:1;text-align:center;padding:8px 0;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Cash</span><span style="flex:1;text-align:center;padding:8px 0;color:#6b7780">Card</span><span style="flex:1;text-align:center;padding:8px 0;color:#6b7780">Transfer</span></div>
+          <span style="font-size:12px;color:#6b7780">2–4 opțiuni scurte, toată lățimea câmpului.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">ChipSelect</span><span style="font-size:13px;font-weight:700">Categorie</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:13px;font-weight:800"><span style="padding:7px 14px;border-radius:999px;background:#3a4750;color:#fff">Alimente</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">Salarii</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">Chirie</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">Rechizite</span></div>
+          <span style="font-size:12px;color:#6b7780">Alegere unică sau multiplă. Selectat = slate sau tonul opțiunii.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">ChoiceCards</span><span style="font-size:13px;font-weight:700">Program</span>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <span style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;border:2px solid #ef8a1d;background:#fcead3"><span style="font-size:14px;font-weight:800">Zi întreagă</span><span style="font-size:12px;color:#5b666e">480 € / lună</span></span>
+            <span style="display:flex;flex-direction:column;gap:2px;padding:11px 13px;border-radius:14px;border:1.5px solid #ede7dc"><span style="font-size:14px;font-weight:800">Jumătate</span><span style="font-size:12px;color:#5b666e">300 € / lună</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="25d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">25d</span><span style="font-size:16px;font-weight:700">AmountInput · SearchSelect</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Sumă</span>
+          <span style="display:flex;align-items:baseline;gap:8px;padding:14px 18px;border-radius:16px;border:1.5px solid #ef8a1d;background:#fffaf0"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:40px;line-height:1">9.600</span><span style="font-size:18px;font-weight:700;color:#9aa3a9">lei</span></span>
+          <div style="display:flex;gap:6px;font-size:12px;font-weight:800"><span style="padding:5px 12px;border-radius:999px;background:#3a4750;color:#fff">1 lună · 9.600</span><span style="padding:5px 12px;border-radius:999px;background:#f4f1ea">2 luni · 19.200</span><span style="padding:5px 12px;border-radius:999px;background:#f4f1ea">3 luni · 28.800</span></div>
+          <span style="font-size:12px;color:#6b7780">Baloo 40 în panou, 36 în dialog. Scurtăturile sunt opționale.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Copil</span>
+          <span style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3;font-size:15px;font-weight:600"><span style="color:#9aa3a9">⌕</span>bal</span>
+          <div style="display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#fff;border:1px solid #ede7dc;box-shadow:0 12px 30px rgba(58,71,80,.14)">
+            <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fcead3"><span style="width:28px;height:28px;border-radius:50%;background:#fce9ef;color:#b0284f;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">BI</span><span style="flex:1;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:800"><b style="color:#a34f00">Bal</b>an Ilinca</span><span style="font-size:12px;color:#6b7780">Stele · Balan Lilia</span></span></span>
+            <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px"><span style="width:28px;height:28px;border-radius:50%;background:#e7f4ec;color:#2e6b4c;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">BT</span><span style="flex:1;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:800"><b style="color:#a34f00">Bal</b>anuța Tudor</span><span style="font-size:12px;color:#6b7780">Soare · Balanuța Vera</span></span></span>
+          </div>
+          <span style="font-size:12px;color:#6b7780">Existent: <code>SearchSelect</code>. Rând cu avatar și sub-text opțional, potrivirea îngroșată.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="25e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">25e</span><span style="font-size:16px;font-weight:700">Mărimea sm · filtre, rânduri de setări</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:16px;border:1px solid #ede7dc">
+          <span style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">⌕ Caută destinatar sau telefon</span>
+          <span style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid #ede7dc;font-size:13px;font-weight:700">Toate șabloanele<span style="color:#6b7780;font-size:11px">▾</span></span>
+          <span style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid #ede7dc;font-size:13px;font-weight:700">Ultimele 30 de zile<span style="color:#6b7780;font-size:11px">▾</span></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:16px;border:1px solid #ede7dc">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:800;font-size:15px">Zile de naștere</span><span style="font-size:13px;color:#6b7780">Copiii care împlinesc ani, cu atâtea zile înainte.</span></div>
+          <span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#6b7780">cu<span style="width:44px;text-align:center;padding:7px 0;border-radius:10px;border:1px solid #c9c4ba;color:#3a4750;font-variant-numeric:tabular-nums">1</span>zile înainte</span>
+          <span style="width:46px;height:26px;border-radius:999px;background:#ef8a1d;display:flex;align-items:center;justify-content:flex-end;padding:3px;box-sizing:border-box"><span style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></span></span>
+        </div>
+        <span style="font-size:13px;color:#5b666e;line-height:1.5">Mărimea <b>sm</b>: <code>8px 12px</code> (numeric <code>7px 0</code>, lățime fixă), radius 10, border 1px <code>--border</code> (în filtre) sau <code>--input-border</code> (în rânduri de setări), 13/700. Etichetele stau în linie, nu deasupra. Aceleași stări ca în 25a.</span>
+      </div>
+    </div>
+
+    <div id="25f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">25f</span><span style="font-size:16px;font-weight:700">FormSection + FormGrid · un panou întreg (Programare nouă)</span></div>
+      <div style="width:520px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);display:flex;flex-direction:column;overflow:hidden">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:24px 30px;border-bottom:1px solid #ede7dc"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#ef8a1d">Bazin</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;line-height:1.1">Programare nouă</span></div><span style="width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7780">×</span></div>
+        <div style="padding:22px 30px;display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="display:flex;align-items:center;gap:10px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px"><span style="width:24px;height:24px;border-radius:8px;background:#3a4750;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">1</span>Cine</span>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Copil</span><span style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:15px;font-weight:600">Balan Ilinca<span style="margin-left:auto;font-size:13px;font-weight:800;color:#a34f00">Schimbă</span></span></div>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Antrenor</span><span style="display:flex;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:15px;font-weight:600">Rusu Vlad<span style="margin-left:auto;color:#6b7780;font-size:12px">▾</span></span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="display:flex;align-items:center;gap:10px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px"><span style="width:24px;height:24px;border-radius:8px;background:#3a4750;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center">2</span>Când</span>
+            <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Zile</span><div style="display:flex;gap:6px;font-size:13px;font-weight:800"><span style="padding:7px 14px;border-radius:999px;background:#3a4750;color:#fff">L</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">Ma</span><span style="padding:7px 14px;border-radius:999px;background:#3a4750;color:#fff">Mi</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">J</span><span style="padding:7px 14px;border-radius:999px;background:#f4f1ea">V</span></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">De la</span><span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:15px;font-weight:600">01.10.2026</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Până la <span style="font-weight:600;color:#9aa3a9">· opțional</span></span><span style="padding:11px 14px;border-radius:12px;border:1px solid #c9c4ba;background:#fff;font-size:15px;font-weight:600;color:#9aa3a9">zz.ll.aaaa</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:18px 30px;border-top:1px solid #ede7dc;background:#fff"><span style="font-size:13px;color:#6b7780">8 ședințe în octombrie</span><span style="margin-left:auto;padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span><span style="padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Salvează</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const base = { pad: '11px 14px', bd: '1px solid #c9c4ba', bg: '#fff', ring: 'none', fg: '#3a4750', lab: '#3a4750', hw: 400, hc: '#6b7780' };
+    const states = [
+      { tag: 'Gol', val: '069 123 456', fg: '#9aa3a9', hint: 'Mobil sau fix, din Moldova.' },
+      { tag: 'Hover', val: '069 123 456', fg: '#9aa3a9', bd: '1px solid #9aa3a9', hint: 'Mobil sau fix, din Moldova.' },
+      { tag: 'Focus', val: '069 12', pad: '10.5px 13.5px', bd: '1.5px solid #ef8a1d', ring: '0 0 0 3px #fcead3', hint: 'Mobil sau fix, din Moldova.' },
+      { tag: 'Completat', val: '069 123 456', hint: '✓ +373 69 123 456', hw: 800, hc: '#2e6b4c' },
+      { tag: 'Eroare', val: '069 12', pad: '10.5px 13.5px', bd: '1.5px solid #e9527c', bg: '#fffafb', lab: '#b0284f', hint: 'Numărul are prea puține cifre.', hw: 700, hc: '#b0284f' },
+      { tag: 'Dezactivat', val: '069 123 456', bd: '1px solid #ede7dc', bg: '#f4f1ea', fg: '#9aa3a9', lab: '#9aa3a9', hint: 'Se schimbă din fișa copilului.', hc: '#9aa3a9' }
+    ].map(s => ({ ...base, ...s }));
+    return { states };
+  }
+}
+</script>
+</body>
+</html>

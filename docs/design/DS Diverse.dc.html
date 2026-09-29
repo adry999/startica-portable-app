@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}@keyframes dsSpin{to{transform:rotate(360deg)}}@keyframes dsPulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1040px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="DS Fundamente.dc.html">DS · Fundamente</a><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="DS Componente.dc.html">DS · Componente</a><a href="Componente formular.dc.html">DS · Formular</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare și stări</a><a href="DS Date si grafice.dc.html">DS · Date și grafice</a><a href="DS Tipare de pagina.dc.html">DS · Tipare de pagină</a><span style="font-weight:800;color:#3a4750">DS · Diverse</span><a href="DS Fundamente 2.dc.html">DS · Fundamente 2</a><a href="DS Componente 2.dc.html">DS · Componente 2</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Design system · Diverse</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#32a">32a</a> GlobalSearch. <a href="#32b">32b</a> BranchSelector și SyncStatusCard. <a href="#32c">32c</a> TonePicker. <a href="#32d">32d</a> SmsPreview și SegmentCounter. <a href="#32e">32e</a> Kbd, scurtături. <a href="#32f">32f</a> piese de tipar (A4, A5, 58 mm). <a href="#32g">32g</a> TagInput, Slider, Stepper numeric, CopyField.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="32a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">32a</span><span style="font-size:16px;font-weight:700">GlobalSearch · Ctrl+K</span></div>
+      <div style="width:620px;display:flex;flex-direction:column;gap:10px">
+        <span style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:999px;background:#fff;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3;font-size:15px;font-weight:600"><span style="color:#9aa3a9">⌕</span>bal<span style="margin-left:auto">{{ spinSearch }}</span><span style="padding:2px 7px;border-radius:6px;border:1px solid #ede7dc;border-bottom-width:2px;font-size:11px;font-weight:800;color:#6b7780">Esc</span></span>
+        <div style="display:flex;flex-direction:column;padding:8px;border-radius:18px;background:#fff;border:1px solid #ede7dc;box-shadow:0 20px 50px rgba(58,71,80,.2)">
+          <sc-for list="{{ gsGroups }}" as="g" hint-placeholder-count="3">
+            <span style="padding:8px 10px 4px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">{{ g.t }}</span>
+            <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="2"><span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:{{ i.bg }}"><span style="width:28px;height:28px;border-radius:{{ i.r }};background:{{ i.av }};color:{{ i.ink }};font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ i.ini }}</span><span style="flex:1;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:800">{{ i.n }}</span><span style="font-size:12px;color:#6b7780">{{ i.s }}</span></span><span style="font-size:12px;color:#9aa3a9;font-weight:700">{{ i.k }}</span></span></sc-for>
+          </sc-for>
+          <span style="display:flex;gap:14px;padding:10px 10px 4px;margin-top:4px;border-top:1px solid #f3eee5;font-size:12px;color:#6b7780"><span><b>↑↓</b> alege</span><span><b>Enter</b> deschide</span><span style="margin-left:auto">Caută în copii, părinți, telefoane, achitări, personal</span></span>
+        </div>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">Câmp în antet, 300px, care la focus se lărgește la 480. Rezultatele sunt grupate pe tip, maximum 4 pe grup, plus „Vezi toate N” pe grup. Fără diacritice. Rezultatul se încarcă = spinner în câmp, iar grupurile vechi rămân vizibile. Nimic găsit = „Nimic pentru „bal”” + sugestia „Adaugă copil”.</span>
+      </div>
+    </div>
+
+    <div id="32b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32b</span><span style="font-size:16px;font-weight:700">BranchSelector · SyncStatusCard · 5 stări</span></div>
+      <div style="width:620px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:260px 1fr;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:14px;border:1.5px solid #f6d3ad;background:#fcead3"><span style="width:30px;height:30px;border-radius:9px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:800;display:flex;align-items:center;justify-content:center">B</span><span style="flex:1;display:flex;flex-direction:column"><span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3a9">Filiala</span><b style="font-size:14px">Buiucani</b></span><span style="font-size:12px;color:#6b7780">▾</span></span>
+          <div style="display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16)"><span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fffaf0;font-size:14px;font-weight:800"><span style="width:24px;height:24px;border-radius:8px;background:#ef8a1d;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center">B</span>Buiucani<span style="margin-left:auto;color:#ef8a1d">✓</span></span><span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-size:14px;font-weight:700"><span style="width:24px;height:24px;border-radius:8px;background:#3f9a6b;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center">Bo</span>Botanica<span style="margin-left:auto">{{ spinBranch }}</span></span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.45">La schimbarea filialei, rândul primește spinner. Dacă există un formular nesalvat, apare mai întâi 13b.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ sync }}" as="s" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:{{ s.bg }};font-size:13px;font-weight:700;color:{{ s.fg }}"><span style="width:10px;height:10px;border-radius:50%;background:{{ s.dot }};animation:{{ s.anim }}"></span><span style="flex:1;display:flex;flex-direction:column"><b>{{ s.t }}</b><span style="font-size:11px;font-weight:600;opacity:.8">{{ s.s }}</span></span></span></sc-for></div>
+      </div>
+    </div>
+
+    <div id="32c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32c</span><span style="font-size:16px;font-weight:700">TonePicker</span></div>
+      <div style="width:460px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:13px;font-weight:700">Culoare</span>
+        <div style="display:flex;gap:8px"><sc-for list="{{ tones }}" as="t" hint-placeholder-count="8"><span style="width:32px;height:32px;box-sizing:border-box;border-radius:10px;background:{{ t.soft }};border:{{ t.bd }};display:flex;align-items:center;justify-content:center;color:{{ t.ink }};font-size:13px;font-weight:800;opacity:{{ t.op }}">{{ t.m }}</span></sc-for></div>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">8 pătrate 32×32, radius 10. Ales = border 2px în ink + ✓. Tonul folosit de altă grupă = punct mic și tooltip „folosit de Mars”, dar se poate alege. Se previzualizează imediat pe cardul grupei.</span>
+      </div>
+    </div>
+
+    <div id="32d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32d</span><span style="font-size:16px;font-weight:700">SmsPreview · SegmentCounter</span></div>
+      <div style="width:620px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:24px;background:#f4f1ea"><span style="font-size:11px;font-weight:800;color:#9aa3a9;text-align:center">Startica · acum</span><span style="align-self:flex-start;max-width:220px;padding:10px 14px;border-radius:18px 18px 18px 6px;background:#fff;font-size:14px;line-height:1.45;box-shadow:0 1px 2px rgba(58,71,80,.08)">Buna ziua, <b style="background:#fcead3;border-radius:4px;padding:0 3px">Lilia</b>! Va reamintim ca taxa pentru <b style="background:#fcead3;border-radius:4px;padding:0 3px">Ilinca</b>, de <b style="background:#fcead3;border-radius:4px;padding:0 3px">9.600 lei</b>, avea scadenta pe 20. Startica</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>142 / 160 caractere</span><span style="color:#2e6b4c">1 SMS · GSM-7</span></span><span style="height:6px;border-radius:999px;background:#f1ece2;overflow:hidden;display:flex"><span style="width:89%;background:#3f9a6b"></span></span></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>82 / 70 caractere</span><span style="color:#b0284f">2 SMS · diacritice</span></span><span style="height:6px;border-radius:999px;background:#f1ece2;overflow:hidden;display:flex"><span style="width:100%;background:#e9527c"></span></span><span style="font-size:12px;color:#6b7780">„ă, ș, ț” trec mesajul pe UCS-2. <b style="color:#a34f00">Scoate diacriticele</b></span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Variabilele completate apar evidențiate. Bula e în stilul telefonului. Contorul: verde până la 1 SMS, galben la 2, raspberry peste 2. Costul = segmente × preț.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="32e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32e</span><span style="font-size:16px;font-weight:700">Kbd · scurtături</span></div>
+      <div style="width:460px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column">
+        <sc-for list="{{ keys }}" as="k" hint-placeholder-count="7"><div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f3eee5"><span style="flex:1;font-size:14px;font-weight:700">{{ k.d }}</span><sc-for list="{{ k.k }}" as="x" hint-placeholder-count="2"><span style="padding:3px 8px;border-radius:6px;border:1px solid #ede7dc;border-bottom-width:2px;background:#fffaf0;font-size:12px;font-weight:800;color:#5b666e;font-variant-numeric:tabular-nums">{{ x }}</span></sc-for></div></sc-for>
+        <span style="padding-top:12px;font-size:12px;color:#5b666e;line-height:1.5">„?” deschide lista. Scurtătura apare și în tooltipul butonului („Anulează · Ctrl+Z”). Scurtăturile nu merg cât scrii într-un câmp, cu excepția lui Esc.</span>
+      </div>
+    </div>
+
+    <div id="32f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32f</span><span style="font-size:16px;font-weight:700">Piese de tipar · PrintHeader, PrintTable, SignatureLine, ThermalBlock</span></div>
+      <div style="width:1100px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start">
+        <div style="background:#fff;padding:28px 32px;box-shadow:0 20px 60px rgba(58,71,80,.16);display:flex;flex-direction:column;gap:16px;font-size:12px">
+          <div style="display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:2px solid #3a4750"><img src="web/assets/startica-logo.svg" alt="Startica" style="height:30px"></img><span style="flex:1;display:flex;flex-direction:column;line-height:1.35;color:#5b666e"><b style="color:#3a4750;font-size:13px">Grădinița Startica · filiala Buiucani</b>str. Alba Iulia 75, Chișinău · IDNO 1012600012345</span><span style="text-align:right;line-height:1.35"><b style="font-family:'Baloo 2',sans-serif;font-size:18px">Situația plăților</b><br></br>Septembrie 2026</span></div>
+          <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;border:1px solid #cccccc"><sc-for list="{{ prHead }}" as="h" hint-placeholder-count="4"><span style="padding:6px 8px;background:#f4f1ea;font-weight:800;border-right:1px solid #cccccc;text-align:{{ h.a }}">{{ h.t }}</span></sc-for><sc-for list="{{ prRows }}" as="c" hint-placeholder-count="8"><span style="padding:6px 8px;border-top:1px solid #cccccc;border-right:1px solid #cccccc;text-align:{{ c.a }};font-variant-numeric:tabular-nums">{{ c.t }}</span></sc-for></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;padding-top:20px"><span style="display:flex;flex-direction:column;gap:4px"><span style="border-bottom:1px solid #3a4750;height:26px"></span><span style="color:#6b7780">Administrator · semnătura</span></span><span style="display:flex;flex-direction:column;gap:4px"><span style="border-bottom:1px solid #3a4750;height:26px"></span><span style="color:#6b7780">Părinte · semnătura</span></span></div>
+          <span style="display:flex;justify-content:space-between;color:#9aa3a9;font-size:10px;border-top:1px solid #ede7dc;padding-top:6px"><span>Tipărit 30.09.2026 · 10:41 · Startica v2.0.0</span><span>C-2026-0418</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="width:220px;background:#fff;padding:14px 12px;box-shadow:0 20px 60px rgba(58,71,80,.16);font-family:monospace;font-size:11px;color:#000;display:flex;flex-direction:column;gap:4px;line-height:1.35"><b style="text-align:center;font-size:13px">STARTICA</b><span style="text-align:center">Buiucani · 30.09.2026 10:41</span><span style="border-top:1px dashed #000;margin:4px 0"></span><span style="display:flex;justify-content:space-between"><span>Balan Ilinca</span><b>9.600</b></span><span style="display:flex;justify-content:space-between"><span>Sep 2026 · Cash</span><span>lei</span></span><span style="border-top:1px dashed #000;margin:4px 0"></span><b style="display:flex;justify-content:space-between;font-size:13px"><span>TOTAL</span><span>9.600</span></b></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Tipar alb-negru, fără tokeni de culoare (<code>#000</code>/<code>#ccc</code>/<code>#222</code>). PrintHeader = logo + grădiniță + titlu. PrintTable are border 1px pe toate celulele și sumele la dreapta. SignatureLine. PrintFooter cu data, versiunea și numărul. ThermalBlock 58 mm, monospace, linii punctate. Previzualizarea arată „Pregătesc…” (29f), apoi deschide automat dialogul de tipar.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="32g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">32g</span><span style="font-size:16px;font-weight:700">TagInput · NumberStepper · Slider · CopyField</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:24px 28px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Alergii</span><span style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-radius:12px;border:1px solid #c9c4ba;min-height:44px;box-sizing:border-box"><span style="display:flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:999px;background:#fce9ef;color:#b0284f;font-size:12px;font-weight:800">Arahide<span style="font-size:11px">×</span></span><span style="display:flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:999px;background:#fce9ef;color:#b0284f;font-size:12px;font-weight:800">Lactoză<span style="font-size:11px">×</span></span><span style="font-size:14px;color:#9aa3a9;padding:4px">Adaugă…</span></span><span style="font-size:12px;color:#6b7780">Enter sau virgulă adaugă. Backspace șterge ultima.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Locuri pe oră</span><span style="display:flex;align-items:stretch;border-radius:12px;border:1px solid #c9c4ba;overflow:hidden;align-self:flex-start"><span style="width:40px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#f4f1ea">−</span><span style="width:60px;display:flex;align-items:center;justify-content:center;padding:11px 0;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums">6</span><span style="width:40px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#f4f1ea">+</span></span><span style="font-size:12px;color:#6b7780">Pentru valori mici (0–30). Ține apăsat = repetă.</span></div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="display:flex;justify-content:space-between;font-size:13px;font-weight:700">Mărimea interfeței<b>90%</b></span><span style="position:relative;height:6px;border-radius:999px;background:#f1ece2"><span style="position:absolute;left:0;top:0;bottom:0;width:40%;border-radius:999px;background:#ef8a1d"></span><span style="position:absolute;left:40%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:#fff;border:2px solid #ef8a1d;box-shadow:0 2px 6px rgba(58,71,80,.2)"></span></span><span style="display:flex;justify-content:space-between;font-size:11px;color:#9aa3a9;font-weight:800"><span>80</span><span>100</span><span>120</span></span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Cod de asociere</span><span style="display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-radius:12px;background:#fffaf0;border:1px solid #ede7dc;font-family:'Baloo 2',sans-serif;font-size:20px;font-weight:800;letter-spacing:.2em">482 913<span style="margin-left:auto;padding:6px 12px;border-radius:999px;background:#3a4750;color:#fff;font-family:Nunito,sans-serif;font-size:12px;letter-spacing:0">Copiat ✓</span></span><span style="font-size:12px;color:#6b7780">Expiră în 9:42 · <b style="color:#a34f00">Cod nou</b></span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const spin = (s, c) => h('span', { style: { display: 'inline-block', flexShrink: 0, width: s, height: s, boxSizing: 'border-box', borderRadius: '50%', border: `2px solid ${c}33`, borderTopColor: c, animation: 'dsSpin .8s linear infinite' } });
+    const it = (n, s, ini, av, ink, k, r, act) => ({ n, s, ini, av, ink, k, r: r || '50%', bg: act ? '#fcead3' : 'transparent' });
+    const gsGroups = [
+      { t: 'Copii · 3', items: [it('Balan Ilinca', 'Mars · Balan Lilia · 069 123 456', 'BI', '#f6d3ad', '#a34f00', 'Fișă', 0, 1), it('Balanuța Tudor', 'Mars · Balanuța Vera', 'BT', '#f6d3ad', '#a34f00', 'Fișă')] },
+      { t: 'Achitări · 12', items: [it('9.600 lei · Balan Ilinca', '29.09 · Cash · C-2026-0418', 'lei', '#e7f4ec', '#2e6b4c', 'Achitări', '8px')] },
+      { t: 'Personal · 1', items: [it('Balan Olga', 'Bucătăreasă · Buiucani', 'BO', '#f4f1ea', '#5b666e', 'Fișă')] }
+    ];
+    const sync = [
+      ['Sincronizat', 'acum 2 min', '#e7f4ec', '#2e6b4c', '#3f9a6b', 'none'],
+      ['Se sincronizează', '3 modificări', '#fdf3d2', '#7a5d00', '#e0b400', 'dsPulse 1.2s ease-in-out infinite'],
+      ['Fără internet', 'lucrezi local · 5 în așteptare', '#f4f1ea', '#5b666e', '#9aa3a9', 'none'],
+      ['Conflict', '1 de rezolvat →', '#fce9ef', '#b0284f', '#e9527c', 'none'],
+      ['Deconectat', 'acest calculator a fost scos', '#3a4750', '#fff', '#e9527c', 'none']
+    ].map(([t, s, bg, fg, dot, anim]) => ({ t, s, bg, fg, dot, anim }));
+    const tones = [['#fcead3', '#a34f00', 1], ['#e7f4ec', '#2e6b4c', 0], ['#fdf3d2', '#7a5d00', 0], ['#fce9ef', '#b0284f', 0], ['#dff1f0', '#1f6464', 0], ['#e4eef6', '#2c5a80', 0], ['#eee8f6', '#5b3f86', 0], ['#fbe6dc', '#9a3f1c', 0]].map(([soft, ink, sel]) => ({ soft, ink, bd: sel ? `2px solid ${ink}` : '1px solid transparent', m: sel ? '✓' : '', op: 1 }));
+    const keys = [['Căutare globală', ['Ctrl', 'K']], ['Anulează ultima modificare', ['Ctrl', 'Z']], ['Închide panoul / dialogul', ['Esc']], ['Salvează formularul', ['Ctrl', 'Enter']], ['De verificat: marchează și treci mai departe', ['S']], ['Rândul următor / anterior', ['↓', '↑']], ['Lista de scurtături', ['?']]].map(([d, k]) => ({ d, k }));
+    const prHead = [['Copil', 'left'], ['Taxă', 'right'], ['Achitat', 'right'], ['Rest', 'right']].map(([t, a]) => ({ t, a }));
+    const prRows = [['Balan Ilinca', '9.600', '9.600', '0'], ['Ceban Maria', '9.600', '4.800', '4.800']].flatMap(r => r.map((t, i) => ({ t, a: i ? 'right' : 'left' })));
+    return { gsGroups, sync, tones, keys, prHead, prRows, spinSearch: spin(16, '#6b7780'), spinBranch: spin(14, '#ef8a1d') };
+  }
+}
+</script>
+</body>
+</html>

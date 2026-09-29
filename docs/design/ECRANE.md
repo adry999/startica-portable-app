@@ -69,6 +69,119 @@ Fiecare id se deschide cu `<Fișier>.dc.html#<id>`. Lățimea 1440 = desktop cu 
 | `13b` | Formular nesalvat la schimbare | 520 |
 | `13c` | Backup și setări → fila Filiale | 760 |
 
+## Design system · Fundamente — `DS Fundamente.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `26a` | Culori de bază | 980 |
+| `26b` | Tonuri de grupă soft/frame/bar/ink | 980 |
+| `26c` | Stări semantice | 980 |
+| `26d` | Tipografie pe roluri | 980 |
+| `26e` | Raze, umbre, spațiere | 980 |
+
+## Design system · Tabel și filtre — `DS Tabel si filtre.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `27a` | DataTable complet | 1152 |
+| `27b` | Antet de coloană și sortare | 560 |
+| `27c` | Tipuri de celulă | 560 |
+| `27d` | Stările rândului | 560 |
+| `27e` | Filtre | 1152 |
+| `27f` | Grupare, gol, încărcare, fără rezultate | 1152 |
+| `27g` | SelectionBar | 1152 |
+| `27h` | Coloane, densitate, export | 1152 |
+
+## Design system · Componente — `DS Componente.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `28a` | Butoane × stări | 1100 |
+| `28b` | Badge, pastile, contoare | 1100 |
+| `28c` | Card, Kpi, Notice | 1100 |
+| `28d` | PageHeader, Tabs, Stepper, Sidebar item | 1100 |
+| `28e` | Avatar, PersonCell, AttendanceDot, ProgressBar | 1100 |
+| `28f` | Toast, SaveIndicator, Undo, Skeleton, LoadingBar | 1100 |
+| `28g` | RowMenu, Popover, Tooltip, Dialog, Drawer | 1100 |
+
+## Design system · Încărcare și stări — `DS Incarcare si stari.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `29a` | Praguri de timp · Spinner | 1100 |
+| `29b` | Butoane și comenzi în așteptare | 1100 |
+| `29c` | Câmpuri și liste în așteptare | 1100 |
+| `29d` | Tabel: schelet, reîmprospătare, rând, pagină | 1100 |
+| `29e` | Kpi, card, panou, dialog | 1100 |
+| `29f` | Progres: fișier, lot, pași | 1100 |
+| `29g` | Eroare, fără legătură, reîncercare | 1100 |
+
+## Design system · Date și grafice — `DS Date si grafice.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `30a` | DatePicker: zi, interval, blocat + încărcare | 1100 |
+| `30b` | MonthPicker, an școlar | 700 |
+| `30c` | TimePicker, TimeSlots | 700 |
+| `30d` | BarChart + încărcare + gol | 1100 |
+| `30e` | Heatmap 12 luni | 1100 |
+| `30f` | DayGrid dot/code/bar | 1100 |
+| `30g` | WeekGrid | 1100 |
+| `30h` | MonthCalendar | 1100 |
+
+## Design system · Tipare de pagină — `DS Tipare de pagina.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `31a` | Board cu tragere | 1100 |
+| `31b` | MasterDetail | 1100 |
+| `31c` | ProfileLayout | 1100 |
+| `31d` | Wizard | 1100 |
+| `31e` | Timeline, NoteList | 1100 |
+| `31f` | Disclosure, Accordion | 700 |
+| `31g` | Ecrane mici | 1100 |
+
+## Design system · Diverse — `DS Diverse.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `32a` | GlobalSearch | 620 |
+| `32b` | BranchSelector, SyncStatusCard | 620 |
+| `32c` | TonePicker | 460 |
+| `32d` | SmsPreview, SegmentCounter | 620 |
+| `32e` | Kbd, scurtături | 460 |
+| `32f` | Piese de tipar | 1100 |
+| `32g` | TagInput, NumberStepper, Slider, CopyField | 1100 |
+
+## Design system · Fundamente 2 — `DS Fundamente 2.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `33a` | Iconițe Lucide pe categorii | 1100 |
+| `33b` | Mărimi, culori, folosire | 1100 |
+| `33c` | Mișcare | 1100 |
+| `33d` | Brand | 1100 |
+| `33e` | Texte și formate | 1100 |
+| `33f` | Accesibilitate | 1100 |
+
+## Design system · Componente 2 — `DS Componente 2.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `34a` | AppBanner | 1100 |
+| `34b` | AvatarGroup | 520 |
+| `34c` | SplitButton | 520 |
+| `34d` | InlineEdit | 1100 |
+| `34e` | DiffTable | 1100 |
+| `34f` | LockedContent | 700 |
+| `34g` | UnsavedChangesDialog | 480 |
+| `34h` | DocumentCard | 1100 |
+| `34i` | HoverCard | 520 |
+| `34j` | MultiSelect | 520 |
+| `34k` | TodoCard, TaskRow | 700 |
+| `34l` | PrintOptionsDialog | 520 |
+
+## Componente de formular — `Componente formular.dc.html`
+| Id | Ce arată | Mărime |
+|---|---|---|
+| `25a` | Field · anatomie și cele 6 stări | 980 |
+| `25b` | Tipuri de câmp (Select, Number, Date, Phone, Month, PIN, TextArea, File) | 980 |
+| `25c` | Alegeri (Checkbox, Radio, Toggle, Segmented, ChipSelect, ChoiceCards) | 980 |
+| `25d` | AmountInput · SearchSelect | 980 |
+| `25e` | Mărimea sm · filtre și rânduri de setări | 980 |
+| `25f` | FormSection + FormGrid · un panou întreg | 520 |
+
 ## Formulare — `Formulare.dc.html`
 | Id | Ce arată | Mărime |
 |---|---|---|

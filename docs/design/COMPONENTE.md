@@ -10,6 +10,155 @@ Designul final folosește un set mic de piese care se repetă pe toate ecranele.
 
 ---
 
+## 0. Câmpuri de formular — `Componente formular.dc.html` (25a–25f), prioritar
+
+**Stare în cod (29.09):** ~200 de `<input>/<select>/<textarea>` brute în ~40 de fișiere din `features/`. Fiecare modul are propriul CSS `.field` (`PaymentFormDrawer`, `ChildFormDrawer`, `NotificationsPage`, `SmsMessagesPanel .select`, `allocationField`…), cu padding, font și radius diferite. În `@shared/ui` există doar `SearchInput`, `SearchSelect`, `SegmentedControl`, `Toggle`. Nu există `Field`, `TextInput`, `Select`, `TextArea` sau `Checkbox`.
+
+| Componentă nouă | Id | Valori |
+|---|---|---|
+| `Field` (label, hint, error, optional, children) | 25a | Etichetă 13/700, gap 8. „· opțional” 13/600 `--subtle`. Ajutor 12px `--muted`, iar eroarea (12/700 `--pink-ink`) îl înlocuiește. Leagă `htmlFor` + `aria-describedby` + `aria-invalid`. |
+| `TextInput` | 25a | `11px 14px`, radius 12, 1px `--input-border`, 15/600, placeholder `--subtle`. Hover border `--subtle`. Focus 1.5px `--orange` + inel `0 0 0 3px var(--orange-soft)` (padding scade cu 0,5px, ca înălțimea să nu sară). Eroare 1.5px `--raspberry`, fundal `#fffafb`, eticheta `--pink-ink`. Dezactivat: fundal `--neutral-soft`, border `--border`, text `--subtle`. Props `prefix`/`suffix` (text 14/700 `--subtle`). |
+| `Select` | 25b | Aceeași cutie + ▾ 12px `--muted`, `appearance:none`. 2–8 opțiuni. Peste 8 → `SearchSelect`. |
+| `NumberInput` | 25b | TextInput + `inputMode="numeric"`, fără săgeți native, `tabular-nums`, `suffix` („copii”, „zile”, „lei”). |
+| `DateInput` / `MonthInput` | 25b | Afișare zz.ll.aaaa. `trailing` opțional (ex. „4 ani”). `MonthInput` deschide popover-ul `MonthPicker`. |
+| `PhoneInput` | 25b | Validează cu `normalizeMoldovanPhone`. Sub câmp: „✓ +373 …” 12/800 `--mint-ink` sau eroarea. |
+| `TextArea` | 25b | Min 96px, auto-grow până la 240, line-height 1.5, contor opțional `N / max`. |
+| `FileInput` | 25b | Zonă punctată 1.5px `--dashed-border-empty`, fundal `--cream`, radius 12, drag & drop. |
+| `PinInput` | 25b | Căsuțe 44×50 radius 12 border 1.5px (activ = `--orange` + inel). |
+| `Checkbox` | 25c | 18px radius 5, 1.5px `--input-border`. Bifat = `--orange` plin + ✓ alb. Dezactivat = `--neutral-soft`. |
+| `Radio` / `RadioGroup` | 25c | 18px. Bifat = border 5px `--orange`. Doar în dialoguri de tipar și export. |
+| `SegmentedControl size="field"` | 25c | Radius 12, opțiune `8px 0` flex:1, 13/700. |
+| `ChipSelect`, `ChoiceCards` | 25c | Vezi tabelul 2. |
+| `AmountInput` | 25d | Vezi tabelul 2. |
+| `size="sm"` pe TextInput, Select, NumberInput | 25e | `8px 12px` (numeric `7px 0`, lățime fixă), radius 10, 13/700. Pentru bare de filtre (border `--border`) și rânduri de setări (border `--input-border`). Eticheta stă în linie. |
+| `FormSection` + `FormGrid` | 25f | Secțiune numerotată (pătrat 24 radius 8 slate + titlu Baloo 17), gap 14. `FormGrid cols={2}` gap 12. Între secțiuni gap 22. |
+
+**Migrare:** după ce piesele există în `@shared/ui` + `/design-system` (toate stările din 25a), înlocuiește toate câmpurile brute, modul cu modul (un commit pe modul). Șterge CSS-ul local `.field` / `.select` rămas. La final nu mai rămâne niciun `<input>/<select>/<textarea>` brut în `features/`, în afară de `type="file"` ascuns din `FileInput`. Test de arhitectură nou în `architecture.test.ts` care interzice câmpurile brute în `features/**`.
+
+## 0b. Tabel, filtre, sortare — `DS Tabel si filtre.dc.html` (27a–27h)
+
+Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate listele: Copii, Achitări, Cheltuieli, Vizite, Personal, Candidați, Mesaje SMS, Istoric, Asociere.
+
+| Componentă / prop | Id | Ce face |
+|---|---|---|
+| `DataTable` · anatomie | 27a | Bara de sus → rândul de filtre active → antet → rânduri → subsol cu totaluri → paginare. Antet sticky la derulare. |
+| `SortableHeader` (`sortValue`, `defaultSort`) | 27b | Clic: ▲ → ▼ → implicit. Hover = fundal `--neutral-soft` + ⇅. Activ = etichetă slate, săgeată `--orange`. Coloanele numerice sunt aliniate la dreapta (și antetul). Sortarea se ține minte per tabel (`usePersistedState`). |
+| `column.type` | 27c | `text` · `truncate` (ellipsis + `title`) · `person` (PersonCell) · `money` (dreapta, `tabular-nums`, 800) · `moneyEur` (lei + „= X €” dedesubt) · `date`/`datetime` · `status` (Badge) · `empty` („—” `--input-border`) · `actions` (link + RowMenu 32×32). |
+| `rowState` | 27d | `hover` `#faf7f1` + apare ⋯ · `selected` bifă portocalie + `--cream` · `active` (deschis în panou) bara inset 3px `--orange` + `--orange-soft` · `archived` opacity .6 · `error` bara `--raspberry` + `#fff7f9`. |
+| Selecție | 27a, 27d | Bifă 16px radius 5. Antetul are și stare parțială („–”). Shift+clic selectează un interval. |
+| `FilterPills` | 27e | Alegere unică, până la 8 valori, selectat = slate. Fără limită de grupuri (Achitări are 3). |
+| `SegmentedControl` cu contoare | 27e | Pentru stări exclusive. Contorul ignoră celelalte filtre. |
+| `SearchInput` | 27e | 260–360px, pill, fără diacritice, fără spații în telefon, debounce 150 ms, × golește, Esc golește. |
+| `FilterMenu` **nou** | 27e | Buton sm (`8px 12px` radius 10). Activ = `--orange-soft` + border 1.5px `--orange` + valoarea sau numărul. Popover 260px: căutare, opțiuni cu bifă și contor, „Golește” / „Doar X”. Înlocuiește `<select>`-urile din bare (Achitări, Mesaje SMS, Cheltuieli). |
+| `PeriodFilter` **nou** | 27e | Presetări (luna curentă, luna trecută, 30 zile, an școlar, tot) + „Interval…” cu 2 DateInput. Înlocuiește `<input type=month>` din Achitări. |
+| `ActiveFilters` **nou** | 27a | Rând de chip-uri „Cheie: valoare ×” + „Șterge filtrele”. Apare doar dacă e activ cel puțin un filtru. |
+| Contor rezultate | 27a | „**24** din 146” în dreapta barei. |
+| `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |
+| `Pagination` | 27a | „Pe pagină 25 ▾” · „1–24 din 24” · ‹ 1 2 3 › (32×32 radius 10, pagina activă slate). Se resetează la schimbarea filtrelor. |
+| `groupBy` + restrângere | 27f | Antet de grup `#faf7f1`, Baloo 15, contor, sumă pe grup, ▼/▶. |
+| Gol / fără rezultate / încărcare | 27f | `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
+| `SelectionBar` | 27g | În linie (Copii, Cheltuieli) sau `floating` (Achitări). „Selectează toate N”. Slot danger. Esc = Anulează. |
+| `ColumnMenu` + `density` **nou** | 27h | ⚙ în bară: coloane vizibile (tragere pentru ordine, cele obligatorii blocate) + Normal/Compact. Se ține minte local, per tabel. |
+| Export | 27h | „Exportă” deschide panoul comun (ca 19b): Excel/CSV/PDF, filtrate / toate / selecția. |
+
+## 0c. Alte componente — `DS Componente.dc.html` (28a–28g), `DS Fundamente.dc.html` (26a–26e)
+
+| Componentă | Id | De făcut în cod |
+|---|---|---|
+| `Button` | 28a | 7 variante × 5 stări (implicit, hover, apăsat, dezactivat, se încarcă). **Nou:** `danger`, `danger-ghost`, prop `loading`, focus ring comun. |
+| `IconButton` **nou** | 28a | × 36 rotund, ⋯ 32 radius 10, ‹ › 32. |
+| `Badge` | 28b | `size sm/md`, `dot`, `solid`, `CountBadge` (roșu = acțiune, neutru = informativ). |
+| `Card` / `Kpi` / `Notice` | 28c | `Kpi` cu `tone`, `size`, `emphasis`, `decorative`. **Nou:** `Notice` cu `tone` (info/notă/eroare/gata), radius 14. |
+| `PageHeader` + `Tabs` **nou** + `Breadcrumb` **nou** | 28d | Ordinea din antet: mod → stepper → secundare → o primară. `Tabs` pentru subpagini (Personal, Backup și setări), cu indicator 2.5px `--orange`. |
+| `Avatar` 26/32/38/64/84, `PersonCell`, `AttendanceDot` 10/14/22, `ProgressBar` (simplă, segmentată, capacitate), `Legend` | 28e | Mărimile lipsă și `ProgressBar` sunt noi. |
+| `Toast`, `SaveIndicator`, `UndoHistory`, `Skeleton`, `LoadingBar` **nou** | 28f | `LoadingBar` = 21b. |
+| `RowMenu`, `Tooltip` **nou**, `Popover` **nou**, `ConfirmDialog`, `Drawer` | 28g | Separator și item danger în `RowMenu`. Un singur `Popover` de bază peste care se fac FilterMenu, PeriodFilter, SearchSelect, motivul absenței. |
+| Tokeni | 26a–26e | Adaugă în `tokens.css` ce lipsește: `--text-secondary`, `--on-slate-muted`, `--yellow-frame`, `--radius-5`, `--shadow-popover`, `--shadow-dialog`, `--shadow-drag`, scara `--space-*`. |
+
+## 0d. Încărcare și stări — `DS Incarcare si stari.dc.html` (29a–29g)
+
+**Regula:** fiecare componentă din §0–§0c are, pe lângă stările vizuale, **`loading`**, **`error`** și, unde are sens, **`offline`**. Toate apar în `/design-system`.
+
+| Ce | Id | Comportament |
+|---|---|---|
+| Praguri de timp | 29a | < 300 ms: nimic. 300 ms–1 s: schelet (conținut) sau spinner (acțiune). > 1 s: text („Salvez…”). > 2 s pe lot: toast de progres. > 10 s: eroare locală + „Încearcă din nou”. Minimum 400 ms pe ecran. Hook comun `useDelayedLoading(active, 300, { minVisible: 400 })`. |
+| `Spinner` **nou** | 29a | 12/16/24/40, `currentColor`, pistă 20%, 0,8 s, `role="status"`. Cu `reduced-motion`: 1 rotație/s. |
+| `Button loading` | 29b | Spinner 14 + text la gerunziu, lățimea păstrată, `aria-busy`, clicuri ignorate. La fel pentru `IconButton` și itemii din `RowMenu` (meniul rămâne deschis). |
+| Comenzi optimiste | 29b | `Toggle`, `Checkbox`, `SegmentedControl`, `ChipSelect`: starea nouă apare imediat, atenuată, cu spinner în buton. La eroare revine + toast. |
+| Câmpuri | 29c | `TextInput validating` (spinner 16 dreapta + ajutor „Verific…”). Câmp calculat (curs BNM): blocat + „Aduc…”, iar după 5 s „Introdu manual”. `Select loading`. `SearchSelect`: spinner în câmp + 3 rânduri schelet. `FilterMenu`: opțiunile imediat, contoarele cu schelet. Salvarea automată pe câmp folosește `SaveIndicator` lângă etichetă. |
+| `DataTable` | 29d | `loading` = antet + filtre reale, 8 rânduri schelet. `refreshing` = rândurile vechi la .55 + `LoadingBar` de 3px deasupra antetului. `rowSaving` = spinner 12 în locul lui ⋯. Pagina următoare = „Pagina 2 se încarcă…” în subsol. |
+| `Kpi` / `Card` | 29e | Prima încărcare = schelet. Reîmprospătare = valoarea veche la .5 + spinner 12. Eroare = chenar punctat roz, „—” și „Reîncearcă”. |
+| `Drawer` / `Dialog` | 29e | La deschidere: antet real + schelet de câmpuri. La salvare: câmpurile read-only, Anulează, Esc și clicul în afară blocate, butonul primar cu loading. |
+| Progres | 29f | `FileInput` cu bară + MB + „Oprește”. `ProgressToast` (lot SMS, arhivări multiple) cu „N din M” + „Oprește” + rezumat final. `StepList` (import, backup, sincronizare), ca 21a. Indicator de sincronizare cu puls. Pregătire de tipar. Spinner inline cu text. |
+| `ErrorState` + `InlineError` **nou** | 29g | Eroarea stă unde a apărut. Datele afișate nu dispar la eroarea unei reîmprospătări. Reîncercare automată doar la citiri (2/5/10 s). Scrierile se reîncearcă doar la clic. Codul tehnic apare mic, dedesubt. |
+
+## 0e. Date și grafice — `DS Date si grafice.dc.html` (30a–30h)
+
+| Componentă | Id | Detalii |
+|---|---|---|
+| `DatePicker` (`mode: single \| range`, `isDisabled`, `markers`) | 30a | Popover 300px, zi 34px radius 10. Azi = inel `--orange`. Ales = plin. Interval cu mijlocul `--orange-soft`. Blocat = tăiat. Marcaj = punct 4px. `loading` = marcajele vin după, cu spinner în subsol. Tastatură completă. Se poate și tasta direct. |
+| `MonthPicker` / `YearPicker` / `SchoolYearStepper` | 30b | Grilă 3×4. Punct de stare pe lună. `maxMonth`. Deschis din titlul `MonthStepper`. |
+| `TimePicker` + `TimeSlots` | 30c | Listă din 15/30 min, cu tastare. Sloturile au capacitate (plin, puține locuri, `loading` pe slot). |
+| `BarChart` | 30d | 2 serii, bare de 13px. Luna curentă intensă. Tooltip slate. Fără axă Y. `loading` = bare schelet + spinner. `empty`. |
+| `Heatmap` | 30e | Celulă 26 radius 6 gap 4. Stări: achitat, parțial, restanță, viitor, fără contract. Luna curentă = inel slate. Tooltip. |
+| `DayGrid` (`cell: dot \| code \| bar`) | 30f | O singură componentă pentru Prezența Luna, Pontaj și Concedii. Weekendul pe coloană întreagă. Azi. Subsol cu totaluri. Celula `saving` = spinner 10. Rândul `loading`. Tastatură: săgeți + Space. |
+| `WeekGrid` | 30g | Zile × ore. Blocul evenimentului cu bară ink 3px. „+ Liber”. Clic pe gol = creare precompletată. Schelet la încărcare. |
+| `MonthCalendar` | 30h | Evenimente ca pastile, maximum 3 + „+N” (popover). Zile din alte luni .45. Schelet. |
+
+## 0f. Tipare de pagină — `DS Tipare de pagina.dc.html` (31a–31g)
+
+| Tipar | Id | Detalii |
+|---|---|---|
+| `Board` + `@shared/dnd` | 31a | Sursa .45 cu loc punctat. Ținta = inel 3px `--orange` + linie de inserare. Copia trasă −2°. Țintă plină = motiv. Plasare optimistă cu spinner. Tastatură (Space/săgeți). |
+| `MasterDetail` | 31b | `1fr 380px`, panou sticky, rândul activ cu bara 3px, ↑/↓. Detaliu `loading` (schelet) și `empty`. Sub 1280 → Drawer. |
+| `ProfileLayout` | 31c | Hero în tonul grupei, avatar 84, Baloo 36, acțiuni. Grilă `columns`. Secțiunile se încarcă independent. `ProfileNotFound`. |
+| `Wizard` | 31d | Indicator de pași (făcut, curent, următor), subsol Înapoi / Sari peste / Continuă. Salvare pe pas cu loading. Progresul se reia. |
+| `Timeline` + `NoteList` | 31e | Antete de zi, oră, autor, pastila acțiunii, „vechi → nou”. Încărcare automată la derulare. Note inline cu autor, „editată”, ⋯. |
+| `Disclosure` / `Accordion` | 31f | ▸/▾, rezumat în antet, 160 ms, stare ținută minte. |
+| Responsive | 31g | ≤ 1280: `NavRail` 72px + meniu în Drawer (☰), acțiunile secundare în ⋯, KPI 4→2. ≤ 768: `DataTable` → carduri (`primary`/`status`/`secondary`), filtrele în Drawer. |
+
+## 0g. Diverse — `DS Diverse.dc.html` (32a–32g)
+
+| Componentă | Id | Detalii |
+|---|---|---|
+| `GlobalSearch` (Ctrl+K) | 32a | Rezultate grupate pe tip, maximum 4 + „Vezi toate”, navigare cu tastatura, spinner fără să dispară rezultatele, gol cu sugestie. |
+| `BranchSelector`, `SyncStatusCard` | 32b | Schimbarea filialei cu spinner pe rând (+ 13b). Sincronizare în 5 stări: sincronizat, în curs (puls), fără internet, conflict, deconectat. |
+| `TonePicker` | 32c | 8 × 32px, ales = border ink + ✓, previzualizare live. |
+| `SmsPreview` + `SegmentCounter` | 32d | Bulă cu variabilele evidențiate. Contor cu bară (verde, galben, raspberry). Avertisment UCS-2 + „Scoate diacriticele”. |
+| `Kbd` + `ShortcutsDialog` (?) | 32e | Ctrl+K, Ctrl+Z, Esc, Ctrl+Enter, S, ↑/↓. Scurtătura apare în tooltip. |
+| `PrintHeader`, `PrintTable`, `SignatureLine`, `PrintFooter`, `ThermalBlock` | 32f | Alb-negru, folosite de toate tipăriturile (16x, 19, 23k, 24x). |
+| `TagInput`, `NumberStepper`, `Slider`, `CopyField` | 32g | Alergii, locuri pe oră, mărimea interfeței, cod de asociere cu expirare. |
+
+## 0h. Fundamente 2 — `DS Fundamente 2.dc.html` (33a–33f)
+
+| Ce | Id | Decizie / de făcut |
+|---|---|---|
+| **Iconițe: Lucide** (`lucide-react`, pinned) | 33a | Set ales: linie 2, colțuri rotunjite. Lista de ~80 de iconițe pe categorii (meniu, acțiuni, interfață, stări, date) = singurele permise. Componenta `Icon` (`name`, `size`) peste `lucide-react`. **Înlocuiește toate caracterele** ⌕ ⋯ ▾ × ‹ › ✓ ☰ ⋮⋮ din cod. |
+| Mărimi și culori | 33b | 14 / 16 / 20 / 24, `absoluteStrokeWidth`, `currentColor`. Butonul doar cu iconiță are obligatoriu `aria-label` + tooltip. |
+| Mișcare | 33c | Tokeni noi `--motion-instant/fast/base/panel/slow` (80/120/160/220/300 ms) + curbe. Se animă doar opacity/transform/max-height. `reduced-motion` → 0 (cu excepția spinnerului și a progresului). |
+| Brand | 33d | Logo complet (minimum 28px), iconiță (minimum 24), versiunea pe fundal închis, reguli pentru cercurile decorative. |
+| Texte și formate | 33e | Ghid de ton (verbe pe butoane, gerunziu cu „…”, întrebare la confirmare, „tu”). `@shared/format` completat cu `formatRelative`, `plural`, `formatPhone`, minus real. |
+| Accesibilitate | 33f | Perechile de contrast validate (`--subtle` doar pentru etichete upper 11/800). **Alb pe `--orange` = 2,4: sub prag la orice mărime (buton primar, pastila „azi”, insigna filialei). Decizie deschisă: `--orange-strong` (≥ 4,5 cu alb) pentru fundalurile cu text alb / text slate / excepție de brand. Până atunci, fără texte albe noi pe `--orange`.** `:focus-visible` comun. Zonă de clic 40×40. Focus prins în panouri și dialoguri. `aria-sort` / `aria-live` / `aria-invalid`. Text până la 120% fără suprapuneri. |
+
+## 0i. Componente 2 — `DS Componente 2.dc.html` (34a–34l)
+
+| Componentă | Id | Detalii |
+|---|---|---|
+| `AppBanner` | 34a | Eroare / offline / avertizare / info. Unul singur vizibil, după prioritate. Eroarea și offline-ul nu se pot închide. Acțiune cu loading. |
+| `AvatarGroup` | 34b | −8px, contur alb 2px, `max`, „+N” deschide lista, schelet. |
+| `SplitButton` | 34c | Ultima variantă e ținută minte, ▾ deschide variantele, loading pe tot butonul. |
+| `InlineEdit` | 34d | view → hover (creion) → edit → saving → error. Enter / Esc / Tab. Optimist. |
+| `DiffTable` | 34e | Câmp / al meu / al lor, rândurile diferite pe galben, alegere pe câmp + „tot al meu / al lor”, rezolvare cu loading. |
+| `LockedContent` + `usePinLock` | 34f | Blocat (suma nu e în DOM), verificare, deschis cu numărătoare inversă. Greșeli: tremurat + încercări, blocare după 5. |
+| `UnsavedChangesDialog` + `useUnsavedGuard` | 34g | Renunță / Rămân / Salvez și continui. Numește formularul și câmpurile. Apare la panou, navigare, filială, închiderea aplicației. |
+| `DocumentCard` + `DocumentGrid` | 34h | Încărcat / se încarcă % / doar pe server / eroare / prea mare. ⋯ Deschide / Descarcă / Redenumește / Șterge. (Pentru A9.) |
+| `HoverCard` | 34i | 400 ms intrare, 200 ms ieșire, nu apare pe tactil, schelet, cache. |
+| `MultiSelect` | 34j | Chip-uri cu avatar, Backspace, „și încă N”, acțiune de grup în subsol, spinner la căutare. |
+| `TodoCard` + `TaskRow` | 34k | Contoare pe categorii, reîmprospătare în fundal. Rândul rezolvat se estompează, apoi dispare. |
+| `PrintOptionsDialog` | 34l | Același pentru toate tipăriturile: ce / format (ChoiceCards) / opțiuni / nr. pagini live, „Pregătesc…”, opțiuni ținute minte. |
+
+---
+
 ## 1. Componente existente → unde apar în design → ce lipsește
 
 | Componentă | Tipar în design | Unde | De făcut |

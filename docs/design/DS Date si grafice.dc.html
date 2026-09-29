@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}@keyframes dsSpin{to{transform:rotate(360deg)}}@keyframes dsShimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1040px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="DS Fundamente.dc.html">DS · Fundamente</a><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="DS Componente.dc.html">DS · Componente</a><a href="Componente formular.dc.html">DS · Formular</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare și stări</a><span style="font-weight:800;color:#3a4750">DS · Date și grafice</span><a href="DS Tipare de pagina.dc.html">DS · Tipare de pagină</a><a href="DS Diverse.dc.html">DS · Diverse</a><a href="DS Fundamente 2.dc.html">DS · Fundamente 2</a><a href="DS Componente 2.dc.html">DS · Componente 2</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Design system · Date, calendare, grafice</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#30a">30a</a> DatePicker: o zi, interval, zile blocate, încărcare. <a href="#30b">30b</a> MonthPicker și YearPicker. <a href="#30c">30c</a> TimePicker și sloturi. <a href="#30d">30d</a> BarChart. <a href="#30e">30e</a> Heatmap pe 12 luni. <a href="#30f">30f</a> DayGrid (zile × persoane). <a href="#30g">30g</a> WeekGrid (zile × ore). <a href="#30h">30h</a> MonthCalendar (evenimente pe zile).</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="30a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">30a</span><span style="font-size:16px;font-weight:700">DatePicker · zi · interval · încărcare</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:28px 32px;background:#efe9de;border-radius:24px;display:grid;grid-template-columns:repeat(3,300px);gap:28px;align-items:start">
+        <sc-for list="{{ cals }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">{{ c.title }}</span>
+            <span style="display:flex;align-items:center;padding:10.5px 13.5px;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3;background:#fff;font-size:15px;font-weight:600">{{ c.value }}<span style="margin-left:auto;font-size:13px;color:#6b7780">▦</span></span>
+            <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16)">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:30px;height:30px;border-radius:10px;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">‹</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px">Septembrie 2026 ▾</span><span style="width:30px;height:30px;border-radius:10px;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">›</span></div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11px;font-weight:800;color:#9aa3a9;text-align:center"><span>L</span><span>Ma</span><span>Mi</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">
+                <sc-for list="{{ c.days }}" as="d" hint-placeholder-count="35"><span style="height:34px;display:flex;align-items:center;justify-content:center;border-radius:{{ d.r }};background:{{ d.bg }};color:{{ d.fg }};font-size:13px;font-weight:{{ d.w }};box-shadow:{{ d.ring }};text-decoration:{{ d.td }};font-variant-numeric:tabular-nums">{{ d.t }}</span></sc-for>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f3eee5;font-size:12px;font-weight:800"><span style="color:#a34f00">Azi</span><span style="display:flex;align-items:center;gap:6px;color:#6b7780">{{ c.foot }}</span></div>
+            </div>
+          </div>
+        </sc-for>
+        <span style="grid-column:1 / -1;font-size:13px;color:#5b666e;line-height:1.5">Zi: 34px, radius 10. Azi = inel 1.5px <code>--orange</code>. Selectat = <code>--orange</code> plin, alb, 800. Interval: capetele pline, iar zilele dintre ele <code>--orange-soft</code> fără rotunjire. Weekend <code>--subtle</code>. Blocat = tăiat, <code>--input-border</code>. Cu marcaj (sărbătoare, ședință) = punct 4px sub cifră. Încărcare (zile ocupate din server): grila apare imediat, iar marcajele vin după, cu spinner în subsol. Tastatură: săgeți, PgUp/PgDn = lună, Enter, Esc. Tastarea directă „29.09” în câmp funcționează.</span>
+      </div>
+    </div>
+
+    <div id="30b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30b</span><span style="font-size:16px;font-weight:700">MonthPicker · YearPicker · an școlar</span></div>
+      <div style="width:700px;box-sizing:border-box;padding:28px 32px;background:#efe9de;border-radius:24px;display:grid;grid-template-columns:300px 1fr;gap:28px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16)">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:30px;height:30px;border-radius:10px;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">‹</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px">2026</span><span style="width:30px;height:30px;border-radius:10px;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">›</span></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="padding:10px 0;text-align:center;border-radius:10px;background:{{ m.bg }};color:{{ m.fg }};box-shadow:{{ m.ring }};font-size:13px;font-weight:800;position:relative">{{ m.t }}<span style="position:absolute;left:50%;bottom:4px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:{{ m.dot }}"></span></span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700;align-self:flex-start"><span style="padding:7px 14px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Lună</span><span style="padding:7px 14px;color:#6b7780">An școlar</span></div>
+          <span style="display:flex;align-items:center;gap:4px;font-weight:800;font-size:14px"><span style="width:30px;height:30px;border-radius:50%;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;background:#fff">‹</span><span style="min-width:150px;text-align:center">2026–2027</span><span style="width:30px;height:30px;border-radius:50%;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center;background:#fff">›</span></span>
+          <span style="font-size:13px;color:#5b666e;line-height:1.5">Lunile de 3 × 4, radius 10. Luna curentă = inel <code>--orange</code>, cea aleasă = <code>--orange</code> plin. Punctul arată că luna are date (verde) sau restanțe (raspberry). Lunile viitoare sunt blocate unde nu au sens (Salarii). Anul școlar începe în septembrie. Același popover se deschide din MonthStepper, la clic pe titlu.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="30c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30c</span><span style="font-size:16px;font-weight:700">TimePicker · TimeSlots</span></div>
+      <div style="width:700px;box-sizing:border-box;padding:28px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Ora rezumatului</span><span style="display:flex;align-items:center;padding:10.5px 13.5px;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">08:00<span style="margin-left:auto;color:#6b7780;font-size:12px">◷</span></span>
+          <div style="display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16);max-height:170px;overflow:hidden"><sc-for list="{{ times }}" as="t" hint-placeholder-count="6"><span style="padding:7px 10px;border-radius:10px;background:{{ t.bg }};color:{{ t.fg }};font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">{{ t.t }}</span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:13px;font-weight:700">Ora · locuri libere</span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ slots }}" as="s" hint-placeholder-count="6"><span style="display:flex;flex-direction:column;gap:2px;padding:{{ s.pad }};border-radius:14px;border:{{ s.bd }};background:{{ s.bg }};opacity:{{ s.op }}"><span style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;text-decoration:{{ s.td }}">{{ s.t }}</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:{{ s.sc }};font-weight:700">{{ s.sub }}</span></span></sc-for></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Listă de ore la 15 sau 30 min (tastezi „8” și sare la 08:00). Sloturile sunt ChoiceCards cu capacitate: plin = blocat și tăiat, puține locuri = galben, locurile se încarcă = spinner 12 pe slot.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="30d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30d</span><span style="font-size:16px;font-weight:700">BarChart · două serii · tooltip · încărcare · gol</span></div>
+      <div style="width:1100px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px">
+        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;gap:14px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Evoluția încasărilor</span><span style="margin-left:auto;display:flex;gap:14px;font-size:12px;font-weight:700;color:#5b666e"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#ef8a1d"></span>Încasări</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#5fb58a"></span>Cheltuieli</span></span></div>
+          <div style="position:relative;height:200px;display:grid;grid-template-columns:repeat(12,1fr);gap:10px;align-items:end;border-bottom:1px solid #ede7dc;padding:0 4px">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12"><span style="height:100%;display:flex;align-items:flex-end;justify-content:center;gap:3px"><span style="width:13px;height:{{ b.a }};border-radius:6px 6px 2px 2px;background:{{ b.ca }}"></span><span style="width:13px;height:{{ b.c }};border-radius:6px 6px 2px 2px;background:{{ b.cc }}"></span></span></sc-for>
+            <span style="position:absolute;left:61%;top:14px;padding:8px 10px;border-radius:10px;background:#3a4750;color:#fff;font-size:12px;line-height:1.4;box-shadow:0 12px 28px rgba(58,71,80,.25)"><b>Septembrie</b><br></br>Încasări 612.480<br></br>Cheltuieli 398.200<br></br><span style="color:#b9c1c6">diferență 214.280 lei</span></span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:10px;font-size:11px;font-weight:800;color:#9aa3a9;text-align:center;padding:0 4px"><sc-for list="{{ bars }}" as="b" hint-placeholder-count="12"><span style="color:{{ b.lc }}">{{ b.m }}</span></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;gap:14px"><div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Evoluția încasărilor</span><span style="margin-left:auto">{{ spinChart }}</span></div><div style="height:110px;display:grid;grid-template-columns:repeat(12,1fr);gap:8px;align-items:end;border-bottom:1px solid #ede7dc"><sc-for list="{{ skBars }}" as="b" hint-placeholder-count="12"><span style="height:{{ b.h }};border-radius:6px 6px 2px 2px;background:linear-gradient(90deg,#f1ece2 0px,#f9f5ee 160px,#f1ece2 320px);background-size:800px 100%;animation:dsShimmer 1.4s linear infinite"></span></sc-for></div></div>
+          <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 22px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px">Încă nu sunt date</span><span style="font-size:13px;color:#6b7780">Graficul apare după prima lună cu achitări.</span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Bare de 13px, gap 3 în pereche, radius <code>6px 6px 2px 2px</code>. Luna curentă e mai intensă, lunile trecute au culoare atenuată. Hover = tooltip slate. Axa Y fără cifre, doar tooltip. Încărcare = schelet de bare + spinner 16 lângă titlu.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="30e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30e</span><span style="font-size:16px;font-weight:700">Heatmap · copii × 12 luni</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <div style="display:grid;grid-template-columns:200px repeat(12,minmax(0,1fr)) 90px;gap:4px;padding:10px 20px;border-bottom:1px solid #ede7dc;font-size:11px;font-weight:800;color:#9aa3a9;text-align:center"><span style="text-align:left;letter-spacing:.07em;text-transform:uppercase">Copil</span><sc-for list="{{ hmMonths }}" as="m" hint-placeholder-count="12"><span style="color:{{ m.c }}">{{ m.t }}</span></sc-for><span style="text-align:right;letter-spacing:.07em;text-transform:uppercase">Rest</span></div>
+        <sc-for list="{{ heat }}" as="r" hint-placeholder-count="5">
+          <div style="display:grid;grid-template-columns:200px repeat(12,minmax(0,1fr)) 90px;gap:4px;align-items:center;padding:6px 20px;border-bottom:1px solid #f3eee5">
+            <span style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.n }}</span>
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="12"><span style="height:26px;border-radius:6px;background:{{ c.bg }};border:{{ c.bd }};box-sizing:border-box;box-shadow:{{ c.ring }}"></span></sc-for>
+            <span style="text-align:right;font-size:13px;font-weight:800;color:{{ r.rc }};font-variant-numeric:tabular-nums">{{ r.rest }}</span>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:16px;padding:12px 20px;font-size:12px;font-weight:700;color:#5b666e"><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#3f9a6b"></span>Achitat</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#e0b400"></span>Parțial</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#e9527c"></span>Restanță</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#fff;border:1.5px dashed #e0d5c2;box-sizing:border-box"></span>Viitor</span><span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:4px;background:#f4f1ea"></span>Fără contract</span><span style="margin-left:auto">Celulă 26px, radius 6, gap 4 · hover = tooltip „Oct · 4.800 din 9.600” · luna curentă = inel <code>--slate</code></span></div>
+      </div>
+    </div>
+
+    <div id="30f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30f</span><span style="font-size:16px;font-weight:700">DayGrid · persoane × zile (Prezența Luna, Pontaj, Concedii)</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <div style="display:grid;grid-template-columns:180px repeat(16,minmax(0,1fr)) 64px;align-items:center;padding:10px 16px;border-bottom:1px solid #ede7dc;font-size:10px;font-weight:800;color:#9aa3a9;text-align:center"><span style="text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase">Copil</span><sc-for list="{{ dgHead }}" as="d" hint-placeholder-count="16"><span style="color:{{ d.c }}"><span style="display:inline-block;min-width:20px;padding:3px 0;border-radius:6px;background:{{ d.bg }};color:{{ d.fg }}">{{ d.t }}</span></span></sc-for><span style="text-align:right;font-size:11px;letter-spacing:.05em;text-transform:uppercase">Zile</span></div>
+        <sc-for list="{{ dgRows }}" as="r" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:180px repeat(16,minmax(0,1fr)) 64px;align-items:stretch;padding:0 16px;border-bottom:1px solid #f3eee5;background:{{ r.bg }}">
+            <span style="padding:7px 0;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800">{{ r.n }}{{ r.spin }}</span>
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="16"><span style="display:flex;align-items:center;justify-content:center;background:{{ c.col }};box-shadow:{{ c.ring }}"><span style="width:{{ c.s }};height:{{ c.s }};box-sizing:border-box;border-radius:{{ c.r }};background:{{ c.bg }};border:{{ c.bd }};color:{{ c.fg }};font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ c.t }}</span></span></sc-for>
+            <span style="padding:7px 0;display:flex;align-items:center;justify-content:flex-end;font-size:13px;font-weight:800">{{ r.tot }}</span>
+          </div>
+        </sc-for>
+        <div style="display:grid;grid-template-columns:180px repeat(16,minmax(0,1fr)) 64px;align-items:stretch;padding:0 16px;background:#fffaf0;font-size:10px;font-weight:800;color:#6b7780;text-align:center"><span style="padding:9px 0;text-align:left;font-size:12px">Prezenți pe zi</span><sc-for list="{{ dgFoot }}" as="f" hint-placeholder-count="16"><span style="padding:9px 0;background:{{ f.col }}">{{ f.t }}</span></sc-for><span></span></div>
+        <div style="padding:12px 16px;font-size:12px;color:#5b666e;line-height:1.5;border-top:1px solid #ede7dc">O singură componentă cu 3 moduri de celulă: <b>dot</b> (Prezența, punct 14 pe stare), <b>code</b> (Pontaj, pătrat 20 radius 5 cu codul „8/CO/CM/A”) și <b>bar</b> (Concedii, bandă continuă peste zile). Rândul e grid cu padding pe rând, nu pe celulă. Weekendul = coloană <code>--off-day</code> pe toată înălțimea. Azi = pastilă portocalie pe cifră + inel pe coloană. Clic pe celulă = ciclu de stări sau popover cu motiv. Celula care se salvează = spinner 10 în locul punctului. Rândul cu spinner lângă nume = rândul se încarcă. Tastatură: săgeți + Space.</div>
+      </div>
+    </div>
+
+    <div id="30g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30g</span><span style="font-size:16px;font-weight:700">WeekGrid · zile × ore (Bazin săptămâna, Vizite)</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <div style="display:grid;grid-template-columns:70px repeat(5,minmax(0,1fr));border-bottom:1px solid #ede7dc"><span></span><sc-for list="{{ wgDays }}" as="d" hint-placeholder-count="5"><span style="padding:10px 12px;display:flex;align-items:baseline;gap:6px;border-left:1px solid #f3eee5;background:{{ d.bg }}"><span style="font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9">{{ d.w }}</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:{{ d.c }}">{{ d.n }}</span></span></sc-for></div>
+        <sc-for list="{{ wgRows }}" as="r" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:70px repeat(5,minmax(0,1fr));border-bottom:1px solid #f3eee5;min-height:74px">
+            <span style="padding:8px 10px;font-size:12px;font-weight:800;color:#9aa3a9;font-variant-numeric:tabular-nums">{{ r.h }}</span>
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><span style="padding:6px;border-left:1px solid #f3eee5;background:{{ c.col }};display:flex;flex-direction:column;gap:4px">{{ c.el }}</span></sc-for>
+          </div>
+        </sc-for>
+        <div style="padding:12px 16px;font-size:12px;color:#5b666e;line-height:1.5">Antet de zi: eticheta 11/800 + cifra Baloo 18. Azi = coloană <code>--cream</code> + cifra portocalie. Ora 12/800 <code>--subtle</code>. Blocul evenimentului: radius 10, fundal în tonul grupei, bară stânga 3px ink, nume 12/800 + sub 11. Plin = chenar punctat „+ Liber”. Clic pe gol = „Programare nouă” cu ziua și ora completate. Încărcarea săptămânii: blocuri schelet în sloturi + spinner lângă stepper.</div>
+      </div>
+    </div>
+
+    <div id="30h" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">30h</span><span style="font-size:16px;font-weight:700">MonthCalendar · evenimente pe zile (Vizite, Zile de naștere, Bazin luna)</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #ede7dc;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9"><sc-for list="{{ mcHead }}" as="h" hint-placeholder-count="7"><span style="padding:10px 12px">{{ h }}</span></sc-for></div>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr))">
+          <sc-for list="{{ mcDays }}" as="d" hint-placeholder-count="14"><div style="min-height:96px;padding:8px;border-right:1px solid #f3eee5;border-bottom:1px solid #f3eee5;background:{{ d.bg }};display:flex;flex-direction:column;gap:4px;opacity:{{ d.op }}"><span style="align-self:flex-start;min-width:24px;padding:2px 6px;box-sizing:border-box;border-radius:8px;text-align:center;font-size:13px;font-weight:800;background:{{ d.nb }};color:{{ d.nc }}">{{ d.n }}</span>{{ d.ev }}</div></sc-for>
+        </div>
+        <div style="padding:12px 16px;font-size:12px;color:#5b666e;line-height:1.5">Celulă min 96px, cifra 13/800, azi = pastilă portocalie. Zilele din alte luni au .45, weekendul are <code>--off-day</code>. Eveniment = pastilă 11/800 în tonul tipului (vizită, zi de naștere, ședință), maximum 3, apoi „+N” deschide un popover cu ziua. Încărcare = pastile schelet.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const O = '#ef8a1d', M = '#6b7780';
+    const spin = (s, c) => h('span', { style: { display: 'inline-block', flexShrink: 0, width: s, height: s, boxSizing: 'border-box', borderRadius: '50%', border: `2px solid ${c}33`, borderTopColor: c, animation: 'dsSpin .8s linear infinite' } });
+    const sk = (st) => h('span', { style: { display: 'block', borderRadius: 6, background: 'linear-gradient(90deg,#f1ece2 0px,#f9f5ee 160px,#f1ece2 320px)', backgroundSize: '800px 100%', animation: 'dsShimmer 1.4s linear infinite', ...st } });
+    const mkDays = (mode) => {
+      const out = [];
+      for (let i = 0; i < 35; i++) {
+        const day = i + 1; const inMonth = day <= 30; const t = inMonth ? day : day - 30; const wk = i % 7 >= 5;
+        let d = { t, r: '10px', bg: 'transparent', fg: inMonth ? (wk ? '#9aa3a9' : '#3a4750') : '#d9d3c8', w: 700, ring: 'none', td: 'none' };
+        if (inMonth && day === 29) d.ring = 'inset 0 0 0 1.5px #ef8a1d';
+        if (mode === 'single' && day === 29) { d.bg = O; d.fg = '#fff'; d.w = 800; d.ring = 'none'; }
+        if (mode === 'range') { if (day === 14 || day === 25) { d.bg = O; d.fg = '#fff'; d.w = 800; d.r = day === 14 ? '10px 0 0 10px' : '0 10px 10px 0'; } else if (day > 14 && day < 25) { d.bg = '#fcead3'; d.fg = '#a34f00'; d.r = '0'; } }
+        if (mode === 'blocked' && inMonth && (wk || [10, 11, 17].includes(day))) { d.fg = '#c9c4ba'; d.td = 'line-through'; }
+        if (mode === 'blocked' && day === 22) { d.bg = O; d.fg = '#fff'; d.w = 800; }
+        out.push(d);
+      }
+      return out;
+    };
+    const cals = [
+      { title: 'O zi', value: '29.09.2026', days: mkDays('single'), foot: 'Luni, 29 septembrie' },
+      { title: 'Interval', value: '14.09 – 25.09.2026', days: mkDays('range'), foot: '10 zile lucrătoare' },
+      { title: 'Zile blocate · se încarcă', value: '22.09.2026', days: mkDays('blocked'), foot: h(React.Fragment, null, spin(12, M), 'Verific zilele ocupate…') }
+    ];
+    const MN = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
+    const months = MN.map((t, i) => ({ t, bg: i === 8 ? O : 'transparent', fg: i === 8 ? '#fff' : i > 9 ? '#c9c4ba' : '#3a4750', ring: i === 9 ? 'inset 0 0 0 1.5px #ef8a1d' : 'none', dot: i < 8 ? (i === 6 ? '#e9527c' : '#3f9a6b') : 'transparent' }));
+    const times = ['07:30', '07:45', '08:00', '08:15', '08:30', '08:45'].map(t => ({ t, bg: t === '08:00' ? O : 'transparent', fg: t === '08:00' ? '#fff' : '#3a4750' }));
+    const slots = [['09:00', '3 locuri', 'ok'], ['09:30', '1 loc', 'few'], ['10:00', 'Plin', 'full'], ['10:30', '4 locuri', 'sel'], ['11:00', 'load', 'load'], ['11:30', '5 locuri', 'ok']].map(([t, sub, st]) => ({
+      t, sub: st === 'load' ? h(React.Fragment, null, spin(12, M), 'locuri…') : sub,
+      pad: st === 'sel' ? '9px 11px' : '10px 12px', bd: st === 'sel' ? '2px solid #ef8a1d' : '1.5px solid #ede7dc', bg: st === 'sel' ? '#fcead3' : st === 'full' ? '#f4f1ea' : '#fff',
+      op: st === 'full' ? 0.6 : 1, td: st === 'full' ? 'line-through' : 'none', sc: st === 'few' ? '#7a5d00' : st === 'full' ? '#9aa3a9' : '#5b666e' }));
+    const A = [42, 48, 55, 50, 60, 38, 30, 44, 88, 0, 0, 0], C = [30, 34, 36, 33, 40, 28, 26, 31, 58, 0, 0, 0];
+    const bars = MN.map((m, i) => ({ m, a: A[i] + '%', c: C[i] + '%', ca: i === 8 ? O : '#f6c49a', cc: i === 8 ? '#5fb58a' : '#a8d8be', lc: i === 8 ? '#3a4750' : '#9aa3a9' }));
+    const skBars = [40, 55, 48, 62, 44, 35, 58, 50, 70, 30, 45, 52].map(v => ({ h: v + '%' }));
+    const hmMonths = ['Sep', 'Oct', 'Noi', 'Dec', 'Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug'].map((t, i) => ({ t, c: i === 0 ? '#3a4750' : '#9aa3a9' }));
+    const pat = { p: '#3f9a6b', h: '#e0b400', r: '#e9527c', f: 'future', n: '#f4f1ea' };
+    const heatRaw = [['Balan Ilinca', 'pfffffffffff', '0 lei'], ['Ceban Maria', 'hfffffffffff', '4.800'], ['Rusu Ana', 'rfffffffffff', '9.600'], ['Pop Ion', 'nnnnnpffffff', '0 lei'], ['Avram Maria', 'pfffffffffff', '0 lei']];
+    const heat = heatRaw.map(([n, s, rest]) => ({ n, rest, rc: rest === '0 lei' ? '#2e6b4c' : '#b0284f', cells: s.split('').map((k, i) => ({ bg: k === 'f' ? '#fff' : pat[k], bd: k === 'f' ? '1.5px dashed #e0d5c2' : 'none', ring: i === 0 ? '0 0 0 2px #3a4750' : 'none' })) }));
+    const DN = ['L', 'Ma', 'Mi', 'J', 'V', 'S', 'D'];
+    const offs = [5, 6, 12, 13];
+    const dgHead = Array.from({ length: 16 }, (_, i) => ({ t: i + 15, c: offs.includes(i) ? '#c9c4ba' : '#9aa3a9', bg: i === 14 ? O : 'transparent', fg: i === 14 ? '#fff' : 'inherit' }));
+    const dot = (k) => ({ p: ['#3f9a6b', 'none', ''], a: ['#e9527c', 'none', ''], m: ['#e0b400', 'none', ''], u: ['#fff', '1.5px solid #c9c4ba', ''], x: ['transparent', 'none', ''] })[k];
+    const mkRow = (n, s, mode, tot, extra) => ({ n, tot, bg: extra?.bg || '#fff', spin: extra?.spin || null, cells: s.split('').map((k, i) => {
+      const col = offs.includes(i) ? '#f6f4f0' : 'transparent';
+      const ring = i === 14 ? 'inset 1.5px 0 0 #fcead3, inset -1.5px 0 0 #fcead3' : 'none';
+      if (mode === 'code') { const m = { '8': ['#e7f4ec', '#2e6b4c'], C: ['#fdf3d2', '#7a5d00'], B: ['#fce9ef', '#b0284f'], A: ['#6b7780', '#fff'], x: ['transparent', 'transparent'] }[k]; return { col, ring, s: '20px', r: '5px', bg: m[0], bd: 'none', fg: m[1], t: k === 'x' ? '' : k === 'C' ? 'CO' : k === 'B' ? 'CM' : k }; }
+      if (mode === 'bar') { const on = k === 'C'; return { col, ring, s: on ? '100%' : '0', r: '0', bg: on ? '#e0b400' : 'transparent', bd: 'none', fg: '#fff', t: '' }; }
+      if (k === 's') return { col, ring, s: '10px', r: '50%', bg: 'transparent', bd: '2px solid #ef8a1d33', fg: '', t: '' };
+      const d = dot(k); return { col, ring, s: '14px', r: '50%', bg: d[0], bd: d[1], fg: '#fff', t: '' };
+    }) });
+    const dgRows = [
+      mkRow('Balan Ilinca', 'ppppppxpppppxxps'.replace(/x/g, 'x'), 'dot', '11/12'),
+      mkRow('Ceban Maria', 'pamppxxppapxxpux', 'dot', '9/12', { bg: '#fffaf0', spin: spin(12, O) }),
+      mkRow('Rusu Ana (Pontaj)', '88888xx8CCCxx88x', 'code', '10'),
+      mkRow('Pop Ion (Concedii)', 'xxxCCCCCCCCCxxxx', 'bar', '9 CO')
+    ];
+    dgRows[0].cells[5] = dgRows[0].cells[6] = { col: '#f6f4f0', ring: 'none', s: '0', r: '50%', bg: 'transparent', bd: 'none', fg: '', t: '' };
+    const dgFoot = Array.from({ length: 16 }, (_, i) => ({ t: offs.includes(i) || i === 15 ? '' : 18 - (i % 3), col: offs.includes(i) ? '#f6f4f0' : 'transparent' }));
+    const wgDays = [['Lu', 28], ['Ma', 29], ['Mi', 30], ['Jo', 1], ['Vi', 2]].map(([w, n], i) => ({ w, n, bg: i === 1 ? '#fffaf0' : 'transparent', c: i === 1 ? O : '#3a4750' }));
+    const ev = (name, sub, soft, ink) => h('span', { style: { display: 'flex', flexDirection: 'column', gap: 1, padding: '6px 8px', borderRadius: 10, background: soft, boxShadow: `inset 3px 0 0 ${ink}` } }, h('span', { style: { fontSize: 12, fontWeight: 800 } }, name), h('span', { style: { fontSize: 11, color: '#5b666e' } }, sub));
+    const free = h('span', { style: { padding: '6px 8px', borderRadius: 10, border: '1.5px dashed #e0d5c2', fontSize: 11, fontWeight: 800, color: '#9aa3a9' } }, '+ Liber · 2');
+    const skEv = sk({ height: 34, borderRadius: 10 });
+    const wgRows = [
+      ['09:00', [[ev('Balan Ilinca', 'Mars · Rusu V.', '#fcead3', '#a34f00'), ev('Pop Ion', 'Soare', '#e7f4ec', '#2e6b4c')], [free], [skEv], [ev('Ceban Maria', 'Stele', '#fce9ef', '#b0284f')], []]],
+      ['09:30', [[free], [ev('Rusu Ana', 'Luna · plin', '#fdf3d2', '#7a5d00')], [skEv], [], [free]]],
+      ['10:00', [[], [ev('Vizită · Grosu', 'părinte nou', '#e4eef6', '#2c5a80')], [skEv], [free], []]],
+      ['10:30', [[ev('Avram Maria', 'Mars', '#fcead3', '#a34f00')], [], [], [], [ev('Bivol Eva', 'Soare', '#e7f4ec', '#2e6b4c')]]]
+    ].map(([hh, cells]) => ({ h: hh, cells: cells.map((els, i) => ({ col: i === 1 ? '#fffaf0' : 'transparent', el: h(React.Fragment, null, ...els) })) }));
+    const mcHead = DN;
+    const pillEv = (t, bg, fg) => h('span', { style: { padding: '3px 8px', borderRadius: 999, background: bg, color: fg, fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, t);
+    const mcDays = Array.from({ length: 14 }, (_, i) => {
+      const n = i < 1 ? 31 : i; const other = i < 1; const wk = i % 7 >= 5; const today = n === 9 && !other;
+      let evs = [];
+      if (n === 2) evs = [pillEv('🎂 '.slice(0, 0) + 'Balan I. · 4 ani', '#fce9ef', '#b0284f')];
+      if (n === 3) evs = [pillEv('10:00 Vizită Grosu', '#e4eef6', '#2c5a80'), pillEv('11:30 Vizită Lupu', '#e4eef6', '#2c5a80')];
+      if (n === 7) evs = [pillEv('Ședință părinți', '#fdf3d2', '#7a5d00'), pillEv('Ceban M. · 5 ani', '#fce9ef', '#b0284f'), pillEv('09:00 Vizită', '#e4eef6', '#2c5a80'), h('span', { style: { fontSize: 11, fontWeight: 800, color: '#a34f00' } }, '+2')];
+      if (n === 10) evs = [sk({ height: 18, borderRadius: 999, width: '80%' }), sk({ height: 18, borderRadius: 999, width: '60%' })];
+      if (n === 11) evs = [sk({ height: 18, borderRadius: 999, width: '70%' })];
+      return { n, op: other ? 0.45 : 1, bg: wk ? '#f6f4f0' : '#fff', nb: today ? O : 'transparent', nc: today ? '#fff' : '#3a4750', ev: h(React.Fragment, null, ...evs) };
+    });
+    return { cals, months, times, slots, bars, skBars, spinChart: spin(16, M), hmMonths, heat, dgHead, dgRows, dgFoot, wgDays, wgRows, mcHead, mcDays };
+  }
+}
+</script>
+</body>
+</html>

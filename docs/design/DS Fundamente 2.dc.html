@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}svg.lucide{stroke-width:2;flex-shrink:0}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1040px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="DS Fundamente.dc.html">DS · Fundamente</a><span style="font-weight:800;color:#3a4750">DS · Fundamente 2</span><a href="DS Componente.dc.html">DS · Componente</a><a href="DS Componente 2.dc.html">DS · Componente 2</a><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="Componente formular.dc.html">DS · Formular</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare</a><a href="DS Date si grafice.dc.html">DS · Date și grafice</a><a href="DS Tipare de pagina.dc.html">DS · Tipare</a><a href="DS Diverse.dc.html">DS · Diverse</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Design system · Fundamente 2</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#33a">33a</a> iconițe (Lucide, linie 2, colțuri rotunjite, potrivite cu Nunito). <a href="#33b">33b</a> mărimi și folosire. <a href="#33c">33c</a> mișcare. <a href="#33d">33d</a> brand. <a href="#33e">33e</a> texte și formate. <a href="#33f">33f</a> accesibilitate.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="33a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">33a</span><span style="font-size:16px;font-weight:700">Iconițe · setul aplicației (Lucide 0.453, linie 2)</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:28px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:22px">
+        <sc-for list="{{ iconGroups }}" as="g" hint-placeholder-count="5">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">{{ g.t }}</span>
+            <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px">
+              <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="8"><div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:14px;background:#fffaf0;border:1px solid #f3eee5;color:#3a4750"><i data-lucide="{{ i.n }}" style="width:22px;height:22px"></i><span style="font-size:11px;font-weight:800;text-align:center">{{ i.l }}</span><span style="font-size:10px;color:#9aa3a9">{{ i.n }}</span></div></sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div id="33b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">33b</span><span style="font-size:16px;font-weight:700">Icon · mărimi, culori, folosire</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:28px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px">
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Mărimi</span>
+          <div style="display:flex;align-items:flex-end;gap:18px;color:#3a4750"><span style="display:flex;flex-direction:column;align-items:center;gap:6px"><i data-lucide="calendar" style="width:14px;height:14px"></i><span style="font-size:11px;font-weight:800">14</span></span><span style="display:flex;flex-direction:column;align-items:center;gap:6px"><i data-lucide="calendar" style="width:16px;height:16px"></i><span style="font-size:11px;font-weight:800">16</span></span><span style="display:flex;flex-direction:column;align-items:center;gap:6px"><i data-lucide="calendar" style="width:20px;height:20px"></i><span style="font-size:11px;font-weight:800">20</span></span><span style="display:flex;flex-direction:column;align-items:center;gap:6px"><i data-lucide="calendar" style="width:24px;height:24px"></i><span style="font-size:11px;font-weight:800">24</span></span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">14 în pastile și câmpuri sm. 16 în butoane, câmpuri și rânduri. 20 în meniul lateral și în antet. 24 în stări goale și bannere. Linia rămâne 2 la toate mărimile (<code>absoluteStrokeWidth</code>).</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">Culori</span>
+          <div style="display:flex;gap:14px"><span style="color:#3a4750"><i data-lucide="users" style="width:20px;height:20px"></i></span><span style="color:#6b7780"><i data-lucide="users" style="width:20px;height:20px"></i></span><span style="color:#9aa3a9"><i data-lucide="users" style="width:20px;height:20px"></i></span><span style="color:#ef8a1d"><i data-lucide="users" style="width:20px;height:20px"></i></span><span style="color:#2e6b4c"><i data-lucide="check-circle-2" style="width:20px;height:20px"></i></span><span style="color:#b0284f"><i data-lucide="alert-triangle" style="width:20px;height:20px"></i></span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Mereu <code>currentColor</code>, deci iconița ia culoarea textului de lângă ea. Slate/muted = neutru, orange = activ în meniu, ink-ul stării = alertă, succes sau eroare. Nu se colorează decorativ.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9">În componente</span>
+          <span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px"><i data-lucide="plus" style="width:16px;height:16px"></i>Achitare nouă</span>
+          <span style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#fffaf0;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9"><i data-lucide="search" style="width:16px;height:16px"></i>Caută copil</span>
+          <span style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:#fcead3;color:#a34f00;font-size:14px;font-weight:800"><i data-lucide="wallet" style="width:20px;height:20px"></i>Achitări</span>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Iconița stă înaintea textului, cu gap 8. Butonul care are doar iconiță are obligatoriu <code>aria-label</code> + tooltip. Caracterele din design (⌕ ⋯ ▾ × ‹ ›) se înlocuiesc toate cu Lucide.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="33c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">33c</span><span style="font-size:16px;font-weight:700">Mișcare · durate, curbe, reguli</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:24px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column">
+        <sc-for list="{{ motion }}" as="m" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:200px 140px minmax(0,1fr);gap:18px;align-items:center;padding:11px 0;border-bottom:1px solid #f3eee5"><span style="font-size:13px;font-weight:800">{{ m.t }}</span><span style="font-size:12px;font-weight:800;color:#a34f00;font-variant-numeric:tabular-nums">{{ m.v }}</span><span style="font-size:13px;color:#5b666e;line-height:1.45">{{ m.u }}</span></div></sc-for>
+        <span style="padding-top:12px;font-size:12px;color:#5b666e;line-height:1.5">Se animă doar <code>opacity</code>, <code>transform</code> și <code>max-height</code>. Nu se animă culori pe tabele mari. Cu <code>prefers-reduced-motion</code>, durata devine 0, cu excepția spinnerului (1 rotație/s) și a barei de progres.</span>
+      </div>
+    </div>
+
+    <div id="33d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">33d</span><span style="font-size:16px;font-weight:700">Brand · logo, iconiță, cercuri decorative</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:28px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="height:110px;border-radius:18px;background:#fffaf0;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center"><img src="web/assets/startica-logo.svg" alt="Startica" style="height:44px"></img></span><b style="font-size:13px">Logo complet</b><span style="font-size:12px;color:#5b666e">Meniu, pornire, tipărituri. Înălțime minimă 28px. Spațiu liber = înălțimea „S”.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="height:110px;border-radius:18px;background:#fffaf0;border:1px solid #ede7dc;display:flex;align-items:center;justify-content:center"><img src="web/assets/startica-icon.svg" alt="" style="width:56px;height:56px"></img></span><b style="font-size:13px">Iconiță</b><span style="font-size:12px;color:#5b666e">Meniul strâns, favicon, încărcare (animată). Minimum 24px.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="height:110px;border-radius:18px;background:#3a4750;display:flex;align-items:center;justify-content:center;gap:10px"><img src="web/assets/startica-icon.svg" alt="" style="width:36px;height:36px"></img><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:#fffaf0">startica</span></span><b style="font-size:13px">Pe fundal închis</b><span style="font-size:12px;color:#5b666e">Iconiță + cuvânt în <code>--cream</code>. Nu se pune logo complet pe portocaliu.</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="position:relative;overflow:hidden;height:110px;border-radius:18px;background:#fcead3"><span style="position:absolute;right:-30px;top:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.45)"></span><span style="position:absolute;left:-20px;bottom:-30px;width:70px;height:70px;border-radius:50%;background:#f9d257"></span></span><b style="font-size:13px">Cercuri decorative</b><span style="font-size:12px;color:#5b666e">Doar pe hero-uri, KPI principal, pornire și ecrane goale. Maximum 2–4 cercuri, tăiate de margine, niciodată peste text. Albe .4–.45 sau culori de brand pline.</span></div>
+      </div>
+    </div>
+
+    <div id="33e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">33e</span><span style="font-size:16px;font-weight:700">Texte și formate</span></div>
+      <div style="width:1100px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start">
+        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 24px;display:flex;flex-direction:column">
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;padding-bottom:8px">Ton și cuvinte</span>
+          <sc-for list="{{ voice }}" as="v" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:140px minmax(0,1fr) minmax(0,1fr);gap:12px;padding:9px 0;border-top:1px solid #f3eee5;font-size:13px;line-height:1.4"><b>{{ v.k }}</b><span style="color:#2e6b4c">{{ v.ok }}</span><span style="color:#b0284f;text-decoration:line-through">{{ v.no }}</span></div></sc-for>
+        </div>
+        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 24px;display:flex;flex-direction:column">
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;padding-bottom:8px">Formate · <code style="font-size:13px">@shared/format</code></span>
+          <sc-for list="{{ formats }}" as="f" hint-placeholder-count="10"><div style="display:grid;grid-template-columns:150px minmax(0,1fr) 150px;gap:12px;padding:9px 0;border-top:1px solid #f3eee5;font-size:13px"><b>{{ f.k }}</b><span style="font-variant-numeric:tabular-nums;font-weight:800">{{ f.ex }}</span><span style="color:#6b7780;font-size:12px">{{ f.fn }}</span></div></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div id="33f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">33f</span><span style="font-size:16px;font-weight:700">Accesibilitate · contrast, focus, ținte, etichete</span></div>
+      <div style="width:1100px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:20px;align-items:start">
+        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 24px;display:flex;flex-direction:column">
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;padding-bottom:8px">Perechi de contrast</span>
+          <sc-for list="{{ contrast }}" as="c" hint-placeholder-count="9"><div style="display:grid;grid-template-columns:130px minmax(0,1fr) 70px 90px;gap:12px;align-items:center;padding:7px 0;border-top:1px solid #f3eee5;font-size:13px"><span style="padding:6px 10px;border-radius:10px;background:{{ c.bg }};color:{{ c.fg }};font-weight:800;text-align:center">Aa 14/800</span><span style="color:#5b666e">{{ c.d }}</span><b style="font-variant-numeric:tabular-nums">{{ c.r }}</b><span style="justify-self:start;padding:3px 10px;border-radius:999px;background:{{ c.pb }};color:{{ c.pf }};font-size:12px;font-weight:800">{{ c.v }}</span></div></sc-for>
+          <div style="margin-top:10px;padding:12px 14px;border-radius:14px;background:#fce9ef;color:#b0284f;font-size:12px;line-height:1.5"><b>De decis: textul alb pe <code>--orange</code> nu trece WCAG la nicio mărime (2,4 &lt; 3).</b> Acum e folosit pe butonul primar, pastila „azi” și insigna filialei. Variante: (a) un portocaliu mai închis doar pentru fundalurile cu text alb (token nou <code>--orange-strong</code>, cu contrast ≥ 4,5 față de alb), cu <code>--orange</code> păstrat pentru decor, bare și focus; (b) text <code>--slate</code> pe portocaliu; (c) excepție de brand asumată, documentată. Până la decizie, nu adăuga alte texte albe pe <code>--orange</code>.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 24px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Focus și ținte</span><div style="display:flex;gap:14px;align-items:center"><span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3;font-weight:800;font-size:14px">Exportă</span><span style="width:32px;height:32px;border-radius:10px;background:#f4f1ea;display:flex;align-items:center;justify-content:center;outline:2px dashed #e9527c;outline-offset:4px;color:#6b7780"><i data-lucide="more-horizontal" style="width:16px;height:16px"></i></span><span style="font-size:12px;color:#5b666e">32×32 vizibil, 40×40 zonă de clic</span></div><span style="font-size:12px;color:#5b666e;line-height:1.5">Focus-ul se vede doar la tastatură (<code>:focus-visible</code>): inel 3px <code>--orange-soft</code> + contur 1.5px <code>--orange</code>. Zona minimă de clic e 40×40 (32 vizibil + padding invizibil). Ordinea tab = ordinea vizuală. Panourile și dialogurile țin focusul în ele și îl întorc la butonul care le-a deschis.</span></div>
+          <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;padding:20px 24px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:#5b666e;line-height:1.5"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;color:#3a4750">Etichete și stări</span><span>Starea nu se transmite doar prin culoare: are și text sau formă (punct + „Absent”, ✓ la selectat).</span><span>Fiecare câmp are <code>label</code>. Erorile folosesc <code>aria-describedby</code> + <code>aria-invalid</code>.</span><span>Spinner = <code>role="status"</code>. Toast = <code>aria-live="polite"</code>, iar erorile <code>assertive</code>.</span><span>Tabel: <code>aria-sort</code> pe antet. Selecția: <code>aria-selected</code>.</span><span>Textul se poate mări până la 120% (Mărimea interfeței) fără să se suprapună.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { this.draw(); }
+  componentDidUpdate() { this.draw(); }
+  draw() {
+    const run = () => { if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 2 } }); else setTimeout(run, 150); };
+    setTimeout(run, 0);
+  }
+  renderVals() {
+    const G = (t, list) => ({ t, items: list.map(([n, l]) => ({ n, l })) });
+    const iconGroups = [
+      G('Navigare · meniu', [['layout-dashboard', 'Dashboard'], ['baby', 'Copii'], ['shapes', 'Grupe'], ['calendar-check', 'Prezența'], ['waves', 'Bazin'], ['door-open', 'Vizite'], ['users', 'Personal'], ['wallet', 'Achitări'], ['receipt', 'Cheltuieli'], ['chart-column', 'Situația'], ['bell-ring', 'De notificat'], ['file-spreadsheet', 'Raport'], ['list-checks', 'De rezolvat'], ['settings', 'Administrare'], ['history', 'Istoric'], ['message-square-text', 'SMS']]),
+      G('Acțiuni', [['plus', 'Adaugă'], ['pencil', 'Editează'], ['trash-2', 'Șterge'], ['archive', 'Arhivează'], ['archive-restore', 'Dezarhivează'], ['printer', 'Tipărește'], ['download', 'Exportă'], ['upload', 'Importă'], ['copy', 'Copiază'], ['send', 'Trimite'], ['undo-2', 'Anulează'], ['refresh-cw', 'Reîncearcă'], ['link-2', 'Asociază'], ['arrow-right-left', 'Mută'], ['save', 'Salvează'], ['external-link', 'Deschide']]),
+      G('Interfață', [['search', 'Caută'], ['x', 'Închide'], ['chevron-down', 'Deschide'], ['chevron-left', 'Înapoi'], ['chevron-right', 'Înainte'], ['more-horizontal', 'Meniu ⋯'], ['menu', 'Meniu ☰'], ['grip-vertical', 'Trage'], ['arrow-up-down', 'Sortează'], ['arrow-up', 'Crescător'], ['arrow-down', 'Descrescător'], ['list-filter', 'Filtre'], ['columns-3', 'Coloane'], ['eye', 'Arată'], ['eye-off', 'Ascunde'], ['check', 'Bifat']]),
+      G('Stări', [['check-circle-2', 'Gata'], ['alert-triangle', 'Atenție'], ['alert-circle', 'Eroare'], ['info', 'Info'], ['lock', 'Blocat'], ['lock-open', 'Deschis'], ['cloud', 'Sincronizat'], ['cloud-off', 'Offline'], ['git-compare', 'Conflict'], ['loader-circle', 'Se încarcă'], ['clock', 'În așteptare'], ['shield-check', 'Backup ok'], ['wifi-off', 'Fără internet'], ['circle-dashed', 'Nemarcat'], ['star', 'Implicit'], ['badge-alert', 'Restanță']]),
+      G('Date și obiecte', [['calendar', 'Dată'], ['calendar-range', 'Interval'], ['clock-3', 'Oră'], ['phone', 'Telefon'], ['mail', 'Email'], ['map-pin', 'Adresă'], ['file-text', 'Document'], ['paperclip', 'Atașament'], ['banknote', 'Cash'], ['credit-card', 'Card'], ['landmark', 'Transfer'], ['euro', 'Euro'], ['cake', 'Zi de naștere'], ['sticky-note', 'Notă'], ['tag', 'Categorie'], ['building-2', 'Filială']])
+    ];
+    const motion = [
+      ['--motion-instant', '80 ms · ease-out', 'Hover pe rând, culoarea butonului.'],
+      ['--motion-fast', '120 ms · ease-out', 'Tragere (sursă, țintă), apăsare de buton, bifă.'],
+      ['--motion-base', '160 ms · cubic-bezier(.2,.8,.2,1)', 'Popover, meniu, secțiune pliabilă, bara de selecție.'],
+      ['--motion-panel', '220 ms · cubic-bezier(.2,.8,.2,1)', 'Panou lateral (intră din dreapta 24px + opacitate), dialog (scale .98 → 1).'],
+      ['--motion-slow', '300 ms · ease-in-out', 'Bara de progres, schimbarea valorii KPI.'],
+      ['Toast', '160 intrare · 120 ieșire', 'Urcă 8px + opacitate, iar la ieșire doar opacitate.'],
+      ['Spinner', '800 ms linear, infinit', 'Singura animație continuă, alături de shimmer (1,4 s) și puls (1,2 s).'],
+      ['Ieșire', '≈ 70% din intrare', 'Închiderea e mereu mai rapidă decât deschiderea.']
+    ].map(([t, v, u]) => ({ t, v, u }));
+    const voice = [
+      ['Butoane', 'Salvează · Șterge 3 copii · Trimite SMS', 'OK · Submit · Da'],
+      ['În curs', 'Salvez… · Trimit 4 din 12…', 'Loading… · Vă rugăm așteptați'],
+      ['Confirmare', 'Ștergi definitiv 3 copii?', 'Sunteți sigur?'],
+      ['Eroare', 'Nu s-a salvat. Modificarea rămâne aici.', 'Eroare 500'],
+      ['Gol', 'Nicio achitare încă.', 'Nu există date'],
+      ['Persoana', 'tu (Ai modificări nesalvate)', 'dvs. / utilizatorul'],
+      ['Diacritice', 'Mereu în interfață. SMS: opțional, fără', 'Fara diacritice in UI'],
+      ['Majuscule', 'Doar prima literă. Etichete mici UPPERCASE din CSS', 'Achitare Nouă']
+    ].map(([k, ok, no]) => ({ k, ok, no }));
+    const formats = [
+      ['Sumă lei', '9.600 lei · 1.250,50 lei', 'formatMoney'],
+      ['KPI', '612.480 (fără zecimale)', 'formatKpiMoney'],
+      ['Sumă €', '480 € · = 9.560 lei', 'formatMoney(…, EUR)'],
+      ['Negativ', '−1.200 lei (minus real)', '—'],
+      ['Dată', '29.09.2026', 'formatDate'],
+      ['Dată scurtă', '29 sept. · Luni, 29 septembrie', 'formatDateShort'],
+      ['Lună', 'Septembrie 2026 · Sep', 'formatMonthName'],
+      ['Oră', '08:12', 'formatTime'],
+      ['Relativ', 'acum 2 min · azi, 08:12 · ieri', 'formatRelative (nou)'],
+      ['Telefon', '+373 69 123 456', 'formatPhone'],
+      ['Număr', '94 copii · 1 copil · 2 copii', 'plural (nou)']
+    ].map(([k, ex, fn]) => ({ k, ex, fn }));
+    const contrast = [
+      ['#fff', '#3a4750', 'Slate pe alb', '10,5', 'AA'],
+      ['#fff', '#6b7780', 'Muted pe alb', '4,8', 'AA'],
+      ['#fff', '#9aa3a9', 'Subtle pe alb · doar 11/800 upper', '2,6', 'Doar decor'],
+      ['#ef8a1d', '#fff', 'Alb pe portocaliu · butonul primar', '2,4', 'Sub prag'],
+      ['#fcead3', '#a34f00', 'Orange-ink pe soft', '5,4', 'AA'],
+      ['#e7f4ec', '#2e6b4c', 'Mint-ink pe soft', '6,1', 'AA'],
+      ['#fdf3d2', '#7a5d00', 'Yellow-ink pe soft', '5,7', 'AA'],
+      ['#fce9ef', '#b0284f', 'Pink-ink pe soft', '5,6', 'AA'],
+      ['#3a4750', '#b9c1c6', 'On-slate-muted pe slate', '5,0', 'AA']
+    ].map(([bg, fg, d, r, v]) => ({ bg, fg, d, r, v, pb: v === 'AA' ? '#e7f4ec' : '#fce9ef', pf: v === 'AA' ? '#2e6b4c' : '#b0284f' }));
+    return { iconGroups, motion, voice, formats, contrast };
+  }
+}
+</script>
+</body>
+</html>

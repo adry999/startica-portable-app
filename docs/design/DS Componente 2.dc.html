@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}svg.lucide{stroke-width:2;flex-shrink:0}@keyframes dsSpin{to{transform:rotate(360deg)}}@keyframes dsShimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1040px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="DS Fundamente.dc.html">DS · Fundamente</a><a href="DS Fundamente 2.dc.html">DS · Fundamente 2</a><a href="DS Componente.dc.html">DS · Componente</a><span style="font-weight:800;color:#3a4750">DS · Componente 2</span><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="Componente formular.dc.html">DS · Formular</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare</a><a href="DS Date si grafice.dc.html">DS · Date și grafice</a><a href="DS Tipare de pagina.dc.html">DS · Tipare</a><a href="DS Diverse.dc.html">DS · Diverse</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Design system · Componente 2</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#34a">34a</a> AppBanner. <a href="#34b">34b</a> AvatarGroup. <a href="#34c">34c</a> SplitButton. <a href="#34d">34d</a> InlineEdit. <a href="#34e">34e</a> DiffTable. <a href="#34f">34f</a> LockedContent. <a href="#34g">34g</a> UnsavedChangesDialog. <a href="#34h">34h</a> DocumentCard. <a href="#34i">34i</a> HoverCard. <a href="#34j">34j</a> MultiSelect. <a href="#34k">34k</a> TodoCard + TaskRow. <a href="#34l">34l</a> PrintOptionsDialog. Fiecare are stările de încărcare și de eroare.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="34a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">34a</span><span style="font-size:16px;font-weight:700">AppBanner · deasupra antetului, pe toată lățimea</span></div>
+      <div style="width:1100px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ banners }}" as="b" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:12px;padding:10px 40px;background:{{ b.bg }};color:{{ b.fg }};font-size:14px;border-radius:12px"><i data-lucide="{{ b.ic }}" style="width:18px;height:18px"></i><b>{{ b.t }}</b><span style="opacity:.9">{{ b.d }}</span><span style="margin-left:auto;display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:{{ b.btnBg }};color:{{ b.btnFg }};font-weight:800;font-size:13px">{{ b.a }}</span><i data-lucide="x" style="width:16px;height:16px;opacity:{{ b.xop }}"></i></div></sc-for>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">Un singur banner vizibil, după prioritate: eroare → fără legătură → avertizare → info. Eroarea și offline-ul nu se pot închide. Info se închide și nu mai apare până la următoarea versiune. Acțiunea din banner are stare de încărcare, iar pornirea actualizării arată 29f.</span>
+      </div>
+    </div>
+
+    <div id="34b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34b</span><span style="font-size:16px;font-weight:700">AvatarGroup</span></div>
+      <div style="width:520px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center"><sc-for list="{{ stack }}" as="a" hint-placeholder-count="6"><span style="width:32px;height:32px;margin-left:-8px;border-radius:50%;border:2px solid #fff;background:{{ a.bg }};color:{{ a.fg }};font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ a.t }}</span></sc-for><span style="margin-left:10px;font-size:13px;color:#6b7780">14 copii</span></div>
+        <div style="display:flex;align-items:center"><sc-for list="{{ stackSk }}" as="a" hint-placeholder-count="4"><span style="width:32px;height:32px;margin-left:-8px;border-radius:50%;border:2px solid #fff;background:linear-gradient(90deg,#f1ece2 0px,#f9f5ee 160px,#f1ece2 320px);background-size:800px 100%;animation:dsShimmer 1.4s linear infinite"></span></sc-for></div>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">Suprapunere −8px, contur alb 2px. Maximum N (implicit 5), apoi „+N” neutru. Clic pe „+N” deschide lista (HoverCard/Popover). Mărimi 26/32. Încărcare: 4 cercuri schelet.</span>
+      </div>
+    </div>
+
+    <div id="34c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34c</span><span style="font-size:16px;font-weight:700">SplitButton</span></div>
+      <div style="width:520px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="display:inline-flex;align-items:stretch;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px;overflow:hidden"><span style="display:flex;align-items:center;gap:8px;padding:8px 14px"><i data-lucide="printer" style="width:16px;height:16px"></i>Tipărește A5</span><span style="display:flex;align-items:center;padding:8px 10px;border-left:1px solid #ede7dc;background:#f4f1ea"><i data-lucide="chevron-down" style="width:16px;height:16px"></i></span></span>
+            <div style="display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16);font-size:14px;font-weight:700"><span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fffaf0">A5 · o confirmare<i data-lucide="check" style="width:16px;height:16px;margin-left:auto;color:#ef8a1d"></i></span><span style="padding:8px 10px">A4 · 1/3 + 2/3</span><span style="padding:8px 10px">Bon 58 mm</span></div>
+          </div>
+          <span style="display:inline-flex;align-items:stretch;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px;overflow:hidden"><span style="display:flex;align-items:center;gap:8px;padding:9px 16px">{{ spinSplit }}Tipăresc…</span><span style="display:flex;align-items:center;padding:9px 10px;border-left:1px solid rgba(255,255,255,.3);opacity:.6"><i data-lucide="chevron-down" style="width:16px;height:16px"></i></span></span>
+        </div>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">Clic pe partea stângă face acțiunea ultimei variante alese (ținută minte). ▾ deschide variantele. În timpul acțiunii, ambele părți sunt blocate și stânga arată spinner.</span>
+      </div>
+    </div>
+
+    <div id="34d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34d</span><span style="font-size:16px;font-weight:700">InlineEdit · celulă și rând de setări</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <sc-for list="{{ inline }}" as="r" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:200px minmax(0,1fr) 260px;gap:16px;align-items:center;padding:10px 20px;border-bottom:1px solid #f3eee5"><b style="font-size:14px">{{ r.n }}</b><span style="display:flex;align-items:center;gap:8px;justify-self:start;min-width:160px;padding:{{ r.pad }};border-radius:10px;border:{{ r.bd }};background:{{ r.bg }};box-shadow:{{ r.ring }};font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">{{ r.v }}{{ r.icon }}</span><span style="font-size:12px;font-weight:700;color:{{ r.hc }}">{{ r.h }}</span></div></sc-for>
+        <div style="padding:12px 20px;font-size:12px;color:#5b666e;line-height:1.5">Clic sau Enter intră în editare. Enter salvează, Esc renunță, Tab trece la următoarea celulă și salvează. Salvarea e optimistă cu spinner 12. Eroarea lasă câmpul deschis cu mesajul sub el. Pentru valori complexe (plan, monedă) se folosește un popover mic, nu editare în celulă.</div>
+      </div>
+    </div>
+
+    <div id="34e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34e</span><span style="font-size:16px;font-weight:700">DiffTable · Conflicte, Istoric</span></div>
+      <div style="width:1100px;background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
+        <div style="display:grid;grid-template-columns:180px minmax(0,1fr) minmax(0,1fr);padding:10px 20px;border-bottom:1px solid #ede7dc;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9"><span>Câmp</span><span>Acest calculator · 10:41</span><span>Recepție · 10:43</span></div>
+        <sc-for list="{{ diff }}" as="d" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:180px minmax(0,1fr) minmax(0,1fr);align-items:center;padding:10px 20px;border-bottom:1px solid #f3eee5;background:{{ d.bg }};font-size:14px"><span style="font-weight:800;color:#5b666e">{{ d.f }}</span><span style="display:flex;align-items:center;gap:8px;padding:6px 10px;margin-right:10px;border-radius:10px;border:{{ d.ba }};font-weight:{{ d.w }}">{{ d.a }}</span><span style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;border:{{ d.bb }};font-weight:{{ d.w }}">{{ d.b }}</span></div></sc-for>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;background:#fffaf0"><span style="font-size:13px;color:#6b7780">2 câmpuri diferite · alege pe rând sau:</span><span style="margin-left:auto;padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:13px">Păstrează tot al meu</span><span style="padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:13px">Păstrează tot al lor</span><span style="display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:13px">{{ spinDiff }}Rezolv…</span></div>
+      </div>
+    </div>
+
+    <div id="34f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34f</span><span style="font-size:16px;font-weight:700">LockedContent · PIN</span></div>
+      <div style="width:700px;box-sizing:border-box;padding:24px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+        <div style="padding:16px 18px;border-radius:20px;background:#fff;border:1.5px dashed #ede7dc;display:flex;flex-direction:column;gap:4px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780"><i data-lucide="lock" style="width:14px;height:14px"></i>Salariu</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:#c9c4ba;letter-spacing:.1em">•••••</span><span style="font-size:12px;color:#a34f00;font-weight:800">Vezi cu PIN →</span></div>
+        <div style="padding:16px 18px;border-radius:20px;background:#fff;border:1.5px solid #ef8a1d;display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;font-weight:800;color:#6b7780">PIN</span><div style="display:flex;gap:6px"><span style="width:30px;height:36px;border-radius:10px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">•</span><span style="width:30px;height:36px;border-radius:10px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">•</span><span style="width:30px;height:36px;border-radius:10px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">•</span><span style="width:30px;height:36px;border-radius:10px;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center">{{ spinPin }}</span></div><span style="font-size:12px;color:#6b7780">Verific…</span></div>
+        <div style="padding:16px 18px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:4px"><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f"><i data-lucide="lock-open" style="width:14px;height:14px"></i>Salariu</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px">9.000 lei</span><span style="font-size:12px;color:#5b666e">Se blochează în 9:42</span></div>
+        <span style="grid-column:1 / -1;font-size:12px;color:#5b666e;line-height:1.5">Blocat = puncte + lacăt, iar suma nu există în DOM. PIN greșit = căsuțele tremură 200 ms + „PIN greșit, mai ai 2 încercări”. După 5 greșeli, blocare 1 min. Deblocarea e globală, cu 10 min fără activitate. „Blochează” ascunde suma peste tot.</span>
+      </div>
+    </div>
+
+    <div id="34g" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34g</span><span style="font-size:16px;font-weight:700">UnsavedChangesDialog</span></div>
+      <div style="width:480px;background:#fffaf0;border-radius:24px;box-shadow:0 24px 60px rgba(58,71,80,.28);overflow:hidden">
+        <div style="padding:22px 26px 16px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Ai modificări nesalvate</span><span style="font-size:14px;color:#5b666e;line-height:1.5">În „Editează copilul” ai schimbat telefonul și grupa. Ce faci cu ele?</span></div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding:14px 26px;border-top:1px solid #ede7dc;background:#fff"><span style="padding:10px 16px;border-radius:999px;font-weight:800;font-size:14px;color:#b0284f">Renunță la ele</span><span style="padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Rămân aici</span><span style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">{{ spinUnsaved }}Salvez și continui</span></div>
+      </div>
+      <span style="width:480px;font-size:12px;color:#5b666e;line-height:1.5">Apare la: închiderea panoului, navigare, schimbarea filialei (13b) și închiderea aplicației. Numește formularul și câmpurile schimbate. Hook <code>useUnsavedGuard(dirty)</code>.</span>
+    </div>
+
+    <div id="34h" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34h</span><span style="font-size:16px;font-weight:700">DocumentCard · stări</span></div>
+      <div style="width:1100px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+        <sc-for list="{{ docs }}" as="d" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:16px;border:{{ d.bd }};background:{{ d.bg }}"><span style="height:92px;border-radius:12px;background:{{ d.th }};display:flex;align-items:center;justify-content:center;color:{{ d.ic }}">{{ d.center }}</span><span style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.n }}</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:{{ d.sc }};font-weight:700">{{ d.s }}</span><span style="height:4px;border-radius:2px;background:#f1ece2;overflow:hidden;display:{{ d.pd }}"><span style="display:block;height:100%;width:{{ d.p }};background:#ef8a1d"></span></span></div></sc-for>
+        <span style="grid-column:1 / -1;font-size:12px;color:#5b666e;line-height:1.5">Miniatură 92px (PDF = iconiță + nr. pagini, imagine = previzualizare). Stări: încărcat, se încarcă (bară + %), pe server doar (nor, descărcare la clic, spinner), eroare (Reîncearcă), prea mare (&gt; 10 MB). ⋯ = Deschide / Descarcă / Redenumește / Șterge.</span>
+      </div>
+    </div>
+
+    <div id="34i" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34i</span><span style="font-size:16px;font-weight:700">HoverCard · persoană</span></div>
+      <div style="width:520px;display:flex;gap:16px;align-items:flex-start">
+        <div style="width:280px;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16)">
+          <span style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:50%;background:#f6d3ad;color:#a34f00;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center">BI</span><span style="display:flex;flex-direction:column"><b style="font-size:15px">Balan Ilinca</b><span style="font-size:12px;color:#6b7780">Mars · 4 ani · #112</span></span></span>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px"><span style="color:#6b7780">Părinte</span><b>Balan Lilia</b><span style="color:#6b7780">Telefon</span><b>+373 69 123 456</b><span style="color:#6b7780">Sold</span><b style="color:#2e6b4c">0 lei</b></div>
+          <span style="display:flex;gap:8px"><span style="padding:7px 12px;border-radius:999px;background:#ef8a1d;color:#fff;font-size:12px;font-weight:800">Deschide fișa</span><span style="padding:7px 12px;border-radius:999px;border:1.5px solid #ede7dc;font-size:12px;font-weight:800">+ Plată</span></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;flex:1">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:18px;background:#fff;border:1px solid #ede7dc"><span style="display:flex;align-items:center;gap:8px;font-size:12px;color:#6b7780;font-weight:800">{{ spinHover }}Se încarcă</span><span style="height:12px;width:70%;border-radius:6px;background:linear-gradient(90deg,#f1ece2 0px,#f9f5ee 160px,#f1ece2 320px);background-size:800px 100%;animation:dsShimmer 1.4s linear infinite"></span><span style="height:10px;width:50%;border-radius:6px;background:linear-gradient(90deg,#f1ece2 0px,#f9f5ee 160px,#f1ece2 320px);background-size:800px 100%;animation:dsShimmer 1.4s linear infinite"></span></div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Apare după 400 ms de hover pe un nume (sau la focus + 0,5 s) și dispare la 200 ms după ieșire. Nu apare pe ecrane tactile. Datele se încarcă la prima afișare, apoi rămân în cache.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="34j" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34j</span><span style="font-size:16px;font-weight:700">MultiSelect · în formular</span></div>
+      <div style="width:520px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:13px;font-weight:700">Copii</span>
+        <span style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:7px 10px;border-radius:12px;border:1.5px solid #ef8a1d;box-shadow:0 0 0 3px #fcead3"><span style="display:flex;align-items:center;gap:6px;padding:3px 6px 3px 4px;border-radius:999px;background:#fcead3;color:#a34f00;font-size:12px;font-weight:800"><span style="width:20px;height:20px;border-radius:50%;background:#f6d3ad;font-size:9px;display:flex;align-items:center;justify-content:center">BI</span>Balan Ilinca<i data-lucide="x" style="width:12px;height:12px"></i></span><span style="display:flex;align-items:center;gap:6px;padding:3px 6px 3px 4px;border-radius:999px;background:#e7f4ec;color:#2e6b4c;font-size:12px;font-weight:800"><span style="width:20px;height:20px;border-radius:50%;background:#c6e6d3;font-size:9px;display:flex;align-items:center;justify-content:center">PI</span>Pop Ion<i data-lucide="x" style="width:12px;height:12px"></i></span><span style="font-size:14px;font-weight:600;color:#3a4750">ce</span><span style="margin-left:auto">{{ spinMulti }}</span></span>
+        <div style="display:flex;flex-direction:column;padding:6px;border-radius:14px;background:#fff;border:1px solid #ede7dc;box-shadow:0 16px 32px rgba(58,71,80,.16);font-size:14px;font-weight:700">
+          <span style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:#fffaf0"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:5px;border:1.5px solid #c9c4ba"></span><b style="color:#a34f00">Ce</b>ban Maria<span style="margin-left:auto;font-size:12px;color:#9aa3a9">Stele</span></span>
+          <span style="display:flex;align-items:center;gap:10px;padding:8px 10px"><span style="width:16px;height:16px;box-sizing:border-box;border-radius:5px;border:1.5px solid #c9c4ba"></span><b style="color:#a34f00">Ce</b>rnei Dan<span style="margin-left:auto;font-size:12px;color:#9aa3a9">Luna</span></span>
+          <span style="display:flex;justify-content:space-between;padding:8px 10px 4px;margin-top:4px;border-top:1px solid #f3eee5;font-size:12px;font-weight:800"><span style="color:#6b7780">2 aleși</span><span style="color:#a34f00">Toată grupa Mars (14)</span></span>
+        </div>
+        <span style="font-size:12px;color:#5b666e;line-height:1.5">Aleșii apar ca chip-uri în câmp, cu avatar în tonul grupei. Backspace scoate ultimul. Peste 5 aleși → „Balan Ilinca, Pop Ion și încă 4”. Acțiunea de grup („Toată grupa”) e în subsol.</span>
+      </div>
+    </div>
+
+    <div id="34k" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34k</span><span style="font-size:16px;font-weight:700">TodoCard (meniu) · TaskRow</span></div>
+      <div style="width:700px;box-sizing:border-box;padding:24px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:240px 1fr;gap:22px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:4px;padding:14px 12px 10px;border-radius:18px;background:#fdf3d2">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px 6px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px">De rezolvat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:#a34f00">451</span></div>
+          <sc-for list="{{ todo }}" as="t" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:{{ t.bg }};font-size:13px;font-weight:700"><i data-lucide="{{ t.ic }}" style="width:16px;height:16px;color:#7a5d00"></i>{{ t.l }}<span style="margin-left:auto;min-width:20px;height:20px;box-sizing:border-box;padding:0 6px;border-radius:999px;background:{{ t.cb }};color:{{ t.cf }};font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ t.n }}</span></span></sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid #ede7dc;background:{{ t.bg }};opacity:{{ t.op }}"><span style="width:34px;height:34px;border-radius:10px;background:{{ t.ib }};color:{{ t.if }};display:flex;align-items:center;justify-content:center"><i data-lucide="{{ t.ic }}" style="width:18px;height:18px"></i></span><span style="flex:1;display:flex;flex-direction:column"><b style="font-size:14px">{{ t.t }}</b><span style="font-size:12px;color:#6b7780">{{ t.s }}</span></span><span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#a34f00">{{ t.a }}</span></div></sc-for>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">TodoCard: 4 categorii cu contor; roșu doar dacă e urgent. Clic duce la listă. Contoarele se reîmprospătează în fundal (fără schelet după prima dată). TaskRow: iconiță în tonul tipului, titlu, cauză, acțiune directă. Rezolvat = .5 + ✓, apoi dispare după 1,5 s.</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="34l" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">34l</span><span style="font-size:16px;font-weight:700">PrintOptionsDialog</span></div>
+      <div style="width:520px;background:#fffaf0;border-radius:24px;box-shadow:0 24px 60px rgba(58,71,80,.28);overflow:hidden">
+        <div style="padding:22px 26px 6px;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#ef8a1d">Tipărire</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Situația plăților</span></div>
+        <div style="padding:14px 26px 20px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Ce tipăresc</span><div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700"><span style="flex:1;text-align:center;padding:8px 0;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Rândurile filtrate · 24</span><span style="flex:1;text-align:center;padding:8px 0;color:#6b7780">Toate · 146</span></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:700">Format</span><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><span style="display:flex;flex-direction:column;gap:2px;padding:9px 11px;border-radius:14px;border:2px solid #ef8a1d;background:#fcead3"><b style="font-size:14px">A4 orizontal</b><span style="font-size:12px;color:#5b666e">recomandat</span></span><span style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;border:1.5px solid #ede7dc"><b style="font-size:14px">A4 vertical</b><span style="font-size:12px;color:#5b666e">fără Note</span></span><span style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;border:1.5px solid #ede7dc;opacity:.5"><b style="font-size:14px">58 mm</b><span style="font-size:12px;color:#5b666e">nu se aplică</span></span></div></div>
+          <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span>Semnătură și ștampilă jos</label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 26px;border-top:1px solid #ede7dc;background:#fff"><span style="font-size:13px;color:#6b7780">2 pagini</span><span style="margin-left:auto;padding:10px 18px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Anulează</span><span style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">{{ spinPrintDlg }}Pregătesc…</span></div>
+      </div>
+      <span style="width:520px;font-size:12px;color:#5b666e;line-height:1.5">Același dialog pentru toate tipăriturile. Opțiunile care nu se aplică apar blocate, cu motiv. Numărul de pagini se estimează live. „Tipărește” → „Pregătesc…” → dialogul de tipar al sistemului. Opțiunile se țin minte per tip de document.</span>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { const run = () => { if (window.lucide) window.lucide.createIcons(); else setTimeout(run, 150); }; setTimeout(run, 0); }
+  renderVals() {
+    const h = React.createElement;
+    const spin = (s, c) => h('span', { style: { display: 'inline-block', flexShrink: 0, width: s, height: s, boxSizing: 'border-box', borderRadius: '50%', border: `2px solid ${c}33`, borderTopColor: c, animation: 'dsSpin .8s linear infinite' } });
+    const O = '#ef8a1d', M = '#6b7780', W = '#fff';
+    const banners = [
+      ['alert-circle', 'Backup eșuat.', 'Ultimul backup reușit: ieri, 12:00. Discul extern nu e conectat.', 'Încearcă acum', '#fce9ef', '#b0284f', '#b0284f', '#fff', 0],
+      ['wifi-off', 'Fără internet.', 'Lucrezi local. 5 modificări se trimit la revenire.', 'Detalii', '#3a4750', '#fff', 'rgba(255,255,255,.14)', '#fff', 0],
+      ['alert-triangle', 'Soldul SMS e scăzut.', 'Mai ai 18 lei (≈ 60 SMS).', 'Reîncarcă', '#fdf3d2', '#7a5d00', '#fff', '#7a5d00', 1],
+      ['info', 'Versiune nouă: 2.1.0.', 'Se instalează la următoarea pornire.', 'Ce e nou', '#e4eef6', '#2c5a80', '#fff', '#2c5a80', 1]
+    ].map(([ic, t, d, a, bg, fg, btnBg, btnFg, x]) => ({ ic, t, d, a, bg, fg, btnBg, btnFg, xop: x ? 0.8 : 0 }));
+    const stack = [['BI', '#f6d3ad', '#a34f00'], ['AM', '#f6d3ad', '#a34f00'], ['CM', '#f6d3ad', '#a34f00'], ['RA', '#f6d3ad', '#a34f00'], ['PI', '#f6d3ad', '#a34f00'], ['+9', '#f4f1ea', '#5b666e']].map(([t, bg, fg]) => ({ t, bg, fg }));
+    const stackSk = [1, 2, 3, 4].map(() => ({}));
+    const pen = h('i', { 'data-lucide': 'pencil', style: { width: 14, height: 14, color: '#9aa3a9', marginLeft: 'auto' } });
+    const inline = [
+      ['Mars · taxă lunară', '9.600 lei', 'Implicit · clic pentru a edita', 'view'],
+      ['Soare · taxă lunară', '9.600 lei', 'Hover · apare creionul', 'hover'],
+      ['Luna · taxă lunară', '10.200', 'Editare · Enter salvează, Esc renunță', 'edit'],
+      ['Stele · taxă lunară', '9.800 lei', 'Se salvează…', 'saving'],
+      ['Delfini · taxă lunară', '98OO', 'Doar cifre. Ex. 9.800', 'error']
+    ].map(([n, v, hh, st]) => ({ n, v, h: hh,
+      pad: st === 'edit' || st === 'error' ? '6.5px 9.5px' : '7px 10px',
+      bd: st === 'edit' ? '1.5px solid #ef8a1d' : st === 'error' ? '1.5px solid #e9527c' : st === 'hover' ? '1px solid #ede7dc' : '1px solid transparent',
+      bg: st === 'hover' ? '#faf7f1' : '#fff', ring: st === 'edit' ? '0 0 0 3px #fcead3' : 'none',
+      icon: st === 'hover' ? pen : st === 'saving' ? h('span', { style: { marginLeft: 'auto' } }, spin(12, O)) : null,
+      hc: st === 'error' ? '#b0284f' : st === 'saving' ? '#6b7780' : '#9aa3a9' }));
+    const diff = [
+      ['Nume', 'Balan Ilinca', 'Balan Ilinca', 0, 0],
+      ['Telefon', '069 123 456', '069 123 999', 1, 1],
+      ['Grupa', 'Mars', 'Soare', 1, 2],
+      ['Taxă', '9.600 lei', '9.600 lei', 0, 0]
+    ].map(([f, a, b, d, pick]) => ({ f, a, b, bg: d ? '#fdf3d2' : '#fff', w: d ? 800 : 600, ba: pick === 1 ? '2px solid #ef8a1d' : '1px solid transparent', bb: pick === 2 ? '2px solid #ef8a1d' : '1px solid transparent' }));
+    const ic = (n, s) => h('i', { 'data-lucide': n, style: { width: s, height: s } });
+    const docs = [
+      ['Contract 2026.pdf', 'PDF · 3 pagini · 240 KB', '#fcead3', '#a34f00', '1px solid #ede7dc', '#fff', ic('file-text', 32), '#6b7780', 'none', '0'],
+      ['Certificat medical.jpg', h(React.Fragment, null, spin(12, O), 'Se încarcă · 64%'), '#f4f1ea', '#9aa3a9', '1.5px solid #ef8a1d', '#fff', spin(24, O), '#6b7780', 'block', '64%'],
+      ['Adeverință.pdf', h(React.Fragment, null, ic('cloud', 14), 'Pe server · clic = descarcă'), '#f4f1ea', '#9aa3a9', '1px solid #ede7dc', '#fff', ic('cloud-download', 28), '#6b7780', 'none', '0'],
+      ['Buletin.png', h(React.Fragment, null, ic('alert-circle', 14), 'Nu s-a încărcat · Reîncearcă'), '#fce9ef', '#b0284f', '1.5px solid #e9527c', '#fffafb', ic('alert-circle', 28), '#b0284f', 'none', '0'],
+      ['Scanare mare.pdf', 'Peste 10 MB · micșorează fișierul', '#f4f1ea', '#9aa3a9', '1.5px dashed #e0d5c2', '#fff', ic('file-x', 28), '#7a5d00', 'none', '0']
+    ].map(([n, s, th, icc, bd, bg, center, sc, pd, p]) => ({ n, s, th, ic: icc, bd, bg, center, sc, pd, p }));
+    const todo = [['wallet', 'Achitări neasociate', 64, '#fff', '#e9527c', '#fff'], ['search-check', 'De verificat', 12, 'transparent', '#fff', '#7a5d00'], ['tags', 'Taxe și grupe', 3, 'transparent', '#fff', '#7a5d00'], ['git-compare', 'Conflicte', 1, 'transparent', '#e9527c', '#fff']].map(([ic2, l, n, bg, cb, cf]) => ({ ic: ic2, l, n, bg, cb, cf }));
+    const tasks = [
+      ['wallet', 'Achitare de 9.600 lei fără copil', 'Extras 29.09 · plătitor „BALAN L.”', 'Asociază →', '#fcead3', '#a34f00', '#fff', 1],
+      ['phone', 'Telefon invalid · Ceban Maria', 'SMS-ul de ieri a eșuat', h(React.Fragment, null, spin(12, O), 'Se salvează'), '#fce9ef', '#b0284f', '#fff', 1],
+      ['check-circle-2', 'Taxă lipsă · grupa Delfini', 'Rezolvat acum', '✓', '#e7f4ec', '#2e6b4c', '#fff', 0.5]
+    ].map(([ic2, t, s, a, ib, iff, bg, op]) => ({ ic: ic2, t, s, a, ib, if: iff, bg, op }));
+    return { banners, stack, stackSk, inline, diff, docs, todo, tasks,
+      spinSplit: spin(14, W), spinDiff: spin(14, W), spinPin: spin(14, O), spinUnsaved: spin(14, W), spinHover: spin(12, M), spinMulti: spin(14, M), spinPrintDlg: spin(14, W) };
+  }
+}
+</script>
+</body>
+</html>

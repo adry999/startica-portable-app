@@ -60,6 +60,7 @@
         <main style="flex:1;min-width:0;display:flex;flex-direction:column">
           <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc">
             <div style="flex:1;display:flex;flex-direction:row-reverse;justify-content:flex-end;align-items:baseline;gap:12px;min-width:0"><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Notificări</h2></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800"><span style="padding:7px 14px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.12);color:#3a4750">Canale</span><a href="Sms.dc.html#11a" style="padding:7px 14px;color:#6b7780;font-weight:800">Mesaje SMS</a><a href="Sms.dc.html#11b" style="padding:7px 14px;color:#6b7780;font-weight:800">Șabloane</a></div>
             <span style="padding:8px 16px;border-radius:999px;background:#fff;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Trimite un mesaj de test</span>
           </header>
           <div style="padding:24px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;align-items:start">
@@ -71,16 +72,44 @@
               <div style="display:flex;gap:10px;position:relative"><span style="padding:8px 16px;border-radius:999px;background:#fff;font-weight:800;font-size:13px;color:#2e6b4c">Schimbă contul</span><span style="padding:8px 16px;font-weight:800;font-size:13px;color:#b0284f">Deconectează</span></div>
             </div>
             <div style="background:#fff;border-radius:24px;border:1px solid #ede7dc;overflow:hidden">
-              <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="5">
+              <div style="padding:20px 22px 6px;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Ce trimite rezumatul zilnic Telegram</div>
+              <sc-for list="{{ toggles }}" as="t" hint-placeholder-count="4">
                 <div style="display:flex;align-items:center;gap:16px;padding:16px 22px;border-bottom:1px solid #f3eee5">
                   <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:800;font-size:15px">{{ t.name }}</span><span style="font-size:13px;color:#6b7780">{{ t.desc }}</span></div>
-                  <span style="font-size:13px;color:#6b7780;font-weight:700">{{ t.when }}</span>
+                  <span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#6b7780;font-weight:700">{{ t.pre }}<span style="padding:6px 10px;border-radius:10px;border:1px solid #c9c4ba;background:#fff;color:#3a4750;font-weight:700;opacity:{{ t.op }}">{{ t.val }}</span>{{ t.post }}</span>
                   <span style="width:46px;height:26px;border-radius:999px;background:{{ t.bg }};display:flex;align-items:center;padding:3px;box-sizing:border-box;justify-content:{{ t.jc }}"><span style="width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15)"></span></span>
                 </div>
               </sc-for>
+              <a href="#10e" style="display:flex;align-items:center;gap:8px;padding:14px 22px;font-size:13px;font-weight:800;color:#3a4750">▸ Detalii <span style="font-weight:600;color:#9aa3a9">ora rezumatului, „Nimic de semnalat”, memento-uri Windows</span></a>
             </div>
           </div>
         </main>
+      </div>
+    </div>
+
+    <div id="10e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">10e</span><span style="font-size:16px;font-weight:700">Notificări · Detalii deschise, modificări nesalvate</span></div>
+      <div style="width:700px;background:#fff;border-radius:24px;border:1px solid #ede7dc;overflow:hidden;box-shadow:0 30px 80px rgba(58,71,80,.14)">
+        <div style="display:flex;align-items:center;gap:8px;padding:16px 22px 10px;font-size:13px;font-weight:800">▾ Detalii</div>
+        <div style="display:flex;flex-direction:column;gap:14px;padding:0 22px 18px">
+          <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</span>Trimite și „Nimic de semnalat” într-o zi goală</label>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700">Ora rezumatului<span style="padding:6px 10px;border-radius:10px;border:1px solid #c9c4ba;font-weight:700">08:00</span></span>
+            <span style="font-size:12px;color:#6b7780">Ora se aplică la următoarea pornire a Startica.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:16px;background:#faf7f1;border:1px solid #f1e8d6">
+            <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Memento-uri Windows</span>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</span>Vizite azi</label>
+              <span style="font-size:12px;color:#6b7780;padding-left:28px">Cere fereastra Startica deschisă cât timp aplicația rulează.</span>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700"><span style="width:18px;height:18px;border-radius:5px;background:#ef8a1d;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">✓</span>Vizită în curând<span style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:13px;color:#6b7780">cu<span style="padding:6px 10px;border-radius:10px;border:1px solid #c9c4ba;color:#3a4750;font-weight:700">30</span>minute înainte</span></label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid #ede7dc;background:#fdf3d2">
+          <span style="font-size:13px;font-weight:700;color:#7a5d00">Ai modificări nesalvate.</span>
+          <span style="margin-left:auto;padding:9px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Salvează preferințele</span>
+        </div>
       </div>
     </div>
 
@@ -116,7 +145,6 @@
                   <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Grădinița</span>
                   <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px"><span style="color:#6b7780">Nume</span><span style="font-weight:700">Startica</span><span style="color:#6b7780">Monedă</span><span style="font-weight:700">lei</span><span style="color:#6b7780">An școlar</span><span style="font-weight:700">începe în septembrie</span></div>
                 </div>
-                <div style="border-radius:22px;border:1.5px solid #f3a6be;padding:16px 20px;display:flex;align-items:center;gap:12px"><div style="flex:1;display:flex;flex-direction:column"><span style="font-weight:800;font-size:14px;color:#b0284f">Zonă periculoasă</span><span style="font-size:13px;color:#6b7780">Șterge toate datele arhivate definitiv</span></div><span style="font-weight:800;font-size:13px;color:#b0284f">Șterge…</span></div>
               </div>
             </div>
           </div>
@@ -194,12 +222,11 @@ class Component extends DCLogic {
       { day: 'Ieri, 22 septembrie', items: mk([['17:30', 'Modificat', 'Grupa Mars', 'capacitate', '8', '10', 0], ['16:02', 'Arhivat', 'Fișa Balanuta Vera', '', '', '', 1], ['09:40', 'Șters', 'Achitare duplicat 17.07 · 13.058 lei', '', '', '', 0]]) }
     ];
     const toggles = [
-      ['Restanțe', 'Când trece scadența unui copil fără plată', 'zilnic 08:00', 1],
-      ['Zile de naștere', 'Copiii care împlinesc ani mâine', 'zilnic 08:00', 1],
-      ['Vizite programate', 'Cu o zi înainte de vizită', 'cu 1 zi înainte', 1],
-      ['Rezumat săptămânal', 'Încasări, cheltuieli și ce e de rezolvat', 'luni 09:00', 0],
-      ['Probleme la backup', 'Dacă backupul local sau extern eșuează', 'imediat', 1]
-    ].map(([name, desc, when, on]) => ({ name, desc, when, bg: on ? '#ef8a1d' : '#ede7dc', jc: on ? 'flex-end' : 'flex-start' }));
+      ['Restanțe', 'Copiii cu restanță la plată, cu detaliile de mai jos.', '', 'Zilnic ▾', '', 1],
+      ['Zile de naștere', 'Copiii care împlinesc ani, cu atâtea zile înainte.', 'cu', '1', 'zile înainte', 1],
+      ['Vizite programate', 'Vizitele din următoarele zile, ca să nu fie uitate.', 'orizont', '2', 'zile', 1],
+      ['Probleme la backup', 'Dacă backupul local sau extern eșuează. De construit (A7).', '', 'imediat', '', 1]
+    ].map(([name, desc, pre, val, post, on]) => ({ name, desc, pre, val, post, op: on ? 1 : 0, bg: on ? '#ef8a1d' : '#ede7dc', jc: on ? 'flex-end' : 'flex-start' }));
     const backups = [['23.09.2026 · 12:00', '4,2 MB', 'automat'], ['22.09.2026 · 12:00', '4,2 MB', 'automat'], ['21.09.2026 · 12:00', '4,1 MB', 'automat'], ['18.09.2026 · 15:32', '4,1 MB', 'manual'], ['15.09.2026 · 12:00', '4,0 MB', 'automat']].map(([d, size, kind]) => ({ d, size, kind }));
     return { log, toggles, backups };
   }

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:32px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:980px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><span style="font-weight:800;color:#3a4750">DS · Fundamente</span><a href="DS Tabel si filtre.dc.html">DS · Tabel și filtre</a><a href="DS Componente.dc.html">DS · Componente</a><a href="Componente formular.dc.html">DS · Formular</a><a href="DS Incarcare si stari.dc.html">DS · Încărcare și stări</a><a href="DS Date si grafice.dc.html">DS · Date și grafice</a><a href="DS Tipare de pagina.dc.html">DS · Tipare de pagină</a><a href="DS Diverse.dc.html">DS · Diverse</a><a href="DS Fundamente 2.dc.html">DS · Fundamente 2</a><a href="DS Componente 2.dc.html">DS · Componente 2</a></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Design system · Fundamente</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Tokenii din <code>tokens.css</code> și rolul fiecăruia. În cod se folosește mereu numele tokenului, iar hex-ul e doar pentru referință. <a href="#26a">26a</a> culori de bază. <a href="#26b">26b</a> cele 8 tonuri de grupă. <a href="#26c">26c</a> stări. <a href="#26d">26d</a> tipografie pe roluri. <a href="#26e">26e</a> raze, umbre, spațiere.</p>
+  </div>
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+
+    <div id="26a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">26a</span><span style="font-size:16px;font-weight:700">Culori de bază</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:26px">
+        <sc-for list="{{ baseGroups }}" as="g" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">{{ g.title }}</span>
+            <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ g.items }}" as="c" hint-placeholder-count="6">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <span style="height:64px;border-radius:14px;background:{{ c.hex }};border:1px solid #ede7dc"></span>
+                  <span style="font-size:13px;font-weight:800">{{ c.token }}</span>
+                  <span style="font-size:12px;color:#6b7780;font-variant-numeric:tabular-nums">{{ c.hex }}</span>
+                  <span style="font-size:12px;color:#5b666e;line-height:1.35">{{ c.use }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div id="26b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">26b</span><span style="font-size:16px;font-weight:700">Tonuri de grupă · soft / frame / bar / ink</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:10px">
+        <div style="display:grid;grid-template-columns:110px repeat(4,72px) minmax(0,1fr);gap:14px;padding:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9"><span>Ton</span><span>soft</span><span>frame</span><span>bar</span><span>ink</span><span>Exemple</span></div>
+        <sc-for list="{{ tones }}" as="t" hint-placeholder-count="8">
+          <div style="display:grid;grid-template-columns:110px repeat(4,72px) minmax(0,1fr);gap:14px;align-items:center;padding:8px 0;border-top:1px solid #f3eee5">
+            <span style="font-weight:800;font-size:14px">{{ t.name }}</span>
+            <span style="height:36px;border-radius:10px;background:{{ t.soft }}"></span>
+            <span style="height:36px;border-radius:10px;background:{{ t.frame }}"></span>
+            <span style="height:36px;border-radius:10px;background:{{ t.bar }}"></span>
+            <span style="height:36px;border-radius:10px;background:{{ t.ink }}"></span>
+            <span style="display:flex;align-items:center;gap:10px">
+              <span style="padding:6px 14px;border-radius:999px;background:{{ t.soft }};color:{{ t.ink }};font-size:13px;font-weight:800">Grupa {{ t.group }}</span>
+              <span style="padding:6px 14px;border-radius:999px;background:{{ t.ink }};color:#fff;font-size:13px;font-weight:800">{{ t.group }}</span>
+              <span style="width:32px;height:32px;border-radius:50%;background:{{ t.frame }};color:{{ t.ink }};font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ t.ini }}</span>
+              <span style="flex:1;height:8px;border-radius:4px;background:{{ t.soft }};overflow:hidden;display:flex"><span style="width:62%;background:{{ t.bar }}"></span></span>
+            </span>
+          </div>
+        </sc-for>
+        <span style="font-size:13px;color:#5b666e;line-height:1.5;padding-top:6px">soft = fundal (card, secțiune, pastilă). frame = chenar și avatar. bar = grafice și puncte. ink = text pe soft, pastilă plină. Grupa își ia tonul din <code>group.tone</code>; dacă lipsește, din poziție (<code>groupTone()</code>).</span>
+      </div>
+    </div>
+
+    <div id="26c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">26c</span><span style="font-size:16px;font-weight:700">Stări semantice</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+        <sc-for list="{{ states }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:20px;background:{{ s.soft }}">
+            <span style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;background:{{ s.dot }};border:{{ s.dotBd }};box-sizing:border-box"></span><span style="font-weight:800;font-size:15px;color:{{ s.ink }}">{{ s.name }}</span></span>
+            <span style="align-self:flex-start;padding:4px 10px;border-radius:999px;background:#fff;color:{{ s.ink }};font-size:12px;font-weight:800">{{ s.pill }}</span>
+            <span style="font-size:12px;color:#5b666e;line-height:1.4">{{ s.use }}</span>
+            <span style="font-size:11px;color:#6b7780;font-variant-numeric:tabular-nums">{{ s.codes }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div id="26d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">26d</span><span style="font-size:16px;font-weight:700">Tipografie pe roluri · Baloo 2 + Nunito</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:24px 32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column">
+        <sc-for list="{{ type }}" as="t" hint-placeholder-count="14">
+          <div style="display:grid;grid-template-columns:200px minmax(0,1fr) 220px;gap:20px;align-items:center;padding:12px 0;border-bottom:1px solid #f3eee5">
+            <span style="font-size:13px;font-weight:800">{{ t.role }}</span>
+            <span style="font-family:{{ t.ff }};font-size:{{ t.size }}px;font-weight:{{ t.w }};line-height:1.15;letter-spacing:{{ t.ls }};text-transform:{{ t.tt }};color:{{ t.c }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.sample }}</span>
+            <span style="font-size:12px;color:#6b7780;font-variant-numeric:tabular-nums">{{ t.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div id="26e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">26e</span><span style="font-size:16px;font-weight:700">Raze · umbre · spațiere</span></div>
+      <div style="width:980px;box-sizing:border-box;padding:32px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.1);display:flex;flex-direction:column;gap:30px">
+        <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px">
+          <sc-for list="{{ radii }}" as="r" hint-placeholder-count="8">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="height:72px;border-radius:{{ r.v }};background:#fcead3;border:1.5px solid #ef8a1d"></span><span style="font-size:12px;font-weight:800">{{ r.token }}</span><span style="font-size:11px;color:#6b7780">{{ r.v }} · {{ r.use }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;padding:10px 0 4px">
+          <sc-for list="{{ shadows }}" as="s" hint-placeholder-count="6">
+            <div style="display:flex;flex-direction:column;gap:10px"><span style="height:64px;border-radius:16px;background:{{ s.bg }};box-shadow:{{ s.v }}"></span><span style="font-size:12px;font-weight:800">{{ s.token }}</span><span style="font-size:11px;color:#6b7780">{{ s.use }}</span></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:13px;font-weight:800">Spațiere · <code>--space-N</code> (px)</span>
+          <div style="display:flex;align-items:flex-end;gap:14px">
+            <sc-for list="{{ spaces }}" as="s" hint-placeholder-count="12">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:{{ s.px }};height:{{ s.px }};background:#a8d8be;border-radius:3px"></span><span style="font-size:11px;font-weight:800">{{ s.n }}</span></div>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;color:#5b666e;line-height:1.5">Pagina are <code>28px 40px 40px</code> sub antet. Între carduri gap 16, în card gap 12–14. Rândurile de tabel au <code>11–12px 20px</code>. Panoul lateral are 30 pe orizontală.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = (token, hex, use) => ({ token, hex, use });
+    const baseGroups = [
+      { title: 'Text și neutre', items: [C('--slate', '#3a4750', 'Text principal, bara de selecție, pastila activă'), C('--text-secondary', '#5b666e', 'Text secundar mai închis'), C('--muted', '#6b7780', 'Etichete, descrieri'), C('--subtle', '#9aa3a9', 'Eyebrow, antet coloană, placeholder'), C('--input-border', '#c9c4ba', 'Chenar de câmp, nemarcat'), C('--on-slate-muted', '#b9c1c6', 'Text stins pe slate')] },
+      { title: 'Suprafețe și linii', items: [C('--white', '#ffffff', 'Carduri, câmpuri'), C('--cream', '#fffaf0', 'Fundal aplicație, subsol tabel'), C('--neutral-soft', '#f4f1ea', 'Segmented, pastile neutre'), C('--sand', '#f1ece2', 'Pistă bară, segmented antet'), C('--border', '#ede7dc', 'Chenar card și tabel'), C('--row-divider', '#f3eee5', 'Linie între rânduri')] },
+      { title: 'Brand', items: [C('--orange', '#ef8a1d', 'Acțiune primară, focus, azi'), C('--yellow', '#f9d257', 'Decor, avertizare'), C('--mint', '#a8d8be', 'Decor, succes'), C('--pink', '#f3a6be', 'Decor'), C('--raspberry', '#e9527c', 'Absent, restanță, ștergere'), C('--success-dot', '#3f9a6b', 'Prezent, achitat')] }
+    ];
+    const tones = [
+      ['orange', '#fcead3', '#f6d3ad', '#ef8a1d', '#a34f00', 'Mars', 'MA'],
+      ['mint', '#e7f4ec', '#c6e6d3', '#3f9a6b', '#2e6b4c', 'Soare', 'SO'],
+      ['yellow', '#fdf3d2', '#f6e3a6', '#d9a400', '#7a5d00', 'Luna', 'LU'],
+      ['pink', '#fce9ef', '#f6c6d5', '#d9577c', '#b0284f', 'Stele', 'ST'],
+      ['teal', '#dff1f0', '#a8d9d9', '#3a9c9c', '#1f6464', 'Delfini', 'DE'],
+      ['blue', '#e4eef6', '#aecbe0', '#4a86b8', '#2c5a80', 'Nori', 'NO'],
+      ['purple', '#eee8f6', '#cfc0e6', '#8a6bc0', '#5b3f86', 'Fluturi', 'FL'],
+      ['coral', '#fbe6dc', '#f0b79c', '#e0714a', '#9a3f1c', 'Ursuleți', 'UR']
+    ].map(([name, soft, frame, bar, ink, group, ini]) => ({ name, soft, frame, bar, ink, group, ini }));
+    const states = [
+      { name: 'Prezent · Achitat', dot: '#3f9a6b', dotBd: 'none', soft: '#e7f4ec', ink: '#2e6b4c', pill: 'Achitat', use: 'Prezență, plată completă, zi lucrată, livrat.', codes: '#3f9a6b · --mint-soft · --mint-ink' },
+      { name: 'Absent · Restanță', dot: '#e9527c', dotBd: 'none', soft: '#fce9ef', ink: '#b0284f', pill: 'Restanță', use: 'Absent nemotivat, neachitat, CM, eșuat.', codes: '#e9527c · --pink-soft · --pink-ink' },
+      { name: 'Motivat · Parțial', dot: '#e0b400', dotBd: 'none', soft: '#fdf3d2', ink: '#7a5d00', pill: 'Parțial', use: 'Motivat, plată parțială, CO, în curs.', codes: '#e0b400 · --yellow-soft · --yellow-ink' },
+      { name: 'Nemarcat · Neutru', dot: '#fff', dotBd: '1.5px solid #c9c4ba', soft: '#f4f1ea', ink: '#6b7780', pill: 'Nemarcat', use: 'Fără stare încă, arhivat, implicit.', codes: 'cerc gol --input-border · --neutral-soft · --muted' }
+    ];
+    const T = (role, ff, size, w, sample, spec, extra) => ({ role, ff: ff === 'B' ? "'Baloo 2',sans-serif" : 'Nunito,sans-serif', size, w, sample, spec, ls: 'normal', tt: 'none', c: '#3a4750', ...(extra || {}) });
+    const type = [
+      T('Titlu mare (fișă, 21c)', 'B', 36, 800, 'Balan Ilinca', 'Baloo 36/800 · lh 1'),
+      T('Cifră KPI principală', 'B', 36, 800, '612.480 lei', 'Baloo 36/800'),
+      T('Cifră KPI', 'B', 28, 800, '48.300 lei', 'Baloo 28–30/800'),
+      T('Titlu panou lateral', 'B', 26, 800, 'Achitare nouă', 'Baloo 26/800 · lh 1.1'),
+      T('Titlu pagină (antet)', 'B', 24, 800, 'Achitări', 'Baloo 24/800 · lh 1.1'),
+      T('Titlu card / secțiune', 'B', 18, 800, 'Istoric plăți', 'Baloo 18–20/800'),
+      T('Buton primar antet', 'B', 15, 700, '+ Achitare nouă', 'Baloo 15/700'),
+      T('Text rând tabel / corp', 'N', 14, 700, 'Balan Lilia · +373 69 123 456', 'Nunito 14/400–800'),
+      T('Câmp de formular', 'N', 15, 600, '069 123 456', 'Nunito 15/600'),
+      T('Etichetă câmp / secundar', 'N', 13, 700, 'Numele părintelui', 'Nunito 13/700'),
+      T('Ajutor / notă', 'N', 12, 400, 'Apare pe confirmarea de plată.', 'Nunito 12/400 · --muted', { c: '#6b7780' }),
+      T('Etichetă KPI', 'N', 12, 800, 'Încasări septembrie', 'Nunito 12/800 · upper .08em · -ink', { tt: 'uppercase', ls: '.08em', c: '#a34f00' }),
+      T('Antet coloană', 'N', 11, 800, 'Destinatar', 'Nunito 11/800 · upper .07em · --subtle', { tt: 'uppercase', ls: '.07em', c: '#9aa3a9' }),
+      T('Eyebrow antet', 'N', 11, 800, 'Contabilitate', 'Nunito 11/800 · upper .1em · --subtle', { tt: 'uppercase', ls: '.1em', c: '#9aa3a9' })
+    ];
+    const radii = [['--radius-5', '5px', 'bifă, celulă'], ['--radius-xs', '8px', 'pătrat nr.'], ['--radius-sm', '10px', 'meniu, sm'], ['--radius-input', '12px', 'câmp'], ['--radius-md', '14px', 'notă, card mic'], ['--radius-md-lg', '16px', 'bulă, dialog'], ['--radius-lg', '20px', 'KPI'], ['--radius-xl', '22–24px', 'card mare']].map(([token, v, use]) => ({ token, v: v.split('–')[0], use }));
+    radii.push({ token: '--radius-pill', v: '999px', use: 'buton, pastilă' });
+    const shadows = [
+      ['--shadow-pill-active', '0 1px 3px rgba(58,71,80,.12)', 'Opțiune activă segmented', '#fff'],
+      ['--shadow-button-header', '0 4px 10px rgba(239,138,29,.28)', 'Buton primar antet', '#ef8a1d'],
+      ['--shadow-card', '0 8px 24px rgba(58,71,80,.1)', 'Card ridicat, sticky', '#fff'],
+      ['--shadow-popover', '0 16px 32px rgba(58,71,80,.16)', 'Meniu ⋯, SearchSelect, popover', '#fff'],
+      ['--shadow-floating-bar', '0 12px 28px rgba(58,71,80,.25)', 'Bara de selecție plutitoare', '#3a4750'],
+      ['--shadow-panel', '-20px 0 60px rgba(58,71,80,.2)', 'Panou lateral', '#fff'],
+      ['--shadow-dialog', '0 24px 60px rgba(58,71,80,.28)', 'Dialog de confirmare', '#fff'],
+      ['--shadow-drag', '0 18px 36px rgba(58,71,80,.22)', 'Copia trasă (Grupe)', '#fff']
+    ].map(([token, v, use, bg]) => ({ token, v, use, bg }));
+    const spaces = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40].map(n => ({ n, px: n + 'px' }));
+    return { baseGroups, tones, states, type, radii, shadows, spaces };
+  }
+}
+</script>
+</body>
+</html>
