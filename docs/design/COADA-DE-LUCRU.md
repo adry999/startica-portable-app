@@ -515,7 +515,7 @@ Verificare unică la final: `npm run check` (root, 1175/1177 + 2 skip) + webapp 
 
 ## 2026-09-29 — Coada ALINIERE-DESIGN.md, închidere
 
-A1–A8 și B1–B3 sunt DONE (vezi intrările de mai sus). **A9 (Documente pe fișă) amânat, la cererea utilizatorului** — nu se atașează documente la fișa copilului deocamdată; rămâne singurul punct neînceput din listă, cu planul tehnic (obligatoriu înainte de cod, per `screens/28-fisa-copilului-date.md`) încă nescris. De reluat separat, când se decide să se înceapă.
+A1–A8 și B1–B2 sunt DONE (vezi intrările de mai sus). **B3 — doar diagnostic, așteaptă răspunsurile de mai jos**: `scripts/diagnostic/b3-pool-expenses.mjs` a identificat cele 143 de cheltuieli suspecte (113.250 lei), dar migrarea propriu-zisă (`Payment.service`, kind-ul `services`, fila Servicii) nu există încă — corectat aici după ce textul anterior spunea greșit că B3 e DONE. **A9 (Documente pe fișă) amânat, la cererea utilizatorului** — nu se atașează documente la fișa copilului deocamdată; rămâne singurul punct neînceput din listă, cu planul tehnic (obligatoriu înainte de cod, per `screens/28-fisa-copilului-date.md`) încă nescris. De reluat separat, când se decide să se înceapă.
 
 Nimic deschis în „De discutat cu utilizatorul” de mai jos. `npm run check` (root) și webapp (`tsc` + `vitest`) verzi la fiecare punct din listă; 5 commit-uri locale împinse la `origin/master-v2` la finalul acestei sesiuni.
 
