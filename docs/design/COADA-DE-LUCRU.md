@@ -442,5 +442,11 @@ Scos complet marcarea în masă din Prezența · Ziua: `markGroupPresent`/`markA
 
 Urmează A3e-undo (Anulează/istoric în Prezența · Luna).
 
+## 2026-09-29 — A3e-undo — DONE
+
+Prezența · Luna nu avea deloc mecanismul anulabil din Ziua. Adăugat în `useAttendanceMonth.ts`: `HistoryEntry` ține `(childId, date)` per celulă (nu doar `childId`, ca în Ziua — aceeași grilă schimbă mai multe zile deodată), restul (undoLast/undoUntil/undoAll, reset la schimbarea lunii) identic ca mecanică cu Ziua. `AttendanceUndoControl` (deja generic) refolosit neschimbat în antetul modului Luna; Ctrl+Z merge acum pe fila activă (Ziua sau Luna). Nota de sub grilă („Zilele de weekend...") era deja în cod, nimic de schimbat acolo. `npm run check` (1170/1172 + 2 skip) + webapp 873/873 — verzi. Commit `f853909`.
+
+Urmează A3b (Achitare nouă, 15b).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
