@@ -333,5 +333,11 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - **Teste:** actualizate 4 teste care încă așteptau „Altele” (`record-list-summary.test.mjs`, `usePayments.test.ts`, `payment-form.test.ts` ×2) + adăugate 6 teste noi (normalizare, validare la salvare, duplicat independent de ordine, split UI în `PaymentsPage.test.tsx`). `npm run check` (root, 1166/1168, 2 skip) + webapp typecheck + 850/850 teste + build — toate verzi.
 - **Neatins intenționat** (nu era în lista explicită a lui B1): `cash-summary.mjs` (Dashboard) și `accounting-report.mjs` (Raport contabil) mai au propriul fallback „Altele” — beneficiază deja de normalizare (pasul 2) fără nicio schimbare de cod, iar singurele 7 plăți care ar mai putea ajunge acolo sunt exact cele semnalate în De rezolvat.
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A1 (Drawer comun) — DONE
+
+- Verificat întâi codul: padding-urile (`.header` 24/30, `.body` 22/30, `.footer` 18/30) și liniile (`border-bottom`/`border-top`) erau deja corecte (din commit-urile de dinainte de b84d7df). Singurul lucru care lipsea: `.footer` nu avea `display:flex; align-items:center; gap:10px` — consumatorii cu 2+ butoane (`BookingDrawer`) le pasează ca fragment direct în footer, fără propriul wrapper flex, deci se bazau pe layout-ul implicit al `<button>` (inline-block), fără gap controlat.
+- Fix: adăugat `display:flex; align-items:center; gap:10px` pe `.footer` în `Drawer.module.css`. Fără alte schimbări — restul era deja aliniat.
+- `npm run check` (root) neafectat (CSS pur webapp); webapp typecheck + 850/850 teste verzi.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
