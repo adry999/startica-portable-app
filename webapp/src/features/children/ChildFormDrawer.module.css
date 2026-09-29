@@ -253,6 +253,10 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--slate);
+  /* Fără asta, un `.field` din `.grid3`/`.grid2`/`.parentRow` nu poate coborî sub lățimea
+     minimă intrinsecă a input-ului lui — coloanele `1fr` nu se mai puteau micșora, iar
+     rândurile ieșeau din drawer (620px nu ajungea pentru 3 coloane). */
+  min-width: 0;
 }
 
 .field input,
