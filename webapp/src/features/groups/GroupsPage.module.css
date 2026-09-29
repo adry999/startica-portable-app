@@ -122,7 +122,8 @@
   align-items: center;
   gap: var(--space-8);
   background: var(--cream);
-  border: 1px solid var(--row-divider);
+  /* #f1e8d6 din A8 (4b) — niciun token exact (--row-divider e #f3eee5, prea aproape ca să reutilizăm greșit). */
+  border: 1px solid #f1e8d6;
   border-radius: 12px;
   padding: var(--space-6) var(--space-8);
   height: 40px;

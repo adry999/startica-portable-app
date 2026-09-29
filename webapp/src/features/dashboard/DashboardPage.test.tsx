@@ -97,6 +97,27 @@ describe('DashboardPage', () => {
     expect(onNavigate).toHaveBeenCalledWith('expenses', { nou: '1' });
   });
 
+  it('A8: graficul Evoluția încasărilor arată legenda cu pătrate, nu comutatorul Încasări/Cheltuieli', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
+    expect(screen.queryByRole('radiogroup', { name: /Evoluția încasărilor/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /încasări 1\.500,00 lei, cheltuieli 0,00 lei/ })).toBeInTheDocument();
+  });
+
+  it('A8: hover pe o lună din grafic arată tooltipul cu diferența', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    const user = userEvent.setup();
+
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
+    const currentMonthBar = screen.getByRole('button', { name: /încasări 1\.500,00 lei/ });
+    await user.hover(currentMonthBar);
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('diferență 1.500 lei');
+  });
+
   it('ascunde CTA-ul unui rând „Necesită atenție" fără elemente', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

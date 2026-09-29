@@ -112,6 +112,25 @@
   font-size: 12px;
 }
 
+.parentName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* Insignă „+1” pentru al doilea părinte (A8, 2a). */
+.secondParentBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .dot {
   width: 6px;
   height: 6px;

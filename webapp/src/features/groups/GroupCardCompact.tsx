@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { RowMenu } from '@shared/ui';
-import { GROUP_DRAG_TYPE } from './dragTypes';
+import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
 import { capacityPillLabel } from './groupStatePill';
 import type { GroupCardView } from './useGroups';
@@ -32,13 +33,20 @@ export function GroupCardCompact({
   const colors = BOARD_TONE_COLORS[group.tone];
   const pillLabel = capacityPillLabel(group);
   const overCapacity = group.capacityState === 'over';
+  const [beingDragged, setBeingDragged] = useState(false);
 
   return (
     <div
       role="button"
       tabIndex={0}
-      className={`${styles.card} ${selected ? styles.selected : ''} ${dragOver ? styles.dragOver : ''}`}
-      style={{ background: colors.soft, color: colors.ink, borderColor: selected ? colors.bar : 'transparent' }}
+      className={`${styles.card} ${selected ? styles.selected : ''} ${dragOver ? styles.dragOver : ''} ${
+        beingDragged ? styles.beingDragged : ''
+      }`}
+      style={{
+        background: colors.soft,
+        color: colors.ink,
+        borderColor: selected || beingDragged ? colors.bar : 'transparent',
+      }}
       draggable={!busy}
       onClick={onSelect}
       onKeyDown={event => {
@@ -50,7 +58,10 @@ export function GroupCardCompact({
       onDragStart={event => {
         event.dataTransfer.setData(GROUP_DRAG_TYPE, group.id);
         event.dataTransfer.effectAllowed = 'move';
+        attachRotatedDragImage(event, event.currentTarget);
+        setBeingDragged(true);
       }}
+      onDragEnd={() => setBeingDragged(false)}
       onDragOver={event => {
         if (!event.dataTransfer.types.includes(GROUP_DRAG_TYPE)) return;
         event.preventDefault();

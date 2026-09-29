@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, LoadingState, SegmentedControl } from '@shared/ui';
+import { Card, LoadingState } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -55,20 +55,16 @@ function fullMonthLabel(month: string): string {
   return `${name} ${year}`;
 }
 
+const capitalize = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+
 export interface DashboardPageProps {
   month: string;
   onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
 }
 
-const CHART_MODE_OPTIONS = [
-  { value: 'income' as const, label: 'Încasări' },
-  { value: 'expense' as const, label: 'Cheltuieli' },
-];
-
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const dashboardData = useDashboard(month);
   const navigate = useNavigate();
-  const [chartMode, setChartMode] = useState<'income' | 'expense'>('income');
   const [activeBar, setActiveBar] = useState<string | null>(null);
 
   if (dashboardData.status === 'loading') return <LoadingState />;
@@ -76,8 +72,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
     return <p className={styles.notice}>{dashboardData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   const currentMonthIndex = dashboardData.revenueHistory.length - 1;
-  const revenueView = chartMode === 'expense' ? dashboardData.expenseHistory : dashboardData.revenueHistory;
-  const maxRevenue = Math.max(1, ...revenueView.map(r => r.value));
+  // Aceeași scală pentru Încasări și Cheltuieli (A8) — o singură coloană cu ambele serii pe lună.
+  const chartMonths = dashboardData.revenueHistory.map((bar, index) => ({
+    month: bar.month,
+    income: bar.value,
+    expense: dashboardData.expenseHistory[index]?.value ?? 0,
+  }));
+  const maxRevenue = Math.max(1, ...chartMonths.flatMap(bar => [bar.income, bar.expense]));
 
   return (
     <>
@@ -136,56 +137,59 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               <p className={styles.panelTitle}>Evoluția încasărilor</p>
               <p className={styles.panelSubtitle}>Ultimele 12 luni</p>
             </div>
-            <SegmentedControl
-              ariaLabel="Evoluția încasărilor sau cheltuielilor"
-              options={CHART_MODE_OPTIONS}
-              value={chartMode}
-              onChange={setChartMode}
-            />
+            <div className={styles.chartLegend}>
+              <span className={styles.legendItem}>
+                <span className={`${styles.legendSquare} ${styles.legendSquareIncome}`} />
+                Încasări
+              </span>
+              <span className={styles.legendItem}>
+                <span className={`${styles.legendSquare} ${styles.legendSquareExpense}`} />
+                Cheltuieli
+              </span>
+            </div>
           </div>
           <div className={styles.bars}>
-            {revenueView.map((bar, index) => {
+            {chartMonths.map((bar, index) => {
               const isActive = activeBar === bar.month;
-              const methodEntries = Object.entries(bar.byMethod ?? {}).filter(([, value]) => value > 0);
+              const isCurrent = index === currentMonthIndex;
+              const diff = bar.income - bar.expense;
               return (
                 <div key={bar.month} className={styles.barColumn}>
                   {isActive && (
                     <div className={styles.barTooltip} role="tooltip">
-                      <strong>{fullMonthLabel(bar.month)}</strong>
-                      <span>{formatMoney(bar.value)}</span>
-                      {methodEntries.length > 0 && (
-                        <ul className={styles.barTooltipMethods}>
-                          {methodEntries.map(([method, value]) => (
-                            <li key={method}>
-                              {METHOD_LABELS[method] ?? method}: {formatCompactMoney(value)}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
+                      <strong>
+                        {capitalize(fullMonthLabel(bar.month))} · diferență {formatCompactMoney(diff)} lei
+                      </strong>
                     </div>
                   )}
                   <button
                     type="button"
-                    className={`${styles.barButton} ${
-                      index === currentMonthIndex
-                        ? styles.barCurrent
-                        : bar.value === 0
-                          ? styles.barEmpty
-                          : styles.barPast
-                    } ${isActive ? styles.barActive : ''}`}
-                    style={{ height: bar.value === 0 ? 6 : Math.max(6, (bar.value / maxRevenue) * 100) }}
+                    className={styles.barPair}
                     onMouseEnter={() => setActiveBar(bar.month)}
                     onMouseLeave={() => setActiveBar(current => (current === bar.month ? null : current))}
                     onFocus={() => setActiveBar(bar.month)}
                     onBlur={() => setActiveBar(current => (current === bar.month ? null : current))}
-                    aria-label={`${fullMonthLabel(bar.month)}: ${formatMoney(bar.value)}`}
-                  />
+                    aria-label={`${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`}
+                  >
+                    <span
+                      className={`${styles.barIncome} ${isCurrent ? styles.barIncomeCurrent : ''} ${
+                        bar.income === 0 ? styles.barNoData : ''
+                      } ${isActive ? styles.barActive : ''}`}
+                      style={{ height: bar.income === 0 ? 5 : Math.max(6, (bar.income / maxRevenue) * 100) }}
+                    />
+                    <span
+                      className={`${styles.barExpense} ${isCurrent ? styles.barExpenseCurrent : ''} ${
+                        bar.expense === 0 ? styles.barNoData : ''
+                      } ${isActive ? styles.barActive : ''}`}
+                      style={{ height: bar.expense === 0 ? 5 : Math.max(6, (bar.expense / maxRevenue) * 100) }}
+                    />
+                  </button>
                 </div>
               );
             })}
           </div>
           <div className={styles.barLabels}>
-            {revenueView.map((bar, index) => (
+            {chartMonths.map((bar, index) => (
               <small key={bar.month} className={index === currentMonthIndex ? styles.barLabelCurrent : undefined}>
                 {bar.month.slice(5)}
               </small>

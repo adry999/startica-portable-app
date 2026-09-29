@@ -90,14 +90,24 @@ export function StartupScreen() {
 
   const doneCount = steps.filter(step => step.status === 'done').length;
   const pct = Math.round((doneCount / steps.length) * 100);
+  // ALINIERE-DESIGN.md A8 „Încărcare 21a”: rândul sub bară arată pasul curent.
+  const currentStepLabel = (steps.find(step => step.status === 'current') ?? steps[steps.length - 1])?.label ?? '';
 
   return (
     <div className={styles.screen}>
+      <span className={styles.circleTopLeft} aria-hidden="true" />
+      <span className={styles.circleBottomRight} aria-hidden="true" />
       <div className={styles.card}>
         <img src="/assets/startica-icon.svg" alt="" className={styles.icon} />
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logo} />
-        <div className={styles.progressTrack}>
-          <span className={styles.progressBar} style={{ width: `${pct}%` }} />
+        <div className={styles.progressGroup}>
+          <div className={styles.progressTrack}>
+            <span className={styles.progressBar} style={{ width: `${pct}%` }} />
+          </div>
+          <div className={styles.progressMeta}>
+            <span className={styles.progressStepLabel}>{currentStepLabel}</span>
+            <span>{pct}%</span>
+          </div>
         </div>
         <ol className={styles.steps}>
           {steps.map(step => (
@@ -123,6 +133,7 @@ export function StartupScreen() {
 function StartupTooSlow({ onRetry }: { onRetry: () => void }) {
   return (
     <div className={styles.screen}>
+      <span className={styles.circleTopLeftSmall} aria-hidden="true" />
       <div className={styles.messageCard}>
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logoSmall} />
         <h2 className={styles.title}>Pornirea durează mai mult ca de obicei</h2>
@@ -138,6 +149,7 @@ function StartupTooSlow({ onRetry }: { onRetry: () => void }) {
 function StartupError({ message, backupPath, onRetry }: { message: string; backupPath: string; onRetry: () => void }) {
   return (
     <div className={styles.screen}>
+      <span className={styles.circleTopLeftSmall} aria-hidden="true" />
       <div className={styles.messageCard}>
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logoSmall} />
         <h2 className={styles.title}>Datele nu s-au putut încărca</h2>

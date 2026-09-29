@@ -79,7 +79,6 @@ export function ChildrenToolbar({
               { value: 'Achitat', label: 'Achitat', tone: 'mint' },
               { value: 'Parțial', label: 'Parțial', tone: 'yellow' },
               { value: 'Neachitat', label: 'Neachitat', tone: 'pink' },
-              { value: 'Scadent', label: 'Scadent', tone: 'neutral' },
             ],
           },
         ]}

@@ -54,8 +54,8 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
       }
     : undefined;
 
-  // Aceeași idee ca Topbar.goToCursValutar: fila implicită se alege din localStorage,
-  // citită de BackupPage la montare (usePersistedState('view.backup', …)).
+  // Fila implicită se alege din localStorage, citită de BackupPage la montare
+  // (usePersistedState('view.backup', …)).
   function goToBranchesTab() {
     try {
       localStorage.setItem('view.backup', 'branches');

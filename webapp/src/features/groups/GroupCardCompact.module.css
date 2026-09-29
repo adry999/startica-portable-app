@@ -8,6 +8,9 @@
   border: 2px solid transparent;
   cursor: pointer;
   text-align: left;
+  transition:
+    opacity 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .card:focus-visible {
@@ -21,6 +24,12 @@
 
 .dragOver {
   box-shadow: 0 0 0 3px var(--orange);
+}
+
+/* Cardul sursă devine loc gol cât timp e tras (A8, 4a/4b) — culoarea vine din style inline (tonul grupei). */
+.beingDragged {
+  opacity: 0.45;
+  border-style: dashed;
 }
 
 /* A3d: mânerul stă în rând, în stânga numelui — nu absolut, nu mai împinge numele cu padding-right. */

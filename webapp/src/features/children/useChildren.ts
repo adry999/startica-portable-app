@@ -27,7 +27,8 @@ export interface ChildRow {
   archived: boolean;
   status: string;
   dueDateLabel: string;
-  payment: PaymentStatus;
+  /** null = fără pastilă (A8, 2a): copilul nu e nici scadent-în-curând, nici nescadent — nimic de arătat. */
+  payment: PaymentStatus | null;
   child: Child;
 }
 
@@ -52,8 +53,12 @@ export interface ChildrenData {
  * „De verificat”/„Fără obligație” din obligation() — fișe fără taxă completă
  * sau inactive rămân în neutru, cu propriul text, în loc să fie forțate
  * într-una din cele patru culori.
+ *
+ * Pastila „Scadent” a dispărut (A8, 2a): a nu fi încă scadent e starea normală a
+ * majorității rândurilor active, nu ceva de semnalat — Scadent în curând/Nescadent
+ * nu mai arată nimic în coloana Plată.
  */
-function paymentStatusFor(label: string): PaymentStatus {
+function paymentStatusFor(label: string): PaymentStatus | null {
   switch (label) {
     case 'Plătit':
       return { tone: 'mint', label: 'Achitat' };
@@ -63,7 +68,7 @@ function paymentStatusFor(label: string): PaymentStatus {
       return { tone: 'pink', label: 'Neachitat' };
     case 'Scadent în curând':
     case 'Nescadent':
-      return { tone: 'neutral', label: 'Scadent' };
+      return null;
     case 'Fără obligație':
       return { tone: 'neutral', label: 'Fără obligație' };
     default:

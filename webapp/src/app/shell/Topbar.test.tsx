@@ -82,21 +82,20 @@ describe('Topbar', () => {
       );
     });
 
-    it('arată pastila de curs pe Dashboard și navighează la fila Curs valutar', async () => {
+    it('A8: pastila de curs e link extern spre bnm.md, cu rata și data', async () => {
       const session = renderHook(() => useAppSession());
       await act(() => session.result.current.load());
 
-      const user = userEvent.setup();
       renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
 
-      const pill = await screen.findByRole('button', { name: /1 € = 19,6200 lei/ });
-      await user.click(pill);
-
-      expect(await screen.findByTestId('location')).toHaveTextContent('/backup-si-setari');
-      expect(localStorage.getItem('view.backup')).toBe('curs');
+      const pill = await screen.findByRole('link', { name: /19,6200 lei/ });
+      expect(pill).toHaveAttribute('href', 'https://www.bnm.md/');
+      expect(pill).toHaveAttribute('target', '_blank');
+      expect(pill).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(pill).toHaveTextContent('Curs BNM · 27.09.2026');
     });
 
-    it('eyebrow-ul conține filiala doar când există mai multe filiale', async () => {
+    it('A8: eyebrow-ul nu conține niciodată filiala, chiar și cu mai multe filiale', async () => {
       const branch = { id: 'b1', name: 'Buiucani', color: 'orange', address: '' };
       const otherBranch = { id: 'b2', name: 'Botanica', color: 'mint', address: '' };
       vi.stubGlobal(
@@ -107,6 +106,7 @@ describe('Topbar', () => {
           if (path === '/api/state')
             return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
           if (path === '/api/health') return jsonResponse({});
+          if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
           throw new Error(`neașteptat: ${path}`);
         }),
       );
@@ -114,7 +114,8 @@ describe('Topbar', () => {
       await act(() => session.result.current.load());
 
       renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
-      expect(screen.getByText(/Privire de ansamblu · Filiala Buiucani/)).toBeInTheDocument();
+      expect(screen.getByText('Privire de ansamblu')).toBeInTheDocument();
+      expect(screen.queryByText(/Filiala/)).not.toBeInTheDocument();
     });
 
     it('scrierea unui query arată rezultate live, iar click navighează la fișa copilului', async () => {

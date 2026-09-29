@@ -80,12 +80,12 @@ function ChildrenListView({
       if (archiveFilter === 'archived' && !row.archived) return false;
       if (groupFilter === 'none' && row.groupId) return false;
       if (groupFilter !== 'all' && groupFilter !== 'none' && row.groupId !== groupFilter) return false;
-      if (paymentFilter !== 'all' && row.payment.label !== paymentFilter) return false;
+      if (paymentFilter !== 'all' && row.payment?.label !== paymentFilter) return false;
       if (normalizedQuery) {
-        const haystack =
-          `${row.name} ${row.parent} ${row.phone} ${row.child.contractNumber ?? row.child.id}`.toLocaleLowerCase(
-            'ro-RO',
-          );
+        // A8: căutarea găsește și după al doilea părinte (nume + telefon), nu doar contactul principal.
+        const haystack = `${row.name} ${row.parent} ${row.phone} ${row.child.parent2 ?? ''} ${
+          row.child.phone2 ?? ''
+        } ${row.child.contractNumber ?? row.child.id}`.toLocaleLowerCase('ro-RO');
         if (!haystack.includes(normalizedQuery)) return false;
       }
       return true;
@@ -187,7 +187,7 @@ function ChildrenListView({
         row.phone,
         row.groupName,
         row.dueDateLabel,
-        row.payment.label,
+        row.payment?.label ?? '',
       ]),
     );
   }

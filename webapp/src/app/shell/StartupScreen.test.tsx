@@ -67,7 +67,8 @@ describe('StartupScreen', () => {
       vi.advanceTimersByTime(1000);
     });
     expect(screen.getByAltText('Startica')).toBeInTheDocument();
-    expect(screen.getByText('Citesc baza de date')).toBeInTheDocument();
+    // Pasul curent apare de două ori: în rândul de sub bară (A8, ALINIERE-DESIGN.md) și în listă.
+    expect(screen.getAllByText('Citesc baza de date')).toHaveLength(2);
     expect(screen.getByText('Pregătesc Dashboard-ul')).toBeInTheDocument();
     // pasul de sincronizare nu apare — nu există server comun în această etapă (INTREBARI.md)
     expect(screen.queryByText(/Sincronizez/)).not.toBeInTheDocument();

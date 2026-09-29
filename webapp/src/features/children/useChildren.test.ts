@@ -190,7 +190,7 @@ describe('useChildren', () => {
     expect(byId.c1.payment).toEqual({ tone: 'mint', label: 'Achitat' }); // plătit integral
     expect(byId.c2.payment).toEqual({ tone: 'yellow', label: 'Parțial' }); // plată parțială, nescadent încă
     expect(byId.c3.payment).toEqual({ tone: 'pink', label: 'Neachitat' }); // restanță (scadență trecută)
-    expect(byId.c4.payment).toEqual({ tone: 'neutral', label: 'Scadent' }); // nescadent, neplătit
+    expect(byId.c4.payment).toBeNull(); // nescadent, neplătit — fără pastilă (A8)
   });
 
   // M10: obligation() trebuie chemată cu `rates`, altfel un copil cu taxă EUR plătit integral în lei

@@ -494,5 +494,26 @@ Ambele ecrane erau deja foarte aproape de spec — `NotificationsPage.tsx` (10b)
 
 Urmează A8 (diferențe mici, un singur commit).
 
+## 2026-09-29 — A8. Diferențe mici — DONE (un singur commit)
+
+Cele 13 puncte din A8, verificate unul câte unul; multe erau deja în cod (probabil dintr-o sesiune de design în paralel — `docs/design/DECIZII.md`, apărut azi, confirmă exact aceleași decizii):
+
+- **Antet — eyebrow fără filială**: scos `· Filiala X` din `Topbar.tsx` (mereu `baseEyebrow` acum). `screens/17-filiale.md` avea deja nota de suprascriere (altă sesiune).
+- **Pastila „curs €”**: rescrisă complet — era buton intern (`goToCursValutar` → `/backup-si-setari`) + o iconiță `BnmRateLink` alăturată; acum toată pastila e un singur `<a href="https://www.bnm.md/" target="_blank">`: cerc 30px `--mint-soft`/„€”, rata Baloo 15/800, „Curs BNM · azi” (sau data, dacă ultimul curs cunoscut nu e de azi) 11px/700 `--subtle`, săgeată „↗”. `goToCursValutar` șters.
+- **Dashboard KPI/CTA**: deja 30px/36px pe valori, 13px pe CTA — niciun cod de schimbat.
+- **Evoluția încasărilor**: rescris din grafic-cu-comutator (Încasări/Cheltuieli, o serie) în două coloane pe lună (Încasări `--orange-bar-past`/`--orange` curent, Cheltuieli `--mint`/`#5fb58a` curent — literal, niciun token pentru verdele curent), gap 3, max 13px, radius `6px 6px 2px 2px`; comutatorul a dispărut, înlocuit cu legendă de pătrate 10px; tooltip „<Lună> · diferență X lei”. 2 teste noi.
+- **Copii 2a**: header „Părinte · telefon” și sub-nume „Contract #N · vârstă” erau deja corecte. Adăugat: pastila „Scadent” eliminată (`paymentStatusFor` întoarce `null` pentru Scadent-în-curând/Nescadent — nicio pastilă, nu una nouă), insignă „+1” cu tooltip pentru al doilea părinte, căutarea include acum și `parent2`/`phone2`. Opțiunea „Scadent” scoasă din filtrul Plată. 1 test actualizat (`payment: null`).
+- **Grupe — tragere**: cardul sursă (Tablă și Carduri) devine loc gol cât timp e tras (opacity .45, border 2px dashed în tonul grupei — stare locală, fără schimbări de props); imaginea de tragere = copie rotită −2° cu border portocaliu + umbră (`dragTypes.ts` → `attachRotatedDragImage`, gardă pe `setDragImage` lipsă din teste); ținta primește inel portocaliu (era border punctat pe `GroupTile`, acum aliniat cu `GroupCardCompact`). Tranziție 120ms opacitate/umbră.
+- **Cheltuieli 6a, Situația 7b, Prezența 18a**: deja exact din spec (`1fr 2.2fr`, avatar 30px + cifre 44px + antet 11px, tile padding/radius/border) — niciun cod de schimbat.
+- **Pontaj 23b**: 2 culori literale corectate (`--muted`→`#5b666e` pe antetul departament, `--yellow-bar`→`#e0b400` pe pastila/legenda CO) — restul (dimensiuni, radius, rol sub-nume) era deja corect.
+- **Grupe 4b/4a**: titlul „Fără grupă” era deja 20px; border-ul rândurilor din editor corectat la `#f1e8d6` (era `--row-divider`, prea apropiat dar diferit).
+- **Vizite**: calendarul (gap/padding/radius) era deja exact din spec.
+- **Sincronizare 14b/14c**: coloana 380px, `font-family` titlu și radius tabel — deja corecte (altă sesiune le reparase).
+- **Încărcare 21a/21c**: cercuri decorative adăugate (300px+320px pe ecranul de progres, 220px pe „prea încet”/eroare), rândul sub bară (pas curent 800 stânga / procent dreapta, 13px), gap 26px, titlu 21c 30px.
+
+Verificare unică la final: `npm run check` (root, 1175/1177 + 2 skip) + webapp (`tsc --noEmit` curat, 883/883 teste). Commit unic, per instrucțiunea din spec.
+
+Urmează A9 (Documente pe fișă) — are nevoie de plan tehnic întâi, per aceeași convenție ca EUR/BNM și filiale.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.

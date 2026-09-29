@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BnmRateLink, MonthPicker, ScrollArea, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
+import { MonthPicker, ScrollArea, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
-import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
+import { BNM_HOME_URL, latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
+import { formatDate } from '#shared/format/date-format.mjs';
 import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
-import { pathForSearchResult, VIEW_PATHS } from './routes';
+import { pathForSearchResult } from './routes';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './Topbar.module.css';
 
@@ -23,12 +24,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   const { eyebrow: baseEyebrow, title } = titleOverride ?? VIEW_TITLES[view];
   const pageActions = useTopbarActionsSlot();
   const session = useAppSession();
-  // O singură filială (orice instalare imediat după migrare) n-ar trebui să citească
-  // „Filiala principală” pe fiecare ecran — eyebrow-ul arată filiala doar cu mai multe (17-filiale.md).
-  const eyebrow =
-    session.state.branches.length > 1 && session.state.branch
-      ? `${baseEyebrow} · Filiala ${session.state.branch.name}`
-      : baseEyebrow;
+  const eyebrow = baseEyebrow;
   const navigate = useNavigate();
   const { rates } = useExchangeRates();
   const todaysRate = latestKnownRate(rates);
@@ -61,14 +57,8 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
     navigate(pathForSearchResult(result));
   }
 
-  function goToCursValutar() {
-    try {
-      localStorage.setItem('view.backup', 'curs');
-    } catch {
-      // Fila implicită se deschide oricum din Backup și setări.
-    }
-    navigate(VIEW_PATHS.settings);
-  }
+  const isRateFromToday = todaysRateDate === new Date().toISOString().slice(0, 10);
+  const ratePillCaption = `Curs BNM · ${isRateFromToday ? 'azi' : formatDate(todaysRateDate)}`;
 
   return (
     <header className={styles.topbar}>
@@ -140,12 +130,24 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
         )}
         {pageActions}
         {view === 'dashboard' && todaysRate != null && (
-          <span className={styles.ratePill}>
-            <button type="button" className={styles.ratePillMain} onClick={goToCursValutar}>
-              <span className={styles.ratePillDot} />1 € = {formatRate(todaysRate)} lei
-            </button>
-            {todaysRateDate && <BnmRateLink date={todaysRateDate} className={styles.ratePillLink} />}
-          </span>
+          <a
+            className={styles.ratePill}
+            href={BNM_HOME_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Verifică pe bnm.md — ${ratePillCaption}`}
+          >
+            <span className={styles.ratePillDot} aria-hidden="true">
+              €
+            </span>
+            <span className={styles.ratePillText}>
+              <strong className={styles.ratePillRate}>{formatRate(todaysRate)} lei</strong>
+              <small className={styles.ratePillCaption}>{ratePillCaption}</small>
+            </span>
+            <span className={styles.ratePillArrow} aria-hidden="true">
+              ↗
+            </span>
+          </a>
         )}
         {view === 'dashboard' && <MonthPicker value={month} onChange={onMonthChange} />}
       </div>

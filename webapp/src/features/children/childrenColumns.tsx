@@ -33,7 +33,17 @@ export function buildChildrenColumns({
       sortValue: row => row.parent,
       render: row => (
         <div className={styles.parentCell}>
-          <span>{row.parent || '—'}</span>
+          <span className={styles.parentName}>
+            {row.parent || '—'}
+            {row.child.parent2 && (
+              <span
+                className={styles.secondParentBadge}
+                title={`Al doilea părinte: ${row.child.parent2}${row.child.phone2 ? ` · ${row.child.phone2}` : ''}`}
+              >
+                +1
+              </span>
+            )}
+          </span>
           {row.phone && <small>{row.phone}</small>}
         </div>
       ),
@@ -57,12 +67,13 @@ export function buildChildrenColumns({
     {
       key: 'payment',
       header: `Plată ${currentMonthName}`,
-      render: row => (
-        <Badge tone={row.payment.tone}>
-          <span className={styles.dot} />
-          {row.payment.label}
-        </Badge>
-      ),
+      render: row =>
+        row.payment && (
+          <Badge tone={row.payment.tone}>
+            <span className={styles.dot} />
+            {row.payment.label}
+          </Badge>
+        ),
     },
     {
       key: 'menu',

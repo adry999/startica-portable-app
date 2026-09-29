@@ -1,7 +1,7 @@
-import { type KeyboardEvent } from 'react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import { RowMenu } from '@shared/ui';
 import { initials } from '@shared/format/initials';
-import { GROUP_DRAG_TYPE } from './dragTypes';
+import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
 import { capacityPillLabel } from './groupStatePill';
 import type { GroupCardView } from './useGroups';
@@ -47,6 +47,8 @@ export function GroupTile({
   const overCapacity = group.capacityState === 'over';
   const visibleMembers = group.members.slice(0, 9);
   const extra = Math.max(0, group.memberCount - 9);
+  const tileRef = useRef<HTMLDivElement>(null);
+  const [beingDragged, setBeingDragged] = useState(false);
 
   function handleHandleKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
     if (!event.altKey) return;
@@ -61,7 +63,8 @@ export function GroupTile({
 
   return (
     <div
-      className={`${styles.tile} ${dragOver ? styles.dragOver : ''}`}
+      ref={tileRef}
+      className={`${styles.tile} ${dragOver ? styles.dragOver : ''} ${beingDragged ? styles.beingDragged : ''}`}
       style={{ background: colors.soft, color: colors.ink, ['--tone-bar' as string]: colors.bar }}
       onDragOver={event => {
         event.preventDefault();
@@ -88,7 +91,10 @@ export function GroupTile({
           onDragStart={event => {
             event.dataTransfer.setData(GROUP_DRAG_TYPE, group.id);
             event.dataTransfer.effectAllowed = 'move';
+            if (tileRef.current) attachRotatedDragImage(event, tileRef.current);
+            setBeingDragged(true);
           }}
+          onDragEnd={() => setBeingDragged(false)}
         >
           ⋮⋮
         </button>
