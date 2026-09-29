@@ -519,15 +519,15 @@ A1–A8 și B1–B2 sunt DONE (vezi intrările de mai sus). **B3 — doar diagno
 
 Nimic deschis în „De discutat cu utilizatorul” de mai jos. `npm run check` (root) și webapp (`tsc` + `vitest`) verzi la fiecare punct din listă; 5 commit-uri locale împinse la `origin/master-v2` la finalul acestei sesiuni.
 
-## 2026-09-30 — B3 — script de migrare scris (neexecutat încă)
+## 2026-09-30 — B3 — script de migrare executat pe baza reală
 
-`scripts/migrate/b3-pool-expenses-to-payments.mjs` — scrie efectiv doar cu `--execute` (implicit dry-run), ia backup înainte de orice scriere, citește `/api/state` proaspăt înainte de fiecare rând (ca `b1-fix-mixed-payments.mjs`), se oprește la prima eroare, e reluabil (id de plată determinist `PAY-B3-<suffix>`, sare peste cheltuielile deja arhivate). Rulat în dry-run pe baza reală: 143 candidate, 113.250,00 lei — identic cu diagnosticul din 29.09. **Neexecutat cu `--execute`** — urmează să fie rulat separat, cu backup, când se decide.
+`scripts/migrate/b3-pool-expenses-to-payments.mjs` rulat cu `--execute` (backup luat înainte: `startica_2026-09-29T21-53-48-336Z_manual_de2aa54c.db`). **143 din 143 migrate, 0 erori, 0 sărite.** 113.250,00 lei mutate din Cheltuieli în Încasări (`service: 'bazin'`, `childId: ''`, id-uri `PAY-B3-<suffix>`, cheltuielile sursă arhivate cu nota „mutată la Achitări · <id>”). Verificat după: `scripts/diagnostic/b3-pool-expenses.mjs` nu mai găsește nicio candidată (0 din 1201 cheltuieli nearhivate).
 
-**Impact retroactiv la execuție** (per decizia #3 din `RASPUNSURI.md`, migrarea se face și pe lunile deja închise): Dashboard și Raportul contabil pentru **iunie 2026** și **iulie 2026** își vor muta sumele respective din Cheltuieli în Încasări:
-- iunie 2026: 53.250 lei trec din Cheltuieli în Încasări (serviciul Bazin);
-- iulie 2026: 60.000 lei trec din Cheltuieli în Încasări (serviciul Bazin).
+**Impact retroactiv aplicat** (decizia #3 din `RASPUNSURI.md`): Dashboard și Raportul contabil pentru **iunie 2026** și **iulie 2026** au acum sumele respective în Încasări, nu în Cheltuieli:
+- iunie 2026: 53.250 lei;
+- iulie 2026: 60.000 lei.
 
-Sumele individuale rămân neasociate unui copil (`childId: ''`) până când cineva le potrivește manual din Asociere achitări — deci Situația plăților per copil nu se schimbă automat, doar totalurile agregate Dashboard/Raport contabil. O rulare nouă a `scripts/diagnostic/b3-pool-expenses.mjs` după execuție ar trebui să nu mai găsească nicio candidată.
+Cele 143 achitări rămân neasociate unui copil (`childId: ''`) — apar în **Asociere achitări** (64 achitări neasociate în total la data migrării, incluzându-le), unde urmează să fie potrivite manual cu copiii.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
