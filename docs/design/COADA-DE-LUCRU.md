@@ -555,5 +555,17 @@ Copiat din `design_final_startica/` (`Startica V2.zip`, șters după): 10 artboa
 
 `npm run check` (root, 1182/1184 + 2 skip) + webapp (typecheck curat, 897/897 teste) — verzi.
 
+## 2026-09-30 — PROMPT-CLAUDE-CODE-3.md, punctul 3 — SMS peste tot (7c/7e, 11c/11d, 15b) — DONE
+
+Lucrat cu 3 subagenți paraleli (Sonnet), fișiere separate, integrate și verificate de Opus înainte de commit (`6eb689f`).
+
+- **7c/7e** — `SmsConfirmDialog` (mod single) primește segmented „Șablon" (șabloane reale + „Personalizat") + textarea editabil + „Fără diacritice" (`Checkbox`) + `SmsSegmentCounter`. Textul editat se trimite cu `templateId: null` (spec). Editarea inline care era înainte un `<textarea>` brut în `NotifyPage.tsx` a fost mutată în dialog și scoasă de acolo. `StatusPage.tsx` cablat la fel, doar pe rândul unic (bulk neatins).
+- **11c/11d** — „+ SMS nou" nou în Notificări → Mesaje SMS (`SmsNewMessageDialog.tsx`): „Din aplicație" (părinți din `children` + angajați din `usePersonal()`) sau „Alt număr" (`normalizeMoldovanPhone`), șablon sau text liber, „Salvează ca șablon nou". Backend: `SmsSource` += `'manual'`, `childId` nullable pe `SmsSendMessage`/`SmsSendOutcome`, `assertValidSendMessage` cere telefon valid mereu dar `childId` doar în afara sursei manuale. Fără migrare de schemă — `child_id`/`recipient_name` erau deja nullable/persistate. Extrase `TextField`/`TextArea` în `@shared/ui` (prima folosire — nu exista niciun câmp de text generic).
+- **15b** — `Checkbox` (`COMPONENTE.md` §25c, extras odată cu acest punct) în subsolul Achitării noi, „Trimite confirmare părintelui prin SMS", implicit bifată doar când părintele are telefon valid (`chooseSmsRecipient`), dezactivată + „SMS neconectat" cât `sms.md` nu e conectat. Șablon nou „Confirmare plată" (`TPL-confirmare-plata`, seed al doilea `INSERT OR IGNORE` lângă cel implicit) — trimis cu sursa `'notify'` după salvare, fără să blocheze succesul salvării (non-blocking, ca sincronizarea de pornire); eroarea iese prin toast, nu prin blocarea formularului.
+
+**Gol constatat, nu de rezolvat acum:** nu există o sursă de date „angajați" dedicată pentru „Din aplicație" — s-a refolosit `usePersonal()`/`Staff.phone` direct.
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 924/924 teste) — verzi.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
