@@ -387,5 +387,15 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - Fără test dedicat pe componentă — acoperit indirect prin `GroupsPage.test.tsx` (48/48 verzi).
 - `npm run check` (root, 1169/1171 + 2 skip) + webapp typecheck + 855/855 teste — toate verzi.
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A3f Personal (23a/23b/23f) — DONE; 23c/23l rămân
+
+- Lucrat de 3 subagenți (Sonnet) în paralel pe fișiere fără suprapunere — Echipa (`TeamView.tsx`/`staffColumns.tsx`), Pontaj (`TimesheetView.tsx`/`timesheet-rules.ts`), Concedii (`LeavesView.tsx`/`LeaveFormDrawer.tsx`/`leave-days.ts`) — verificat personal, rând cu rând față de spec, înainte de commit (nu doar raportul lor).
+- **23a Echipa:** căutare+pastile pe același rând, „N angajați · K în concediu azi”, avatar 36px pe tonul departamentului, „Grupa și rolul” devine pastilă în tonul grupei, coloana Azi mutată după Telefon. Limitare cunoscută, nefixabilă fără a schimba `DataTable` (shared, folosit peste tot): randează `<table>`, nu poate reproduce exact lățimile de coloană px/fr din spec.
+- **23b Pontaj:** legendă deasupra tabelului, celule-pastilă unificate (nu mai e celulă colorată + pastilă suprapusă), coloană CM la totaluri (lipsea), zilele viitoare acceptă acum concediu planificat (ciclu gol→CO→CM→gol, fără A) — o zi viitoare marcată intră în totalul lunii.
+- **23f Concedii:** bare pe zile (nu pe luni) — funcție nouă `leaveYearBar()` cu poziționare proporțională pe ziua din an, gestionează anul bisect și un concediu peste 31 decembrie (teste dedicate pentru ambele). Clic pe bară deschide acum editare + Șterge (`ConfirmDeleteDialog`) — lipsea complet.
+- Token nou `--leave-planned`/`--leave-planned-border` (`#f0d77a`/`#b89a00`, exact ca în spec) pentru bara „Planificat”; restul culorilor refolosesc tokeni existenți (`--sand`/`--sand-soft` pentru benzile alternante — se potrivesc exact cu hex-urile din spec; `--yellow-bar` pentru CO, ca la A3c/A3e).
+- `npm run check` (root, 1169/1171 + 2 skip) + webapp typecheck + 870/870 teste — toate verzi.
+- **Rămân din A3f:** 23c Salarii (antet cu stepper/Blochează/Plătește, carduri, tabel, cele 5 verificări de logică — verificările sunt deja făcute și în `INTREBARI.md`, mai rămâne restilizarea UI) și 23l Candidați (verificări mici).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
