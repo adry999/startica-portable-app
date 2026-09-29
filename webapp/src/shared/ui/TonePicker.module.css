@@ -10,8 +10,12 @@
   border-radius: var(--radius-sm);
   border: 2px solid transparent;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.active {
-  box-shadow: 0 0 0 1px var(--white);
+.check {
+  width: 14px;
+  height: 12px;
 }
