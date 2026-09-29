@@ -25,6 +25,7 @@ import { formatRate } from '#shared/format/rate-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
+import { normalizePayerAlias } from '#shared/format/text-search.mjs';
 import { useChildProfile } from './useChildProfile';
 import { ChildAttendanceSection } from './ChildAttendanceSection';
 import { ChildFormDrawer } from './ChildFormDrawer';
@@ -171,6 +172,7 @@ export function ChildProfileView({
                 <strong>Adresă</strong>
                 <span>{child.address || '—'}</span>
               </div>
+              {child.healthNotes && <p className={styles.healthNote}>{child.healthNotes}</p>}
             </ProfileSection>
 
             <ProfileSection title="Părinți">
@@ -195,6 +197,11 @@ export function ChildProfileView({
                     {profileData.groupMemberCount}/{profileData.group?.capacity ?? '—'} copii · Educator{' '}
                     {profileData.group?.educator || '—'}
                   </small>
+                  {(profileData.group?.ageMinYears != null || profileData.group?.ageMaxYears != null) && (
+                    <small className={styles.groupAges}>
+                      vârste {profileData.group?.ageMinYears ?? '0'}–{profileData.group?.ageMaxYears ?? '∞'} ani
+                    </small>
+                  )}
                 </div>
                 {changingGroup ? (
                   <SearchSelect
@@ -214,6 +221,8 @@ export function ChildProfileView({
                 )}
               </div>
             </ProfileSection>
+
+            <ChildAttendanceSection childId={child.id} month={month} />
 
             <ProfileSection
               title="Note"
@@ -258,17 +267,39 @@ export function ChildProfileView({
             </ProfileSection>
 
             <ProfileSection title="Plătitori reținuți">
+              <p className={styles.aliasIntro}>
+                Se adaugă automat din{' '}
+                <button type="button" onClick={() => onNavigate('assign')}>
+                  Asociere achitări
+                </button>{' '}
+                când bifezi „Ține minte plătitorul”.
+              </p>
               {profileData.payerAliases.length === 0 ? (
                 <p>Niciun plătitor reținut încă.</p>
               ) : (
-                profileData.payerAliases.map(alias => (
-                  <div key={alias.id} className={styles.aliasRow}>
-                    <span>{alias.alias}</span>
-                    <button type="button" aria-label={`Șterge ${alias.alias}`} onClick={() => void deleteAlias(alias)}>
-                      ×
-                    </button>
-                  </div>
-                ))
+                profileData.payerAliases.map(alias => {
+                  const usageCount = profileData.payments.filter(
+                    payment => normalizePayerAlias(payment.sourceName || '') === normalizePayerAlias(alias.alias),
+                  ).length;
+                  return (
+                    <div key={alias.id} className={styles.aliasRow}>
+                      <span className={styles.aliasName}>
+                        <strong>{alias.alias}</strong>
+                        <small>
+                          din {formatDate(alias.createdAt.slice(0, 10))}
+                          {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
+                        </small>
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Șterge ${alias.alias}`}
+                        onClick={() => void deleteAlias(alias)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </ProfileSection>
           </>
@@ -305,7 +336,7 @@ export function ChildProfileView({
             key="contract"
             label="Contract"
             value={profileData.contractLabel}
-            sub={child.contractDate ? formatDate(child.contractDate) : '—'}
+            sub={child.contractDate ? `din ${formatDate(child.contractDate)}` : '—'}
           />,
         ]}
         right={
@@ -333,8 +364,6 @@ export function ChildProfileView({
                 + Încarcă
               </Button>
             </ProfileSection>
-
-            <ChildAttendanceSection childId={child.id} month={month} />
           </>
         }
       />

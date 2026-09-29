@@ -38,7 +38,7 @@
 .actions {
   flex: none;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: var(--space-8);
 }
 
