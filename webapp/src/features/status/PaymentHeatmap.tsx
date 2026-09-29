@@ -1,4 +1,5 @@
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { initials } from '@shared/format/initials';
 import type { HeatCellKind, HeatRowView } from './useSchoolYearStatus';
 import styles from './PaymentHeatmap.module.css';
 
@@ -49,7 +50,10 @@ export function PaymentHeatmap({ rows, monthLabels, currentMonth }: PaymentHeatm
           </div>
           {rows.map(row => (
             <div key={row.id} className={styles.row} style={gridStyle}>
-              <span className={styles.name}>{row.name}</span>
+              <span className={styles.nameCell}>
+                <span className={styles.avatar}>{initials(row.name)}</span>
+                <span className={styles.name}>{row.name}</span>
+              </span>
               {row.cells.map((cell, index) => (
                 <span
                   key={cell.month}

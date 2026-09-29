@@ -104,9 +104,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  padding: var(--space-8) var(--space-10);
-  border-radius: 14px;
-  border: 1px solid var(--border);
+  padding: var(--space-10) var(--space-12);
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
   background: #fff;
   text-align: left;
   cursor: pointer;

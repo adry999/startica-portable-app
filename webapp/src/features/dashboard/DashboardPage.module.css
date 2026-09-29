@@ -47,6 +47,11 @@
   margin: 0;
 }
 
+/* 08-dashboard.md #4: doar Încasări e 36px, celelalte 3 KPI sunt 30px. */
+.kpiValueSm {
+  font-size: 30px;
+}
+
 .methodBar {
   display: flex;
   height: 8px;
@@ -375,7 +380,7 @@
 .attentionAction {
   border: none;
   background: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   color: inherit;
   white-space: nowrap;

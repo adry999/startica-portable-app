@@ -163,7 +163,7 @@
 .yearCardValue {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 36px;
+  font-size: 44px;
   color: var(--slate);
   white-space: nowrap;
 }

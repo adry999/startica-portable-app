@@ -110,7 +110,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
         <Card tone="mint" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelExpense}`}>Cheltuieli</p>
-          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.expense)}</strong>
+          <strong className={`${styles.kpiValue} ${styles.kpiValueSm}`}>{formatKpiMoney(dashboardData.expense)}</strong>
           <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses', { nou: '1' })}>
             + Adaugă cheltuială
           </button>
@@ -118,13 +118,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
 
         <Card tone="yellow" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelNet}`}>Diferență</p>
-          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.net)}</strong>
+          <strong className={`${styles.kpiValue} ${styles.kpiValueSm}`}>{formatKpiMoney(dashboardData.net)}</strong>
           <small className={styles.netHint}>încasări − cheltuieli</small>
         </Card>
 
         <Card tone="dashed" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelAdvance}`}>Avansuri nerepartizate</p>
-          <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.advance)}</strong>
+          <strong className={`${styles.kpiValue} ${styles.kpiValueSm}`}>{formatKpiMoney(dashboardData.advance)}</strong>
           <span className={styles.pillNeutral}>Toate lunile, până azi</span>
         </Card>
       </div>

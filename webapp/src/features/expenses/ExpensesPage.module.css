@@ -95,7 +95,7 @@
 
 .kpiRow {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr 2.2fr;
   gap: var(--space-16);
   margin-bottom: var(--space-16);
 }
@@ -123,7 +123,7 @@
   display: block;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 32px;
+  font-size: 34px;
 }
 
 .categoryCard {

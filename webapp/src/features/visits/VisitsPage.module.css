@@ -108,7 +108,7 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
 
 .calendarHeadCell {
@@ -130,7 +130,7 @@
   border: 2px solid transparent;
   border-radius: var(--radius-input);
   background: var(--white);
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-8);
   text-align: left;
   cursor: pointer;
 }

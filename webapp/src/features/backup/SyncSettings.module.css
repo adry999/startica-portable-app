@@ -1,6 +1,6 @@
 .layout {
   display: grid;
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 1fr 380px;
   gap: var(--space-16);
   align-items: start;
 }

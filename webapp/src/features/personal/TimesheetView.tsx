@@ -125,7 +125,10 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
               </div>
               {rows.map(({ staff, summary }) => (
                 <Fragment key={staff.id}>
-                  <div className={styles.nameCell}>{staff.name}</div>
+                  <div className={styles.nameCell}>
+                    <strong>{staff.name}</strong>
+                    <small>{personal.roleName(staff.roleId)}</small>
+                  </div>
                   {summary.cells.map(cell => {
                     const clickable = cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future';
                     return (
@@ -147,13 +150,19 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                         tabIndex={clickable ? 0 : undefined}
                         aria-label={`${staff.name}: ${cell.date}`}
                       >
-                        {cell.kind && CELL_LABEL[cell.kind] ? CELL_LABEL[cell.kind] : ''}
+                        {cell.kind && CELL_LABEL[cell.kind] ? (
+                          <span className={styles.pill} data-kind={cell.kind}>
+                            {CELL_LABEL[cell.kind]}
+                          </span>
+                        ) : (
+                          ''
+                        )}
                       </div>
                     );
                   })}
-                  <div className={styles.totalCell}>{summary.worked}</div>
-                  <div className={styles.totalCell}>{summary.co}</div>
-                  <div className={styles.totalCell}>{summary.a}</div>
+                  <div className={`${styles.totalCell} ${styles.totalWorked}`}>{summary.worked}</div>
+                  <div className={`${styles.totalCell} ${styles.totalCo}`}>{summary.co}</div>
+                  <div className={`${styles.totalCell} ${styles.totalA}`}>{summary.a}</div>
                 </Fragment>
               ))}
             </Fragment>
@@ -162,22 +171,36 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
       </Card>
 
       <div className={styles.legend}>
-        <span className={styles.legendItem} data-kind="worked">
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="worked" />
           Lucrat
         </span>
-        <span className={styles.legendItem} data-kind="CO">
-          CO
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="CO">
+            CO
+          </span>
+          Concediu de odihnă
         </span>
-        <span className={styles.legendItem} data-kind="CM">
-          CM
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="CM">
+            CM
+          </span>
+          Concediu medical
         </span>
-        <span className={styles.legendItem} data-kind="A">
-          A
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="A">
+            A
+          </span>
+          Absență
         </span>
-        <span className={styles.legendItem} data-kind="off">
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="off" />
           Zi liberă
         </span>
       </div>
+      <p className={styles.footnote}>
+        Clic pe o zi ciclează gol → CO → CM → A → gol. Zilele viitoare și cele libere nu se pot marca.
+      </p>
 
       <TimesheetPrintDialog
         open={printDialogOpen}

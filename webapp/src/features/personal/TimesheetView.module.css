@@ -25,13 +25,17 @@
   gap: var(--space-8);
   padding: var(--space-8) var(--space-8);
   background: var(--cream);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
 }
 
 .departmentSquare {
-  width: 12px;
-  height: 12px;
-  border-radius: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
   flex-shrink: 0;
 }
 
@@ -52,18 +56,30 @@
 }
 
 .nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   padding: var(--space-8);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
   border-bottom: 1px solid var(--row-divider);
 }
 
-.cell {
-  text-align: center;
-  padding: 6px 2px;
+.nameCell strong {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.nameCell small {
   font-size: 11px;
-  font-weight: 800;
+  color: var(--subtle);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px 0;
   border-bottom: 1px solid var(--row-divider);
   cursor: default;
 }
@@ -81,21 +97,35 @@
   background: var(--mint-soft);
 }
 
-.cell[data-kind='CO'] {
-  background: var(--yellow);
-}
-
-.cell[data-kind='CM'] {
-  background: var(--pink);
-}
-
-.cell[data-kind='A'] {
-  background: var(--muted);
-  color: #fff;
-}
-
 .cell[data-kind='future'] {
   border: 1px dashed var(--border);
+}
+
+/* 24-personal.md #23b: codurile (CO/CM/A) sunt o pastilă în celulă, nu toată celula colorată. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  min-width: 22px;
+  margin: 0 1px;
+  padding: 0 4px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.pill[data-kind='CO'] {
+  background: var(--yellow-ink);
+}
+
+.pill[data-kind='CM'] {
+  background: var(--raspberry);
+}
+
+.pill[data-kind='A'] {
+  background: var(--muted);
 }
 
 .totalCell {
@@ -107,39 +137,67 @@
   border-bottom: 1px solid var(--row-divider);
 }
 
+.totalWorked {
+  color: var(--mint-ink);
+}
+
+.totalCo {
+  color: var(--yellow-ink);
+}
+
+.totalA {
+  color: var(--muted);
+}
+
 .legend {
   display: flex;
-  gap: var(--space-12);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-16);
   font-size: 12px;
   color: var(--muted);
 }
 
-.legendItem::before {
-  content: '';
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  margin-right: 4px;
-  vertical-align: middle;
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
 }
 
-.legendItem[data-kind='worked']::before {
+.legendSquare {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.legendSquare[data-kind='worked'] {
   background: var(--mint-soft);
 }
 
-.legendItem[data-kind='CO']::before {
-  background: var(--yellow);
+.legendSquare[data-kind='CO'] {
+  background: var(--yellow-ink);
 }
 
-.legendItem[data-kind='CM']::before {
-  background: var(--pink);
+.legendSquare[data-kind='CM'] {
+  background: var(--raspberry);
 }
 
-.legendItem[data-kind='A']::before {
+.legendSquare[data-kind='A'] {
   background: var(--muted);
 }
 
-.legendItem[data-kind='off']::before {
+.legendSquare[data-kind='off'] {
   background: var(--off-day);
+}
+
+.footnote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
 }

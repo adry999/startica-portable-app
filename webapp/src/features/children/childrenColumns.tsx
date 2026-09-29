@@ -29,7 +29,7 @@ export function buildChildrenColumns({
     },
     {
       key: 'parent',
-      header: 'Părinte',
+      header: 'Părinte · telefon',
       sortValue: row => row.parent,
       render: row => (
         <div className={styles.parentCell}>
