@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Badge,
   Button,
   Card,
   LoadingState,
+  PersonCell,
+  SegmentedControl,
   SmsConfirmDialog,
   useToast,
   useTopbarActions,
+  type PillTone,
   type SmsRecipientView,
 } from '@shared/ui';
 import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
@@ -28,6 +31,15 @@ const SMS_DISABLED_TITLE = 'Conectează sms.md în Notificări';
 // numărate în dialog să rămână GSM-7, cel mai ieftin encoding.
 const STRIP_DIACRITICS = true;
 
+type QueueTab = 'toSend' | 'sent' | 'failed';
+
+function toneForLabel(label: string): PillTone {
+  if (label === 'Restanță') return 'pink';
+  if (label === 'Plată parțială') return 'yellow';
+  if (label === 'Scadent în curând') return 'orange';
+  return 'neutral';
+}
+
 export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const notifyData = useNotify(month);
   const toast = useToast();
@@ -35,6 +47,10 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const lastNotified = useSmsLastNotified();
   const smsSend = useSmsSend();
   const [dialog, setDialog] = useState<{ mode: 'single' | 'bulk'; recipients: SmsRecipientView[] } | null>(null);
+  const [tab, setTab] = useState<QueueTab>('toSend');
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState(false);
+  const [edits, setEdits] = useState<Record<string, string>>({});
 
   const todayStr = todayFn();
   const batchPlan = planSmsBatch({
@@ -46,13 +62,35 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const plannedByChildId = new Map(batchPlan.messages.map(message => [message.childId, message]));
   const smsConfigured = sms.data?.configured ?? false;
 
+  // Selectează primul rând o singură dată la încărcare; „Nu trimite” golește selecția
+  // intenționat, deci nu re-selectăm automat decât dacă rândul activ chiar a dispărut din listă.
+  const initializedRef = useRef(false);
+  const rowIdsKey = notifyData.rows.map(row => row.id).join('|');
+  useEffect(() => {
+    if (notifyData.status !== 'ready') return;
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      setActiveId(notifyData.rows[0]?.id ?? null);
+      return;
+    }
+    if (activeId !== null && !notifyData.rows.some(row => row.id === activeId)) {
+      setActiveId(notifyData.rows[0]?.id ?? null);
+      setEditingText(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifyData.status, rowIdsKey]);
+
+  function messageFor(row: NotifyRowView): string {
+    return edits[row.id] ?? row.message;
+  }
+
   function recipientView(row: NotifyRowView): SmsRecipientView {
     const planned = plannedByChildId.get(row.id);
     return {
       id: row.id,
       name: row.name,
       phone: planned?.phone ?? null,
-      text: planned?.text ?? row.message,
+      text: edits[row.id] ?? planned?.text ?? row.message,
       rest: row.rest ?? undefined,
       excludeReason: lastNotified.notifiedToday(row.id, todayStr) ? 'notificat azi' : undefined,
     };
@@ -63,9 +101,15 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
     toast.show({ message: notice });
   }
 
-  // Butoanele antetului (05/10-de-notificat.md: acțiunile stau în antet, nu în corpul paginii).
+  // Butoanele antetului (10-de-notificat.md: „De notificat CONTABILITATE” · pastila de stare ·
+  // „Trimite tuturor · N”). „Copiază toate mesajele” nu apare în mockup, dar rămâne accesibilă
+  // aici — nu are alt loc în noul layout pe 2 coloane.
   useTopbarActions(
     <div className={styles.headerActions}>
+      <span className={smsConfigured ? styles.statusPillOn : styles.statusPillOff}>
+        <span className={styles.statusDot} />
+        {smsConfigured ? 'SMS conectat' : 'sms.md neconectat'}
+      </span>
       <button
         type="button"
         className={styles.btnPrimary}
@@ -77,9 +121,6 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
       </button>
       <Button variant="ghost" onClick={() => void copyAll()}>
         Copiază toate mesajele
-      </Button>
-      <Button variant="ghost" onClick={() => window.print()}>
-        Tipărește lista
       </Button>
     </div>,
   );
@@ -97,7 +138,7 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
         childName: message.childName,
         recipientName: message.recipientName,
         phone: message.phone,
-        text: message.text,
+        text: edits[message.childId] ?? message.text,
       }));
     return smsSend.send({ source: 'notify', month, templateId: null, messages });
   }
@@ -117,79 +158,140 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
     toast.show({ message: notice });
   }
 
+  const activeRow = notifyData.rows.find(row => row.id === activeId) ?? null;
+  const sentThisMonth = sms.data?.sentThisMonth ?? 0;
+  const failedThisMonth = sms.data?.failedThisMonth ?? 0;
+
   return (
     <>
-      <p className={styles.period}>{notifyData.periodLabel}</p>
+      <div className={styles.content}>
+        <Card className={styles.queue}>
+          <div className={styles.queueHead}>
+            <SegmentedControl
+              ariaLabel="Coadă notificări"
+              value={tab}
+              onChange={setTab}
+              options={[
+                { value: 'toSend', label: `De trimis · ${notifyData.rows.length}` },
+                { value: 'sent', label: `Trimise · ${sentThisMonth}` },
+                { value: 'failed', label: `Eșuate · ${failedThisMonth}` },
+              ]}
+            />
+          </div>
 
-      <p className={styles.notice}>
-        Copiii care au de achitat luna selectată, indiferent cât de aproape e scadența. Scadența este ziua din data
-        contractului; cei cu scadența trecută apar evidențiați ca restanță. Cei fără taxă sau fără perioadă confirmată
-        nu pot fi evaluați și apar la „De verificat".
-      </p>
+          {tab !== 'toSend' && (
+            <p className={styles.tabNotice}>
+              {tab === 'sent'
+                ? `${sentThisMonth} mesaje trimise luna aceasta.`
+                : `${failedThisMonth} mesaje eșuate luna aceasta.`}{' '}
+              <button type="button" className={styles.hintLink} onClick={() => onNavigate('notifications')}>
+                Vezi jurnalul SMS
+              </button>
+            </p>
+          )}
 
-      <div className={styles.statsRow}>
-        <Card tone="pink" className={styles.statCard}>
-          <p className={styles.statLabel}>Cu întârziere</p>
-          <strong className={styles.statValue}>{notifyData.stats.late}</strong>
-          <small>scadența a trecut</small>
+          {tab === 'toSend' &&
+            (notifyData.rows.length === 0 ? (
+              <p className={styles.empty}>{notifyData.emptyMessage}</p>
+            ) : (
+              <div className={styles.rows}>
+                {notifyData.rows.map(row => {
+                  const notifiedToday = lastNotified.notifiedToday(row.id, todayStr);
+                  const parentName = row.contacts[0]?.name ?? row.name;
+                  return (
+                    <button
+                      key={row.id}
+                      type="button"
+                      className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
+                      aria-pressed={row.id === activeId}
+                      onClick={() => {
+                        setActiveId(row.id);
+                        setEditingText(false);
+                      }}
+                    >
+                      <PersonCell
+                        name={parentName}
+                        sub={
+                          <>
+                            pentru <strong>{row.name}</strong> · {row.termLabel}
+                          </>
+                        }
+                        tone={toneForLabel(row.label)}
+                      />
+                      <span className={styles.rowMeta}>
+                        <span className={row.late ? styles.sumLate : styles.sumNeutral}>{formatMoney(row.rest)}</span>
+                        {notifiedToday && <Badge tone="mint">Notificat azi</Badge>}
+                        {/* Semnal doar informativ aici (rândul întreg e deja un buton, nu poate
+                            conține alt element clicabil) — link-ul spre Asociere e în panoul din
+                            dreapta, când acest rând e activ. */}
+                        {row.hasUnassignedHint && <Badge tone="pink">plată neasociată?</Badge>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
         </Card>
-        <Card tone="yellow" className={styles.statCard}>
-          <p className={styles.statLabel}>Nescadente încă</p>
-          <strong className={styles.statValue}>{notifyData.stats.soon}</strong>
-          <small>de plată, dar scadența n-a trecut</small>
-        </Card>
-        <Card tone="orange" className={styles.statCard}>
-          <p className={styles.statLabel}>Sumă de încasat</p>
-          <strong className={styles.statValue}>{formatMoney(notifyData.stats.owed)}</strong>
-          <small>total pe lista de mai jos</small>
-        </Card>
-        <Card tone="mint" className={styles.statCard}>
-          <p className={styles.statLabel}>Nu pot fi evaluați</p>
-          <strong className={styles.statValue}>{notifyData.stats.unknown}</strong>
-          <small>fără taxă sau perioadă confirmată</small>
+
+        <Card className={styles.preview}>
+          {!activeRow ? (
+            <p className={styles.empty}>Alege un părinte din listă pentru a vedea mesajul.</p>
+          ) : (
+            <>
+              <div className={styles.previewHead}>
+                <h2 className={styles.previewTitle}>Mesaj către {activeRow.contacts[0]?.name ?? activeRow.name}</h2>
+                <Badge tone={toneForLabel(activeRow.label)}>{activeRow.label}</Badge>
+              </div>
+              {activeRow.hasUnassignedHint && (
+                <p className={styles.tabNotice}>
+                  Există o plată fără copil asociat care s-ar putea potrivi cu {activeRow.name}.{' '}
+                  <button type="button" className={styles.hintLink} onClick={() => onNavigate('assign')}>
+                    posibilă plată neasociată
+                  </button>
+                </p>
+              )}
+
+              <div className={styles.templates}>
+                <span className={styles.templateChip}>Șablon: {activeRow.label}</span>
+              </div>
+
+              {editingText ? (
+                <textarea
+                  className={styles.bubbleEdit}
+                  value={messageFor(activeRow)}
+                  onChange={event => setEdits(current => ({ ...current, [activeRow.id]: event.target.value }))}
+                />
+              ) : (
+                <p className={styles.bubble}>{messageFor(activeRow)}</p>
+              )}
+              <span className={styles.editHint}>Textul se poate edita înainte de trimitere.</span>
+
+              <footer className={styles.previewFooter}>
+                <button type="button" className={styles.linkGhost} onClick={() => setActiveId(null)}>
+                  Nu trimite
+                </button>
+                <div className={styles.previewActions}>
+                  <Button variant="outline" onClick={() => setEditingText(current => !current)}>
+                    {editingText ? 'Gata' : 'Editează textul'}
+                  </Button>
+                  <button
+                    type="button"
+                    className={styles.btnPrimarySmall}
+                    disabled={!smsConfigured}
+                    title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+                    onClick={() => setDialog({ mode: 'single', recipients: [recipientView(activeRow)] })}
+                  >
+                    Trimite SMS
+                  </button>
+                  <button type="button" className={styles.btnGhostSmall} onClick={() => void copyOne(messageFor(activeRow))}>
+                    Copiază
+                  </button>
+                </div>
+              </footer>
+            </>
+          )}
         </Card>
       </div>
-
-      <Card className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Contract</th>
-              <th>Copil</th>
-              <th>Părinte / telefon</th>
-              <th>Grupă</th>
-              <th>Scadență</th>
-              <th>Termen</th>
-              <th className={styles.alignEnd}>Taxă</th>
-              <th className={styles.alignEnd}>Achitat</th>
-              <th className={styles.alignEnd}>Rest</th>
-              <th>Situație</th>
-              <th>Mesaj</th>
-            </tr>
-          </thead>
-          <tbody>
-            {notifyData.rows.length === 0 ? (
-              <tr>
-                <td colSpan={11} className={styles.empty}>
-                  {notifyData.emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              notifyData.rows.map(row => (
-                <NotifyRow
-                  key={row.id}
-                  row={row}
-                  onNavigate={onNavigate}
-                  onCopy={copyOne}
-                  smsConfigured={smsConfigured}
-                  notifiedToday={lastNotified.notifiedToday(row.id, todayStr)}
-                  onSendSms={() => setDialog({ mode: 'single', recipients: [recipientView(row)] })}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
 
       {dialog && (
         <SmsConfirmDialog
@@ -205,72 +307,5 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
         />
       )}
     </>
-  );
-}
-
-function NotifyRow({
-  row,
-  onNavigate,
-  onCopy,
-  smsConfigured,
-  notifiedToday,
-  onSendSms,
-}: {
-  row: NotifyRowView;
-  onNavigate: (view: ViewKey) => void;
-  onCopy: (message: string) => void;
-  smsConfigured: boolean;
-  notifiedToday: boolean;
-  onSendSms: () => void;
-}) {
-  return (
-    <tr className={row.late ? styles.lateRow : undefined}>
-      <td>{row.contract}</td>
-      <td>{row.name}</td>
-      <td>
-        {row.contacts.map((contact, index) => (
-          <div key={index}>
-            {contact.name}
-            {contact.phone && <div>{contact.phone}</div>}
-          </div>
-        ))}
-      </td>
-      <td>{row.groupLabel}</td>
-      <td>{row.dueLabel}</td>
-      <td>{row.termLabel}</td>
-      <td className={styles.alignEnd}>{formatMoney(row.expected)}</td>
-      <td className={styles.alignEnd}>{formatMoney(row.paid)}</td>
-      <td className={styles.alignEnd}>
-        <strong>{formatMoney(row.rest)}</strong>
-      </td>
-      <td>
-        {row.label}
-        {row.hasUnassignedHint && (
-          <>
-            {' '}
-            <button type="button" className={styles.hintLink} onClick={() => onNavigate('assign')}>
-              posibilă plată neasociată
-            </button>
-          </>
-        )}
-      </td>
-      <td>
-        <div className={styles.messageActions}>
-          <button
-            type="button"
-            className={styles.btnPrimarySmall}
-            disabled={!smsConfigured}
-            title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
-            onClick={onSendSms}
-          >
-            Trimite SMS
-          </button>
-          <button type="button" className={styles.btnGhostSmall} onClick={() => onCopy(row.message)}>
-            Copiază
-          </button>
-          {notifiedToday && <Badge tone="mint">Notificat azi</Badge>}
-        </div>
-      </td>
-    </tr>
   );
 }
