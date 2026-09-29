@@ -4,6 +4,8 @@ import {
   CHILD_STATUSES,
   TYPES,
   stripSensitiveFields,
+  DEFAULT_SERVICE_ID,
+  DEFAULT_SERVICE_SEEDS,
 } from '#shared/domain/record-schema.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
@@ -129,6 +131,10 @@ export function readWorkbook(workbook, XLSX, findRecordIssues) {
         state.groups.push({ id, name, capacity: null });
       }
     }
+    // V5 nu are conceptul de serviciu — o eventuală coloană Serviciu (fișă re-exportată manual
+    // cu ea adăugată) se leagă doar de cele 2 servicii de sistem, singurele cunoscute înainte ca
+    // fișierul să aibă și o filă Servicii proprie; orice altceva/gol cade pe implicit (Grădiniță).
+    const serviceNameToId = new Map(DEFAULT_SERVICE_SEEDS.map(seed => [seed.name.toLocaleLowerCase('ro-RO'), seed.id]));
     parse(
       'Copii',
       'children',
@@ -172,6 +178,7 @@ export function readWorkbook(workbook, XLSX, findRecordIssues) {
         notes: t(r[10]),
         verification: t(r[11]),
         original: t(r[12]),
+        service: serviceNameToId.get(t(r[13]).toLocaleLowerCase('ro-RO')) || DEFAULT_SERVICE_ID,
       }),
       r => !!r[0] && !String(r[0]).toUpperCase().includes('TOTAL'),
     );
@@ -215,6 +222,9 @@ export function exportWorkbook(records, XLSX) {
   const wb = XLSX.utils.book_new(),
     sheet = (name, data) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), name);
   const groupName = id => records.groups.find(g => g.id === id)?.name || '';
+  // Ca la groupName — dacă nu găsim serviciul (fișă veche, serviciu șters între timp), păstrăm
+  // id-ul brut, ca nimic să nu se piardă tăcut din export.
+  const serviceName = id => (records.services ?? []).find(s => s.id === id)?.name || id;
   sheet(
     'Copii',
     records.children.map(child => ({
@@ -246,6 +256,7 @@ export function exportWorkbook(records, XLSX) {
       Copil:
         records.children.find(c => c.id === payment.childId)?.name || payment.childName || payment.sourceName || '',
       Metoda: payment.method,
+      Serviciu: serviceName(payment.service),
       Suma: payment.amount,
       Cash:
         paymentTenders(payment)
@@ -278,6 +289,19 @@ export function exportWorkbook(records, XLSX) {
       Descriere: expense.description,
       Suma: expense.amount,
       Arhivat: !!expense.archived,
+    })),
+  );
+  sheet(
+    'Servicii',
+    (records.services ?? []).map(service => ({
+      ID: service.id,
+      Nume: service.name,
+      Ton: service.tone,
+      Ordine: service.order,
+      Mod_pret: service.priceMode,
+      Pret: service.priceMode === 'fixed' ? service.price : '',
+      Ascuns: !!service.hidden,
+      Sistem: !!service.system,
     })),
   );
   // Doar lizibilă — taxele suplimentare (azi doar Bazin) intră deja în fila brută Startica_Date

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { normalizeRecord, validateState, emptyState } from '#shared/domain/record-schema.mjs';
+import { normalizeRecord, validateState, emptyState, DEFAULT_SERVICE_SEEDS } from '#shared/domain/record-schema.mjs';
 import { upgradeSnapshot } from '#shared/domain/record-snapshot-upgrade.mjs';
 import { readWorkbook, exportWorkbook, mapV5ChildStatus } from './excel-workbook.mjs';
 
@@ -246,6 +246,57 @@ test('Datele medicale nu ajung în fila Startica_Date, iar reimportul le lasă g
   assert.ok(back.state);
   assert.equal(back.state.visits[0].healthNotes, '');
   assert.equal(back.state.children[0].healthNotes, undefined);
+});
+
+test('B3: o achitare pe Bazin trece prin coloana Serviciu la export și revine cu service: bazin', () => {
+  const state = {
+    children: [child()],
+    payments: [normalizeRecord('payments', { ...payment(), service: 'bazin' })],
+    expenses: [],
+    groups: [],
+    categories: [],
+    visits: [],
+    services: DEFAULT_SERVICE_SEEDS,
+  };
+  const wb = exportWorkbook(state, XLSX);
+  assert.equal(XLSX.utils.sheet_to_json(wb.Sheets.Achitari)[0].Serviciu, 'Bazin');
+  assert.deepEqual(
+    XLSX.utils.sheet_to_json(wb.Sheets.Servicii).map(row => row.Nume),
+    ['Grădiniță', 'Bazin'],
+  );
+  const back = readWorkbook(
+    XLSX.read(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }), { type: 'buffer' }),
+    XLSX,
+    findRecordIssues,
+  );
+  assert.deepEqual(back.errors, []);
+  assert.ok(back.state);
+  assert.equal(back.state.payments[0].service, 'bazin');
+});
+
+test('Importul V5 leagă coloana Serviciu de un serviciu de sistem, cu implicit Grădiniță', () => {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[], [], [], ['ID']]), 'Copii');
+  const achitariRows = [
+    [],
+    [],
+    [],
+    ['ID'],
+    // id, data, childId, childName, sourceName, group, month, metoda, suma, tip, note, verificare, original, Serviciu
+    ['P1', '2026-09-08', '', 'Copil test', '', '', '2026-09-08', 'Cash', 100, '', '', '', '', 'Bazin'],
+    ['P2', '2026-09-09', '', 'Copil test', '', '', '2026-09-09', 'Cash', 100, '', '', '', '', 'Serviciu inexistent'],
+    ['P3', '2026-09-10', '', 'Copil test', '', '', '2026-09-10', 'Cash', 100, '', '', '', '', ''],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(achitariRows), 'Achitari');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([[]]), 'Cheltuieli');
+  const result = readWorkbook(wb, XLSX, findRecordIssues);
+  assert.deepEqual(result.errors, []);
+  assert.ok(result.state);
+  const payments = result.state.payments;
+  const byId = id => payments.find(p => p.id === id);
+  assert.equal(byId('P1')?.service, 'bazin');
+  assert.equal(byId('P2')?.service, 'gradinita');
+  assert.equal(byId('P3')?.service, 'gradinita');
 });
 
 test('foaia Bazin e doar lizibilă și nu dublează taxele la reimportul complet', () => {
