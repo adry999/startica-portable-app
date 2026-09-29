@@ -26,7 +26,6 @@ Modulul **independent**: nu importă alt feature. Regulile de zi lucrătoare vin
 | `nextAttendanceStatus(current)` | ciclul prezent → absent → motivat → nemarcat → prezent |
 | `isChildEnrolledOn(child, date)` | neafirmat, arhivat, înscris după zi sau retras înainte de ea |
 | `summarizeDay(childIds, entriesByChild)` | `{ present, absent, excused, unmarked }` — hartă cheie=`childId`, o singură zi |
-| `changesToMarkUnmarkedPresent(childIds, entriesByChild, date)` | doar copiii fără niciun marcaj |
 | `normalizeAttendanceChange(change)` | golește/taie motivul (200 caractere), doar pentru `excused` |
 | `attendanceKey(childId, date)` | `${childId}|${date}` — cheia folosită de hook-ul web (multi-zi) |
 | `monthDates(month)`, `summarizeMonth({ children, month, entries, todayStr })` | grila lunii: `dates`, `rows` (cu `cells`, `presentDays`, `workingDays`), `presentPerDay`, `workingDays` |
@@ -80,9 +79,9 @@ node --test "src/features/attendance/**/*.test.mjs"
 cd webapp && npx vitest run src/features/attendance src/shared/attendance src/features/children/ChildAttendanceSection.test.tsx
 ```
 
-- **Domeniu (`attendance-rules`):** ciclul stării; înscrierea (arhivat/după zi/retras înainte de ea/necunoscut=înscris); `summarizeDay` numără nemarcații; „toți nemarcații → prezenți” exclude absenții/motivații; normalizarea motivului.
+- **Domeniu (`attendance-rules`):** ciclul stării; înscrierea (arhivat/după zi/retras înainte de ea/necunoscut=înscris); `summarizeDay` numără nemarcații; normalizarea motivului.
 - **Domeniu (`attendance-month`):** off/future/none per celulă; `workingDays`/`presentDays` per copil; `presentPerDay` null în zilele off/viitoare.
 - **Repository:** upsert fără duplicare; `status:null` șterge; `listByMonth` filtrat pe copii; o eroare la mijlocul lotului anulează totul (tranzacție atomică).
 - **Rute (integrare):** POST + GET pe zi, ultimul scris câștigă; `status:null` șterge; motivul doar pentru `excused`; zi viitoare/copil inexistent/stare necunoscută → 400, nimic din lot nu se salvează; `GET` pe lună cu `groupId`/`childId`/`groupId=none`; `GET` fără `date` și fără `month` → 400.
 - **Webapp (`useAttendance`):** încărcare indexată după `childId|date`; debounce de 400 ms cu ultima schimbare per copil·zi; un POST eșuat reîncarcă de la server; `query: null` nu face nicio cerere.
-- **Webapp (`AttendancePage`):** ciclul din 18a trimite POST-ul debounce-uit; popover-ul „Motivat” trimite motivul în același POST; „Toți nemarcații → prezenți” și „Toată grupa prezentă”; cardurile numără pe toate grupele; copiii arhivați/înscriși după zi nu apar; ziua viitoare e blocată; modul Luna arată grila și clic pe celulă schimbă starea.
+- **Webapp (`AttendancePage`):** ciclul din 18a trimite POST-ul debounce-uit; popover-ul „Motivat” trimite motivul în același POST; istoricul zilei + „↶ Anulează”/„Anulează până aici”/„Anulează tot” (A3c, fără marcare în masă — decizia 29.09); cardurile numără pe toate grupele; copiii arhivați/înscriși după zi nu apar; ziua viitoare e blocată; modul Luna arată grila și clic pe celulă schimbă starea.

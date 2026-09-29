@@ -58,7 +58,7 @@ export function AttendanceUndoControl({
             <p className={styles.empty}>Nicio modificare încă azi.</p>
           ) : (
             <div className={styles.list}>
-              {history.map(entry => (
+              {history.map((entry, index) => (
                 <div key={entry.id} className={styles.row}>
                   <span className={styles.time}>{entry.time}</span>
                   <span className={styles.label}>{entry.label}</span>
@@ -70,7 +70,10 @@ export function AttendanceUndoControl({
                       close();
                     }}
                   >
-                    {entry.bulk ? 'Anulează până aici' : 'Anulează'}
+                    {/* `history` e deja cel mai recent primul (index 0) — „Anulează” pe orice rând
+                        care nu e cel mai recent desface și acțiunile de după el, deci eticheta
+                        trebuie să spună asta explicit (nu doar butonul de mai sus, „Anulează tot"). */}
+                    {index === 0 ? 'Anulează' : 'Anulează până aici'}
                   </button>
                 </div>
               ))}

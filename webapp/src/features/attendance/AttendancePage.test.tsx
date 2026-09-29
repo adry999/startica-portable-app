@@ -187,17 +187,25 @@ describe('AttendancePage · Ziua', () => {
     expect(changedChildIds).toEqual(['c1', 'c2']);
   });
 
-  it('A3c: „Nemarcații → prezenți” arată un toast cu „↶ Anulează” care revine la starea dinainte', async () => {
+  it('A3c: istoricul zilei arată „Anulează” pe cel mai recent și „Anulează până aici” pe restul', async () => {
     const posted: PostedBatch[] = [];
     stubFetch(posted);
     await renderPage();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Nemarcații (3) → prezenți' }));
+    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ })); // prezent
+    await user.click(screen.getByRole('button', { name: /Bogdan Rusu:/ })); // prezent
+    await user.click(screen.getByRole('button', { name: /Cristina Ionescu:/ })); // prezent
+    await waitForDebounce();
+    posted.length = 0;
 
-    const toast = await screen.findByRole('status');
-    expect(within(toast).getByText(/copii marcați prezenți/)).toBeInTheDocument();
-    await user.click(within(toast).getByRole('button', { name: '↶ Anulează' }));
+    await user.click(screen.getByLabelText('Istoricul zilei'));
+    const rows = screen.getAllByText(/Nemarcat → Prezent/).map(node => node.closest('div')!);
+    // Cel mai recent primul: Cristina (ultima acțiune) → „Anulează”; Ana (prima) → „Anulează până aici”.
+    expect(within(rows[0]).getByRole('button', { name: 'Anulează' })).toBeInTheDocument();
+    expect(within(rows[2]).getByRole('button', { name: 'Anulează până aici' })).toBeInTheDocument();
+
+    await user.click(within(rows[2]).getByRole('button', { name: 'Anulează până aici' }));
 
     expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Bogdan Rusu: Nemarcat' })).toBeInTheDocument();
@@ -229,67 +237,6 @@ describe('AttendancePage · Ziua', () => {
 
     expect(posted).toHaveLength(1);
     expect(posted[0].changes).toEqual([{ childId: 'c1', date: TODAY, status: 'excused', reason: 'Boală' }]);
-  });
-
-  it('„Nemarcații (N) → prezenți” trimite doar copiii fără marcaj', async () => {
-    const posted: PostedBatch[] = [];
-    stubFetch(posted);
-    await renderPage();
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Bogdan Rusu:/ })); // marcat prezent, nu mai e „nemarcat”
-
-    await waitForDebounce();
-    expect(posted).toHaveLength(1);
-    expect(posted[0].changes[0]).toEqual({ childId: 'c2', date: TODAY, status: 'present' });
-    posted.length = 0;
-
-    expect(screen.getByRole('button', { name: 'Bogdan Rusu: Prezent' })).toBeInTheDocument();
-    const button = screen.getByRole('button', { name: 'Nemarcații (2) → prezenți' });
-    expect(button).not.toBeDisabled();
-    await user.click(button);
-    await waitForDebounce();
-
-    expect(posted).toHaveLength(1);
-    const changedChildIds = posted[0].changes.map(change => change.childId).sort();
-    expect(changedChildIds).toEqual(['c1', 'c3']);
-  });
-
-  it('„Nemarcații (N) → prezenți” pe secțiune nu suprascrie Absent/Motivat', async () => {
-    const posted: PostedBatch[] = [];
-    stubFetch(posted);
-    await renderPage();
-
-    const user = userEvent.setup();
-    const anaTile = screen.getByRole('button', { name: /Ana Popescu:/ });
-    await user.click(anaTile); // prezent
-    await user.click(anaTile); // absent
-    await waitForDebounce();
-    posted.length = 0;
-
-    // Fluturași randează prima secțiune (Fără grupă e mereu ultima) — primul buton e al ei.
-    // Ana e deja Absent, Bogdan e nemarcat -> secțiunea are 1 nemarcat.
-    const sectionButton = screen.getAllByRole('button', { name: 'Nemarcații (1) → prezenți' })[0];
-    await user.click(sectionButton);
-    await waitForDebounce();
-
-    expect(posted).toHaveLength(1);
-    expect(posted[0].changes).toEqual([{ childId: 'c2', date: TODAY, status: 'present' }]);
-    expect(screen.getByRole('button', { name: /Ana Popescu: Absent/ })).toBeInTheDocument();
-  });
-
-  it('„Nemarcații (0) → prezenți” pe secțiune e dezactivat când nu mai e nimeni nemarcat', async () => {
-    const posted: PostedBatch[] = [];
-    stubFetch(posted);
-    await renderPage();
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /Ana Popescu:/ }));
-    await user.click(screen.getByRole('button', { name: /Bogdan Rusu:/ }));
-    await waitForDebounce();
-
-    const sectionButton = screen.getAllByRole('button', { name: 'Toți sunt marcați' })[0];
-    expect(sectionButton).toBeDisabled();
   });
 
   it('cardurile numără pe toate grupele când filtrul e pe o grupă', async () => {

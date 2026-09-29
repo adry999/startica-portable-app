@@ -123,14 +123,6 @@ export function DayView({ data, onOpenWeeklySheet, weeklySheetIsMonday }: DayVie
               {section.present} din {section.tiles.length} prezenți
               {section.unmarked > 0 && ` · ${section.unmarked} nemarcați`}
             </span>
-            <button
-              type="button"
-              className={styles.sectionAction}
-              onClick={() => data.markGroupPresent(section.key)}
-              disabled={section.unmarked === 0}
-            >
-              {section.unmarked === 0 ? 'Toți sunt marcați' : `Nemarcații (${section.unmarked}) → prezenți`}
-            </button>
           </div>
           <div className={styles.grid}>
             {section.tiles.map(tile => (

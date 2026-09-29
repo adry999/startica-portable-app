@@ -4,7 +4,6 @@ import {
   nextAttendanceStatus,
   isChildEnrolledOn,
   summarizeDay,
-  changesToMarkUnmarkedPresent,
   normalizeAttendanceChange,
   attendanceKey,
 } from './attendance-rules.mjs';
@@ -43,16 +42,6 @@ test('summarizeDay numără nemarcații ca diferența față de lista copiilor',
   ];
   const summary = summarizeDay(['c1', 'c2', 'c3'], new Map(pairs));
   assert.deepEqual(summary, { present: 1, absent: 1, excused: 0, unmarked: 1 });
-});
-
-test('„toți nemarcații → prezenți” nu produce schimbări pentru absenți și motivați', () => {
-  /** @type {[string, import('../attendance.types.d.mts').AttendanceEntry][]} */
-  const pairs = [
-    ['c1', { childId: 'c1', date: '2026-09-27', status: 'absent', reason: '', updatedAt: '' }],
-    ['c2', { childId: 'c2', date: '2026-09-27', status: 'excused', reason: 'Boală', updatedAt: '' }],
-  ];
-  const changes = changesToMarkUnmarkedPresent(['c1', 'c2', 'c3'], new Map(pairs), '2026-09-27');
-  assert.deepEqual(changes, [{ childId: 'c3', date: '2026-09-27', status: 'present' }]);
 });
 
 test('motivul se golește pentru orice stare în afară de motivat și se taie la 200 de caractere', () => {

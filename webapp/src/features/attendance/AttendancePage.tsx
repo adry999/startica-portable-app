@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, DayStepper, MonthStepper, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
+import { Button, DayStepper, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { shiftMonth } from '@shared/format/month-shift';
@@ -36,19 +36,9 @@ export function AttendancePage({ month }: AttendancePageProps) {
   const dayData = useAttendanceDay(date);
   const monthData = useAttendanceMonth(monthKey);
   const activeData = mode === 'day' ? dayData : monthData;
-  const toast = useToast();
 
-  // A3c: toast slate care nu dispare la primul clic în altă parte, cu „↶ Anulează” — pentru
-  // acțiunile în masă (Nemarcații → prezenți). Ctrl+Z anulează ultima acțiune a zilei, indiferent
-  // unde e focusul pe pagină, doar cât timp suntem pe Ziua (nu are sens pe Luna).
-  useEffect(() => {
-    if (!dayData.bulkUndoNotice) return;
-    const notice = dayData.bulkUndoNotice;
-    toast.show({ message: notice.label, actionLabel: '↶ Anulează', onAction: notice.undo });
-    dayData.dismissBulkUndoNotice();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dayData.bulkUndoNotice]);
-
+  // Ctrl+Z anulează ultima acțiune a zilei, indiferent unde e focusul pe pagină, doar cât timp
+  // suntem pe Ziua (nu are sens pe Luna).
   useEffect(() => {
     if (mode !== 'day') return;
     function onKeyDown(event: KeyboardEvent) {
@@ -96,9 +86,6 @@ export function AttendancePage({ month }: AttendancePageProps) {
           onUndoUntil={dayData.undoUntil}
           onUndoAll={dayData.undoAll}
         />
-        <Button onClick={dayData.markAllUnmarkedPresent} disabled={dayData.counts.unmarked === 0}>
-          Nemarcații ({dayData.counts.unmarked}) → prezenți
-        </Button>
       </>
     ) : (
       <>

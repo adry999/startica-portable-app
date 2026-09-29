@@ -10,7 +10,6 @@ import {
   isChildEnrolledOn,
   nextAttendanceStatus,
   summarizeDay,
-  changesToMarkUnmarkedPresent,
 } from '#features/attendance/index.web.mjs';
 import type { AttendanceChange, AttendanceStatus } from '#features/attendance/attendance.types.d.mts';
 import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -26,7 +25,6 @@ interface HistoryEntry {
   id: string;
   label: string;
   time: string;
-  bulk: boolean;
   prev: Map<string, PriorValue>;
 }
 
@@ -34,7 +32,6 @@ export interface HistoryEntryView {
   id: string;
   label: string;
   time: string;
-  bulk: boolean;
 }
 
 export interface DayTileView {
@@ -68,8 +65,6 @@ export interface AttendanceDayData {
   setGroupFilter: (value: string) => void;
   cycle: (childId: string) => AttendanceStatus | null;
   setReason: (childId: string, reason: string) => void;
-  markGroupPresent: (sectionKey: string) => void;
-  markAllUnmarkedPresent: () => void;
   /** Istoricul zilei (A3c) — cel mai recent primul, ca în popover-ul „Modificări azi”. */
   history: HistoryEntryView[];
   canUndo: boolean;
@@ -78,9 +73,6 @@ export interface AttendanceDayData {
   /** Anulează intrarea `id` și tot ce a venit după ea. */
   undoUntil: (id: string) => void;
   undoAll: () => void;
-  /** Textul + „↶ Anulează” pentru toastul de după o acțiune în masă (markGroupPresent/markAllUnmarkedPresent). */
-  bulkUndoNotice: { label: string; undo: () => void } | null;
-  dismissBulkUndoNotice: () => void;
 }
 
 /** Orchestrarea ecranului Ziua (18a): tabel de secțiuni per grupă + acțiuni de marcaj, fără logică de randare. */
@@ -90,18 +82,16 @@ export function useAttendanceDay(date: string): AttendanceDayData {
   const attendance = useAttendance({ date });
   const [groupFilter, setGroupFilter] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [bulkUndoNotice, setBulkUndoNotice] = useState<{ label: string; undo: () => void } | null>(null);
   // Golește istoricul la schimbarea zilei (A3c) — o intrare „Anulează” nu are sens peste altă zi.
   const dateRef = useRef(date);
   if (dateRef.current !== date) {
     dateRef.current = date;
     if (history.length > 0) setHistory([]);
-    if (bulkUndoNotice) setBulkUndoNotice(null);
   }
 
   const enrolled = records.children.filter(child => isChildEnrolledOn(child, date));
   const enrolledIds = enrolled.map(child => child.id);
-  // Regulile din domain (summarizeDay, changesToMarkUnmarkedPresent) așteaptă o hartă cheie=childId
+  // Regulile din domain (summarizeDay) așteaptă o hartă cheie=childId
   // pentru O SINGURĂ zi; hook-ul partajat ține cheia attendanceKey(childId,date) — se re-mapează aici.
   const entriesByChildId = new Map([...attendance.entries.values()].map(entry => [entry.childId, entry]));
   const counts = summarizeDay(enrolledIds, entriesByChildId);
@@ -144,7 +134,7 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     return new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
   }
 
-  function buildHistoryEntry(label: string, changes: AttendanceChange[], bulk: boolean): HistoryEntry {
+  function buildHistoryEntry(label: string, changes: AttendanceChange[]): HistoryEntry {
     const prev = new Map<string, PriorValue>();
     for (const change of changes) {
       const existing = attendance.entries.get(attendanceKey(change.childId, date));
@@ -153,14 +143,14 @@ export function useAttendanceDay(date: string): AttendanceDayData {
         existing ? { status: existing.status, reason: existing.reason } : { status: null, reason: '' },
       );
     }
-    return { id: crypto.randomUUID(), label, time: timeLabel(), bulk, prev };
+    return { id: crypto.randomUUID(), label, time: timeLabel(), prev };
   }
 
   // Fiecare acțiune anulabilă își capătă intrarea în istoric ÎNAINTE de a muta starea (A3c) —
   // `attendance.mark` trece prin coada de salvare normală, deci „Anulează” e o mutație obișnuită,
   // vizibilă și în Istoricul din Administrare, nu o ștergere locală.
-  function pushHistory(label: string, changes: AttendanceChange[], bulk: boolean): HistoryEntry {
-    const entry = buildHistoryEntry(label, changes, bulk);
+  function pushHistory(label: string, changes: AttendanceChange[]): HistoryEntry {
+    const entry = buildHistoryEntry(label, changes);
     setHistory(current => [...current, entry]);
     attendance.mark(changes);
     return entry;
@@ -185,7 +175,6 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     if (history.length === 0) return;
     applyRestore([history[history.length - 1]]);
     setHistory(current => current.slice(0, -1));
-    setBulkUndoNotice(null);
   }
 
   function undoUntil(id: string) {
@@ -193,14 +182,12 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     if (index === -1) return;
     applyRestore(history.slice(index));
     setHistory(current => current.slice(0, index));
-    setBulkUndoNotice(null);
   }
 
   function undoAll() {
     if (history.length === 0) return;
     applyRestore(history);
     setHistory([]);
-    setBulkUndoNotice(null);
   }
 
   function cycle(childId: string): AttendanceStatus | null {
@@ -208,52 +195,13 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     const next = nextAttendanceStatus(current);
     const childName = records.children.find(child => child.id === childId)?.name ?? childId;
     const label = `${childName}: ${STATUS_LABEL[current ?? 'unmarked']} → ${STATUS_LABEL[next ?? 'unmarked']}`;
-    pushHistory(label, [{ childId, date, status: next }], false);
+    pushHistory(label, [{ childId, date, status: next }]);
     return next;
   }
 
   function setReason(childId: string, reason: string) {
     const childName = records.children.find(child => child.id === childId)?.name ?? childId;
-    pushHistory(`${childName}: motiv „${reason}”`, [{ childId, date, status: 'excused', reason }], false);
-  }
-
-  function markGroupPresent(sectionKey: string) {
-    const children = bySection.get(sectionKey) ?? [];
-    const childIds = children.map(child => child.id);
-    const changes = changesToMarkUnmarkedPresent(childIds, entriesByChildId, date);
-    if (changes.length === 0) return;
-    const groupName =
-      sectionKey === 'none'
-        ? 'Fără grupă'
-        : (records.groups.find(group => group.id === sectionKey)?.name ?? sectionKey);
-    const label = `${changes.length} ${changes.length === 1 ? 'copil marcat prezent' : 'copii marcați prezenți'} · grupa ${groupName}`;
-    const entry = pushHistory(label, changes, true);
-    // Nu prin `undoUntil(entry.id)`: closure-ul de mai jos poate fi apelat mult după acest render
-    // (toastul stă până la 6s sau până la un clic), când `history` din closure-ul curent ar fi deja
-    // depășit — `applyRestore([entry])` + `setHistory` funcțional nu depind de starea capturată acum.
-    setBulkUndoNotice({
-      label,
-      undo: () => {
-        applyRestore([entry]);
-        setHistory(current => current.filter(item => item.id !== entry.id));
-        setBulkUndoNotice(null);
-      },
-    });
-  }
-
-  function markAllUnmarkedPresent() {
-    const changes = changesToMarkUnmarkedPresent(enrolledIds, entriesByChildId, date);
-    if (changes.length === 0) return;
-    const label = `${changes.length} ${changes.length === 1 ? 'copil marcat prezent' : 'copii marcați prezenți'}`;
-    const entry = pushHistory(label, changes, true);
-    setBulkUndoNotice({
-      label,
-      undo: () => {
-        applyRestore([entry]);
-        setHistory(current => current.filter(item => item.id !== entry.id));
-        setBulkUndoNotice(null);
-      },
-    });
+    pushHistory(`${childName}: motiv „${reason}”`, [{ childId, date, status: 'excused', reason }]);
   }
 
   return {
@@ -271,14 +219,10 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     setGroupFilter,
     cycle,
     setReason,
-    markGroupPresent,
-    markAllUnmarkedPresent,
-    history: [...history].reverse().map(({ id, label, time, bulk }) => ({ id, label, time, bulk })),
+    history: [...history].reverse().map(({ id, label, time }) => ({ id, label, time })),
     canUndo: history.length > 0,
     undoLast,
     undoUntil,
     undoAll,
-    bulkUndoNotice,
-    dismissBulkUndoNotice: () => setBulkUndoNotice(null),
   };
 }

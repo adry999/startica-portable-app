@@ -7,7 +7,6 @@ export {
   nextAttendanceStatus,
   isChildEnrolledOn,
   summarizeDay,
-  changesToMarkUnmarkedPresent,
   normalizeAttendanceChange,
 } from './domain/attendance-rules.mjs';
 export { monthDates, summarizeMonth } from './domain/attendance-month.mjs';

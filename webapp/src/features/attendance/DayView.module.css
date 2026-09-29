@@ -189,54 +189,29 @@
   color: var(--muted);
 }
 
-.sectionAction {
-  margin-left: auto;
-  border: none;
-  padding: var(--space-4) var(--space-12);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.75);
-  font-weight: 800;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.sectionAction:disabled {
-  color: var(--subtle);
-  background: rgba(255, 255, 255, 0.5);
-  cursor: default;
-}
-
-/* Numele grupei + butonul „Nemarcații → prezenți" trec în -ink-ul tonului secțiunii lor. */
-.sectionOrange .sectionName,
-.sectionOrange .sectionAction:not(:disabled) {
+/* Numele grupei trece în -ink-ul tonului secțiunii lui (A3c: fără buton la dreapta a antetului). */
+.sectionOrange .sectionName {
   color: var(--orange-ink);
 }
-.sectionMint .sectionName,
-.sectionMint .sectionAction:not(:disabled) {
+.sectionMint .sectionName {
   color: var(--mint-ink);
 }
-.sectionYellow .sectionName,
-.sectionYellow .sectionAction:not(:disabled) {
+.sectionYellow .sectionName {
   color: var(--yellow-ink);
 }
-.sectionPink .sectionName,
-.sectionPink .sectionAction:not(:disabled) {
+.sectionPink .sectionName {
   color: var(--pink-ink);
 }
-.sectionTeal .sectionName,
-.sectionTeal .sectionAction:not(:disabled) {
+.sectionTeal .sectionName {
   color: var(--teal-ink);
 }
-.sectionBlue .sectionName,
-.sectionBlue .sectionAction:not(:disabled) {
+.sectionBlue .sectionName {
   color: var(--blue-ink);
 }
-.sectionPurple .sectionName,
-.sectionPurple .sectionAction:not(:disabled) {
+.sectionPurple .sectionName {
   color: var(--purple-ink);
 }
-.sectionCoral .sectionName,
-.sectionCoral .sectionAction:not(:disabled) {
+.sectionCoral .sectionName {
   color: var(--coral-ink);
 }
 .sectionNeutral .sectionName {

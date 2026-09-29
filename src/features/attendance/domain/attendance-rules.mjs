@@ -59,19 +59,6 @@ export function summarizeDay(childIds, entriesByChild) {
 }
 
 /**
- * „Toți nemarcații → prezenți”: doar copiii fără niciun marcaj în ziua respectivă.
- * @param {string[]} childIds
- * @param {ReadonlyMap<string, AttendanceEntry>} entriesByChild
- * @param {string} date
- * @returns {AttendanceChange[]}
- */
-export function changesToMarkUnmarkedPresent(childIds, entriesByChild, date) {
-  return childIds
-    .filter(childId => !entriesByChild.has(childId))
-    .map(childId => ({ childId, date, status: /** @type {AttendanceStatus} */ ('present') }));
-}
-
-/**
  * @param {AttendanceChange} change
  * @returns {{ childId: string, date: string, status: AttendanceStatus | null, reason: string }}
  */
