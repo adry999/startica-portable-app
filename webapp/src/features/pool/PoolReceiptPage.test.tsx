@@ -30,8 +30,10 @@ vi.mock('@shared/pool/usePool', () => ({
         absent: 0,
         excused: 0,
         cancelled: 1,
-        unmarked: 0,
-        amount: 600,
+        unmarked: 5,
+        // Nimic marcat încă (început de lună) — bonul NU mai citește acest câmp (A-2): dacă ar mai
+        // face-o, ar tipări „4 ședințe × 150 lei = 0 lei”, o înmulțire falsă pe același rând.
+        amount: 0,
         charged: false,
         bookings: [
           {
@@ -82,7 +84,7 @@ function renderPage() {
 }
 
 describe('PoolReceiptPage', () => {
-  it('bonul de bazin listează ședințele lunii, cele anulate punctat, și totalul lunii', () => {
+  it('bonul de bazin listează ședințele lunii, cele anulate punctat, și un total care rezultă din același rând (A-2)', () => {
     const { container } = renderPage();
 
     expect(screen.getByText('Avram Maria')).toBeInTheDocument();
@@ -91,7 +93,10 @@ describe('PoolReceiptPage', () => {
     // Marțile din septembrie 2026: 01, 08, 15, 22, 29 — 5 ședințe, una anulată (15) punctat.
     expect(container.querySelectorAll('[class*="sessionCell"]')).toHaveLength(5);
     expect(container.querySelectorAll('[class*="dashed"]')).toHaveLength(1);
-    expect(screen.getByText(/5 ședințe × 150 lei = 600 lei/)).toBeInTheDocument();
+    // A-2: nimic marcat încă (row.amount = 0), dar bonul nu mai citește acel câmp — 4 ședințe
+    // taxabile (5 listate minus 1 punctată) × 150 lei = 600 lei, o înmulțire adevărată pe rând,
+    // nu „5 ședințe × 150 lei = 0 lei” cum tipărea înainte de fix.
+    expect(screen.getByText(/4 ședințe × 150 lei = 600 lei/)).toBeInTheDocument();
     expect(screen.getByText('Costum de baie, cască, prosop, papuci.')).toBeInTheDocument();
   });
 });

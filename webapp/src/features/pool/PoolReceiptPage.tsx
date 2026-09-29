@@ -77,7 +77,6 @@ export function PoolReceiptPage() {
         weekdayTime={weekdayTime}
         sessions={sessions}
         pricePerSession={pricePerSession}
-        monthlyTotal={row.amount}
         itemsNote={itemsNote}
         logoDataUrl={kindergarten.settings?.logoDataUrl}
       />

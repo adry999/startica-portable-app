@@ -19,15 +19,16 @@ export interface PoolReceiptLabelProps {
   weekdayTime: string;
   sessions: PoolSessionCell[];
   pricePerSession: number;
-  monthlyTotal: number;
   /** Ce trebuie să aducă copilul, ex. „Costum de baie, cască, prosop, papuci.". */
   itemsNote: string;
   logoDataUrl?: string;
 }
 
 /**
- * Biletul de bazin al copilului (24c, Bazin spec 23) — componentă de tip layout, pură. Nu are încă
- * rută/hook de date (Bazin nu e implementat) — pregătită pentru când modulul Bazin va exista.
+ * Biletul de bazin al copilului (24c, Bazin spec 23) — componentă de tip layout, pură, cu rută/hook
+ * de date reale de la `f0d40af`. Totalul se calculează AICI din `sessions`/`pricePerSession`, nu se
+ * primește gata calculat (A-2): ședințele punctate (anulate) nu se taxează, restul da — înmulțirea
+ * tipărită pe bon e mereu adevărată, indiferent câte ședințe sunt deja marcate.
  */
 export function PoolReceiptLabel({
   childName,
@@ -37,10 +38,11 @@ export function PoolReceiptLabel({
   weekdayTime,
   sessions,
   pricePerSession,
-  monthlyTotal,
   itemsNote,
   logoDataUrl,
 }: PoolReceiptLabelProps) {
+  const chargeableSessions = sessions.filter(session => !session.dashed).length;
+  const monthlyTotal = Math.round(chargeableSessions * pricePerSession * 100) / 100;
   return (
     <div className={styles.bon}>
       {logoDataUrl && <img src={logoDataUrl} alt="" className={styles.logo} />}
@@ -68,7 +70,7 @@ export function PoolReceiptLabel({
         ))}
       </div>
       <span className={styles.note}>
-        {sessions.length} ședințe × {pricePerSession} lei = {monthlyTotal} lei, cu taxa lunii.
+        {chargeableSessions} ședințe × {pricePerSession} lei = {monthlyTotal} lei, cu taxa lunii.
         <br />
         Linie punctată = ziua liberă, nu se taxează.
       </span>

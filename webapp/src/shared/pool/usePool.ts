@@ -38,8 +38,15 @@ export interface WeekStats {
  * nu importe din celălalt (`architecture.test.ts`).
  */
 
-/** Săptămâna Bazinului (22a) — reîncarcă la fiecare marcaj/programare nouă. */
+/**
+ * Săptămâna Bazinului (22a) — reîncarcă la fiecare marcaj/programare nouă, la schimbarea zilei, și
+ * (B-8) la fiecare `records-changed` de pe alt calculator: `reloadRecords()` incrementează
+ * `session.state.revision`, exact ce ascultă deja `useSyncStatus` — Prezența nu are încă acest
+ * fix (nu exista un precedent de mirat), așa că am legat direct de revizie, ca la orice altă
+ * citire care trebuie să rămână la zi cu sincronizarea.
+ */
 export function usePoolWeek(date: string) {
+  const session = useAppSession();
   const [days, setDays] = useState<WeekDay[]>([]);
   const [stats, setStats] = useState<WeekStats>({ scheduled: 0, present: 0, absent: 0, excused: 0 });
   const [loading, setLoading] = useState(true);
@@ -57,7 +64,8 @@ export function usePoolWeek(date: string) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, session.state.revision]);
 
   async function markSession(bookingId: string, sessionDate: string, status: PoolSessionStatus | null) {
     await requestJson('/api/pool/sessions', { changes: [{ bookingId, date: sessionDate, status }] });
@@ -100,7 +108,10 @@ export interface MonthData {
   unmarked: number;
 }
 
-/** Luna Bazinului (22c) — situația fiecărui copil și a fiecărui antrenor, plus „Închide luna”. */
+/**
+ * Luna Bazinului (22c) — situația fiecărui copil și a fiecărui antrenor, plus „Închide luna”.
+ * Reîncarcă și la `records-changed` de pe alt calculator (B-8) — vezi comentariul din `usePoolWeek`.
+ */
 export function usePoolMonth(month: string) {
   const session = useAppSession();
   const [data, setData] = useState<MonthData>({ children: [], coaches: [], closing: null, unmarked: 0 });
@@ -119,7 +130,8 @@ export function usePoolMonth(month: string) {
 
   useEffect(() => {
     void load();
-  }, [load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, session.state.revision]);
 
   async function closeMonth(method: string, date: string) {
     setClosingBusy(true);

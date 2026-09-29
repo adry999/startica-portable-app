@@ -4,11 +4,16 @@ import type { PoolSessionStatus } from '#features/pool/pool.types.d.mts';
 import type { WeekDay, WeekStats } from '@shared/pool/usePool';
 import styles from './WeekView.module.css';
 
+// Trecut/azi: nemarcat → prezent → lipsă → motivat → nemarcat. Viitor: programat → anulat → programat
+// — server-ul acceptă doar anularea pentru zile viitoare („Ziua viitoare acceptă doar anularea”,
+// pool.routes.mjs postSessions), altfel nicio placă „programat” nu era acționabilă (A-8).
 const NEXT_STATE: Record<string, PoolSessionStatus | null> = {
   unmarked: 'present',
   present: 'absent',
   absent: 'excused',
   excused: null,
+  scheduled: 'cancelled',
+  cancelled: null,
 };
 
 const STATE_LABEL: Record<string, string> = {
@@ -66,8 +71,10 @@ export function WeekView({ days, stats, onCycle }: WeekViewProps) {
               return (
                 <div key={day.date + time} className={styles.cell}>
                   {slot?.entries.map(entry => {
-                    const clickable = entry.state === 'unmarked' || entry.state in NEXT_STATE;
-                    const next = NEXT_STATE[entry.state] ?? 'present';
+                    const clickable = entry.state in NEXT_STATE;
+                    // `?? 'present'` ar fi greșit aici: 'excused' și 'cancelled' duc explicit la
+                    // `null` (nemarcat) — nu la fallback-ul „present" al unei stări necunoscute.
+                    const next = clickable ? NEXT_STATE[entry.state] : 'present';
                     return (
                       <button
                         key={entry.booking.id}

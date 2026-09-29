@@ -16,7 +16,6 @@ const fixture: PoolReceiptLabelProps = {
     { day: '27', monthLabel: 'oct' },
   ],
   pricePerSession: 150,
-  monthlyTotal: 600,
   itemsNote: 'Costum de baie, cască, prosop, papuci.',
 };
 
@@ -37,8 +36,9 @@ describe('PoolReceiptLabel', () => {
     expect(container.querySelectorAll('[class*="dashed"]')).toHaveLength(1);
   });
 
-  it('arată calculul lunar din numărul de ședințe și preț', () => {
+  it('arată calculul lunar din numărul de ședințe taxabile și preț — ziua punctată nu se taxează (A-2)', () => {
     render(<PoolReceiptLabel {...fixture} />);
-    expect(screen.getByText(/4 ședințe × 150 lei = 600 lei/)).toBeInTheDocument();
+    // 4 ședințe listate, 1 punctată (ziua 20) → 3 taxabile × 150 lei = 450 lei, mereu adevărat.
+    expect(screen.getByText(/3 ședințe × 150 lei = 450 lei/)).toBeInTheDocument();
   });
 });
