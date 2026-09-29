@@ -27,7 +27,9 @@ export function matchesRecordListSearch(listId, row, records, normalizedSearch) 
       listId === 'children' ? groupNameOf(row.groupId, records.groups) : row.group,
       row.id,
       row.contractNumber,
-      row.notes,
+      // `children.notes` e listă de note datate (CF-4), nu text — căutăm doar textul, ca la
+      // Achitări/Cheltuieli, altfel id-uri/date de notă (ex. "2026") ar potrivi orice copil.
+      Array.isArray(row.notes) ? row.notes.map(note => note.text) : row.notes,
       row.description,
       row.category,
       listId === 'payments' ? childNameOf(row, records.children) : '',
