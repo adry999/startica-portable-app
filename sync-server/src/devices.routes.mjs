@@ -88,9 +88,17 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
     return pairing.createCode({ createdBy: device.id, now: now() });
   }
 
-  /** @param {{ device: { id: string }, params: Record<string, string> }} context */
-  function revokeDevice({ device, params }) {
-    if (params.id === device.id) fail('Nu te poți deconecta pe tine însuți din listă.', 400);
+  /**
+   * B-9 (audit 2026-09-29): un calculator care tocmai s-a înregistrat (`pair()` reușit) dar
+   * a eșuat la un pas de-după (reconciliere de filiale, urcare/descărcare de instantanee) are
+   * nevoie să-și revoce PROPRIA înregistrare — altfel codul de asociere e ars degeaba și
+   * rândul fantomă rămâne în „Calculatoare conectate”, fără nicio cale locală de reluare.
+   * Restricția de-a nu te revoca pe tine „din listă” rămâne doar în interfață (DevicesList.tsx
+   * ascunde butonul pe rândul propriu) — aici era doar o gardă suplimentară, fără niciun
+   * apelant legitim care s-ar fi bazat pe ea, și bloca exact acest caz.
+   * @param {{ params: Record<string, string> }} context
+   */
+  function revokeDevice({ params }) {
     if (!devices.findById(params.id)) fail('Calculator inexistent.', 404);
     devices.revoke(params.id, now().toISOString());
     return { ok: true };
@@ -120,7 +128,7 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
       method: 'POST',
       pattern: /^\/v1\/devices\/(?<id>[^/]+)\/revoke$/,
       auth: true,
-      handle: ({ device, params }) => revokeDevice({ device: /** @type {{ id: string }} */ (device), params }),
+      handle: ({ params }) => revokeDevice({ params }),
     },
   ];
   return { routes };

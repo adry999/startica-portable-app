@@ -45,6 +45,8 @@ export interface SyncSettingsData {
   server: SyncServerInfo | null;
   devices: SyncDevice[];
   devicesReady: boolean;
+  /** B-5: mesajul de eșec al `/api/sync/devices` (ex. offline, 503) — `null` cât timp lista s-a încărcat. */
+  devicesError: string | null;
   connecting: boolean;
   connect: (input: ConnectInput) => Promise<ConnectResult>;
   disconnect: () => Promise<void>;
@@ -67,6 +69,7 @@ export function useSyncSettings(): SyncSettingsData {
   const [server, setServer] = useState<SyncServerInfo | null>(null);
   const [devices, setDevices] = useState<SyncDevice[]>([]);
   const [devicesReady, setDevicesReady] = useState(false);
+  const [devicesError, setDevicesError] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
@@ -75,15 +78,27 @@ export function useSyncSettings(): SyncSettingsData {
       setServer(null);
       setDevices([]);
       setDevicesReady(false);
+      setDevicesError(null);
       return;
     }
     setDevicesReady(false);
-    const [serverInfo, deviceList] = await Promise.all([
+    // B-5: `/api/sync/server` traduce singur o rețea căzută într-un răspuns care rezolvă
+    // (`{ connection: 'offline' }`), dar `/api/sync/devices` respinge direct (503) — cu
+    // `Promise.all`, respingerea lui făcea tot `load()`-ul să respingă: `devicesReady` nu mai
+    // ajungea niciodată `true` (spinner la nesfârșit), iar respingerea rămânea netratată.
+    // `Promise.allSettled` lasă fiecare secțiune să-și arate propria stare din propriul rezultat.
+    const [serverResult, devicesResult] = await Promise.allSettled([
       requestJson('/api/sync/server') as Promise<SyncServerInfo>,
       requestJson('/api/sync/devices') as Promise<{ devices: SyncDevice[] }>,
     ]);
-    setServer(serverInfo);
-    setDevices(deviceList.devices);
+    if (serverResult.status === 'fulfilled') setServer(serverResult.value);
+    if (devicesResult.status === 'fulfilled') {
+      setDevices(devicesResult.value.devices);
+      setDevicesError(null);
+    } else {
+      setDevices([]);
+      setDevicesError((devicesResult.reason as Error)?.message || 'Lista nu este disponibilă offline.');
+    }
     setDevicesReady(true);
   }, [configured]);
 
@@ -132,6 +147,7 @@ export function useSyncSettings(): SyncSettingsData {
     server,
     devices,
     devicesReady,
+    devicesError,
     connecting,
     connect,
     disconnect,

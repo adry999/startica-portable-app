@@ -59,6 +59,23 @@ describe('useSyncSettings', () => {
     expect(result.current.devices).toHaveLength(1);
   });
 
+  it('B-5: /api/sync/devices respinge (offline) — server tot se arată, lista nu rămâne la infinit „se încarcă”', async () => {
+    sessionState = { sync: { configured: true, deviceName: 'Calculator A', serverUrl: 'https://sync.exemplu.md' } };
+    requestJsonMock.mockImplementation((path: string) => {
+      if (path === '/api/sync/server') return Promise.resolve({ connection: 'offline', branches: 0, devices: 0 });
+      if (path === '/api/sync/devices') return Promise.reject(new Error('Serverul de sincronizare nu răspunde.'));
+      throw new Error(`neașteptat: ${path}`);
+    });
+
+    const { useSyncSettings } = await import('./useSyncSettings');
+    const { result } = renderHook(() => useSyncSettings());
+
+    await waitFor(() => expect(result.current.devicesReady).toBe(true));
+    expect(result.current.server?.connection).toBe('offline');
+    expect(result.current.devices).toEqual([]);
+    expect(result.current.devicesError).toBe('Serverul de sincronizare nu răspunde.');
+  });
+
   it('revokeDevice trimite deviceId și reîncarcă lista', async () => {
     sessionState = { sync: { configured: true, deviceName: 'Calculator A', serverUrl: 'https://sync.exemplu.md' } };
     let devices = [

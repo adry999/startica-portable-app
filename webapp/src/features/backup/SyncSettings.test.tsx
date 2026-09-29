@@ -161,6 +161,42 @@ describe('SyncSettings', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
   });
 
+  it('B-5: /api/sync/devices offline arată o stare specifică, nu un spinner la nesfârșit', async () => {
+    sessionState = {
+      branches: [],
+      sync: {
+        configured: true,
+        deviceName: 'Calculator A',
+        serverUrl: 'https://sync.exemplu.md',
+        connection: 'offline',
+      },
+    };
+    requestJsonMock.mockImplementation((path: string) => {
+      if (path === '/api/sync/status')
+        return Promise.resolve({
+          configured: true,
+          serverUrl: '',
+          deviceName: '',
+          connection: 'offline',
+          pending: 2,
+          pushing: false,
+          lastSyncedAt: '2026-09-28T10:00:00.000Z',
+          conflicts: 0,
+          lastError: '',
+        });
+      if (path === '/api/sync/server') return Promise.resolve({ connection: 'offline', branches: 0, devices: 0 });
+      if (path === '/api/sync/devices') return Promise.reject(new Error('Serverul de sincronizare nu răspunde.'));
+      return Promise.reject(new Error(`neașteptat: ${path}`));
+    });
+
+    await renderPage();
+
+    await waitFor(() => expect(screen.getByText('Lista nu e disponibilă offline')).toBeInTheDocument());
+    expect(screen.getByText('Serverul de sincronizare nu răspunde.')).toBeInTheDocument();
+    // Cardul „Server” tot s-a randat, din propriul rezultat — nu a rămas blocat de eșecul listei.
+    expect(screen.getByText('Sincronizează acum')).toBeInTheDocument();
+  });
+
   it('+ Conectează un calculator cere un cod și îl afișează cu adresa', async () => {
     sessionState = {
       branches: [],

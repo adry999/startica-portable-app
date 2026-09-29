@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Card, LoadingState, useToast } from '@shared/ui';
+import { Button, Card, EmptyState, LoadingState, useToast } from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { ConnectServerForm } from './ConnectServerForm';
 import { PairingCodeCard } from './PairingCodeCard';
@@ -108,7 +108,16 @@ export function SyncSettings() {
               + Conectează un calculator
             </Button>
           </div>
-          {!sync.devicesReady ? <LoadingState /> : <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />}
+          {!sync.devicesReady ? (
+            <LoadingState />
+          ) : sync.devicesError ? (
+            // B-5: lista respinge separat de cardul „Server” (care traduce singur o rețea
+            // căzută în starea „Fără internet”) — offline, secțiunea asta arată de ce
+            // lista lipsește, în loc de un spinner la nesfârșit sau o listă goală înșelătoare.
+            <EmptyState variant="no-results" title="Lista nu e disponibilă offline" description={sync.devicesError} />
+          ) : (
+            <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />
+          )}
         </Card>
 
         <Card className={backupStyles.panel}>

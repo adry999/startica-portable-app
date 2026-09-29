@@ -1,13 +1,57 @@
 import { randomUUID } from 'node:crypto';
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
+import { openDatabase, openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { branchDirectories, countBranchRecords } from '#core/server/branches/branch-layout.mjs';
 import { readLocalSnapshot, writeLocalSnapshot, readCommonSnapshot, writeCommonSnapshot } from './snapshot-io.mjs';
+
+// B-4: aceeași cheie ca sync-engine.service.mjs/snapshot-io.mjs — nu importată de acolo
+// (fiecare modul o repetă local) ca să nu lege connect-ul de motor doar pentru o constantă.
+const SYNC_SINCE_SETTING = 'sync.since';
 
 /** @param {string} dataDir */
 function isBranchEmpty(dataDir) {
   const counts = countBranchRecords(dataDir);
   return counts.children === 0 && counts.groups === 0;
+}
+
+/**
+ * B-4: filiala a mai sincronizat vreodată cu un server (are `sync_state` local)? Dacă da,
+ * o filială nevidă care „există deja pe server” nu e un filiale.json copiat — e chiar
+ * acest calculator, reconectat. Eșecul de citire (bază fără tabelele de sincronizare încă,
+ * sau alt motiv) înseamnă „nu știm” — tratat ca „nu”, adică rămâne verificarea de mai jos.
+ * @param {string} dataDir
+ */
+function hasLocalSyncState(dataDir) {
+  const opened = openDatabaseReadOnly({ dataDir });
+  if (!opened) return false;
+  try {
+    return !!opened.db.prepare('SELECT 1 FROM sync_state LIMIT 1').get();
+  } catch {
+    return false;
+  } finally {
+    opened.db.close();
+  }
+}
+
+/**
+ * B-4: golește starea de sincronizare a unei baze (filială sau setul comun) — apelată la
+ * `disconnect()`. Rândurile din outbox NU se șterg (editările netrimise nu trebuie
+ * pierdute), se arhivează, ca să nu mai plece la o viitoare conectare cu o revizie de bază
+ * care n-are ce să mai însemne pe un server nou (sau același, reconectat de la zero).
+ * @param {import('node:sqlite').DatabaseSync} db
+ */
+function resetSyncState(db) {
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    db.prepare('DELETE FROM sync_state').run();
+    db.prepare('DELETE FROM sync_conflicts').run();
+    db.prepare('DELETE FROM settings WHERE key=?').run(SYNC_SINCE_SETTING);
+    db.prepare("UPDATE sync_outbox SET status='archived' WHERE status IN ('pending','parked')").run();
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
 }
 
 /**
@@ -58,6 +102,36 @@ export function createSyncConnectService({
     const paired = await pairClient.pair({ code, setupKey, name: deviceName, os: os || platform() });
     const client = createHttpClient({ serverUrl, token: paired.token });
 
+    // B-9: codul de asociere e deja ars și dispozitivul deja înregistrat pe server din
+    // `pair()` de mai sus — orice eșec de-acum încolo (reconciliere de filiale, urcare/
+    // descărcare de instantanee, setul comun) ar lăsa un rând fantomă în „Calculatoare
+    // conectate” pe celălalt calculator, fără niciun sync.json local și fără nicio cale
+    // de reluare (codul nu mai poate fi refolosit). Revocă propriul dispozitiv — același
+    // apel ca „DECONECTEAZĂ” din DevicesList.tsx — înainte să retrimită eroarea originală.
+    try {
+      return await finishConnecting({ client, serverUrl, paired, deviceName });
+    } catch (error) {
+      try {
+        await client.revokeDevice(paired.deviceId);
+      } catch {
+        // Cel mai bine posibil: dacă nici revocarea nu reușește (serverul tocmai a căzut),
+        // eroarea originală tot trebuie să ajungă la utilizator — nu-i ascundem cauza.
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Restul lui `connect()`, după `pair()` — separat ca `catch`-ul de mai sus (B-9) să
+   * învelească exact partea care poate eșua fără cale de reluare, nu și `pair()` însuși.
+   * Închidere peste `now`/`commonDatasetId` din `createSyncConnectService` — nu parametri,
+   * ca `pair()` de mai sus.
+   * @param {{
+   *   client: ReturnType<typeof import('./sync-http-client.mjs').createSyncHttpClient>,
+   *   serverUrl: string, paired: { deviceId: string, token: string }, deviceName: string,
+   * }} params
+   */
+  async function finishConnecting({ client, serverUrl, paired, deviceName }) {
     const { branches: serverBranches } = await client.listBranches();
     const localBranches = registry.list();
     const localIds = new Set(localBranches.map(branch => branch.id));
@@ -76,10 +150,26 @@ export function createSyncConnectService({
       const serverMatch = serverBranches.find(branch => branch.id === local.id);
       if (serverMatch) {
         claimedServerIds.add(serverMatch.id);
-        if (!isBranchEmpty(dirsOf(local).dataDir))
-          fail(`Filiala „${local.name}” există deja pe server — poate fi doar un filiale.json copiat.`, 409);
-        toDownload.push({ localId: local.id, serverBranch: serverMatch });
-        continue;
+        if (isBranchEmpty(dirsOf(local).dataDir)) {
+          toDownload.push({ localId: local.id, serverBranch: serverMatch });
+          continue;
+        }
+        // B-4: filiala nu e goală local ȘI există deja pe server — nu neapărat un
+        // filiale.json copiat (singurul caz tratat înainte). Două situații legitime,
+        // altfel respinse cu un 409 fără nicio cale de reluare:
+        //  - reconectare pe ACELAȘI calculator: `sync_state` local nevid înseamnă că
+        //    filiala asta a mai sincronizat cu un server, cândva — nimic de urcat sau
+        //    descărcat, motorul reia normal de unde a rămas (`sync.since`).
+        //  - conectare întreruptă între înregistrarea filialei și încărcarea ei (rețea
+        //    căzută, sau corpul depășește limita serverului): filiala există pe server,
+        //    dar n-a primit încă nicio dată (`headSeq` 0) — reia încărcarea, nu respinge.
+        if (hasLocalSyncState(dirsOf(local).dataDir)) continue;
+        const serverSnapshot = await client.downloadSnapshot(serverMatch.id);
+        if (serverSnapshot.headSeq === 0) {
+          toUpload.push(local);
+          continue;
+        }
+        fail(`Filiala „${local.name}” există deja pe server — poate fi doar un filiale.json copiat.`, 409);
       }
       if (isBranchEmpty(dirsOf(local).dataDir)) {
         const unclaimed = serverBranches.find(branch => !localIds.has(branch.id) && !claimedServerIds.has(branch.id));
@@ -186,6 +276,21 @@ export function createSyncConnectService({
   }
 
   function disconnect() {
+    // B-4: sync.json nu e singura urmă — fiecare filială (+ setul comun) ține propriul
+    // `sync_state`/`sync_conflicts`/`sync.since`/outbox. Fără curățarea lor, o reconectare
+    // la ACELAȘI server dă 409 pe fiecare filială nevidă (hasLocalSyncState rămâne
+    // adevărat), iar una la un server DIFERIT pornește cu cursoare/conflicte ale celui vechi.
+    for (const branch of registry.list()) {
+      const opened = openDatabase(dirsOf(branch));
+      try {
+        resetSyncState(opened.db);
+      } finally {
+        opened.db.close();
+      }
+    }
+    const common = getCommon();
+    if (common) resetSyncState(common.db);
+
     syncDevice.clear();
     deleteSyncDeviceFile();
     reopenActiveBranch();
