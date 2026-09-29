@@ -17,6 +17,9 @@ export interface ChildOption {
   id: string;
   label: string;
   group: string;
+  /** Scorul brut din `suggestChildren` — folosit doar pentru cele 3 tonuri (A6), nu afișat direct. */
+  score: number;
+  nameMatch: boolean;
 }
 
 export interface AssignRowView {
@@ -61,18 +64,26 @@ function childOptionsFor(suggestions: ChildSuggestion[], children: Child[]): Chi
   return [
     ...suggestions
       .filter(suggestion => suggestion.nameMatch)
-      .map(suggestion => ({ id: suggestion.id, label: suggestionLabel(suggestion), group: 'Nume potrivit în sursă' })),
+      .map(suggestion => ({
+        id: suggestion.id,
+        label: suggestionLabel(suggestion),
+        group: 'Nume potrivit în sursă',
+        score: suggestion.score,
+        nameMatch: true,
+      })),
     ...suggestions
       .filter(suggestion => !suggestion.nameMatch)
       .map(suggestion => ({
         id: suggestion.id,
         label: suggestionLabel(suggestion),
         group: 'Doar sumă sau lună — verifică',
+        score: suggestion.score,
+        nameMatch: false,
       })),
     ...children
       .filter(child => !child.archived && !suggestedIds.has(child.id))
       .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-      .map(child => ({ id: child.id, label: child.name, group: 'Toți copiii' })),
+      .map(child => ({ id: child.id, label: child.name, group: 'Toți copiii', score: 0, nameMatch: false })),
   ];
 }
 

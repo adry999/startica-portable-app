@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from '@testing-library/react';
+import { act, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -143,6 +143,34 @@ describe('AssignPage', () => {
     expect(screen.getByText('Achitare selectată · 05.09.2026')).toBeInTheDocument();
   });
 
+  it('A6: sugestiile arată treapta de potrivire (Potrivire mare / Posibil)', async () => {
+    await loadedSession();
+    renderPage();
+
+    // p1 e activă implicit — sursa „Andrei P.” potrivește numele lui c1 (mint); suma
+    // e exact taxa lunară a lui c2 de 5 ori, dar fără nume, deci doar „Posibil” (galben).
+    const mareCard = screen.getByText('Andrei Popescu').closest('[class*="suggestionCard"]') as HTMLElement;
+    expect(within(mareCard).getByText('Potrivire mare')).toBeInTheDocument();
+
+    const posibilCard = screen.getByText('Maria Ionescu').closest('[class*="suggestionCard"]') as HTMLElement;
+    expect(within(posibilCard).getByText('Posibil')).toBeInTheDocument();
+  });
+
+  it('A6: „Ține minte” arată plătitorul și copilul aleși, doar după ce s-a ales un copil', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    expect(screen.getByText('Ține minte plătitorul')).toBeInTheDocument();
+
+    const mareCard = screen.getByText('Andrei Popescu').closest('[class*="suggestionCard"]') as HTMLElement;
+    await user.click(within(mareCard).getByRole('button', { name: 'Asociază' }));
+
+    expect(
+      screen.getByText('Ține minte: plătitorul „Andrei P.” = Andrei Popescu pentru achitările viitoare'),
+    ).toBeInTheDocument();
+  });
+
   it('"Completează cu prima sugestie" alege copilul potrivit după nume', async () => {
     await loadedSession();
     renderPage();
@@ -150,9 +178,9 @@ describe('AssignPage', () => {
 
     await user.click(screen.getByText('Completează cu prima sugestie'));
 
-    const selects = screen.getAllByLabelText(/Copil pentru achitarea din/) as HTMLSelectElement[];
-    const p1Select = selects.find(select => select.value === 'c1');
-    expect(p1Select).toBeTruthy();
+    // p1 (10.09.2026) e activă implicit (cea mai recentă) — după completare, caseta
+    // „Alt copil…” trebuie să arate numele copilului ales, nu doar id-ul intern.
+    expect(screen.getByLabelText('Copil pentru achitarea din 10.09.2026')).toHaveTextContent('Andrei Popescu');
   });
 
   it('salvarea asocierilor arată un toast de confirmare', async () => {
@@ -166,14 +194,17 @@ describe('AssignPage', () => {
     expect(await screen.findByText('1 achitări asociate.')).toBeInTheDocument();
   });
 
-  it('arată grupurile de opțiuni relevante, inclusiv cel ambiguu', async () => {
+  it('caseta „Alt copil…” include toți copiii relevanți, inclusiv cel ambiguu', async () => {
     await loadedSession();
-    const { container } = renderPage();
+    renderPage();
+    const user = userEvent.setup();
 
-    const labels = Array.from(container.querySelectorAll('optgroup')).map(el => el.getAttribute('label'));
-    expect(labels).toEqual(
-      expect.arrayContaining(['Nume potrivit în sursă', 'Toți copiii', 'Doar sumă sau lună — verifică']),
-    );
+    await user.click(screen.getByLabelText('Copil pentru achitarea din 10.09.2026'));
+    const listbox = screen.getByRole('listbox', { name: 'Copil pentru achitarea din 10.09.2026' });
+    // c1: potrivire de nume; c2/c3: „Maria” ambiguu între ele, niciuna nu e exclusă.
+    expect(within(listbox).getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(within(listbox).getByText('Maria Ionescu')).toBeInTheDocument();
+    expect(within(listbox).getByText('Maria Dinescu')).toBeInTheDocument();
   });
 
   it('arată mesajul de coadă goală când nu există achitări neasociate', async () => {

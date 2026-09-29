@@ -56,6 +56,9 @@
 .queueCard {
   padding: 0;
   overflow: hidden;
+  /* 22px — nicio variabilă din tokens.css nu are exact această valoare (20 sau 24 cele mai
+     apropiate); același literal folosit deja la card-tabel (00-comun.md §E) și în alte ecrane. */
+  border-radius: 22px;
 }
 
 .queueToolbar {
@@ -106,7 +109,7 @@
 
 .queueDate {
   flex: none;
-  width: 40px;
+  width: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -116,7 +119,7 @@
 .queueDate strong {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 18px;
+  font-size: 19px;
 }
 
 .queueDate small {
@@ -214,7 +217,9 @@
   align-items: center;
   gap: var(--space-14);
   padding: var(--space-14) var(--space-16);
-  border-radius: var(--radius-md-lg);
+  /* 18px — la fel ca radius-ul cardurilor de statistici din Bazin (A4): niciun token exact,
+     16 (--radius-md-lg) e cel mai apropiat de jos, 20 (--radius-lg) de sus. */
+  border-radius: 18px;
   border: 1.5px solid var(--border);
 }
 
@@ -226,6 +231,10 @@
 .suggestionCard.yellow {
   background: var(--yellow-soft);
   border-color: var(--yellow);
+}
+
+.suggestionCard.neutral {
+  background: var(--neutral-soft);
 }
 
 .suggestionAvatar {
@@ -259,28 +268,37 @@
   color: var(--muted);
 }
 
+/* „scor” (A6, Formulare.dc.html#9c): treapta calitativă (mare/posibil/slab), nu numărul
+   brut din payment-name-matching.mjs — vezi comentariul lui suggestionTone() în AssignPage.tsx. */
+.suggestionScore {
+  flex: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.suggestionScore.mint {
+  color: var(--mint-ink);
+}
+
+.suggestionScore.yellow {
+  color: var(--yellow-ink);
+}
+
+.suggestionScore.neutral {
+  color: var(--subtle);
+}
+
+/* SearchSelect (A6) are propriul buton cu bordură — wrapper-ul rămâne doar layout, ca să
+   nu dubleze bordura/padding-ul de la vechiul <select> nativ disimulat. */
 .altChildField {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  padding: var(--space-10) var(--space-12);
-  border-radius: var(--radius-input);
-  border: 1px solid var(--border);
   color: var(--subtle);
 }
 
 .altChildIcon {
   flex: none;
-}
-
-.altChildSelect {
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  color: var(--slate);
 }
 
 .rememberField {

@@ -7,6 +7,7 @@ import {
   LoadingState,
   ScrollArea,
   SearchInput,
+  SearchSelect,
   useToast,
   useTopbarActions,
 } from '@shared/ui';
@@ -33,6 +34,23 @@ function splitSuggestionLabel(label: string): { name: string; reason: string } {
   const sep = label.indexOf(' — ');
   return sep === -1 ? { name: label, reason: '' } : { name: label.slice(0, sep), reason: label.slice(sep + 3) };
 }
+
+type SuggestionTone = 'mint' | 'yellow' | 'neutral';
+
+// 3 trepte (11-de-rezolvat.md §9c): nume potrivit = sigur; fără nume dar cu ≥2 indicii
+// independente (sumă + lună neachitată) = posibil; un singur indiciu slab = de verificat.
+// Pragul „2” e o interpretare provizorie a scorului din payment-name-matching.mjs — nu
+// vine din spec, notat în INTREBARI.md ca decizie deschisă.
+function suggestionTone(option: ChildOption): SuggestionTone {
+  if (option.nameMatch) return 'mint';
+  return option.score >= 2 ? 'yellow' : 'neutral';
+}
+
+const TONE_LABEL: Record<SuggestionTone, string> = {
+  mint: 'Potrivire mare',
+  yellow: 'Posibil',
+  neutral: 'Slab',
+};
 
 export function AssignPage({ month }: AssignPageProps) {
   const assignData = useAssign(month);
@@ -85,7 +103,8 @@ export function AssignPage({ month }: AssignPageProps) {
   const active = assignData.rows[activeIndex] ?? null;
 
   const matchedOptions = active ? active.options.filter(option => option.group !== 'Toți copiii') : [];
-  const groups = active ? [...new Set(active.options.map(option => option.group))] : [];
+  const selectedOption = active ? (active.options.find(option => option.id === active.selectedChildId) ?? null) : null;
+  const selectedChildName = selectedOption ? splitSuggestionLabel(selectedOption.label).name : '';
 
   return (
     <>
@@ -151,46 +170,41 @@ export function AssignPage({ month }: AssignPageProps) {
                   <SuggestionCard
                     key={option.id}
                     option={option}
-                    tone={option.group === 'Nume potrivit în sursă' ? 'mint' : 'yellow'}
+                    tone={suggestionTone(option)}
                     onAssign={() => assignData.selectChild(active.paymentId, option.id)}
                   />
                 ))
               )}
             </div>
 
-            <label className={styles.altChildField}>
+            <div className={styles.altChildField}>
               <span className={styles.altChildIcon} aria-hidden="true">
                 ⌕
               </span>
-              <select
-                className={styles.altChildSelect}
+              <SearchSelect
                 value={active.selectedChildId}
-                onChange={event => assignData.selectChild(active.paymentId, event.target.value)}
-                aria-label={`Copil pentru achitarea din ${active.dateLabel}`}
-              >
-                <option value="">Alt copil…</option>
-                {groups.map(group => (
-                  <optgroup key={group} label={group}>
-                    {active.options
-                      .filter(option => option.group === group)
-                      .map(option => (
-                        <option key={option.id} value={option.id}>
-                          {splitSuggestionLabel(option.label).name}
-                        </option>
-                      ))}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
+                onChange={childId => assignData.selectChild(active.paymentId, childId)}
+                options={active.options.map(option => ({
+                  value: option.id,
+                  label: splitSuggestionLabel(option.label).name,
+                }))}
+                placeholder="Alt copil…"
+                ariaLabel={`Copil pentru achitarea din ${active.dateLabel}`}
+              />
+            </div>
 
             <label className={styles.rememberField}>
               <input
                 type="checkbox"
                 checked={active.remember}
-                disabled={!active.canRemember}
+                disabled={!active.canRemember || !active.selectedChildId}
                 onChange={() => assignData.toggleRemember(active.paymentId)}
               />
-              <span>Ține minte plătitorul</span>
+              <span>
+                {active.selectedChildId
+                  ? `Ține minte: plătitorul „${active.source}” = ${selectedChildName} pentru achitările viitoare`
+                  : 'Ține minte plătitorul'}
+              </span>
             </label>
           </Card>
         )}
@@ -242,7 +256,7 @@ function SuggestionCard({
   onAssign,
 }: {
   option: ChildOption;
-  tone: 'mint' | 'yellow';
+  tone: SuggestionTone;
   onAssign: () => void;
 }) {
   const { name, reason } = splitSuggestionLabel(option.label);
@@ -253,6 +267,7 @@ function SuggestionCard({
         <strong>{name}</strong>
         {reason && <small>{reason}</small>}
       </div>
+      <span className={`${styles.suggestionScore} ${styles[tone]}`}>{TONE_LABEL[tone]}</span>
       <Button variant={tone === 'mint' ? 'primary' : 'outline'} onClick={onAssign}>
         Asociază
       </Button>

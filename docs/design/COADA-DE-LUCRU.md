@@ -468,7 +468,18 @@ Frontend: `ConfirmDeleteDialog` a primit `confirmLabel` opțional (implicit „�
 
 Backend: 8 teste noi de integrare (`record-editing.routes.routes.integration.test.mjs`) + 2 pe `attendance.repository.test.mjs` (`removeAllForChild`). Frontend: 4 teste noi (câte unul per ecran) pentru vizibilitatea butonului + fluxul de confirmare + apelul cu `ids[]`. `npm run check` (root, 1177/1177 + 2 skip) + webapp (typecheck curat, 878/878 teste) — toate verzi. Documente rămase în afara scopului: A9 (Documente pe fișă) nu există încă, deci „se șterg documentele” din spec nu are ce să șteargă până atunci.
 
-Urmează A6 (Asociere achitări).
+## 2026-09-29 — A6. Asociere achitări (9c) — DONE
+
+`AssignPage.tsx`/`useAssign.ts` erau deja foarte aproape de spec (grid `1fr 1.1fr`, sub-statistici, „Completează cu prima sugestie”, checkbox „Ține minte”) — câteva goluri reale:
+
+- Radius: card stânga 22px (era 24, implicit din `Card`), carduri sugestie 18px (era 16, `--radius-md-lg`) — niciun token exact pentru nici unul, literale ca la alte ecrane deja aliniate (Copii, Bazin).
+- Coloana de dată din listă: 44px lățime + 19px (erau 40/18).
+- **„Alt copil…” trecut de la `<select>` nativ cu `optgroup` la `SearchSelect` (shared/ui)** — componenta căutabilă exista deja când codul vechi fusese scris cu un `<select>` disimulat (comentariu explicit „webapp nu are încă o componentă de combobox”, depășit între timp). Simplificare acceptată: `SearchSelect` e o listă plată, fără grupuri — grupurile vizuale (Nume potrivit / Doar sumă-lună / Toți copiii) dispar, opțiunile rămân toate căutabile după nume.
+- **3 trepte de potrivire pe cardul de sugestie** (mint „Potrivire mare” / galben „Posibil” / neutru „Slab”), înlocuind cele 2 de dinainte (mint/galben) — satisface și „scor 12px/800” din spec, ca etichetă calitativă, nu scorul brut intern (ar fi arătat „1000” la un plătitor reținut). Prag notat ca provizoriu în `INTREBARI.md`.
+- Checkbox „Ține minte plătitorul” → text dinamic „Ține minte: plătitorul „X” = <copil> pentru achitările viitoare” după ce se alege un copil (înainte generic, mereu activ); acum dezactivat până se alege un copil (nu doar până există text de sursă).
+- 2 teste noi (treptele de potrivire, textul dinamic „Ține minte”) + 2 actualizate (căutarea „Alt copil…” pe `SearchSelect` în loc de `optgroup`). `npm run check` (root, 1177/1177 + 2 skip) + webapp (typecheck curat, 880/880 teste) — verzi.
+
+Urmează A7 (Backup și setări / Notificări).
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
