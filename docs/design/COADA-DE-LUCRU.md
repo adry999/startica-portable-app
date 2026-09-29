@@ -311,5 +311,13 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - **Verificare finală, pe `master-v2` integrat** (nu doar pe worktree-uri separate): `npm run check` (root) 1163/1165 pass, `sync-server` 69/69, webapp typecheck curat + 848/848 teste, `npm run test:e2e` (browser smoke + ciclu de viață lansator) exit 0.
 - **Rămas neadresat, semnalat explicit, nu blocant pentru livrare locală** (fără sincronizare activă): `candidates` tot nu se contopește între calculatoare (doar sincronizat acum ca kind, per S-4 — merge-ul lui la connect urmează aceeași regulă ca restul comun-ului, nu e un gol separat); S-8 (scrierile din Personal/Bazin-salarii ajung la sincronizare abia la polling-ul de 15s, nu imediat ca la o filială); S-9 (rezolvarea unui conflict `staff` cu „varianta de pe alt calculator” nu notifică ecranul Personal deschis, cere reîncărcare manuală).
 
+## 2026-09-29 — Build final + hash instalator (după audit + push)
+
+- `npm run check:full` echivalent (root + webapp + `npm run test:e2e`, toate rulate separat mai sus, toate verzi) apoi `scripts\pachet-client\build-client-package.ps1` din HEAD `b84d7df` (tot ce e în secțiunea de mai sus, integrat, pushat).
+- `Livrare\Startica_Setup_2.0.0.exe` — 22.73 MB.
+- **SHA-256:** `9CE14082A31C43EC7C3062B549750452C8F15B3252199429C21F97906A05B6CE` (verificat independent cu `certutil -hashfile`, identic cu ce a raportat scriptul de build).
+- Instalerele vechi mutate, nu șterse: `Startica_Setup_2.0.0.exe.prev-feabc05` (build-ul de dinainte de sesiunea de azi), `.prev-4a9633d`, `.stale-20260928`.
+- `master-v2` pushat pe `origin` (`e94c7e3..b84d7df`, 20 commit-uri).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
