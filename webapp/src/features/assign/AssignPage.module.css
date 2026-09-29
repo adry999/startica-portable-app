@@ -1,97 +1,304 @@
 .notice {
   color: var(--subtle);
-  margin: 0 0 var(--space-16);
+  margin: 0;
 }
 
-.riskRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.headerStat {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.headerStat strong {
+  color: var(--slate);
+}
+
+.subStats {
+  display: flex;
+  align-items: center;
   gap: var(--space-16);
   margin-bottom: var(--space-16);
+  font-size: 13px;
+  color: var(--muted);
 }
 
-.riskCard {
+.subStatItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.subStatItem strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--slate);
+}
+
+.subStatLabel {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.subStatDivider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.queueCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.queueToolbar {
+  padding: var(--space-14) var(--space-16);
+  border-bottom: 1px solid var(--border);
+}
+
+.search {
+  width: 100%;
+}
+
+.queueList {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 320px);
+}
+
+.queueEmpty {
+  padding: var(--space-20);
+  text-align: center;
+  color: var(--subtle);
+  margin: 0;
+}
+
+.queueRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--row-divider);
+  background: none;
+  padding: var(--space-12) var(--space-16);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.queueRow:last-child {
+  border-bottom: none;
+}
+
+.queueRowActive {
+  background: var(--cream);
+  box-shadow: inset 4px 0 0 var(--orange);
+}
+
+.queueDate {
+  flex: none;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+}
+
+.queueDate strong {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.queueDate small {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--subtle);
+}
+
+.queueText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.queueText strong {
+  font-size: 14px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueText small {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queueAmount {
+  flex: none;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.detailCard {
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.detailHeader {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
 }
 
-.riskLabel {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
+.detailEyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.riskValue {
+.detailAmount {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 28px;
+  font-size: 30px;
+  line-height: 1.1;
 }
 
-.toolbar {
-  display: flex;
-  gap: var(--space-12);
-  margin-bottom: var(--space-12);
-}
-
-.summary {
-  margin: 0 0 var(--space-12);
+.bankBox {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-md);
+  background: var(--neutral-softer);
+  font-family: monospace;
   font-size: 13px;
   color: var(--muted);
 }
 
-.tableCard {
-  padding: 0;
-  overflow: hidden;
-  overflow-x: auto;
+.suggestionsTitle {
+  font-weight: 800;
+  font-size: 15px;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
 }
 
-.table th,
-.table td {
-  text-align: left;
+.noSuggestions {
+  margin: 0;
+  font-size: 13px;
+  color: var(--subtle);
+}
+
+.suggestionCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
+  padding: var(--space-14) var(--space-16);
+  border-radius: var(--radius-md-lg);
+  border: 1.5px solid var(--border);
+}
+
+.suggestionCard.mint {
+  background: var(--mint-soft);
+  border-color: var(--mint);
+}
+
+.suggestionCard.yellow {
+  background: var(--yellow-soft);
+  border-color: var(--yellow);
+}
+
+.suggestionAvatar {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.suggestionText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.suggestionText strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.suggestionText small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.altChildField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
   padding: var(--space-10) var(--space-12);
-  border-bottom: 1px solid var(--row-divider);
-  font-size: 13px;
-  vertical-align: top;
-}
-
-.table select {
-  width: 100%;
-  min-width: 220px;
-  border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
-  font: inherit;
-  font-size: 13px;
+  border: 1px solid var(--border);
+  color: var(--subtle);
 }
 
-.alignEnd {
-  text-align: right;
+.altChildIcon {
+  flex: none;
+}
+
+.altChildSelect {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--slate);
 }
 
 .rememberField {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  margin-top: var(--space-6);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
 }
 
-.empty {
-  text-align: center;
-  color: var(--subtle);
-  padding: var(--space-20);
-}
-
 .saveRow {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-12);
   margin-top: var(--space-16);
+}
+
+.saveButton {
+  margin-left: auto;
 }

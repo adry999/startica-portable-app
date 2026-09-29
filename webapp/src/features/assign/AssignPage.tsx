@@ -1,20 +1,50 @@
-import { Button, Card, LoadingState, useToast } from '@shared/ui';
+import { useState } from 'react';
+import { Button, Card, EmptyState, LoadingState, ScrollArea, SearchInput, useToast, useTopbarActions } from '@shared/ui';
+import { initials } from '@shared/format/initials';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
-import { useAssign, type AssignRowView } from './useAssign';
+import { useAssign, type AssignRowView, type ChildOption } from './useAssign';
 import styles from './AssignPage.module.css';
 
 export interface AssignPageProps {
   month: string;
 }
 
+// „10.09.2026" -> ziua + luna (numerică, nu abreviată — evită duplicarea listei de nume de
+// luni din #shared/format/date-format.mjs doar pentru acest bloc vizual).
+function splitDateLabel(dateLabel: string): { day: string; month: string } {
+  const [day = '', month = ''] = dateLabel.split('.');
+  return { day, month };
+}
+
+// Eticheta unei opțiuni e „Nume — motive" (useAssign.ts, suggestionLabel); pentru „Toți copiii"
+// e doar numele, deci separatorul lipsește și numele rămâne întreg.
+function splitSuggestionLabel(label: string): { name: string; reason: string } {
+  const sep = label.indexOf(' — ');
+  return sep === -1 ? { name: label, reason: '' } : { name: label.slice(0, sep), reason: label.slice(sep + 3) };
+}
+
 export function AssignPage({ month }: AssignPageProps) {
   const assignData = useAssign(month);
   const toast = useToast();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
+  const totalAmount = assignData.rows.reduce((sum, row) => sum + row.amount, 0);
+
+  useTopbarActions(
+    <span className={styles.headerStat}>
+      <strong>{assignData.risk.unassigned}</strong> achitări fără copil · {formatMoney(totalAmount)}
+    </span>,
+  );
 
   if (assignData.status === 'loading') return <LoadingState />;
   if (assignData.status === 'failed')
     return <p className={styles.notice}>{assignData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
+
+  if (assignData.rows.length === 0) {
+    return <EmptyState variant="resolved" title="Nu există achitări neasociate." />;
+  }
 
   function fillSuggested() {
     const count = assignData.fillSuggested();
@@ -30,78 +60,138 @@ export function AssignPage({ month }: AssignPageProps) {
     }
   }
 
+  const query = search.trim().toLocaleLowerCase('ro-RO');
+  const filteredRows = query
+    ? assignData.rows.filter(
+        row =>
+          (row.source || '').toLocaleLowerCase('ro-RO').includes(query) || row.amountLabel.toLocaleLowerCase('ro-RO').includes(query),
+      )
+    : assignData.rows;
+
+  const foundIndex = assignData.rows.findIndex(row => row.paymentId === activeId);
+  const activeIndex = foundIndex === -1 ? 0 : foundIndex;
+  const active = assignData.rows[activeIndex] ?? null;
+
+  const matchedOptions = active ? active.options.filter(option => option.group !== 'Toți copiii') : [];
+  const groups = active ? [...new Set(active.options.map(option => option.group))] : [];
+
   return (
     <>
-      <p className={styles.notice}>
-        O achitare fără copil asociat nu se scade din datoria nimănui, deci un copil care a plătit poate apărea pe lista
-        de notificat. Textul din sursă este adesea un prenume sau o notă, nu un nume complet, așa că nimic nu se
-        asociază automat: sugestiile doar ordonează, alegerea rămâne a ta.
-      </p>
-
-      <div className={styles.riskRow}>
-        <Card tone="pink" decorative className={styles.riskCard}>
-          <p className={styles.riskLabel}>Achitări fără copil</p>
-          <strong className={styles.riskValue}>{assignData.risk.unassigned}</strong>
-          <small>nu se scad din datoria nimănui</small>
-        </Card>
-        <Card tone="yellow" className={styles.riskCard}>
-          <p className={styles.riskLabel}>Din care pe luna {formatMonthLabel(month)}</p>
-          <strong className={styles.riskValue}>{assignData.risk.coveringMonth}</strong>
-          <small>{formatMoney(assignData.risk.amountCoveringMonth)}</small>
-        </Card>
-        <Card tone="orange" className={styles.riskCard}>
-          <p className={styles.riskLabel}>Copii pe lista de notificat</p>
-          <strong className={styles.riskValue}>{assignData.risk.notified}</strong>
-          <small>unii pot să fi achitat deja</small>
-        </Card>
+      <div className={styles.subStats}>
+        <span className={styles.subStatItem}>
+          <strong>{assignData.risk.unassigned}</strong>
+          <span className={styles.subStatLabel}>nu se scad din datoria nimănui</span>
+        </span>
+        <span className={styles.subStatDivider} aria-hidden="true" />
+        <span className={styles.subStatItem}>
+          <strong>
+            {assignData.risk.coveringMonth} · {formatMoney(assignData.risk.amountCoveringMonth)}
+          </strong>
+          <span className={styles.subStatLabel}>Din care pe luna {formatMonthLabel(month)}</span>
+        </span>
       </div>
 
-      <div className={styles.toolbar}>
+      <div className={styles.grid}>
+        <Card className={styles.queueCard}>
+          <div className={styles.queueToolbar}>
+            <SearchInput
+              className={styles.search}
+              placeholder="Caută plătitor sau sumă"
+              value={search}
+              onChange={setSearch}
+              ariaLabel="Caută plătitor sau sumă"
+            />
+          </div>
+          <ScrollArea className={styles.queueList}>
+            {filteredRows.length === 0 ? (
+              <p className={styles.queueEmpty}>Niciun rezultat pentru căutare.</p>
+            ) : (
+              filteredRows.map(row => (
+                <PaymentRow
+                  key={row.paymentId}
+                  row={row}
+                  active={row.paymentId === active?.paymentId}
+                  onSelect={() => setActiveId(row.paymentId)}
+                />
+              ))
+            )}
+          </ScrollArea>
+        </Card>
+
+        {active && (
+          <Card className={styles.detailCard}>
+            <div className={styles.detailHeader}>
+              <span className={styles.detailEyebrow}>Achitare selectată · {active.dateLabel}</span>
+              <span className={styles.detailAmount}>
+                {active.source || 'Fără nume în sursă'} · {active.amountLabel}
+              </span>
+              <p className={styles.bankBox}>
+                {active.source ? `Detalii bancă: „${active.source}”` : 'Fără text de sursă în extras.'}
+              </p>
+            </div>
+
+            <span className={styles.suggestionsTitle}>Sugestii</span>
+            <div className={styles.suggestions}>
+              {matchedOptions.length === 0 ? (
+                <p className={styles.noSuggestions}>Nicio sugestie — caută mai jos.</p>
+              ) : (
+                matchedOptions.map(option => (
+                  <SuggestionCard
+                    key={option.id}
+                    option={option}
+                    tone={option.group === 'Nume potrivit în sursă' ? 'mint' : 'yellow'}
+                    onAssign={() => assignData.selectChild(active.paymentId, option.id)}
+                  />
+                ))
+              )}
+            </div>
+
+            <label className={styles.altChildField}>
+              <span className={styles.altChildIcon} aria-hidden="true">
+                ⌕
+              </span>
+              <select
+                className={styles.altChildSelect}
+                value={active.selectedChildId}
+                onChange={event => assignData.selectChild(active.paymentId, event.target.value)}
+                aria-label={`Copil pentru achitarea din ${active.dateLabel}`}
+              >
+                <option value="">Alt copil…</option>
+                {groups.map(group => (
+                  <optgroup key={group} label={group}>
+                    {active.options
+                      .filter(option => option.group === group)
+                      .map(option => (
+                        <option key={option.id} value={option.id}>
+                          {splitSuggestionLabel(option.label).name}
+                        </option>
+                      ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.rememberField}>
+              <input
+                type="checkbox"
+                checked={active.remember}
+                disabled={!active.canRemember}
+                onChange={() => assignData.toggleRemember(active.paymentId)}
+              />
+              <span>Ține minte plătitorul</span>
+            </label>
+          </Card>
+        )}
+      </div>
+
+      <div className={styles.saveRow}>
         <Button variant="ghost" onClick={fillSuggested}>
           Completează cu prima sugestie
         </Button>
         <Button variant="ghost" onClick={assignData.clearSelections}>
           Golește selecțiile
         </Button>
-      </div>
-
-      <p className={styles.summary}>{assignData.summary}</p>
-
-      <Card className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th className={styles.alignEnd}>Suma</th>
-              <th>Metodă</th>
-              <th>Luni acoperite</th>
-              <th>Text în sursă</th>
-              <th>Copil</th>
-            </tr>
-          </thead>
-          <tbody>
-            {assignData.rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} className={styles.empty}>
-                  Nu există achitări neasociate.
-                </td>
-              </tr>
-            ) : (
-              assignData.rows.map(row => (
-                <AssignRow
-                  key={row.paymentId}
-                  row={row}
-                  onSelectChild={assignData.selectChild}
-                  onToggleRemember={assignData.toggleRemember}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
-
-      <div className={styles.saveRow}>
-        <Button size="lg" disabled={assignData.saving} onClick={() => void save()}>
+        <Button size="lg" disabled={assignData.saving} onClick={() => void save()} className={styles.saveButton}>
           Salvează asocierile ({assignData.selectedCount})
         </Button>
       </div>
@@ -109,56 +199,51 @@ export function AssignPage({ month }: AssignPageProps) {
   );
 }
 
-function AssignRow({
-  row,
-  onSelectChild,
-  onToggleRemember,
-}: {
-  row: AssignRowView;
-  onSelectChild: (id: string, childId: string) => void;
-  onToggleRemember: (id: string) => void;
-}) {
-  const groups = [...new Set(row.options.map(option => option.group))];
+function PaymentRow({ row, active, onSelect }: { row: AssignRowView; active: boolean; onSelect: () => void }) {
+  const { day, month } = splitDateLabel(row.dateLabel);
+  const details = row.monthLines.length > 0 ? row.monthLines.join(', ') : 'fără lună alocată';
   return (
-    <tr>
-      <td>{row.dateLabel}</td>
-      <td className={styles.alignEnd}>
-        <strong>{row.amountLabel}</strong>
-      </td>
-      <td>{row.method}</td>
-      <td>{row.monthLines.length === 0 ? '—' : row.monthLines.map(line => <div key={line}>{line}</div>)}</td>
-      <td>{row.source ? row.source : <small className={styles.notice}>fără text în sursă</small>}</td>
-      <td>
-        <select
-          value={row.selectedChildId}
-          onChange={event => onSelectChild(row.paymentId, event.target.value)}
-          aria-label={`Copil pentru achitarea din ${row.dateLabel}`}
-        >
-          <option value="">— alege copilul —</option>
-          {groups.map(group => (
-            <optgroup key={group} label={group}>
-              {row.options
-                .filter(option => option.group === group)
-                .map(option => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
-        {/* 11-de-rezolvat.md §9c: scrie în payer_aliases — sugestia apare primă, cu motivul
-            „Plătitor reținut”, la următoarea achitare de la același plătitor. */}
-        <label className={styles.rememberField}>
-          <input
-            type="checkbox"
-            checked={row.remember}
-            disabled={!row.canRemember}
-            onChange={() => onToggleRemember(row.paymentId)}
-          />
-          <span>Ține minte plătitorul</span>
-        </label>
-      </td>
-    </tr>
+    <button
+      type="button"
+      className={active ? `${styles.queueRow} ${styles.queueRowActive}` : styles.queueRow}
+      aria-current={active}
+      onClick={onSelect}
+    >
+      <span className={styles.queueDate}>
+        <strong>{day}</strong>
+        <small>{month}</small>
+      </span>
+      <span className={styles.queueText}>
+        <strong>{row.source || 'fără text în sursă'}</strong>
+        <small>
+          {row.method || 'Transfer'} · {details}
+        </small>
+      </span>
+      <strong className={styles.queueAmount}>{row.amountLabel}</strong>
+    </button>
+  );
+}
+
+function SuggestionCard({
+  option,
+  tone,
+  onAssign,
+}: {
+  option: ChildOption;
+  tone: 'mint' | 'yellow';
+  onAssign: () => void;
+}) {
+  const { name, reason } = splitSuggestionLabel(option.label);
+  return (
+    <div className={`${styles.suggestionCard} ${styles[tone]}`}>
+      <span className={styles.suggestionAvatar}>{initials(name)}</span>
+      <div className={styles.suggestionText}>
+        <strong>{name}</strong>
+        {reason && <small>{reason}</small>}
+      </div>
+      <Button variant={tone === 'mint' ? 'primary' : 'outline'} onClick={onAssign}>
+        Asociază
+      </Button>
+    </div>
   );
 }
