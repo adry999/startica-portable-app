@@ -6,8 +6,16 @@
   color: var(--raspberry);
 }
 
+/* 10b — Telegram (1fr) + lista de setări (1.3fr) în două coloane, nu stivuite. */
+.channelsLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
 .panel {
-  margin-bottom: var(--space-16);
+  margin-bottom: 0;
 }
 
 .panelTitle {
@@ -19,7 +27,6 @@
 
 /* Telegram (10b): card mint cu cerc decorativ — vezi Card tone="mint" decorative. */
 .telegramCard {
-  margin-bottom: var(--space-16);
   gap: var(--space-8);
 }
 

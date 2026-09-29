@@ -44,10 +44,10 @@ export function NotificationsPage() {
   return (
     <>
       {tab === 'canale' && (
-        <>
+        <div className={styles.channelsLayout}>
           <TelegramSection telegram={telegram} />
           <PreferencesSection />
-        </>
+        </div>
       )}
       {tab === 'mesaje' && <SmsMessagesPanel />}
       {tab === 'sabloane' && <SmsTemplatesPanel />}
