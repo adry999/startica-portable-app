@@ -42,3 +42,14 @@ Ecran separat, plan scris înainte de cod (`docs/superpowers/plans/`). Ordinea: 
 
 ## ✅ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — decis provizoriu
 Nu există server comun (Faza 6 exclusă): pasul de sincronizare nu apare (spec-ul permite asta), iar pe 21c butonul „Lucrez fără legătură” nu are sens fără server comun — rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri”.
+
+## ✅ Personal + Bazin (`docs/superpowers/plans/2026-09-27-personal-bazin.md`) — 6 întrebări deschise, decise provizoriu și deja implementate
+Planul le listează cu recomandarea pe care o și urmează în cod; mutate aici ca să nu se piardă, cu răspunsul deja construit:
+1. **Valorile implicite ale bazinului** (150 lei/ședință, 30 min, 09:00–11:30 din 30 în 30, locuri nelimitate, lipsa nemotivată se taxează, antrenorul plătit per copil prezent, 60 lei) — doar precompletare de formular, în 22d se schimbă fără cod nou.
+2. **Valorile implicite ale Personalului** (`annualLeaveDays = 28`, `deductOnlyUnexcused = true`, departamentele/rolurile din spec) — seminate o singură dată la crearea bazei `comun`, editabile din 23e.
+3. **Codul „I” (învoire)** — rămâne în afara ciclului de clic din 23b (doar CO/CM/A); API-ul îl acceptă și legenda îl tipărește, fără ecran propriu în V1.
+4. **Zilele rămase de concediu** scad și pentru CO planificat, nu doar pentru cel trecut — fișa arată „14 din 28 · 7 planificate”.
+5. **Salariul fix al unui angajat cu ambele filiale** se plătește din filiala activă la momentul „Plătește”; cealaltă arată „Plătit din <filiala>”. Un antrenor `bazin` se plătește separat, per filială.
+6. **Salariul antrenorului rămâne vizibil fără PIN** pe cardul din 22c — consemnat explicit în textul din setările 22d, nu ascuns.
+
+Nu blochează nimic din Task 12 (sincronizarea setului comun) — consemnate aici doar ca să nu rămână doar în planul tehnic.
