@@ -1,0 +1,20 @@
+.textarea {
+  width: 100%;
+  resize: vertical;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: var(--space-10) var(--space-14);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.textarea::placeholder {
+  color: var(--subtle);
+}
+
+.textarea:disabled {
+  background: var(--neutral-soft);
+  color: var(--subtle);
+}

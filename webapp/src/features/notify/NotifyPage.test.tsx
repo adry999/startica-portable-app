@@ -85,6 +85,7 @@ describe('NotifyPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -152,6 +153,7 @@ describe('NotifyPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -181,6 +183,7 @@ describe('NotifyPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -193,6 +196,46 @@ describe('NotifyPage', () => {
 
     expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(1);
     expect(screen.getByText(/Trimite SMS \(≈/)).toBeInTheDocument();
+  });
+
+  it('cu șabloane disponibile, dialogul unic arată segmentul „Șablon" (7c/7e)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates')
+          return jsonResponse({
+            templates: [
+              {
+                id: 't1',
+                name: 'Implicit',
+                body: 'Bună, {părinte}!',
+                stripDiacritics: true,
+                isDefault: true,
+                createdAt: '',
+                updatedAt: '',
+              },
+            ],
+            usageCountById: {},
+          });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Andrei Popescu');
+    await user.click(screen.getByText('Trimite SMS'));
+
+    expect(await screen.findByRole('radiogroup', { name: 'Șablon' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Implicit' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: 'Personalizat' })).toBeInTheDocument();
   });
 
   it('o trimitere reușită arată toast-ul și marchează rândul „Notificat azi"', async () => {
@@ -212,6 +255,7 @@ describe('NotifyPage', () => {
               ? { c1: { at: `${todayFn()}T12:00:00.000Z`, status: 'sent', month: '2026-09', templateName: 'Implicit' } }
               : {},
           );
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         if (path === '/api/sms-send') {
           notified = true;
           return jsonResponse({

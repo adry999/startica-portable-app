@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { stripDiacritics } from '#shared/format/strip-diacritics.mjs';
 import { ScrollArea } from '../ScrollArea';
+import { SegmentedControl } from '../SegmentedControl';
+import { Checkbox } from '../Checkbox';
 // SmsSegmentCounter e definit în shared/sms (Task 16) — e stateless (nu are fetch), deci
 // reutilizarea lui aici nu rupe regula „shared/ui fără fetch" a acestui dialog.
-import { SmsSegmentCounter, type SmsSendResultView } from '@shared/sms';
+import { SmsSegmentCounter, type SmsSendResultView, type SmsTemplateView } from '@shared/sms';
 import styles from './SmsConfirmDialog.module.css';
+
+const CUSTOM_TEMPLATE_CHOICE = 'custom';
 
 export interface SmsRecipientView {
   id: string;
@@ -16,6 +21,13 @@ export interface SmsRecipientView {
   excludeReason?: string;
 }
 
+/** Alegerea finală din modul single (7c/7e) — un șablon salvat sau text personalizat (`templateId: null`). */
+export interface SmsSingleChoiceView {
+  templateId: string | null;
+  text: string;
+  stripDiacritics: boolean;
+}
+
 export interface SmsConfirmDialogProps {
   open: boolean;
   mode: 'single' | 'bulk';
@@ -23,8 +35,14 @@ export interface SmsConfirmDialogProps {
   unitCostLei: number;
   balanceLei: number | null;
   monthlyLimitNote?: string;
-  onSend: (selectedIds: string[]) => Promise<SmsSendResultView>;
-  onRetry?: (failedOrSkippedIds: string[]) => Promise<SmsSendResultView>;
+  /** Șabloanele disponibile pentru segmented „Șablon" (mod single); lipsă/gol → comportamentul vechi, fără selector. */
+  templates?: SmsTemplateView[];
+  /** Randează șablonul ales, interpolat pentru destinatarul unic al acestui dialog. */
+  renderTemplate?: (templateId: string) => string;
+  /** Șablonul preselectat la deschidere; implicit „Personalizat" dacă lipsește sau nu e în `templates`. */
+  defaultTemplateId?: string | null;
+  onSend: (selectedIds: string[], singleChoice?: SmsSingleChoiceView) => Promise<SmsSendResultView>;
+  onRetry?: (failedOrSkippedIds: string[], singleChoice?: SmsSingleChoiceView) => Promise<SmsSendResultView>;
   onClose: () => void;
   onSent: (result: SmsSendResultView) => void;
 }
@@ -41,6 +59,9 @@ export function SmsConfirmDialog({
   unitCostLei,
   balanceLei,
   monthlyLimitNote,
+  templates,
+  renderTemplate,
+  defaultTemplateId,
   onSend,
   onRetry,
   onClose,
@@ -51,6 +72,9 @@ export function SmsConfirmDialog({
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<SmsSendResultView | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [templateChoice, setTemplateChoice] = useState<string>(CUSTOM_TEMPLATE_CHOICE);
+  const [customText, setCustomText] = useState('');
+  const [stripDiacriticsChecked, setStripDiacriticsChecked] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +82,10 @@ export function SmsConfirmDialog({
     setPreviewIndex(0);
     setResult(null);
     setErrorMessage('');
+    const hasDefaultTemplate = !!defaultTemplateId && !!templates?.some(template => template.id === defaultTemplateId);
+    setTemplateChoice(hasDefaultTemplate ? (defaultTemplateId as string) : CUSTOM_TEMPLATE_CHOICE);
+    setCustomText(recipients[0]?.text ?? '');
+    setStripDiacriticsChecked(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
@@ -78,6 +106,31 @@ export function SmsConfirmDialog({
   const recipient = recipients[0];
   const balanceWarning = balanceLei !== null && balanceLei < 20 * unitCostLei;
 
+  const selectedTemplate = templates?.find(template => template.id === templateChoice) ?? null;
+  // Textul din șablonul ales, brut (cu diacritice) — sursa pentru textarea „Personalizat" la comutare.
+  const templateRenderedText =
+    templateChoice !== CUSTOM_TEMPLATE_CHOICE
+      ? renderTemplate
+        ? renderTemplate(templateChoice)
+        : (selectedTemplate?.body ?? recipient?.text ?? '')
+      : customText;
+  const singleBaseText = templateChoice === CUSTOM_TEMPLATE_CHOICE ? customText : templateRenderedText;
+  const singleSentText = stripDiacriticsChecked ? stripDiacritics(singleBaseText) : singleBaseText;
+
+  function singleChoiceForSend(): SmsSingleChoiceView | undefined {
+    if (!single) return undefined;
+    return {
+      templateId: templateChoice === CUSTOM_TEMPLATE_CHOICE ? null : templateChoice,
+      text: singleSentText,
+      stripDiacritics: stripDiacriticsChecked,
+    };
+  }
+
+  function selectTemplate(choice: string) {
+    if (choice === CUSTOM_TEMPLATE_CHOICE) setCustomText(templateRenderedText);
+    setTemplateChoice(choice);
+  }
+
   function toggle(id: string) {
     setSelected(current => {
       const next = new Set(current);
@@ -92,7 +145,7 @@ export function SmsConfirmDialog({
     setSending(true);
     try {
       const ids = single ? (recipient && recipient.phone !== null ? [recipient.id] : []) : [...selected];
-      const sendResult = await onSend(ids);
+      const sendResult = await onSend(ids, singleChoiceForSend());
       setResult(sendResult);
     } catch (error) {
       setErrorMessage((error as Error).message);
@@ -104,12 +157,15 @@ export function SmsConfirmDialog({
   async function retry() {
     if (!onRetry || !result) return;
     const failedOrSkippedIds = result.results
-      .filter(outcome => outcome.outcome === 'failed' || outcome.outcome === 'skipped')
+      .filter(
+        (outcome): outcome is typeof outcome & { childId: string } =>
+          (outcome.outcome === 'failed' || outcome.outcome === 'skipped') && outcome.childId !== null,
+      )
       .map(outcome => outcome.childId);
     setErrorMessage('');
     setSending(true);
     try {
-      setResult(await onRetry(failedOrSkippedIds));
+      setResult(await onRetry(failedOrSkippedIds, singleChoiceForSend()));
     } catch (error) {
       setErrorMessage((error as Error).message);
     } finally {
@@ -169,8 +225,43 @@ export function SmsConfirmDialog({
                 </Link>
               )}
             </div>
-            <p className={styles.bubble}>{recipient.text}</p>
-            <SmsSegmentCounter text={recipient.text} unitCost={unitCostLei} />
+
+            {templates && templates.length > 0 ? (
+              <>
+                <SegmentedControl<string>
+                  ariaLabel="Șablon"
+                  value={templateChoice}
+                  onChange={selectTemplate}
+                  options={[
+                    ...templates.map(template => ({ value: template.id, label: template.name })),
+                    { value: CUSTOM_TEMPLATE_CHOICE, label: 'Personalizat' },
+                  ]}
+                />
+                {templateChoice === CUSTOM_TEMPLATE_CHOICE && (
+                  <textarea
+                    className={styles.textarea}
+                    aria-label="Text mesaj"
+                    value={customText}
+                    onChange={event => setCustomText(event.target.value)}
+                  />
+                )}
+                <p className={styles.bubble}>{singleSentText}</p>
+                <div className={styles.diacriticsRow}>
+                  <Checkbox
+                    checked={stripDiacriticsChecked}
+                    onChange={setStripDiacriticsChecked}
+                    ariaLabel="Fără diacritice"
+                  />
+                  <span>Fără diacritice</span>
+                </div>
+                <SmsSegmentCounter text={singleSentText} unitCost={unitCostLei} />
+              </>
+            ) : (
+              <>
+                <p className={styles.bubble}>{recipient.text}</p>
+                <SmsSegmentCounter text={recipient.text} unitCost={unitCostLei} />
+              </>
+            )}
           </>
         )}
 

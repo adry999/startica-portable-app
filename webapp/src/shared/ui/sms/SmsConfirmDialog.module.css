@@ -74,6 +74,28 @@
   color: var(--slate);
 }
 
+.textarea {
+  padding: var(--space-14) var(--space-16);
+  border-radius: var(--radius-md-lg);
+  background: var(--white);
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--slate);
+  resize: vertical;
+  min-height: 110px;
+}
+
+.diacriticsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
 .list {
   display: flex;
   flex-direction: column;

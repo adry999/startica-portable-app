@@ -1,0 +1,51 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+  margin-bottom: var(--space-16);
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.preview {
+  background: var(--cream);
+  border-radius: var(--radius-input);
+  padding: var(--space-10) var(--space-14);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--slate);
+  white-space: pre-wrap;
+}
+
+.saveTemplateRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--slate);
+  margin-bottom: var(--space-16);
+}
+
+.saveTemplateRow > :last-child {
+  flex: 1;
+}
+
+.error {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pink-ink);
+}
+
+.resultSummary {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--slate);
+}

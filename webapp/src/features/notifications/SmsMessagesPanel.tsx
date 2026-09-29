@@ -27,6 +27,7 @@ import {
 import { formatDateTime, formatMonthLabel, formatMonthName } from '#shared/format/date-format.mjs';
 import { downloadCsv } from '@shared/csv-export';
 import { today as todayFn } from '@domain/calendar-month.mjs';
+import { SmsNewMessageDialog } from './SmsNewMessageDialog';
 import styles from './SmsMessagesPanel.module.css';
 
 const SEGMENT_LABEL: Record<SmsLogSegment, string> = {
@@ -42,6 +43,7 @@ const SOURCE_LABEL: Record<SmsSource, string> = {
   notify: 'De notificat',
   resend: 'Retrimitere',
   test: 'Test',
+  manual: 'Manual',
 };
 
 const PERIOD_LABEL: Record<string, string> = {
@@ -82,6 +84,7 @@ export function SmsMessagesPanel() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [resendOpen, setResendOpen] = useState(false);
   const [monthsOpen, setMonthsOpen] = useState(false);
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const selectedEntry = log.entries.find(entry => entry.id === selectedId) ?? null;
   const currentMonthKey = todayFn().slice(0, 7);
@@ -152,6 +155,12 @@ export function SmsMessagesPanel() {
     void log.refresh();
   }
 
+  function handleNewMessageSent(result: SmsSendResultView) {
+    const sent = result.results.some(outcome => outcome.outcome === 'sent');
+    toast.show({ message: sent ? 'SMS trimis.' : 'Trimiterea a eșuat.' });
+    void log.refresh();
+  }
+
   function exportMonthlyCsv() {
     downloadCsv(
       'sms-pe-luni.csv',
@@ -193,6 +202,9 @@ export function SmsMessagesPanel() {
       <div className={styles.grid}>
         <Card className={styles.tableCard}>
           <div className={styles.toolbar}>
+            <Button variant="primary" onClick={() => setNewMessageOpen(true)}>
+              + SMS nou
+            </Button>
             <SegmentedControl
               ariaLabel="Stare SMS"
               value={log.segment}
@@ -251,6 +263,13 @@ export function SmsMessagesPanel() {
           </Card>
         )}
       </div>
+
+      <SmsNewMessageDialog
+        open={newMessageOpen}
+        unitCostLei={sms.data?.unitCost ?? 0.3}
+        onClose={() => setNewMessageOpen(false)}
+        onSent={handleNewMessageSent}
+      />
 
       {resendOpen && selectedEntry && (
         <SmsConfirmDialog

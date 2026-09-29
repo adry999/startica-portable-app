@@ -29,7 +29,7 @@ export interface SmsTemplateInput {
 }
 
 export type SmsLogStatus = 'sent' | 'delivered' | 'failed' | 'unknown';
-export type SmsSource = 'status-row' | 'status-bulk' | 'notify' | 'resend' | 'test';
+export type SmsSource = 'status-row' | 'status-bulk' | 'notify' | 'resend' | 'test' | 'manual';
 export type SmsEncoding = 'gsm-7' | 'ucs-2';
 
 export interface SmsLogEntry {
@@ -137,7 +137,8 @@ export interface SmsStatus {
 }
 
 export interface SmsSendMessage {
-  childId: string;
+  /** null pentru sursa 'manual' — destinatarul nu e neapărat un copil din aplicație. */
+  childId: string | null;
   childName: string;
   recipientName: string;
   phone: string;
@@ -154,7 +155,7 @@ export interface SmsSendRequest {
 }
 
 export interface SmsSendOutcome {
-  childId: string;
+  childId: string | null;
   outcome: 'sent' | 'failed' | 'skipped';
   logId: number | null;
   segments: number;
@@ -195,7 +196,10 @@ export interface SmsRecipientRow {
   obligation: import('#shared/domain/sms-template.mjs').SmsObligation;
 }
 
-export interface PlannedSmsMessage extends SmsSendMessage, SmsSegmentCount {
+// planSmsBatch() cere mereu copii reali (rânduri din SmsBatchPlan) — childId rămâne non-null
+// aici, spre diferență de SmsSendMessage (unde 'manual' îl lasă null pentru „Alt număr”/angajat).
+export interface PlannedSmsMessage extends Omit<SmsSendMessage, 'childId'>, SmsSegmentCount {
+  childId: string;
   parentLabel: string;
 }
 

@@ -16,11 +16,13 @@ import {
   type BadgeTone,
   type DataTableColumn,
   type SmsRecipientView,
+  type SmsSingleChoiceView,
 } from '@shared/ui';
 import {
   useSmsLastNotified,
   useSmsSend,
   useSmsStatus,
+  useSmsTemplates,
   type SmsRecipientRow,
   type SmsSendResultView,
 } from '@shared/sms';
@@ -50,6 +52,12 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 const SMS_DISABLED_TITLE = 'Conectează sms.md în Notificări';
 
 type PlannedSmsMessage = ReturnType<typeof planSmsBatch>['messages'][number];
+
+// planSmsBatch produce mereu childId dintr-un Child real (`chooseSmsRecipient`); nullul din tipul
+// SmsSendMessage e doar pentru sursa 'manual' (neatinsă aici) — filtrul de mai jos e doar pentru tipuri.
+function nonNullChildId<T extends { childId: string | null }>(messages: T[]): (T & { childId: string })[] {
+  return messages.filter((message): message is T & { childId: string } => message.childId !== null);
+}
 
 /** Textul mesajului când destinatarul n-are telefon valid (nu se trimite, dar previzualizarea trebuie să arate ceva). */
 function fallbackSmsText(recipient: SmsRecipientRow, month: string): string {
@@ -86,17 +94,38 @@ function createSendHandler(
   sendBatch: (request: {
     source: 'status-row' | 'status-bulk';
     month: string | null;
-    templateId: null;
+    templateId: string | null;
     messages: { childId: string; childName: string; recipientName: string; phone: string; text: string }[];
   }) => Promise<SmsSendResultView>,
   source: 'status-row' | 'status-bulk',
   requestMonth: string | null,
   plannedMessages: PlannedSmsMessage[],
 ) {
-  return async (selectedIds: string[]): Promise<SmsSendResultView> => {
+  return async (selectedIds: string[], singleChoice?: SmsSingleChoiceView): Promise<SmsSendResultView> => {
+    if (singleChoice) {
+      const message = plannedMessages.find(candidate => candidate.childId === selectedIds[0]);
+      if (!message) throw new Error('Destinatar invalid.');
+      return sendBatch({
+        source,
+        month: requestMonth,
+        templateId: singleChoice.templateId,
+        messages: [
+          {
+            childId: selectedIds[0],
+            childName: message.childName,
+            recipientName: message.recipientName,
+            phone: message.phone,
+            text: singleChoice.text,
+          },
+        ],
+      });
+    }
     const selected = new Set(selectedIds);
     const messages = plannedMessages
-      .filter(message => selected.has(message.childId))
+      .filter(
+        (message): message is PlannedSmsMessage & { childId: string } =>
+          message.childId !== null && selected.has(message.childId),
+      )
       .map(message => ({
         childId: message.childId,
         childName: message.childName,
@@ -166,12 +195,14 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   const sms = useSmsStatus();
   const lastNotified = useSmsLastNotified();
   const smsSend = useSmsSend();
+  const smsTemplates = useSmsTemplates();
   const toast = useToast();
   const [smsDialog, setSmsDialog] = useState<{
     mode: 'single' | 'bulk';
     recipients: SmsRecipientView[];
-    send: (ids: string[]) => Promise<SmsSendResultView>;
+    send: (ids: string[], singleChoice?: SmsSingleChoiceView) => Promise<SmsSendResultView>;
     namesByChildId: Map<string, string>;
+    rowId?: string;
   } | null>(null);
 
   const smsConfigured = sms.data?.configured ?? false;
@@ -185,11 +216,12 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     stripDiacritics: true,
     month,
   });
-  const monthPlannedByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message]));
+  const monthMessages = nonNullChildId(monthBatchPlan.messages);
+  const monthPlannedByChildId = new Map(monthMessages.map(message => [message.childId, message]));
   const monthRecipientByChildId = new Map(
     statusData.notifiableRecipients.map(recipient => [recipient.child.id, recipient]),
   );
-  const monthNameByChildId = new Map(monthBatchPlan.messages.map(message => [message.childId, message.recipientName]));
+  const monthNameByChildId = new Map(monthMessages.map(message => [message.childId, message.recipientName]));
 
   // Lot An școlar: fiecare copil cu sold > 0 are propria lună reprezentativă (cea mai veche restanță
   // neachitată) — planSmsBatch cere o singură lună per apel, deci grupăm destinatarii pe lună.
@@ -199,12 +231,32 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     group.push(recipient);
     yearRecipientsByMonth.set(recipient.month, group);
   }
-  const yearBatchMessages = [...yearRecipientsByMonth.entries()].flatMap(
-    ([groupMonth, rows]) =>
-      planSmsBatch({ rows, body: DEFAULT_SMS_TEMPLATE_BODY, stripDiacritics: true, month: groupMonth }).messages,
+  const yearBatchMessages = nonNullChildId(
+    [...yearRecipientsByMonth.entries()].flatMap(
+      ([groupMonth, rows]) =>
+        planSmsBatch({ rows, body: DEFAULT_SMS_TEMPLATE_BODY, stripDiacritics: true, month: groupMonth }).messages,
+    ),
   );
   const yearPlannedByChildId = new Map(yearBatchMessages.map(message => [message.childId, message]));
   const yearNameByChildId = new Map(yearBatchMessages.map(message => [message.childId, message.recipientName]));
+
+  /** Randează un șablon salvat pentru destinatarul unic al dialogului (7c/7e) — luna e fixă (mod Lună). */
+  function renderTemplateForRow(rowId: string) {
+    return (templateId: string) => {
+      const recipient = monthRecipientByChildId.get(rowId);
+      const template = smsTemplates.templates.find(candidate => candidate.id === templateId);
+      if (!recipient || !template) return '';
+      return renderSmsTemplate(
+        template.body,
+        smsVariablesFor({
+          child: recipient.child,
+          parentName: recipient.child.parent,
+          obligation: recipient.obligation,
+          month,
+        }),
+      );
+    };
+  }
 
   function openRowNotify(row: StatusRowView) {
     const recipient = monthRecipientByChildId.get(row.id);
@@ -212,8 +264,9 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
     setSmsDialog({
       mode: 'single',
       recipients: [toSmsRecipientView(recipient, monthPlannedByChildId, month, isNotifiedToday)],
-      send: createSendHandler(smsSend.send, 'status-row', month, monthBatchPlan.messages),
+      send: createSendHandler(smsSend.send, 'status-row', month, monthMessages),
       namesByChildId: monthNameByChildId,
+      rowId: row.id,
     });
   }
 
@@ -223,7 +276,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
       recipients: statusData.overdueRecipients.map(recipient =>
         toSmsRecipientView(recipient, monthPlannedByChildId, month, isNotifiedToday),
       ),
-      send: createSendHandler(smsSend.send, 'status-bulk', month, monthBatchPlan.messages),
+      send: createSendHandler(smsSend.send, 'status-bulk', month, monthMessages),
       namesByChildId: monthNameByChildId,
     });
   }
@@ -240,7 +293,9 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
   }
 
   function handleSmsSent(result: SmsSendResultView, namesByChildId: Map<string, string>) {
-    const sentIds = result.results.filter(outcome => outcome.outcome === 'sent').map(outcome => outcome.childId);
+    const sentIds = result.results
+      .filter(outcome => outcome.outcome === 'sent' && outcome.childId !== null)
+      .map(outcome => outcome.childId as string);
     if (sentIds.length === 1) {
       toast.show({ message: `SMS trimis către ${namesByChildId.get(sentIds[0]) ?? ''}` });
     } else if (sentIds.length > 1) {
@@ -345,6 +400,11 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           recipients={smsDialog.recipients}
           unitCostLei={sms.data?.unitCost ?? 0.3}
           balanceLei={sms.data?.balance ? Number(sms.data.balance) : null}
+          templates={smsDialog.mode === 'single' ? smsTemplates.templates : undefined}
+          defaultTemplateId={smsDialog.mode === 'single' ? (smsTemplates.defaultTemplate?.id ?? null) : null}
+          renderTemplate={
+            smsDialog.mode === 'single' && smsDialog.rowId ? renderTemplateForRow(smsDialog.rowId) : undefined
+          }
           onSend={smsDialog.send}
           onRetry={smsDialog.send}
           onClose={() => setSmsDialog(null)}

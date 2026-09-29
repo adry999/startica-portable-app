@@ -58,6 +58,17 @@ test('insert apoi update({status,...}) → find întoarce rândul îmbinat cu id
   });
 });
 
+test('insert cu childId null și recipientName (trimitere manuală, 11c/11d) → find întoarce rândul nemodificat', t => {
+  const { repository } = openRepository(t);
+  const id = repository.insert(
+    entry({ childId: null, recipientName: 'Elena Rusu', childName: '', source: 'manual', templateId: null }),
+  );
+  assert.deepEqual(repository.find(id), {
+    ...entry({ childId: null, recipientName: 'Elena Rusu', childName: '', source: 'manual', templateId: null }),
+    id,
+  });
+});
+
 test('monthlyStats ignoră failed și alte luni; adună segments doar pe non-failed', t => {
   const { repository } = openRepository(t);
   const now = new Date(2026, 8, 27, 12);

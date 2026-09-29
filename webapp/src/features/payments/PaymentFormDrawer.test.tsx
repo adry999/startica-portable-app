@@ -2,8 +2,19 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readDirtyForms } from '@shared/state/dirty-forms';
-import { PaymentFormDrawer } from './PaymentFormDrawer';
+import { ToastProvider } from '@shared/ui';
+import { PAYMENT_CONFIRMATION_TEMPLATE_ID } from '@domain/sms-template.mjs';
+import { PaymentFormDrawer, type PaymentFormDrawerProps } from './PaymentFormDrawer';
 import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
+
+/** `useToast()` (15b) cere `ToastProvider` — un singur loc care randează drawer-ul, pentru toate testele. */
+function renderDrawerWithProps(props: PaymentFormDrawerProps) {
+  return render(
+    <ToastProvider>
+      <PaymentFormDrawer {...props} />
+    </ToastProvider>,
+  );
+}
 
 // Curs cunoscut doar la o dată veche, ca eurToMdlRate să-l propună (cel mai
 // recent cunoscut înaintea datei) indiferent de data „de azi” din test.
@@ -20,6 +31,9 @@ const records = {
       statusHistory: [{ from: '2026-01', status: 'Activ' }],
       attendanceDate: '2026-01-10',
       feeHistory: [{ from: '2026-01', amount: 1500 }],
+      // 15b: telefon moldovenesc valid — sendSmsConfirmation pornește bifat pentru acest copil.
+      parent: 'Maria Popescu',
+      phone: '069123456',
     },
     { id: 'c2', name: 'Maria Ionescu', archived: false, feeHistory: [] },
     {
@@ -44,7 +58,7 @@ const records = {
 function renderDrawer() {
   const onSubmit = vi.fn().mockResolvedValue(true);
   const onClose = vi.fn();
-  render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={onClose} />);
+  renderDrawerWithProps({ target: 'new', records, onSubmit, onClose });
   return { onSubmit, onClose };
 }
 
@@ -65,20 +79,23 @@ async function goManual(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Repartizează manual' }));
 }
 
+/** Implicit sms.md neconectat — testele 15b care au nevoie de „conectat” își suprascriu propriul fetch. */
+function stubFetch({ smsStatus = { configured: false }, smsSend }: { smsStatus?: object; smsSend?: unknown } = {}) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (path: string) => {
+      if (path === '/api/exchange-rates')
+        return { ok: true, status: 200, json: async () => ({ rates: { [KNOWN_RATE_DATE]: KNOWN_RATE }, sources: {} }) };
+      if (path === '/api/sms-status') return { ok: true, status: 200, json: async () => smsStatus };
+      if (path === '/api/sms-send' && smsSend) return { ok: true, status: 200, json: async () => smsSend };
+      throw new Error(`neașteptat: ${path}`);
+    }),
+  );
+}
+
 describe('PaymentFormDrawer', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/exchange-rates')
-          return {
-            ok: true,
-            status: 200,
-            json: async () => ({ rates: { [KNOWN_RATE_DATE]: KNOWN_RATE }, sources: {} }),
-          };
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    stubFetch();
   });
 
   afterEach(() => {
@@ -192,14 +209,7 @@ describe('PaymentFormDrawer', () => {
       notes: '',
     } as unknown as Payment;
 
-    render(
-      <PaymentFormDrawer
-        target={payment}
-        records={records}
-        onSubmit={vi.fn().mockResolvedValue(true)}
-        onClose={vi.fn()}
-      />,
-    );
+    renderDrawerWithProps({ target: payment, records, onSubmit: vi.fn().mockResolvedValue(true), onClose: vi.fn() });
     const user = userEvent.setup();
     await goManual(user);
 
@@ -215,7 +225,7 @@ describe('PaymentFormDrawer', () => {
           resolveSubmit = resolve;
         }),
     );
-    render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawerWithProps({ target: 'new', records, onSubmit, onClose: vi.fn() });
     const user = userEvent.setup();
 
     await user.type(sumInput(), '500');
@@ -229,15 +239,13 @@ describe('PaymentFormDrawer', () => {
   });
 
   it('defaultChildId la o plată nouă propune luna cea mai veche neachitată a copilului', async () => {
-    render(
-      <PaymentFormDrawer
-        target="new"
-        records={records}
-        defaultChildId="c1"
-        onSubmit={vi.fn().mockResolvedValue(true)}
-        onClose={vi.fn()}
-      />,
-    );
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c1',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
     const user = userEvent.setup();
     await goManual(user);
 
@@ -352,7 +360,7 @@ describe('PaymentFormDrawer', () => {
 
   it('save() întoarce false când mutația pică (C1) — „Salvează și schimbă” nu are voie să schimbe filiala', async () => {
     const onSubmit = vi.fn().mockRejectedValue(new Error('Verifică operațiunea anterioară.'));
-    render(<PaymentFormDrawer target="new" records={records} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawerWithProps({ target: 'new', records, onSubmit, onClose: vi.fn() });
     const user = userEvent.setup();
 
     await user.type(sumInput(), '500');
@@ -362,7 +370,7 @@ describe('PaymentFormDrawer', () => {
   });
 
   it('formularul nu e nesalvat cât timp drawer-ul e închis (target null)', () => {
-    render(<PaymentFormDrawer target={null} records={records} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawerWithProps({ target: null, records, onSubmit: vi.fn(), onClose: vi.fn() });
     expect(readDirtyForms()).toEqual([]);
   });
 
@@ -434,7 +442,7 @@ describe('PaymentFormDrawer', () => {
       ],
     } as unknown as RecordsSnapshot;
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(<PaymentFormDrawer target="new" records={recordsWithCharge} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawerWithProps({ target: 'new', records: recordsWithCharge, onSubmit, onClose: vi.fn() });
     const user = userEvent.setup();
 
     await pickChild(user, 'Andrei Popescu');
@@ -448,5 +456,90 @@ describe('PaymentFormDrawer', () => {
 
     await user.click(saveButton());
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ service: 'bazin' }));
+  });
+
+  describe('15b: confirmare plată prin SMS', () => {
+    it('bifa pornește bifată pentru un copil cu telefon valid', async () => {
+      stubFetch({ smsStatus: { configured: true } });
+      renderDrawer();
+      const user = userEvent.setup();
+
+      await pickChild(user, 'Andrei Popescu');
+      expect(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+
+    it('bifa pornește debifată pentru un copil fără telefon valid', async () => {
+      stubFetch({ smsStatus: { configured: true } });
+      renderDrawer();
+      const user = userEvent.setup();
+
+      await pickChild(user, 'Maria Ionescu');
+      expect(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' })).toHaveAttribute(
+        'aria-checked',
+        'false',
+      );
+    });
+
+    it('cu sms.md neconectat, bifa e dezactivată și arată „SMS neconectat”', () => {
+      renderDrawer();
+      expect(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' })).toBeDisabled();
+      expect(screen.getByText('SMS neconectat')).toBeInTheDocument();
+    });
+
+    it('salvarea cu bifa activă trimite SMS de confirmare cu șablonul „Confirmare plată”', async () => {
+      let sendBody: {
+        source: string;
+        templateId: string;
+        messages: { childId: string; phone: string; text: string }[];
+      } | null = null;
+      stubFetch({
+        smsStatus: { configured: true },
+        smsSend: {
+          ok: true,
+          results: [{ childId: 'c1', outcome: 'sent', logId: 1, segments: 1, cost: '0.30', error: '' }],
+          stopped: null,
+        },
+      });
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+
+      await pickChild(user, 'Andrei Popescu');
+      await user.type(sumInput(), '500');
+      await user.click(saveButton());
+
+      await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      await vi.waitFor(() => {
+        const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
+        const sendCall = calls.find(call => call[0] === '/api/sms-send');
+        expect(sendCall).toBeDefined();
+        sendBody = JSON.parse((sendCall![1] as RequestInit).body as string);
+      });
+
+      expect(sendBody).toMatchObject({
+        source: 'notify',
+        templateId: PAYMENT_CONFIRMATION_TEMPLATE_ID,
+        messages: [{ childId: 'c1', phone: '+37369123456' }],
+      });
+      expect(sendBody!.messages[0].text).toContain('Andrei Popescu');
+      expect(sendBody!.messages[0].text).toContain('Maria Popescu');
+    });
+
+    it('bifa activă fără telefon valid nu trimite SMS și arată un toast', async () => {
+      stubFetch({ smsStatus: { configured: true } });
+      renderDrawer();
+      const user = userEvent.setup();
+
+      await pickChild(user, 'Maria Ionescu');
+      await user.click(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' }));
+      await user.type(sumInput(), '500');
+      await user.click(saveButton());
+
+      await screen.findByText('Confirmarea nu s-a trimis: fără telefon valid.');
+      const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
+      expect(calls.some(call => call[0] === '/api/sms-send')).toBe(false);
+    });
   });
 });

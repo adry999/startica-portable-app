@@ -193,6 +193,29 @@ test('trimiterea unui lot reușit scrie jurnalul și întoarce statusul cu sentT
   assert.equal(response.body.status.sentThisMonth, 2);
 });
 
+test('trimiterea manuală (11c/11d) cu childId null și recipientName scrie jurnalul cu source manual', async t => {
+  const { fetch } = createFakeSmsApi();
+  const { origin } = await startSmsServer(t, { fetch });
+  await postJson(origin, '/api/sms-connect', { token: VALID_TOKEN, sender: 'Startica', monthlyLimit: null });
+
+  const response = await postJson(origin, '/api/sms-send', {
+    source: 'manual',
+    month: null,
+    templateId: null,
+    requestId: 'req-manual-01',
+    messages: [{ childId: null, childName: '', recipientName: 'Elena Rusu', phone: '+37369123456', text: 'Salut' }],
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.ok, true);
+  assert.equal(response.body.results[0].childId, null);
+
+  const page = await getJson(origin, '/api/sms-log');
+  assert.equal(page.entries[0].source, 'manual');
+  assert.equal(page.entries[0].childId, null);
+  assert.equal(page.entries[0].recipientName, 'Elena Rusu');
+});
+
 test('M10: două POST-uri identice cu același requestId fac un singur apel către sms.md', async t => {
   const { fetch, calls } = createFakeSmsApi();
   const { origin } = await startSmsServer(t, { fetch });

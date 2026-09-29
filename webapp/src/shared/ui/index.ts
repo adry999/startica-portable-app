@@ -4,6 +4,8 @@ export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export { Card, type CardProps, type CardTone } from './Card';
 export { Checkbox, type CheckboxProps } from './Checkbox';
 export { SearchInput, type SearchInputProps } from './SearchInput';
+export { TextField, type TextFieldProps } from './TextField';
+export { TextArea, type TextAreaProps } from './TextArea';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Toggle, type ToggleProps } from './Toggle';
 export { Drawer, type DrawerProps } from './Drawer';
@@ -42,7 +44,12 @@ export {
   useTopbarTitle,
   type TopbarTitleOverride,
 } from './TopbarActions';
-export { SmsConfirmDialog, type SmsConfirmDialogProps, type SmsRecipientView } from './sms/SmsConfirmDialog';
+export {
+  SmsConfirmDialog,
+  type SmsConfirmDialogProps,
+  type SmsRecipientView,
+  type SmsSingleChoiceView,
+} from './sms/SmsConfirmDialog';
 export { ScrollArea, type ScrollAreaProps } from './ScrollArea';
 export { Skeleton } from './Skeleton';
 export { LoadingState } from './LoadingState';

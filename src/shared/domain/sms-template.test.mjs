@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_SMS_TEMPLATE_BODY,
+  PAYMENT_CONFIRMATION_TEMPLATE_BODY,
   SMS_TEMPLATE_VARIABLES,
   renderSmsTemplate,
   smsVariablesFor,
+  smsVariablesForPayment,
   findUnknownSmsVariables,
 } from './sms-template.mjs';
 
@@ -53,6 +55,33 @@ test('smsVariablesFor formatează taxa/rest/achitat în moneda obligației, nu i
   assert.equal(variables.taxa, '100,00 €');
   assert.equal(variables.rest, '60,00 €');
   assert.equal(variables.achitat, '40,00 €');
+});
+
+test('smsVariablesForPayment completează părinte/copil/luna/achitat din plată, nu din obligație', () => {
+  const variables = smsVariablesForPayment({ child: child(), parentName: 'Maria', amount: 1500, month: '2026-09' });
+  assert.deepEqual(variables, { părinte: 'Maria', copil: 'Ion', luna: 'septembrie 2026', achitat: '1.500,00 lei' });
+});
+
+test('smsVariablesForPayment formatează suma în moneda dată, nu implicit în lei', () => {
+  const variables = smsVariablesForPayment({
+    child: child(),
+    parentName: 'Maria',
+    amount: 40,
+    currency: 'EUR',
+    month: '2026-09',
+  });
+  assert.equal(variables.achitat, '40,00 €');
+});
+
+test('șablonul de confirmare plată se randează cu variabilele unei plăți', () => {
+  const text = renderSmsTemplate(
+    PAYMENT_CONFIRMATION_TEMPLATE_BODY,
+    smsVariablesForPayment({ child: child(), parentName: 'Maria', amount: 1500, month: '2026-09' }),
+  );
+  assert.equal(
+    text,
+    'Bună ziua, Maria! Confirmăm plata de 1.500,00 lei pentru Ion, luna septembrie 2026. Vă mulțumim! Startica',
+  );
 });
 
 test('findUnknownSmsVariables întoarce doar numele care nu sunt în listă', () => {

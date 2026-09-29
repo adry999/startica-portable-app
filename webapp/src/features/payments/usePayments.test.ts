@@ -400,6 +400,7 @@ describe('usePayments', () => {
     reviewed: false,
     allocations: [{ month: '2026-09', amount: '600' }],
     notes: '',
+    sendSmsConfirmation: false,
   };
 
   it('createPayment trimite mutația de creare cu id PAY- generat', async () => {
@@ -435,6 +436,7 @@ describe('usePayments', () => {
       reviewed: false,
       allocations: [{ month: '2026-09', amount: '1500' }],
       notes: '',
+      sendSmsConfirmation: false,
     };
 
     const confirmDuplicate = vi.fn(() => false);
@@ -467,6 +469,7 @@ describe('usePayments', () => {
         reviewed: false,
         allocations: [{ month: '2026-09', amount: '1500' }],
         notes: '',
+        sendSmsConfirmation: false,
       }),
     );
   });

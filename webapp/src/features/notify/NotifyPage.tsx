@@ -10,12 +10,13 @@ import {
   useTopbarActions,
   type PillTone,
   type SmsRecipientView,
+  type SmsSingleChoiceView,
 } from '@shared/ui';
 import { initials } from '@shared/format/initials';
-import { useSmsLastNotified, useSmsSend, useSmsStatus, type SmsSendResultView } from '@shared/sms';
+import { useSmsLastNotified, useSmsSend, useSmsStatus, useSmsTemplates, type SmsSendResultView } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
-import { DEFAULT_SMS_TEMPLATE_BODY } from '@domain/sms-template.mjs';
+import { DEFAULT_SMS_TEMPLATE_BODY, renderSmsTemplate, smsVariablesFor } from '@domain/sms-template.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useNotify, type NotifyRowView } from './useNotify';
 import type { ViewKey } from '@shared/view-key';
@@ -27,8 +28,8 @@ export interface NotifyPageProps {
 }
 
 const SMS_DISABLED_TITLE = 'Conectează sms.md în Notificări';
-// Ecranul nu are selector de șablon (P3): trimite cu diacritice eliminate, ca segmentele
-// numărate în dialog să rămână GSM-7, cel mai ieftin encoding.
+// Lotul „Trimite tuturor” trimite mereu cu diacritice eliminate — dialogul unic (P3, 7c/7e)
+// are propria bifă „Fără diacritice”, cu textul editat de acolo.
 const STRIP_DIACRITICS = true;
 
 type QueueTab = 'toSend' | 'sent' | 'failed';
@@ -46,11 +47,14 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   const sms = useSmsStatus();
   const lastNotified = useSmsLastNotified();
   const smsSend = useSmsSend();
-  const [dialog, setDialog] = useState<{ mode: 'single' | 'bulk'; recipients: SmsRecipientView[] } | null>(null);
+  const smsTemplates = useSmsTemplates();
+  const [dialog, setDialog] = useState<{
+    mode: 'single' | 'bulk';
+    recipients: SmsRecipientView[];
+    rowId?: string;
+  } | null>(null);
   const [tab, setTab] = useState<QueueTab>('toSend');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState(false);
-  const [edits, setEdits] = useState<Record<string, string>>({});
 
   const todayStr = todayFn();
   const batchPlan = planSmsBatch({
@@ -75,14 +79,11 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
     }
     if (activeId !== null && !notifyData.rows.some(row => row.id === activeId)) {
       setActiveId(notifyData.rows[0]?.id ?? null);
-      setEditingText(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notifyData.status, rowIdsKey]);
 
-  function messageFor(row: NotifyRowView): string {
-    return edits[row.id] ?? row.message;
-  }
+  const recipientRowById = new Map(notifyData.recipients.map(recipient => [recipient.child.id, recipient]));
 
   function recipientView(row: NotifyRowView): SmsRecipientView {
     const planned = plannedByChildId.get(row.id);
@@ -90,9 +91,27 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
       id: row.id,
       name: row.name,
       phone: planned?.phone ?? null,
-      text: edits[row.id] ?? planned?.text ?? row.message,
+      text: planned?.text ?? row.message,
       rest: row.rest ?? undefined,
       excludeReason: lastNotified.notifiedToday(row.id, todayStr) ? 'notificat azi' : undefined,
+    };
+  }
+
+  /** Randează un șablon salvat pentru destinatarul unic al dialogului (7c/7e) — recipientRowById are {child, obligation}. */
+  function renderTemplateForRow(rowId: string) {
+    return (templateId: string) => {
+      const template = smsTemplates.templates.find(candidate => candidate.id === templateId);
+      const recipientRow = recipientRowById.get(rowId);
+      if (!template || !recipientRow) return '';
+      return renderSmsTemplate(
+        template.body,
+        smsVariablesFor({
+          child: recipientRow.child,
+          parentName: recipientRow.child.parent,
+          obligation: recipientRow.obligation,
+          month,
+        }),
+      );
     };
   }
 
@@ -129,22 +148,44 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
   if (notifyData.status === 'failed')
     return <p className={styles.notice}>{notifyData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  async function sendSelected(selectedIds: string[]): Promise<SmsSendResultView> {
+  async function sendSelected(selectedIds: string[], singleChoice?: SmsSingleChoiceView): Promise<SmsSendResultView> {
+    if (singleChoice) {
+      const childId = selectedIds[0];
+      const planned = plannedByChildId.get(childId);
+      const row = notifyData.rows.find(candidate => candidate.id === childId);
+      if (!planned || !row) throw new Error('Destinatar invalid.');
+      return smsSend.send({
+        source: 'notify',
+        month,
+        templateId: singleChoice.templateId,
+        messages: [
+          {
+            childId,
+            childName: row.name,
+            recipientName: planned.recipientName,
+            phone: planned.phone,
+            text: singleChoice.text,
+          },
+        ],
+      });
+    }
     const selected = new Set(selectedIds);
     const messages = batchPlan.messages
-      .filter(message => selected.has(message.childId))
+      .filter(message => message.childId !== null && selected.has(message.childId))
       .map(message => ({
         childId: message.childId,
         childName: message.childName,
         recipientName: message.recipientName,
         phone: message.phone,
-        text: edits[message.childId] ?? message.text,
+        text: message.text,
       }));
     return smsSend.send({ source: 'notify', month, templateId: null, messages });
   }
 
   function handleSent(result: SmsSendResultView) {
-    const sentIds = result.results.filter(outcome => outcome.outcome === 'sent').map(outcome => outcome.childId);
+    const sentIds = result.results
+      .filter(outcome => outcome.outcome === 'sent' && outcome.childId !== null)
+      .map(outcome => outcome.childId as string);
     if (sentIds.length === 1) {
       toast.show({ message: `SMS trimis către ${plannedByChildId.get(sentIds[0])?.recipientName ?? ''}` });
     } else if (sentIds.length > 1) {
@@ -204,10 +245,7 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                       type="button"
                       className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
                       aria-pressed={row.id === activeId}
-                      onClick={() => {
-                        setActiveId(row.id);
-                        setEditingText(false);
-                      }}
+                      onClick={() => setActiveId(row.id)}
                     >
                       {/* Bazin.dc.html#8a: avatar 40 în ton — mai mare decât PersonCell 'md' (30),
                           nesuportat de variantele existente (md/lg) — celulă proprie, ca la Echipa. */}
@@ -265,38 +303,29 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                 <span className={styles.templateChip}>Șablon: {activeRow.label}</span>
               </div>
 
-              {editingText ? (
-                <textarea
-                  className={styles.bubbleEdit}
-                  value={messageFor(activeRow)}
-                  onChange={event => setEdits(current => ({ ...current, [activeRow.id]: event.target.value }))}
-                />
-              ) : (
-                <p className={styles.bubble}>{messageFor(activeRow)}</p>
-              )}
-              <span className={styles.editHint}>Textul se poate edita înainte de trimitere.</span>
+              <p className={styles.bubble}>{activeRow.message}</p>
+              <span className={styles.editHint}>Șablonul și textul se pot alege la trimitere.</span>
 
               <footer className={styles.previewFooter}>
                 <button type="button" className={styles.linkGhost} onClick={() => setActiveId(null)}>
                   Nu trimite
                 </button>
                 <div className={styles.previewActions}>
-                  <Button variant="outline" onClick={() => setEditingText(current => !current)}>
-                    {editingText ? 'Gata' : 'Editează textul'}
-                  </Button>
                   <button
                     type="button"
                     className={styles.btnPrimarySmall}
                     disabled={!smsConfigured}
                     title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
-                    onClick={() => setDialog({ mode: 'single', recipients: [recipientView(activeRow)] })}
+                    onClick={() =>
+                      setDialog({ mode: 'single', recipients: [recipientView(activeRow)], rowId: activeRow.id })
+                    }
                   >
                     Trimite SMS
                   </button>
                   <button
                     type="button"
                     className={styles.btnGhostSmall}
-                    onClick={() => void copyOne(messageFor(activeRow))}
+                    onClick={() => void copyOne(activeRow.message)}
                   >
                     Copiază
                   </button>
@@ -314,6 +343,9 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
           recipients={dialog.recipients}
           unitCostLei={sms.data?.unitCost ?? 0.3}
           balanceLei={sms.data?.balance ? Number(sms.data.balance) : null}
+          templates={dialog.mode === 'single' ? smsTemplates.templates : undefined}
+          defaultTemplateId={dialog.mode === 'single' ? (smsTemplates.defaultTemplate?.id ?? null) : null}
+          renderTemplate={dialog.mode === 'single' && dialog.rowId ? renderTemplateForRow(dialog.rowId) : undefined}
           onSend={sendSelected}
           onRetry={sendSelected}
           onClose={() => setDialog(null)}

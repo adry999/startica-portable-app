@@ -48,6 +48,20 @@ describe('defaultPaymentFormValues', () => {
     const values = defaultPaymentFormValues(null, '2026-09-24', 'c1', records);
     expect(values.allocations[0].month).toBe('2026-01');
   });
+
+  it('15b: sendSmsConfirmation implicit bifat doar dacă părintele are telefon valid', () => {
+    const records = {
+      children: [
+        { id: 'c1', name: 'Ion', parent: 'Maria', phone: '069123456' },
+        { id: 'c2', name: 'Andrei', parent: 'Vasile', phone: '' },
+      ],
+      payments: [],
+    } as unknown as RecordsSnapshot;
+
+    expect(defaultPaymentFormValues(null, '2026-09-24', 'c1', records).sendSmsConfirmation).toBe(true);
+    expect(defaultPaymentFormValues(null, '2026-09-24', 'c2', records).sendSmsConfirmation).toBe(false);
+    expect(defaultPaymentFormValues(null, '2026-09-24').sendSmsConfirmation).toBe(false);
+  });
 });
 
 describe('tenderMethodsFor', () => {
@@ -73,6 +87,7 @@ describe('buildPaymentRecord', () => {
     reviewed: false,
     allocations: [{ month: '2026-09', amount: '1500' }],
     notes: '',
+    sendSmsConfirmation: false,
   };
 
   it('calculează suma și metoda din tenders, ignorând amount-ul trimis', () => {

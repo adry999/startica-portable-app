@@ -291,6 +291,41 @@ test('sendBatch: text peste 800 de caractere respinge lotul cu 400, fără apel'
   assert.equal(calls.length, 0);
 });
 
+test('sendBatch: source manual cu childId null și recipientName trimite cu succes', async t => {
+  const { smsLogRepository, sendService } = createDeps(t);
+  const result = await sendService.sendBatch({
+    source: 'manual',
+    month: null,
+    templateId: null,
+    requestId: 'req-manual-01',
+    messages: [
+      message({ childId: null, childName: '', recipientName: 'Elena Rusu', phone: '+37369123456', text: 'Salut' }),
+    ],
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.results[0].outcome, 'sent');
+  assert.equal(result.results[0].childId, null);
+  const row = smsLogRepository.find(/** @type {number} */ (result.results[0].logId));
+  assert.equal(row?.childId, null);
+  assert.equal(row?.recipientName, 'Elena Rusu');
+  assert.equal(row?.source, 'manual');
+});
+
+test('sendBatch: source manual cu telefon invalid respinge lotul cu 400, fără apel', async t => {
+  const { calls, sendService } = createDeps(t);
+  await assert.rejects(() =>
+    sendService.sendBatch({
+      source: 'manual',
+      month: null,
+      templateId: null,
+      requestId: 'req-manual-telefon-invalid-01',
+      messages: [message({ childId: null, recipientName: 'Elena Rusu', phone: '123' })],
+    }),
+  );
+  assert.equal(calls.length, 0);
+});
+
 test('sendBatch: childId gol respinge lotul cu 400, fără apel', async t => {
   const { calls, sendService } = createDeps(t);
   await assert.rejects(() =>
@@ -300,6 +335,20 @@ test('sendBatch: childId gol respinge lotul cu 400, fără apel', async t => {
       templateId: null,
       requestId: 'req-childid-gol-01',
       messages: [message({ childId: '' })],
+    }),
+  );
+  assert.equal(calls.length, 0);
+});
+
+test('sendBatch: source notify cu childId null respinge lotul cu 400 (regresie — doar manual poate omite copilul)', async t => {
+  const { calls, sendService } = createDeps(t);
+  await assert.rejects(() =>
+    sendService.sendBatch({
+      source: 'notify',
+      month: '2026-09',
+      templateId: null,
+      requestId: 'req-notify-childid-null-01',
+      messages: [message({ childId: null })],
     }),
   );
   assert.equal(calls.length, 0);

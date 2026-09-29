@@ -22,9 +22,10 @@ const TERMINAL_STATUS_BY_NAME = { Undelivered: 'failed', Failed: 'failed' };
 const BATCH_REQUEST_ID = /^[a-zA-Z0-9-]{8,100}$/;
 export const INVALID_REQUEST_ID_MESSAGE = 'Identificator de lot invalid.';
 
-/** @param {SmsSendMessage} message */
-function assertValidSendMessage(message) {
-  if (!message.childId) fail('Mesaj SMS invalid: copil necunoscut.');
+/** @param {SmsSendMessage} message @param {import('../sms-notify.types.mjs').SmsSource} source */
+function assertValidSendMessage(message, source) {
+  // 'manual' (11c/11d): destinatarul poate fi „Alt număr" sau un angajat, fără childId din aplicație.
+  if (source !== 'manual' && !message.childId) fail('Mesaj SMS invalid: copil necunoscut.');
   if (!normalizeMoldovanPhone(message.phone)) fail(`Mesaj SMS invalid: telefonul „${message.phone}” nu e valid.`);
   if (!message.text || message.text.length > SMS_TEMPLATE_MAX_LENGTH)
     fail('Mesaj SMS invalid: text gol sau prea lung.');
@@ -67,9 +68,8 @@ function outcomeFromRow(row) {
   // livrarea mai târziu (status poate deveni 'delivered'/'unknown'/'failed' prin refreshDeliveryStatuses).
   const sentSuccessfully = row.providerId != null;
   return {
-    // Rândurile unui lot au mereu childId (validat de assertValidSendMessage înainte de insert);
-    // doar sendTest (fără lot) scrie childId null, deci tipul din SmsLogEntry îl lasă nullable.
-    childId: /** @type {string} */ (row.childId),
+    // null pentru sendTest (fără lot) și pentru un lot manual către „Alt număr”/angajat.
+    childId: row.childId,
     outcome: sentSuccessfully ? 'sent' : 'failed',
     logId: row.id,
     // Un rând failed ține segmentele/costul estimate înainte de trimitere (pentru diagnostic),
@@ -137,7 +137,7 @@ export function createSmsSendService({
 
     const config = readConfig();
     if (!config) fail(NOT_CONNECTED_MESSAGE);
-    for (const message of messages) assertValidSendMessage(message);
+    for (const message of messages) assertValidSendMessage(message, source);
 
     const { sentThisMonth } = smsLogRepository.monthlyStats(now());
     if (config.monthlyLimit != null && sentThisMonth + messages.length > config.monthlyLimit)

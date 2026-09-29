@@ -55,6 +55,133 @@ describe('SmsConfirmDialog — mod single', () => {
     expect(screen.getByRole('link', { name: 'Corectează telefonul' })).toHaveAttribute('href', '/copii/c1');
     expect(screen.getByRole('button', { name: /Trimite SMS/ })).toBeDisabled();
   });
+
+  it('fără `templates`, arată doar bula fixă (comportament vechi, fără selector)', () => {
+    renderDialog({
+      recipients: [{ id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Salut, Andrei!' }],
+    });
+
+    expect(screen.queryByRole('radiogroup', { name: 'Șablon' })).not.toBeInTheDocument();
+    expect(screen.getByText('Salut, Andrei!')).toBeInTheDocument();
+  });
+
+  const templates = [
+    {
+      id: 't1',
+      name: 'Restanță',
+      body: 'Bună, {părinte}! Șablon restanță.',
+      stripDiacritics: true,
+      isDefault: true,
+      createdAt: '',
+      updatedAt: '',
+    },
+    {
+      id: 't2',
+      name: 'Prietenos',
+      body: 'Bună, {părinte}! Șablon prietenos.',
+      stripDiacritics: true,
+      isDefault: false,
+      createdAt: '',
+      updatedAt: '',
+    },
+  ];
+
+  it('comutarea șablonului schimbă textul din previzualizare', async () => {
+    const user = userEvent.setup();
+    renderDialog({
+      recipients: [
+        { id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Text implicit trimis de apelant' },
+      ],
+      templates,
+      defaultTemplateId: 't1',
+      renderTemplate: templateId => templates.find(t => t.id === templateId)?.body ?? '',
+    });
+
+    // Fără diacritice e bifat implicit — previzualizarea arată textul final, fără diacritice.
+    expect(screen.getByText('Buna, {parinte}! Sablon restanta.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Prietenos' }));
+    expect(screen.getByText('Buna, {parinte}! Sablon prietenos.')).toBeInTheDocument();
+  });
+
+  it('a scrie în textarea personalizat comută pe „Personalizat" și actualizează previzualizarea', async () => {
+    const user = userEvent.setup();
+    renderDialog({
+      recipients: [{ id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Text implicit' }],
+      templates,
+      defaultTemplateId: 't1',
+      renderTemplate: templateId => templates.find(t => t.id === templateId)?.body ?? '',
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'Personalizat' }));
+    const textarea = screen.getByRole('textbox', { name: 'Text mesaj' });
+    expect(textarea).toHaveValue('Bună, {părinte}! Șablon restanță.');
+
+    await user.clear(textarea);
+    await user.type(textarea, 'Text scris de mână');
+
+    // Bula de previzualizare arată textul FINAL (Fără diacritice e bifat implicit) — vezi testul dedicat.
+    expect(screen.getByText('Text scris de mana')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Personalizat' })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('bifa „Fără diacritice" schimbă textul afișat și contorul', async () => {
+    const user = userEvent.setup();
+    renderDialog({
+      recipients: [{ id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Ne așteptăm plata' }],
+      templates,
+      defaultTemplateId: 't1',
+      renderTemplate: () => 'Ne așteptăm plata',
+    });
+
+    expect(screen.getByTestId('sms-segment-counter').className).not.toContain('ucs2');
+    expect(screen.getByText('Ne asteptam plata')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Fără diacritice' }));
+
+    expect(screen.getByText('Ne așteptăm plata')).toBeInTheDocument();
+    expect(screen.getByTestId('sms-segment-counter').className).toContain('ucs2');
+  });
+
+  it('trimiterea după editare raportează templateId: null cu textul editat', async () => {
+    const onSend = vi.fn(async () => ({ ok: true, results: [], stopped: null }) as unknown as SmsSendResultView);
+    const user = userEvent.setup();
+    renderDialog({
+      recipients: [{ id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Text implicit' }],
+      templates,
+      defaultTemplateId: 't1',
+      renderTemplate: templateId => templates.find(t => t.id === templateId)?.body ?? '',
+      onSend,
+    });
+
+    await user.click(screen.getByRole('radio', { name: 'Personalizat' }));
+    const textarea = screen.getByRole('textbox', { name: 'Text mesaj' });
+    await user.clear(textarea);
+    await user.type(textarea, 'Text final');
+    await user.click(screen.getByRole('button', { name: /Trimite SMS/ }));
+
+    expect(onSend).toHaveBeenCalledWith(['c1'], { templateId: null, text: 'Text final', stripDiacritics: true });
+  });
+
+  it('trimiterea cu un șablon selectat raportează id-ul acelui șablon', async () => {
+    const onSend = vi.fn(async () => ({ ok: true, results: [], stopped: null }) as unknown as SmsSendResultView);
+    const user = userEvent.setup();
+    renderDialog({
+      recipients: [{ id: 'c1', name: 'Andrei Popescu', phone: '+37369000000', text: 'Text implicit' }],
+      templates,
+      defaultTemplateId: 't1',
+      renderTemplate: templateId => templates.find(t => t.id === templateId)?.body ?? '',
+      onSend,
+    });
+
+    await user.click(screen.getByRole('button', { name: /Trimite SMS/ }));
+
+    expect(onSend).toHaveBeenCalledWith(['c1'], {
+      templateId: 't1',
+      text: 'Buna, {parinte}! Sablon restanta.',
+      stripDiacritics: true,
+    });
+  });
 });
 
 describe('SmsConfirmDialog — mod bulk', () => {
@@ -101,6 +228,6 @@ describe('SmsConfirmDialog — mod bulk', () => {
     expect(await screen.findByText('2 trimise · 1 eșuate · 1 netrimise')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Reîncearcă' }));
-    expect(onRetry).toHaveBeenCalledWith(['c3', 'c4']);
+    expect(onRetry).toHaveBeenCalledWith(['c3', 'c4'], undefined);
   });
 });

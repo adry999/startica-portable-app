@@ -12,6 +12,13 @@ export const DEFAULT_SMS_TEMPLATE_BODY =
   'Bună ziua, {părinte}! Vă reamintim că taxa pentru {luna} pentru {copil} este de {taxa}, cu scadența la {zi}. ' +
   'Rest de plată: {rest}. Vă mulțumim! Startica';
 
+// Id stabil (15b) — folosit de seed-ul din sms-template.repository.mjs și de webapp (payment-form),
+// care nu poate importa acel fișier server (node:sqlite/node:crypto).
+export const PAYMENT_CONFIRMATION_TEMPLATE_ID = 'TPL-confirmare-plata';
+
+export const PAYMENT_CONFIRMATION_TEMPLATE_BODY =
+  'Bună ziua, {părinte}! Confirmăm plata de {achitat} pentru {copil}, luna {luna}. Vă mulțumim! Startica';
+
 /**
  * Înlocuiește variabilele; cele necunoscute rămân ca atare (vizibile în previzualizare, nu ascunse).
  * @param {string} body
@@ -37,6 +44,21 @@ export function smsVariablesFor({ child, parentName, obligation, month }) {
     rest: formatMoney(obligation.rest, obligation.currency),
     achitat: formatMoney(obligation.paid, obligation.currency),
     zi: formatDate(obligation.due),
+  };
+}
+
+/**
+ * Varianta pentru confirmarea unei plăți (15b) — un `Payment`, nu o obligație restantă,
+ * deci fără taxa/rest/zi din `smsVariablesFor`.
+ * @param {{ child: Child, parentName: string, amount: number, currency?: import('#shared/contracts/record-types.mjs').Currency, month: string }} params
+ * @returns {Record<string, string>}
+ */
+export function smsVariablesForPayment({ child, parentName, amount, currency, month }) {
+  return {
+    părinte: parentName,
+    copil: child.name,
+    luna: formatMonthName(month),
+    achitat: formatMoney(amount, currency),
   };
 }
 

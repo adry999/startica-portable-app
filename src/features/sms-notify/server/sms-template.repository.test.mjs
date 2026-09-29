@@ -2,8 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { applySchema } from '#core/server/database/schema.mjs';
-import { DEFAULT_SMS_TEMPLATE_BODY } from '#shared/domain/sms-template.mjs';
-import { createSmsTemplateRepository, DEFAULT_SMS_TEMPLATE_ID } from './sms-template.repository.mjs';
+import { DEFAULT_SMS_TEMPLATE_BODY, PAYMENT_CONFIRMATION_TEMPLATE_BODY } from '#shared/domain/sms-template.mjs';
+import {
+  createSmsTemplateRepository,
+  DEFAULT_SMS_TEMPLATE_ID,
+  PAYMENT_CONFIRMATION_TEMPLATE_ID,
+} from './sms-template.repository.mjs';
 
 const fixedNow = () => new Date('2026-09-27T10:00:00.000Z');
 
@@ -14,17 +18,26 @@ function openRepository(t) {
   return { database, repository: createSmsTemplateRepository(database, { now: fixedNow }) };
 }
 
-test('seed-ul creează „Reamintire restanță” implicit, fără diacritice pornit, o singură dată', t => {
+test('seed-ul creează „Reamintire restanță” implicit și „Confirmare plată” ne-implicit, o singură dată', t => {
   const { database, repository } = openRepository(t);
   createSmsTemplateRepository(database, { now: fixedNow });
   const templates = repository.list();
-  assert.equal(templates.length, 1);
+  assert.equal(templates.length, 2);
   assert.deepEqual(templates[0], {
     id: DEFAULT_SMS_TEMPLATE_ID,
     name: 'Reamintire restanță',
     body: DEFAULT_SMS_TEMPLATE_BODY,
     stripDiacritics: true,
     isDefault: true,
+    createdAt: '2026-09-27T10:00:00.000Z',
+    updatedAt: '2026-09-27T10:00:00.000Z',
+  });
+  assert.deepEqual(templates[1], {
+    id: PAYMENT_CONFIRMATION_TEMPLATE_ID,
+    name: 'Confirmare plată',
+    body: PAYMENT_CONFIRMATION_TEMPLATE_BODY,
+    stripDiacritics: true,
+    isDefault: false,
     createdAt: '2026-09-27T10:00:00.000Z',
     updatedAt: '2026-09-27T10:00:00.000Z',
   });
@@ -47,6 +60,7 @@ test('setDefault mută flagul atomic: exact unul e implicit', t => {
     repository.list().map(template => [template.id, template.isDefault]),
     [
       [DEFAULT_SMS_TEMPLATE_ID, false],
+      [PAYMENT_CONFIRMATION_TEMPLATE_ID, false],
       [second.id, true],
     ],
   );

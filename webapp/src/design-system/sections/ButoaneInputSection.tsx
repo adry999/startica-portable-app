@@ -10,6 +10,8 @@ import {
   SearchInput,
   SearchSelect,
   SegmentedControl,
+  TextArea,
+  TextField,
   Toggle,
   TonePicker,
   type FilterPillGroup,
@@ -33,6 +35,8 @@ export function ButoaneInputSection() {
   const [month, setMonth] = useState(DEMO_MONTH);
   const [stepperMonth, setStepperMonth] = useState(DEMO_MONTH);
   const [day, setDay] = useState(DEMO_DAY);
+  const [textAreaValue, setTextAreaValue] = useState('');
+  const [textFieldValue, setTextFieldValue] = useState('');
   const [toggleOn, setToggleOn] = useState(true);
   const [toggleOff, setToggleOff] = useState(false);
   const [checkboxOn, setCheckboxOn] = useState(true);
@@ -126,6 +130,40 @@ export function ButoaneInputSection() {
             ariaLabel="Câmp dezactivat"
             disabled
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TextField"
+        importLine="import { TextField } from '@shared/ui';"
+        reference="Notificări — SMS nou (11c/11d) „Alt număr” (nume/telefon)"
+      >
+        <DemoRow label="control">
+          <TextField value={textFieldValue} onChange={setTextFieldValue} placeholder="Nume" ariaLabel="Nume" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <TextField value="123" onChange={() => {}} ariaLabel="Telefon" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <TextField value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TextArea"
+        importLine="import { TextArea } from '@shared/ui';"
+        reference="Notificări — SMS nou (11c/11d) „Text liber”"
+      >
+        <DemoRow label="control">
+          <TextArea
+            value={textAreaValue}
+            onChange={setTextAreaValue}
+            placeholder="Scrie un mesaj…"
+            ariaLabel="Text liber"
+          />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <TextArea value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
         </DemoRow>
       </ComponentShowcase>
 

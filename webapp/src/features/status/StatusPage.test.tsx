@@ -146,6 +146,7 @@ describe('StatusPage', () => {
         if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
         if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -207,6 +208,7 @@ describe('StatusPage', () => {
           });
         if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -313,6 +315,7 @@ describe('StatusPage', () => {
         if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -329,6 +332,47 @@ describe('StatusPage', () => {
     expect(screen.getByText(/Trimite SMS \(≈/)).toBeInTheDocument();
   });
 
+  it('cu șabloane disponibile, dialogul de pe rând arată segmentul „Șablon" (7c/7e)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsConfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates')
+          return jsonResponse({
+            templates: [
+              {
+                id: 't1',
+                name: 'Implicit',
+                body: 'Bună, {părinte}!',
+                stripDiacritics: true,
+                isDefault: true,
+                createdAt: '',
+                updatedAt: '',
+              },
+            ],
+            usageCountById: {},
+          });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+    await user.click(within(overdueRow).getByRole('button', { name: 'Notifică' }));
+
+    expect(await screen.findByRole('radiogroup', { name: 'Șablon' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Implicit' })).toHaveAttribute('aria-checked', 'true');
+  });
+
   it('cu sms.md conectat, „Notifică toți” deschide dialogul de lot cu restanțierii', async () => {
     vi.stubGlobal(
       'fetch',
@@ -341,6 +385,7 @@ describe('StatusPage', () => {
         if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -366,6 +411,7 @@ describe('StatusPage', () => {
         if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
         if (path === '/api/sms-status') return jsonResponse(smsConfigured);
         if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         throw new Error(`neașteptat: ${path}`);
       }),
     );
@@ -398,6 +444,7 @@ describe('StatusPage', () => {
               ? { c1: { at: `${todayFn()}T12:00:00.000Z`, status: 'sent', month: '2026-09', templateName: 'Implicit' } }
               : {},
           );
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
         if (path === '/api/sms-send') {
           notified = true;
           return jsonResponse({

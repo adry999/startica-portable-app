@@ -1,0 +1,23 @@
+.input {
+  width: 100%;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: var(--space-10) var(--space-14);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.input::placeholder {
+  color: var(--subtle);
+}
+
+.input:disabled {
+  background: var(--neutral-soft);
+  color: var(--subtle);
+}
+
+.input.invalid {
+  border-color: var(--pink-ink);
+}

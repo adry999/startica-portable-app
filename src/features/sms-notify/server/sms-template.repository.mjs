@@ -1,10 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { DEFAULT_SMS_TEMPLATE_BODY } from '#shared/domain/sms-template.mjs';
+import {
+  DEFAULT_SMS_TEMPLATE_BODY,
+  PAYMENT_CONFIRMATION_TEMPLATE_BODY,
+  PAYMENT_CONFIRMATION_TEMPLATE_ID,
+} from '#shared/domain/sms-template.mjs';
 
 /** @typedef {import('../sms-notify.types.mjs').SmsTemplate} SmsTemplate */
 /** @typedef {import('../sms-notify.types.mjs').SmsTemplateInput} SmsTemplateInput */
 
 export const DEFAULT_SMS_TEMPLATE_ID = 'TPL-restanta';
+export { PAYMENT_CONFIRMATION_TEMPLATE_ID };
 const COLUMNS = 'id,name,body,strip_diacritics,is_default,created_at,updated_at';
 
 /** @returns {SmsTemplate} */
@@ -28,6 +33,9 @@ export function createSmsTemplateRepository(database, { now = () => new Date() }
   database
     .prepare(`INSERT OR IGNORE INTO sms_templates(${COLUMNS}) VALUES(?,?,?,1,1,?,?)`)
     .run(DEFAULT_SMS_TEMPLATE_ID, 'Reamintire restanță', DEFAULT_SMS_TEMPLATE_BODY, seededAt, seededAt);
+  database
+    .prepare(`INSERT OR IGNORE INTO sms_templates(${COLUMNS}) VALUES(?,?,?,1,0,?,?)`)
+    .run(PAYMENT_CONFIRMATION_TEMPLATE_ID, 'Confirmare plată', PAYMENT_CONFIRMATION_TEMPLATE_BODY, seededAt, seededAt);
 
   // sms_templates e TEXT PRIMARY KEY (nu WITHOUT ROWID), deci are rowid implicit crescător cu ordinea reală de inserare;
   // id e un UUID text, deci ordonarea după id ar da tie-break aleatoriu, nelegat de ordinea creării.

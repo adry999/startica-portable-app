@@ -1,6 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { BnmRateLink, Button, Drawer, groupTone, PersonCell, SearchSelect, SegmentedControl } from '@shared/ui';
+import {
+  BnmRateLink,
+  Button,
+  Checkbox,
+  Drawer,
+  groupTone,
+  PersonCell,
+  SearchSelect,
+  SegmentedControl,
+  useToast,
+} from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useSmsSend, useSmsStatus } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -10,7 +21,20 @@ import { today as todayFn } from '@domain/calendar-month.mjs';
 import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from '@domain/record-schema.mjs';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
-import { defaultPaymentFormValues, tenderMethodsFor, totalOfTenders, type PaymentFormValues } from './payment-form';
+import {
+  renderSmsTemplate,
+  smsVariablesForPayment,
+  PAYMENT_CONFIRMATION_TEMPLATE_BODY,
+  PAYMENT_CONFIRMATION_TEMPLATE_ID,
+} from '@domain/sms-template.mjs';
+import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
+import {
+  defaultPaymentFormValues,
+  defaultSendSmsConfirmation,
+  tenderMethodsFor,
+  totalOfTenders,
+  type PaymentFormValues,
+} from './payment-form';
 import type { Child, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './PaymentFormDrawer.module.css';
 
@@ -101,6 +125,11 @@ export function PaymentFormDrawer({
   const effectiveRate = manualRate ? Number(manualRate) : bnmRate;
   const eurEquivalent = effectiveRate ? convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate) : null;
 
+  const toast = useToast();
+  const sms = useSmsStatus();
+  const smsSend = useSmsSend();
+  const smsConfigured = sms.data?.configured ?? false;
+
   // O dată nouă re-propune cursul BNM al zilei — o corectare manuală anterioară nu trebuie ținută peste schimbarea datei.
   useEffect(() => {
     setManualRate('');
@@ -148,9 +177,9 @@ export function PaymentFormDrawer({
 
   function setChildId(childId: string) {
     setValues(previous => {
-      const next = { ...previous, childId };
-      if (previous.allocations.length !== 1 || previous.allocations[0].month !== syncedMonthRef.current) return next;
       const child = records.children.find((c: Child) => c.id === childId);
+      const next = { ...previous, childId, sendSmsConfirmation: defaultSendSmsConfirmation(child) };
+      if (previous.allocations.length !== 1 || previous.allocations[0].month !== syncedMonthRef.current) return next;
       const suggested = child && firstUnpaidMonth(child, records.payments, records.charges);
       if (!suggested || suggested === syncedMonthRef.current) return next;
       syncedMonthRef.current = suggested;
@@ -176,6 +205,47 @@ export function PaymentFormDrawer({
     setValues(previous => ({ ...previous, allocations: previous.allocations.filter((_, i) => i !== index) }));
   }
 
+  // 15b: trimiterea confirmării nu blochează/întârzie succesul salvării — pornește și își
+  // urmează cursul separat, ca sincronizarea de pornire (non-blocking); eroarea iese doar prin toast.
+  function sendPaymentConfirmation(sentValues: PaymentFormValues) {
+    const child = records.children.find((c: Child) => c.id === sentValues.childId);
+    const recipient = child ? chooseSmsRecipient(child) : null;
+    if (!child || !recipient) {
+      toast.show({ message: 'Confirmarea nu s-a trimis: fără telefon valid.' });
+      return;
+    }
+    const month = sentValues.allocations[0]?.month || sentValues.date.slice(0, 7);
+    const text = renderSmsTemplate(
+      PAYMENT_CONFIRMATION_TEMPLATE_BODY,
+      smsVariablesForPayment({
+        child,
+        parentName: recipient.parentLabel,
+        amount: totalOfTenders(sentValues.tenders),
+        month,
+      }),
+    );
+    smsSend
+      .send({
+        source: 'notify',
+        month,
+        templateId: PAYMENT_CONFIRMATION_TEMPLATE_ID,
+        messages: [
+          {
+            childId: child.id,
+            childName: child.name,
+            recipientName: recipient.parentLabel,
+            phone: recipient.phone,
+            text,
+          },
+        ],
+      })
+      .then(result => {
+        const outcome = result.results[0];
+        if (outcome && outcome.outcome !== 'sent') toast.show({ message: `SMS de confirmare eșuat: ${outcome.error}` });
+      })
+      .catch((error: Error) => toast.show({ message: `SMS de confirmare eșuat: ${error.message}` }));
+  }
+
   async function handleSubmit(): Promise<boolean> {
     if (submitting) return false;
     if (isEurChild && !effectiveRate) return false;
@@ -189,7 +259,9 @@ export function PaymentFormDrawer({
             amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
           }
         : values;
-      return await onSubmit(finalValues);
+      const saved = await onSubmit(finalValues);
+      if (saved && finalValues.sendSmsConfirmation) sendPaymentConfirmation(finalValues);
+      return saved;
     } catch {
       // C1: save() nu are voie să arunce mai departe — useBranchSwitch/dirty-forms se
       // bazează pe un boolean, altfel o respingere neprinsă ar bloca „Salvează și schimbă”.
@@ -528,6 +600,17 @@ export function PaymentFormDrawer({
             + Adaugă observație
           </button>
         )}
+
+        <label className={styles.checkboxField}>
+          <Checkbox
+            checked={values.sendSmsConfirmation}
+            onChange={checked => setValues(p => ({ ...p, sendSmsConfirmation: checked }))}
+            disabled={!smsConfigured}
+            ariaLabel="Trimite confirmare părintelui prin SMS"
+          />
+          <span>Trimite confirmare părintelui prin SMS</span>
+        </label>
+        {!smsConfigured && <p className={styles.notice}>SMS neconectat</p>}
       </form>
     </Drawer>
   );
