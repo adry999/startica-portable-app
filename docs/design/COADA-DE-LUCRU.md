@@ -411,5 +411,14 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 873/873 teste — toate verzi. Commit `b80b8d9`.
 - **A3f Personal — COMPLET** (23a, 23b, 23c, 23f, 23l — toate restilizate/verificate față de spec). Urmează A4 Bazin.
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A4 Bazin — DONE
+
+- Codul Bazin (`WeekView`/`BookingDrawer`/`MonthView`/`PoolPage`) era deja foarte aproape de spec — carduri, legendă, sloturile de oră din „Programare nouă”, grid-ul Lunii, cardul antrenorului: toate deja identice cu `Bazin.dc.html`. Doar 2 goluri reale, ambele mici:
+- **22a:** lipsea rândul „Antrenor: <nume>” de sub carduri (stânga, legenda dreapta) — `WeekView` primește acum `coaches` de la `PoolPage`. Decizie provizorie pentru mai mulți antrenori (spec arată un singur nume în mockup): uniți prin virgulă, notat în `INTREBARI.md`.
+- **22c:** cardurile de statistici din Luna aveau padding 16/20 + radius implicit 24; spec cere 14/18 + radius 18 — corectat.
+- 22b (Programare nouă) și restul lui 22c erau deja identice cu spec-ul, neschimbate.
+- `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 874/874 teste — toate verzi. Commit `7c3246e`.
+- Urmează A5 (De notificat).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
