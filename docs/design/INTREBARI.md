@@ -73,8 +73,13 @@ Ecran separat, plan scris înainte de cod (`docs/superpowers/plans/`). Ordinea: 
 ## ✅ Raport contabil (punctul 14) — selectorul de filială din export — rezolvat, implementat
 `20-raport-contabil.md` 19b cerea „Filiala (Ambele pe foi separate / una)”, amânat provizoriu până la filiale (Faza 6 a designului, `2026-09-27-filiale.md` Faza 4 a planului). Implementat: `ReportExportDrawer.tsx` arată grupul „Filiala” doar când sunt mai multe filiale (`GET /api/branches`), cu opțiunile „<filiala curentă>” și „Ambele (o foaie pe filială)”; pe PDF grupul e dezactivat („PDF-ul tipărește filiala deschisă”, PDF rămâne pe filiala curentă). „Ambele” citește celelalte filiale read-only (`GET /api/branches/records?id=`), calculează raportul cu `buildForRecords` (peste `buildAccountingReport`, pur) și scrie un Excel cu `buildMultiBranchWorkbook`: o pereche de foi Încasări/Cheltuieli per filială + un Rezumat comun cu total. Criteriul din `20-raport-contabil.md` e bifat.
 
-## ✅ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — decis provizoriu
-Nu există server comun (Faza 6 exclusă): pasul de sincronizare nu apare (spec-ul permite asta), iar pe 21c butonul „Lucrez fără legătură” nu are sens fără server comun — rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri”.
+## ⏳ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — redeschis 30.09, blocaj arhitectural
+Decizia veche (mai jos, tăiată) presupunea că nu există server de sincronizare. Între timp `src/features/sync/` există (Faza 6 nu mai e exclusă), deci „Lucrez fără legătură” + „Ultima sincronizare” pe 21c ar avea sens — dar codul actual nu poate arăta corect acest ecran:
+- `app-session-store.mjs` (`load()`) cheamă `/api/sync/status` **abia după** ce `/api/state` a reușit și `ready` a devenit `true` (`accept()` setează `ready=true` imediat ce state-ul vine) — sincronizarea explicit „nu blochează pornirea”. Deci exact în scenariul 21c (15s+, `/api/state` nu răspunde), pasul de sincronizare nici n-a apucat să pornească — nu e el cel blocat.
+- `lastSyncedAt` există doar în memorie în `sync-engine.service.mjs`, resetat la fiecare pornire a serverului, nescris niciodată în `sync.json` sau altundeva persistent. `session.routes.mjs`'s `syncSummary()` nu-l expune deloc (`{configured, deviceName, serverUrl}`).
+Ca să afișăm o „Ultima sincronizare” reală pe 21c ar trebui persistat `lastSyncedAt` în sync engine — schimbare de backend mai mare decât UI-ul din punctul 2, pe cod de sincronizare deja verificat/sensibil. Decizie: **nu implementez acum** butonul „Lucrez fără legătură” + ora ultimei sincronizări pe 21c; rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri” (ca înainte). Restul punctului 2 (21a, 21b) merge înainte. Revine ca task separat când se persistă `lastSyncedAt`.
+
+~~Nu există server comun (Faza 6 exclusă): pasul de sincronizare nu apare (spec-ul permite asta), iar pe 21c butonul „Lucrez fără legătură” nu are sens fără server comun — rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri”.~~
 
 ## ✅ Personal + Bazin (`docs/superpowers/plans/2026-09-27-personal-bazin.md`) — 6 întrebări deschise, decise provizoriu și deja implementate
 Planul le listează cu recomandarea pe care o și urmează în cod; mutate aici ca să nu se piardă, cu răspunsul deja construit:
@@ -121,7 +126,7 @@ Ecranele erau deja aproape identice cu spec-ul (grid-uri, radius, Toggle 46×26 
 
 **Divergență deliberată, nu bug:** dreapta grid-ului din 10c (spec: cardul „Grădinița” + zona periculoasă) e azi cardul „Import și export” — pentru că „Grădinița” a devenit între timp propria filă completă (16a, `KindergartenSettings`), nu mai încape ca rezumat mic lângă listă. N-am mutat-o înapoi.
 
-## ⏳ B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin — decizii luate 29.09, migrare încă neexecutată
+## ✅ B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin — decizii luate 29.09, migrare executată 30.09
 
 Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (nou, doar citire — `DatabaseSync(..., { readOnly: true })`) pe ambele baze active:
 
@@ -141,3 +146,5 @@ Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `no
 1. Toate cele 143 sunt încasări reale de bazin — confirmat, fără verificare manuală rând cu rând.
 2. Metoda la migrare: **Cash** (niciuna din cele 143 n-are metodă înregistrată).
 3. Retroactiv, inclusiv iunie–iulie 2026 — nu doar de-acum înainte.
+
+**Executat 30.09** (`scripts/migrate/b3-pool-expenses-to-payments.mjs --execute`, backup luat înainte): 143/143 migrate, 0 erori. Vezi `COADA-DE-LUCRU.md` pentru detalii și impactul retroactiv pe iunie/iulie 2026.

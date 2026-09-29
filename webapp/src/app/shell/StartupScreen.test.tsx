@@ -67,8 +67,9 @@ describe('StartupScreen', () => {
       vi.advanceTimersByTime(1000);
     });
     expect(screen.getByAltText('Startica')).toBeInTheDocument();
-    // Pasul curent apare de două ori: în rândul de sub bară (A8, ALINIERE-DESIGN.md) și în listă.
-    expect(screen.getAllByText('Citesc baza de date')).toHaveLength(2);
+    // Pasul curent apare de două ori: în rândul de sub bară (cu „…”, A8) și în listă.
+    expect(screen.getByText('Citesc baza de date')).toBeInTheDocument();
+    expect(screen.getByText('Citesc baza de date…')).toBeInTheDocument();
     expect(screen.getByText('Pregătesc Dashboard-ul')).toBeInTheDocument();
     // pasul de sincronizare nu apare — nu există server comun în această etapă (INTREBARI.md)
     expect(screen.queryByText(/Sincronizez/)).not.toBeInTheDocument();
@@ -76,6 +77,9 @@ describe('StartupScreen', () => {
     const serverStep = screen.getByText('Pornesc serverul local').closest('li');
     expect(serverStep).toHaveTextContent('✓');
     expect(serverStep?.textContent).toMatch(/0,2 s/);
+
+    // ALINIERE-DESIGN.md A8 „Încărcare 21a”: versiunea are prefixul „v”.
+    expect(screen.getByText('v2.0.0')).toBeInTheDocument();
   });
 
   it('arată mesajul de așteptare lungă după 15 secunde, cu buton de reîncercare', () => {

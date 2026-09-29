@@ -35,6 +35,26 @@
   background: var(--orange);
 }
 
+.circlePink {
+  position: absolute;
+  right: 260px;
+  top: 90px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--pink);
+}
+
+.circleMint {
+  position: absolute;
+  left: 220px;
+  bottom: 120px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--mint);
+}
+
 .circleTopLeftSmall {
   position: absolute;
   left: -80px;

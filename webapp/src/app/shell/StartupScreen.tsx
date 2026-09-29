@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { Button, useDelayedLoading } from '@shared/ui';
 import styles from './StartupScreen.module.css';
@@ -64,6 +64,33 @@ function useStartupSteps() {
   return { steps, session };
 }
 
+const STEP_PROGRESS_CAP = 0.9;
+const STEP_PROGRESS_TAU_MS = 1500;
+const TICK_MS = 100;
+
+/** Bara avansează lin în interiorul pasului curent (max 90% din interval), nu în trepte —
+ * ALINIERE-DESIGN.md A8 „Încărcare 21a”. `active` oprește tick-ul când ecranul nu e vizibil. */
+function useSmoothProgress(currentStepKey: string, doneCount: number, stepCount: number, active: boolean): number {
+  const [, forceTick] = useState(0);
+  const stepStartRef = useRef<{ key: string; at: number }>({ key: currentStepKey, at: Date.now() });
+
+  if (stepStartRef.current.key !== currentStepKey) {
+    stepStartRef.current = { key: currentStepKey, at: Date.now() };
+  }
+
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => forceTick(tick => tick + 1), TICK_MS);
+    return () => clearInterval(id);
+  }, [active]);
+
+  const interval = stepCount > 0 ? 100 / stepCount : 0;
+  const base = doneCount * interval;
+  const elapsed = Date.now() - stepStartRef.current.at;
+  const stepFraction = STEP_PROGRESS_CAP * (1 - Math.exp(-elapsed / STEP_PROGRESS_TAU_MS));
+  return Math.min(100, base + interval * stepFraction);
+}
+
 /** Randată de AppShell cât timp sesiunea nu are snapshot-ul (21a). Nimic vizibil sub 1 s;
  * după 15 s fără răspuns arată 21c; o eroare de încărcare arată varianta cu baza locală. */
 export function StartupScreen() {
@@ -75,6 +102,17 @@ export function StartupScreen() {
   const active = !ready && !hasError;
   const showScreen = useDelayedLoading(active, REVEAL_DELAY_MS);
   const showTooSlow = useDelayedLoading(active, TOO_SLOW_DELAY_MS);
+
+  const doneCount = steps.filter(step => step.status === 'done').length;
+  const allDone = doneCount === steps.length;
+  // ALINIERE-DESIGN.md A8 „Încărcare 21a”: rândul sub bară arată pasul curent.
+  const currentStep = steps.find(step => step.status === 'current') ?? steps[steps.length - 1];
+  const smoothPct = useSmoothProgress(
+    currentStep?.key ?? '',
+    doneCount,
+    steps.length,
+    showScreen && !allDone && !hasError,
+  );
 
   if (hasError) {
     return (
@@ -88,15 +126,15 @@ export function StartupScreen() {
   if (!showScreen) return <div className={styles.blank} />;
   if (showTooSlow) return <StartupTooSlow onRetry={() => void session.load()} />;
 
-  const doneCount = steps.filter(step => step.status === 'done').length;
-  const pct = Math.round((doneCount / steps.length) * 100);
-  // ALINIERE-DESIGN.md A8 „Încărcare 21a”: rândul sub bară arată pasul curent.
-  const currentStepLabel = (steps.find(step => step.status === 'current') ?? steps[steps.length - 1])?.label ?? '';
+  const pct = allDone ? 100 : Math.round(smoothPct);
+  const currentStepLabel = allDone ? 'Gata' : `${currentStep?.label ?? ''}…`;
 
   return (
     <div className={styles.screen}>
       <span className={styles.circleTopLeft} aria-hidden="true" />
       <span className={styles.circleBottomRight} aria-hidden="true" />
+      <span className={styles.circlePink} aria-hidden="true" />
+      <span className={styles.circleMint} aria-hidden="true" />
       <div className={styles.card}>
         <img src="/assets/startica-icon.svg" alt="" className={styles.icon} />
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logo} />
@@ -122,8 +160,7 @@ export function StartupScreen() {
         </ol>
         {/* Filiala e cunoscută din pasul 2 (/api/session a răspuns) — 21a. */}
         <span className={styles.version}>
-          {session.state.branch ? `Filiala ${session.state.branch.name} · ` : ''}
-          {session.state.version}
+          {session.state.branch ? `Filiala ${session.state.branch.name} · ` : ''}v{session.state.version}
         </span>
       </div>
     </div>

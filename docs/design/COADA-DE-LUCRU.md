@@ -541,5 +541,19 @@ Copiat din `design_final_startica/` (`Startica V2.zip`, șters după): 10 artboa
 
 `scripts/migrate/b1-fix-mixed-payments.mjs` a fost deja rulat cu `--execute` pe baza reală, la runda trecută (commit `865a705`), nu doar scris — coada nu spunea asta explicit, corectat aici. Reverificat acum: `scripts/diagnostic/b1-payment-methods.mjs` → **0 plăți cu tender necunoscut** din 954 totale (crescut de la 811 prin migrarea B3 care a adăugat 143 plăți noi, toate cu `method: 'Cash'` cunoscut). Decizia (b) — cele 7 pe Cash — confirmată aplicată, nimic de rulat din nou.
 
+## 2026-09-30 — PROMPT-CLAUDE-CODE-3.md, punctul 2 — Încărcare 21a/21b/21c — 21a DONE, 21b amânat la punctul 4, 21c blocat arhitectural (consemnat)
+
+**21a** (`StartupScreen.tsx`) — implementat complet:
+- cele 2 cercuri lipsă (`--pink` 60px `right:260 top:90`, `--mint` 40px `left:220 bottom:120`);
+- pasul curent se termină cu „…”, la 100% arată „Gata”;
+- bara avansează lin în interiorul pasului (`useSmoothProgress`, apropiere exponențială spre max 90% din interval, nu în trepte), în loc de calculul discret `doneCount/steps.length`;
+- „v” înaintea versiunii.
+
+**21b** (`LoadingBar` 3px la navigare >300ms) — **amânat la punctul 4**: `LoadingBar` e deja catalogat ca și componentă nouă de construit sistematic în `COMPONENTE.md` (28f, folosit și la `DataTable` 29d `refreshing`) și `DS-IMPLEMENTARE.md` (pasul 7, „Straturi și răspuns”). Construirea lui ad-hoc doar pentru 21b acum ar însemna refăcut la punctul 4 după spec complet — se construiește o singură dată acolo, apoi se cablează și la 21b.
+
+**21c** — blocaj arhitectural, consemnat în `INTREBARI.md` (punctul 12, redeschis): pasul de sincronizare (`/api/sync/status`) pornește abia după ce `/api/state` a reușit și `ready` a devenit `true` — deci exact în scenariul 21c (15s+, serverul local nu răspunde), sincronizarea încă n-a pornit. `lastSyncedAt` există doar în memorie în `sync-engine.service.mjs`, nescris niciodată persistent. Nu se poate arăta o „Ultima sincronizare” reală fără să persistăm `lastSyncedAt` — schimbare de backend mai mare decât UI-ul acestui punct, pe cod de sincronizare deja verificat. Rămâne „Încearcă din nou” + varianta cu eroarea bazei locale, ca înainte; „Lucrez fără legătură” + ora ultimei sincronizări rămân netratate, de reluat separat.
+
+`npm run check` (root, 1182/1184 + 2 skip) + webapp (typecheck curat, 897/897 teste) — verzi.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
