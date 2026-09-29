@@ -19,13 +19,17 @@ Toate cele 7 intră deci în **De rezolvat** cu „Plată mixtă: împarte suma 
 
 Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utilizatorului înainte de a fi terminate integral. **Toate punctele de mai jos au primit răspuns în `docs/design/RASPUNSURI.md` (2026-09-26, 20:20) — vezi acolo detaliul complet.** Rămân aici doar ca istoric + trimitere.
 
-## ⏳ Fișa copilului — relația (Mamă/Tată) pe cei 2 părinți + „persoane autorizate să ridice copilul” lipsesc din modelul de date
+## ✅ Fișa copilului — relația (Mamă/Tată) + „persoane autorizate să ridice copilul” — rezolvat, implementat 29.09
 
-Mockup-ul (`Copii.dc.html`, cardul de contacte) arată sub fiecare nume de părinte eticheta relației („Tată”, „Mamă”), dar `Child` (`record-types.d.mts`) are doar `parent`/`phone`/`parent2`/`phone2` — două sloturi fixe de nume+telefon, fără câmp de relație. Mockup-ul nu arată o listă separată de „persoane autorizate să ridice copilul” (dincolo de cei 2 părinți), dar nici schema nu are un asemenea concept — dacă ar trebui adăugat e tot o decizie de produs, nu doar de UI.
+`docs/design/screens/28-fisa-copilului-date.md` (decizii utilizator 29.09, §0) tranșează întrebarea de mai jos (istoric, păstrată): `parentRelation`/`parent2Relation` (string liber, ≤ 40) + `pickupPersons` (≤ 10, `{id, name, relation?, phone?, note?}`) adăugate direct pe `Child` — implementat în `record-types.d.mts` + `record-schema.mjs`, cu teste. Rămân de conectat la UI în A2 (formular) și A3 (fișă).
 
-Nu e un tweak de UI: fie (a) `parent`/`parent2` capătă un câmp `relation?: string` (schemă + migrare + formular + card), fie (b) rămân fără etichetă de relație (mockup-ul afișează un detaliu pe care spec-ul scris nu-l cere explicit — `09-copii-fisa.md` nu menționează „Mamă/Tată”), fie (c) se face un model mai mare (listă variabilă de contacte, fiecare cu relație + autorizare de ridicare) — schimbare de model separată de CF-4 (notele), deja semnalată în `COADA-DE-LUCRU.md` („Nume/Prenume separate pe Child și număr variabil de părinți”) ca rămasă pentru altă sesiune.
+**Simplificare deliberată față de spec 28:** spec-ul cere kind-uri separate (`child_notes`, `child_documents`) tocmai ca să evite conflictul de sincronizare pe tot `Child` când două note/persoane se scriu simultan pe calculatoare diferite (§1). Nu am făcut migrarea la kind separat pentru note — am extins direct `ChildNote` cu `author`/`updatedAt`/`deletedAt`, păstrate pe `Child.notes`, exact ca `pickupPersons`. Risc acceptat: două note scrise în aceeași zi, pe două calculatoare, pentru același copil, ar da conflict pe toată fișa (`CONFLICT_KIND: children`), nu doar pe notă. Pentru un singur calculator per filială (cazul curent, fără sincronizare multi-device activă în producție), riscul e teoretic. Dacă/când sincronizarea multi-device pe aceeași filială devine reală, migrarea la `child_notes` ca kind separat (exact cum descrie spec 28) rămâne recomandarea corectă — nu e refuzată, doar amânată.
 
-Până la răspuns: cardul de contacte rămâne cum e (2 părinți, nume+telefon, fără relație, fără listă de persoane autorizate).
+**Complet amânat, cere plan tehnic propriu (spec 28 §5 cere explicit un plan în `docs/superpowers/plans/` înainte de cod, ca la EUR/BNM și filiale):**
+- `child_documents` — kind nou + stocare fișiere pe server (`documente/<sha256>`), endpoint-uri upload/download cu validare tip/mărime, coadă proprie de sincronizare a blob-urilor (`sync_blob_outbox`), descărcare leneșă, curățare orfani. E backend + UI, nu doar aliniere vizuală — A9 din ALINIERE-DESIGN.md rămâne placeholder până atunci.
+- `payer_aliases.iban`/`nameKey` — kind-ul `payerAliases` există deja (cu `alias`/`childId`/`createdAt`), dar fără `iban` sau `nameKey` normalizat pentru potrivire pe IBAN (spec 28 §5, §6). Card-ul „Plătitori reținuți” din A3 poate arăta ce există acum (nume, dată, N achitări) dar nu IBAN-ul mascat cerut de Copii.dc.html#2b, până nu se adaugă acele câmpuri + `extractPayer()`.
+
+Nu blochează A2/A3: relația părinților și persoanele autorizate se pot construi acum (schema există); notele cu autor/editare/ștergere la fel; documentele și IBAN-ul plătitorilor rămân cu ce era înainte (placeholder, respectiv fără IBAN) până la un plan tehnic dedicat.
 
 ## ⏳ Modulul 2 (Copii) — CF-2, fișa copilului: „Plătitori reținuți” lipsesc din modelul de date
 

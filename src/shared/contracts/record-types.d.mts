@@ -12,11 +12,30 @@ export type EffectiveChildStatus = Exclude<ChildStatus, 'De verificat'>;
 export type Currency = 'MDL' | 'EUR';
 
 /** O notă din fișa copilului (CF-4, 09-copii-fisa.md) — listă, nu text liber, ca fiecare
- * intrare să-și păstreze data la care a fost scrisă. */
+ * intrare să-și păstreze data la care a fost scrisă.
+ * `author`/`updatedAt`/`deletedAt` (A3, 29.09): simplificare deliberată față de kind-ul separat
+ * `child_notes` din screens/28-fisa-copilului-date.md — rămân pe Child (risc teoretic de conflict
+ * pe fișă la două note scrise simultan pe calculatoare diferite, acceptat pentru acum, vezi INTREBARI.md). */
 export interface ChildNote {
   id: string;
   text: string;
   date: DateKey;
+  /** deviceName din /api/session dacă sincronizarea e configurată, altfel „”. */
+  author?: string;
+  /** ISO — prezent doar dacă nota a fost editată după creare („· editată” în UI). */
+  updatedAt?: string;
+  /** ISO — ștergere „soft”, cu „Anulează” din toast; notele șterse nu apar în fișă. */
+  deletedAt?: string | null;
+}
+
+/** O persoană (alta decât cei 2 părinți) autorizată să ridice copilul (A3, Copii.dc.html#2b). */
+export interface PickupPerson {
+  id: string;
+  name: string;
+  relation?: string;
+  phone?: string;
+  /** Ex. „marți, joi”. */
+  note?: string;
 }
 
 export interface Child {
@@ -29,8 +48,13 @@ export interface Child {
   contractNumber?: string;
   parent: string;
   phone: string;
+  /** „Mamă”, „Tată”, „Bunică”… liber, ≤ 40 (A2, screens/29-copil-nou-diferente.md). */
+  parentRelation?: string;
   parent2?: string;
   phone2?: string;
+  parent2Relation?: string;
+  /** ≤ 10 (A3, Copii.dc.html#2b). */
+  pickupPersons?: PickupPerson[];
   /** Sensibil (SENSITIVE_FIELDS): exclus din export, redactat în istoric, golit la 12 luni de la archivedAt. */
   healthNotes?: string;
   /** IDNP, exact 13 cifre (CF-2, 09-copii-fisa.md). */

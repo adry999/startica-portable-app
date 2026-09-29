@@ -85,8 +85,11 @@ const FIELDS = {
     'contractNumber',
     'parent',
     'phone',
+    'parentRelation',
     'parent2',
     'phone2',
+    'parent2Relation',
+    'pickupPersons',
     'healthNotes',
     'idnp',
     'address',
@@ -216,8 +219,11 @@ export function normalizeRecord(type, input) {
     'description',
     'parent',
     'phone',
+    'parentRelation',
     'parent2',
     'phone2',
+    'parent2Relation',
+    'contractNumber',
     'group',
     'category',
     'method',
@@ -307,9 +313,54 @@ export function normalizeRecord(type, input) {
       seenNoteIds.add(id);
       text(note.text, 'Text notă', true);
       requireThat(dateOK(note.date), 'Notă: dată invalidă.');
-      return { id, text: note.text.trim(), date: note.date };
+      // A3: autor/editare/ștergere (simplificare față de kind-ul separat din spec 28 — rămân pe
+      // Child, vezi INTREBARI.md).
+      if (note.author !== undefined) text(note.author, 'Autor notă');
+      if (note.updatedAt !== undefined)
+        requireThat(
+          typeof note.updatedAt === 'string' && !Number.isNaN(Date.parse(note.updatedAt)),
+          'Notă: dată de editare invalidă.',
+        );
+      if (note.deletedAt !== undefined && note.deletedAt !== null)
+        requireThat(
+          typeof note.deletedAt === 'string' && !Number.isNaN(Date.parse(note.deletedAt)),
+          'Notă: dată de ștergere invalidă.',
+        );
+      return {
+        id,
+        text: note.text.trim(),
+        date: note.date,
+        ...(note.author !== undefined && { author: note.author.trim() }),
+        ...(note.updatedAt !== undefined && { updatedAt: note.updatedAt }),
+        ...(note.deletedAt !== undefined && { deletedAt: note.deletedAt }),
+      };
     });
     record.notes.sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+    // A3: până la 10 persoane autorizate (dincolo de cei 2 părinți) — Copii.dc.html#2b.
+    if (record.pickupPersons !== undefined) {
+      requireThat(
+        Array.isArray(record.pickupPersons) && record.pickupPersons.length <= 10,
+        'Persoane autorizate: listă invalidă.',
+      );
+      const seenPickupIds = new Set();
+      record.pickupPersons = record.pickupPersons.map(person => {
+        requireThat(person && typeof person === 'object', 'Persoană autorizată invalidă.');
+        const id = typeof person.id === 'string' && person.id ? person.id : `PICKUP-${crypto.randomUUID()}`;
+        requireThat(!seenPickupIds.has(id), 'Persoană autorizată: id repetat.');
+        seenPickupIds.add(id);
+        text(person.name, 'Nume persoană autorizată', true);
+        if (person.relation !== undefined) text(person.relation, 'Relație persoană autorizată');
+        if (person.phone !== undefined) text(person.phone, 'Telefon persoană autorizată');
+        if (person.note !== undefined) text(person.note, 'Notă persoană autorizată');
+        return {
+          id,
+          name: person.name.trim(),
+          ...(person.relation !== undefined && { relation: person.relation.trim() }),
+          ...(person.phone !== undefined && { phone: person.phone.trim() }),
+          ...(person.note !== undefined && { note: person.note.trim() }),
+        };
+      });
+    }
   } else if (type === 'groups') {
     text(record.name, 'Nume grupă', true);
     record.name = record.name.trim();

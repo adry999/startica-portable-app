@@ -339,5 +339,13 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - Fix: adăugat `display:flex; align-items:center; gap:10px` pe `.footer` în `Drawer.module.css`. Fără alte schimbări — restul era deja aliniat.
 - `npm run check` (root) neafectat (CSS pur webapp); webapp typecheck + 850/850 teste verzi.
 
+## 2026-09-29 — screens/28-fisa-copilului-date.md — fundația de schemă pentru A2/A3 — parțial (vezi INTREBARI.md)
+
+- Citit spec 28 complet: cere kind-uri separate `child_notes`/`child_documents` + `payer_aliases.iban`/`nameKey`, cu plan tehnic propriu în `docs/superpowers/plans/` înainte de cod (ca la EUR/BNM, filiale) — prea mare pentru acest punct din coadă (blob storage server + sync propriu + migrare testată pe 2 calculatoare).
+- Implementat direct, pe `Child` (fără kind nou, fără plan separat — schimbare aditivă, mică, ca `idnp`/`address` mai devreme): `parentRelation`, `parent2Relation`, `pickupPersons` (`PickupPerson[]`, ≤10). `ChildNote` extins cu `author`/`updatedAt`/`deletedAt` — simplificare deliberată fără kind separat, risc de conflict pe fișă acceptat (detaliat în `INTREBARI.md`).
+- `record-schema.mjs`: validare completă (nume obligatoriu la persoana autorizată, ≤10, id unic; notă acceptă autor/dată editare/ștergere soft). Teste noi (6) + `npm run check` (root, 1169/1171 + 2 skip) verde.
+- **Amânat, are nevoie de plan tehnic propriu:** `child_documents` (A9 rămâne placeholder), `payer_aliases.iban`/`nameKey` (cardul „Plătitori reținuți” din A3 nu poate arăta IBAN mascat până atunci).
+- Următorul pas: A2 (`ChildFormDrawer.tsx`) și A3 (`ChildProfileView.tsx`) pot folosi acum `parentRelation`/`pickupPersons`/notele extinse.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.

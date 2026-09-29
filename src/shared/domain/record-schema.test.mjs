@@ -716,6 +716,61 @@ test('notes respinge o valoare care nu e listă (format vechi, text liber, netre
   assert.throws(() => normalizeRecord('children', { ...child(), notes: 'text vechi' }), /Note: listă invalidă/);
 });
 
+test('A3: o notă acceptă autor, dată de editare și ștergere soft', () => {
+  const normalized = normalizeRecord('children', {
+    ...child(),
+    notes: [
+      { id: 'NOTE-1', text: 'a', date: '2026-09-01', author: 'Ala (Recepție)', updatedAt: '2026-09-02T10:00:00.000Z' },
+    ],
+  });
+  assert.equal(normalized.notes[0].author, 'Ala (Recepție)');
+  assert.equal(normalized.notes[0].updatedAt, '2026-09-02T10:00:00.000Z');
+
+  const deleted = normalizeRecord('children', {
+    ...child(),
+    notes: [{ id: 'NOTE-1', text: 'a', date: '2026-09-01', deletedAt: '2026-09-03T10:00:00.000Z' }],
+  });
+  assert.equal(deleted.notes[0].deletedAt, '2026-09-03T10:00:00.000Z');
+
+  assert.throws(
+    () =>
+      normalizeRecord('children', {
+        ...child(),
+        notes: [{ id: 'NOTE-1', text: 'a', date: '2026-09-01', updatedAt: 'nu e dată' }],
+      }),
+    /Notă: dată de editare invalidă/,
+  );
+});
+
+test('A2/A3: parentRelation, parent2Relation și pickupPersons', () => {
+  const normalized = normalizeRecord('children', {
+    ...child(),
+    parentRelation: 'Mamă',
+    parent2Relation: 'Tată',
+    pickupPersons: [{ name: ' Bunica Maria ', relation: 'Bunică', note: 'marți, joi' }],
+  });
+  assert.equal(normalized.parentRelation, 'Mamă');
+  assert.equal(normalized.parent2Relation, 'Tată');
+  assert.equal(normalized.pickupPersons.length, 1);
+  assert.equal(normalized.pickupPersons[0].name, 'Bunica Maria');
+  assert.ok(normalized.pickupPersons[0].id);
+});
+
+test('pickupPersons respinge un nume gol sau mai mult de 10 persoane', () => {
+  assert.throws(
+    () => normalizeRecord('children', { ...child(), pickupPersons: [{ name: '' }] }),
+    /Nume persoană autorizată/,
+  );
+  assert.throws(
+    () =>
+      normalizeRecord('children', {
+        ...child(),
+        pickupPersons: Array.from({ length: 11 }, (_, i) => ({ name: `Persoana ${i}` })),
+      }),
+    /Persoane autorizate: listă invalidă/,
+  );
+});
+
 const payerAlias = () =>
   normalizeRecord('payerAliases', {
     id: 'PAY-ALIAS-test',
