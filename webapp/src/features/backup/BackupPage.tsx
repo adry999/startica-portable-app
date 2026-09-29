@@ -212,7 +212,7 @@ export function BackupPage() {
           ]}
         />
         {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare aici, în antetul filei. */}
-        <span className={styles.version}>{session.state.version}</span>
+        <span className={styles.version}>Startica v{session.state.version}</span>
       </div>
 
       {viewMode === 'curs' ? (

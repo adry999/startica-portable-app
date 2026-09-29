@@ -88,6 +88,12 @@ describe('BackupPage', () => {
     expect(screen.getByText('Se încarcă starea backup-ului…')).toBeInTheDocument();
   });
 
+  it('A7: antetul filei arată „Startica v<versiune>”', async () => {
+    await loadedSession();
+    renderPage();
+    expect(screen.getByText('Startica v1.6.3')).toBeInTheDocument();
+  });
+
   it('backupNow arată un toast de confirmare', async () => {
     await loadedSession();
     renderPage();

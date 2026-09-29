@@ -481,5 +481,18 @@ Backend: 8 teste noi de integrare (`record-editing.routes.routes.integration.tes
 
 Urmează A7 (Backup și setări / Notificări).
 
+## 2026-09-29 — A7. Backup și setări (10c) / Notificări (10b) — DONE (parțial, restul e funcție nouă)
+
+Ambele ecrane erau deja foarte aproape de spec — `NotificationsPage.tsx` (10b) avea deja exact grid-ul `1fr 1.3fr` gap 16, Toggle 46×26 `--orange`, fără „Rezumat săptămânal”, totul comentat explicit în cod ca aliniere la spec. `BackupPage.tsx` (10c) avea deja grid-urile corecte (`repeat(3,1fr)` gap 14, apoi `1.3fr 1fr` gap 16) și tonurile corecte (`--mint-soft`/`--yellow-soft`/`--pink-soft`). Corectat doar 2 goluri reale, ambele mici:
+
+- Cardurile ①②③ foloseau padding/radius implicit din `Card` (22px/24px, 24px) în loc de 20px/22px + radius 22 din spec — literale, ca la alte ecrane deja aliniate.
+- Antetul filei arăta doar „2.0.0”, nu „Startica v2.0.0”.
+
+3 bucăți din spec sunt funcții noi, nu tweak-uri de aliniere — nu construite, detaliate în `INTREBARI.md` §A7: comutatorul „Probleme la backup” (cere schemă nouă + job de verificare), cardul „Zonă periculoasă” (nicio acțiune distructivă existentă de mutat acolo), „Importă copii din CSV” (nu există deloc, doar Excel). Coloana dreaptă din 10c e „Import și export”, nu „Grădinița” + zonă periculoasă — divergență deliberată, Grădinița a devenit între timp propria filă completă (16a).
+
+1 test nou (`BackupPage.test.tsx`, „Startica v<versiune>”). `npm run check` (root, 1177/1177 + 2 skip) + webapp (typecheck curat, 881/881 teste) — verzi.
+
+Urmează A8 (diferențe mici, un singur commit).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.

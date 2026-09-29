@@ -99,6 +99,16 @@ Spec (`ALINIERE-DESIGN.md`, 22a rând info) arată mockup-ul cu un singur antren
 
 Spec (`ALINIERE-DESIGN.md` A6) cere „scor 12px/800” pe cardul de sugestie; `11-de-rezolvat.md` §9c descrie 3 trepte calitative (Mare/Posibil/Slab, mint/galben/neutral), fără prag numeric. `suggestChildren()` (`payment-name-matching.mjs`) calculează deja un scor intern (nume potrivit = +3, sumă = taxa exactă pe N luni = +2, toate lunile neachitate = +2, parțial = +1, plătitor reținut = +1000) — dar acest scor n-a fost gândit ca prag de afișare, doar ca ordine de sortare a sugestiilor. Implementat: `nameMatch` → „Potrivire mare” (mint); fără nume, `score ≥ 2` → „Posibil” (galben); `score < 2` (adică exact 1, un singur indiciu slab) → „Slab” (neutru). Nu am arătat scorul brut (ar fi confuz — un plătitor reținut ar arăta „1000”). Pragul „2” e o alegere rezonabilă, nu vine din spec — dacă vrei alt prag sau alt mod de afișare a scorului, spune și schimb.
 
+## A7 — Backup și setări (10c) / Notificări (10b): 3 goluri care sunt funcții noi, nu restilizare
+
+Ecranele erau deja aproape identice cu spec-ul (grid-uri, radius, Toggle 46×26 `--orange`, „Fără Rezumat săptămânal” — toate deja corecte). Am corectat doar ce era pur vizual (padding/radius cardurilor ①②③, „Startica v” înaintea versiunii). 3 lucruri din spec nu există deloc în cod și sunt funcții noi, nu tweak-uri — nu le-am construit fără confirmare:
+
+1. **„Probleme la backup” (10b)** — al 4-lea comutator din listă (Restanțe/Zile de naștere/Vizite/**Probleme la backup**). Nu există `backupProblemsEnabled` în `notification-preferences.mjs` și nicio verificare periodică a stării backup-ului care să trimită un mesaj Telegram la eșec. Ar cere: câmp nou în schemă + o sarcină (job) care verifică `useBackup`/`backupData.health` și trimite mesaj.
+2. **„Zonă periculoasă” (10c, border `--pink`)** — spec-ul cere un card cu o acțiune distructivă lângă cardul Grădinița, dar nu spune care acțiune. N-am găsit nicio funcție distructivă existentă de mutat acolo (ștergere totală a filialei? resetare?) — nu am inventat una.
+3. **„Importă copii din CSV” (`ChildrenCsvDialog`, 10c → Import și export)** — nu există deloc în webapp (doar Excel: `useExcelTransfer`, „Import Excel”/„Export Excel complet”). Ar cere un dialog nou + o rută de parsare CSV pe server.
+
+**Divergență deliberată, nu bug:** dreapta grid-ului din 10c (spec: cardul „Grădinița” + zona periculoasă) e azi cardul „Import și export” — pentru că „Grădinița” a devenit între timp propria filă completă (16a, `KindergartenSettings`), nu mai încape ca rezumat mic lângă listă. N-am mutat-o înapoi.
+
 ## B3 — diagnostic (doar citire): cheltuieli care par încasări de bazin
 
 Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (nou, doar citire — `DatabaseSync(..., { readOnly: true })`) pe ambele baze active:
