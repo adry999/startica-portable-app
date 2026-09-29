@@ -73,6 +73,18 @@ Dacă calculatorul clientului se strică sau se pierde, procedura de restaurare 
 
 - Lunar: pe drive.google.com ultimul `startica_*.db` are data de azi.
 
+## Sync-server — ordinea de livrare (dacă sincronizarea între calculatoare e activă)
+
+Aplicația și `sync-server/` sunt desfășurate separat. Un lot de sincronizare cu un singur tip
+necunoscut de server e respins integral (400) și blochează toată coada la infinit (backoff),
+nu doar rândul cu pricina — vezi `docs/superpowers/specs/2026-09-29-final-audit.md`, S-6.
+**Redesfășoară întotdeauna `sync-server`-ul înaintea instalatorului**, niciodată invers, când
+un commit adaugă un tip nou de sincronizat (grep `RECORD_KINDS`/`COMMON_KINDS` în
+`sync-server/src/change-policy.mjs` față de commit-ul anterior deploy-ului).
+Actualizează toate calculatoarele conectate deodată, nu treptat — o versiune veche primește
+prin sincronizare câmpuri noi (ex. IDNP/adresă) pe care nu le cunoaște, le taie la următoarea
+editare locală, iar acea pierdere se propagă înapoi la calculatorul nou.
+
 ## Notă despre backup extern
 
 Aplicația copiază baza în folderul extern configurat (de exemplu un folder
