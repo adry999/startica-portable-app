@@ -1,12 +1,26 @@
 import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { openDatabase, openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
+import { readSettingValue, writeSettingValue } from '#core/server/settings/settings-repository.mjs';
+import { sqlStringLiteral } from '#core/server/database/sql-string-literal.mjs';
+import { fileTimestamp } from '#core/server/files/file-timestamp.mjs';
 import { branchDirectories, countBranchRecords } from '#core/server/branches/branch-layout.mjs';
-import { readLocalSnapshot, writeLocalSnapshot, readCommonSnapshot, writeCommonSnapshot } from './snapshot-io.mjs';
+import {
+  readLocalSnapshot,
+  writeLocalSnapshot,
+  overwriteLocalSnapshot,
+  readCommonSnapshot,
+  writeCommonSnapshot,
+} from './snapshot-io.mjs';
 
 // B-4: aceeași cheie ca sync-engine.service.mjs/snapshot-io.mjs — nu importată de acolo
 // (fiecare modul o repetă local) ca să nu lege connect-ul de motor doar pentru o constantă.
 const SYNC_SINCE_SETTING = 'sync.since';
+// S-3: scrisă la disconnect(), ÎNAINTE de resetSyncState (care nu o atinge — șterge doar
+// „sync.since” din settings) — singura urmă care supraviețuiește deconectării și permite
+// connect() să recunoască „același calculator revenit” în loc de un filiale.json copiat.
+const SYNC_LAST_SERVER_URL_SETTING = 'sync.last_server_url';
 
 /** @param {string} dataDir */
 function isBranchEmpty(dataDir) {
@@ -34,15 +48,54 @@ function hasLocalSyncState(dataDir) {
 }
 
 /**
+ * S-3: ultimul server la care s-a conectat această bază (filială sau setul comun) —
+ * scris la disconnect(), înainte de resetSyncState, ca connect() să poată distinge
+ * „același calculator revenit” (409 altfel, vezi hasLocalSyncState mai sus, golit de
+ * disconnect) de un filiale.json copiat pe alt calculator. Eșecul de citire = „nu știm”.
+ * @param {string} dataDir
+ */
+function readLastServerUrl(dataDir) {
+  const opened = openDatabaseReadOnly({ dataDir });
+  if (!opened) return '';
+  try {
+    return readSettingValue(opened.db, SYNC_LAST_SERVER_URL_SETTING) || '';
+  } catch {
+    return '';
+  } finally {
+    opened.db.close();
+  }
+}
+
+/**
+ * S-3: copie de siguranță înainte de a suprascrie o filială nevidă cu instantaneul
+ * serverului (reconectare pe același server) — aceeași convenție ca „inainte-…” din
+ * runRevisionTransaction/sync-engine.service.mjs (`resyncFromSnapshot`), dar autonomă
+ * (fără createBackupService, care cere ancore de instalare — readSetting/forbiddenFolders
+ * — pe care connect() nu le are aici): un simplu VACUUM INTO, vizibil în lista de backup-uri
+ * (același format de nume, `startica_<timestamp>_<motiv>_<id scurt>.db`).
+ * @param {import('node:sqlite').DatabaseSync} db @param {string} backupDir @param {string} reason
+ */
+function backupBeforeOverwrite(db, backupDir, reason) {
+  const file = join(backupDir, `startica_${fileTimestamp()}_${reason}_${randomUUID().slice(0, 8)}.db`);
+  db.exec(`VACUUM INTO ${sqlStringLiteral(file)}`);
+  return file;
+}
+
+/**
  * B-4: golește starea de sincronizare a unei baze (filială sau setul comun) — apelată la
  * `disconnect()`. Rândurile din outbox NU se șterg (editările netrimise nu trebuie
  * pierdute), se arhivează, ca să nu mai plece la o viitoare conectare cu o revizie de bază
  * care n-are ce să mai însemne pe un server nou (sau același, reconectat de la zero).
- * @param {import('node:sqlite').DatabaseSync} db
+ * S-3: `serverUrl` (dacă dat) se scrie ÎNAINTE de ștergeri, în aceeași tranzacție — cheia ei
+ * (`sync.last_server_url`) nu e `sync.since`, deci „DELETE FROM settings WHERE key=?” de mai
+ * jos n-o atinge; supraviețuiește resetului, exact ce are nevoie connect() să recunoască
+ * „același calculator revenit”.
+ * @param {import('node:sqlite').DatabaseSync} db @param {{ serverUrl?: string }} [options]
  */
-function resetSyncState(db) {
+function resetSyncState(db, { serverUrl } = {}) {
   db.exec('BEGIN IMMEDIATE');
   try {
+    if (serverUrl) writeSettingValue(db, SYNC_LAST_SERVER_URL_SETTING, serverUrl);
     db.prepare('DELETE FROM sync_state').run();
     db.prepare('DELETE FROM sync_conflicts').run();
     db.prepare('DELETE FROM settings WHERE key=?').run(SYNC_SINCE_SETTING);
@@ -71,7 +124,7 @@ function resetSyncState(db) {
  *   now: () => Date,
  *   platform: () => string,
  *   reopenActiveBranch: () => void,
- *   getCommon?: () => { db: import('node:sqlite').DatabaseSync, kinds: { list: (kind: string) => { id: string }[] } } | undefined,
+ *   getCommon?: () => { db: import('node:sqlite').DatabaseSync, kinds: { list: (kind: string) => { id: string }[], save: (kind: string, record: { id: string } & Record<string, unknown>) => unknown, transaction: <T>(fn: () => T) => T }, sync: { outbox: { enqueue: (change: { kind: string, recordId: string, payload: unknown }) => unknown } } } | undefined,
  *   commonDatasetId?: string,
  * }} dependencies
  */
@@ -132,10 +185,17 @@ export function createSyncConnectService({
    * }} params
    */
   async function finishConnecting({ client, serverUrl, paired, deviceName }) {
+    // S-5: preluat aici (nu doar mai jos, unde era folosit pentru contopirea setului comun)
+    // — adoptarea unei filiale goale (mai jos, replaceEmpty) schimbă id-ul filialei locale,
+    // iar setul comun poate avea deja `staff`/`salary_payments` care țin id-ul VECHI (Personal
+    // se poate folosi pe filiala implicită înainte de „Conectează”). Remapate mai jos.
+    const common = getCommon();
     const { branches: serverBranches } = await client.listBranches();
     const localBranches = registry.list();
     const localIds = new Set(localBranches.map(branch => branch.id));
     const claimedServerIds = new Set();
+    /** @type {{ oldId: string, newId: string }[]} */
+    const branchIdRemaps = [];
 
     /** @type {{ id: string, name: string }[]} */
     const uploaded = [];
@@ -145,6 +205,8 @@ export function createSyncConnectService({
     const toDownload = [];
     /** @type {import('#core/server/branches/branch-registry.mjs').BranchEntry[]} */
     const toUpload = [];
+    /** @type {{ local: import('#core/server/branches/branch-registry.mjs').BranchEntry, serverSnapshot: Awaited<ReturnType<typeof client.downloadSnapshot>> }[]} */
+    const sameServerReconnects = [];
 
     for (const local of localBranches) {
       const serverMatch = serverBranches.find(branch => branch.id === local.id);
@@ -169,6 +231,17 @@ export function createSyncConnectService({
           toUpload.push(local);
           continue;
         }
+        // S-3: `disconnect()` tocmai a golit `sync_state` (verificarea de mai sus) — dar dacă
+        // ultimul server la care s-a conectat ACEASTĂ bază e chiar cel de-acum
+        // (`sync.last_server_url`, scris la disconnect, înainte de reset), e același
+        // calculator revenit, nu un filiale.json copiat: descarcă instantaneul serverului
+        // peste local (cu backup înainte — ca la o resincronizare 410; editările offline
+        // oricum n-au ajuns în outbox, sincronizarea era oprită cât timp era deconectat). Un
+        // server DIFERIT (sau nicio urmă) păstrează respingerea de azi.
+        if (readLastServerUrl(dirsOf(local).dataDir) === serverUrl) {
+          sameServerReconnects.push({ local, serverSnapshot });
+          continue;
+        }
         fail(`Filiala „${local.name}” există deja pe server — poate fi doar un filiale.json copiat.`, 409);
       }
       if (isBranchEmpty(dirsOf(local).dataDir)) {
@@ -176,6 +249,7 @@ export function createSyncConnectService({
         if (unclaimed) {
           claimedServerIds.add(unclaimed.id);
           const replaced = registry.replaceEmpty(local.id, unclaimed);
+          if (replaced.id !== local.id) branchIdRemaps.push({ oldId: local.id, newId: replaced.id });
           toDownload.push({ localId: replaced.id, serverBranch: unclaimed });
           continue;
         }
@@ -196,6 +270,18 @@ export function createSyncConnectService({
         });
         await client.uploadSnapshot(local.id, readLocalSnapshot(opened.db, { now }));
         uploaded.push({ id: local.id, name: local.name });
+      } finally {
+        opened.db.close();
+      }
+    }
+
+    for (const { local, serverSnapshot } of sameServerReconnects) {
+      const dirs = dirsOf(local);
+      const opened = openDatabase(dirs);
+      try {
+        backupBeforeOverwrite(opened.db, dirs.backupDir, 'inainte-reconectare');
+        overwriteLocalSnapshot(opened.db, serverSnapshot);
+        downloaded.push({ id: local.id, name: local.name });
       } finally {
         opened.db.close();
       }
@@ -226,10 +312,35 @@ export function createSyncConnectService({
       }
     }
 
+    // S-5: filiala goală adoptată mai sus (replaceEmpty) și-a schimbat id-ul — orice
+    // `staff.branchIds`/`salary_payments.branchId` din setul comun care încă țin vechiul id
+    // (angajați/avansuri create pe filiala implicită înainte de „Conectează”) ar rămâne
+    // orfani: id-ul vechi nu mai există în niciun registru, angajatul dispare din lista
+    // filialei pe AMBELE calculatoare, iar salariile lui nu se mai pot plăti. O singură
+    // tranzacție (kinds.transaction) per remap, împreună cu registrul actualizat mai sus.
+    if (common && branchIdRemaps.length) {
+      common.kinds.transaction(() => {
+        for (const { oldId, newId } of branchIdRemaps) {
+          for (const staff of /** @type {{ id: string, branchIds: string[] }[]} */ (common.kinds.list('staff'))) {
+            if (!Array.isArray(staff.branchIds) || !staff.branchIds.includes(oldId)) continue;
+            common.kinds.save('staff', {
+              ...staff,
+              branchIds: staff.branchIds.map(id => (id === oldId ? newId : id)),
+            });
+          }
+          for (const payment of /** @type {{ id: string, branchId: string }[]} */ (
+            common.kinds.list('salary_payments')
+          )) {
+            if (payment.branchId !== oldId) continue;
+            common.kinds.save('salary_payments', { ...payment, branchId: newId });
+          }
+        }
+      });
+    }
+
     // Setul comun (decizia 9, „Changes to the sync plan”): nu e o filială, deci nu trece prin
     // reconcilierea de mai sus. „comun” e opțional (getCommon()) doar când installul nu are
     // deloc Personal/Bazin cablate (teste izolate de reconciliere de filiale, mai vechi).
-    const common = getCommon();
     if (common) {
       const serverSnapshot = await client.downloadSnapshot(commonDatasetId);
       const serverHasRecords = Object.values(serverSnapshot.records).some(rows => rows.length > 0);
@@ -240,21 +351,24 @@ export function createSyncConnectService({
       } else if (!localHasRecords) {
         writeCommonSnapshot(common.db, serverSnapshot);
       } else {
-        // Amândouă au date (decizia 9): nu 409 — rândurile locale se urcă drept modificări
-        // obișnuite, cu baseRevision 0. Id-urile noi se aplică; cele care coincid urmează
-        // politica kind-ului (LWW pentru majoritate, conflict pentru „staff”, o fișă).
-        if (localEntries.length) {
-          await client.pushChanges(
-            commonDatasetId,
-            localEntries.map(entry => ({
-              changeId: randomUUID(),
-              kind: entry.kind,
-              recordId: entry.id,
-              baseRevision: 0,
-              payload: entry.payload,
-              changedAt: entry.updatedAt,
-            })),
-          );
+        // S-2: amândouă au date — NU un push client-wins cu baseRevision 0 pentru tot ce e
+        // local (asta suprascria mereu serverul cu copia calculatorului care se conectează
+        // ULTIM, oricât de veche — cazul obișnuit, nu unul limită: departments/roles au
+        // id-uri deterministe, reseminate la fiecare pornire a aplicației, deci
+        // „localHasRecords” e mereu adevărat pe o instalare reală). Regula corectă (decizia
+        // 9, „Changes to the sync plan”): id-urile care există deja pe server NU se ating —
+        // serverul câștigă, copia locală se corectează la primul pull normal al motorului
+        // (pornit imediat mai jos, la reopenActiveBranch()). Doar id-urile NOI local (create
+        // înainte de connect, absente pe server) se trimit — și nu prin pushChanges direct
+        // (rezultatul era aruncat, fără sync_state/conflicte) — ci prin outbox-ul comun, ca
+        // motorul să le trateze applied/conflict/sync_state ca pe orice altă modificare.
+        const serverRecordIds = new Set();
+        for (const [kind, rows] of Object.entries(serverSnapshot.records)) {
+          for (const row of rows) serverRecordIds.add(`${kind}|${row.id}`);
+        }
+        for (const entry of localEntries) {
+          if (serverRecordIds.has(`${entry.kind}|${entry.id}`)) continue;
+          common.sync.outbox.enqueue({ kind: entry.kind, recordId: entry.id, payload: entry.payload });
         }
       }
     }
@@ -278,18 +392,22 @@ export function createSyncConnectService({
   function disconnect() {
     // B-4: sync.json nu e singura urmă — fiecare filială (+ setul comun) ține propriul
     // `sync_state`/`sync_conflicts`/`sync.since`/outbox. Fără curățarea lor, o reconectare
-    // la ACELAȘI server dă 409 pe fiecare filială nevidă (hasLocalSyncState rămâne
-    // adevărat), iar una la un server DIFERIT pornește cu cursoare/conflicte ale celui vechi.
+    // la un server DIFERIT ar porni cu cursoare/conflicte ale celui vechi. S-3: `serverUrl`
+    // (citit ÎNAINTE de syncDevice.clear() de mai jos) se reține în fiecare bază, dincolo de
+    // reset (readLastServerUrl mai sus) — connect() îl folosește ca să recunoască o
+    // reconectare la ACELAȘI server (aceleași date, nu un filiale.json copiat) în loc să dea
+    // 409 definitiv (B-4 rezolva doar jumătate din problemă — vezi hasLocalSyncState).
+    const serverUrl = syncDevice.read()?.serverUrl;
     for (const branch of registry.list()) {
       const opened = openDatabase(dirsOf(branch));
       try {
-        resetSyncState(opened.db);
+        resetSyncState(opened.db, { serverUrl });
       } finally {
         opened.db.close();
       }
     }
     const common = getCommon();
-    if (common) resetSyncState(common.db);
+    if (common) resetSyncState(common.db, { serverUrl });
 
     syncDevice.clear();
     deleteSyncDeviceFile();

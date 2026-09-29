@@ -293,3 +293,68 @@ test('o modificare de personal făcută dincolo reîncarcă echipa aici', async 
     'angajatul adăugat pe B ajunge în echipa lui A, prin motorul setului comun',
   );
 });
+
+/** @param {string} home @param {string} departmentId */
+function departmentNameOn(home, departmentId) {
+  const { dataDir, backupDir } = commonDirectories(home);
+  const opened = openDatabase({ dataDir, backupDir });
+  try {
+    return createKindRepository(opened.db)
+      .list('departments')
+      .find(department => department.id === departmentId)?.name;
+  } finally {
+    opened.db.close();
+  }
+}
+
+test('S-2: la conectarea celui de-al doilea calculator, semințele reale (departments/roles) se contopesc, nu diverg', async t => {
+  const serverUrl = await startRealSyncServer(t);
+
+  // A: instalare nouă — departments/roles sunt deja seminate automat la pornire
+  // (personal-seeds.mjs, id-uri deterministe). Redenumește DEP-altele ÎNAINTE de connect —
+  // scriere directă pe baza comună, ca la orice test din acest fișier care pregătește
+  // starea dinaintea unui connect (vezi testul 1, mai sus, pentru children).
+  const a = await startTestApplication(t, { prefix: 'startica-s2-a-' });
+  {
+    const { dataDir, backupDir } = commonDirectories(a.dir);
+    const opened = openDatabase({ dataDir, backupDir });
+    const kinds = createKindRepository(opened.db);
+    const target = kinds.list('departments').find(department => department.id === 'DEP-altele');
+    assert.ok(target, 'sămânța DEP-altele există înainte de connect');
+    kinds.save('departments', { ...target, name: 'Contabilitate (redenumit pe A)' });
+    opened.db.close();
+  }
+
+  const connectA = await a.post('/api/sync/connect', { serverUrl, setupKey: SETUP_KEY, deviceName: 'Calculator A' });
+  assert.equal(connectA.status, 200, JSON.stringify(connectA.body));
+  await a.post('/api/sync/now', {});
+
+  // B: instalare nouă, propriile semințe implicite (DEP-altele = „Altele”) — cu o evidență
+  // proprie (nu doar Personal), ca reconcilierea de filiale să nu-i adopte filiala goală în
+  // locul celei a lui A (același truc ca testul 1 din acest fișier).
+  const b = await startTestApplication(t, { prefix: 'startica-s2-b-' });
+  const openedB = openDatabase({ dataDir: join(b.dir, 'data'), backupDir: join(b.dir, 'backups') });
+  createRecordRepository(openedB.db).save('children', { id: 'CHILD-B', name: 'Copilul lui B' });
+  openedB.db.close();
+
+  // Punctul verificat (S-2): serverul ȘI B au deja rânduri pentru „comun” (semințele) —
+  // connect() nu are voie să urce copia lui B ca modificare client-wins (asta suprascria
+  // mereu redenumirea lui A cu „Altele”, calculatorul care se conectează ULTIM câștigând).
+  const connectB = await b.post('/api/sync/connect', { serverUrl, setupKey: SETUP_KEY, deviceName: 'Calculator B' });
+  assert.equal(connectB.status, 200, JSON.stringify(connectB.body));
+
+  await b.post('/api/sync/now', {});
+  await a.post('/api/sync/now', {});
+  await b.post('/api/sync/now', {});
+
+  assert.equal(
+    departmentNameOn(a.dir, 'DEP-altele'),
+    'Contabilitate (redenumit pe A)',
+    'A își păstrează propria redenumire',
+  );
+  assert.equal(
+    departmentNameOn(b.dir, 'DEP-altele'),
+    'Contabilitate (redenumit pe A)',
+    'B preia redenumirea lui A în loc să divergă cu semințele lui implicite',
+  );
+});

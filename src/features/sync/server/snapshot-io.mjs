@@ -156,6 +156,56 @@ export function writeLocalSnapshot(database, { records, headSeq }) {
 }
 
 /**
+ * S-3: reconectarea unei filiale nevide la ACELAȘI server de la care s-a deconectat — nu un
+ * filiale.json copiat, ci chiar acest calculator revenit (`sync.last_server_url` a
+ * supraviețuit lui `resetSyncState`, spre deosebire de `sync_state`, vezi
+ * `sync-connect.service.mjs`). Ca la o resincronizare 410 (`sync-engine.service.mjs`
+ * `resyncFromSnapshot`): serverul câștigă în întregime — `DELETE FROM records` înainte de
+ * a rescrie, ca rândurile șterse de pe alt calculator cât acesta era deconectat să nu
+ * rămână fantomă local. Apelantul face backup înainte (editările offline oricum nu sunt
+ * capturate — `isEnabled()` era fals cât filiala era deconectată).
+ * @param {import('node:sqlite').DatabaseSync} database
+ * @param {{ records: Record<string, { id: string, revision: number, payload: unknown, updatedAt: string }[]>, headSeq: number }} snapshot
+ */
+export function overwriteLocalSnapshot(database, { records, headSeq }) {
+  const raw = createRecordRepository(database);
+  const attendanceRepository = createSyncAttendanceWriter(database);
+  const poolRepository = createSyncPoolWriter(database);
+  const syncState = createSyncStateRepository(database);
+  const settings = createSettingsRepository(database);
+
+  database.exec('BEGIN IMMEDIATE');
+  try {
+    database.exec('DELETE FROM records');
+    database.exec('DELETE FROM sync_state');
+    for (const [kind, rows] of Object.entries(records)) {
+      for (const row of rows) {
+        const applied = applySnapshotEntry({
+          rawRecordRepository: raw,
+          attendanceRepository,
+          poolRepository,
+          kind,
+          recordId: row.id,
+          payload: row.payload,
+        });
+        if (!applied) continue;
+        syncState.set(kind, row.id, {
+          serverRevision: row.revision,
+          updatedAt: row.updatedAt,
+          updatedByDevice: '',
+          updatedByName: '',
+        });
+      }
+    }
+    settings.setSetting(SYNC_SINCE_SETTING, String(headSeq));
+    database.exec('COMMIT');
+  } catch (error) {
+    database.exec('ROLLBACK');
+    throw error;
+  }
+}
+
+/**
  * Aceeași pereche, pentru setul comun (Personal 24, decizia 9): `entries` prin
  * `createKindRepository`, nu `createRecordRepository` — kind-urile lui nu sunt în TYPES.
  * Folosită doar de sync-connect.service.mjs la connect(), când serverul nu are încă
