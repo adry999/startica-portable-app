@@ -1,93 +1,209 @@
 .cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-16);
-  margin-bottom: var(--space-20);
+  gap: 14px;
 }
 
 .statCard {
-  display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-16);
-}
-
-.statValue {
-  font-family: var(--font-heading);
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--slate);
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 18px;
+  border-radius: 18px;
 }
 
 .statLabel {
   font-size: 12px;
-  color: var(--subtle);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.labelOrange {
+  color: var(--orange-ink);
+}
+
+.labelMint {
+  color: var(--mint-ink);
+}
+
+.labelPink {
+  color: var(--pink-ink);
+}
+
+.labelYellow {
+  color: var(--yellow-ink);
+}
+
+.statValue {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--slate);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .grid {
   display: grid;
-  gap: 1px;
-  background: var(--row-divider);
+  background: var(--white);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
 .headerCell {
-  background: var(--neutral-soft);
-  padding: var(--space-8);
-  font-size: 12px;
-  font-weight: 700;
+  background: var(--white);
+  padding: 12px 14px;
+  border-left: 1px solid var(--row-divider);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.headerCell:first-child {
+  border-left: none;
+}
+
+.headerCellToday {
+  background: var(--orange-soft);
+}
+
+.headerNumber {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
   color: var(--slate);
-  text-align: center;
+}
+
+.headerCellToday .headerNumber {
+  color: var(--orange-ink);
+}
+
+.headerName {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.headerCellToday .headerName {
+  color: var(--orange-ink);
 }
 
 .timeCell {
-  background: var(--neutral-soft);
-  padding: var(--space-8);
-  font-size: 12px;
-  font-weight: 700;
+  padding: 12px 0 0 16px;
+  border-bottom: 1px solid var(--row-divider);
+  font-size: 13px;
+  font-weight: 800;
   color: var(--muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .cell {
   background: var(--white);
-  min-height: 48px;
-  padding: var(--space-4);
+  min-height: 92px;
+  padding: var(--space-8);
+  border-left: 1px solid var(--row-divider);
+  border-bottom: 1px solid var(--row-divider);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: 5px;
 }
 
 .tile {
   border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-4) var(--space-8);
+  border-radius: 10px;
+  padding: 5px 8px 5px 5px;
   font: inherit;
   font-size: 12px;
   text-align: left;
   cursor: pointer;
   background: var(--off-day);
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 7px;
 }
 
 .tile:disabled {
   cursor: default;
 }
 
+.avatar {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--neutral-soft);
+  color: var(--subtle);
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .tileName {
+  flex: 1;
+  min-width: 0;
   font-weight: 700;
   color: var(--slate);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tileState {
   font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
+  flex-shrink: 0;
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.dotPresent {
+  background: var(--mint-bar);
+}
+
+.dotAbsent {
+  background: var(--pink-bar);
+}
+
+.dotExcused {
+  background: var(--yellow-bar);
+}
+
+.dotUnmarked {
+  background: transparent;
+  border: 1.5px solid var(--input-border);
 }
 
 .present {
@@ -104,10 +220,19 @@
 
 .cancelled {
   background: var(--neutral-soft);
+}
+
+.cancelled .tileName {
   text-decoration: line-through;
 }
 
 .scheduled {
   background: var(--white);
   border: 1px dashed var(--dashed-border);
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
 }
