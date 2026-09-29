@@ -397,5 +397,13 @@ Sesiune lungă, autonomă, la cererea directă a utilizatorului. Rezumat, în or
 - `npm run check` (root, 1169/1171 + 2 skip) + webapp typecheck + 870/870 teste — toate verzi.
 - **Rămân din A3f:** 23c Salarii (antet cu stepper/Blochează/Plătește, carduri, tabel, cele 5 verificări de logică — verificările sunt deja făcute și în `INTREBARI.md`, mai rămâne restilizarea UI) și 23l Candidați (verificări mici).
 
+## 2026-09-29 — ALINIERE-DESIGN.md — A3f Personal (23c Salarii) — DONE; 23l rămâne
+
+- **23c Salarii:** carduri `Card` cu `tone`/`decorative` (Total salarii roz-decorativ, Avansuri date neutru, Plătit mint, Rămas de plătit alb cu bordură groasă); tabel cu coloane Cum se calculează (pastilă Fix/Pe zile/Bazin) / Baza lunii / Stare; clic pe rând deschide istoricul angajatului (înainte doar din meniul ⋯); „Plătește” deschide un dialog de confirmare cu totalul selectat înainte să trimită plata (înainte plătea direct); luna urcă în `PersonalPage` cu `MonthStepper` în antet, plafonat la luna trecută (o lună neîncheiată nu se poate plăti).
+- **Gol real găsit la una din cele 5 verificări de logică (checked #5, deja în `INTREBARI.md`):** un angajat fără salariu setat dispărea complet din listă (`rowForStaff` întorcea `null`, filtrat în `listMonth`). Fixat: rândul apare oricum, cu `mode: null`, „Baza lunii” arată „+ Setează salariul” (nebifabil) — test nou pe backend (`salaries.service.test.mjs`, 19/19) + pe UI (`SalariesView.test.tsx`).
+- **Decizie de scop, notată aici ca simplificare deliberată:** „Blochează” și „Plătește N selectați” rămân în corpul paginii, nu migrate în antetul comun. `PinGate` are deja propriul buton „Blochează” inline; mutarea „Plătește” în antet ar cere fie duplicarea stării de selecție în `PersonalPage`, fie un pattern nou de ref/callback către `useTopbarActions` — codul actual are o regulă tare de un singur punct de apel per filă (ordinea efectelor copil→părinte), fără niciun precedent de al doilea pattern. Cost/beneficiu nu a meritat riscul pentru un buton.
+- `npm run check` (root, 1171/1173 + 2 skip) + webapp typecheck + 873/873 teste — toate verzi. Commit `a4927ec`.
+- **Rămâne din A3f:** 23l Candidați (verificări mici — căutare 360px, avatar 30px cu inițiale, telefon bold tabular-nums, notițe pe un rând cu ellipsis/„—", drawer 480px).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
