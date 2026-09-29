@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { Button, Drawer, groupTone } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge, ageInYears } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -25,6 +25,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
   // Valorile de la montare — comparate cu cele curente pentru garda de formular nesalvat (13b).
   const initialValuesRef = useRef(values);
   const [submitting, setSubmitting] = useState(false);
+  // 15a: al doilea părinte pornește ascuns („+ Adaugă încă un părinte”), în afară de fișele
+  // care au deja completat parent2 — altfel editarea unei fișe vechi i-ar ascunde datele.
+  const [showParent2, setShowParent2] = useState(() => Boolean(editing?.parent2));
   const { presets } = usePlanPresets();
 
   const orderedGroups = useMemo(() => sortByGroupOrder(groups), [groups]);
@@ -107,40 +110,33 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
       >
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>1 · Copil</legend>
-          <label className={styles.field}>
-            Nume
-            <input
-              required={!editing}
-              value={values.lastName}
-              onChange={event => setNamePart('lastName', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Prenume
-            <input
-              required={!editing}
-              value={values.firstName}
-              onChange={event => setNamePart('firstName', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            IDNP
-            <input
-              inputMode="numeric"
-              maxLength={13}
-              value={values.idnp}
-              onChange={event => setField('idnp', event.target.value.replace(/\D/g, '').slice(0, 13))}
-            />
-          </label>
-          <label className={styles.field}>
-            Adresă
-            <input value={values.address} onChange={event => setField('address', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Data nașterii
-            <input type="date" value={values.birthDate} onChange={event => setField('birthDate', event.target.value)} />
-            <small className={styles.hint}>Vârstă: {formatAge(values.birthDate)}</small>
-          </label>
+          <div className={styles.grid3}>
+            <label className={styles.field}>
+              Nume
+              <input
+                required={!editing}
+                value={values.lastName}
+                onChange={event => setNamePart('lastName', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Prenume
+              <input
+                required={!editing}
+                value={values.firstName}
+                onChange={event => setNamePart('firstName', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Data nașterii
+              <input
+                type="date"
+                value={values.birthDate}
+                onChange={event => setField('birthDate', event.target.value)}
+              />
+            </label>
+          </div>
+          <small className={styles.hint}>Vârstă: {formatAge(values.birthDate)}</small>
           {compatibleGroups.length > 0 && (
             <div className={styles.field}>
               Grupe compatibile cu vârsta
@@ -153,6 +149,23 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               </div>
             </div>
           )}
+          {/* IDNP/Adresă/Statut nu apar în Formulare.dc.html#15a — date personale reale,
+              adăugate peste spec (vezi COADA-DE-LUCRU.md, „Date personale”). */}
+          <div className={styles.grid2}>
+            <label className={styles.field}>
+              IDNP
+              <input
+                inputMode="numeric"
+                maxLength={13}
+                value={values.idnp}
+                onChange={event => setField('idnp', event.target.value.replace(/\D/g, '').slice(0, 13))}
+              />
+            </label>
+            <label className={styles.field}>
+              Adresă
+              <input value={values.address} onChange={event => setField('address', event.target.value)} />
+            </label>
+          </div>
           <label className={styles.field}>
             Statut
             <select value={values.status} onChange={event => setField('status', event.target.value)}>
@@ -167,20 +180,18 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
 
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>2 · Părinți</legend>
-          <div className={styles.parentGrid}>
-            <div className={styles.parentCard}>
-              <span className={styles.parentCardLabel}>Părinte 1</span>
-              <label className={styles.field}>
-                Nume
-                <input required value={values.parent} onChange={event => setField('parent', event.target.value)} />
-              </label>
-              <label className={styles.field}>
-                Telefon (opțional)
-                <input type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
-              </label>
-            </div>
-            <div className={styles.parentCard}>
-              <span className={styles.parentCardLabel}>Părinte 2 (opțional)</span>
+          <div className={styles.parentRow}>
+            <label className={styles.field}>
+              Nume
+              <input required value={values.parent} onChange={event => setField('parent', event.target.value)} />
+            </label>
+            <label className={styles.field}>
+              Telefon (opțional)
+              <input type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
+            </label>
+          </div>
+          {showParent2 ? (
+            <div className={styles.parentRow}>
               <label className={styles.field}>
                 Nume
                 <input value={values.parent2} onChange={event => setField('parent2', event.target.value)} />
@@ -190,7 +201,11 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                 <input type="tel" value={values.phone2} onChange={event => setField('phone2', event.target.value)} />
               </label>
             </div>
-          </div>
+          ) : (
+            <button type="button" className={styles.addParentLink} onClick={() => setShowParent2(true)}>
+              + Adaugă încă un părinte
+            </button>
+          )}
         </fieldset>
 
         <fieldset className={styles.section}>
@@ -208,30 +223,32 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
 
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>3 · Contract și taxă</legend>
-          <label className={styles.field}>
-            Data contractului
-            <input
-              type="date"
-              value={values.contractDate}
-              onChange={event => setField('contractDate', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Început frecventare
-            <input
-              type="date"
-              value={values.attendanceDate}
-              onChange={event => setField('attendanceDate', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Retragere
-            <input
-              type="date"
-              value={values.withdrawalDate}
-              onChange={event => setField('withdrawalDate', event.target.value)}
-            />
-          </label>
+          <div className={styles.grid3}>
+            <label className={styles.field}>
+              Data contractului
+              <input
+                type="date"
+                value={values.contractDate}
+                onChange={event => setField('contractDate', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Început frecventare
+              <input
+                type="date"
+                value={values.attendanceDate}
+                onChange={event => setField('attendanceDate', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Retragere
+              <input
+                type="date"
+                value={values.withdrawalDate}
+                onChange={event => setField('withdrawalDate', event.target.value)}
+              />
+            </label>
+          </div>
           <label className={styles.field}>
             Statut aplicabil din luna
             <input
@@ -272,31 +289,37 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               </div>
             </div>
           )}
-          <label className={styles.field}>
-            Taxa lunară (gol = necunoscută)
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={values.fee}
-              onChange={event => setField('fee', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Taxa aplicabilă din luna
-            <input type="month" value={values.feeFrom} onChange={event => setField('feeFrom', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Ziua scadenței
-            <input
-              type="number"
-              required
-              min={1}
-              max={31}
-              value={values.dueDay}
-              onChange={event => setField('dueDay', event.target.value)}
-            />
-          </label>
+          <div className={styles.grid3}>
+            <label className={styles.field}>
+              Taxa lunară (gol = necunoscută)
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={values.fee}
+                onChange={event => setField('fee', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Taxa aplicabilă din luna
+              <input
+                type="month"
+                value={values.feeFrom}
+                onChange={event => setField('feeFrom', event.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Ziua scadenței
+              <input
+                type="number"
+                required
+                min={1}
+                max={31}
+                value={values.dueDay}
+                onChange={event => setField('dueDay', event.target.value)}
+              />
+            </label>
+          </div>
         </fieldset>
 
         <fieldset className={styles.section}>
@@ -304,7 +327,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
           <div className={styles.groupChips}>
             <button
               type="button"
-              className={values.groupId === '' ? `${styles.groupChip} ${styles.selected}` : styles.groupChip}
+              className={
+                values.groupId === '' ? `${styles.groupChip} ${styles.selected}` : styles.groupChip
+              }
               onClick={() => setField('groupId', '')}
             >
               Fără grupă
@@ -313,11 +338,16 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               const occupied = occupiedByGroup.get(group.id) ?? 0;
               const free = group.capacity != null ? group.capacity - occupied : null;
               const selected = values.groupId === group.id;
+              const tone = groupTone(group.id, orderedGroups);
               return (
                 <button
                   key={group.id}
                   type="button"
-                  className={selected ? `${styles.groupChip} ${styles.selected}` : styles.groupChip}
+                  className={
+                    selected
+                      ? `${styles.groupChip} ${styles.selected}`
+                      : `${styles.groupChip} ${styles[tone]}`
+                  }
                   onClick={() => setField('groupId', group.id)}
                 >
                   {group.name}

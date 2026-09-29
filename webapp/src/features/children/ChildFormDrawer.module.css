@@ -1,23 +1,20 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-20);
+  gap: 22px;
 }
 
 .section {
-  border: 1px solid var(--row-divider);
-  border-radius: var(--radius-md);
-  padding: var(--space-12) var(--space-16) var(--space-16);
+  border: none;
+  padding: 0;
+  margin: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-12);
 }
 
 .section legend {
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--slate);
-  padding: 0 var(--space-4);
+  padding: 0;
 }
 
 /* 13-formulare.md #15a: titlurile celor 4 secțiuni numerotate. */
@@ -27,7 +24,19 @@
   text-transform: uppercase;
   color: var(--orange-ink);
   letter-spacing: 0.02em;
-  padding: 0 var(--space-4);
+  padding: 0;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 170px;
+  gap: 10px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .compatGroups {
@@ -46,26 +55,22 @@
   padding: 2px var(--space-8);
 }
 
-.parentGrid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
+.parentRow {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
 }
 
-.parentCard {
-  border: 1px solid var(--row-divider);
-  border-radius: var(--radius-md);
-  padding: var(--space-12);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.parentCardLabel {
-  font-size: 11px;
+.addParentLink {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
   font-weight: 800;
-  text-transform: uppercase;
-  color: var(--subtle);
+  color: var(--orange-ink);
+  cursor: pointer;
 }
 
 .cardGrid {
@@ -110,35 +115,65 @@
 }
 
 .groupChip {
-  border: 2px solid var(--input-border);
+  border: none;
   border-radius: var(--radius-pill, 999px);
-  background: var(--white);
-  padding: var(--space-4) var(--space-12);
+  padding: 9px 16px;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--slate);
+  font-size: 13px;
+  font-weight: 800;
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.3;
+  background: var(--neutral-soft);
+  color: var(--slate);
 }
 
-.groupChip.selected {
-  border-color: var(--orange);
+/* Tonurile grupelor — aceleași ca FilterPills/Badge (00-comun.md §C, group-tone.ts). */
+.orange {
   background: var(--orange-soft);
   color: var(--orange-ink);
+}
+.mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+.teal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+.blue {
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+.purple {
+  background: var(--purple-soft);
+  color: var(--purple-ink);
+}
+.coral {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+}
+
+/* Chip-ul selectat (inclusiv „Fără grupă”) e mereu tușat, ca în Formulare.dc.html#15a. */
+.groupChip.selected {
+  background: var(--slate);
+  color: var(--white);
 }
 
 .groupChipSpots {
   font-size: 10px;
   font-weight: 600;
-  color: var(--subtle);
-}
-
-.groupChip.selected .groupChipSpots {
-  color: var(--orange-ink);
+  opacity: 0.8;
 }
 
 .field {
@@ -155,9 +190,10 @@
 .field textarea {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
+  padding: 11px 14px;
   font: inherit;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
   resize: vertical;
 }
 
