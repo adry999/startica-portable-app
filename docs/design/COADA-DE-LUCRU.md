@@ -513,7 +513,11 @@ Cele 13 puncte din A8, verificate unul câte unul; multe erau deja în cod (prob
 
 Verificare unică la final: `npm run check` (root, 1175/1177 + 2 skip) + webapp (`tsc --noEmit` curat, 883/883 teste). Commit unic, per instrucțiunea din spec.
 
-Urmează A9 (Documente pe fișă) — are nevoie de plan tehnic întâi, per aceeași convenție ca EUR/BNM și filiale.
+## 2026-09-29 — Coada ALINIERE-DESIGN.md, închidere
+
+A1–A8 și B1–B3 sunt DONE (vezi intrările de mai sus). **A9 (Documente pe fișă) amânat, la cererea utilizatorului** — nu se atașează documente la fișa copilului deocamdată; rămâne singurul punct neînceput din listă, cu planul tehnic (obligatoriu înainte de cod, per `screens/28-fisa-copilului-date.md`) încă nescris. De reluat separat, când se decide să se înceapă.
+
+Nimic deschis în „De discutat cu utilizatorul” de mai jos. `npm run check` (root) și webapp (`tsc` + `vitest`) verzi la fiecare punct din listă; 5 commit-uri locale împinse la `origin/master-v2` la finalul acestei sesiuni.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
