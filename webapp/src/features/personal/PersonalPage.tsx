@@ -6,7 +6,7 @@ import type { Staff, Candidate } from '@shared/personal/personal.types';
 import { TeamView } from './TeamView';
 import { TimesheetView } from './TimesheetView';
 import { LeavesView } from './LeavesView';
-import { SalariesView } from './SalariesView';
+import { SalariesView, previousMonth } from './SalariesView';
 import { CandidatesTab } from './CandidatesTab';
 import styles from './PersonalPage.module.css';
 
@@ -32,6 +32,9 @@ export function PersonalPage({ month }: PersonalPageProps) {
 
   // Pontaj (23b) își plimbă propria lună, independent de luna aplicației.
   const [pontajMonth, setPontajMonth] = useState(month.slice(0, 7));
+  // Salarii (23c) arată implicit luna trecută (deja încheiată); stepperul permite orice lună
+  // încheiată, dar nu luna curentă (pay() o refuză — absențele ei nu sunt încă definitive).
+  const [salariesMonth, setSalariesMonth] = useState(previousMonth(month.slice(0, 7)));
   // „Tipărește” doar deschide dialogul „Ce tipăresc?” — tipărirea în sine pornește la confirmarea
   // din dialog, în TimesheetView, nu la clicul din antet (M5: nu mai tipărește peste dialog).
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
@@ -51,6 +54,14 @@ export function PersonalPage({ month }: PersonalPageProps) {
     setPontajMonth(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
   }
 
+  function shiftSalariesMonth(delta: number) {
+    const [year, monthNumber] = salariesMonth.split('-').map(Number);
+    const date = new Date(year, monthNumber - 1 + delta, 1);
+    const next = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const cap = previousMonth(month.slice(0, 7));
+    if (next <= cap) setSalariesMonth(next);
+  }
+
   // Un singur apel useTopbarActions (24-personal.md #4): comutatorul de file plus acțiunea
   // filei active, ca a doua chemare să nu-l suprascrie pe primul la schimbarea filei.
   useTopbarActions(
@@ -66,6 +77,13 @@ export function PersonalPage({ month }: PersonalPageProps) {
           </Button>
         </>
       )}
+      {tab === 'salarii' && (
+        <MonthStepper
+          value={salariesMonth}
+          onPrev={() => shiftSalariesMonth(-1)}
+          onNext={() => shiftSalariesMonth(1)}
+        />
+      )}
     </div>,
   );
 
@@ -78,7 +96,7 @@ export function PersonalPage({ month }: PersonalPageProps) {
       />
     );
   if (tab === 'concedii') return <LeavesView />;
-  if (tab === 'salarii') return <SalariesView />;
+  if (tab === 'salarii') return <SalariesView month={salariesMonth} />;
   if (tab === 'candidati')
     return (
       <CandidatesTab

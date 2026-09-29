@@ -91,7 +91,20 @@ export function createSalariesService({
   /** @param {Staff} staff @param {string} month @param {import('../personal.types.d.mts').PersonalSettings} settings @param {string} todayStr */
   function rowForStaff(staff, month, settings, todayStr) {
     const salary = salaryEntryFor(personalRepository.salariesForStaff(staff.id), staff.id, month);
-    if (!salary) return null;
+    // A3f (24-personal.md #23c): rândul apare oricum — „Baza lunii” arată „+ Setează salariul”,
+    // nebifabil — nu mai dispare din listă un angajat căruia nu i s-a setat încă salariul.
+    if (!salary)
+      return {
+        staff,
+        mode: null,
+        base: '',
+        gross: null,
+        advances: 0,
+        net: null,
+        paid: null,
+        deductible: 0,
+        estimated: false,
+      };
     const monthHasEnded = month < todayStr.slice(0, 7);
     const rows = new Map(
       personalRepository.timesheetForMonth(month, [staff.id]).map(row => [timesheetKey(staff.id, row.date), row]),
@@ -153,8 +166,7 @@ export function createSalariesService({
     const rows = personalRepository
       .staffForBranch(branchId)
       .filter(staff => !staff.archivedAt)
-      .map(staff => rowForStaff(staff, month, settings, todayStr))
-      .filter(row => row !== null);
+      .map(staff => rowForStaff(staff, month, settings, todayStr));
     const totals = rows.reduce(
       (totals, row) => ({
         gross: totals.gross + (row.gross || 0),

@@ -159,6 +159,61 @@ test('o cursă bazin selectată la plată e refuzată — se plătește din Bazi
   );
 });
 
+// A3f (24-personal.md #23c): un angajat fără salariu setat pentru lună apare oricum în listă,
+// cu mode null și „Baza lunii”/„+ Setează salariul” pe frontend — nu mai dispare din tabel.
+test('listMonth arată și angajații fără salariu setat, cu mode null și net null', t => {
+  const { service, personalRepository } = createServiceHarness(t);
+  personalRepository.saveStaff(
+    {
+      id: 'STF-nosalary',
+      name: 'Bogdan Rusu',
+      roleId: personalRepository.roles()[0].id,
+      branchIds: [BRANCH_ID],
+      since: '2026-01-01',
+    },
+    'create',
+  );
+
+  const listing = service.listMonth('2026-09');
+  assert.equal(listing.rows.length, 1);
+  const row = listing.rows[0];
+  assert.equal(row.staff.id, 'STF-nosalary');
+  assert.equal(row.mode, null);
+  assert.equal(row.gross, null);
+  assert.equal(row.net, null);
+  assert.equal(row.paid, null);
+  // Nu strică totalul lunii (null tratat ca 0, nu NaN).
+  assert.equal(listing.totals.gross, 0);
+  assert.equal(listing.totals.net, 0);
+});
+
+test('pay() refuză explicit un angajat fără salariu setat, chiar dacă acum apare în listă', t => {
+  const { service, personalRepository } = createServiceHarness(t);
+  personalRepository.saveStaff(
+    {
+      id: 'STF-nosalary',
+      name: 'Bogdan Rusu',
+      roleId: personalRepository.roles()[0].id,
+      branchIds: [BRANCH_ID],
+      since: '2026-01-01',
+    },
+    'create',
+  );
+
+  assert.throws(
+    () =>
+      service.pay({
+        staffIds: ['STF-nosalary'],
+        month: '2026-09',
+        method: 'cash',
+        date: '2026-09-30',
+        revision: 0,
+        requestId: randomUUID(),
+      }),
+    /nu are salariu setat/,
+  );
+});
+
 test('listMonth arată salariul net și starea plătit fără sume expuse mai mult decât cere ecranul', t => {
   const { service, personalRepository } = createServiceHarness(t);
   const staffId = seedStaffWithFixSalary(personalRepository);

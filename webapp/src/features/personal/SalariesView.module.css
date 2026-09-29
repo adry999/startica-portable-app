@@ -15,9 +15,10 @@
   gap: var(--space-12);
 }
 
+/* A3f (24-personal.md #23c): padding/radius proprii cardurilor de sus — Card dă implicit 22px/24, radius 24. */
 .card {
-  display: flex;
-  flex-direction: column;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
   gap: var(--space-4);
 }
 
@@ -34,18 +35,16 @@
   color: var(--slate);
 }
 
+/* „Rămas de plătit”: alb cu bordură groasă, ca să se distingă de „Avansuri date” (tot alb). */
+.cardOutlined {
+  border: 2px solid var(--slate);
+}
+
 .payBar {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: var(--space-10);
-}
-
-.payBar select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 6px var(--space-10);
-  font-size: 13px;
 }
 
 .tableCard {
@@ -56,7 +55,7 @@
 .headRow,
 .row {
   display: grid;
-  grid-template-columns: 40px 1.5fr 1.3fr 1.2fr 110px 100px 110px 110px;
+  grid-template-columns: 40px minmax(0, 1.5fr) minmax(0, 1.3fr) minmax(0, 1.2fr) 110px 100px 110px 110px;
   align-items: center;
   padding: 10px 20px;
   border-bottom: 1px solid var(--row-divider);
@@ -70,9 +69,144 @@
   color: var(--subtle);
 }
 
+.row {
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--neutral-softer);
+}
+
+/* Rând selectat — --cream, ca în restul aplicației (rânduri evidențiate). */
+.rowSelected,
+.rowSelected:hover {
+  background: var(--cream);
+}
+
+.employeeCell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.employeeCell strong {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.employeeCell small {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+/* Spec cere #5b666e; nu există token exact, --muted (#6b7780) e cel mai apropiat (ca la Echipa). */
+.baseCell {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.setSalaryLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--orange-ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.netCell {
+  font-weight: 800;
+}
+
 .rowEnd {
   display: flex;
   align-items: center;
   gap: var(--space-8);
   justify-content: flex-end;
+}
+
+.footnote {
+  padding: var(--space-8) var(--space-4);
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.footnote:first-of-type {
+  background: var(--yellow-soft);
+  border-radius: 12px;
+  padding: var(--space-10) var(--space-14);
+  color: var(--yellow-ink);
+}
+
+/* Dialogul de confirmare a plății — ca SmsConfirmDialog (shared/ui/sms), fără listă de destinatari. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58, 71, 80, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-dialog);
+}
+
+.payDialog {
+  width: 420px;
+  max-width: calc(100vw - var(--space-40));
+  background: var(--cream);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-panel);
+  padding: var(--space-28);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.payDialogTitle {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--slate);
+}
+
+.payDialogTotal {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.payDialogTotal strong {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  color: var(--slate);
+}
+
+.payDialogField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.payDialogField select {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-input);
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.payDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-10);
 }

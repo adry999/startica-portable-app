@@ -43,11 +43,14 @@ let postedAdvances: unknown[] = [];
 // M8: al doilea răspuns la /api/personal/salaries?month= trebuie să reflecte avansul dat —
 // altfel testul de reîncărcare automată ar trece și fără fix.
 let salariesLoadCount = 0;
+// A3f: un test înlocuiește rândurile implicite ca să verifice un angajat fără salariu setat (mode: null).
+let salariesRowsOverride: unknown[] | null = null;
 
 function stubFetch() {
   postedPay = [];
   postedAdvances = [];
   salariesLoadCount = 0;
+  salariesRowsOverride = null;
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
@@ -64,6 +67,12 @@ function stubFetch() {
       if (path.startsWith('/api/personal/salaries?month=')) {
         salariesLoadCount += 1;
         const advances = salariesLoadCount >= 2 ? 500 : 0;
+        if (salariesRowsOverride) {
+          return jsonResponse({
+            rows: salariesRowsOverride,
+            totals: { gross: 0, advances: 0, net: 0, paid: 0 },
+          });
+        }
         return jsonResponse({
           rows: [
             {
@@ -118,34 +127,79 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView />
+        <SalariesView month="2026-08" />
       </ToastProvider>,
     );
 
     await screen.findByText('Ion Antrenor');
-    expect(screen.getByText('Plătit din Bazin')).toBeInTheDocument();
+    expect(screen.getByText('Din Bazin')).toBeInTheDocument();
     const checkbox = screen.getByLabelText('Selectează Ion Antrenor');
     expect(checkbox).toBeDisabled();
   });
 
-  it('Plătește trimite id-urile selectate cu metoda aleasă și reîncarcă', async () => {
+  it('Plătește deschide o confirmare cu totalul, apoi trimite id-urile selectate cu metoda aleasă', async () => {
     await loadedSession();
     await act(() => reloadPersonal());
 
     render(
       <ToastProvider>
-        <SalariesView />
+        <SalariesView month="2026-08" />
       </ToastProvider>,
     );
 
     await screen.findByText('Ana Popescu');
     await userEvent.click(screen.getByLabelText('Selectează Ana Popescu'));
-    await userEvent.selectOptions(screen.getByLabelText('Metoda plății'), 'Card');
-    await userEvent.click(screen.getByRole('button', { name: /Plătește/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^Plătește 1 selectați$/ }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Confirmă plata' });
+    expect(within(dialog).getByText('10.000,00 lei')).toBeInTheDocument();
+    await userEvent.selectOptions(within(dialog).getByLabelText('Metoda plății'), 'Card');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Plătește ·/ }));
 
     expect(await screen.findByText(/plătite/)).toBeInTheDocument();
     expect(postedPay).toHaveLength(1);
     expect(postedPay[0]).toMatchObject({ staffIds: ['STF-1'], method: 'Card' });
+  });
+
+  it('clic pe un rând deschide istoricul angajatului (23c)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <SalariesView month="2026-08" />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(await screen.findByText('Ana Popescu'));
+    expect(await screen.findByRole('heading', { name: 'Istoric salariu: Ana Popescu' })).toBeInTheDocument();
+  });
+
+  it('un angajat fără salariu setat apare cu „+ Setează salariul”, nebifabil', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+    salariesRowsOverride = [
+      {
+        staff: { id: 'STF-3', name: 'Elena Croitoru' },
+        mode: null,
+        base: '',
+        gross: null,
+        advances: 0,
+        net: null,
+        paid: null,
+      },
+    ];
+
+    render(
+      <ToastProvider>
+        <SalariesView month="2026-08" />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Elena Croitoru');
+    expect(screen.getByText('Fără salariu setat')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Setează salariul' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Selectează Elena Croitoru')).toBeDisabled();
   });
 
   it('după un avans dat, lista se reîncarcă automat și cardul „Avansuri” se actualizează (M8)', async () => {
@@ -154,14 +208,12 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView />
+        <SalariesView month="2026-08" />
       </ToastProvider>,
     );
 
     await screen.findByText('Ana Popescu');
-    // „Avansuri” apare de 3 ori (fila din SegmentedControl, cardul de total, coloana din tabel)
-    // — cardul de total e primul <span>, celelalte două nu sunt <div class="card">.
-    const advancesCard = screen.getAllByText('Avansuri', { selector: 'span' })[0].closest('div')!;
+    const advancesCard = screen.getByText('Avansuri date', { selector: 'span' }).closest('div')!;
     expect(within(advancesCard).getByText('0,00 lei')).toBeInTheDocument();
 
     const row = screen.getByText('Ana Popescu').closest('div')!;
@@ -179,7 +231,7 @@ describe('SalariesView', () => {
     // load() trece prin 'loading' (LoadingState înlocuiește tot ecranul), deci `advancesCard`
     // de mai sus devine un nod desprins de document după reîncărcare.
     await waitFor(() => {
-      const card = screen.getAllByText('Avansuri', { selector: 'span' })[0].closest('div')!;
+      const card = screen.getByText('Avansuri date', { selector: 'span' }).closest('div')!;
       expect(within(card).getByText('500,00 lei')).toBeInTheDocument();
     });
   });

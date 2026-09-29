@@ -149,7 +149,8 @@ export interface OverlappingLeaveWarning {
 /** Un rând din `GET /api/personal/salaries?month=`. */
 export interface SalaryRow {
   staff: Staff;
-  mode: SalaryMode;
+  /** null = angajatul nu are încă niciun salariu setat pentru lună (23c: „+ Setează salariul”). */
+  mode: SalaryMode | null;
   base: string;
   gross: number | null;
   advances: number;

@@ -48,6 +48,8 @@ function stubFetch() {
       if (path === '/api/kindergarten') return jsonResponse({ name: 'Grădinița Test', idno: '' });
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       if (path.startsWith('/api/personal/timesheet')) return jsonResponse({ rows: [] });
+      if (path === '/api/personal/pin') return jsonResponse({ configured: true, unlocked: true });
+      if (path.startsWith('/api/personal/salaries?month=')) return jsonResponse({ rows: [], totals: null });
       throw new Error(`neașteptat: ${path}`);
     }),
   );
@@ -162,5 +164,26 @@ describe('PersonalPage', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await vi.waitFor(() => expect(printSpy).toHaveBeenCalledTimes(1));
+  });
+
+  it('la fila Salarii, stepperul de lună (implicit luna trecută) stă în antet (23c)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <MemoryRouter>
+            <PersonalPage month="2026-09" />
+          </MemoryRouter>
+        </TopbarActionsProvider>
+      </ToastProvider>,
+    );
+
+    const topbarSlot = screen.getByTestId('topbar-slot');
+    await userEvent.click(within(topbarSlot).getByRole('radio', { name: 'Salarii' }));
+
+    expect(within(topbarSlot).getByText(/August 2026/)).toBeInTheDocument();
   });
 });
