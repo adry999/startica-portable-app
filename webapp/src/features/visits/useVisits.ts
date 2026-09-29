@@ -46,6 +46,7 @@ export interface VisitsData {
   applyQuickStatus: (visit: Visit, status: VisitStatus) => Promise<void>;
   setArchived: (visit: Visit, archived: boolean) => Promise<void>;
   deleteForever: (id: string) => Promise<void>;
+  deleteManyForever: (ids: string[]) => Promise<void>;
   enrollChild: (visit: Visit, overrides: { fee: string; groupId: string; attendanceDate: string }) => Promise<string>;
 }
 
@@ -112,6 +113,10 @@ export function useVisits(initialDate?: string): VisitsData {
     await session.mutate('/api/record-delete', { type: 'visits', id });
   }
 
+  async function deleteManyForever(ids: string[]) {
+    await session.mutate('/api/record-delete', { type: 'visits', ids });
+  }
+
   async function enrollChild(
     visit: Visit,
     overrides: { fee: string; groupId: string; attendanceDate: string },
@@ -166,6 +171,7 @@ export function useVisits(initialDate?: string): VisitsData {
       applyQuickStatus,
       setArchived,
       deleteForever,
+      deleteManyForever,
       enrollChild,
     };
   }
@@ -224,6 +230,7 @@ export function useVisits(initialDate?: string): VisitsData {
     applyQuickStatus,
     setArchived,
     deleteForever,
+    deleteManyForever,
     enrollChild,
   };
 }

@@ -47,6 +47,7 @@ export interface ExpensesData {
   createExpense: (input: ExpenseFormInput) => Promise<void>;
   updateExpense: (previous: Expense, input: ExpenseFormInput) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  deleteManyForever: (ids: string[]) => Promise<void>;
 }
 
 // Culorile exacte din spec (README redesign, secțiunea Cheltuieli) pentru cele
@@ -181,6 +182,10 @@ export function useExpenses(month: string): ExpensesData {
     await session.mutate('/api/record-delete', { type: 'expenses', id });
   }
 
+  async function deleteManyForever(ids: string[]) {
+    await session.mutate('/api/record-delete', { type: 'expenses', ids });
+  }
+
   if (!ready) {
     return {
       status: loading || !saveError ? 'loading' : 'failed',
@@ -199,6 +204,7 @@ export function useExpenses(month: string): ExpensesData {
       createExpense,
       updateExpense,
       deleteExpense,
+      deleteManyForever,
     };
   }
 
@@ -222,5 +228,6 @@ export function useExpenses(month: string): ExpensesData {
     createExpense,
     updateExpense,
     deleteExpense,
+    deleteManyForever,
   };
 }

@@ -215,11 +215,13 @@ test('refuză ștergerea definitivă a unei înregistrări nearhivate', async t 
     revision: imported.body.revision,
     requestId: randomUUID(),
   });
-  assert.equal(result.status, 400);
+  assert.equal(result.status, 409);
   assert.match(result.body.error, /arhivate pot fi șterse/);
 });
 
-test('refuză ștergerea definitivă a unui copil cu achitări', async t => {
+// B2 (Formulare.dc.html#15h): ștergerea definitivă a unui copil NU mai refuză din cauza
+// achitărilor existente — le dezasociază (childId: ''), ca să apară în Asociere achitări.
+test('ștergerea definitivă a unui copil cu achitări le dezasociază, nu le refuză', async t => {
   const app = await startApplication(t);
   const archivedChild = { ...child, archived: true };
   const payment = {
@@ -242,8 +244,97 @@ test('refuză ștergerea definitivă a unui copil cu achitări', async t => {
     revision: imported.body.revision,
     requestId: randomUUID(),
   });
-  assert.equal(result.status, 400);
-  assert.match(result.body.error, /Șterge mai întâi achitările/);
+  assert.equal(result.status, 200, result.body.error);
+  assert.deepEqual(result.body.state.children, []);
+  assert.equal(result.body.state.payments.length, 1, 'plata rămâne, nu se șterge');
+  assert.equal(result.body.state.payments[0].childId, '', 'plata rămâne, dar fără copil');
+  assert.deepEqual(validateState(result.body.state), result.body.state);
+});
+
+test('ștergerea definitivă a unui copil îi șterge plătitorii reținuți și prezența', async t => {
+  const app = await startApplication(t);
+  const alias = {
+    id: 'PAY-ALIAS-1',
+    alias: 'Ion Popescu IBAN MD00XYZ',
+    childId: child.id,
+    createdAt: '2026-09-25T10:00:00.000Z',
+  };
+  const imported = await app.post(
+    '/api/import',
+    request(
+      { children: [child], payments: [], expenses: [], groups: [], categories: [], visits: [], payerAliases: [alias] },
+      0,
+    ),
+  );
+  // Prezența se marchează cât copilul e activ (un copil arhivat nu e „înscris” pentru
+  // isChildEnrolledOn) — abia apoi îl arhivăm, ca la fluxul real din aplicație.
+  const marked = await app.post('/api/attendance', {
+    changes: [{ childId: child.id, date: '2020-01-06', status: 'present' }],
+  });
+  assert.equal(marked.status, 200, marked.body.error);
+
+  const archived = await app.post('/api/record', {
+    type: 'children',
+    mode: 'update',
+    record: { ...child, archived: true },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(archived.status, 200, archived.body.error);
+
+  const result = await app.post('/api/record-delete', {
+    type: 'children',
+    id: child.id,
+    revision: archived.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 200, result.body.error);
+  assert.deepEqual(result.body.state.payerAliases, [], 'plătitorul reținut al copilului dispare');
+
+  const attendance = await app.get('/api/attendance?date=2020-01-06');
+  assert.deepEqual(attendance.entries, [], 'prezența copilului dispare');
+});
+
+test('respinge tot lotul dacă un singur id din /api/record-delete nu e arhivat (409)', async t => {
+  const app = await startApplication(t);
+  const archivedChild = { ...child, archived: true };
+  const otherChild = { ...child, id: 'ID-2', archived: false };
+  const imported = await app.post(
+    '/api/import',
+    request(
+      { children: [archivedChild, otherChild], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+      0,
+    ),
+  );
+  const result = await app.post('/api/record-delete', {
+    type: 'children',
+    ids: [archivedChild.id, otherChild.id],
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 409);
+  assert.match(result.body.error, /arhivate pot fi șterse/);
+
+  const envelope = await app.get('/api/state');
+  assert.equal(envelope.state.children.length, 2, 'niciun copil nu s-a șters — lotul e atomic');
+});
+
+test('/api/record-delete cu ids[] șterge tot lotul într-o singură cerere', async t => {
+  const app = await startApplication(t);
+  const first = { ...child, archived: true };
+  const second = { ...child, id: 'ID-2', archived: true };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [first, second], payments: [], expenses: [], groups: [], categories: [], visits: [] }, 0),
+  );
+  const result = await app.post('/api/record-delete', {
+    type: 'children',
+    ids: [first.id, second.id],
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result.status, 200, result.body.error);
+  assert.deepEqual(result.body.state.children, []);
 });
 
 test('refuză ștergerea definitivă a unui copil înscris dintr-o vizită nearhivată', async t => {

@@ -11,7 +11,7 @@ Modulul **independent**: nu importă alt feature. Regulile de zi lucrătoare vin
 | Export | Rol |
 | --- | --- |
 | `createAttendanceRoutes({ database, recordRepository, now?, today? })` | cele două rute din tabelul de mai jos |
-| `createAttendanceRepository(database, { now? })` | `listByDate`, `listByMonth`, `applyChanges` — o singură tranzacție SQLite per lot |
+| `createAttendanceRepository(database, { now? })` | `listByDate`, `listByMonth`, `applyChanges` — o singură tranzacție SQLite per lot; `removeAllForChild(childId)` — cascadă la ștergerea definitivă a unui copil (B2), fără tranzacție proprie (rulează în cea a apelantului) |
 
 | Rută | Corp | 200 | 400 |
 | --- | --- | --- | --- |

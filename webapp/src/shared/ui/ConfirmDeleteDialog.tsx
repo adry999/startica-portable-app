@@ -7,6 +7,8 @@ export interface ConfirmDeleteDialogProps {
   description: string;
   /** Cuvântul pe care operatorul trebuie să-l scrie exact pentru a debloca ștergerea. */
   confirmWord?: string;
+  /** Textul butonului de confirmare (implicit „Șterge definitiv”; B2 trimite „Șterge N copii” etc.). */
+  confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -17,6 +19,7 @@ export function ConfirmDeleteDialog({
   title,
   description,
   confirmWord = 'ȘTERGE',
+  confirmLabel = 'Șterge definitiv',
   onConfirm,
   onCancel,
 }: ConfirmDeleteDialogProps) {
@@ -67,7 +70,7 @@ export function ConfirmDeleteDialog({
             Anulează
           </button>
           <button type="button" className={styles.confirm} disabled={!canConfirm} onClick={onConfirm}>
-            Șterge definitiv
+            {confirmLabel}
           </button>
         </div>
       </div>

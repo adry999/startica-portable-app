@@ -93,6 +93,15 @@
   color: var(--pink);
 }
 
+/* Pastilă plină #e9527c, text alb (B2, 15h) — singurul buton „plin” din bara de selecție,
+   ca să iasă în evidență față de restul (text simplu, fără fundal). */
+.selectionDeleteForever.selectionDeleteForever {
+  background: var(--raspberry);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-12);
+}
+
 .parentCell {
   display: flex;
   flex-direction: column;

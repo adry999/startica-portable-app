@@ -355,6 +355,13 @@
   color: var(--pink) !important;
 }
 
+.selectionDeleteForever {
+  background: var(--raspberry) !important;
+  color: var(--white) !important;
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-12);
+}
+
 .dailyWrap {
   display: flex;
   flex-direction: column;

@@ -17,6 +17,7 @@ import {
   type PillTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatNameList } from '@shared/format/name-list';
 import { exportPaymentsCsv } from './payments-export';
 import { ARCHIVE_FILTER_OPTIONS, type ArchiveFilter, type PaymentRowView, type PaymentsData } from './usePayments';
 import styles from './PaymentsTable.module.css';
@@ -35,9 +36,12 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
   const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<PaymentRowView | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const selectedRows = data.rows.filter(row => selectedRowKeys.has(row.id));
   const selectedTotal = selectedRows.reduce((sum, row) => sum + row.total, 0);
+  const allSelectedArchived = selectedRows.length > 0 && selectedRows.every(row => row.archived);
+  const showDeleteForever = data.archiveFilter === 'archived' || (data.archiveFilter === 'all' && allSelectedArchived);
 
   async function archiveSelected() {
     const targets = selectedRows;
@@ -60,6 +64,30 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
   async function undoArchiveMany(targets: PaymentRowView[]) {
     try {
       for (const row of targets) await data.unarchivePayment(row.id);
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function unarchiveSelected() {
+    const targets = selectedRows;
+    if (targets.length === 0) return;
+    try {
+      await data.unarchiveMany(targets.map(row => row.id));
+      setSelectedRowKeys(new Set());
+      toast.show({ message: `${targets.length} achitări dezarhivate.` });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function deleteSelectedForever() {
+    const targets = selectedRows;
+    if (targets.length === 0) return;
+    try {
+      await data.deleteManyForever(targets.map(row => row.id));
+      setSelectedRowKeys(new Set());
+      toast.show({ message: `${targets.length} achitări șterse definitiv.` });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -233,9 +261,20 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
             <button type="button" onClick={exportSelected}>
               Exportă
             </button>
-            <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
-              Arhivează
-            </button>
+            {data.archiveFilter === 'archived' ? (
+              <button type="button" className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
+                Dezarhivează
+              </button>
+            ) : (
+              <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
+                Arhivează
+              </button>
+            )}
+            {showDeleteForever && (
+              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+                Șterge definitiv
+              </button>
+            )}
           </SelectionBar>
         )}
 
@@ -364,6 +403,18 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
         onConfirm={() => {
           if (deleteTarget) void deleteForever(deleteTarget);
           setDeleteTarget(null);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        title={`Ștergi definitiv ${selectedRows.length} ${selectedRows.length === 1 ? 'achitare' : 'achitări'}?`}
+        description={`${formatNameList(selectedRows.map(row => row.childLabel))}. Se șterg repartizările; obligația lunii se recalculează. Nu poate fi anulată.`}
+        confirmLabel={`Șterge ${selectedRows.length} ${selectedRows.length === 1 ? 'achitare' : 'achitări'}`}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => {
+          void deleteSelectedForever();
+          setBulkDeleteOpen(false);
         }}
       />
     </>

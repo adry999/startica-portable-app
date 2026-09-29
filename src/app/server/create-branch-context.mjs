@@ -21,7 +21,7 @@ import { createDataTransferRoutes } from '#features/data-transfer/index.server.m
 import { findRecordIssues } from '#features/review-center/index.server.mjs';
 import { createTelegramService, createTelegramRoutes } from '#features/telegram-notify/index.server.mjs';
 import { createSmsService, createSmsRoutes, createSmsLogRepository } from '#features/sms-notify/index.server.mjs';
-import { createAttendanceRoutes } from '#features/attendance/index.server.mjs';
+import { createAttendanceRoutes, createAttendanceRepository } from '#features/attendance/index.server.mjs';
 import {
   createPersonalRoutes,
   createPersonalRepository,
@@ -157,6 +157,12 @@ export function createBranchContext({
   const isSyncEnabled = () => !!syncDevice.read();
   const recordRepository = createOutboxRecordingRepository(rawRecordRepository, syncOutboxRepository, isSyncEnabled);
   const syncChangeSink = createChangeSink({ outbox: syncOutboxRepository, isEnabled: isSyncEnabled });
+  // A doua instanță, doar pentru cascada de ștergere definitivă a unui copil (B2): aceleași
+  // interogări pregătite ca ale rutei /api/attendance, dar fără transformarea acesteia în rută —
+  // record-editing.routes.mjs o apelează direct, în tranzacția ei (vezi removeAllForChild).
+  const attendanceRepositoryForRecordEditing = createAttendanceRepository(db, {
+    onChange: change => syncChangeSink.record(change.kind, change.id, change.payload),
+  });
 
   // Motorul de sincronizare (Faza 3): construit doar dacă acest calculator e conectat
   // (sync.json existent la deschiderea filialei) — o instalare neconfigurată nu are
@@ -316,7 +322,10 @@ export function createBranchContext({
     ...createAuditLogRoutes({ auditLogRepository }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
     ...createVisitsRoutes({ visitsService }),
-    ...createRecordEditingRoutes(recordWriteDependencies),
+    ...createRecordEditingRoutes({
+      ...recordWriteDependencies,
+      attendanceRepository: attendanceRepositoryForRecordEditing,
+    }),
     ...createChildrenRoutes({ ...recordWriteDependencies, readEnvelope }),
     ...createDataTransferRoutes({
       ...recordWriteDependencies,

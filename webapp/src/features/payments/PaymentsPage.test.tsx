@@ -103,7 +103,13 @@ async function loadedSession() {
 }
 
 describe('PaymentsPage', () => {
+  // Mutabil, resetat la fiecare test — altfel o a doua mutație din aceeași interacțiune (ex.
+  // arhivarea secvențială a mai multor rânduri, M1) ar porni mereu de la fixtureState-ul
+  // static și ar anula modificarea primei (la fel ca `currentExpenses` din ExpensesPage.test.tsx).
+  let currentPayments = fixtureState.payments;
+
   beforeEach(() => {
+    currentPayments = fixtureState.payments;
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -114,19 +120,25 @@ describe('PaymentsPage', () => {
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
-          const updated = {
-            ...fixtureState,
-            payments:
-              body.mode === 'create'
-                ? [...fixtureState.payments, body.record]
-                : fixtureState.payments.map(p => (p.id === body.record.id ? body.record : p)),
-          };
-          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+          currentPayments =
+            body.mode === 'create'
+              ? [...currentPayments, body.record]
+              : currentPayments.map(p => (p.id === body.record.id ? body.record : p));
+          return jsonResponse({
+            state: { ...fixtureState, payments: currentPayments },
+            revision: 2,
+            updatedAt: '2026-09-23T10:05:00Z',
+          });
         }
         if (path === '/api/record-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
-          const updated = { ...fixtureState, payments: fixtureState.payments.filter(p => p.id !== body.id) };
-          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+          const ids: string[] = body.ids ?? (body.id ? [body.id] : []);
+          currentPayments = currentPayments.filter(p => !ids.includes(p.id));
+          return jsonResponse({
+            state: { ...fixtureState, payments: currentPayments },
+            revision: 2,
+            updatedAt: '2026-09-23T10:05:00Z',
+          });
         }
         throw new Error(`neașteptat: ${path}`);
       }),
@@ -399,6 +411,42 @@ describe('PaymentsPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Achitare ștearsă definitiv.')).toBeInTheDocument();
+  });
+
+  it('B2: arhivează 2 achitări, apoi le șterge definitiv în lot din bara de selecție', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'Selectează rândul' });
+    await user.click(checkboxes[0]);
+    await user.click(checkboxes[1]);
+    let selectionBar = screen.getByText(`2 selectate · ${formatMoney(1800)}`).closest('div')!;
+    await user.click(within(selectionBar).getByRole('button', { name: 'Arhivează' }));
+    expect(await screen.findByText('2 achitări arhivate.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Arhivate' }));
+    const archivedCheckboxes = screen.getAllByRole('checkbox', { name: 'Selectează rândul' });
+    await user.click(archivedCheckboxes[0]);
+    await user.click(archivedCheckboxes[1]);
+
+    selectionBar = screen.getByText(`2 selectate · ${formatMoney(1800)}`).closest('div')!;
+    // Dezarhivează, nu Arhivează, cât filtrul e Arhivate.
+    expect(within(selectionBar).getByRole('button', { name: 'Dezarhivează' })).toBeInTheDocument();
+
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
+      expect(path).toBe('/api/record-delete');
+      const body = JSON.parse(options.body as string);
+      expect(body.ids.sort()).toEqual(['p1', 'p4']);
+      return jsonResponse({ state: { ...fixtureState, payments: [] }, revision: 3, updatedAt: '2026-09-23T10:06:00Z' });
+    });
+
+    await user.click(within(selectionBar).getByRole('button', { name: 'Șterge definitiv' }));
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergi definitiv 2 achitări?' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge 2 achitări' }));
+
+    expect(await screen.findByText('2 achitări șterse definitiv.')).toBeInTheDocument();
   });
 
   it('B1: o plată mixtă (Cash + Card) se editează despărțit pe metode, fără „Altele”', async () => {

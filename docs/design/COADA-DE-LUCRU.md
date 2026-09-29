@@ -454,5 +454,21 @@ Urmează A3b (Achitare nouă, 15b).
 
 Urmează B3 (Serviciu pe achitare + migrare bazin) și B2 (ștergere în masă din arhivă) — ambele opriri de confirmare cu utilizatorul înainte de implementare (migrare de date financiare, respectiv ștergere definitivă).
 
+## 2026-09-29 — B3 — doar diagnosticul (oprire de confirmare)
+
+Rulat `scripts/diagnostic/b3-pool-expenses.mjs` (doar citire, comis pentru reproducere) pe bazele de date reale: 143 cheltuieli nearhivate par de fapt încasări de bazin (categorie „Bazin” sau descriere cu „bazin”), 113.250 lei total. Găsit pe drum: niciuna din cele 143 nu are `description`/`method` completate — planul din §B3 presupunea că migrarea le-ar prelua pentru `sourceName`/metoda achitării, dar aici n-ar avea de unde. Scris 3 întrebări deschise în `INTREBARI.md` (metodă implicită la migrare, migrare retroactivă sau doar de-acum înainte, etc.) — niciun cod de schimbat până la răspuns. Migrarea propriu-zisă (modelul `Payment.service`, kind-ul `services`, filă Servicii) rămâne neînceput.
+
+Urmează B2 (ștergere în masă din arhivă) — aprobat de utilizator să înceapă acum.
+
+## 2026-09-29 — B2. Ștergere în masă din arhivă (15h) — DONE
+
+Backend: `/api/record-delete` acceptă acum `{ type, ids }` (lot) pe lângă `{ type, id }` (formă originală, păstrată pentru dialogul vanilla și pentru toate apelurile single-record existente) — exact unul dintre ele. Validarea rulează pe tot lotul înainte de orice ștergere (un singur id nearhivat respinge tot lotul, 409), într-o singură tranzacție (`runRevisionTransaction`). Ștergerea unui **copil** nu mai refuză din cauza achitărilor existente (comportament vechi) — le dezasociază (`childId: ''`, rămân, apar în Asociere achitări), șterge `payerAliases` legate de el și prezența lui (`attendance.repository.mjs` a primit `removeAllForChild(childId)`, fără tranzacție proprie — rulează în cea a apelantului). Refuzurile pe vizită activă/taxe de bazin rămân neschimbate (nu erau în scopul §B2). Istoric: o intrare per fișă cerută la ștergere, nu per efect de cascadă.
+
+Frontend: `ConfirmDeleteDialog` a primit `confirmLabel` opțional (implicit „Șterge definitiv”, neschimbat pentru apelanții existenți). Cele 4 ecrane (Copii, Achitări, Cheltuieli, Vizite) au acum un buton „Șterge definitiv” (pastilă `--raspberry`/alb) în bara de selecție, cu regula de vizibilitate din spec: mereu vizibil în filtrul Arhivate, în Toate doar când toate rândurile selectate sunt arhivate, niciodată în Active. Vizite nu avea deloc selecție în masă înainte de asta (doar acțiuni per rând) — a primit `selectable`/`SelectionBar` complet nou (Exportă, Arhivează/Dezarhivează, Șterge definitiv), ca paritate cu celelalte 3; Achitări a primit în plus „Dezarhivează” în lot (exista doar per rând). Confirmarea listează numele (max. 5 + „și încă N”, `shared/format/name-list.ts`) și explică ce se șterge odată cu fișele.
+
+Backend: 8 teste noi de integrare (`record-editing.routes.routes.integration.test.mjs`) + 2 pe `attendance.repository.test.mjs` (`removeAllForChild`). Frontend: 4 teste noi (câte unul per ecran) pentru vizibilitatea butonului + fluxul de confirmare + apelul cu `ids[]`. `npm run check` (root, 1177/1177 + 2 skip) + webapp (typecheck curat, 878/878 teste) — toate verzi. Documente rămase în afara scopului: A9 (Documente pe fișă) nu există încă, deci „se șterg documentele” din spec nu are ce să șteargă până atunci.
+
+Urmează A6 (Asociere achitări).
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.

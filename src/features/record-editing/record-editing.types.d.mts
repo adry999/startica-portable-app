@@ -12,17 +12,21 @@ export interface RecordSaveRequest extends RevisionRequest {
   mode: 'create' | 'update';
 }
 
-/** Contractul HTTP existent al /api/record-delete; se păstrează neschimbat la migrare.
- *  Doar tipurile cu arhivare pot fi șterse definitiv (grupele/categoriile au rutele lor). */
+/** Contractul HTTP al /api/record-delete — `id` (o singură înregistrare, forma originală)
+ *  sau `ids` (lot, B2/15h): exact unul dintre ele. Doar tipurile cu arhivare pot fi șterse
+ *  definitiv (grupele/categoriile au rutele lor); orice id nearhivat respinge tot lotul (409). */
 export interface RecordDeleteRequest extends RevisionRequest {
   type: EditableRecordType;
-  id: string;
+  id?: string;
+  ids?: string[];
 }
 
 export interface RecordEditingRoutesDependencies {
   recordRepository: RecordRepository;
   auditTrail: AuditTrail;
   runRevisionTransaction: RunRevisionTransaction;
+  /** Doar pt. cascada de la ștergerea definitivă a unui copil (B2): șterge prezența lui. */
+  attendanceRepository: { removeAllForChild(childId: string): void };
 }
 
 /**

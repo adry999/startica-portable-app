@@ -7,6 +7,17 @@
   font-size: 12px;
 }
 
+.selectionArchive {
+  color: var(--pink) !important;
+}
+
+.selectionDeleteForever {
+  background: var(--raspberry) !important;
+  color: var(--white) !important;
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-12);
+}
+
 .arrowButton {
   width: 32px;
   height: 32px;

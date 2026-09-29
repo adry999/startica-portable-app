@@ -11,6 +11,7 @@ import {
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
+import { formatNameList } from '@shared/format/name-list';
 import { useChildren, type ChildRow } from './useChildren';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
@@ -61,6 +62,7 @@ function ChildrenListView({
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChildRow | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   useTopbarActions(
     <div className={styles.headerActions}>
@@ -230,6 +232,22 @@ function ChildrenListView({
     }
   }
 
+  async function deleteSelectedForever() {
+    const ids = [...selectedRowKeys];
+    const targets = childrenData.rows.filter(row => ids.includes(row.id));
+    if (targets.length === 0) return;
+    try {
+      await session.mutate('/api/record-delete', {
+        type: 'children',
+        ids: targets.map(row => row.id),
+      });
+      setSelectedRowKeys(new Set());
+      toast.show({ message: `${targets.length} ${targets.length === 1 ? 'copil șters' : 'copii șterși'} definitiv.` });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
   if (childrenData.status === 'loading') return <LoadingState />;
   if (childrenData.status === 'failed')
     return <p className={styles.notice}>{childrenData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
@@ -251,6 +269,9 @@ function ChildrenListView({
     );
   }
   if (paymentFilter !== 'all') activeFilterLabels.push(paymentFilter);
+
+  const selectedRows = childrenData.rows.filter(row => selectedRowKeys.has(row.id));
+  const allSelectedArchived = selectedRows.length > 0 && selectedRows.every(row => row.archived);
 
   function clearFilters() {
     setQuery('');
@@ -297,6 +318,8 @@ function ChildrenListView({
             archiveFilter={archiveFilter}
             onArchive={() => void archiveSelected()}
             onUnarchive={() => void unarchiveSelected()}
+            allSelectedArchived={allSelectedArchived}
+            onDeleteForever={() => setBulkDeleteOpen(true)}
           />
         )}
 
@@ -343,6 +366,18 @@ function ChildrenListView({
         onConfirm={() => {
           if (deleteTarget) void deleteChildForever(deleteTarget);
           setDeleteTarget(null);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        title={`Ștergi definitiv ${selectedRows.length} ${selectedRows.length === 1 ? 'copil' : 'copii'}?`}
+        description={`${formatNameList(selectedRows.map(row => row.name))}. Se șterg prezența, plătitorii reținuți; achitările rămân, cu copil neasociat. Nu poate fi anulată.`}
+        confirmLabel={`Șterge ${selectedRows.length} ${selectedRows.length === 1 ? 'copil' : 'copii'}`}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => {
+          void deleteSelectedForever();
+          setBulkDeleteOpen(false);
         }}
       />
     </>

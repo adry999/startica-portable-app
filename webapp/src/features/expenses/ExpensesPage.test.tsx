@@ -113,7 +113,9 @@ describe('ExpensesPage', () => {
         }
         if (path === '/api/record-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
-          const updated = { ...fixtureState, expenses: fixtureState.expenses.filter(e => e.id !== body.id) };
+          const ids: string[] = body.ids ?? (body.id ? [body.id] : []);
+          currentExpenses = currentExpenses.filter(e => !ids.includes(e.id));
+          const updated = { ...fixtureState, expenses: currentExpenses };
           return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
         }
         throw new Error(`neașteptat: ${path}`);
@@ -480,6 +482,29 @@ describe('ExpensesPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Șterge definitiv' }));
 
     expect(await screen.findByText('Cheltuială ștearsă definitiv.')).toBeInTheDocument();
+  });
+
+  it('B2: „Șterge definitiv” din bara de selecție șterge în lot cheltuielile arhivate selectate', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Nearhivate ▾'));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Arhivate' }));
+    const row = screen.getByText('Chirie sediu').closest('tr')!;
+    await user.click(within(row).getByRole('checkbox'));
+
+    const selectionBar = screen.getByText(/1 selectate/).closest('div')!;
+    await user.click(within(selectionBar).getByRole('button', { name: 'Șterge definitiv' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergi definitiv 1 cheltuială?' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge 1 cheltuială' }));
+
+    expect(await screen.findByText('1 cheltuială ștearsă definitiv.')).toBeInTheDocument();
+    expect(screen.queryByText('Chirie sediu')).not.toBeInTheDocument();
   });
 
   it('comută pe vizualizarea „Pe zile” și grupează cheltuielile pe dată', async () => {

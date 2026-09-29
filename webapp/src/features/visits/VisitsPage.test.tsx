@@ -109,7 +109,8 @@ describe('VisitsPage', () => {
         }
         if (path === '/api/record-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
-          const updated = { ...fixtureState, visits: fixtureState.visits.filter(v => v.id !== body.id) };
+          const ids: string[] = body.ids ?? (body.id ? [body.id] : []);
+          const updated = { ...fixtureState, visits: fixtureState.visits.filter(v => !ids.includes(v.id)) };
           return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
         }
         if (path === '/api/visits-enrol') {
@@ -260,5 +261,33 @@ describe('VisitsPage', () => {
     expect(within(table).getByText('Vlad Rusu')).toBeInTheDocument();
     expect(within(table).queryByText('Andrei Popescu')).not.toBeInTheDocument();
     expect(within(table).queryByText('Maria Ionescu')).not.toBeInTheDocument();
+  });
+
+  it('B2: bara de selecție nu arată „Șterge definitiv” în Programate, dar da în Arhivate, și șterge în lot', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    const table = screen.getByRole('table');
+    const activeRow = within(table).getByText('Andrei Popescu').closest('tr')!;
+    await user.click(within(activeRow).getByRole('checkbox', { name: 'Selectează rândul' }));
+    let selectionBar = screen.getByText('1 selectate').closest('div')!;
+    expect(within(selectionBar).queryByRole('button', { name: 'Șterge definitiv' })).not.toBeInTheDocument();
+    await user.click(within(selectionBar).getByRole('button', { name: 'Anulează ×' }));
+
+    await user.click(screen.getByRole('radio', { name: /Arhivate/ }));
+    const archivedRow = within(screen.getByRole('table')).getByText('Vlad Rusu').closest('tr')!;
+    await user.click(within(archivedRow).getByRole('checkbox', { name: 'Selectează rândul' }));
+    selectionBar = screen.getByText('1 selectate').closest('div')!;
+    await user.click(within(selectionBar).getByRole('button', { name: 'Șterge definitiv' }));
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Ștergi definitiv 1 vizită?' });
+    await user.type(within(dialog).getByLabelText('Scrie ȘTERGE pentru confirmare'), 'ȘTERGE');
+    await user.click(within(dialog).getByRole('button', { name: 'Șterge 1 vizită' }));
+
+    expect(await screen.findByText('1 vizită ștearsă definitiv.')).toBeInTheDocument();
+    expect(screen.queryByText('Vlad Rusu')).not.toBeInTheDocument();
   });
 });

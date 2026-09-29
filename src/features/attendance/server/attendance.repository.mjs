@@ -34,6 +34,8 @@ export function createAttendanceRepository(database, { now = () => new Date(), o
     'SELECT child_id,date,status,reason,updated_at FROM attendance WHERE child_id=? AND date=?',
   );
   const deleteStatement = database.prepare('DELETE FROM attendance WHERE child_id=? AND date=?');
+  const selectByChildStatement = database.prepare('SELECT date FROM attendance WHERE child_id=?');
+  const deleteByChildStatement = database.prepare('DELETE FROM attendance WHERE child_id=?');
   const upsertStatement = database.prepare(
     `INSERT INTO attendance(child_id,date,status,reason,updated_at) VALUES(?,?,?,?,?)
      ON CONFLICT(child_id,date) DO UPDATE SET status=excluded.status,reason=excluded.reason,updated_at=excluded.updated_at`,
@@ -93,7 +95,20 @@ export function createAttendanceRepository(database, { now = () => new Date(), o
     }
   }
 
-  return { listByDate, listByMonth, applyChanges };
+  /**
+   * Ștergere în cascadă (B2, Formulare.dc.html#15h) — apelată din tranzacția de
+   * ștergere definitivă a unui copil, care ține deja `BEGIN IMMEDIATE` pe aceeași
+   * conexiune; de-aia nu are propria tranzacție, spre deosebire de applyChanges.
+   * @param {string} childId
+   */
+  function removeAllForChild(childId) {
+    const dates = selectByChildStatement.all(childId).map(row => /** @type {{ date: string }} */ (row).date);
+    if (dates.length === 0) return;
+    deleteByChildStatement.run(childId);
+    for (const date of dates) onChange?.({ kind: 'attendance', id: `${childId}|${date}`, payload: null });
+  }
+
+  return { listByDate, listByMonth, applyChanges, removeAllForChild };
 }
 
 /** @typedef {ReturnType<typeof createAttendanceRepository>} AttendanceRepository */

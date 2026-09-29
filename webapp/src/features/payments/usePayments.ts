@@ -83,9 +83,11 @@ export interface PaymentsData {
   archivePayment: (id: string) => Promise<void>;
   unarchivePayment: (id: string) => Promise<void>;
   archiveMany: (ids: string[]) => Promise<void>;
+  unarchiveMany: (ids: string[]) => Promise<void>;
   createPayment: (values: PaymentFormValues, confirmDuplicate: () => boolean) => Promise<boolean>;
   updatePayment: (previous: Payment, values: PaymentFormValues) => Promise<void>;
   deletePayment: (id: string) => Promise<void>;
+  deleteManyForever: (ids: string[]) => Promise<void>;
 }
 
 const EMPTY_SUMMARY: PaymentsSummary = {
@@ -172,6 +174,10 @@ export function usePayments(initialChildId = ''): PaymentsData {
     for (const id of ids) await archivePayment(id);
   }
 
+  async function unarchiveMany(ids: string[]) {
+    for (const id of ids) await unarchivePayment(id);
+  }
+
   // `confirmDuplicate` e injectat de pagină (window.confirm), ca hook-ul să
   // rămână testabil fără un dialog real de browser — la fel ca `context.confirm`
   // din record-editor-dialog.mjs.
@@ -192,6 +198,10 @@ export function usePayments(initialChildId = ''): PaymentsData {
     await session.mutate('/api/record-delete', { type: 'payments', id });
   }
 
+  async function deleteManyForever(ids: string[]) {
+    await session.mutate('/api/record-delete', { type: 'payments', ids });
+  }
+
   const actions = {
     search,
     setSearch,
@@ -210,9 +220,11 @@ export function usePayments(initialChildId = ''): PaymentsData {
     archivePayment,
     unarchivePayment,
     archiveMany,
+    unarchiveMany,
     createPayment,
     updatePayment,
     deletePayment,
+    deleteManyForever,
   };
 
   if (!ready) {

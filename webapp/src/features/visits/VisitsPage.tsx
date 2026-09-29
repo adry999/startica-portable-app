@@ -11,6 +11,7 @@ import {
   SearchInput,
   SearchSelect,
   SegmentedControl,
+  SelectionBar,
   useToast,
   useTopbarActions,
   type BadgeTone,
@@ -19,6 +20,8 @@ import {
 } from '@shared/ui';
 import { formatAge, formatDate } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
+import { downloadCsv } from '@shared/csv-export';
+import { formatNameList } from '@shared/format/name-list';
 import { useVisits } from './useVisits';
 import { VisitFormDrawer } from './VisitFormDrawer';
 import { EnrollDrawer } from './EnrollDrawer';
@@ -83,6 +86,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   const [formTarget, setFormTarget] = useState<Visit | 'new' | null>(null);
   const [enrollTarget, setEnrollTarget] = useState<Visit | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Visit | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   useTopbarActions(<Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>);
 
@@ -141,6 +146,52 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     }
   }
 
+  const selectedVisits = visitsData.rows.filter(visit => selectedRowKeys.has(visit.id));
+
+  async function archiveSelectedVisits() {
+    const targetArchived = !visitsData.showArchived;
+    if (selectedVisits.length === 0) return;
+    try {
+      for (const visit of selectedVisits) await visitsData.setArchived(visit, targetArchived);
+      setSelectedRowKeys(new Set());
+      const single = selectedVisits.length === 1;
+      toast.show({
+        message: `${selectedVisits.length} ${single ? 'vizită' : 'vizite'} ${targetArchived ? (single ? 'arhivată' : 'arhivate') : single ? 'dezarhivată' : 'dezarhivate'}.`,
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  function exportSelectedVisits() {
+    if (selectedVisits.length === 0) return;
+    downloadCsv(
+      `vizite-selectate-${selectedVisits.length}.csv`,
+      ['Data', 'Ora', 'Copil', 'Părinte', 'Telefon', 'Statut'],
+      selectedVisits.map(visit => [
+        visit.date,
+        visit.time,
+        visit.name,
+        visit.parent,
+        visit.phone ?? '',
+        STATUS_LABEL[visit.status],
+      ]),
+    );
+  }
+
+  async function deleteSelectedVisitsForever() {
+    if (selectedVisits.length === 0) return;
+    try {
+      await visitsData.deleteManyForever(selectedVisits.map(visit => visit.id));
+      setSelectedRowKeys(new Set());
+      toast.show({
+        message: `${selectedVisits.length} ${selectedVisits.length === 1 ? 'vizită ștearsă' : 'vizite șterse'} definitiv.`,
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
   async function submitEnroll(overrides: { fee: string; groupId: string; attendanceDate: string }) {
     if (!enrollTarget) return;
     try {
@@ -165,6 +216,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   function setQuickFilter(next: 'all' | 'scheduled' | 'archived') {
     visitsData.setShowArchived(next === 'archived');
     visitsData.setStatusFilter(next === 'scheduled' ? 'Programată' : '');
+    setSelectedRowKeys(new Set());
   }
 
   const quickFilterCounts = {
@@ -517,11 +569,30 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           trailing={`${visitsData.rows.length} vizite`}
         />
 
+        {selectedRowKeys.size > 0 && (
+          <SelectionBar label={<>{selectedRowKeys.size} selectate</>} onCancel={() => setSelectedRowKeys(new Set())}>
+            <button type="button" onClick={exportSelectedVisits}>
+              Exportă
+            </button>
+            <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelectedVisits()}>
+              {visitsData.showArchived ? 'Dezarhivează' : 'Arhivează'}
+            </button>
+            {visitsData.showArchived && (
+              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+                Șterge definitiv
+              </button>
+            )}
+          </SelectionBar>
+        )}
+
         <DataTable
           bare
           columns={columns}
           rows={visitsData.rows}
           rowKey={row => row.id}
+          selectable
+          selectedRowKeys={selectedRowKeys}
+          onSelectedRowKeysChange={setSelectedRowKeys}
           onRowClick={row => visitsData.setSelectedDate(row.date)}
           rowClassName={row => (row.date === visitsData.selectedDate ? styles.selectedDayRow : undefined)}
           emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
@@ -559,6 +630,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         onConfirm={() => {
           if (deleteTarget) void deleteForever(deleteTarget);
           setDeleteTarget(null);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        title={`Ștergi definitiv ${selectedVisits.length} ${selectedVisits.length === 1 ? 'vizită' : 'vizite'}?`}
+        description={`${formatNameList(selectedVisits.map(visit => visit.name))}. Doar înregistrarea. Nu poate fi anulată.`}
+        confirmLabel={`Șterge ${selectedVisits.length} ${selectedVisits.length === 1 ? 'vizită' : 'vizite'}`}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => {
+          void deleteSelectedVisitsForever();
+          setBulkDeleteOpen(false);
         }}
       />
     </>

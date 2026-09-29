@@ -14,7 +14,12 @@ const DELETE_ACTION = 'ștergere definitivă';
 const DELETABLE_TYPES = ['children', 'payments', 'expenses', 'visits'];
 
 /** @param {RecordEditingRoutesDependencies} dependencies */
-export function createRecordEditingRoutes({ recordRepository, auditTrail, runRevisionTransaction }) {
+export function createRecordEditingRoutes({
+  recordRepository,
+  auditTrail,
+  runRevisionTransaction,
+  attendanceRepository,
+}) {
   /** @param {RecordSaveRequest} request */
   function saveRecord(request) {
     return runRevisionTransaction(request, { action: SAVE_ACTION, backupBefore: false }, () => {
@@ -63,37 +68,52 @@ export function createRecordEditingRoutes({ recordRepository, auditTrail, runRev
     });
   }
 
+  // Copil (B2, Formulare.dc.html#15h): se șterg prezența și plătitorii reținuți; achitările
+  // NU se mai refuză (ca înainte) — rămân, doar dezasociate, ca să apară în Asociere achitări.
+  // Notele sunt embedded pe fișa copilului, deci dispar odată cu ea, fără pas separat.
+  /** @param {string} childId */
+  function cascadeChildDeletion(childId) {
+    const snapshot = recordRepository.readSnapshot();
+    for (const payment of snapshot.payments)
+      if (payment.childId === childId) recordRepository.save('payments', { ...payment, childId: '' });
+    for (const alias of snapshot.payerAliases ?? [])
+      if (alias.childId === childId) recordRepository.remove('payerAliases', alias.id);
+    attendanceRepository.removeAllForChild(childId);
+  }
+
   /** @param {RecordDeleteRequest} request */
   function deleteRecord(request) {
     // Ireversibil, spre deosebire de arhivare — de-aia backup înainte.
     return runRevisionTransaction(request, { action: DELETE_ACTION, backupBefore: true }, () => {
+      const ids = Array.isArray(request.ids) ? request.ids : typeof request.id === 'string' ? [request.id] : [];
+      if (ids.length === 0) fail('Lista de șters este goală.');
       if (!DELETABLE_TYPES.includes(request.type)) fail('Tip invalid.');
-      const record = recordRepository.find(request.type, request.id);
-      if (!record) fail('Înregistrarea nu mai există.', 409);
-      if (!record.archived) fail('Doar înregistrările arhivate pot fi șterse definitiv.');
-      if (
-        request.type === 'children' &&
-        recordRepository.readSnapshot().payments.some(payment => payment.childId === request.id)
-      )
-        fail('Șterge mai întâi achitările copilului, altfel ar rămâne fără copil valid.');
-      if (
-        request.type === 'children' &&
-        recordRepository.readSnapshot().visits.some(visit => visit.childId === request.id && !visit.archived)
-      )
-        fail('Arhivează mai întâi vizita care l-a înscris, altfel ar rămâne fără copil valid.');
-      if (
-        request.type === 'children' &&
-        (recordRepository.readSnapshot().charges ?? []).some(charge => charge.childId === request.id)
-      )
-        fail('Copilul are taxe de bazin înregistrate — nu poate fi șters.');
-      recordRepository.remove(request.type, request.id);
-      auditTrail.recordChange({
-        action: DELETE_ACTION,
-        recordType: request.type,
-        recordId: request.id,
-        before: record,
-        after: null,
+      // Validare întâi, pentru tot lotul — un singur id nearhivat respinge totul, nimic
+      // nu se șterge parțial (revision-transaction rulează asta într-un singur BEGIN/COMMIT).
+      const records = ids.map(id => {
+        const record = recordRepository.find(request.type, id);
+        if (!record) fail('Înregistrarea nu mai există.', 409);
+        if (!record.archived) fail('Doar înregistrările arhivate pot fi șterse definitiv.', 409);
+        return record;
       });
+      if (request.type === 'children')
+        for (const id of ids) {
+          if (recordRepository.readSnapshot().visits.some(visit => visit.childId === id && !visit.archived))
+            fail('Arhivează mai întâi vizita care l-a înscris, altfel ar rămâne fără copil valid.');
+          if ((recordRepository.readSnapshot().charges ?? []).some(charge => charge.childId === id))
+            fail('Copilul are taxe de bazin înregistrate — nu poate fi șters.');
+        }
+      for (const record of records) {
+        if (request.type === 'children') cascadeChildDeletion(record.id);
+        recordRepository.remove(request.type, record.id);
+        auditTrail.recordChange({
+          action: DELETE_ACTION,
+          recordType: request.type,
+          recordId: record.id,
+          before: record,
+          after: null,
+        });
+      }
     });
   }
 

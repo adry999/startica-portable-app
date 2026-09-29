@@ -17,6 +17,7 @@ import {
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
 import { shiftMonth } from '@shared/format/month-shift';
+import { formatNameList } from '@shared/format/name-list';
 import { total } from '@domain/money.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -74,6 +75,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [deleteTarget, setDeleteTarget] = useState<
     { kind: 'category'; id: string; name: string } | { kind: 'expense'; expense: Expense } | null
   >(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const monthExpenses = useMemo(
     () => expensesData.expenses.filter(expense => expense.date.startsWith(monthKey)),
@@ -165,6 +167,21 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
+  async function deleteSelectedForever() {
+    const ids = [...selectedRowKeys];
+    const targets = expensesData.expenses.filter(expense => ids.includes(expense.id));
+    if (targets.length === 0) return;
+    try {
+      await expensesData.deleteManyForever(targets.map(expense => expense.id));
+      setSelectedRowKeys(new Set());
+      toast.show({
+        message: `${targets.length} ${targets.length === 1 ? 'cheltuială ștearsă' : 'cheltuieli șterse'} definitiv.`,
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
   async function archiveSelected() {
     const targetArchived = archiveFilter !== 'archived';
     const ids = [...selectedRowKeys];
@@ -232,7 +249,10 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   if (expensesData.status === 'failed')
     return <p className={styles.notice}>{expensesData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
-  const selectedTotal = total(filteredExpenses.filter(expense => selectedRowKeys.has(expense.id)));
+  const selectedExpenses = filteredExpenses.filter(expense => selectedRowKeys.has(expense.id));
+  const selectedTotal = total(selectedExpenses);
+  const allSelectedArchived = selectedExpenses.length > 0 && selectedExpenses.every(expense => expense.archived);
+  const showDeleteForever = archiveFilter === 'archived' || (archiveFilter === 'all' && allSelectedArchived);
 
   const columns = buildExpenseColumns({
     onEdit: expense => setFormTarget(expense),
@@ -274,6 +294,11 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
               {archiveFilter === 'archived' ? 'Dezarhivează selectate' : 'Arhivează selectate'}
             </button>
+            {showDeleteForever && (
+              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+                Șterge definitiv
+              </button>
+            )}
           </SelectionBar>
         )}
 
@@ -344,6 +369,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
           if (deleteTarget?.kind === 'category') void deleteCategoryConfirmed(deleteTarget.id);
           else if (deleteTarget?.kind === 'expense') void deleteExpenseForever(deleteTarget.expense);
           setDeleteTarget(null);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        title={`Ștergi definitiv ${selectedExpenses.length} ${selectedExpenses.length === 1 ? 'cheltuială' : 'cheltuieli'}?`}
+        description={`${formatNameList(selectedExpenses.map(expense => expense.description || expense.category))}. Doar înregistrarea. Nu poate fi anulată.`}
+        confirmLabel={`Șterge ${selectedExpenses.length} ${selectedExpenses.length === 1 ? 'cheltuială' : 'cheltuieli'}`}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => {
+          void deleteSelectedForever();
+          setBulkDeleteOpen(false);
         }}
       />
     </>

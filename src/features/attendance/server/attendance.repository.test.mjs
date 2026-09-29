@@ -87,6 +87,39 @@ test('un onChange care aruncă anulează tot lotul, ca oricare altă eroare din 
   assert.equal(database.prepare('SELECT * FROM attendance').all().length, 0);
 });
 
+test('removeAllForChild șterge toate zilele copilului, notifică onChange și nu atinge alți copii', () => {
+  const notified = [];
+  const { database, repository } = createRepository({ onChange: change => notified.push(change) });
+  repository.applyChanges([
+    { childId: 'c1', date: '2026-09-01', status: 'present', reason: '' },
+    { childId: 'c1', date: '2026-09-02', status: 'absent', reason: '' },
+    { childId: 'c2', date: '2026-09-01', status: 'present', reason: '' },
+  ]);
+  notified.length = 0;
+
+  repository.removeAllForChild('c1');
+
+  const rows = database.prepare('SELECT * FROM attendance').all();
+  assert.deepEqual(
+    rows.map(row => row.child_id),
+    ['c2'],
+  );
+  assert.deepEqual(notified.map(change => change.id).sort(), ['c1|2026-09-01', 'c1|2026-09-02']);
+  assert.ok(notified.every(change => change.payload === null));
+});
+
+test('removeAllForChild pe un copil fără prezență nu face nimic și nu notifică', () => {
+  const notified = [];
+  const { database, repository } = createRepository({ onChange: change => notified.push(change) });
+  repository.applyChanges([{ childId: 'c1', date: '2026-09-01', status: 'present', reason: '' }]);
+  notified.length = 0;
+
+  repository.removeAllForChild('c-fara-prezenta');
+
+  assert.equal(database.prepare('SELECT * FROM attendance').all().length, 1);
+  assert.equal(notified.length, 0);
+});
+
 test('o eroare la mijlocul lotului anulează tot lotul', () => {
   const { database, repository } = createRepository();
   // date: null nu e o schimbare validă (ar fi respinsă de rutele care validează dinainte);
