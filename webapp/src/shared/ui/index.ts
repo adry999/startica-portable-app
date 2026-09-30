@@ -12,6 +12,8 @@ export { NumberInput, type NumberInputProps } from './NumberInput';
 export { DateInput, type DateInputProps } from './DateInput';
 export { AmountInput, type AmountInputProps } from './AmountInput';
 export { TextArea, type TextAreaProps } from './TextArea';
+export { Select, type SelectOption, type SelectProps } from './Select';
+export { PhoneInput, type PhoneInputProps } from './PhoneInput';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Toggle, type ToggleProps } from './Toggle';
 export { Drawer, type DrawerProps } from './Drawer';

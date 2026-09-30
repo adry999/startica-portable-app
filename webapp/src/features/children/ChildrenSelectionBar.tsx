@@ -1,4 +1,4 @@
-import { RowMenu, SelectionBar } from '@shared/ui';
+import { Button, RowMenu, SelectionBar } from '@shared/ui';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ArchiveFilter } from './ChildrenToolbar';
 import styles from './ChildrenPage.module.css';
@@ -42,22 +42,22 @@ export function ChildrenSelectionBar({
           ...groups.map(group => ({ label: group.name, onClick: () => onMove(group.id) })),
         ]}
       />
-      <button type="button" onClick={onExport}>
+      <Button className={styles.selectionExport} onClick={onExport}>
         Exportă
-      </button>
+      </Button>
       {archiveFilter === 'archived' ? (
-        <button type="button" className={styles.selectionArchive} onClick={onUnarchive}>
+        <Button className={styles.selectionArchive} onClick={onUnarchive}>
           Dezarhivează
-        </button>
+        </Button>
       ) : (
-        <button type="button" className={styles.selectionArchive} onClick={onArchive}>
+        <Button className={styles.selectionArchive} onClick={onArchive}>
           Arhivează
-        </button>
+        </Button>
       )}
       {showDeleteForever && (
-        <button type="button" className={styles.selectionDeleteForever} onClick={onDeleteForever}>
+        <Button className={styles.selectionDeleteForever} onClick={onDeleteForever}>
           Șterge definitiv
-        </button>
+        </Button>
       )}
     </SelectionBar>
   );

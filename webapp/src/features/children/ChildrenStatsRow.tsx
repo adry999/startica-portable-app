@@ -1,4 +1,4 @@
-import { Card } from '@shared/ui';
+import { Button, Card } from '@shared/ui';
 import styles from './ChildrenPage.module.css';
 
 export interface ChildrenStatsRowProps {
@@ -38,9 +38,9 @@ export function ChildrenStatsRow({
           <span>Fișe de verificat</span>
           <small>în centrul de verificare</small>
         </div>
-        <button type="button" className={styles.statLink} onClick={onReview}>
+        <Button variant="link" className={styles.statLink} onClick={onReview}>
           Verifică →
-        </button>
+        </Button>
       </Card>
     </div>
   );

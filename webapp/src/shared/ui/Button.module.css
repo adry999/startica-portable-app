@@ -38,6 +38,13 @@
   color: var(--slate);
 }
 
+/* Link fără chenar/fundal — acțiuni secundare în text (ex. „Schimbă”, „+ Adaugă” dintr-o fișă). */
+.link {
+  padding: 0;
+  color: var(--orange-ink);
+  font-weight: 700;
+}
+
 .lg {
   padding: var(--space-10) var(--space-20);
 }

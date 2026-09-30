@@ -1,0 +1,56 @@
+.box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 11px 14px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--input-border);
+  background: var(--white);
+}
+
+.box:has(.select:hover) {
+  border-color: var(--subtle);
+}
+
+.box:has(.select:focus) {
+  border-width: 1.5px;
+  padding: 10.5px 13.5px;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-soft);
+}
+
+.box:has(.select:disabled) {
+  background: var(--neutral-soft);
+  border-color: var(--border);
+}
+
+.box.invalid {
+  border-width: 1.5px;
+  padding: 10.5px 13.5px;
+  border-color: var(--raspberry);
+  background: var(--error-bg-soft);
+}
+
+.select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  appearance: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.select:disabled {
+  color: var(--subtle);
+}
+
+.caret {
+  flex: none;
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}

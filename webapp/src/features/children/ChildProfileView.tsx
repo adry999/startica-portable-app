@@ -5,6 +5,7 @@ import {
   BnmRateLink,
   Button,
   DataTable,
+  IconButton,
   LoadingState,
   ProfileLayout,
   ProfileNotFound,
@@ -12,6 +13,7 @@ import {
   RowMenu,
   SearchSelect,
   StatCard,
+  TextArea,
   groupTone,
   useToast,
   type DataTableColumn,
@@ -254,9 +256,9 @@ export function ChildProfileView({
               <div className={styles.divider} />
               <div className={styles.sectionSubtitleRow}>
                 <span className={styles.sectionSubtitle}>Pot ridica copilul</span>
-                <button type="button" className={styles.sectionLink} onClick={() => setEditDrawerOpen(true)}>
+                <Button variant="link" onClick={() => setEditDrawerOpen(true)}>
                   + Adaugă
-                </button>
+                </Button>
               </div>
               {(child.pickupPersons ?? []).length === 0 ? (
                 <p className={styles.notice}>Nimeni adăugat.</p>
@@ -303,9 +305,9 @@ export function ChildProfileView({
                     ]}
                   />
                 ) : (
-                  <button type="button" className={styles.sectionLink} onClick={() => setChangingGroup(true)}>
+                  <Button variant="link" onClick={() => setChangingGroup(true)}>
                     Schimbă
-                  </button>
+                  </Button>
                 )}
               </div>
             </ProfileSection>
@@ -330,11 +332,12 @@ export function ChildProfileView({
                     void addNote();
                   }}
                 >
-                  <textarea
+                  <TextArea
+                    ariaLabel="Notă nouă"
                     rows={2}
                     autoFocus
                     value={noteText}
-                    onChange={event => setNoteText(event.target.value)}
+                    onChange={setNoteText}
                     onKeyDown={event => {
                       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                         event.preventDefault();
@@ -365,11 +368,12 @@ export function ChildProfileView({
                           void saveNoteEdit(note);
                         }}
                       >
-                        <textarea
+                        <TextArea
+                          ariaLabel="Editează nota"
                           rows={2}
                           autoFocus
                           value={editingNoteText}
-                          onChange={event => setEditingNoteText(event.target.value)}
+                          onChange={setEditingNoteText}
                           onKeyDown={event => {
                             if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                               event.preventDefault();
@@ -484,9 +488,9 @@ export function ChildProfileView({
             <ProfileSection title="Plătitori reținuți">
               <p className={styles.aliasIntro}>
                 Transferurile de la ei se propun direct pentru {child.firstName || child.name} la{' '}
-                <button type="button" onClick={() => onNavigate('assign')}>
+                <Button variant="link" onClick={() => onNavigate('assign')}>
                   Asociere achitări
-                </button>
+                </Button>
                 .
               </p>
               {profileData.payerAliases.length === 0 ? (
@@ -505,13 +509,11 @@ export function ChildProfileView({
                           {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
                         </small>
                       </span>
-                      <button
-                        type="button"
-                        aria-label={`Șterge ${alias.alias}`}
+                      <IconButton
+                        icon="×"
+                        ariaLabel={`Șterge ${alias.alias}`}
                         onClick={() => void deleteAlias(alias)}
-                      >
-                        ×
-                      </button>
+                      />
                     </div>
                   );
                 })
@@ -552,9 +554,9 @@ function ParentRow({
       {phone ? (
         <span>{phone}</span>
       ) : (
-        <button type="button" onClick={onAddPhone}>
+        <Button variant="link" onClick={onAddPhone}>
           + adaugă telefon
-        </button>
+        </Button>
       )}
     </div>
   );

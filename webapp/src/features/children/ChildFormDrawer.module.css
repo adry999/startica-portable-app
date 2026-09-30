@@ -67,38 +67,6 @@
   cursor: pointer;
 }
 
-.dueDayField {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 11px 14px;
-}
-
-.dueDayField span {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--subtle);
-}
-
-.dueDayField input {
-  border: none;
-  padding: 0;
-  width: 100%;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.dueDayField input:focus {
-  outline: none;
-}
-
-.dueDayField:focus-within {
-  border: 1.5px solid var(--orange);
-}
-
 .cardGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -225,14 +193,6 @@
   grid-template-columns: 1.2fr 1fr 1fr 1fr auto;
   gap: var(--space-8);
   align-items: center;
-}
-
-.pickupRow input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 8px 12px;
-  font: inherit;
-  font-size: 13px;
 }
 
 .removeRow {

@@ -1,11 +1,16 @@
-import type { ReactNode } from 'react';
-import styles from './TextInput.module.css';
+import styles from './Select.module.css';
 
-export interface TextInputProps {
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface SelectProps {
   id?: string;
   value: string;
   onChange: (value: string) => void;
-  type?: 'text' | 'tel' | 'email' | 'password';
+  options: readonly SelectOption[];
+  /** Prima opțiune, cu valoarea `''` — ex. „—”. */
   placeholder?: string;
   ariaLabel?: string;
   ariaDescribedBy?: string;
@@ -13,18 +18,16 @@ export interface TextInputProps {
   disabled?: boolean;
   required?: boolean;
   autoFocus?: boolean;
-  inputMode?: 'text' | 'numeric' | 'decimal' | 'tel' | 'email' | 'search' | 'url' | 'none';
-  prefix?: ReactNode;
-  suffix?: ReactNode;
   className?: string;
 }
 
-/** Câmp de text pe o singură linie (25a, `COMPONENTE.md` §0) — folosit direct sau prin `Field`. */
-export function TextInput({
+/** Listă derulantă scurtă (25b, `COMPONENTE.md` §0) — aceeași cutie ca `TextInput` + ▾.
+ * 2–8 opțiuni; peste 8, `SearchSelect`. */
+export function Select({
   id,
   value,
   onChange,
-  type = 'text',
+  options,
   placeholder,
   ariaLabel,
   ariaDescribedBy,
@@ -32,31 +35,33 @@ export function TextInput({
   disabled,
   required,
   autoFocus,
-  inputMode,
-  prefix,
-  suffix,
   className,
-}: TextInputProps) {
+}: SelectProps) {
   const classes = [styles.box, invalid ? styles.invalid : '', className ?? ''].filter(Boolean).join(' ');
   return (
     <div className={classes}>
-      {prefix && <span className={styles.affix}>{prefix}</span>}
-      <input
+      <select
         id={id}
-        className={styles.input}
-        type={type}
+        className={styles.select}
         value={value}
         onChange={event => onChange(event.target.value)}
-        placeholder={placeholder}
         aria-label={ariaLabel}
         aria-describedby={ariaDescribedBy}
         aria-invalid={invalid || undefined}
         disabled={disabled}
         required={required}
         autoFocus={autoFocus}
-        inputMode={inputMode}
-      />
-      {suffix && <span className={styles.affix}>{suffix}</span>}
+      >
+        {placeholder !== undefined && <option value="">{placeholder}</option>}
+        {options.map(option => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <span className={styles.caret} aria-hidden="true">
+        ▾
+      </span>
     </div>
   );
 }

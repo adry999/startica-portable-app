@@ -1,6 +1,17 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Drawer, groupTone } from '@shared/ui';
+import {
+  Button,
+  DateInput,
+  Drawer,
+  Field,
+  NumberInput,
+  PhoneInput,
+  Select,
+  TextArea,
+  TextInput,
+  groupTone,
+} from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge, ageInYears } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -21,6 +32,12 @@ export interface ChildFormDrawerProps {
 }
 
 const PARENT_RELATIONS = ['Mamă', 'Tată', 'Bunică', 'Bunic', 'Tutore', 'Altul'];
+const PARENT_RELATION_OPTIONS = PARENT_RELATIONS.map(relation => ({ value: relation, label: relation }));
+const CHILD_STATUS_OPTIONS = CHILD_STATUSES.map(status => ({ value: status, label: status }));
+const CURRENCY_OPTIONS: { value: ChildFeeCurrency; label: string }[] = [
+  { value: 'MDL', label: 'MDL' },
+  { value: 'EUR', label: 'EUR' },
+];
 
 export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, onClose }: ChildFormDrawerProps) {
   const editing = target !== null && target !== 'new' ? target : null;
@@ -163,30 +180,29 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>1 · Copil</legend>
           <div className={styles.grid3}>
-            <label className={styles.field}>
-              Nume
-              <input
+            <Field label="Nume" htmlFor="child-last-name">
+              <TextInput
+                id="child-last-name"
                 required={!editing}
                 value={values.lastName}
-                onChange={event => setNamePart('lastName', event.target.value)}
+                onChange={value => setNamePart('lastName', value)}
               />
-            </label>
-            <label className={styles.field}>
-              Prenume
-              <input
+            </Field>
+            <Field label="Prenume" htmlFor="child-first-name">
+              <TextInput
+                id="child-first-name"
                 required={!editing}
                 value={values.firstName}
-                onChange={event => setNamePart('firstName', event.target.value)}
+                onChange={value => setNamePart('firstName', value)}
               />
-            </label>
-            <label className={styles.field}>
-              Data nașterii
-              <input
-                type="date"
+            </Field>
+            <Field label="Data nașterii" htmlFor="child-birth-date">
+              <DateInput
+                id="child-birth-date"
                 value={values.birthDate}
-                onChange={event => setField('birthDate', event.target.value)}
+                onChange={value => setField('birthDate', value)}
               />
-            </label>
+            </Field>
           </div>
           {values.birthDate && (
             <small className={styles.hint}>
@@ -207,50 +223,44 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>2 · Părinți</legend>
           <div className={styles.parentRow}>
-            <label className={styles.field}>
-              Nume
-              <input required value={values.parent} onChange={event => setField('parent', event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              Telefon
-              <input type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              Relație
-              <select value={values.parentRelation} onChange={event => setField('parentRelation', event.target.value)}>
-                <option value="">—</option>
-                {PARENT_RELATIONS.map(relation => (
-                  <option key={relation} value={relation}>
-                    {relation}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Field label="Nume" htmlFor="parent1-name">
+              <TextInput
+                id="parent1-name"
+                required
+                value={values.parent}
+                onChange={value => setField('parent', value)}
+              />
+            </Field>
+            <Field label="Telefon" htmlFor="parent1-phone">
+              <PhoneInput id="parent1-phone" value={values.phone} onChange={value => setField('phone', value)} />
+            </Field>
+            <Field label="Relație" htmlFor="parent1-relation">
+              <Select
+                id="parent1-relation"
+                value={values.parentRelation}
+                onChange={value => setField('parentRelation', value)}
+                options={PARENT_RELATION_OPTIONS}
+                placeholder="—"
+              />
+            </Field>
           </div>
           {showParent2 ? (
             <div className={styles.parentRow}>
-              <label className={styles.field}>
-                Nume
-                <input value={values.parent2} onChange={event => setField('parent2', event.target.value)} />
-              </label>
-              <label className={styles.field}>
-                Telefon
-                <input type="tel" value={values.phone2} onChange={event => setField('phone2', event.target.value)} />
-              </label>
-              <label className={styles.field}>
-                Relație
-                <select
+              <Field label="Nume" htmlFor="parent2-name">
+                <TextInput id="parent2-name" value={values.parent2} onChange={value => setField('parent2', value)} />
+              </Field>
+              <Field label="Telefon" htmlFor="parent2-phone">
+                <PhoneInput id="parent2-phone" value={values.phone2} onChange={value => setField('phone2', value)} />
+              </Field>
+              <Field label="Relație" htmlFor="parent2-relation">
+                <Select
+                  id="parent2-relation"
                   value={values.parent2Relation}
-                  onChange={event => setField('parent2Relation', event.target.value)}
-                >
-                  <option value="">—</option>
-                  {PARENT_RELATIONS.map(relation => (
-                    <option key={relation} value={relation}>
-                      {relation}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={value => setField('parent2Relation', value)}
+                  options={PARENT_RELATION_OPTIONS}
+                  placeholder="—"
+                />
+              </Field>
             </div>
           ) : (
             <button type="button" className={styles.addParentLink} onClick={() => setShowParent2(true)}>
@@ -262,32 +272,27 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
         <fieldset className={styles.section}>
           <legend className={styles.sectionTitle}>3 · Contract și taxă</legend>
           <div className={styles.grid3}>
-            <label className={styles.field}>
-              Nr. contract
-              <input value={values.contractNumber} onChange={event => setField('contractNumber', event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              Începe la
-              <input
-                type="date"
-                value={values.attendanceDate}
-                onChange={event => setAttendanceDate(event.target.value)}
+            <Field label="Nr. contract" htmlFor="child-contract-number">
+              <TextInput
+                id="child-contract-number"
+                value={values.contractNumber}
+                onChange={value => setField('contractNumber', value)}
               />
-            </label>
-            <label className={styles.field}>
-              Scadență
-              <div className={styles.dueDayField}>
-                <span>ziua</span>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={31}
-                  value={values.dueDay}
-                  onChange={event => setField('dueDay', event.target.value)}
-                />
-              </div>
-            </label>
+            </Field>
+            <Field label="Începe la" htmlFor="child-attendance-date">
+              <DateInput id="child-attendance-date" value={values.attendanceDate} onChange={setAttendanceDate} />
+            </Field>
+            <Field label="Scadență" htmlFor="child-due-day" hint="Ziua din lună (1–31)">
+              <NumberInput
+                id="child-due-day"
+                required
+                min={1}
+                max={31}
+                step={1}
+                value={values.dueDay}
+                onChange={value => setField('dueDay', value)}
+              />
+            </Field>
           </div>
           {presets.length > 0 && (
             <div className={styles.cardGrid}>
@@ -349,69 +354,62 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
             <summary className={styles.detailsSummary}>5 · Alte date</summary>
             <div className={styles.detailsBody}>
               <div className={styles.grid2}>
-                <label className={styles.field}>
-                  IDNP
-                  <input
+                <Field label="IDNP" htmlFor="child-idnp">
+                  <TextInput
+                    id="child-idnp"
                     inputMode="numeric"
-                    maxLength={13}
                     value={values.idnp}
-                    onChange={event => setField('idnp', event.target.value.replace(/\D/g, '').slice(0, 13))}
+                    onChange={value => setField('idnp', value.replace(/\D/g, '').slice(0, 13))}
                   />
-                </label>
-                <label className={styles.field}>
-                  Adresă
-                  <input value={values.address} onChange={event => setField('address', event.target.value)} />
-                </label>
+                </Field>
+                <Field label="Adresă" htmlFor="child-address">
+                  <TextInput id="child-address" value={values.address} onChange={value => setField('address', value)} />
+                </Field>
               </div>
-              <label className={styles.field}>
-                Statut
-                <select value={values.status} onChange={event => setField('status', event.target.value)}>
-                  {CHILD_STATUSES.map(status => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Field label="Statut" htmlFor="child-status">
+                <Select
+                  id="child-status"
+                  value={values.status}
+                  onChange={value => setField('status', value)}
+                  options={CHILD_STATUS_OPTIONS}
+                />
+              </Field>
               <div className={styles.grid2}>
-                <label className={styles.field}>
-                  Data contractului
-                  <input
-                    type="date"
+                <Field label="Data contractului" htmlFor="child-contract-date">
+                  <DateInput
+                    id="child-contract-date"
                     value={values.contractDate}
-                    onChange={event => setField('contractDate', event.target.value)}
+                    onChange={value => setField('contractDate', value)}
                   />
-                </label>
-                <label className={styles.field}>
-                  Retragere
-                  <input
-                    type="date"
+                </Field>
+                <Field label="Retragere" htmlFor="child-withdrawal-date">
+                  <DateInput
+                    id="child-withdrawal-date"
                     value={values.withdrawalDate}
-                    onChange={event => setField('withdrawalDate', event.target.value)}
+                    onChange={value => setField('withdrawalDate', value)}
                   />
-                </label>
+                </Field>
               </div>
               <div className={styles.grid3}>
-                <label className={styles.field}>
-                  Monedă
-                  <select
+                <Field label="Monedă" htmlFor="child-currency">
+                  <Select
+                    id="child-currency"
                     value={values.currency}
-                    onChange={event => setField('currency', event.target.value as ChildFeeCurrency)}
-                  >
-                    <option value="MDL">MDL</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </label>
-                <label className={styles.field}>
-                  Taxa lunară (gol = necunoscută)
-                  <input
-                    type="number"
+                    onChange={value => setField('currency', value as ChildFeeCurrency)}
+                    options={CURRENCY_OPTIONS}
+                  />
+                </Field>
+                <Field label="Taxa lunară (gol = necunoscută)" htmlFor="child-fee">
+                  <NumberInput
+                    id="child-fee"
                     min={0}
                     step="0.01"
                     value={values.fee}
-                    onChange={event => setField('fee', event.target.value)}
+                    onChange={value => setField('fee', value)}
                   />
-                </label>
+                </Field>
+                {/* type="month" rămâne brut — nu există încă `MonthInput` în @shared/ui (COMPONENTE.md
+                    §0/25b), la fel ca rândul de alocare din PaymentFormDrawer. */}
                 <label className={styles.field}>
                   Taxa aplicabilă din luna
                   <input
@@ -430,44 +428,43 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                   onChange={event => setField('statusFrom', event.target.value)}
                 />
               </label>
-              <label className={styles.field}>
-                Date medicale / alergii
-                <textarea
+              <Field label="Date medicale / alergii" htmlFor="child-health-notes">
+                <TextArea
+                  id="child-health-notes"
                   rows={3}
                   value={values.healthNotes}
-                  onChange={event => setField('healthNotes', event.target.value)}
+                  onChange={value => setField('healthNotes', value)}
                 />
-              </label>
+              </Field>
               <p className={styles.notice}>Date sensibile: nu apar în export și în istoric.</p>
               <div className={styles.field}>
                 Persoane autorizate să ridice copilul
                 <div className={styles.pickupList}>
                   {values.pickupPersons.map((person, index) => (
                     <div key={person.id} className={styles.pickupRow}>
-                      <input
+                      <TextInput
                         placeholder="Nume"
-                        aria-label="Nume persoană autorizată"
+                        ariaLabel="Nume persoană autorizată"
                         value={person.name}
-                        onChange={event => setPickupField(index, 'name', event.target.value)}
+                        onChange={value => setPickupField(index, 'name', value)}
                       />
-                      <input
+                      <TextInput
                         placeholder="Relație"
-                        aria-label="Relație persoană autorizată"
+                        ariaLabel="Relație persoană autorizată"
                         value={person.relation}
-                        onChange={event => setPickupField(index, 'relation', event.target.value)}
+                        onChange={value => setPickupField(index, 'relation', value)}
                       />
-                      <input
-                        type="tel"
+                      <PhoneInput
                         placeholder="Telefon"
-                        aria-label="Telefon persoană autorizată"
+                        ariaLabel="Telefon persoană autorizată"
                         value={person.phone}
-                        onChange={event => setPickupField(index, 'phone', event.target.value)}
+                        onChange={value => setPickupField(index, 'phone', value)}
                       />
-                      <input
+                      <TextInput
                         placeholder="Notă"
-                        aria-label="Notă persoană autorizată"
+                        ariaLabel="Notă persoană autorizată"
                         value={person.note}
-                        onChange={event => setPickupField(index, 'note', event.target.value)}
+                        onChange={value => setPickupField(index, 'note', value)}
                       />
                       <button
                         type="button"
@@ -492,22 +489,22 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
           <details className={styles.details}>
             <summary className={styles.detailsSummary}>6 · Istoric (avansat)</summary>
             <div className={styles.detailsBody}>
-              <label className={styles.field}>
-                Istoric taxe — câte un rând: 2026-09 = 2000
-                <textarea
+              <Field label="Istoric taxe — câte un rând: 2026-09 = 2000" htmlFor="child-fee-history">
+                <TextArea
+                  id="child-fee-history"
                   rows={3}
                   value={values.feeHistoryText}
-                  onChange={event => setField('feeHistoryText', event.target.value)}
+                  onChange={value => setField('feeHistoryText', value)}
                 />
-              </label>
-              <label className={styles.field}>
-                Istoric statut — câte un rând: 2026-09 = Activ
-                <textarea
+              </Field>
+              <Field label="Istoric statut — câte un rând: 2026-09 = Activ" htmlFor="child-status-history">
+                <TextArea
+                  id="child-status-history"
                   rows={3}
                   value={values.statusHistoryText}
-                  onChange={event => setField('statusHistoryText', event.target.value)}
+                  onChange={value => setField('statusHistoryText', value)}
                 />
-              </label>
+              </Field>
               <p className={styles.notice}>
                 Taxele se aplică integral lunii începute. O taxă sau un statut schimbat adaugă o intrare din luna
                 aleasă. Poți corecta explicit rândurile din istoric. Completează data începerii pentru calculul

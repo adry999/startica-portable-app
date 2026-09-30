@@ -14,9 +14,11 @@ import {
   MonthStepper,
   NumberInput,
   PeriodFilter,
+  PhoneInput,
   SearchInput,
   SearchSelect,
   SegmentedControl,
+  Select,
   TextArea,
   TextField,
   TextInput,
@@ -46,6 +48,8 @@ export function ButoaneInputSection() {
   const [textAreaValue, setTextAreaValue] = useState('');
   const [textFieldValue, setTextFieldValue] = useState('');
   const [textInputValue, setTextInputValue] = useState('');
+  const [selectRelationValue, setSelectRelationValue] = useState('');
+  const [phoneInputValue, setPhoneInputValue] = useState('');
   const [numberInputValue, setNumberInputValue] = useState('');
   const [dateInputValue, setDateInputValue] = useState('2026-09-30');
   const [amountInputValue, setAmountInputValue] = useState('');
@@ -94,6 +98,7 @@ export function ButoaneInputSection() {
           <Button variant="ghost">Ghost</Button>
           <Button variant="white">White</Button>
           <Button variant="outline">Outline</Button>
+          <Button variant="link">Link</Button>
         </DemoRow>
         <DemoRow label="size">
           <Button size="md">Mărime md</Button>
@@ -210,6 +215,62 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <NumberInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Select"
+        importLine="import { Select } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25b — aceeași cutie ca TextInput + ▾, 2–8 opțiuni · Copil nou/Editează 2a (Relație, Statut, Monedă)"
+      >
+        <DemoRow label="control">
+          <Select
+            value={selectRelationValue}
+            onChange={setSelectRelationValue}
+            options={[
+              { value: 'mama', label: 'Mamă' },
+              { value: 'tata', label: 'Tată' },
+              { value: 'bunica', label: 'Bunică' },
+            ]}
+            placeholder="—"
+            ariaLabel="Relație"
+          />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <Select value="" onChange={() => {}} options={[{ value: 'mdl', label: 'MDL' }]} ariaLabel="Monedă" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <Select
+            value=""
+            onChange={() => {}}
+            options={[{ value: 'mdl', label: 'MDL' }]}
+            ariaLabel="Câmp dezactivat"
+            disabled
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PhoneInput"
+        importLine="import { PhoneInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25b — validează cu normalizeMoldovanPhone, „✓ +373 …” sub câmp · Copil nou/Editează 2a/2b (telefon părinte)"
+      >
+        <DemoRow label="control">
+          <PhoneInput
+            value={phoneInputValue}
+            onChange={setPhoneInputValue}
+            placeholder="069123456"
+            ariaLabel="Telefon"
+          />
+        </DemoRow>
+        <DemoRow label="valid">
+          <PhoneInput value="069123456" onChange={() => {}} ariaLabel="Telefon" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <PhoneInput value="123" onChange={() => {}} ariaLabel="Telefon" />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <PhoneInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
         </DemoRow>
       </ComponentShowcase>
 
