@@ -49,14 +49,6 @@
   color: var(--mint-ink);
 }
 
-.close {
-  border: none;
-  background: none;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--muted);
-}
-
 .headerAmount {
   font-family: var(--font-heading);
   font-weight: 800;
@@ -107,11 +99,11 @@
 
 .assignLink {
   align-self: flex-start;
-  border: none;
-  background: none;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--orange-ink);
+  border: none !important;
+  background: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  color: var(--orange-ink) !important;
 }
 
 .months {
@@ -175,11 +167,11 @@
 }
 
 .archiveLink {
-  border: none;
-  background: none;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--pink-ink);
+  border: none !important;
+  background: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  color: var(--pink-ink) !important;
 }
 
 .printButton {

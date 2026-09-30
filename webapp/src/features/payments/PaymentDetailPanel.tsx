@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@shared/ui';
+import { Button, IconButton } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { PaymentRowView } from './usePayments';
 import styles from './PaymentDetailPanel.module.css';
@@ -23,9 +23,7 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
       <div className={`${styles.header} ${payment.unassigned ? styles.headerPink : styles.headerMint}`}>
         <div className={styles.headerTop}>
           <span className={styles.headerEyebrow}>Achitare · {payment.dateLabel}</span>
-          <button type="button" className={styles.close} onClick={onClose} aria-label="Închide panoul">
-            ×
-          </button>
+          <IconButton icon="×" ariaLabel="Închide panoul" size="lg" onClick={onClose} />
         </div>
         <strong className={styles.headerAmount}>{formatMoney(payment.total)}</strong>
         <p className={styles.headerSubtitle}>
@@ -46,13 +44,9 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
               {payment.unassigned ? 'neasociat' : payment.childLabel}
             </strong>
           </div>
-          <button
-            type="button"
-            className={styles.assignLink}
-            onClick={() => navigate(`/asociere-achitari?id=${payment.id}`)}
-          >
+          <Button className={styles.assignLink} onClick={() => navigate(`/asociere-achitari?id=${payment.id}`)}>
             Asociază în De rezolvat →
-          </button>
+          </Button>
         </div>
 
         <div className={styles.months}>
@@ -82,9 +76,9 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
       </div>
 
       <div className={styles.footer}>
-        <button type="button" className={styles.archiveLink} onClick={() => onToggleArchived(payment)}>
+        <Button className={styles.archiveLink} onClick={() => onToggleArchived(payment)}>
           {payment.archived ? 'Dezarhivează' : 'Arhivează'}
-        </button>
+        </Button>
         <Button
           variant="outline"
           className={styles.printButton}

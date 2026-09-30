@@ -29,18 +29,6 @@
   color: var(--slate);
 }
 
-.field input,
-.field select,
-.field textarea {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 11px 14px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  resize: vertical;
-}
-
 .notice {
   margin: 0;
   font-size: 12px;
@@ -87,6 +75,12 @@
   font-weight: 600;
 }
 
+/* Perechea Suma dintr-un rând de repartizare manuală (25d) — lățime egală cu `.allocationField`
+   vecin (Luna), fără să moștenească stilul lui de input brut (`NumberInput` își are propriul). */
+.allocationAmountField {
+  flex: 1;
+}
+
 .removeRow {
   border: none;
   background: var(--neutral-soft);
@@ -102,17 +96,6 @@
   margin: var(--space-8) 0 0;
   font-size: 12px;
   font-weight: 700;
-  color: var(--slate);
-}
-
-.btnGhostSmall {
-  align-self: flex-start;
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
-  padding: var(--space-6) var(--space-12);
-  font-weight: 700;
-  font-size: 12px;
   color: var(--slate);
 }
 
@@ -143,35 +126,6 @@
 
 .childCard > :first-child {
   flex: 1;
-}
-
-.sumBox {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-8);
-  padding: var(--space-14) var(--space-18);
-  border-radius: var(--radius-md-lg);
-  border: 1.5px solid var(--orange);
-  background: var(--cream);
-}
-
-.sumInput {
-  flex: 1;
-  border: none !important;
-  background: none;
-  padding: 0 !important;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 40px !important;
-  line-height: 1;
-  color: var(--slate);
-  outline: none;
-}
-
-.sumCurrency {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--subtle);
 }
 
 .shortcuts {

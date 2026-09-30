@@ -1,0 +1,25 @@
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 9px 14px;
+  border-radius: var(--radius-input);
+  border: 1px solid var(--border);
+}
+
+.inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.inputs input {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: var(--slate);
+  width: 112px;
+}

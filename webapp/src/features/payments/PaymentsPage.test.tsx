@@ -602,7 +602,7 @@ describe('PaymentsPage', () => {
       renderPage();
 
       await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
-      const importRow = screen.getAllByText(/Import CSV/)[0].closest('button')!;
+      const importRow = screen.getAllByText(/Import CSV/)[0].closest('[role="button"]')!;
       await user.click(importRow);
 
       expect(screen.getByText('Achitare · 02.09.2026')).toBeInTheDocument();

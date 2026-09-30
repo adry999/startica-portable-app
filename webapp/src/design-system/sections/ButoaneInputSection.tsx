@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import {
+  ActiveFilters,
+  AmountInput,
   Button,
   Checkbox,
+  DateInput,
   DayStepper,
   Field,
   FilterPills,
   groupTone,
+  IconButton,
   MonthPicker,
   MonthStepper,
+  NumberInput,
+  PeriodFilter,
   SearchInput,
   SearchSelect,
   SegmentedControl,
@@ -40,7 +46,12 @@ export function ButoaneInputSection() {
   const [textAreaValue, setTextAreaValue] = useState('');
   const [textFieldValue, setTextFieldValue] = useState('');
   const [textInputValue, setTextInputValue] = useState('');
+  const [numberInputValue, setNumberInputValue] = useState('');
+  const [dateInputValue, setDateInputValue] = useState('2026-09-30');
+  const [amountInputValue, setAmountInputValue] = useState('');
   const [fieldValue, setFieldValue] = useState('');
+  const [periodFrom, setPeriodFrom] = useState(DEMO_MONTH);
+  const [periodTo, setPeriodTo] = useState(DEMO_MONTH);
   const [toggleOn, setToggleOn] = useState(true);
   const [toggleOff, setToggleOff] = useState(false);
   const [checkboxOn, setCheckboxOn] = useState(true);
@@ -94,6 +105,20 @@ export function ButoaneInputSection() {
           <Button variant="outline" disabled>
             Outline dezactivat
           </Button>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="IconButton"
+        importLine="import { IconButton } from '@shared/ui';"
+        reference="DS Componente.dc.html §28a — × 36 rotund (închidere) / ⋯ 32 radius 10"
+      >
+        <DemoRow label="size">
+          <IconButton icon="×" ariaLabel="Închide" size="lg" onClick={() => {}} />
+          <IconButton icon="⋯" ariaLabel="Mai multe acțiuni" size="sm" onClick={() => {}} />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <IconButton icon="×" ariaLabel="Închide" size="lg" disabled onClick={() => {}} />
         </DemoRow>
       </ComponentShowcase>
 
@@ -169,6 +194,71 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <TextInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="NumberInput"
+        importLine="import { NumberInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25b — TextInput fără săgeți native, cifre aliniate · Achitare nouă 15b (Sumă pe metode, repartizare manuală)"
+      >
+        <DemoRow label="control">
+          <NumberInput value={numberInputValue} onChange={setNumberInputValue} ariaLabel="Sumă" suffix="lei" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <NumberInput value="abc" onChange={() => {}} ariaLabel="Sumă" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <NumberInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="DateInput"
+        importLine="import { DateInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25b — afișare zz.ll.aaaa, `trailing` opțional · Achitare nouă 15b (Data)"
+      >
+        <DemoRow label="control">
+          <DateInput value={dateInputValue} onChange={setDateInputValue} ariaLabel="Data" />
+        </DemoRow>
+        <DemoRow label="cu trailing">
+          <DateInput value="2020-01-01" onChange={() => {}} ariaLabel="Data nașterii" trailing="4 ani" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <DateInput value="" onChange={() => {}} ariaLabel="Data" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <DateInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="AmountInput"
+        importLine="import { AmountInput } from '@shared/ui';"
+        reference="COMPONENTE.md §2, id 25d — Baloo 40 (36 în dialog) + monedă, caset orange/cream · Achitare nouă 15b (Sumă)"
+      >
+        <DemoRow label="control">
+          <AmountInput value={amountInputValue} onChange={setAmountInputValue} ariaLabel="Sumă" currency="lei" />
+        </DemoRow>
+        <DemoRow label="cu shortcuts">
+          <AmountInput
+            value="3000"
+            onChange={() => {}}
+            ariaLabel="Sumă"
+            currency="lei"
+            shortcuts={
+              <>
+                <button type="button">1 lună · 1.500</button>
+                <button type="button">2 luni · 3.000</button>
+              </>
+            }
+          />
+        </DemoRow>
+        <DemoRow label="dialog (36px)">
+          <AmountInput value="9600" onChange={() => {}} ariaLabel="Sumă" currency="lei" size="dialog" />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <AmountInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" currency="lei" disabled />
         </DemoRow>
       </ComponentShowcase>
 
@@ -276,6 +366,32 @@ export function ButoaneInputSection() {
       >
         <DemoRow label="control">
           <FilterPills groups={filterGroups} trailing={`${DEMO_GROUPS.length} grupe`} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PeriodFilter"
+        importLine="import { PeriodFilter } from '@shared/ui';"
+        reference="DS Tabel si filtre.dc.html §27e — varianta minimă (interval de luni), folosită azi de Achitări; presetările rămân pentru ecranul care le va folosi prima dată"
+      >
+        <DemoRow label="control">
+          <PeriodFilter from={periodFrom} to={periodTo} onFromChange={setPeriodFrom} onToChange={setPeriodTo} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ActiveFilters"
+        importLine="import { ActiveFilters } from '@shared/ui';"
+        reference="DS Tabel si filtre.dc.html §27a — „Cheie: valoare ×” + „Șterge filtrele”, randat doar cât e activ cel puțin un filtru"
+      >
+        <DemoRow label="control">
+          <ActiveFilters
+            filters={[
+              { key: 'method', label: 'Metodă: Cash', onClear: () => {} },
+              { key: 'group', label: 'Grupa: Curcubeu', onClear: () => {} },
+            ]}
+            onReset={() => {}}
+          />
         </DemoRow>
       </ComponentShowcase>
 

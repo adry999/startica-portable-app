@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FilterPills, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
+import { Button, FilterPills, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthName } from '#shared/format/date-format.mjs';
 import { PaymentDetailPanel } from './PaymentDetailPanel';
@@ -71,27 +71,24 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
       <div className={styles.main}>
         <div className={styles.filterRow}>
           <div className={styles.pills}>
-            <button
-              type="button"
+            <Button
               className={monthFilter === 'all' ? styles.pillActive : styles.pillNeutral}
               onClick={() => selectMonthFilter('all')}
             >
               Toate · {data.rows.length}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={monthFilter === 'unassigned' ? styles.pillActive : styles.pillPink}
               onClick={() => selectMonthFilter('unassigned')}
             >
               Neasociate · {unassignedCount}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               className={monthFilter === 'archived' ? styles.pillActive : styles.pillNeutral}
               onClick={() => selectMonthFilter('archived')}
             >
               Arhivate
-            </button>
+            </Button>
           </div>
           <SearchInput
             className={styles.search}
@@ -100,9 +97,9 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
             placeholder="Caută"
             ariaLabel="Căutare achitări"
           />
-          <button type="button" className={styles.filtersToggle} onClick={() => setFiltersOpen(open => !open)}>
+          <Button variant="outline" onClick={() => setFiltersOpen(open => !open)}>
             Filtre · {activeFiltersCount}
-          </button>
+          </Button>
         </div>
 
         {filtersOpen && (
@@ -153,11 +150,18 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
                 </div>
                 <div className={styles.card}>
                   {rows.map(row => (
-                    <button
+                    <div
                       key={row.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
                       onClick={() => setSelectedId(row.id)}
+                      onKeyDown={event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSelectedId(row.id);
+                        }
+                      }}
                     >
                       <span className={styles.rowDay}>
                         <strong>{dayOfMonth(row.date)}</strong>
@@ -172,7 +176,7 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
                         {row.allocations.map(allocation => allocation.label).join(', ') || '—'}
                       </span>
                       <span className={styles.rowSum}>{formatMoney(row.total)}</span>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>

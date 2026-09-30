@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  ActiveFilters,
   Badge,
+  Button,
   Card,
   ConfirmDeleteDialog,
   DataTable,
   EmptyState,
   FilterPills,
+  PeriodFilter,
   RowMenu,
   SearchInput,
   SegmentedControl,
@@ -185,24 +188,12 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
             placeholder="Caută copil, plătitor sau sumă"
             ariaLabel="Căutare achitări"
           />
-          <label className={styles.periodField}>
-            Perioadă
-            <span className={styles.periodInputs}>
-              <input
-                type="month"
-                value={data.monthFrom}
-                onChange={event => data.setMonthFrom(event.target.value)}
-                aria-label="Perioadă de la"
-              />
-              <span aria-hidden="true">–</span>
-              <input
-                type="month"
-                value={data.monthTo}
-                onChange={event => data.setMonthTo(event.target.value)}
-                aria-label="Perioadă până la"
-              />
-            </span>
-          </label>
+          <PeriodFilter
+            from={data.monthFrom}
+            to={data.monthTo}
+            onFromChange={data.setMonthFrom}
+            onToChange={data.setMonthTo}
+          />
           <SegmentedControl<ArchiveFilter>
             options={ARCHIVE_FILTER_OPTIONS}
             value={data.archiveFilter}
@@ -254,19 +245,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
           ]}
         />
 
-        {activeFilterChips.length > 0 && (
-          <div className={styles.activeFilters}>
-            <span className={styles.activeFiltersLabel}>Filtre active:</span>
-            {activeFilterChips.map(chip => (
-              <button key={chip.key} type="button" className={styles.activeFilterChip} onClick={chip.onClear}>
-                {chip.label} ×
-              </button>
-            ))}
-            <button type="button" className={styles.resetFilters} onClick={resetFilters}>
-              Resetează
-            </button>
-          </div>
-        )}
+        {activeFilterChips.length > 0 && <ActiveFilters filters={activeFilterChips} onReset={resetFilters} />}
 
         {selectedRows.length > 0 && (
           <SelectionBar
@@ -278,25 +257,25 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
             }
             onCancel={() => setSelectedRowKeys(new Set())}
           >
-            <button type="button" onClick={() => navigate('/asociere-achitari')}>
+            <Button className={styles.selectionAction} onClick={() => navigate('/asociere-achitari')}>
               Asociază în De rezolvat →
-            </button>
-            <button type="button" onClick={exportSelected}>
+            </Button>
+            <Button className={styles.selectionAction} onClick={exportSelected}>
               Exportă
-            </button>
+            </Button>
             {data.archiveFilter === 'archived' ? (
-              <button type="button" className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
+              <Button className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
                 Dezarhivează
-              </button>
+              </Button>
             ) : (
-              <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
+              <Button className={styles.selectionArchive} onClick={() => void archiveSelected()}>
                 Arhivează
-              </button>
+              </Button>
             )}
             {showDeleteForever && (
-              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+              <Button className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
                 Șterge definitiv
-              </button>
+              </Button>
             )}
           </SelectionBar>
         )}
@@ -331,8 +310,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                 row.unassigned ? (
                   <span className={styles.unassignedCell}>
                     —{' '}
-                    <button
-                      type="button"
+                    <Button
                       className={styles.unassignedLink}
                       onClick={event => {
                         event.stopPropagation();
@@ -340,7 +318,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                       }}
                     >
                       Neasociată →
-                    </button>
+                    </Button>
                   </span>
                 ) : (
                   row.childLabel

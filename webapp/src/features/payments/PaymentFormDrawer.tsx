@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  AmountInput,
   BnmRateLink,
   Button,
   Checkbox,
+  DateInput,
   Drawer,
+  Field,
   groupTone,
+  NumberInput,
   PersonCell,
   SearchSelect,
   SegmentedControl,
+  TextArea,
+  TextInput,
   useToast,
 } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
@@ -375,31 +381,64 @@ export function PaymentFormDrawer({
           {splitByMethod ? (
             <div className={styles.allocationRows}>
               {methods.map(method => (
-                <label key={method} className={styles.allocationField}>
-                  {method}
-                  <input
-                    type="number"
+                <Field key={method} label={method} htmlFor={`tender-${method}`}>
+                  <NumberInput
+                    id={`tender-${method}`}
                     min={0}
                     step="0.01"
                     value={values.tenders[method] ?? ''}
-                    onChange={event => setTender(method, event.target.value)}
+                    onChange={value => setTender(method, value)}
                   />
-                </label>
+                </Field>
               ))}
             </div>
           ) : (
-            <div className={styles.sumBox}>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                aria-label="Sumă"
-                className={styles.sumInput}
-                value={values.tenders[activeMethod] ?? ''}
-                onChange={event => setTender(activeMethod, event.target.value)}
-              />
-              <span className={styles.sumCurrency}>lei</span>
-            </div>
+            <AmountInput
+              ariaLabel="Sumă"
+              min={0}
+              step="0.01"
+              value={values.tenders[activeMethod] ?? ''}
+              onChange={value => setTender(activeMethod, value)}
+              currency="lei"
+              // Scurtăturile de lună țin de taxa lunară (Grădiniță); „restul lunii” vine din taxa de
+              // bazin deja calculată pentru luna curentă — cele două nu apar niciodată simultan (B3).
+              shortcuts={
+                (feeEntry && !isEurChild && isGradinitaService) || currentMonthCharge ? (
+                  <>
+                    {feeEntry &&
+                      !isEurChild &&
+                      isGradinitaService &&
+                      [1, 2, 3].map(months => {
+                        const amount = feeEntry.amount * months;
+                        const active = Number(values.tenders[activeMethod]) === amount;
+                        return (
+                          <button
+                            key={months}
+                            type="button"
+                            className={active ? `${styles.shortcut} ${styles.shortcutActive}` : styles.shortcut}
+                            onClick={() => setTender(activeMethod, String(amount))}
+                          >
+                            {months} {months === 1 ? 'lună' : 'luni'} · {new Intl.NumberFormat('ro-RO').format(amount)}
+                          </button>
+                        );
+                      })}
+                    {currentMonthCharge && (
+                      <button
+                        type="button"
+                        className={
+                          Number(values.tenders[activeMethod]) === currentMonthCharge.amount
+                            ? `${styles.shortcut} ${styles.shortcutActive}`
+                            : styles.shortcut
+                        }
+                        onClick={() => setTender(activeMethod, String(currentMonthCharge.amount))}
+                      >
+                        restul lunii · {new Intl.NumberFormat('ro-RO').format(currentMonthCharge.amount)}
+                      </button>
+                    )}
+                  </>
+                ) : undefined
+              }
+            />
           )}
           {splitByMethod ? (
             <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>
@@ -408,55 +447,19 @@ export function PaymentFormDrawer({
               Împarte pe metode
             </button>
           )}
-          {/* Scurtăturile de lună țin de taxa lunară — au sens doar la serviciul Grădiniță (B3). */}
-          {feeEntry && !isEurChild && !splitByMethod && isGradinitaService && (
-            <div className={styles.shortcuts}>
-              {[1, 2, 3].map(months => {
-                const amount = feeEntry.amount * months;
-                const active = Number(values.tenders[activeMethod]) === amount;
-                return (
-                  <button
-                    key={months}
-                    type="button"
-                    className={active ? `${styles.shortcut} ${styles.shortcutActive}` : styles.shortcut}
-                    onClick={() => setTender(activeMethod, String(amount))}
-                  >
-                    {months} {months === 1 ? 'lună' : 'luni'} · {new Intl.NumberFormat('ro-RO').format(amount)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          {/* Bazin (B3): „restul lunii · X lei”, din taxa de bazin deja calculată pentru luna curentă. */}
-          {currentMonthCharge && !splitByMethod && (
-            <div className={styles.shortcuts}>
-              <button
-                type="button"
-                className={
-                  Number(values.tenders[activeMethod]) === currentMonthCharge.amount
-                    ? `${styles.shortcut} ${styles.shortcutActive}`
-                    : styles.shortcut
-                }
-                onClick={() => setTender(activeMethod, String(currentMonthCharge.amount))}
-              >
-                restul lunii · {new Intl.NumberFormat('ro-RO').format(currentMonthCharge.amount)}
-              </button>
-            </div>
-          )}
           {isEurChild && (
             <>
               <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
-              <label className={styles.field}>
-                Curs EUR
-                <input
-                  type="number"
+              <Field label="Curs EUR" htmlFor="payment-eur-rate">
+                <NumberInput
+                  id="payment-eur-rate"
                   step="0.0001"
                   min={0}
                   placeholder={bnmRate !== undefined ? String(bnmRate) : ''}
                   value={manualRate}
-                  onChange={event => setManualRate(event.target.value)}
+                  onChange={setManualRate}
                 />
-              </label>
+              </Field>
               <p className={styles.notice}>
                 {manualRate
                   ? 'Curs manual pentru această plată'
@@ -470,10 +473,9 @@ export function PaymentFormDrawer({
         </div>
 
         <div className={splitByMethod ? undefined : styles.grid2}>
-          <label className={styles.field}>
-            Data
-            <input type="date" required value={values.date} onChange={event => setDate(event.target.value)} />
-          </label>
+          <Field label="Data" htmlFor="payment-date">
+            <DateInput id="payment-date" required value={values.date} onChange={setDate} />
+          </Field>
           {!splitByMethod && (
             <div className={styles.field}>
               Metodă
@@ -525,17 +527,18 @@ export function PaymentFormDrawer({
                         onChange={event => setAllocationField(index, 'month', event.target.value)}
                       />
                     </label>
-                    <label className={styles.allocationField}>
-                      Suma
-                      <input
-                        type="number"
-                        required
-                        min={0.01}
-                        step="0.01"
-                        value={row.amount}
-                        onChange={event => setAllocationField(index, 'amount', event.target.value)}
-                      />
-                    </label>
+                    <div className={styles.allocationAmountField}>
+                      <Field label="Suma" htmlFor={`allocation-amount-${row.id}`}>
+                        <NumberInput
+                          id={`allocation-amount-${row.id}`}
+                          required
+                          min={0.01}
+                          step="0.01"
+                          value={row.amount}
+                          onChange={value => setAllocationField(index, 'amount', value)}
+                        />
+                      </Field>
+                    </div>
                     <button
                       type="button"
                       className={styles.removeRow}
@@ -547,9 +550,9 @@ export function PaymentFormDrawer({
                   </div>
                 ))}
               </div>
-              <button type="button" className={styles.btnGhostSmall} onClick={addAllocationRow}>
+              <Button variant="ghost" onClick={addAllocationRow}>
                 + Lună
-              </button>
+              </Button>
               <p className={styles.balance}>
                 Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
                 {formatMoney(balanceTotal - allocated, balanceCurrency)}
@@ -561,23 +564,23 @@ export function PaymentFormDrawer({
           )}
         </div>
 
-        <label className={styles.field}>
-          Plătitor
-          <input
+        <Field label="Plătitor" htmlFor="payment-source-name">
+          <TextInput
+            id="payment-source-name"
             placeholder="Numele din extras, dacă diferă de părinte"
             value={values.sourceName}
-            onChange={event => setValues(p => ({ ...p, sourceName: event.target.value }))}
+            onChange={value => setValues(p => ({ ...p, sourceName: value }))}
           />
-        </label>
+        </Field>
 
         {editing?.verification && (
           <fieldset className={styles.section}>
             <legend>Verificare import</legend>
             <label className={styles.checkboxField}>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={values.reviewed}
-                onChange={event => setValues(p => ({ ...p, reviewed: event.target.checked }))}
+                onChange={checked => setValues(p => ({ ...p, reviewed: checked }))}
+                ariaLabel="Am verificat observațiile importului"
               />
               <span>Am verificat observațiile importului</span>
             </label>
@@ -586,15 +589,15 @@ export function PaymentFormDrawer({
         )}
 
         {notesOpen ? (
-          <label className={styles.field}>
-            Observații
-            <textarea
+          <Field label="Observații" htmlFor="payment-notes">
+            <TextArea
+              id="payment-notes"
               rows={3}
               autoFocus
               value={values.notes}
-              onChange={event => setValues(p => ({ ...p, notes: event.target.value }))}
+              onChange={value => setValues(p => ({ ...p, notes: value }))}
             />
-          </label>
+          </Field>
         ) : (
           <button type="button" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
             + Adaugă observație

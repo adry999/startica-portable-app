@@ -1,12 +1,16 @@
 export { BnmRateLink, type BnmRateLinkProps } from './BnmRateLink';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
+export { IconButton, type IconButtonProps, type IconButtonSize } from './IconButton';
 export { Card, type CardProps, type CardTone } from './Card';
 export { Checkbox, type CheckboxProps } from './Checkbox';
 export { Field, type FieldProps } from './Field';
 export { SearchInput, type SearchInputProps } from './SearchInput';
 export { TextField, type TextFieldProps } from './TextField';
 export { TextInput, type TextInputProps } from './TextInput';
+export { NumberInput, type NumberInputProps } from './NumberInput';
+export { DateInput, type DateInputProps } from './DateInput';
+export { AmountInput, type AmountInputProps } from './AmountInput';
 export { TextArea, type TextAreaProps } from './TextArea';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Toggle, type ToggleProps } from './Toggle';
@@ -17,6 +21,8 @@ export { EmptyState, type EmptyStateAction, type EmptyStateProps, type EmptyStat
 export { MonthPicker, type MonthPickerProps } from './MonthPicker';
 export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from './SearchSelect';
 export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone } from './FilterPills';
+export { ActiveFilters, type ActiveFilterChip, type ActiveFiltersProps } from './ActiveFilters';
+export { PeriodFilter, type PeriodFilterProps } from './PeriodFilter';
 export { PersonCell, type PersonCellProps } from './PersonCell';
 export { ListToolbar, type ListToolbarProps, type ListToolbarSearch } from './ListToolbar';
 export {
