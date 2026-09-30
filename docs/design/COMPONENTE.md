@@ -1,11 +1,11 @@
 # Componente reutilizabile și design system — 29.09.2026
 
-Designul final folosește un set mic de piese care se repetă pe toate ecranele. Codul are deja `webapp/src/shared/ui` (exportate din `@shared/ui`) și pagina `/design-system`. Acest fișier leagă fiecare tipar din design de componenta din cod, spune ce trebuie extins și ce componente noi trebuie extrase.
+Designul final folosește un set mic de piese care se repetă pe toate ecranele. Codul are deja `webapp/src/shared/ui` (exportate din `@shared/ui`) și Storybook (din 30.09 înlocuiește pagina `/design-system`). Acest fișier leagă fiecare tipar din design de componenta din cod, spune ce trebuie extins și ce componente noi trebuie extrase.
 
 **Reguli**
 1. Un tipar care apare în **≥ 2 module** devine componentă în `@shared/ui` (sau `@shared/<domeniu>`). Un tipar folosit într-un singur loc rămâne local modulului.
 2. Componentele primesc **tonuri** (`PillTone`/`CardTone`/`BadgeTone`, 8 tonuri + neutral), nu culori. Hex-ul stă doar în `tokens.css` (vezi `TOKENS.md`).
-3. Fiecare componentă nouă sau variantă nouă: test în `*.test.tsx` și o secțiune în `/design-system` cu toate stările (implicit, hover, activ, dezactivat, gol, eroare).
+3. Fiecare componentă nouă sau variantă nouă: test în `*.test.tsx` și o poveste în Storybook cu toate stările (implicit, hover, activ, dezactivat, gol, eroare).
 4. Nu dubla o componentă existentă cu CSS local; extinde-o cu o prop.
 
 ---
@@ -33,7 +33,7 @@ Designul final folosește un set mic de piese care se repetă pe toate ecranele.
 | `size="sm"` pe TextInput, Select, NumberInput | 25e | `8px 12px` (numeric `7px 0`, lățime fixă), radius 10, 13/700. Pentru bare de filtre (border `--border`) și rânduri de setări (border `--input-border`). Eticheta stă în linie. |
 | `FormSection` + `FormGrid` | 25f | Secțiune numerotată (pătrat 24 radius 8 slate + titlu Baloo 17), gap 14. `FormGrid cols={2}` gap 12. Între secțiuni gap 22. |
 
-**Migrare:** după ce piesele există în `@shared/ui` + `/design-system` (toate stările din 25a), înlocuiește toate câmpurile brute, modul cu modul (un commit pe modul). Șterge CSS-ul local `.field` / `.select` rămas. La final nu mai rămâne niciun `<input>/<select>/<textarea>` brut în `features/`, în afară de `type="file"` ascuns din `FileInput`. Test de arhitectură nou în `architecture.test.ts` care interzice câmpurile brute în `features/**`.
+**Migrare:** după ce piesele există în `@shared/ui` + Storybook (toate stările din 25a), înlocuiește toate câmpurile brute, modul cu modul (un commit pe modul). Șterge CSS-ul local `.field` / `.select` rămas. La final nu mai rămâne niciun `<input>/<select>/<textarea>` brut în `features/`, în afară de `type="file"` ascuns din `FileInput`. Test de arhitectură nou în `architecture.test.ts` care interzice câmpurile brute în `features/**`.
 
 ## 0b. Tabel, filtre, sortare — `DS Tabel si filtre.dc.html` (27a–27h)
 
@@ -77,7 +77,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 
 ## 0d. Încărcare și stări — `DS Incarcare si stari.dc.html` (29a–29g)
 
-**Regula:** fiecare componentă din §0–§0c are, pe lângă stările vizuale, **`loading`**, **`error`** și, unde are sens, **`offline`**. Toate apar în `/design-system`.
+**Regula:** fiecare componentă din §0–§0c are, pe lângă stările vizuale, **`loading`**, **`error`** și, unde are sens, **`offline`**. Toate apar în Storybook.
 
 | Ce | Id | Comportament |
 |---|---|---|
@@ -151,7 +151,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `DiffTable` | 34e | Câmp / al meu / al lor, rândurile diferite pe galben, alegere pe câmp + „tot al meu / al lor”, rezolvare cu loading. |
 | `LockedContent` + `usePinLock` | 34f | Blocat (suma nu e în DOM), verificare, deschis cu numărătoare inversă. Greșeli: tremurat + încercări, blocare după 5. |
 | `UnsavedChangesDialog` + `useUnsavedGuard` | 34g | Renunță / Rămân / Salvez și continui. Numește formularul și câmpurile. Apare la panou, navigare, filială, închiderea aplicației. |
-| ~~`DocumentCard` + `DocumentGrid`~~ | 34h | **Scos 30.09** odată cu documentele copilului. Nu e folosit de niciun ecran; se șterge din `@shared/ui` și din `/design-system`. |
+| ~~`DocumentCard` + `DocumentGrid`~~ | 34h | **Scos 30.09** odată cu documentele copilului. Nu e folosit de niciun ecran; se șterge din `@shared/ui`, fără poveste în Storybook. |
 | `HoverCard` | 34i | 400 ms intrare, 200 ms ieșire, nu apare pe tactil, schelet, cache. |
 | `MultiSelect` | 34j | Chip-uri cu avatar, Backspace, „și încă N”, acțiune de grup în subsol, spinner la căutare. |
 | `TodoCard` + `TaskRow` | 34k | Contoare pe categorii, reîmprospătare în fundal. Rândul rezolvat se estompează, apoi dispare. |
@@ -202,7 +202,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `SettingsList` | Lista editabilă cu mâner, pastilă, contor, stare Activ/Ascuns, „Editează” + „+ Element” în antet | 10d Servicii, categorii cheltuieli, Funcții (23e), Planuri (12a) | Grid `24px 1fr 150px 120px 90px`, rând `12px 20px`, nota de jos 12px. |
 | `GroupSection` | Chenar în tonul grupei (fundal soft, border `-border`, radius 22) cu antet nume Baloo 19 + sumar | Prezența Ziua; candidat și pentru Bazin Săptămâna | Necesită tokenii `--<ton>-border` și `--<ton>-avatar` pentru toate 8 tonurile. |
 
-## 3. Pagina `/design-system`
+## 3. Storybook (fostă pagina `/design-system`)
 Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2 și pentru variantele noi din tabelul 1: `Button danger`, `SegmentedControl field`, `Badge sm`, `PersonCell sm/md`, `SelectionBar` cu danger, `ConfirmDeleteDialog` cu listă, `AttendanceDot` pe 3 mărimi. Fiecare secțiune arată toate stările. Scara de tokeni (culori, tipografie pe roluri, raze, umbre) din `TOKENS.md` apare sus pe pagină.
 
 ## 4. Ordine

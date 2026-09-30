@@ -20,5 +20,5 @@ Prioritate la conflict: DECIZII > ALINIERE > artboard .dc.html > screens/*.md > 
 ## Design system
 - Ecranele se construiesc doar din componente reutilizabile din `@shared/ui` / `@shared/<domeniu>`. Dacă lipsește o variantă, se adaugă ca prop acolo, nu ca CSS local.
 - În `features/**` nu există `<input>/<select>/<textarea>/<button>/<table>` brute, hex, umbre literale sau caractere-iconiță. Iconițele vin doar prin `<Icon>` (Lucide).
-- Fiecare componentă are test, `axe` și secțiune în `/design-system` cu toate stările (inclusiv loading/error).
+- Fiecare componentă are test, `axe` și poveste în Storybook (`*.stories.tsx` lângă componentă) cu toate stările (inclusiv loading/error). Ruta `/design-system` nu mai există.
 - Plan și reguli: `docs/design/DS-IMPLEMENTARE.md`. Spec: `docs/design/COMPONENTE.md` §0–§0i.

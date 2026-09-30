@@ -87,7 +87,7 @@ class Component extends DCLogic {
     });
     const mkB = (items) => items.map(([k, l, c]) => {
       const on = k === act;
-      return { label: l, count: c ? String(c) : '', bg: on ? '#ef8a1d' : 'transparent', color: on ? '#fff' : '#e9e4da', weight: on ? 800 : 600 };
+      return { label: l, count: c ? String(c) : '', bg: on ? '#b85a00' : 'transparent', color: on ? '#fff' : '#e9e4da', weight: on ? 800 : 600 };
     });
     const BR = { buiucani: ['Filiala Buiucani', 'Bu', '#ef8a1d', '#fffaf0', '#f6d9b5'], botanica: ['Filiala Botanica', 'Bo', '#3f9a6b', '#f3faf6', '#bfe3cf'] };
     const br = BR[this.props.branch ?? 'buiucani'] || BR.buiucani;

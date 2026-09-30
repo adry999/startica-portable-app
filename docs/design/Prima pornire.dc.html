@@ -107,7 +107,7 @@ class Component extends DCLogic {
     const L = [['Grădinița', 'nume, IDNO, adresă'], ['Filiale', 'Buiucani, Botanica'], ['Taxe și curs', 'planuri în EUR, curs BNM'], ['Importă datele', 'din Excel'], ['Backup', 'dosar extern']];
     const steps = cur => L.map(([l, sub], i) => {
       const done = i < cur, on = i === cur;
-      return { l, sub, mark: done ? '✓' : String(i + 1), bg: on ? 'rgba(255,255,255,.7)' : 'transparent', cBg: done ? '#3a4750' : on ? '#ef8a1d' : 'transparent', cFg: done || on ? '#fff' : '#5c4a00', cBd: done ? '#3a4750' : on ? '#ef8a1d' : '#5c4a00' };
+      return { l, sub, mark: done ? '✓' : String(i + 1), bg: on ? 'rgba(255,255,255,.7)' : 'transparent', cBg: done ? '#3a4750' : on ? '#b85a00' : 'transparent', cFg: done || on ? '#fff' : '#5c4a00', cBd: done ? '#3a4750' : on ? '#b85a00' : '#5c4a00' };
     });
     const fields = [['Denumire juridică', 'Startica SRL', 1], ['Nume afișat', 'Grădinița Startica', 1], ['IDNO', '1000600000000', 1], ['Administrator', 'Ciobanu Maria', 1], ['Telefon', '+373 60 000 000', 1], ['Adresă', 'str. Exemplu 12, Chișinău', 0]].map(([l, v, ok]) => ({ l, v, bd: ok ? '#ede7dc' : '#ef8a1d', fg: '#3a4750' }));
     const S = { ok: ['Gata', '#e7f4ec', '#2e6b4c'], warn: ['12 de verificat', '#fdf3d2', '#7a5d00'], skip: ['Ignorată', '#f4f1ea', '#6b7780'] };

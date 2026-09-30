@@ -1,6 +1,6 @@
 # Tokeni de design — inventar din toate paginile finale (29.09.2026)
 
-Generat automat din cele 26 fișiere `.dc.html`. Coloana „Token” e numele din `webapp/src/shared/tokens/tokens.css`. **Regula:** în cod se folosește mereu tokenul; hex-ul din design e doar referința.
+Generat automat din fișierele `.dc.html`. Coloana „Token” e numele din `webapp/src/shared/tokens/tokens.css`. **Regula:** în cod se folosește mereu tokenul; hex-ul din design e doar referința.
 
 ## Culori care au deja token (32)
 | Hex | Token | Folosiri | Unde |
@@ -129,3 +129,5 @@ Pe Prezența (18a) chenarul și avatarul au nevoie de două nuanțe noi per ton 
 
 ## `--orange-strong` (nou, 30.09)
 `#b85a00` — fundal pentru text alb (buton primar, insigne pline, pastila „azi”). Contrast cu alb 4,7:1. Umbra buton: `rgba(184,90,0,.28)`. `--orange` nu mai poartă text alb.
+
+Stări pentru fundal `--orange-strong`: hover `--orange-strong-hover` = `#a34f00` (= `--orange-ink`), apăsat `--orange-strong-pressed` = `#8a4300` (nou), dezactivat `--sand` cu text `--subtle`, loading opacitate .75. Text portocaliu pe alb/crem = mereu `--orange-ink`.

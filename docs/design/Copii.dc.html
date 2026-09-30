@@ -209,7 +209,7 @@
           </div>
           <aside style="border-left:1px solid #ede7dc;background:#fff;padding:18px 20px;display:flex;flex-direction:column;gap:8px;">
             <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;margin-bottom:4px">Toată luna</span>
-            <sc-if value="{{ calEmpty }}"><span style="font-size:14px;color:#6b7780">Nicio zi de naștere pentru filtrul ales.</span></sc-if>
+            <sc-if value="{{ calEmpty }}"><span style="font-size:14px;color:#6b7780">Niciun rezultat pentru filtrele alese.</span></sc-if>
             <sc-for list="{{ calList }}" as="k" hint-placeholder-count="8">
               <div style="display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:#fffaf0;opacity:{{ k.op }}">
                 <span style="width:36px;height:36px;border-radius:10px;background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px">{{ k.day }}</span>
@@ -255,7 +255,7 @@ class Component extends DCLogic {
         day: d,
         kids: ks.slice(0, 2).map(k => ({ name: k[1].split(' ')[1] + ' ' + k[1][0] + '.', age: k[2], bg: GR[k[3]][0], fg: GR[k[3]][1] })),
         more: ks.length > 2 ? '+' + (ks.length - 2) + ' copii' : '',
-        bg: wk ? '#f7f4ee' : '#fff', fg: today ? '#ef8a1d' : '#3a4750', op: past ? 0.5 : 1,
+        bg: wk ? '#f7f4ee' : '#fff', fg: today ? '#a34f00' : '#3a4750', op: past ? 0.5 : 1,
         bd: today ? '2px solid #ef8a1d' : '1px solid #ede7dc'
       });
     }
@@ -292,7 +292,7 @@ class Component extends DCLogic {
       const on = sel.includes(i);
       return { open: () => { window.location.hash = '2b'; }, nr, name, age, parent, phone, group, due, pay: p, ini, hasP2: !!p2, p2tip: p2 ? 'Al doilea părinte: ' + p2 : '',
         avBg: av[i % 4][0], avFg: av[i % 4][1], gBg: grp[group][0], gFg: grp[group][1], pBg: pay[p][0], pFg: pay[p][1],
-        rowBg: on ? '#fffaf0' : (i === 5 ? '#fffaf0' : '#fff'), cbBorder: on ? '#ef8a1d' : '#c9c4ba', cbBg: on ? '#ef8a1d' : '#fff', cbMark: on ? '✓' : '',
+        rowBg: on ? '#fffaf0' : (i === 5 ? '#fffaf0' : '#fff'), cbBorder: on ? '#b85a00' : '#c9c4ba', cbBg: on ? '#b85a00' : '#fff', cbMark: on ? '✓' : '',
         dotsBg: i === 5 ? '#f4f1ea' : 'transparent', listBg: i === 0 ? '#fcead3' : 'transparent' };
     });
     const st = { 'Achitat': ['#e7f4ec', '#2e6b4c'], 'Scadent 26 sep': ['#fdf3d2', '#7a5d00'] };

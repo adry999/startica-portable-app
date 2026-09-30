@@ -10,3 +10,7 @@ Răspund la punctele ⏳ din `INTREBARI.md` și la cele din audit.
 6. **Stările goale ale listelor care nu erau în 35b** → textele sunt acum în design: `Stari goale.dc.html` 35c (pagini și panouri), 35d (compact, în card), 35e (ce nu intră în catalog). Se copiază exact.
 7. **Spinner în buton** → se adaugă mărimea 14 în `Spinner`.
 8. **R3 fără „×”** → confirmat, e corect așa.
+
+
+## 9. Storybook (30.09, după audit)
+Catalogul de componente trece în Storybook și înlocuiește ruta `/design-system`, care se șterge. Se face înainte de al doilea val de migrare. Detalii în `PROMPT-CLAUDE-CODE-6.md` §4, iar regula R6 e actualizată în `DS-IMPLEMENTARE.md`.

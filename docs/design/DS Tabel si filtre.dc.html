@@ -42,7 +42,7 @@
         </div>
         <div style="display:grid;grid-template-columns:{{ cols }};gap:14px;align-items:center;padding:10px 20px;border-bottom:1px solid #ede7dc;background:#fff;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9">
           <span style="width:16px;height:16px;box-sizing:border-box;border-radius:5px;background:#b85a00;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;line-height:1">–</span>
-          <span style="display:flex;align-items:center;gap:4px;color:#3a4750">Data <span style="color:#ef8a1d;font-size:10px">▼</span></span>
+          <span style="display:flex;align-items:center;gap:4px;color:#3a4750">Data <span style="color:#a34f00;font-size:10px">▼</span></span>
           <span>Copil · părinte</span>
           <span>Grupa</span>
           <span>Metodă</span>
@@ -161,8 +161,8 @@
             <div style="padding:10px 20px;font-size:12px;color:#6b7780">Încărcare: rânduri schelet cu aceleași coloane, arătate doar după 300 ms.</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 20px;border-radius:22px;background:#fff;border:1px solid #ede7dc;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Nicio achitare încă</span><span style="font-size:13px;color:#6b7780">Adaugă prima achitare sau importă extrasul.</span><span style="margin-top:4px;padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px">+ Achitare nouă</span></div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 20px;border-radius:22px;background:#fff;border:1.5px dashed #e0d5c2;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Nimic pentru „bal”</span><span style="font-size:13px;color:#6b7780">2 filtre active ascund rezultatele.</span><span style="margin-top:4px;font-weight:800;font-size:13px;color:#a34f00">Șterge filtrele</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 20px;border-radius:22px;background:#fff;border:1px solid #ede7dc;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Nicio achitare în octombrie</span><span style="font-size:13px;color:#6b7780">Achitările lunii apar aici pe măsură ce le înregistrezi.</span><span style="margin-top:4px;padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px">+ Achitare nouă</span></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 20px;border-radius:22px;background:#fff;border:1.5px dashed #e0d5c2;text-align:center"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Niciun rezultat pentru „bal”</span><span style="font-size:13px;color:#6b7780">2 filtre active ascund rezultatele.</span><span style="margin-top:4px;font-weight:800;font-size:13px;color:#a34f00">Șterge filtrele</span></div>
           </div>
         </div>
       </div>
@@ -223,7 +223,7 @@ class Component extends DCLogic {
       return { date, child, parent, ini, group, method, amount, status,
         bg: sel ? '#fffaf0' : st === 'hover' ? '#faf7f1' : st === 'active' ? '#fcead3' : '#fff',
         bar: st === 'active' ? 'inset 3px 0 0 #ef8a1d' : 'none', op: st === 'arch' ? 0.6 : 1,
-        cb: sel ? '✓' : '', cbBg: sel ? '#ef8a1d' : '#fff', cbBd: sel ? 'none' : '1.5px solid #c9c4ba',
+        cb: sel ? '✓' : '', cbBg: sel ? '#b85a00' : '#fff', cbBd: sel ? 'none' : '1.5px solid #c9c4ba',
         avBg: G[group][2], avFg: G[group][1], gBg: G[group][0], gFg: G[group][1], sBg: S[status][0], sFg: S[status][1],
         menuBg: st === 'hover' ? '#f4f1ea' : 'transparent' };
     });
@@ -254,12 +254,12 @@ class Component extends DCLogic {
       ['Deschis în panou', 'Bara portocalie 3px + --orange-soft', 'active', '#fcead3', 1, 'inset 3px 0 0 #ef8a1d', ''],
       ['Arhivat', 'Opacitate .6, numele cu --muted', 'archived', '#fff', 0.6, 'none', ''],
       ['Cu problemă', 'Fundal --pink-soft, textul cauzei în --pink-ink', 'error', '#fff7f9', 1, 'inset 3px 0 0 #e9527c', '']
-    ].map(([name, desc, tag, bg, op, bar, cb]) => ({ name, desc, tag, bg, op, bar, cb, cbBg: cb ? '#ef8a1d' : '#fff', cbBd: cb ? 'none' : '1.5px solid #c9c4ba' }));
-    const menuOpts = [['Cash', 312, 1], ['Card', 188, 0], ['Transfer', 94, 0], ['De rezolvat', 7, 0]].map(([l, n, on]) => ({ l, n, m: on ? '✓' : '', cb: on ? '#ef8a1d' : '#fff', bd: on ? 'none' : '1.5px solid #c9c4ba', bg: on ? '#fffaf0' : 'transparent' }));
+    ].map(([name, desc, tag, bg, op, bar, cb]) => ({ name, desc, tag, bg, op, bar, cb, cbBg: cb ? '#b85a00' : '#fff', cbBd: cb ? 'none' : '1.5px solid #c9c4ba' }));
+    const menuOpts = [['Cash', 312, 1], ['Card', 188, 0], ['Transfer', 94, 0], ['De rezolvat', 7, 0]].map(([l, n, on]) => ({ l, n, m: on ? '✓' : '', cb: on ? '#b85a00' : '#fff', bd: on ? 'none' : '1.5px solid #c9c4ba', bg: on ? '#fffaf0' : 'transparent' }));
     const periods = ['Luna curentă', 'Luna trecută', 'Ultimele 30 de zile', 'Anul școlar 2026–2027', 'Tot', 'Interval…'].map((l, i) => ({ l, bg: i === 0 ? '#3a4750' : 'transparent', fg: i === 0 ? '#fff' : '#3a4750' }));
     const groupRows = [['Rusu Ana', '9.000 lei'], ['Ceban Maria', '9.000 lei']].map(([n, v]) => ({ n, v }));
     const skel = ['70%', '55%', '64%'].map(w => ({ w }));
-    const colOpts = [['Data', 1, 1], ['Copil · părinte', 1, 1], ['Grupa', 1, 0], ['Metodă', 0, 0], ['Sursă / plătitor', 0, 0]].map(([l, on, fixed]) => ({ l, m: on ? '✓' : '', cb: on ? (fixed ? '#c9c4ba' : '#ef8a1d') : '#fff', bd: on ? 'none' : '1.5px solid #c9c4ba', c: fixed ? '#9aa3a9' : '#3a4750' }));
+    const colOpts = [['Data', 1, 1], ['Copil · părinte', 1, 1], ['Grupa', 1, 0], ['Metodă', 0, 0], ['Sursă / plătitor', 0, 0]].map(([l, on, fixed]) => ({ l, m: on ? '✓' : '', cb: on ? (fixed ? '#c9c4ba' : '#b85a00') : '#fff', bd: on ? 'none' : '1.5px solid #c9c4ba', c: fixed ? '#9aa3a9' : '#3a4750' }));
     return { cols, rows, groupPills, sorts, cells, rowStates, menuOpts, periods, groupRows, skel, colOpts };
   }
 }

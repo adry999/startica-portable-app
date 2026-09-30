@@ -165,7 +165,7 @@ class Component extends DCLogic {
     const pays = raw.map(([date, name, un, sum, luna, payer, svc], i) => {
       const on = sel.includes(i);
       return { svc: svc === 'b' ? 'Bazin' : 'Grădiniță', sBg: svc === 'b' ? '#e4eef6' : '#f4f1ea', sFg: svc === 'b' ? '#2c5a80' : '#5b666e', date, name, payer, child: un ? '—' : name, menu: i === 1, dotsBg: i === 1 ? '#f4f1ea' : 'transparent', un: !!un, sum: sum + ' lei', luna, day: date.slice(0, 2), mon: mon[date.slice(3, 5)],
-        rowBg: on ? '#fffaf0' : '#fff', cbBorder: on ? '#ef8a1d' : '#c9c4ba', cbBg: on ? '#ef8a1d' : '#fff', cbMark: on ? '✓' : '',
+        rowBg: on ? '#fffaf0' : '#fff', cbBorder: on ? '#b85a00' : '#c9c4ba', cbBg: on ? '#b85a00' : '#fff', cbMark: on ? '✓' : '',
         selBg: i === 0 ? '#fffaf0' : '#fff', selSh: i === 0 ? 'inset 4px 0 0 #ef8a1d' : 'none' };
     });
     const groups = [

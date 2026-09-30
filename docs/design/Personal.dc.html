@@ -42,7 +42,7 @@
                 <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ c.noteCol }}">{{ c.noteShow }}</span>
               </div>
             </sc-for>
-            <sc-if value="{{ cNone }}" hint-placeholder-val="{{ false }}"><div style="padding:36px;text-align:center;font-size:14px;color:#6b7780">Nimeni nu se potrivește căutării.</div></sc-if>
+            <sc-if value="{{ cNone }}" hint-placeholder-val="{{ false }}"><div style="padding:36px;text-align:center;font-size:14px;color:#6b7780">Niciun rezultat pentru căutarea ta.</div></sc-if>
           </div>
         </div>
       </main>
@@ -485,7 +485,7 @@ class Component extends DCLogic {
     const roleList = DL.map(([k, label, c]) => ({ label, c, roles: Object.entries(R).filter(([rk]) => DEPT[rk] === k).map(([rk, l]) => { const n = people.filter(p => p[1] === rk).length; return { l, n: n + (n === 1 ? ' angajat' : ' angajați') }; }) }));
     const rolePills = roleOpts.map(([k, label, bg, fg]) => ({ label, bg: this.state.role === k ? '#3a4750' : bg, fg: this.state.role === k ? '#fff' : fg, pick: () => this.setState({ role: k }) }));
     const wk = d => { const w = new Date(2026, 8, d).getDay(); return w === 0 || w === 6; };
-    const days = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), fg: wk(i + 1) ? '#c9c4ba' : i + 1 === 24 ? '#fff' : '#9aa3a9', bg: i + 1 === 24 ? '#ef8a1d' : 'transparent' }));
+    const days = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), fg: wk(i + 1) ? '#c9c4ba' : i + 1 === 24 ? '#fff' : '#9aa3a9', bg: i + 1 === 24 ? '#b85a00' : 'transparent' }));
     const seedP = { 2: { 21: 'C', 22: 'C', 23: 'C', 24: 'C', 25: 'C' }, 5: { 23: 'B', 24: 'B' }, 1: { 10: 'B' }, 7: { 3: 'A' } };
     const PC = { '': ['#e7f4ec', ''], C: ['#e0b400', 'CO'], B: ['#e9527c', 'CM'], A: ['#6b7780', 'A'] };
     const nxt = { '': 'C', C: 'B', B: 'A', A: '' };
@@ -505,7 +505,7 @@ class Component extends DCLogic {
     const f = n => n.toLocaleString('de-DE') + ' lei';
     let tot = 0, adv = 0, paid = 0, rest = 0;
     const salaries = sr.map(([name, role, t, base, sal, a, s, on]) => { tot += sal; adv += a; if (s === 'paid') paid += sal - a; else rest += sal - a;
-      return { name, role, type: TY[t][0], tBg: TY[t][1], tFg: TY[t][2], base, sal: f(sal), adv: a ? f(a) : '—', rest: s === 'paid' ? '0 lei' : f(sal - a), st: ST[s][0], stBg: ST[s][1], stFg: ST[s][2], cb: on ? '✓' : '', cbBg: on ? '#ef8a1d' : '#fff', cbBd: on ? '#ef8a1d' : '#c9c4ba', rowBg: on ? '#fffaf0' : '#fff' }; });
+      return { name, role, type: TY[t][0], tBg: TY[t][1], tFg: TY[t][2], base, sal: f(sal), adv: a ? f(a) : '—', rest: s === 'paid' ? '0 lei' : f(sal - a), st: ST[s][0], stBg: ST[s][1], stFg: ST[s][2], cb: on ? '✓' : '', cbBg: on ? '#b85a00' : '#fff', cbBd: on ? '#b85a00' : '#c9c4ba', rowBg: on ? '#fffaf0' : '#fff' }; });
     const pinDots = ['•', '•', '', ''].map((v, i) => ({ v, bd: i === 2 ? '#ef8a1d' : '#ede7dc' }));
     const teamLine = vis.length + ' angajați · ' + cnt('p') + ' la lucru azi · ' + cnt('c') + ' în concediu · ' + cnt('b') + ' bolnav';
     const MON = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];

@@ -145,11 +145,11 @@ class Component extends DCLogic {
       ['Botica Maxim', '4 ani', 'Taxă', 0, 1], ['Chitac Matteo', '3 ani', 'Grupă, taxă', 0, 0], ['Jidobina Polina', '5 ani', 'Grupă, taxă', 0, 0], ['Lucinschi Ilinca', '2 ani', 'Taxă', 0, 0]
     ].map(([name, age, miss, sel, done], i) => ({
       name, age, miss, ini: ini(name), avBg: av[i % 4][0], avFg: av[i % 4][1],
-      rowBg: sel ? '#fffaf0' : '#fff', cbBd: sel ? '#ef8a1d' : '#c9c4ba', cbBg: sel ? '#ef8a1d' : '#fff', cb: sel ? '✓' : '',
+      rowBg: sel ? '#fffaf0' : '#fff', cbBd: sel ? '#b85a00' : '#c9c4ba', cbBg: sel ? '#b85a00' : '#fff', cb: sel ? '✓' : '',
       group: miss.includes('Grupă') ? (done ? 'Mars' : 'Alege') : 'Soare', gBd: miss.includes('Grupă') && !done ? '#f3a6be' : '#ede7dc', gFg: miss.includes('Grupă') && !done ? '#9aa3a9' : '#3a4750',
       fee: done ? '9.600 lei' : (miss.includes('taxă') || miss === 'Taxă' ? '— lei' : '9.600 lei'), fBd: !done && (miss.includes('taxă') || miss === 'Taxă') ? '#f3a6be' : '#ede7dc', fFg: !done && (miss.includes('taxă') || miss === 'Taxă') ? '#9aa3a9' : '#3a4750',
       due: done ? 'ziua 26' : 'ziua —', dFg: done ? '#3a4750' : '#9aa3a9',
-      btn: done ? 'Salvează' : 'Salvează', btnBg: done ? '#ef8a1d' : '#f4f1ea', btnFg: done ? '#fff' : '#9aa3a9'
+      btn: done ? 'Salvează' : 'Salvează', btnBg: done ? '#b85a00' : '#f4f1ea', btnFg: done ? '#fff' : '#9aa3a9'
     }));
     const reviews = [
       ['Bagnyuk Timur', 'Posibil duplicat', 'fișă', '#e9527c'], ['Muradu Letizia', 'Telefon părinte lipsă', 'fișă', '#f9d257'], ['Achitare 17.08 · 12.981 lei', 'Sumă diferită de taxă', 'achitare', '#f9d257'],
@@ -161,7 +161,7 @@ class Component extends DCLogic {
       ['26', 'iun', 'Alex', '13.085,00 lei', 'plătitor nou'], ['10', 'iun', 'Luca', '8.000,00 lei', 'plătitor cunoscut'], ['04', 'iun', 'MAIB transfer 4471', '9.993,00 lei', 'fără nume'], ['28', 'mai', 'Elena R.', '12.981,00 lei', 'plătitor nou']
     ].map(([day, mon, name, sum, hint], i) => ({ day, mon, name, sum, hint, bg: i === 0 ? '#fffaf0' : '#fff', sh: i === 0 ? 'inset 4px 0 0 #ef8a1d' : 'none' }));
     const matches = [
-      ['SB', 'Sofia Brinza', 'Prenume identic · taxa lunară este 12.981 lei · august neachitat', 'Potrivire mare', '#e7f4ec', '#a8d8be', '#2e6b4c', '#ef8a1d', '#fff'],
+      ['SB', 'Sofia Brinza', 'Prenume identic · taxa lunară este 12.981 lei · august neachitat', 'Potrivire mare', '#e7f4ec', '#a8d8be', '#2e6b4c', '#b85a00', '#fff'],
       ['SM', 'Sofia Moraru', 'Prenume identic · taxa lunară este 9.600 lei', 'Posibil', '#fff', '#ede7dc', '#7a5d00', '#f4f1ea', '#3a4750'],
       ['BI', 'Brinza Iustina', 'Aceeași sumă · plătită deja pentru august', 'Slab', '#fff', '#ede7dc', '#9aa3a9', '#f4f1ea', '#3a4750']
     ].map(([ini, name, why, score, bg, bd, fg, btnBg, btnFg]) => ({ ini, name, why, score, bg, bd, fg, btnBg, btnFg }));

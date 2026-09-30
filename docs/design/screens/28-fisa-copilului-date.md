@@ -97,7 +97,7 @@ interface PayerAlias {
 ## 6. UI (2b)
 - **Date personale:** Data nașterii; „Alergii, sănătate” (`healthNotes`, roșu `#a3361f` dacă e ne-gol); Părinți cu relația sub nume; „Pot ridica copilul” cu nume · relație · notă · telefon și „+ Adaugă” (deschide 15a la secțiunea respectivă).
 - **Note:** „+ Notă” deschide editorul inline deasupra listei (Ctrl+Enter salvează, Esc renunță). Cea mai recentă pe `--yellow-soft`, restul `--neutral-softer`. Sub text: `dd.mm.yyyy, HH:MM · autor`, plus „· editată” dacă are `updatedAt`, sau „nota din fișa veche” dacă e `migrated`. „⋯” → Editează / Șterge (toast „Notă ștearsă.” + „Anulează”). Mai mult de 5 → „Toate notele (N)”.
-- **Documente:** grid 3, icon colorat pe tip (PDF/JPG/PNG), nume, `dată · mărime` sau starea de descărcare. Trage fișierul peste card sau „+ Încarcă”. „⋯” → Deschide / Redenumește / Arhivează.
+- ~~**Documente:**~~ *(scos 30.09, doar istoric)* grid 3, icon colorat pe tip (PDF/JPG/PNG), nume, `dată · mărime` sau starea de descărcare. Trage fișierul peste card sau „+ Încarcă”. „⋯” → Deschide / Redenumește / Arhivează.
 - **Plătitori reținuți:** rând cu nume (majuscule, ca în extras), IBAN mascat (primele 4 + ultimele 4) sau „fără IBAN, doar numele”, `din dd.mm.yyyy · N achitări`, „×” (fără confirmare, cu „Anulează”). Card ascuns dacă lista e goală.
 
 ## 7. Criterii de acceptare

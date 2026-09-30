@@ -17,7 +17,7 @@ Fișierele `.dc.html` sunt **referințe de design construite în HTML** — arat
 | 3 | `PROMPT-CLAUDE-CODE.md` | Textul de pornire pentru sesiunea Claude Code. |
 | 4 | `TOKENS.md` | Inventarul culorilor din design → tokenii din `tokens.css`, scara tipografică pe roluri, raze, umbre, tonurile grupelor, culorile de stare. |
 | 5 | `ECRANE.md` | Toate artboard-urile, cu id, conținut și mărime. |
-| 5b | `COMPONENTE.md` | Tiparele din design → componentele din `@shared/ui`: ce există, ce se extinde, ce componente noi se extrag și când; ce intră în `/design-system`. |
+| 5b | `COMPONENTE.md` | Tiparele din design → componentele din `@shared/ui`: ce există, ce se extinde, ce componente noi se extrag și când; ce intră în Storybook. |
 | 6 | `screens/NN-*.md` | Specurile detaliate pe ecran (rută, date, arbore de componente, CSS, stări, teste, criterii). Cele atinse de decizii au un bloc „Actualizat 29.09.2026” sus. |
 | 7 | `VERIFICARE-DESIGN.md` | Comparația cod ↔ design făcută ecran cu ecran (b84d7df). |
 | 8 | `Set final.dc.html` | Indexul vizual: stadiul fiecărui ecran în cod și punctul din ALINIERE. |
@@ -27,11 +27,11 @@ Fișierele `.dc.html` sunt **referințe de design construite în HTML** — arat
 ## Ordinea de lucru (din ALINIERE)
 A1 Drawer comun → A2 Copil nou → A3 Fișa copilului → A3b Achitare nouă → A3c Prezența · Ziua (+Anulează, fără marcare în masă) → A3e Prezența · Luna → A3d Grupe · Carduri → A3f Personal → B1 plăți mixte / „Altele” → B2 ștergere din arhivă → B3 Serviciu + mutarea încasărilor de bazin → A4 Bazin → A5 De notificat → A6 Asociere achitări → A7 Backup și Notificări → A8 diferențe mici → A9 Documente.
 
-Starea la 29.09 14:54: A1 și structura A5 sunt deja în cod; restul se verifică punct cu punct înainte de lucru.
+Starea la 30.09: componentele din DS-IMPLEMENTARE §2 există în cod; urmează Storybook (PROMPT-5 §1b) și al doilea val de migrare (PROMPT-5 §2). Prompturile și auditurile vechi sunt în `arhiva/`.
 
 ## Sistemul vizual, pe scurt
 - **Fonturi:** Baloo 2 (titluri, cifre, butoane primare) + Nunito (text). Locale, din `webapp/public/assets/fonts`.
-- **Culori de bază:** portocaliu `#ef8a1d` (acțiune), slate `#3a4750` (text), crem `#fffaf0` (fundal pagină), border `#ede7dc`; perechi soft/ink pe mint, galben, roz; 8 tonuri de grupă.
+- **Culori de bază:** portocaliu `#ef8a1d` (accent, borduri, puncte; **nu** poartă text), `--orange-strong` `#b85a00` (fundal pentru text alb: buton primar, checkbox bifat, pastila „azi”), `--orange-ink` `#a34f00` (text portocaliu), slate `#3a4750` (text), crem `#fffaf0` (fundal pagină), border `#ede7dc`; perechi soft/ink pe mint, galben, roz; 8 tonuri de grupă.
 - **Antet de pagină:** padding `12px 40px`, border-bottom `1px solid #ede7dc`; titlu Baloo 24/800 + eyebrow 11/800 uppercase `#9aa3a9` pe același rând; la dreapta comutatorul de mod (pastilă `#f1ece2`, opțiunea activă albă cu `--shadow-pill-active`), stepper-ul de lună/zi, butoanele.
 - **Conținut:** padding `24–32px 40px 40px`, gap 16–18 între blocuri. Carduri albe radius 22 cu border `#ede7dc`; carduri KPI radius 20 pe fundal soft cu cerc decorativ `rgba(255,255,255,.45)`.
 - **Tabele:** antet 11/800 uppercase .07em `#9aa3a9`, rânduri `11–12px 20px` cu `border-bottom:1px solid #f3eee5`, bifă 16px radius 5, meniu ⋯ 32×32 radius 10.

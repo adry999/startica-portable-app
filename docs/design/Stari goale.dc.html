@@ -180,7 +180,8 @@ class Component extends DCLogic {
       ['bazin.coach', 'Setări · Bazin, antrenor', 'Niciun antrenor. Adaugă-l în', 'Personal'],
       ['raport.income', 'Raport · Metode', 'Nicio încasare în perioada aleasă.', ''],
       ['raport.expenses', 'Raport · Categorii', 'Nicio cheltuială în perioada aleasă.', ''],
-      ['asociere.suggestions', 'Asociere · Sugestii', 'Nicio sugestie. Caută copilul mai jos.', '']
+      ['asociere.suggestions', 'Asociere · Sugestii', 'Nicio sugestie. Caută copilul mai jos.', ''],
+      ['chart.nodata', 'Dashboard · Grafice (BarChart, Heatmap)', 'Încă nu sunt date. Graficul apare după prima lună cu achitări.', '']
     ].map(([key, screen, text, link]) => ({ key, screen, text, link }));
     const notEmpty = [
       ['Căutare sau filtre fără rezultat', '„Niciun rezultat pentru „{căutare}”” sau „Niciun rezultat pentru filtrele alese” + filtrele active + „Șterge filtrele” (15e). Text generat de EmptyState variant="no-results", nu cheie în catalog.'],

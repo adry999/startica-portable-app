@@ -254,7 +254,7 @@ class Component extends DCLogic {
     const wkGroups = all.map(g => { const on = w.sel.includes(g.name); return { name: g.name, n: g.n, bg: on ? g.bg : '#fff', fg: on ? g.fg : '#9aa3a9', bd: on ? g.bg : '#ede7dc', mark: on ? '✓' : '+', toggle: () => up({ sel: on ? w.sel.filter(x => x !== g.name) : [...w.sel, g.name], pv: on ? w.pv : g.name }) }; });
     const wkTabs = selG.map(g => ({ name: g.name, bg: g.name === pvName ? '#3a4750' : '#fff', fg: g.name === pvName ? '#fff' : '#3a4750', pick: () => up({ pv: g.name }) }));
     const rows = (pv?.kids ?? []).slice(0, 16).map(([name, age, tag, info, phone], i) => ({ n: i + 1, name, age, tag, alert: !!tag, info: info || '—', w: tag ? '800' : '600', phone, bg: i % 2 ? '#f6f4f0' : '#fff' }));
-    const box = on => ({ bg: on ? '#ef8a1d' : '#fff', bd: on ? '#ef8a1d' : '#c9c4ba', ch: on ? '✓' : '' });
+    const box = on => ({ bg: on ? '#b85a00' : '#fff', bd: on ? '#b85a00' : '#c9c4ba', ch: on ? '✓' : '' });
     const wkOpts = [['info','Alergii și detalii importante'],['notes','Notițe pe zile']].map(([k, label]) => ({ label, ...box(w[k]), toggle: () => up({ [k]: !w[k] }) }));
     const cols = '22px minmax(0,1.3fr) ' + (w.info ? 'minmax(0,1.7fr) ' : '') + 'repeat(5,' + (w.info ? '84px' : 'minmax(84px,1fr)') + ')';
     const pg = pv ? pages(pv) : 0;
@@ -266,7 +266,7 @@ class Component extends DCLogic {
       wkPrev: () => up({ off: w.off - 1 }), wkNext: () => up({ off: w.off + 1 }),
       wkBlankN: w.blank, wkLess: () => up({ blank: Math.max(0, w.blank - 1) }), wkMore: () => up({ blank: Math.min(6, w.blank + 1) }),
       wkSelCount: selG.length + ' din 7', wkAll: () => up({ sel: all.map(g => g.name) }), wkNone: () => up({ sel: [] }),
-      wkBtn: selG.length ? 'Tipărește ' + nPages + (nPages === 1 ? ' foaie' : ' foi') : 'Alege o grupă', wkBtnBg: selG.length ? '#ef8a1d' : '#c9c4ba',
+      wkBtn: selG.length ? 'Tipărește ' + nPages + (nPages === 1 ? ' foaie' : ' foi') : 'Alege o grupă', wkBtnBg: selG.length ? '#b85a00' : '#c9c4ba',
       wkHint: !pv ? 'Nicio grupă aleasă.' : pv.n === 0 ? pv.name + ' nu are copii: doar rânduri libere.' : pv.name + ': ' + pv.n + ' copii + ' + (16 - Math.min(16, pv.n)) + ' rânduri libere · ' + pg + (pg === 1 ? ' foaie' : ' foi'),
       wkHasPv: !!pv, wkNoPv: !pv,
       pvName: pv?.name ?? '', pvEdu: pv?.edu || 'Fără educator', pvAsist: pv?.asist ? ' · Asistent: ' + pv.asist : '', pvMeta: (pv?.n ?? 0) + ' copii · ' + (pv ? pv.a0 + '–' + pv.a1 + ' ani' : '')
@@ -320,7 +320,7 @@ class Component extends DCLogic {
         kids: kids.map(n => { const s = S[get(n)]; return { name: n, ini: n.split(' ').map(w => w[0]).join('').slice(0, 2), label: s[0], bg: s[1], bd: s[2], fg: s[3], dot: s[4], dotBd: s[5], mark: s[6], op: s[7], cycle: () => set([n], next[get(n)]) }; }) };
     });
     const wk = d => { const w = new Date(2026, 8, d).getDay(); return w === 0 || w === 6; };
-    const days = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), fg: wk(i + 1) ? '#c9c4ba' : i + 1 === 24 ? '#fff' : '#9aa3a9', bg: i + 1 === 24 ? '#ef8a1d' : 'transparent' }));
+    const days = Array.from({ length: 30 }, (_, i) => ({ n: String(i + 1), fg: wk(i + 1) ? '#c9c4ba' : i + 1 === 24 ? '#fff' : '#9aa3a9', bg: i + 1 === 24 ? '#b85a00' : 'transparent' }));
     const pat = (r, d) => { const x = (r * 7 + d * 13) % 23; return x === 0 || x === 5 ? 'a' : x === 11 ? 'm' : 'p'; };
     const dayTotals = [];
     const month = roster.Soare.map((name, r) => {
