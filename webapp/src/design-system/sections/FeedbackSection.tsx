@@ -5,8 +5,11 @@ import {
   Drawer,
   EmptyState,
   LoadingState,
+  Popover,
+  SaveIndicator,
   Skeleton,
   SmsConfirmDialog,
+  UndoHistory,
   useToast,
 } from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
@@ -21,6 +24,7 @@ export function FeedbackSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [smsSingleOpen, setSmsSingleOpen] = useState(false);
   const [smsBulkOpen, setSmsBulkOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   return (
     <div className={styles.section}>
@@ -185,6 +189,69 @@ export function FeedbackSection() {
           <span>
             Curs BNM din {DEMO_DAY} <BnmRateLink date={DEMO_DAY} />
           </span>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SaveIndicator"
+        importLine="import { SaveIndicator } from '@shared/ui';"
+        reference="COMPONENTE.md §0f/28f · Prezența, Pontaj, Bazin (marcaj)"
+      >
+        <DemoRow label="saving">
+          <SaveIndicator saving saveError="" savedAt="" unsavedCount={0} onRetry={() => {}} />
+        </DemoRow>
+        <DemoRow label="saved">
+          <SaveIndicator
+            saving={false}
+            saveError=""
+            savedAt="2026-09-27T08:12:00Z"
+            unsavedCount={0}
+            onRetry={() => {}}
+          />
+        </DemoRow>
+        <DemoRow label="unsaved + retry">
+          <SaveIndicator saving={false} saveError="rețea" savedAt="" unsavedCount={3} onRetry={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="UndoHistory"
+        importLine="import { UndoHistory } from '@shared/ui';"
+        reference="COMPONENTE.md §0f/28f · Prezența Ziua, Prezența Luna, Pontaj — stiva vine din useUndoStack (@shared/state)"
+      >
+        <DemoRow label="control">
+          <UndoHistory
+            history={[
+              { id: '2', label: 'Ana Popescu: Prezent → Absent', time: '09:15' },
+              { id: '1', label: 'Bogdan Rusu: Nemarcat → Prezent', time: '09:10' },
+            ]}
+            canUndo
+            onUndoLast={() => {}}
+            onUndoUntil={() => {}}
+            onUndoAll={() => {}}
+          />
+        </DemoRow>
+        <DemoRow label="fără istoric">
+          <UndoHistory history={[]} canUndo={false} onUndoLast={() => {}} onUndoUntil={() => {}} onUndoAll={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Popover"
+        importLine="import { Popover } from '@shared/ui';"
+        reference="COMPONENTE.md §0c/28g · bază pentru FilterMenu, PeriodFilter, SearchSelect, motivul absenței (attendance/ExcuseReasonPopover)"
+      >
+        <DemoRow label="control">
+          <div className={styles.frame}>
+            <button type="button" onClick={() => setPopoverOpen(current => !current)}>
+              {popoverOpen ? 'Închide' : 'Deschide'}
+            </button>
+            {popoverOpen && (
+              <Popover onClose={() => setPopoverOpen(false)} ariaLabel="Exemplu Popover">
+                <p>Conținut plutitor, poziționat sub declanșator.</p>
+              </Popover>
+            )}
+          </div>
         </DemoRow>
       </ComponentShowcase>
     </div>

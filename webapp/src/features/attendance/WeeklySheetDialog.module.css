@@ -56,16 +56,16 @@
   padding: 6px 8px;
 }
 
-.arrow {
-  border: 0;
-  background: none;
+.arrow.arrow {
+  width: auto;
+  height: auto;
   font-size: 16px;
   line-height: 1;
   color: var(--slate);
   padding: 2px 6px;
 }
 
-.arrow:disabled {
+.arrow.arrow:disabled {
   color: var(--subtle);
   cursor: default;
 }
@@ -88,13 +88,9 @@
   gap: var(--space-10);
 }
 
-.linkButton {
-  border: 0;
-  background: none;
+.linkButton.linkButton {
   font-size: 12px;
   font-weight: 800;
-  color: var(--orange-ink);
-  padding: 0;
 }
 
 .pillRow {
@@ -103,16 +99,12 @@
   flex-wrap: wrap;
 }
 
-.groupPill {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+.groupPill.groupPill {
+  border-width: 1px;
   padding: 6px 12px;
-  font-family: var(--font-body);
   font-weight: 800;
   font-size: 12px;
   color: var(--muted);
-  background: var(--white);
-  cursor: pointer;
 }
 
 .optionsBox {
@@ -151,18 +143,15 @@
   flex-wrap: wrap;
 }
 
-.previewTab {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+.previewTab.previewTab {
+  border-width: 1px;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
-  background: var(--white);
   color: var(--muted);
-  cursor: pointer;
 }
 
-.previewTabActive {
+.previewTabActive.previewTabActive {
   background: var(--slate);
   color: var(--white);
   border-color: var(--slate);

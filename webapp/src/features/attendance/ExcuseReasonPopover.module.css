@@ -1,50 +1,20 @@
-.popover {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 6px);
-  left: 0;
-  width: 220px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  padding: var(--space-12);
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-}
-
-.input {
-  padding: 8px 10px;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  font-size: 13px;
-}
-
 .suggestions {
   display: flex;
   gap: var(--space-8);
   flex-wrap: wrap;
 }
 
-.suggestion {
-  border: 0;
+.suggestion.suggestion {
   border-radius: var(--radius-pill);
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
   background: var(--yellow-soft);
   color: var(--yellow-ink);
-  cursor: pointer;
 }
 
-.save {
-  border: 0;
+.save.save {
   border-radius: var(--radius-pill);
   padding: 8px 14px;
   font-size: 13px;
-  font-weight: 800;
-  background: var(--orange);
-  color: #fff;
-  cursor: pointer;
 }

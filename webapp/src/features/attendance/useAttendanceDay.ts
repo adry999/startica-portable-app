@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { groupTone, type PillTone } from '@shared/ui';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { useAttendance } from '@shared/attendance';
 import { STATUS_LABEL } from '@shared/attendance/attendance-labels';
 import { initials as initialsOf } from '@shared/format/initials';
+import { useUndoStack, type UndoHistoryEntry } from '@shared/state/useUndoStack';
 import {
   attendanceKey,
   isChildEnrolledOn,
@@ -19,20 +20,7 @@ interface PriorValue {
   reason: string;
 }
 
-/** O acțiune anulabilă (A3c) — `prev` ține starea de dinainte, per copil, ca „Anulează” să
- * rescrie exact acele valori prin `attendance.mark` (trece prin sync/Istoric, nu ștergere locală). */
-interface HistoryEntry {
-  id: string;
-  label: string;
-  time: string;
-  prev: Map<string, PriorValue>;
-}
-
-export interface HistoryEntryView {
-  id: string;
-  label: string;
-  time: string;
-}
+export type HistoryEntryView = UndoHistoryEntry;
 
 export interface DayTileView {
   child: Child;
@@ -81,13 +69,16 @@ export function useAttendanceDay(date: string): AttendanceDayData {
   const records = session.state.state as RecordsSnapshot;
   const attendance = useAttendance({ date });
   const [groupFilter, setGroupFilter] = useState('');
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
   // Golește istoricul la schimbarea zilei (A3c) — o intrare „Anulează” nu are sens peste altă zi.
-  const dateRef = useRef(date);
-  if (dateRef.current !== date) {
-    dateRef.current = date;
-    if (history.length > 0) setHistory([]);
-  }
+  const undo = useUndoStack<PriorValue>(date, restore => {
+    const changes: AttendanceChange[] = [...restore.entries()].map(([childId, value]) => ({
+      childId,
+      date,
+      status: value.status,
+      reason: value.reason,
+    }));
+    attendance.mark(changes);
+  });
 
   const enrolled = records.children.filter(child => isChildEnrolledOn(child, date));
   const enrolledIds = enrolled.map(child => child.id);
@@ -130,64 +121,16 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     };
   });
 
-  function timeLabel(): string {
-    return new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  function buildHistoryEntry(label: string, changes: AttendanceChange[]): HistoryEntry {
-    const prev = new Map<string, PriorValue>();
-    for (const change of changes) {
-      const existing = attendance.entries.get(attendanceKey(change.childId, date));
-      prev.set(
-        change.childId,
-        existing ? { status: existing.status, reason: existing.reason } : { status: null, reason: '' },
-      );
-    }
-    return { id: crypto.randomUUID(), label, time: timeLabel(), prev };
-  }
-
   // Fiecare acțiune anulabilă își capătă intrarea în istoric ÎNAINTE de a muta starea (A3c) —
   // `attendance.mark` trece prin coada de salvare normală, deci „Anulează” e o mutație obișnuită,
   // vizibilă și în Istoricul din Administrare, nu o ștergere locală.
-  function pushHistory(label: string, changes: AttendanceChange[]): HistoryEntry {
-    const entry = buildHistoryEntry(label, changes);
-    setHistory(current => [...current, entry]);
-    attendance.mark(changes);
-    return entry;
-  }
-
-  function applyRestore(entries: HistoryEntry[]) {
-    const restore = new Map<string, PriorValue>();
-    // Din cel mai vechi spre cel mai nou: prima atingere a unui copil e starea de dinainte de
-    // TOATE intrările anulate — o intrare mai nouă care nu l-a atins nu trebuie să-l suprascrie.
-    for (const entry of entries)
-      for (const [childId, value] of entry.prev) if (!restore.has(childId)) restore.set(childId, value);
-    const changes: AttendanceChange[] = [...restore.entries()].map(([childId, value]) => ({
-      childId,
-      date,
-      status: value.status,
-      reason: value.reason,
-    }));
-    attendance.mark(changes);
-  }
-
-  function undoLast() {
-    if (history.length === 0) return;
-    applyRestore([history[history.length - 1]]);
-    setHistory(current => current.slice(0, -1));
-  }
-
-  function undoUntil(id: string) {
-    const index = history.findIndex(entry => entry.id === id);
-    if (index === -1) return;
-    applyRestore(history.slice(index));
-    setHistory(current => current.slice(0, index));
-  }
-
-  function undoAll() {
-    if (history.length === 0) return;
-    applyRestore(history);
-    setHistory([]);
+  function pushHistory(label: string, childId: string, change: AttendanceChange) {
+    const existing = attendance.entries.get(attendanceKey(childId, date));
+    const prev = new Map<string, PriorValue>([
+      [childId, existing ? { status: existing.status, reason: existing.reason } : { status: null, reason: '' }],
+    ]);
+    undo.push(label, prev);
+    attendance.mark([change]);
   }
 
   function cycle(childId: string): AttendanceStatus | null {
@@ -195,13 +138,13 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     const next = nextAttendanceStatus(current);
     const childName = records.children.find(child => child.id === childId)?.name ?? childId;
     const label = `${childName}: ${STATUS_LABEL[current ?? 'unmarked']} → ${STATUS_LABEL[next ?? 'unmarked']}`;
-    pushHistory(label, [{ childId, date, status: next }]);
+    pushHistory(label, childId, { childId, date, status: next });
     return next;
   }
 
   function setReason(childId: string, reason: string) {
     const childName = records.children.find(child => child.id === childId)?.name ?? childId;
-    pushHistory(`${childName}: motiv „${reason}”`, [{ childId, date, status: 'excused', reason }]);
+    pushHistory(`${childName}: motiv „${reason}”`, childId, { childId, date, status: 'excused', reason });
   }
 
   return {
@@ -219,10 +162,10 @@ export function useAttendanceDay(date: string): AttendanceDayData {
     setGroupFilter,
     cycle,
     setReason,
-    history: [...history].reverse().map(({ id, label, time }) => ({ id, label, time })),
-    canUndo: history.length > 0,
-    undoLast,
-    undoUntil,
-    undoAll,
+    history: undo.history,
+    canUndo: undo.canUndo,
+    undoLast: undo.undoLast,
+    undoUntil: undo.undoUntil,
+    undoAll: undo.undoAll,
   };
 }

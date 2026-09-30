@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, groupTone, type PillTone } from '@shared/ui';
+import { Button, Checkbox, IconButton, groupTone, type PillTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -116,23 +116,19 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
         <div className={styles.weekRow}>
           <span className={styles.label}>Săptămâna</span>
           <div className={styles.stepper}>
-            <button
-              type="button"
-              aria-label="Săptămâna anterioară"
+            <IconButton
+              icon="‹"
+              ariaLabel="Săptămâna anterioară"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, -7))}
-            >
-              ‹
-            </button>
+            />
             <span className={styles.stepperLabel}>{formatWeekRangeShort(week)}</span>
-            <button
-              type="button"
-              aria-label="Săptămâna următoare"
+            <IconButton
+              icon="›"
+              ariaLabel="Săptămâna următoare"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, 7))}
-            >
-              ›
-            </button>
+            />
           </div>
         </div>
 
@@ -141,16 +137,16 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
             Grupe · {selectedGroupIds.length} din {groups.length}
           </span>
           <div className={styles.quickActions}>
-            <button
-              type="button"
+            <Button
+              variant="link"
               className={styles.linkButton}
               onClick={() => setSelectedGroupIds(groups.map(g => g.id))}
             >
               Toate
-            </button>
-            <button type="button" className={styles.linkButton} onClick={() => setSelectedGroupIds([])}>
+            </Button>
+            <Button variant="link" className={styles.linkButton} onClick={() => setSelectedGroupIds([])}>
               Niciuna
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -160,18 +156,18 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
             const selected = selectedGroupIds.includes(group.id);
             const vars = TONE_VARS[tone];
             return (
-              <button
+              <Button
                 key={group.id}
-                type="button"
+                variant="outline"
                 className={styles.groupPill}
-                style={selected ? { background: vars.bg, color: vars.ink } : undefined}
+                style={selected ? { background: vars.bg, color: vars.ink, borderColor: 'transparent' } : undefined}
                 onClick={() => {
                   toggleGroup(group.id);
                   setPreviewGroupId(group.id);
                 }}
               >
                 {selected ? '✓' : '+'} {group.name} {childCountByGroup.get(group.id) ?? 0}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -181,22 +177,22 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
           <p className={styles.optionsNote}>
             Rândurile neocupate rămân libere pentru copii noi. Peste 16 copii, grupa trece pe a doua foaie.
           </p>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
+          <div className={styles.checkboxRow}>
+            <Checkbox
               checked={options.showDetails}
-              onChange={event => setShowDetailsStr(event.target.checked ? '1' : '0')}
+              onChange={checked => setShowDetailsStr(checked ? '1' : '0')}
+              ariaLabel="Alergii și detalii importante"
             />
-            Alergii și detalii importante
-          </label>
-          <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
+            <span>Alergii și detalii importante</span>
+          </div>
+          <div className={styles.checkboxRow}>
+            <Checkbox
               checked={options.showNotes}
-              onChange={event => setShowNotesStr(event.target.checked ? '1' : '0')}
+              onChange={checked => setShowNotesStr(checked ? '1' : '0')}
+              ariaLabel="Notițe pe zile"
             />
-            Notițe pe zile
-          </label>
+            <span>Notițe pe zile</span>
+          </div>
         </div>
 
         {selectedGroupIds.length > 1 && (
@@ -204,15 +200,16 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
             {selectedGroupIds.map(groupId => {
               const group = groups.find(g => g.id === groupId);
               if (!group) return null;
+              const active = previewGroupId === groupId;
               return (
-                <button
+                <Button
                   key={groupId}
-                  type="button"
-                  className={`${styles.previewTab} ${previewGroupId === groupId ? styles.previewTabActive : ''}`}
+                  variant={active ? 'primary' : 'outline'}
+                  className={active ? `${styles.previewTab} ${styles.previewTabActive}` : styles.previewTab}
                   onClick={() => setPreviewGroupId(groupId)}
                 >
                   {group.name}
-                </button>
+                </Button>
               );
             })}
           </div>

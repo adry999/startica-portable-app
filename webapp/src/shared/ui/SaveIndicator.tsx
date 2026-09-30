@@ -9,8 +9,8 @@ export interface SaveIndicatorProps {
   onRetry: () => void;
 }
 
-/** Indicator compact de salvare, lângă acțiunile din antet (19-prezenta.md — Indicator de salvare).
- *  Înlocuiește toastul de `saveError` care apărea la fiecare marcaj eșuat. */
+/** Indicator compact de salvare, lângă acțiunile din antet (`COMPONENTE.md` §0f/28f — Prezența,
+ * Pontaj, Bazin). Înlocuiește toastul de `saveError` care ar apărea la fiecare marcaj eșuat. */
 export function SaveIndicator({ saving, saveError, savedAt, unsavedCount, onRetry }: SaveIndicatorProps) {
   if (saving) {
     return (

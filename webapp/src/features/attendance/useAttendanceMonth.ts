@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useAttendance } from '@shared/attendance';
@@ -9,22 +8,16 @@ import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
 import { attendanceKey, monthDates, nextAttendanceStatus, summarizeMonth } from '#features/attendance/index.web.mjs';
 import type { AttendanceChange, AttendanceStatus, DayCellKind } from '#features/attendance/attendance.types.d.mts';
 import type { Group, RecordsSnapshot } from '@contracts/record-types.mjs';
+import { useUndoStack } from '@shared/state/useUndoStack';
 import type { HistoryEntryView } from './useAttendanceDay';
 
+/** O acțiune anulabilă (A3e) — ca în Ziua (A3c), dar o intrare ține și data celulei, nu doar
+ * copilul, fiindcă aceeași grilă are mai multe zile deodată. */
 interface PriorValue {
   childId: string;
   date: string;
   status: AttendanceStatus | null;
   reason: string;
-}
-
-/** O acțiune anulabilă (A3e) — ca în Ziua (A3c), dar o intrare ține și data celulei, nu doar
- * copilul, fiindcă aceeași grilă are mai multe zile deodată. */
-interface HistoryEntry {
-  id: string;
-  label: string;
-  time: string;
-  prev: Map<string, PriorValue>;
 }
 
 function dayMonthLabel(date: string): string {
@@ -73,13 +66,6 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
   const session = useAppSession();
   const records = session.state.state as RecordsSnapshot;
   const [groupId, setGroupId] = usePersistedState<string>('attendance.group', '');
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  // Golește istoricul la schimbarea lunii (A3e) — ca la schimbarea zilei în Ziua.
-  const monthRef = useRef(month);
-  if (monthRef.current !== month) {
-    monthRef.current = month;
-    if (history.length > 0) setHistory([]);
-  }
 
   const sortedGroups = sortByGroupOrder(records.groups);
   const hasUnassignedChildren = records.children.some(child => !child.archived && child.groupId === null);
@@ -92,6 +78,16 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
       : (sortedGroups.find(group => group.id === effectiveGroupId)?.name ?? '');
 
   const attendance = useAttendance(effectiveGroupId ? { month, groupId: effectiveGroupId } : null);
+  // Golește istoricul la schimbarea lunii (A3e) — ca la schimbarea zilei în Ziua.
+  const undo = useUndoStack<PriorValue>(month, restore => {
+    const changes: AttendanceChange[] = [...restore.values()].map(value => ({
+      childId: value.childId,
+      date: value.date,
+      status: value.status,
+      reason: value.reason,
+    }));
+    attendance.mark(changes);
+  });
 
   const dates = monthDates(month);
   const todayStr = today();
@@ -118,10 +114,6 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
       };
     });
 
-  function timeLabel(): string {
-    return new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  }
-
   // Fiecare acțiune anulabilă își capătă intrarea în istoric ÎNAINTE de a muta starea (ca în Ziua,
   // A3c) — `attendance.mark` trece prin coada de salvare normală, deci „Anulează” e o mutație
   // obișnuită, vizibilă și în Istoricul din Administrare, nu o ștergere locală.
@@ -130,50 +122,11 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
     const prev = new Map<string, PriorValue>([
       [
         attendanceKey(childId, date),
-        {
-          childId,
-          date,
-          status: existing?.status ?? null,
-          reason: existing?.reason ?? '',
-        },
+        { childId, date, status: existing?.status ?? null, reason: existing?.reason ?? '' },
       ],
     ]);
-    const entry: HistoryEntry = { id: crypto.randomUUID(), label, time: timeLabel(), prev };
-    setHistory(current => [...current, entry]);
+    undo.push(label, prev);
     attendance.mark([change]);
-  }
-
-  function applyRestore(entries: HistoryEntry[]) {
-    const restore = new Map<string, PriorValue>();
-    // Din cel mai vechi spre cel mai nou: prima atingere a unei celule e starea de dinainte de
-    // TOATE intrările anulate — o intrare mai nouă care nu a atins-o nu trebuie să o suprascrie.
-    for (const entry of entries) for (const [key, value] of entry.prev) if (!restore.has(key)) restore.set(key, value);
-    const changes: AttendanceChange[] = [...restore.values()].map(value => ({
-      childId: value.childId,
-      date: value.date,
-      status: value.status,
-      reason: value.reason,
-    }));
-    attendance.mark(changes);
-  }
-
-  function undoLast() {
-    if (history.length === 0) return;
-    applyRestore([history[history.length - 1]]);
-    setHistory(current => current.slice(0, -1));
-  }
-
-  function undoUntil(id: string) {
-    const index = history.findIndex(entry => entry.id === id);
-    if (index === -1) return;
-    applyRestore(history.slice(index));
-    setHistory(current => current.slice(0, index));
-  }
-
-  function undoAll() {
-    if (history.length === 0) return;
-    applyRestore(history);
-    setHistory([]);
   }
 
   function cycle(childId: string, date: string): AttendanceStatus | null {
@@ -212,10 +165,10 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
     groupName,
     cycle,
     setReason,
-    history: [...history].reverse().map(({ id, label, time }) => ({ id, label, time })),
-    canUndo: history.length > 0,
-    undoLast,
-    undoUntil,
-    undoAll,
+    history: undo.history,
+    canUndo: undo.canUndo,
+    undoLast: undo.undoLast,
+    undoUntil: undo.undoUntil,
+    undoAll: undo.undoAll,
   };
 }

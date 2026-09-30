@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
+import { Button, Popover, TextInput } from '@shared/ui';
 import { EXCUSE_SUGGESTIONS, REASON_MAX_LENGTH } from '#features/attendance/index.web.mjs';
 import styles from './ExcuseReasonPopover.module.css';
 
@@ -12,43 +13,27 @@ export interface ExcuseReasonPopoverProps {
 /** Popover mic sub placă, deschis când starea devine „Motivat” (18a) — Esc sau clic în afară închide fără să salveze. */
 export function ExcuseReasonPopover({ childName, reason, onSave, onClose }: ExcuseReasonPopoverProps) {
   const [value, setValue] = useState(reason);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onClose();
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose]);
 
   return (
-    <div ref={rootRef} className={styles.popover} role="dialog" aria-label={`Motivul absenței lui ${childName}`}>
-      <input
-        className={styles.input}
+    <Popover onClose={onClose} ariaLabel={`Motivul absenței lui ${childName}`}>
+      <TextInput
         value={value}
+        onChange={setValue}
         maxLength={REASON_MAX_LENGTH}
         placeholder="Motivul absenței…"
-        onChange={event => setValue(event.target.value)}
+        ariaLabel={`Motivul absenței lui ${childName}`}
         autoFocus
       />
       <div className={styles.suggestions}>
         {EXCUSE_SUGGESTIONS.map(suggestion => (
-          <button key={suggestion} type="button" className={styles.suggestion} onClick={() => setValue(suggestion)}>
+          <Button key={suggestion} className={styles.suggestion} onClick={() => setValue(suggestion)}>
             {suggestion}
-          </button>
+          </Button>
         ))}
       </div>
-      <button type="button" className={styles.save} onClick={() => onSave(value)}>
+      <Button className={styles.save} onClick={() => onSave(value)}>
         Salvează
-      </button>
-    </div>
+      </Button>
+    </Popover>
   );
 }

@@ -64,3 +64,6 @@ export { ScrollArea, type ScrollAreaProps } from './ScrollArea';
 export { Skeleton } from './Skeleton';
 export { LoadingState } from './LoadingState';
 export { useDelayedLoading } from './useDelayedLoading';
+export { SaveIndicator, type SaveIndicatorProps } from './SaveIndicator';
+export { UndoHistory, type UndoHistoryEntry, type UndoHistoryProps } from './UndoHistory';
+export { Popover, type PopoverProps } from './Popover';

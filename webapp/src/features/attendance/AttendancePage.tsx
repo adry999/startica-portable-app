@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Button, DayStepper, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
+import {
+  Button,
+  DayStepper,
+  MonthStepper,
+  SaveIndicator,
+  SegmentedControl,
+  UndoHistory,
+  useTopbarActions,
+} from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { shiftMonth } from '@shared/format/month-shift';
 import { exportAttendanceMonth } from './attendance-export';
 import { useAttendanceDay } from './useAttendanceDay';
 import { useAttendanceMonth } from './useAttendanceMonth';
-import { AttendanceUndoControl } from './AttendanceUndoControl';
 import { DayView } from './DayView';
 import { MonthView } from './MonthView';
-import { SaveIndicator } from './SaveIndicator';
 import { WeeklySheetDialog } from './WeeklySheetDialog';
 
 /** Butonul „Foi pe săptămână” e principal doar lunea (26-foaie-saptamana.md §3). */
@@ -77,7 +83,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
         {saveIndicator}
         {modeSwitch}
         <DayStepper value={date} max={today()} onChange={setDate} />
-        <AttendanceUndoControl
+        <UndoHistory
           history={dayData.history}
           canUndo={dayData.canUndo}
           onUndoLast={dayData.undoLast}
@@ -94,7 +100,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
           onPrev={() => setMonthKey(shiftMonth(monthKey, -1))}
           onNext={() => setMonthKey(current => (current >= CURRENT_MONTH ? current : shiftMonth(current, 1)))}
         />
-        <AttendanceUndoControl
+        <UndoHistory
           history={monthData.history}
           canUndo={monthData.canUndo}
           onUndoLast={monthData.undoLast}

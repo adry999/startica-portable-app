@@ -1,23 +1,21 @@
 import { useRef } from 'react';
-import type { HistoryEntryView } from './useAttendanceDay';
-import styles from './AttendanceUndoControl.module.css';
+import type { UndoHistoryEntry } from '@shared/state/useUndoStack';
+import styles from './UndoHistory.module.css';
 
-export interface AttendanceUndoControlProps {
-  history: HistoryEntryView[];
+export type { UndoHistoryEntry };
+
+export interface UndoHistoryProps {
+  history: UndoHistoryEntry[];
   canUndo: boolean;
   onUndoLast: () => void;
   onUndoUntil: (id: string) => void;
   onUndoAll: () => void;
 }
 
-/** „↶ Anulează | N ▾” din antetul Prezenței (A3c) — Ctrl+Z pe pagină face `onUndoLast()` direct. */
-export function AttendanceUndoControl({
-  history,
-  canUndo,
-  onUndoLast,
-  onUndoUntil,
-  onUndoAll,
-}: AttendanceUndoControlProps) {
+/** „↶ Anulează | N ▾” + popover „Modificări azi” (`COMPONENTE.md` §0f/28f) — Ctrl/⌘+Z pe pagină
+ * face `onUndoLast()` direct. Stiva efectivă (istoricul, undo/redo) vine din `useUndoStack`
+ * (`@shared/state`); componenta doar randează ce primește. */
+export function UndoHistory({ history, canUndo, onUndoLast, onUndoUntil, onUndoAll }: UndoHistoryProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
   function close() {

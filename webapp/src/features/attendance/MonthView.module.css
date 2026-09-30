@@ -127,12 +127,10 @@
   background: var(--off-day);
 }
 
-.cellButton {
-  border: 0;
-  background: none;
+.cellButton.cellButton {
+  width: auto;
+  height: auto;
   padding: 2px;
-  cursor: pointer;
-  display: flex;
 }
 
 .daysCell {
