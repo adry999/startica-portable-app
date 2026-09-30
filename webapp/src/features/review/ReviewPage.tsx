@@ -164,9 +164,9 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
                 <strong>{active.name}</strong>
                 <span>{active.subtitle}</span>
               </div>
-              <button type="button" className={styles.openLink} onClick={() => openRecord(active)}>
+              <Button variant="link" className={styles.openLink} onClick={() => openRecord(active)}>
                 {active.type === 'payments' ? 'Deschide achitarea →' : 'Deschide fișa →'}
-              </button>
+              </Button>
             </div>
 
             <div className={styles.problemBox}>
@@ -188,9 +188,9 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
                   Nu e o problemă · marchează verificat
                 </Button>
               )}
-              <button type="button" className={styles.skipButton} onClick={skip}>
+              <Button variant="link" className={styles.skipButton} onClick={skip}>
                 Sari peste
-              </button>
+              </Button>
             </div>
           </Card>
         </div>

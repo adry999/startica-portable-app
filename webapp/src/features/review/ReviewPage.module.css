@@ -196,10 +196,6 @@
 
 .openLink {
   flex: none;
-  border: none;
-  background: none;
-  color: var(--orange-ink);
-  font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
 }
@@ -233,8 +229,6 @@
 
 .skipButton {
   margin-left: auto;
-  border: none;
-  background: none;
   font-weight: 800;
   font-size: 13px;
   color: var(--muted);

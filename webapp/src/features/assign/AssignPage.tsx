@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Button,
   Card,
+  Checkbox,
   EmptyState,
   LoadingState,
   ScrollArea,
@@ -194,11 +195,15 @@ export function AssignPage({ month }: AssignPageProps) {
             </div>
 
             <label className={styles.rememberField}>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={active.remember}
                 disabled={!active.canRemember || !active.selectedChildId}
                 onChange={() => assignData.toggleRemember(active.paymentId)}
+                ariaLabel={
+                  active.selectedChildId
+                    ? `Ține minte: plătitorul „${active.source}” = ${selectedChildName} pentru achitările viitoare`
+                    : 'Ține minte plătitorul'
+                }
               />
               <span>
                 {active.selectedChildId
