@@ -35,6 +35,31 @@
   font-weight: 700;
 }
 
+.action {
+  padding: 0;
+}
+
+.action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionAccent {
+  color: var(--pink);
+}
+
+.danger {
+  background: var(--raspberry);
+  color: var(--white);
+  border-radius: var(--radius-pill);
+  padding: var(--space-6) var(--space-12);
+}
+
+.danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .cancel {
   margin-left: auto;
   display: inline-flex;

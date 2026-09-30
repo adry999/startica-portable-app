@@ -1,7 +1,6 @@
-import { Button, RowMenu, SelectionBar } from '@shared/ui';
+import { RowMenu, SelectionBar } from '@shared/ui';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ArchiveFilter } from './ChildrenToolbar';
-import styles from './ChildrenPage.module.css';
 
 export interface ChildrenSelectionBarProps {
   selectedCount: number;
@@ -33,7 +32,17 @@ export function ChildrenSelectionBar({
   // Toate doar când toate rândurile selectate sunt arhivate, și niciodată în Active.
   const showDeleteForever = archiveFilter === 'archived' || (archiveFilter === 'all' && allSelectedArchived);
   return (
-    <SelectionBar label={<>{selectedCount} selectați</>} onCancel={onCancel}>
+    <SelectionBar
+      label={<>{selectedCount} selectați</>}
+      onCancel={onCancel}
+      actions={[
+        { label: 'Exportă', onClick: onExport },
+        archiveFilter === 'archived'
+          ? { label: 'Dezarhivează', onClick: onUnarchive, tone: 'accent' }
+          : { label: 'Arhivează', onClick: onArchive, tone: 'accent' },
+      ]}
+      danger={showDeleteForever ? { label: 'Șterge definitiv', onClick: onDeleteForever } : undefined}
+    >
       <RowMenu
         ariaLabel="Mută în grupă"
         trigger="Mută în grupă"
@@ -42,23 +51,6 @@ export function ChildrenSelectionBar({
           ...groups.map(group => ({ label: group.name, onClick: () => onMove(group.id) })),
         ]}
       />
-      <Button className={styles.selectionExport} onClick={onExport}>
-        Exportă
-      </Button>
-      {archiveFilter === 'archived' ? (
-        <Button className={styles.selectionArchive} onClick={onUnarchive}>
-          Dezarhivează
-        </Button>
-      ) : (
-        <Button className={styles.selectionArchive} onClick={onArchive}>
-          Arhivează
-        </Button>
-      )}
-      {showDeleteForever && (
-        <Button className={styles.selectionDeleteForever} onClick={onDeleteForever}>
-          Șterge definitiv
-        </Button>
-      )}
     </SelectionBar>
   );
 }

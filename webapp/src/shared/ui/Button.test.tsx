@@ -41,4 +41,23 @@ describe('Button', () => {
     render(<Button size="lg">Salvează asocierile</Button>);
     expect(screen.getByRole('button', { name: 'Salvează asocierile' }).className).toMatch(/lg/);
   });
+
+  it('cât `loading` e adevărat, butonul e dezactivat, aria-busy și arată un Spinner', () => {
+    const { container } = render(<Button loading>Salvez…</Button>);
+    const button = container.querySelector('button')!;
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(container.querySelector('[role="status"]')).toBeInTheDocument();
+  });
+
+  it('`loading` ignoră clicurile', async () => {
+    const onClick = vi.fn();
+    const { container } = render(
+      <Button loading onClick={onClick}>
+        Salvez…
+      </Button>,
+    );
+    await userEvent.click(container.querySelector('button')!);
+    expect(onClick).not.toHaveBeenCalled();
+  });
 });

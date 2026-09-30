@@ -68,22 +68,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-.selectionAction {
-  padding: 0 !important;
-}
-
-.selectionArchive {
-  color: var(--pink) !important;
-  padding: 0 !important;
-}
-
-.selectionDeleteForever {
-  background: var(--raspberry) !important;
-  color: var(--white) !important;
-  border-radius: var(--radius-pill);
-  padding: var(--space-6) var(--space-12) !important;
-}
-
 .badgeStack {
   display: inline-flex;
   flex-wrap: wrap;

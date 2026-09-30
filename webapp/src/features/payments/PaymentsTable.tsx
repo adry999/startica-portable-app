@@ -256,28 +256,17 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
               </>
             }
             onCancel={() => setSelectedRowKeys(new Set())}
-          >
-            <Button className={styles.selectionAction} onClick={() => navigate('/asociere-achitari')}>
-              Asociază în De rezolvat →
-            </Button>
-            <Button className={styles.selectionAction} onClick={exportSelected}>
-              Exportă
-            </Button>
-            {data.archiveFilter === 'archived' ? (
-              <Button className={styles.selectionArchive} onClick={() => void unarchiveSelected()}>
-                Dezarhivează
-              </Button>
-            ) : (
-              <Button className={styles.selectionArchive} onClick={() => void archiveSelected()}>
-                Arhivează
-              </Button>
-            )}
-            {showDeleteForever && (
-              <Button className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
-                Șterge definitiv
-              </Button>
-            )}
-          </SelectionBar>
+            actions={[
+              { label: 'Asociază în De rezolvat →', onClick: () => navigate('/asociere-achitari') },
+              { label: 'Exportă', onClick: exportSelected },
+              data.archiveFilter === 'archived'
+                ? { label: 'Dezarhivează', onClick: () => void unarchiveSelected(), tone: 'accent' }
+                : { label: 'Arhivează', onClick: () => void archiveSelected(), tone: 'accent' },
+            ]}
+            danger={
+              showDeleteForever ? { label: 'Șterge definitiv', onClick: () => setBulkDeleteOpen(true) } : undefined
+            }
+          />
         )}
 
         <DataTable<PaymentRowView>

@@ -1,4 +1,8 @@
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
   border: none;
   border-radius: var(--radius-pill);
   padding: var(--space-8) var(--space-16);
@@ -10,6 +14,17 @@
   opacity: 0.5;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+/* `loading` folosește `disabled` ca să ignore clicurile, dar rămâne plin (nu estompat) — e o
+   stare activă, nu dezactivată (29b). */
+.btn.loading:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.spinner {
+  flex: none;
 }
 
 .primary {
