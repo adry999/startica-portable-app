@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { capitalize } from '#shared/format/date-format.mjs';
 import { Card, type CardTone } from './Card';
 import styles from './Kpi.module.css';
 
@@ -62,7 +63,7 @@ export function Kpi({
     );
   }
 
-  const activeClass = activeTone ? styles[`active${activeTone.charAt(0).toUpperCase()}${activeTone.slice(1)}`] : null;
+  const activeClass = activeTone ? styles[`active${capitalize(activeTone)}`] : null;
 
   return (
     <Card

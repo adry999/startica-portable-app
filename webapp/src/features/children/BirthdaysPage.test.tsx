@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { TopbarActionsProvider, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
+import { today } from '@domain/calendar-month.mjs';
+import { capitalize, formatMonthName } from '#shared/format/date-format.mjs';
 import { BirthdaysPage } from './BirthdaysPage';
 
 function jsonResponse(body: unknown) {
@@ -111,7 +113,8 @@ describe('BirthdaysPage', () => {
     expect(screen.getByText('Octombrie 2026')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Azi' }));
-    expect(screen.getByText('Septembrie 2026')).toBeInTheDocument();
+    // Luna curentă în ora locală, ca `today()` din aplicație — nu o lună fixă.
+    expect(screen.getByText(capitalize(formatMonthName(today().slice(0, 7))))).toBeInTheDocument();
   });
 
   it('filtrul pe grupă ascunde copiii din celelalte grupe și actualizează contorul', async () => {

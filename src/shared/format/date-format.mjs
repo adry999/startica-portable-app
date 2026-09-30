@@ -1,3 +1,7 @@
+// Prima literă mare — pentru titluri de ecran ("Septembrie 2026"), spre deosebire de textul
+// adresat direct părinților, care rămâne cu literă mică ("plata pentru septembrie").
+export const capitalize = v => (v ? v.charAt(0).toUpperCase() + v.slice(1) : v);
+
 // Ora fixă evită schimbarea zilei la conversia de fus orar.
 export const formatDate = v => (v ? new Date(v + 'T12:00:00').toLocaleDateString('ro-RO') : '—');
 

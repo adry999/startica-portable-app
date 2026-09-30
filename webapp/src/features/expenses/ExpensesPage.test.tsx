@@ -273,6 +273,10 @@ describe('ExpensesPage', () => {
     const user = userEvent.setup();
 
     await user.click(screen.getByText('+ Cheltuială nouă'));
+    // Data implicită e `today()` — poate cădea în afara lunii vizualizate (2026-09) când testul
+    // rulează chiar în ultima noapte a lunii; fixăm o dată din septembrie explicit.
+    await user.clear(screen.getByLabelText('Data cheltuielii'));
+    await user.type(screen.getByLabelText('Data cheltuielii'), '2026-09-15');
     await user.type(screen.getByLabelText('Suma'), '250');
     await user.type(screen.getByLabelText('Descriere'), 'Detergenți');
     await user.click(screen.getByRole('button', { name: 'Salvează' }));

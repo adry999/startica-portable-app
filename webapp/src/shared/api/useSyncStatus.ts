@@ -132,6 +132,22 @@ function start() {
   eventSource.onerror = () => startPollingFallback();
 }
 
+/** Oprește fluxul SSE + polling-ul de rezervă — apelat când sincronizarea se decuplează
+ * (`configured` trece pe `false`), ca să nu rămână o conexiune deschisă către un server
+ * cu care aplicația nu mai e perechiată. Idempotent — sigur de apelat de mai multe ori. */
+function stop() {
+  if (!started) return;
+  started = false;
+  eventSource?.close();
+  eventSource = null;
+  stopPollingFallback();
+  if (reloadTimer) {
+    clearTimeout(reloadTimer);
+    reloadTimer = null;
+  }
+  setStatus(EMPTY_STATUS);
+}
+
 /**
  * Doar pentru teste — un modul singleton nu se resetează singur între cazuri.
  * @internal
@@ -168,6 +184,7 @@ export function useSyncStatus(): SyncStatus {
 
   useEffect(() => {
     if (configured) start();
+    else stop();
   }, [configured]);
 
   return configured ? status : EMPTY_STATUS;

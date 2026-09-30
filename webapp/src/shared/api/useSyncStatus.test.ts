@@ -125,4 +125,44 @@ describe('useSyncStatus', () => {
     expect(result.current.connection).toBe('offline');
     expect(result.current.pending).toBe(3);
   });
+
+  it('decuplarea (configured → false) închide fluxul SSE, nu-l lasă deschis pe fundal', async () => {
+    const { useSyncStatus } = await import('./useSyncStatus');
+    const { rerender } = renderHook(() => useSyncStatus());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const source = FakeEventSource.instances[0];
+    expect(source.closed).toBe(false);
+
+    sessionState = { revision: 5, sync: null };
+    rerender();
+
+    expect(source.closed).toBe(true);
+  });
+
+  it('polling-ul de rezervă se oprește la decuplare, nu mai cere status după aceea', async () => {
+    vi.useFakeTimers();
+    const { useSyncStatus } = await import('./useSyncStatus');
+    const { rerender } = renderHook(() => useSyncStatus());
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    const source = FakeEventSource.instances[0];
+    act(() => {
+      source.onerror?.();
+    });
+    requestJsonMock.mockClear();
+
+    sessionState = { revision: 5, sync: null };
+    rerender();
+
+    act(() => {
+      vi.advanceTimersByTime(60000);
+    });
+
+    expect(requestJsonMock).not.toHaveBeenCalled();
+  });
 });

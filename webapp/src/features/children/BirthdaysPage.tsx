@@ -12,7 +12,7 @@ import {
   useTopbarTitle,
 } from '@shared/ui';
 import { pluralRo } from '@shared/format/plural-ro';
-import { formatMonthName, formatMonthOnly } from '#shared/format/date-format.mjs';
+import { capitalize, formatMonthName, formatMonthOnly } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useBirthdays, type BirthdaysGroupOption } from './useBirthdays';
 import styles from './BirthdaysPage.module.css';
@@ -24,8 +24,7 @@ function cx(...classes: Array<string | false | null | undefined>): string {
 }
 
 function monthLabel(monthKey: string): string {
-  const label = formatMonthName(monthKey);
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return capitalize(formatMonthName(monthKey));
 }
 
 function isValidMonth(value: string | null): value is string {

@@ -13,6 +13,7 @@ import {
   type ProgressBarTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { capitalize } from '#shared/format/date-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
@@ -56,8 +57,6 @@ function fullMonthLabel(month: string): string {
   const name = MONTH_NAMES[Number(monthIndex) - 1] ?? monthIndex;
   return `${name} ${year}`;
 }
-
-const capitalize = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 
 export interface DashboardPageProps {
   month: string;

@@ -14,6 +14,7 @@ import {
   useTopbarActions,
 } from '@shared/ui';
 import { initials } from '@shared/format/initials';
+import { capitalize } from '#shared/format/date-format.mjs';
 import { useReview, type ReviewRowView, type ReviewTypeCounts, type ReviewTypeFilter } from './useReview';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
@@ -33,10 +34,6 @@ function typeOptions(counts: ReviewTypeCounts) {
 
 function rowKey(row: ReviewRowView): string {
   return `${row.type} ${row.id}`;
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 export interface ReviewPageProps {

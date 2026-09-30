@@ -4,7 +4,7 @@ import { paymentTenders } from '#shared/domain/payment-allocations.mjs';
 import { cents } from '#shared/domain/money.mjs';
 import { childNameOf, serviceOf } from '#shared/domain/record-labels.mjs';
 import { DEFAULT_SERVICE_ID } from '#shared/domain/record-schema.mjs';
-import { formatDate } from '#shared/format/date-format.mjs';
+import { capitalize, formatDate } from '#shared/format/date-format.mjs';
 import type { Expense, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export type DayClosingStatus = 'loading' | 'ready';
@@ -50,7 +50,7 @@ const EMPTY_TOTALS: DayMethodTotals = { Cash: 0, Card: 0, Transfer: 0 };
 // „Joi, 24.09.2026" — ziua săptămânii scrisă, data numerică, ca pe bonul de închidere a zilei (24b).
 function dayLabelOf(date: string): string {
   const weekday = new Date(`${date}T12:00:00`).toLocaleDateString('ro-RO', { weekday: 'long' });
-  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${formatDate(date)}`;
+  return `${capitalize(weekday)}, ${formatDate(date)}`;
 }
 
 /**

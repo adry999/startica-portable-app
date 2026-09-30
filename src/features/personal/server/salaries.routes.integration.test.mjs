@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { startTestApplication } from '#test-support/start-test-application.mjs';
+import { today } from '#shared/domain/calendar-month.mjs';
 
 // Lună sigur încheiată, indiferent de data reală de rulare a testelor (M4: pay() refuză o
 // lună care nu s-a încheiat) — angajatul e activ dinainte de ea, ca salariul să fie întreg.
@@ -135,12 +136,13 @@ test('pay() refuză o lună care nu s-a încheiat (M4)', async t => {
   });
 
   const revision = (await get('/api/state')).revision;
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  // Ora locală, ca `today()` din server — `toISOString()` (UTC) alunecă luna în noaptea de 1.
+  const currentMonth = today().slice(0, 7);
   const response = await post('/api/personal/salaries/pay', {
     staffIds: ['STF-1'],
     month: currentMonth,
     method: 'cash',
-    date: new Date().toISOString().slice(0, 10),
+    date: today(),
     revision,
     requestId: randomUUID(),
   });

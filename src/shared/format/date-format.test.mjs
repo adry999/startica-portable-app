@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  capitalize,
   formatLongDate,
   formatMonthName,
   formatMonthOnly,
@@ -65,4 +66,12 @@ test('formatDayMonthNumeric scrie ziua și luna cu două cifre, pentru pastila �
 
 test('formatDayMonthNumeric arată liniuță pentru dată lipsă', () => {
   assert.equal(formatDayMonthNumeric(''), '—');
+});
+
+test('capitalize pune prima literă mare, pentru titluri de ecran', () => {
+  assert.equal(capitalize('septembrie 2026'), 'Septembrie 2026');
+});
+
+test('capitalize nu explodează pe șir gol', () => {
+  assert.equal(capitalize(''), '');
 });

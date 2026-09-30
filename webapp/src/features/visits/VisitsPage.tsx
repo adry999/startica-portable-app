@@ -23,7 +23,7 @@ import {
   type DataTableColumn,
   type PillTone,
 } from '@shared/ui';
-import { formatAge, formatDate, formatDayLabel, formatMonthName } from '#shared/format/date-format.mjs';
+import { capitalize, formatAge, formatDate, formatDayLabel, formatMonthName } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
@@ -61,11 +61,8 @@ const STATUS_PILL_CLASS: Record<VisitStatus, keyof typeof styles> = {
 
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
 
-// R7: `formatMonthName` întoarce „septembrie 2026" (nu majusculă — folosit și în text adresat
-// direct părinților); antetul calendarului cere „Septembrie 2026", ca în children/BirthdaysPage.tsx.
 function monthLabel(monthKey: string): string {
-  const label = formatMonthName(monthKey);
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return capitalize(formatMonthName(monthKey));
 }
 
 /** Ecranul „Vizite" (2a din Operatiuni.dc.html): calendar + panou de detalii pentru ziua selectată, plus lista completă filtrabilă. */

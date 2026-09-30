@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
+import { today } from '@domain/calendar-month.mjs';
 import { useBirthdays } from './useBirthdays';
 
 function jsonResponse(body: unknown) {
@@ -78,7 +79,8 @@ describe('useBirthdays', () => {
     expect(result.current.month).toBe('2026-08');
 
     act(() => result.current.goToday());
-    const todayMonth = new Date().toISOString().slice(0, 7);
+    // Ora locală, ca `today()` din aplicație — `toISOString()` (UTC) greșește luna în noaptea de 1.
+    const todayMonth = today().slice(0, 7);
     expect(result.current.month).toBe(todayMonth);
   });
 
