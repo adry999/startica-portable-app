@@ -84,15 +84,6 @@
   width: 320px;
 }
 
-.emptyMembers {
-  margin: 0;
-  padding: var(--space-16);
-  border: 1px dashed var(--mint);
-  border-radius: var(--radius-md);
-  color: var(--mint-ink);
-  text-align: center;
-}
-
 .memberGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -104,9 +95,8 @@
   align-items: center;
   gap: var(--space-8);
   background: var(--cream);
-  /* #f1e8d6 din A8 (4b) — niciun token exact (--row-divider e #f3eee5, prea aproape ca să reutilizăm greșit). */
-  border: 1px solid #f1e8d6;
-  border-radius: 12px;
+  border: 1px solid var(--row-divider-warm);
+  border-radius: var(--radius-input);
   padding: var(--space-6) var(--space-8);
   height: 40px;
 }

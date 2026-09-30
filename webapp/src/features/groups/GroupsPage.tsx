@@ -3,10 +3,13 @@ import {
   Button,
   Card,
   ConfirmDeleteDialog,
+  EMPTY_STATES,
+  EmptyState,
   Field,
   IconButton,
   LoadingState,
   NumberInput,
+  resolveEmptyStateTitle,
   SearchSelect,
   SegmentedControl,
   TextInput,
@@ -334,7 +337,11 @@ function GroupEditor({
       </div>
 
       {group.members.length === 0 ? (
-        <p className={styles.emptyMembers}>Niciun copil în grupă. Caută mai sus sau trage-i din Tablă.</p>
+        <EmptyState
+          variant={EMPTY_STATES['grupe.members'].variant}
+          size="compact"
+          title={resolveEmptyStateTitle(EMPTY_STATES['grupe.members'])}
+        />
       ) : (
         <div className={styles.memberGrid}>
           {group.members.map(member => (

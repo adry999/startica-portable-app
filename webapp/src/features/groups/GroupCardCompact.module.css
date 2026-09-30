@@ -110,7 +110,7 @@
 
 .pill {
   flex: none;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--white-a60);
   border-radius: var(--radius-pill);
   padding: 2px var(--space-8);
   font-size: 11px;

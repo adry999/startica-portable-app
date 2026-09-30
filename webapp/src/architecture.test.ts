@@ -127,7 +127,12 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     'expenses/DailyExpensesView.tsx',
     'expenses/ExpenseFormDrawer.tsx',
     'expenses/ExpensesFilters.tsx',
+    // Rândul candidatului din căutare (avatar + nume + pastilă) e un hit-area pe tot rândul, ca
+    // ChildTile — și togglurile de zi L-V (22×22, comutare multiplă, nu `Button`) n-au variantă potrivită.
     'groups/GroupTeamPicker.tsx',
+    // Mâner de tragere, numele-ca-buton-de-editare, pastila „Editează" și „+N" — patru roluri într-un
+    // tile compact, cu `currentColor` moștenit din tonul dinamic al grupei; un `Button`/`IconButton`
+    // ar impune propriul fundal/padding și ar sparge nuanțarea pe ton (ca ChildTile în attendance).
     'groups/GroupTile.tsx',
     'notify/NotifyPage.tsx',
     'payments/PaymentFormDrawer.tsx',
@@ -171,9 +176,10 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'conflicts/ConflictsPage.module.css',
     'expenses/ExpensesPage.module.css',
     'fee-setup/FeeSetupPage.module.css',
+    // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
+    // shared/ui (Board, DateInput, NumberInput…), unde nu e scanată de R2; nu există un token
+    // cu întreaga valoare a umbrei, iar shorthand-ul nu poate începe cu `var(...)`.
     'groups/GroupCardCompact.module.css',
-    'groups/GroupsPage.module.css',
-    'groups/GroupTeamPicker.module.css',
     'groups/GroupTile.module.css',
     'notifications/SmsTemplatesPanel.module.css',
     'notify/NotifyPage.module.css',
@@ -244,7 +250,6 @@ describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format �
   const RAW_FORMAT_PATTERN = /\.(toLocaleDateString|toLocaleString|toFixed)\(/;
 
   const ALLOWED: readonly string[] = [
-    'groups/GroupTeamPicker.tsx',
     'payments/PaymentFormDrawer.tsx',
     'personal/SalariesView.tsx',
     'pool/MonthView.tsx',
@@ -290,8 +295,12 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'children/ChildrenPage.tsx',
     'expenses/ExpensesCategoryManager.tsx',
     'fee-setup/FeeSetupPage.tsx',
+    // „Niciun rezultat pentru căutare” pe panoul „Fără grupă” — text de căutare fără rezultate,
+    // intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca AssignPage/AuditLogPage.
     'groups/GroupsBoard.tsx',
-    'groups/GroupsPage.tsx',
+    // „Niciun asistent" / „Niciun înlocuitor" (03-grupe.md §5c) — indicii scurte pe rolul unui bloc din
+    // Echipa grupei, nu o stare goală de listă/pagină (fără ilustrație, fără acțiune); niciun cheie din
+    // catalog nu se potrivește, textul rămâne literal, ca în spec.
     'groups/GroupTeamPicker.test.tsx',
     'groups/GroupTeamPicker.tsx',
     'notifications/NotificationsPage.test.tsx',
@@ -321,6 +330,8 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'conflicts/ConflictsPage.tsx',
     'dashboard/DashboardPage.tsx',
     'fee-setup/FeeSetupPage.tsx',
+    'groups/GroupsBoard.tsx',
+    'groups/GroupsPage.tsx',
     'payments/PaymentsTable.tsx',
     'personal/CandidatesTab.tsx',
     'review/ReviewPage.tsx',

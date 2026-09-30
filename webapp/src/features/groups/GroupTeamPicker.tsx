@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Badge, Button, IconButton, SearchInput } from '@shared/ui';
 import { initials } from '@shared/format/initials';
+import { formatShortDayMonth } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import styles from './GroupTeamPicker.module.css';
@@ -42,10 +43,6 @@ const DAY_LABELS = ['L', 'Ma', 'Mi', 'J', 'V'];
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function shortDate(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short' });
 }
 
 function isEducatorRole(roleLabel: string): boolean {
@@ -161,7 +158,7 @@ export function GroupTeamPicker({
                         {person?.name ?? member.staffId}
                         {person && <span className={styles.function}>{roleName(person.roleId)}</span>}
                       </span>
-                      {leave && <Badge tone="yellow">Concediu până pe {shortDate(leave.to)}</Badge>}
+                      {leave && <Badge tone="yellow">Concediu până pe {formatShortDayMonth(leave.to)}</Badge>}
                       {showDays && (
                         <span className={styles.days}>
                           {DAY_LABELS.map((label, index) => (

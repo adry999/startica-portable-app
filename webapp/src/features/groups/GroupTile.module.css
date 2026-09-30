@@ -39,8 +39,8 @@
 .handle:hover,
 .handle:focus-visible {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 6px;
+  background: var(--white-a60);
+  border-radius: var(--radius-5);
 }
 
 .name {
@@ -63,7 +63,7 @@
 .editButton {
   flex: none;
   border: none;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--white-a60);
   border-radius: var(--radius-pill);
   padding: 2px var(--space-8);
   font-size: 11px;
@@ -73,7 +73,7 @@
 
 .pill {
   flex: none;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--white-a60);
   border-radius: var(--radius-pill);
   padding: 2px var(--space-8);
   font-size: 11px;
@@ -95,7 +95,7 @@
 .bar {
   height: 5px;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--white-a60);
   overflow: hidden;
 }
 
@@ -163,7 +163,7 @@
 .placeholder {
   min-height: 62px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--white-a60);
   display: flex;
   align-items: center;
   justify-content: center;

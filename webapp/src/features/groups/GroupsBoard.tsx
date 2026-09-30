@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon, ScrollArea, SearchInput, useToast } from '@shared/ui';
+import { EMPTY_STATES, EmptyState, Icon, ScrollArea, SearchInput, resolveEmptyStateTitle, useToast } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { GroupTile } from './GroupTile';
 import type { GroupsData } from './useGroups';
@@ -87,7 +87,16 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
                 <span className={styles.poolAge}>{child.ageLabel}</span>
               </div>
             ))}
-            {visiblePool.length === 0 && <p className={styles.poolEmpty}>Niciun copil fără grupă.</p>}
+            {visiblePool.length === 0 &&
+              (groupsData.unassignedChildren.length === 0 ? (
+                <EmptyState
+                  variant={EMPTY_STATES['grupe.pool.done'].variant}
+                  size="compact"
+                  title={resolveEmptyStateTitle(EMPTY_STATES['grupe.pool.done'])}
+                />
+              ) : (
+                <p className={styles.poolEmpty}>Niciun rezultat pentru căutare.</p>
+              ))}
           </div>
         </ScrollArea>
       </aside>

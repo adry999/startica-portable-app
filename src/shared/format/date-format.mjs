@@ -56,6 +56,13 @@ export const formatAge = v => {
   return rest === 0 ? yearsLabel : `${yearsLabel} ${rest} luni`;
 };
 
+// „3 oct” — ziua și luna scurtă, fără an, pentru pastila de concediu din Echipa grupei (03-grupe.md §5c).
+export const formatShortDayMonth = v => {
+  if (!v) return '—';
+  const date = new Date(v + 'T12:00:00');
+  return `${date.getDate()} ${MONTHS_RO[date.getMonth()].toLocaleLowerCase('ro-RO')}`;
+};
+
 /** Vârsta în ani întregi (rotunjită în jos) — pentru filtrare/sugestii pe interval, nu afișare. */
 export const ageInYears = v => {
   if (!v) return null;
