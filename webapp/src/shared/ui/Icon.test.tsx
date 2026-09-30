@@ -14,4 +14,11 @@ describe('Icon', () => {
     const { container } = render(<Icon name="check" size={24} />);
     expect(container.querySelector('svg')).toHaveAttribute('width', '24');
   });
+
+  it('devine accesibilă de sine stătător când primește ariaLabel', () => {
+    const { container } = render(<Icon name="close" ariaLabel="Închide" />);
+    const svg = container.querySelector('svg');
+    expect(svg).toHaveAttribute('aria-label', 'Închide');
+    expect(svg).not.toHaveAttribute('aria-hidden', 'true');
+  });
 });

@@ -36,21 +36,36 @@ export type IconName = keyof typeof ICONS;
 
 export interface IconProps {
   name: IconName;
-  /** 14/16/20/24 (33b, COMPONENTE.md §0h). Implicit 16. */
-  size?: 14 | 16 | 20 | 24;
+  /** 14/16/18/20/24 (33b, COMPONENTE.md §0h). Implicit 16. */
+  size?: 14 | 16 | 18 | 20 | 24;
   className?: string;
   style?: CSSProperties;
+  /** Dacă e setat, iconița devine accesibilă de sine stătător (`aria-label` + `role="img"`), fără `aria-hidden`. */
+  ariaLabel?: string;
 }
 
 /**
  * Set unic de iconițe peste `lucide-react` (33a — linie 2, colțuri rotunjite, `currentColor`,
  * `absoluteStrokeWidth`). Singurul fișier care importă `lucide-react` (R4, ESLint
  * `no-restricted-imports` în altă parte) — orice iconiță nouă se adaugă aici, nu la locul de folosire.
- * Mereu decorativă (`aria-hidden`) — numele accesibil vine din elementul care o conține
- * (`aria-label` pe buton, text vizibil alăturat etc.), nu din iconiță.
+ * Implicit decorativă (`aria-hidden`) — numele accesibil vine din elementul care o conține
+ * (`aria-label` pe buton, text vizibil alăturat etc.); cu `ariaLabel` iconița devine ea însăși accesibilă.
  */
-export function Icon({ name, size = 16, className, style }: IconProps) {
+export function Icon({ name, size = 16, className, style, ariaLabel }: IconProps) {
   const LucideIcon = ICONS[name];
+  if (ariaLabel) {
+    return (
+      <LucideIcon
+        size={size}
+        strokeWidth={2}
+        absoluteStrokeWidth
+        aria-label={ariaLabel}
+        role="img"
+        className={className}
+        style={style}
+      />
+    );
+  }
   return (
     <LucideIcon
       size={size}
