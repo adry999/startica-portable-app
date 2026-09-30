@@ -1,0 +1,77 @@
+.board {
+  display: flex;
+  gap: var(--space-16);
+  overflow-x: auto;
+  font-family: var(--font-body);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 220px;
+  padding: var(--space-12);
+  background: var(--sand-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md-lg);
+}
+
+.dropTarget {
+  box-shadow: 0 0 0 3px var(--orange);
+}
+
+.disabled {
+  background: var(--neutral-soft);
+  border-style: dashed;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.columnTitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.columnCount {
+  min-width: 20px;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: center;
+}
+
+.disabledReason {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.card {
+  padding: var(--space-8) var(--space-10);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+  cursor: grab;
+}
+
+.dragging {
+  opacity: 0.45;
+  border: 1px dashed var(--input-border);
+}

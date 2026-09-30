@@ -1,0 +1,50 @@
+.group {
+  display: inline-flex;
+  gap: var(--space-8);
+}
+
+.box {
+  width: 40px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--slate);
+}
+
+.box:focus {
+  outline: 2px solid var(--orange);
+  outline-offset: 1px;
+}
+
+.box:disabled {
+  opacity: 0.5;
+}
+
+.invalid .box {
+  border-color: var(--raspberry);
+  animation: shake 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invalid .box {
+    animation: none;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}

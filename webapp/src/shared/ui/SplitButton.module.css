@@ -1,0 +1,37 @@
+.root {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.main {
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+}
+
+.toggle {
+  border-left: 1px solid var(--orange-ink);
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  padding-left: var(--space-10);
+  padding-right: var(--space-10);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.option {
+  border: none;
+  background: none;
+  padding: var(--space-8);
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+  text-align: left;
+}
+
+.option:hover {
+  background: var(--sand);
+}

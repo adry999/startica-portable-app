@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  AppBanner,
   BnmRateLink,
   ConfirmDeleteDialog,
   ConfirmDialog,
@@ -8,6 +9,7 @@ import {
   EmptyState,
   EMPTY_STATES,
   ErrorState,
+  HoverCard,
   InlineError,
   LockedContent,
   LoadingState,
@@ -17,6 +19,7 @@ import {
   Skeleton,
   SmsConfirmDialog,
   UndoHistory,
+  UnsavedChangesDialog,
   useToast,
 } from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
@@ -36,6 +39,7 @@ export function FeedbackSection() {
   const [smsBulkOpen, setSmsBulkOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [lockedContentUnlocked, setLockedContentUnlocked] = useState(false);
+  const [unsavedChangesOpen, setUnsavedChangesOpen] = useState(false);
 
   return (
     <div className={styles.section}>
@@ -404,6 +408,55 @@ export function FeedbackSection() {
               </Popover>
             )}
           </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="AppBanner"
+        importLine="import { AppBanner } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34a — o singură bară, după prioritate"
+      >
+        <DemoRow label="tone">
+          <AppBanner
+            tone="error"
+            message="Nu s-a putut salva ultima modificare."
+            action={{ label: 'Reîncearcă', onClick: () => {} }}
+          />
+        </DemoRow>
+        <DemoRow label="info (închidere)">
+          <AppBanner tone="info" message="Versiune nouă disponibilă." onDismiss={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="UnsavedChangesDialog"
+        importLine="import { UnsavedChangesDialog } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34g — 3 alegeri"
+      >
+        <DemoRow label="control">
+          <button type="button" onClick={() => setUnsavedChangesOpen(true)}>
+            Deschide dialogul
+          </button>
+          <UnsavedChangesDialog
+            open={unsavedChangesOpen}
+            formName="copilul nou"
+            changedFields={['nume', 'telefon']}
+            onDiscard={() => setUnsavedChangesOpen(false)}
+            onStay={() => setUnsavedChangesOpen(false)}
+            onSaveAndContinue={() => setUnsavedChangesOpen(false)}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="HoverCard"
+        importLine="import { HoverCard } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34i — 400ms intrare"
+      >
+        <DemoRow label="control">
+          <HoverCard content={<div>Detalii suplimentare despre acest element.</div>}>
+            <button type="button">Treci cu mouse-ul</button>
+          </HoverCard>
         </DemoRow>
       </ComponentShowcase>
     </div>

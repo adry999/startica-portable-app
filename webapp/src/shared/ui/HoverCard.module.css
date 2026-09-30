@@ -1,0 +1,52 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.panelWrapper {
+  position: absolute;
+  z-index: var(--z-popover);
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: var(--space-8);
+}
+
+.card {
+  box-shadow: var(--shadow-popover);
+  min-width: 220px;
+  max-width: 320px;
+  padding: var(--space-16);
+}
+
+.content {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--slate);
+}
+
+.shimmer {
+  display: block;
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, var(--sand) 0px, var(--sand-soft) 160px, var(--sand) 320px);
+  background-size: 800px 100%;
+  animation: hovercard-shimmer 1.4s linear infinite;
+}
+
+@keyframes hovercard-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+    background: var(--sand);
+  }
+}

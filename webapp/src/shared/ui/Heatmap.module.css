@@ -1,0 +1,35 @@
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cell {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-5);
+}
+
+.paid {
+  background: var(--mint);
+}
+
+.partial {
+  background: var(--yellow);
+}
+
+.overdue {
+  background: var(--raspberry);
+}
+
+.future {
+  background: var(--sand);
+}
+
+.no-contract {
+  background: var(--sand-soft);
+}
+
+.current {
+  box-shadow: 0 0 0 2px var(--slate);
+}

@@ -1,0 +1,14 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.value {
+  min-width: 24px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--slate);
+}

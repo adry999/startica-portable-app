@@ -2,9 +2,12 @@ import { useState } from 'react';
 import {
   Avatar,
   Badge,
+  CopyField,
   CountBadge,
   Icon,
+  Kbd,
   LoadingBar,
+  NumberStepper,
   Notice,
   PrintFooter,
   PrintHeader,
@@ -12,6 +15,7 @@ import {
   ScrollArea,
   SettingsList,
   SignatureLine,
+  Slider,
   StepList,
   Tabs,
   ThermalBlock,
@@ -340,6 +344,49 @@ export function AlteleSection() {
           <Notice tone="note">O notă de atenție.</Notice>
           <Notice tone="error">A apărut o eroare.</Notice>
           <Notice tone="done">Totul e la zi.</Notice>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="NumberStepper"
+        importLine="import { NumberStepper } from '@shared/ui';"
+        reference="DS Diverse.dc.html §32g — locuri pe oră"
+      >
+        <DemoRow label="control">
+          <NumberStepper ariaLabel="Locuri" value={4} min={0} max={10} onChange={() => {}} />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <NumberStepper ariaLabel="Locuri" value={4} min={0} max={10} disabled onChange={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Slider"
+        importLine="import { Slider } from '@shared/ui';"
+        reference="DS Diverse.dc.html §32g — mărimea interfeței"
+      >
+        <DemoRow label="control">
+          <Slider ariaLabel="Mărime" value={50} onChange={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="CopyField"
+        importLine="import { CopyField } from '@shared/ui';"
+        reference="DS Diverse.dc.html §32g — cod de asociere cu expirare"
+      >
+        <DemoRow label="control">
+          <CopyField ariaLabel="Cod de asociere" value="7F3K-9QRT" hint="Expiră în 4:32" />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Kbd"
+        importLine="import { Kbd } from '@shared/ui';"
+        reference="DS Diverse.dc.html §32e — scurtături"
+      >
+        <DemoRow label="control">
+          <Kbd>Ctrl+K</Kbd> <Kbd>Esc</Kbd> <Kbd>Ctrl+Z</Kbd>
         </DemoRow>
       </ComponentShowcase>
     </div>

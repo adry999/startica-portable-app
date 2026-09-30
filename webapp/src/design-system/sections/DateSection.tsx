@@ -4,11 +4,14 @@ import {
   BarChart,
   Card,
   DataTable,
+  DatePicker,
   DiffTable,
+  Heatmap,
   Kpi,
   ListToolbar,
   Legend,
   PersonCell,
+  PinInput,
   ProfileLayout,
   ProfileNotFound,
   ProfileSection,
@@ -18,6 +21,7 @@ import {
   ServiceBadge,
   serviceTone,
   StatCard,
+  TimePicker,
   type DataTableColumn,
 } from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
@@ -382,6 +386,66 @@ export function DateSection() {
             <button type="button">Mută în grupă</button>
             <button type="button">Exportă</button>
           </SelectionBar>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Heatmap"
+        importLine="import { Heatmap } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §30e — situația plăților"
+      >
+        <DemoRow label="control">
+          <Heatmap
+            ariaLabel="Situația plăților"
+            columns={6}
+            cells={[
+              { key: '1', label: 'Ian — achitat', state: 'paid' },
+              { key: '2', label: 'Feb — parțial', state: 'partial' },
+              { key: '3', label: 'Mar — restanță', state: 'overdue' },
+              { key: '4', label: 'Apr — curent', state: 'paid', current: true },
+              { key: '5', label: 'Mai — viitor', state: 'future' },
+              { key: '6', label: 'Iun — fără contract', state: 'no-contract' },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="DatePicker"
+        importLine="import { DatePicker } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §30a"
+      >
+        <DemoRow label="control">
+          <DatePicker ariaLabel="Data" value="2026-09-15" onChange={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TimePicker"
+        importLine="import { TimePicker } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §30c"
+      >
+        <DemoRow label="control">
+          <TimePicker
+            ariaLabel="Ora"
+            value="10:00"
+            onChange={() => {}}
+            slots={[
+              { value: '09:00', capacity: { taken: 2, total: 4 } },
+              { value: '09:30', capacity: { taken: 4, total: 4 } },
+              { value: '10:00', loading: true },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PinInput"
+        importLine="import { PinInput } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34f"
+      >
+        <DemoRow label="control">
+          <PinInput ariaLabel="PIN" value="12" onChange={() => {}} />
         </DemoRow>
       </ComponentShowcase>
     </div>

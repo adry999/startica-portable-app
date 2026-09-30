@@ -17,14 +17,17 @@ import {
   MonthInput,
   MonthPicker,
   MonthStepper,
+  MultiSelect,
   NumberInput,
   PeriodFilter,
   PhoneInput,
+  RadioGroup,
   SearchInput,
   SearchSelect,
   SegmentedControl,
   Select,
   StatusIconButton,
+  TagInput,
   TextArea,
   TextField,
   TextInput,
@@ -73,6 +76,8 @@ export function ButoaneInputSection() {
   const [toneValue, setToneValue] = useState<string>(SERVICE_TONES[0]);
   const [chipValue, setChipValue] = useState('1');
   const [choiceValue, setChoiceValue] = useState('09:00');
+  const [radioValue, setRadioValue] = useState('cash');
+  const [tagInputTags, setTagInputTags] = useState(['Lactate', 'Nuci']);
 
   const filterGroups: FilterPillGroup<string>[] = [
     {
@@ -673,6 +678,61 @@ export function ButoaneInputSection() {
       >
         <DemoRow label="control">
           <DayStepper value={day} onChange={setDay} max={DEMO_MAX_DAY} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="RadioGroup"
+        importLine="import { RadioGroup } from '@shared/ui';"
+        reference="DS Componente formular.dc.html — selecție unică, listă verticală"
+      >
+        <DemoRow label="control">
+          <RadioGroup
+            name="demo-radio"
+            ariaLabel="Metodă"
+            value={radioValue}
+            onChange={setRadioValue}
+            options={[
+              { value: 'cash', label: 'Cash' },
+              { value: 'card', label: 'Card' },
+              { value: 'transfer', label: 'Transfer', disabled: true },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="MultiSelect"
+        importLine="import { MultiSelect } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34j — chip-uri, selecție multiplă dintr-o listă fixă (v1: fără căutare/spinner și fără acțiune de grup în subsol)"
+      >
+        <DemoRow label="control">
+          <MultiSelect
+            ariaLabel="Grupe"
+            placeholder="Alege grupe…"
+            selected={['a']}
+            onChange={() => {}}
+            options={[
+              { value: 'a', label: 'Grupa Mari' },
+              { value: 'b', label: 'Grupa Mici' },
+              { value: 'c', label: 'Grupa Mijlocii' },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TagInput"
+        importLine="import { TagInput } from '@shared/ui';"
+        reference="DS Diverse.dc.html §32g — alergii, taguri libere introduse de utilizator"
+      >
+        <DemoRow label="control">
+          <TagInput
+            ariaLabel="Alergii"
+            placeholder="Adaugă o alergie…"
+            tags={tagInputTags}
+            onChange={setTagInputTags}
+          />
         </DemoRow>
       </ComponentShowcase>
     </div>

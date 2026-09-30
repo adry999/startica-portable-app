@@ -1,0 +1,151 @@
+.grid {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md-lg);
+  overflow: hidden;
+  overflow-x: auto;
+  font-family: var(--font-body);
+}
+
+.row {
+  display: grid;
+  align-items: center;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row[data-loading] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.headerCell {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.headerCell[data-weekend] {
+  background: var(--off-day);
+}
+
+.rowLabel {
+  padding: var(--space-8) var(--space-12);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--slate);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  padding: var(--space-4);
+}
+
+.cell[data-weekend] {
+  background: var(--off-day);
+}
+
+.cell[data-today] {
+  box-shadow: inset 0 0 0 2px var(--orange);
+}
+
+.cellButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-5);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.cellButton:disabled {
+  cursor: default;
+}
+
+.cellButton:not(:disabled):hover {
+  background: var(--sand-soft);
+}
+
+.barButton {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-5);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.tone-mint,
+.tone-bg-mint {
+  background: var(--mint);
+}
+
+.tone-raspberry,
+.tone-bg-raspberry {
+  background: var(--raspberry);
+}
+
+.tone-yellow,
+.tone-bg-yellow {
+  background: var(--yellow);
+}
+
+.tone-neutral,
+.tone-bg-neutral {
+  background: var(--muted);
+}
+
+.tone-transparent,
+.tone-bg-transparent {
+  background: transparent;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.footerLabel {
+  padding: var(--space-8) var(--space-12);
+}
+
+.footerCell {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  background: var(--cream);
+}

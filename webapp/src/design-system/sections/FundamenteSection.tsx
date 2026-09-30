@@ -1,4 +1,4 @@
-import { Spinner, Tooltip } from '@shared/ui';
+import { Breadcrumb, PageHeader, Spinner, SplitButton, Tooltip } from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import { COLOR_TOKEN_GROUPS, RADIUS_TOKENS, readCssVariable, SHADOW_TOKENS, SPACING_TOKENS } from '../tokens-reference';
@@ -114,6 +114,47 @@ export function FundamenteSection() {
           <Tooltip content="Șterge rândul">
             <button type="button">Acțiune</button>
           </Tooltip>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PageHeader"
+        importLine="import { PageHeader } from '@shared/ui';"
+        reference="DS Componente.dc.html §28d — antet de ecran"
+      >
+        <DemoRow label="control">
+          <PageHeader
+            title="Copii"
+            secondaryActions={<button type="button">Exportă</button>}
+            primaryAction={<button type="button">+ Copil nou</button>}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Breadcrumb"
+        importLine="import { Breadcrumb } from '@shared/ui';"
+        reference="DS Componente.dc.html §28d — fir de ariadnă"
+      >
+        <DemoRow label="control">
+          <Breadcrumb items={[{ label: 'Copii', onClick: () => {} }, { label: 'Ionescu Maria' }]} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SplitButton"
+        importLine="import { SplitButton } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34c — variantă ținută minte"
+      >
+        <DemoRow label="control">
+          <SplitButton
+            selectedValue="pdf"
+            onSelectedValueChange={() => {}}
+            options={[
+              { value: 'pdf', label: 'Exportă PDF', onClick: () => {} },
+              { value: 'excel', label: 'Exportă Excel', onClick: () => {} },
+            ]}
+          />
         </DemoRow>
       </ComponentShowcase>
     </div>

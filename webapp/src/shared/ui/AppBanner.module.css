@@ -1,0 +1,43 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-12) var(--space-16);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.message {
+  flex: 1;
+}
+
+.action {
+  flex: none;
+}
+
+.dismiss {
+  flex: none;
+}
+
+.error {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.offline {
+  background: var(--neutral-soft);
+  color: var(--slate);
+}
+
+.warning {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.info {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}

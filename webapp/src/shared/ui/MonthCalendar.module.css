@@ -1,0 +1,139 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  font-family: var(--font-body);
+}
+
+.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekday {
+  padding: var(--space-4) 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md-lg);
+  overflow: hidden;
+}
+
+.dayWrap {
+  background: var(--white);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 84px;
+  padding: var(--space-6);
+}
+
+.day[role='button'] {
+  cursor: pointer;
+}
+
+.day[role='button']:hover {
+  background: var(--sand-soft);
+}
+
+.day[role='button']:focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: -2px;
+}
+
+.adjacent {
+  opacity: 0.45;
+}
+
+.dayNumber {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.today .dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--orange);
+  color: var(--white);
+}
+
+.pills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pill {
+  overflow: hidden;
+  padding: 1px var(--space-6);
+  border-radius: var(--radius-5);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tone-orange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.tone-mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.tone-yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.tone-teal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.tone-pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.tone-neutral {
+  background: var(--neutral-soft);
+  color: var(--subtle);
+}
+
+.overflow {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+}
