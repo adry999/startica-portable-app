@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -80,111 +80,108 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
       <form id="visit-form" className={styles.form} onSubmit={handleSubmit}>
         <fieldset className={styles.section}>
           <legend>Vizita</legend>
-          <label className={styles.field}>
-            Data vizitei
+          <Field label="Data vizitei" htmlFor="visit-date">
+            <DateInput id="visit-date" required value={values.date} onChange={value => setDateOrTime('date', value)} />
+          </Field>
+          {/* type="time" rămâne brut — nu există încă un `TimeInput` în @shared/ui (nici în
+              COMPONENTE.md §0), la fel ca la Notificări/Backup. */}
+          <Field label="Ora vizitei" htmlFor="visit-time">
             <input
-              required
-              type="date"
-              value={values.date}
-              onChange={event => setDateOrTime('date', event.target.value)}
-            />
-          </label>
-          <label className={styles.field}>
-            Ora vizitei
-            <input
+              id="visit-time"
               required
               type="time"
+              className={styles.rawInput}
               value={values.time}
               onChange={event => setDateOrTime('time', event.target.value)}
             />
-          </label>
+          </Field>
           {editing && (
-            <label className={styles.field}>
-              Statut
-              <select value={values.status} onChange={event => setField('status', event.target.value)}>
-                {statusChoices.map(status => (
-                  <option key={status} value={status}>
-                    {STATUS_LABEL[status]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Field label="Statut" htmlFor="visit-status">
+              <Select
+                id="visit-status"
+                value={values.status}
+                onChange={value => setField('status', value)}
+                options={statusChoices.map(status => ({ value: status, label: STATUS_LABEL[status] }))}
+              />
+            </Field>
           )}
           {editing && <p className={styles.notice}>Schimbarea datei sau orei reprogramează vizita.</p>}
         </fieldset>
 
         <fieldset className={styles.section}>
           <legend>Copil</legend>
-          <label className={styles.field}>
-            Nume copil
-            <input required value={values.name} onChange={event => setField('name', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Data nașterii
-            <input type="date" value={values.birthDate} onChange={event => setField('birthDate', event.target.value)} />
-            <small className={styles.hint}>Vârstă: {formatAge(values.birthDate)}</small>
-          </label>
+          <Field label="Nume copil" htmlFor="visit-child-name">
+            <TextInput id="visit-child-name" required value={values.name} onChange={value => setField('name', value)} />
+          </Field>
+          <Field
+            label="Data nașterii"
+            htmlFor="visit-child-birth-date"
+            hint={values.birthDate ? `Vârstă: ${formatAge(values.birthDate)}` : undefined}
+          >
+            <DateInput
+              id="visit-child-birth-date"
+              value={values.birthDate}
+              onChange={value => setField('birthDate', value)}
+            />
+          </Field>
         </fieldset>
 
         <fieldset className={styles.section}>
           <legend>Părinți</legend>
-          <label className={styles.field}>
-            Părinte 1
-            <input required value={values.parent} onChange={event => setField('parent', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Telefon părinte 1
-            <input required type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Părinte 2 (opțional)
-            <input value={values.parent2} onChange={event => setField('parent2', event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Telefon părinte 2 (opțional)
-            <input type="tel" value={values.phone2} onChange={event => setField('phone2', event.target.value)} />
-          </label>
+          <Field label="Părinte 1" htmlFor="visit-parent1-name">
+            <TextInput
+              id="visit-parent1-name"
+              required
+              value={values.parent}
+              onChange={value => setField('parent', value)}
+            />
+          </Field>
+          <Field label="Telefon părinte 1" htmlFor="visit-parent1-phone">
+            <PhoneInput id="visit-parent1-phone" value={values.phone} onChange={value => setField('phone', value)} />
+          </Field>
+          <Field label="Părinte 2 (opțional)" htmlFor="visit-parent2-name">
+            <TextInput id="visit-parent2-name" value={values.parent2} onChange={value => setField('parent2', value)} />
+          </Field>
+          <Field label="Telefon părinte 2 (opțional)" htmlFor="visit-parent2-phone">
+            <PhoneInput id="visit-parent2-phone" value={values.phone2} onChange={value => setField('phone2', value)} />
+          </Field>
         </fieldset>
 
         <fieldset className={styles.section}>
           <legend>Dorințe</legend>
-          <label className={styles.field}>
-            Data dorită de start
-            <input
-              type="date"
+          <Field label="Data dorită de start" htmlFor="visit-desired-start-date">
+            <DateInput
+              id="visit-desired-start-date"
               value={values.desiredStartDate}
-              onChange={event => setField('desiredStartDate', event.target.value)}
+              onChange={value => setField('desiredStartDate', value)}
             />
-          </label>
-          <label className={styles.field}>
-            Grupa dorită
-            <select value={values.desiredGroupId} onChange={event => setField('desiredGroupId', event.target.value)}>
-              <option value="">Fără preferință</option>
-              {[...groups]
+          </Field>
+          <Field label="Grupa dorită" htmlFor="visit-desired-group">
+            <Select
+              id="visit-desired-group"
+              value={values.desiredGroupId}
+              onChange={value => setField('desiredGroupId', value)}
+              placeholder="Fără preferință"
+              options={[...groups]
                 .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-                .map(group => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className={styles.field}>
-            Cum a aflat de grădiniță
-            <input value={values.source} onChange={event => setField('source', event.target.value)} />
-          </label>
+                .map(group => ({ value: group.id, label: group.name }))}
+            />
+          </Field>
+          <Field label="Cum a aflat de grădiniță" htmlFor="visit-source">
+            <TextInput id="visit-source" value={values.source} onChange={value => setField('source', value)} />
+          </Field>
         </fieldset>
 
         <fieldset className={styles.section}>
           <legend>Date medicale</legend>
-          <label className={styles.field}>
-            Date medicale
-            <textarea
+          <Field label="Date medicale" htmlFor="visit-health-notes">
+            <TextArea
+              id="visit-health-notes"
               rows={3}
               value={values.healthNotes}
-              onChange={event => setField('healthNotes', event.target.value)}
+              onChange={value => setField('healthNotes', value)}
             />
-          </label>
+          </Field>
           <p className={styles.notice}>
             Date sensibile: nu apar în export și în istoric; se șterg automat la 12 luni de la ultima schimbare de
             statut.
@@ -193,20 +190,19 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
 
         <fieldset className={styles.section}>
           <legend>După vizită</legend>
-          <label className={styles.field}>
-            Observații după vizită
-            <textarea
+          <Field label="Observații după vizită" htmlFor="visit-post-visit-notes">
+            <TextArea
+              id="visit-post-visit-notes"
               rows={3}
               value={values.postVisitNotes}
-              onChange={event => setField('postVisitNotes', event.target.value)}
+              onChange={value => setField('postVisitNotes', value)}
             />
-          </label>
+          </Field>
         </fieldset>
 
-        <label className={styles.field}>
-          Observații
-          <textarea rows={3} value={values.notes} onChange={event => setField('notes', event.target.value)} />
-        </label>
+        <Field label="Observații" htmlFor="visit-notes">
+          <TextArea id="visit-notes" rows={3} value={values.notes} onChange={value => setField('notes', value)} />
+        </Field>
       </form>
     </Drawer>
   );

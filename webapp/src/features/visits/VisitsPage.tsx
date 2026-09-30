@@ -6,6 +6,7 @@ import {
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
+  IconButton,
   LoadingState,
   RowMenu,
   SearchInput,
@@ -343,22 +344,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             <Button variant="ghost" onClick={visitsData.goToToday}>
               Azi
             </Button>
-            <button
-              type="button"
+            <IconButton
               className={styles.arrowButton}
+              icon="‹"
+              ariaLabel="Luna anterioară"
               onClick={visitsData.goToPreviousMonth}
-              aria-label="Luna anterioară"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
+            />
+            <IconButton
               className={styles.arrowButton}
+              icon="›"
+              ariaLabel="Luna următoare"
               onClick={visitsData.goToNextMonth}
-              aria-label="Luna următoare"
-            >
-              ›
-            </button>
+            />
           </div>
 
           <div className={styles.calendarGrid}>
@@ -443,39 +440,37 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                   <span className={styles.detailSectionLabel}>Cum a decurs vizita?</span>
                   <div className={styles.quickStatusGrid}>
                     {visitsData.allowedNextStatuses(visit.status).map(status => (
-                      <button
+                      <Button
                         key={status}
-                        type="button"
                         className={`${styles.quickStatus} ${styles[STATUS_PILL_CLASS[status]]}`}
                         onClick={() => void applyQuickStatus(visit, status)}
                       >
                         {STATUS_LABEL[status]}
-                      </button>
+                      </Button>
                     ))}
                     {visit.status === 'Efectuată' && (
-                      <button
-                        type="button"
+                      <Button
                         className={`${styles.quickStatus} ${styles.pillInscris}`}
                         onClick={() => setEnrollTarget(visit)}
                       >
                         S-a înscris
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </>
               )}
 
               <div className={styles.detailActions}>
-                <button type="button" className={styles.detailLink} onClick={() => setFormTarget(visit)}>
+                <Button variant="link" className={styles.detailLink} onClick={() => setFormTarget(visit)}>
                   Editează
-                </button>
+                </Button>
                 <span className={styles.detailActionsRight}>
-                  <button type="button" className={styles.detailLinkMuted} onClick={() => setFormTarget(visit)}>
+                  <Button variant="link" className={styles.detailLinkMuted} onClick={() => setFormTarget(visit)}>
                     Reprogramează
-                  </button>
-                  <button type="button" className={styles.detailLinkMuted} onClick={() => void toggleArchived(visit)}>
+                  </Button>
+                  <Button variant="link" className={styles.detailLinkMuted} onClick={() => void toggleArchived(visit)}>
                     {visit.archived ? 'Dezarhivează' : 'Arhivează'}
-                  </button>
+                  </Button>
                 </span>
               </div>
             </Card>
@@ -487,9 +482,9 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
               <p className={styles.dim}>Nicio altă vizită programată luna aceasta.</p>
             ) : (
               upcoming.map(visit => (
-                <button
+                <Button
                   key={visit.id}
-                  type="button"
+                  variant="ghost"
                   className={styles.upcomingRow}
                   onClick={() => visitsData.setSelectedDate(visit.date)}
                 >
@@ -509,7 +504,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
                       Grupă dorită: {groupNameOf(visit.desiredGroupId, visitsData.groups)}
                     </span>
                   )}
-                </button>
+                </Button>
               ))
             )}
           </Card>
@@ -571,16 +566,14 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
 
         {selectedRowKeys.size > 0 && (
           <SelectionBar label={<>{selectedRowKeys.size} selectate</>} onCancel={() => setSelectedRowKeys(new Set())}>
-            <button type="button" onClick={exportSelectedVisits}>
-              Exportă
-            </button>
-            <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelectedVisits()}>
+            <Button onClick={exportSelectedVisits}>Exportă</Button>
+            <Button className={styles.selectionArchive} onClick={() => void archiveSelectedVisits()}>
               {visitsData.showArchived ? 'Dezarhivează' : 'Arhivează'}
-            </button>
+            </Button>
             {visitsData.showArchived && (
-              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+              <Button className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
                 Șterge definitiv
-              </button>
+              </Button>
             )}
           </SelectionBar>
         )}

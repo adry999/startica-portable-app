@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { Button, DateInput, Drawer, Field, NumberInput, Select } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -58,27 +58,23 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
 
         <fieldset className={styles.section}>
           <legend>Fișa nouă</legend>
-          <label className={styles.field}>
-            Taxa lunară (gol = necunoscută)
-            <input type="number" min={0} step="0.01" value={fee} onChange={event => setFee(event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Grupă
-            <select value={groupId} onChange={event => setGroupId(event.target.value)}>
-              <option value="">Fără grupă</option>
-              {[...groups]
+          <Field label="Taxa lunară (gol = necunoscută)" htmlFor="enroll-fee">
+            <NumberInput id="enroll-fee" min={0} step="0.01" value={fee} onChange={setFee} />
+          </Field>
+          <Field label="Grupă" htmlFor="enroll-group">
+            <Select
+              id="enroll-group"
+              value={groupId}
+              onChange={setGroupId}
+              placeholder="Fără grupă"
+              options={[...groups]
                 .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-                .map(group => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className={styles.field}>
-            Început frecventare
-            <input type="date" value={attendanceDate} onChange={event => setAttendanceDate(event.target.value)} />
-          </label>
+                .map(group => ({ value: group.id, label: group.name }))}
+            />
+          </Field>
+          <Field label="Început frecventare" htmlFor="enroll-attendance-date">
+            <DateInput id="enroll-attendance-date" value={attendanceDate} onChange={setAttendanceDate} />
+          </Field>
         </fieldset>
       </div>
     </Drawer>

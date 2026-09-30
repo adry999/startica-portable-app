@@ -19,16 +19,10 @@
 }
 
 .arrowButton {
-  width: 32px;
-  height: 32px;
   flex: none;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--border) !important;
+  background: var(--white) !important;
 }
 
 .funnelRow {
@@ -292,37 +286,37 @@
 }
 
 .quickStatus {
-  border: none;
-  border-radius: var(--radius-md);
-  padding: var(--space-10);
-  font-size: 13px;
-  font-weight: 800;
-  text-align: center;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-10) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
 }
 
 .pillProgramata {
-  background: var(--yellow-soft);
-  color: var(--yellow-ink, #7a5d00);
+  background: var(--yellow-soft) !important;
+  color: var(--yellow-ink, #7a5d00) !important;
 }
 
 .pillEfectuata {
-  background: var(--mint-soft);
-  color: var(--mint-ink);
+  background: var(--mint-soft) !important;
+  color: var(--mint-ink) !important;
 }
 
 .pillNeprezentata {
-  background: var(--neutral-soft);
-  color: var(--muted);
+  background: var(--neutral-soft) !important;
+  color: var(--muted) !important;
 }
 
 .pillInscris {
-  background: var(--orange-soft);
-  color: var(--orange-ink);
+  background: var(--orange-soft) !important;
+  color: var(--orange-ink) !important;
 }
 
 .pillRenuntat {
-  background: var(--pink-soft);
-  color: var(--raspberry);
+  background: var(--pink-soft) !important;
+  color: var(--raspberry) !important;
 }
 
 .detailActions {
@@ -333,12 +327,10 @@
 }
 
 .detailLink {
-  border: none;
-  background: none;
-  padding-top: var(--space-8);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--orange-ink);
+  padding: var(--space-8) 0 0 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--orange-ink) !important;
 }
 
 .detailActionsRight {
@@ -348,12 +340,10 @@
 }
 
 .detailLinkMuted {
-  border: none;
-  background: none;
-  padding-top: var(--space-8);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--subtle);
+  padding: var(--space-8) 0 0 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--subtle) !important;
 }
 
 .upcomingCard {
@@ -367,18 +357,21 @@
 }
 
 .upcomingRow {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border: none;
-  border-bottom: 1px solid var(--row-divider);
-  background: none;
-  padding: var(--space-8) 0;
-  text-align: left;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+  border: none !important;
+  border-bottom: 1px solid var(--row-divider) !important;
+  border-radius: 0 !important;
+  background: none !important;
+  padding: var(--space-8) 0 !important;
+  text-align: left !important;
+  font-weight: 400 !important;
 }
 
 .upcomingRow:last-child {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
 .upcomingWhen {
