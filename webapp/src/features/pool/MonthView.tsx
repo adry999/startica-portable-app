@@ -7,12 +7,17 @@ import {
   ConfirmDeleteDialog,
   DateInput,
   Drawer,
+  EMPTY_STATES,
+  EmptyState,
   Field,
   RowMenu,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
   useToast,
   groupTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatDateTime } from '#shared/format/date-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
 import { endBooking } from '@shared/pool/usePool';
@@ -181,7 +186,13 @@ export function MonthView({
               </div>
             );
           })}
-          {children.length === 0 && <div className={styles.empty}>Nicio programare în luna asta.</div>}
+          {children.length === 0 && (
+            <EmptyState
+              variant="period"
+              title={resolveEmptyStateTitle(EMPTY_STATES['bazin.month.period'], { luna: monthLabel })}
+              description={resolveEmptyStateText(EMPTY_STATES['bazin.month.period'], { luna: monthLabel })}
+            />
+          )}
         </Card>
 
         <div className={styles.side}>
@@ -223,7 +234,7 @@ export function MonthView({
 
           <div className={styles.closeRow}>
             <Button disabled={unmarked > 0 || closingBusy} onClick={() => setCloseConfirmOpen(true)}>
-              {closing ? `Închisă la ${new Date(closing.closedAt).toLocaleString('ro-RO')}` : 'Închide luna'}
+              {closing ? `Închisă la ${formatDateTime(closing.closedAt)}` : 'Închide luna'}
             </Button>
             {unmarked > 0 && <p className={styles.notice}>{unmarked} ședințe nemarcate — consemnează-le mai întâi.</p>}
             {closeError && <p className={styles.error}>{closeError}</p>}

@@ -138,12 +138,6 @@
   justify-content: center;
 }
 
-.empty {
-  padding: var(--space-20);
-  text-align: center;
-  color: var(--subtle);
-}
-
 .side {
   display: flex;
   flex-direction: column;

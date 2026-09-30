@@ -4,6 +4,8 @@
   gap: 14px;
 }
 
+/* Bazin.dc.html#22a: padding/radius proprii, ca la 22c — Card dă implicit 22px/24, radius 24;
+   18px n-are token exact (16 --radius-md-lg dedesubt, 20 --radius-lg deasupra, vezi și AssignPage.module.css). */
 .statCard {
   flex-direction: column;
   align-items: flex-start;
