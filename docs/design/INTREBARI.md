@@ -149,11 +149,10 @@ Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `no
 
 **Executat 30.09** (`scripts/migrate/b3-pool-expenses-to-payments.mjs --execute`, backup luat înainte): 143/143 migrate, 0 erori. Vezi `COADA-DE-LUCRU.md` pentru detalii și impactul retroactiv pe iunie/iulie 2026.
 
-## ⏳ Contrast buton primar — alb pe `--orange` (punctul 5, PROMPT-CLAUDE-CODE-3.md) — decizie deschisă
+## ✅ Contrast buton primar — alb pe `--orange` (punctul 5, PROMPT-CLAUDE-CODE-3.md) — rezolvat 30.09, varianta 1
 
-Textul alb pe fundal `--orange` (butonul principal peste tot în aplicație) are contrast **2,4:1** — sub minimul WCAG AA pentru text normal (4,5:1) și chiar sub cel pentru text mare/bold (3:1). Nu e o decizie tehnică, e de brand: trei variante posibile:
-1. **`--orange-strong`** — o nădejde mai închisă a portocaliului, doar pentru fundalul butonului (text rămâne alb); celelalte folosiri ale `--orange` (badge-uri, bare, cercuri decorative) rămân neschimbate.
-2. **Text `--slate` (închis) pe `--orange`** — păstrează exact portocaliul de brand de peste tot, schimbă doar culoarea textului pe buton.
-3. **Excepție de brand, asumată** — se lasă cum e (alb pe `--orange`), consemnat ca abatere de la WCAG AA, acceptată explicit.
+Textul alb pe fundal `--orange` (butonul principal peste tot în aplicație) avea contrast **2,4:1** — sub minimul WCAG AA. Rezolvat cu varianta 1: token nou `--orange-strong` (#b85a00, contrast 4,7:1 cu alb), aplicat doar acolo unde stă text/iconițe albe pe portocaliu — `Button.primary`, `Checkbox.box.on` (bifa albă pe fundal bifat). `--orange` rămâne neschimbat pentru restul (badge-uri soft, accente, evidențieri fără text alb deasupra). Vezi `TOKENS.md` și `DECIZII.md` (secțiunea „30.09 — Contrast buton primar”).
 
-Până la decizie: **nu se adaugă alte texte albe noi pe `--orange`** (evit să adâncesc problema în timp ce e deschisă). Nu blochează restul punctului 4 — design-system-ul se construiește mai departe, doar cu grijă la acest punct specific când se ajunge la `Button`-ul primar propriu-zis.
+## ✅ R3 (arhitectură DS) — caracterul „×” exclus din verificarea automată de iconițe-brute — decizie tehnică, nu de business
+
+`architecture.test.ts` (R3) verifică automat caracterele-iconiță (⌕⋯▾‹›✓☰⋮⋮↶↗▲▼⇅) rămase ca text randat în `features/**`. „×” a fost exclus intenționat din regex: în cod apare aproape exclusiv ca semn de înmulțire legitim în text („tarif × zile lucrate”, „ședințe × preț”, „58×30”), nu ca iconiță de închidere — un regex care l-ar prinde ar da fals-pozitive în text corect, nu datorie reală. Singurele „×” cu rol de iconiță (buton de închidere) au fost deja înlocuite cu `<Icon name="close">` în migrarea anterioară (commit `2f8fdfd`). Nimic de decis din partea ta — doar consemnat ca să nu pară o gaură în acoperirea R3.
