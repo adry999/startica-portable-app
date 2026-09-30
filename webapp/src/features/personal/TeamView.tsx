@@ -15,12 +15,14 @@ export interface TeamViewProps {
   /** „+ Angajat” (23a) stă în antet, în PersonalPage — formularul rămâne aici, controlat de acolo. */
   staffFormTarget: Staff | 'new' | null;
   onCloseStaffForm: () => void;
+  /** Deschide formularul de angajat nou — pentru acțiunea din starea goală `personal.first`. */
+  onAddStaff: () => void;
 }
 
 const DEPARTMENT_TONES: PillTone[] = ['orange', 'mint', 'yellow', 'pink'];
 
 /** Echipa (23a): tabel grupat pe departamente, cu filtru și sortare din antet. Rând → fișa angajatului (23j). */
-export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: TeamViewProps) {
+export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm, onAddStaff }: TeamViewProps) {
   const personal = usePersonal();
   const session = useAppSession();
   const groups = (session.state.state?.groups ?? []) as Group[];
@@ -97,6 +99,12 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
     })),
   ];
 
+  const activeFilterLabels: string[] = [];
+  if (search) activeFilterLabels.push(`Căutare: ${search}`);
+  if (departmentFilter !== 'all') {
+    activeFilterLabels.push(departmentsSorted.find(department => department.id === departmentFilter)?.name ?? '');
+  }
+
   return (
     <div className={styles.root}>
       <div className={styles.toolbar}>
@@ -131,7 +139,14 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
         rows={filteredStaff}
         rowKey={person => person.id}
         onRowClick={person => onOpenStaff(person.id)}
-        emptyState={<p className={styles.notice}>Niciun angajat găsit.</p>}
+        empty="personal.first"
+        onEmptyAction={onAddStaff}
+        hasActiveFilters={activeFilterLabels.length > 0}
+        activeFilterLabels={activeFilterLabels}
+        onClearFilters={() => {
+          setSearch('');
+          setDepartmentFilter('all');
+        }}
         groupBy={{
           key: person => personal.roleDepartmentId(person.roleId) ?? '',
           order: departmentsSorted.map(department => department.id),

@@ -4,11 +4,13 @@ import {
   BnmRateLink,
   Button,
   Checkbox,
+  ChipSelect,
   DateInput,
   Drawer,
   Field,
   groupTone,
   IconButton,
+  MonthInput,
   NumberInput,
   PersonCell,
   SearchSelect,
@@ -127,6 +129,27 @@ export function PaymentFormDrawer({
         )
       : null;
 
+  // Scurtăturile de lună țin de taxa lunară (Grădiniță); „restul lunii” vine din taxa de bazin deja
+  // calculată pentru luna curentă — cele două nu apar niciodată simultan (B3).
+  const amountShortcuts: { key: string; label: string; amount: number }[] = [];
+  if (feeEntry && !isEurChild && isGradinitaService) {
+    for (const months of [1, 2, 3]) {
+      const amount = feeEntry.amount * months;
+      amountShortcuts.push({
+        key: String(months),
+        label: `${months} ${months === 1 ? 'lună' : 'luni'} · ${new Intl.NumberFormat('ro-RO').format(amount)}`,
+        amount,
+      });
+    }
+  }
+  if (currentMonthCharge) {
+    amountShortcuts.push({
+      key: 'rest',
+      label: `restul lunii · ${new Intl.NumberFormat('ro-RO').format(currentMonthCharge.amount)}`,
+      amount: currentMonthCharge.amount,
+    });
+  }
+
   const { rates } = useExchangeRates();
   const bnmRate = eurToMdlRate(rates, values.date);
   const effectiveRate = manualRate ? Number(manualRate) : bnmRate;
@@ -151,6 +174,8 @@ export function PaymentFormDrawer({
       // Copilul cu taxă EUR își scade obligația în €, deci rândul de repartizare urmărește
       // echivalentul în € al sumei primite în lei, nu suma în lei ca la un copil MDL.
       const target = isEurChild ? eurEquivalent : totalAmount;
+      // R7: valoare internă a câmpului editabil (string numeric brut, nu text afișat) — formatMoney
+      // ar adăuga „ lei”/separator de mii, care ar sparge inputul controlat de repartizare.
       const next = target ? target.toFixed(2) : '';
       syncedAmountRef.current = next;
       if (row.amount === next) return previous;
@@ -348,9 +373,9 @@ export function PaymentFormDrawer({
                   </>
                 }
               />
-              <button type="button" className={styles.linkButton} onClick={() => setPickerOpen(true)}>
+              <Button variant="link" className={styles.linkButton} onClick={() => setPickerOpen(true)}>
                 Schimbă
-              </button>
+              </Button>
             </div>
           ) : (
             <SearchSelect
@@ -401,42 +426,17 @@ export function PaymentFormDrawer({
               value={values.tenders[activeMethod] ?? ''}
               onChange={value => setTender(activeMethod, value)}
               currency="lei"
-              // Scurtăturile de lună țin de taxa lunară (Grădiniță); „restul lunii” vine din taxa de
-              // bazin deja calculată pentru luna curentă — cele două nu apar niciodată simultan (B3).
               shortcuts={
-                (feeEntry && !isEurChild && isGradinitaService) || currentMonthCharge ? (
-                  <>
-                    {feeEntry &&
-                      !isEurChild &&
-                      isGradinitaService &&
-                      [1, 2, 3].map(months => {
-                        const amount = feeEntry.amount * months;
-                        const active = Number(values.tenders[activeMethod]) === amount;
-                        return (
-                          <button
-                            key={months}
-                            type="button"
-                            className={active ? `${styles.shortcut} ${styles.shortcutActive}` : styles.shortcut}
-                            onClick={() => setTender(activeMethod, String(amount))}
-                          >
-                            {months} {months === 1 ? 'lună' : 'luni'} · {new Intl.NumberFormat('ro-RO').format(amount)}
-                          </button>
-                        );
-                      })}
-                    {currentMonthCharge && (
-                      <button
-                        type="button"
-                        className={
-                          Number(values.tenders[activeMethod]) === currentMonthCharge.amount
-                            ? `${styles.shortcut} ${styles.shortcutActive}`
-                            : styles.shortcut
-                        }
-                        onClick={() => setTender(activeMethod, String(currentMonthCharge.amount))}
-                      >
-                        restul lunii · {new Intl.NumberFormat('ro-RO').format(currentMonthCharge.amount)}
-                      </button>
-                    )}
-                  </>
+                amountShortcuts.length > 0 ? (
+                  <ChipSelect
+                    ariaLabel="Sumă rapidă"
+                    options={amountShortcuts.map(shortcut => ({ value: shortcut.key, label: shortcut.label }))}
+                    value={amountShortcuts.find(s => Number(values.tenders[activeMethod]) === s.amount)?.key ?? ''}
+                    onChange={key => {
+                      const shortcut = amountShortcuts.find(s => s.key === key);
+                      if (shortcut) setTender(activeMethod, String(shortcut.amount));
+                    }}
+                  />
                 ) : undefined
               }
             />
@@ -444,9 +444,9 @@ export function PaymentFormDrawer({
           {splitByMethod ? (
             <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>
           ) : (
-            <button type="button" className={styles.linkButton} onClick={() => setSplitByMethod(true)}>
+            <Button variant="link" className={styles.linkButton} onClick={() => setSplitByMethod(true)}>
               Împarte pe metode
-            </button>
+            </Button>
           )}
           {isEurChild && (
             <>
@@ -508,9 +508,9 @@ export function PaymentFormDrawer({
                   );
                 })}
               </div>
-              <button type="button" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
+              <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
                 Repartizează manual
-              </button>
+              </Button>
             </>
           ) : (
             <>
@@ -519,15 +519,16 @@ export function PaymentFormDrawer({
               <div className={styles.allocationRows}>
                 {values.allocations.map((row, index) => (
                   <div key={row.id} className={styles.allocationRow}>
-                    <label className={styles.allocationField}>
-                      Luna
-                      <input
-                        type="month"
-                        required
-                        value={row.month}
-                        onChange={event => setAllocationField(index, 'month', event.target.value)}
-                      />
-                    </label>
+                    <div className={styles.allocationField}>
+                      <Field label="Luna" htmlFor={`allocation-month-${row.id}`}>
+                        <MonthInput
+                          id={`allocation-month-${row.id}`}
+                          required
+                          value={row.month}
+                          onChange={value => setAllocationField(index, 'month', value)}
+                        />
+                      </Field>
+                    </div>
                     <div className={styles.allocationAmountField}>
                       <Field label="Suma" htmlFor={`allocation-amount-${row.id}`}>
                         <NumberInput
@@ -556,9 +557,9 @@ export function PaymentFormDrawer({
                 Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
                 {formatMoney(balanceTotal - allocated, balanceCurrency)}
               </p>
-              <button type="button" className={styles.linkButton} onClick={() => setAllocationMode('auto')}>
+              <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('auto')}>
                 Se repartizează automat
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -598,9 +599,9 @@ export function PaymentFormDrawer({
             />
           </Field>
         ) : (
-          <button type="button" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
+          <Button variant="link" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
             + Adaugă observație
-          </button>
+          </Button>
         )}
 
         <label className={styles.checkboxField}>

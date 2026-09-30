@@ -399,7 +399,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Andrei Popescu');
-    await user.click(screen.getByRole('button', { name: '2 luni · 3.000' }));
+    await user.click(screen.getByRole('radio', { name: '2 luni · 3.000' }));
 
     expect(sumInput().value).toBe('3000');
 
@@ -448,9 +448,9 @@ describe('PaymentFormDrawer', () => {
     await pickChild(user, 'Andrei Popescu');
     await user.click(screen.getByRole('radio', { name: 'Bazin' }));
 
-    expect(screen.queryByRole('button', { name: /luni ·/ })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^1 lună ·/ })).toBeNull();
-    const shortcut = screen.getByRole('button', { name: 'restul lunii · 450' });
+    expect(screen.queryByRole('radio', { name: /luni ·/ })).toBeNull();
+    expect(screen.queryByRole('radio', { name: /^1 lună ·/ })).toBeNull();
+    const shortcut = screen.getByRole('radio', { name: 'restul lunii · 450' });
     await user.click(shortcut);
     expect(sumInput().value).toBe('450');
 

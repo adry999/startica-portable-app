@@ -2,10 +2,12 @@ import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Button,
+  ChoiceCards,
   DateInput,
   Drawer,
   Field,
   IconButton,
+  MonthInput,
   NumberInput,
   PhoneInput,
   Select,
@@ -264,9 +266,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               </Field>
             </div>
           ) : (
-            <button type="button" className={styles.addParentLink} onClick={() => setShowParent2(true)}>
+            <Button variant="link" className={styles.addParentLink} onClick={() => setShowParent2(true)}>
               + Adaugă încă un părinte
-            </button>
+            </Button>
           )}
         </fieldset>
 
@@ -296,22 +298,20 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
             </Field>
           </div>
           {presets.length > 0 && (
-            <div className={styles.cardGrid}>
-              {presets.map(preset => {
-                const selected = values.currency === 'EUR' && values.fee === String(preset.priceEur);
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    className={selected ? `${styles.presetCard} ${styles.selected}` : styles.presetCard}
-                    onClick={() => selectPreset(preset.priceEur)}
-                  >
-                    <span className={styles.presetCardName}>{preset.name}</span>
-                    <span className={styles.presetCardPrice}>{preset.priceEur} €</span>
-                  </button>
-                );
-              })}
-            </div>
+            <ChoiceCards
+              ariaLabel="Tarif preset"
+              columns={presets.length}
+              value={presets.find(p => values.currency === 'EUR' && values.fee === String(p.priceEur))?.id ?? ''}
+              onChange={id => {
+                const preset = presets.find(p => p.id === id);
+                if (preset) selectPreset(preset.priceEur);
+              }}
+              options={presets.map(preset => ({
+                value: preset.id,
+                title: preset.name,
+                sub: `${preset.priceEur} €`,
+              }))}
+            />
           )}
         </fieldset>
 
@@ -319,6 +319,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
           <legend className={styles.sectionTitle}>
             4 · Grupă <span className={styles.optional}>(opțional)</span>
           </legend>
+          {/* R1: pastilă cu tooltip nativ (`title`, locuri libere) + nuanță de ton per-grupă
+              (`groupTone`) — nici FilterPills, nici ChipSelect n-au un prop de tooltip per-opțiune;
+              extinderea lor ar cere un nou prop + teste, în afara sferei acestei curățenii de allowlist. */}
           <div className={styles.groupChips}>
             <button
               type="button"
@@ -409,26 +412,22 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                     onChange={value => setField('fee', value)}
                   />
                 </Field>
-                {/* type="month" rămâne brut — nu există încă `MonthInput` în @shared/ui (COMPONENTE.md
-                    §0/25b), la fel ca rândul de alocare din PaymentFormDrawer. */}
-                <label className={styles.field}>
-                  Taxa aplicabilă din luna
-                  <input
-                    type="month"
+                <Field label="Taxa aplicabilă din luna" htmlFor="child-fee-from">
+                  <MonthInput
+                    id="child-fee-from"
                     value={values.feeFrom}
-                    onChange={event => setField('feeFrom', event.target.value)}
+                    onChange={value => setField('feeFrom', value)}
                   />
-                </label>
+                </Field>
               </div>
-              <label className={styles.field}>
-                Statut aplicabil din luna
-                <input
-                  type="month"
+              <Field label="Statut aplicabil din luna" htmlFor="child-status-from">
+                <MonthInput
+                  id="child-status-from"
                   required
                   value={values.statusFrom}
-                  onChange={event => setField('statusFrom', event.target.value)}
+                  onChange={value => setField('statusFrom', value)}
                 />
-              </label>
+              </Field>
               <Field label="Date medicale / alergii" htmlFor="child-health-notes">
                 <TextArea
                   id="child-health-notes"
@@ -476,9 +475,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                     </div>
                   ))}
                 </div>
-                <button type="button" className={styles.addParentLink} onClick={addPickupPerson}>
+                <Button variant="link" className={styles.addParentLink} onClick={addPickupPerson}>
                   + Adaugă
-                </button>
+                </Button>
               </div>
             </div>
           </details>

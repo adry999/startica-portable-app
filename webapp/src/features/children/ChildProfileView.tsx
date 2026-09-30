@@ -365,7 +365,14 @@ export function ChildProfileView({
               )}
               {(() => {
                 const visibleNotes = (child.notes ?? []).filter(note => !note.deletedAt);
-                if (visibleNotes.length === 0) return <p>Nicio notă încă.</p>;
+                if (visibleNotes.length === 0)
+                  return (
+                    <EmptyState
+                      size="compact"
+                      variant={EMPTY_STATES['fisa.notes'].variant}
+                      title={resolveEmptyStateTitle(EMPTY_STATES['fisa.notes'])}
+                    />
+                  );
                 return visibleNotes.map((note, index) => {
                   if (editingNoteId === note.id) {
                     return (

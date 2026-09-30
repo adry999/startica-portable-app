@@ -56,27 +56,8 @@
   gap: var(--space-8);
 }
 
-.allocationField {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
-.allocationField input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 11px 14px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-/* Perechea Suma dintr-un rând de repartizare manuală (25d) — lățime egală cu `.allocationField`
-   vecin (Luna), fără să moștenească stilul lui de input brut (`NumberInput` își are propriul). */
+/* Perechea Luna/Suma dintr-un rând de repartizare manuală (25d) — lățime egală în rândul flex. */
+.allocationField,
 .allocationAmountField {
   flex: 1;
 }
@@ -96,12 +77,6 @@
 
 .linkButton {
   align-self: flex-start;
-  border: none;
-  background: none;
-  padding: 0;
-  font-weight: 800;
-  font-size: 13px;
-  color: var(--orange-ink);
 }
 
 .grid2 {
@@ -121,27 +96,6 @@
 
 .childCard > :first-child {
   flex: 1;
-}
-
-.shortcuts {
-  display: flex;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.shortcut {
-  border: none;
-  background: var(--neutral-soft);
-  border-radius: var(--radius-pill);
-  padding: 5px var(--space-12);
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--slate);
-}
-
-.shortcutActive {
-  background: var(--slate);
-  color: var(--white);
 }
 
 .autoList {

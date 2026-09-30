@@ -117,18 +117,33 @@ function stripComments(text: string): string {
 describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/<table>/<dialog>) în features/**', () => {
   const RAW_TAG_PATTERN = /<(input|select|textarea|button|table|dialog)\b/;
 
+  /** Un `<input type="file" hidden>` (dropzone/file-picker nativ) n-are echivalent `@shared/ui` —
+   * nu e un câmp de text/număr — deci nu contează ca încălcare, oriunde apare. */
+  function stripNativeFileInputs(text: string): boolean {
+    const withoutFileInputs = text.replace(/<input\b[\s\S]*?\/?>/g, tag => (/type=["']file["']/.test(tag) ? '' : tag));
+    return RAW_TAG_PATTERN.test(withoutFileInputs);
+  }
+
+  // Permanent, nu datorie: fiecare intrare de mai jos e un hit-area/tabel-de-tipărit pe care
+  // `Button`/`DataTable` din `@shared/ui` nu-l poate reproduce fără să-și piardă forma sau
+  // comportamentul (vezi comentariul din fișierul sursă, la linia încălcării). Fișierele `.test.tsx`
+  // (mock-uri de componente) sunt excluse structural mai jos, ca la R3/R7/R9.
   const ALLOWED: readonly string[] = [
     // Rândul din coada de achitări neasociate (dată + text sursă + sumă) — hit-area pe tot rândul,
     // ca ChildTile/GroupTile/NotifyPage; un `Button` ar impune propriul fundal/padding și ar sparge
     // layout-ul din 11-de-rezolvat.md §9c.
     'assign/AssignPage.tsx',
+    // Placa copilului (attendance) — hit-area pe toată placa, cu `currentColor` moștenit din statusul
+    // zilei; un `Button` ar impune propriul fundal/padding.
     'attendance/ChildTile.tsx',
-    // `<input type="file" hidden>` din spatele butonului „Alege fișierul" — dropzone/file-picker
-    // nativ, fără echivalent `@shared/ui` (nu e un câmp de text/număr); declanșat programatic prin
-    // `fileInputRef.current?.click()`, ascuns vizual.
-    'backup/ExcelImportDialog.tsx',
+    // Grupul „Grupă” (pastilă cu tooltip nativ de capacitate + nuanță de ton per-grupă) — vezi
+    // comentariul din fișier.
     'children/ChildFormDrawer.tsx',
+    // Rândul din lista de conflicte — hit-area pe tot rândul, ca ChildTile/GroupTile.
     'conflicts/ConflictsPage.tsx',
+    // Bara graficului lunar (formă/înălțime dinamică per venit/cheltuială, fără text, cu Tooltip) și
+    // acțiunea „→” din cardul „De văzut” cu culoare de ton moștenită (`color: inherit`) — `Button
+    // variant="link"` ar forța orange peste tonul roz/galben/mint al cardului.
     'dashboard/DashboardPage.tsx',
     // Rândul candidatului din căutare (avatar + nume + pastilă) e un hit-area pe tot rândul, ca
     // ChildTile — și togglurile de zi L-V (22×22, comutare multiplă, nu `Button`) n-au variantă potrivită.
@@ -141,7 +156,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // rândul, ca ChildTile/GroupTile; un `Button` ar impune propriul fundal/padding și ar sparge
     // layout-ul din 10-de-notificat.md §3.
     'notify/NotifyPage.tsx',
-    'payments/PaymentFormDrawer.tsx',
     // Bară de concediu poziționată absolut pe zilele lui (stânga/lățime calculate, culoare dinamică
     // pe tip/planificat) — hit-area pe formă custom, ca ChildTile/GroupTile; vezi comentariul din fișier.
     'personal/LeavesView.tsx',
@@ -153,9 +167,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // printare (antet repetat la 14 rânduri/pagină); același caz ca `report/ReportPrintSummary.tsx`
     // mai jos, `DataTable` nefiind gândit pentru `window.print()`.
     'personal/TimesheetPrint.tsx',
-    // Fixtură de test: `BookingDrawer` mockuit e un buton „Salvat (fixture)” care declanșează direct
-    // `onSaved()`, fără să reproducă interacțiunea reală din formular (nu asta se testează în PoolPage).
-    'pool/PoolPage.test.tsx',
     // Placa dintr-o celulă a grilei săptămânii (22a) — avatar + nume + etichetă de stare + punct de
     // culoare, hit-area pe toată placa, ca ChildTile/GroupTile; un `Button` ar impune propriul
     // fundal/padding și ar sparge grila oră×zi (`display: contents` pe rânduri).
@@ -177,9 +188,9 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     'visits/VisitsPage.tsx',
   ];
 
-  it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
-    const files = collectFeatureFilesByName(/\.tsx$/);
-    const actual = featureFilesMatching(files, text => RAW_TAG_PATTERN.test(text));
+  it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {
+    const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
+    const actual = featureFilesMatching(files, stripNativeFileInputs);
     expect(unexpectedViolations(actual, ALLOWED)).toEqual([]);
   });
 });
@@ -202,7 +213,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'assign/AssignPage.module.css',
     'attendance/WeeklySheet.module.css',
     'backup/BackupPage.module.css',
-    'children/ChildFormDrawer.module.css',
     'conflicts/ConflictsPage.module.css',
     // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
     // shared/ui (Board, DateInput, NumberInput…), unde nu e scanată de R2; nu există un token
@@ -220,7 +230,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     // din fișier.
     'notify/NotifyPage.module.css',
     'payments/DayClosingReceipt.module.css',
-    'payments/PaymentFormDrawer.module.css',
     'payments/PaymentReceipt.module.css',
     'payments/PaymentReceiptThermal.module.css',
     'payments/PaymentsByMonth.module.css',
@@ -249,9 +258,17 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'stickers/StickerLabel.module.css',
   ];
 
+  /** Un comentariu `/* ... *\/` care doar explică o valoare (ex. „#15a”, un id de artboard, sau
+   * „#e0b400 nu are token exact”) nu e o valoare CSS reală — nu contează ca încălcare. */
+  function stripCssComments(text: string): string {
+    return text.replace(/\/\*[\s\S]*?\*\//g, '');
+  }
+
   it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
     const files = collectFeatureFilesByName(/\.module\.css$/);
-    const actual = featureFilesMatching(files, text => CSS_VIOLATION_PATTERNS.some(p => p.test(text)));
+    const actual = featureFilesMatching(files, text =>
+      CSS_VIOLATION_PATTERNS.some(p => p.test(stripCssComments(text))),
+    );
     expect(unexpectedViolations(actual, ALLOWED)).toEqual([]);
   });
 });
@@ -307,11 +324,17 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     /throw\s+new\s+Error\(|\btoast\.(show|error|success|info|warning)\(|\b(label|hint|emptyLabel)\s*[:=]\s*/;
 
   /** R9 mai precis (PROMPT-CLAUDE-CODE-5.md §1.4): numără doar liniile unde „Niciun/Nicio” apare
-   * într-un text randat direct pe ecran, nu în erori aruncate, toast-uri sau props de indiciu/opțiune. */
+   * într-un text randat direct pe ecran, nu în comentarii, erori aruncate, toast-uri sau props de
+   * indiciu/opțiune. */
   function hasUnexpectedEmptyText(text: string): boolean {
-    return text.split('\n').some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
+    return stripComments(text)
+      .split('\n')
+      .some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
   }
 
+  // Fișierele `.test.tsx` sunt excluse structural mai jos (ca la R1/R3/R7) — un test care verifică
+  // textul catalogului prin `screen.findByText(...)` conține inevitabil „Niciun/Nicio”, fără să fie
+  // text nou hardcodat.
   const TEXT_ALLOWED: readonly string[] = [
     // „Niciun rezultat pentru căutare” pe coada de achitări neasociate — text de căutare fără
     // rezultate, intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca
@@ -320,15 +343,8 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'assign/AssignPage.tsx',
     'attendance/WeeklySheetDialog.tsx',
     'audit-log/AuditLogPage.tsx',
-    // Test-ul verifică textul catalogului („planuri.first”) chiar prin `screen.findByText(...)` —
-    // inevitabil conține litera „Niciun”, la fel ca celelalte teste `.test.tsx` din listă.
-    'backup/ExchangeRateSettings.test.tsx',
-    'children/BirthdaysPage.error.test.tsx',
-    'children/BirthdaysPage.tsx',
-    'children/ChildAttendanceSection.test.tsx',
-    'children/ChildAttendanceSection.tsx',
-    'children/ChildProfileView.test.tsx',
-    'children/ChildProfileView.tsx',
+    // „Niciun copil nu corespunde filtrelor curente” — text de căutare/filtre fără rezultate,
+    // intenționat în afara catalogului, ca AssignPage/AuditLogPage.
     'children/ChildrenPage.tsx',
     // „Niciun rezultat pentru căutare” pe panoul „Fără grupă” — text de căutare fără rezultate,
     // intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca AssignPage/AuditLogPage.
@@ -336,21 +352,17 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     // „Niciun asistent" / „Niciun înlocuitor" (03-grupe.md §5c) — indicii scurte pe rolul unui bloc din
     // Echipa grupei, nu o stare goală de listă/pagină (fără ilustrație, fără acțiune); niciun cheie din
     // catalog nu se potrivește, textul rămâne literal, ca în spec.
-    'groups/GroupTeamPicker.test.tsx',
     'groups/GroupTeamPicker.tsx',
-    // Testul menționează doar textul afișat de SmsMessagesPanel.tsx mai jos, ca să verifice starea
-    // fără rezultate a jurnalului SMS — mențiune de test, nu text nou, exceptare permanentă ca la
-    // celelalte `*.test.tsx` din listă.
-    'notifications/NotificationsPage.test.tsx',
     // „Niciun SMS pentru filtrele alese” pe tabelul jurnalului SMS (14-sms.md §11a) — text de
     // căutare/filtre fără rezultate, intenționat în afara catalogului (empty-states.ts, header-ul
     // fișierului), ca AssignPage/GroupsBoard mai sus.
     'notifications/SmsMessagesPanel.tsx',
+    // „Nicio achitare în această zi.” — linie pe chitanța tipărită a închiderii zilei (thermal
+    // receipt), nu o stare goală de ecran/listă; catalogul empty-states.ts nu acoperă tipăriri.
     'payments/DayClosingReceipt.tsx',
-    'payments/PaymentFormDrawer.test.tsx',
+    // „Niciun curs cunoscut pentru această dată — completează manual” — indiciu inline lângă câmpul
+    // de curs valutar (fallback când BNM n-are cursul zilei), nu o stare goală de listă/pagină.
     'payments/PaymentFormDrawer.tsx',
-    'personal/CandidatesTab.test.tsx',
-    'personal/TeamView.tsx',
   ];
 
   const IMPORT_ALLOWED: readonly string[] = [
@@ -362,6 +374,11 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'attendance/MonthView.tsx',
     'backup/SyncSettings.tsx',
     'children/BirthdaysPage.tsx',
+    // Genuin nou (§3 final) — „Nicio absență motivată în {luna}.” nu mai e text hardcodat, ci
+    // `EmptyState` cu cheia din catalog (`fisa.absences`, compact).
+    'children/ChildAttendanceSection.tsx',
+    // Include și „Nicio notă încă.” (`fisa.notes`, compact, genuin nou §3 final), alături de
+    // `fisa.payers` deja cablat.
     'children/ChildProfileView.tsx',
     'children/ChildrenPage.tsx',
     'conflicts/ConflictsPage.tsx',
@@ -402,7 +419,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   ];
 
   it('nicio încălcare nouă de text literal „Niciun/Nicio" în afara listei de excepții', () => {
-    const files = collectFeatureFilesByName(/\.tsx$/);
+    const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
     const actual = featureFilesMatching(files, hasUnexpectedEmptyText);
     expect(unexpectedViolations(actual, TEXT_ALLOWED)).toEqual([]);
   });

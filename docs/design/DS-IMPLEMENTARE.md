@@ -41,22 +41,24 @@ Pașii 2–8 se pot face în paralel pe fișiere disjuncte. Pasul 9 începe pe u
 
 | Modul | Componente folosite (de bifat) | R1–R8 | Captură = artboard |
 |---|---|---|---|
-| Achitări 5a/5b/15b | DataTable, ListToolbar, FilterMenu, PeriodFilter, ActiveFilters, SelectionBar, Kpi, MasterDetail, AmountInput, ChoiceCards, SegmentedControl, SplitButton, PrintOptionsDialog | ☐ | ☐ |
-| Copii 2a/2b/2c/15a | DataTable, FilterPills, ProfileLayout, NoteList, MultiSelect, FormSection, PhoneInput, DateInput, HoverCard | ☐ | ☐ |
-| Prezența 18a–18d | DayGrid(dot), GroupSection, UndoHistory, SaveIndicator, Popover (motiv), Notice | ☐ | ☐ |
-| Cheltuieli 6a/6b/15c | DataTable, ChipSelect, AmountInput, InlineEdit, Kpi | ☐ | ☐ |
-| Situația 7a–7e | Heatmap, DataTable, SmsPreview, SegmentCounter, ProgressToast | ☐ | ☐ |
-| Personal 23a–23m | DataTable(groupBy), DayGrid(code/bar), LockedContent, Tabs, ProfileLayout, Timeline | ☐ | ☐ |
-| Grupe 4a–4c | Board, TonePicker, AvatarGroup, ProgressBar(capacitate) | ☐ | ☐ |
-| Bazin 22a–22d | WeekGrid, TimeSlots, DayGrid, Kpi | ☐ | ☐ |
-| Vizite | MonthCalendar, WeekGrid, DataTable | ☐ | ☐ |
-| De rezolvat 9a–9c, 14c | TaskRow, InlineEdit, MasterDetail, DiffTable, Kbd | ☐ | ☐ |
-| De notificat 8a | MasterDetail, SmsPreview | ☐ | ☐ |
-| Administrare 10a–10e, 11a–11d, 12a, 13c, 14b, 16a | Timeline, Tabs, Toggle, Disclosure, DataTable, SmsPreview, CopyField, Slider | ☐ | ☐ |
-| Raport 19a/19b | Kpi, DataTable, PrintOptionsDialog | ☐ | ☐ |
-| Tipăriri 16x, 23k, 24x | PrintHeader, PrintTable, SignatureLine, PrintFooter, ThermalBlock | ☐ | ☐ |
-| Pornire 20a–20c, 21a–21c | Wizard, StepList, LoadingBar | ☐ | ☐ |
-| Shell | NavRail, BranchSelector, SyncStatusCard, TodoCard, GlobalSearch, AppBanner, PageHeader | ☐ | ☐ |
+| Achitări 5a/5b/15b | DataTable, ListToolbar, FilterMenu, PeriodFilter, ActiveFilters, SelectionBar, Kpi, MasterDetail, AmountInput, ChoiceCards, SegmentedControl, SplitButton, PrintOptionsDialog | ☑ | ☐ |
+| Copii 2a/2b/2c/15a | DataTable, FilterPills, ProfileLayout, NoteList, MultiSelect, FormSection, PhoneInput, DateInput, HoverCard | ☑ | ☐ |
+| Prezența 18a–18d | DayGrid(dot), GroupSection, UndoHistory, SaveIndicator, Popover (motiv), Notice | ☑ | ☐ |
+| Cheltuieli 6a/6b/15c | DataTable, ChipSelect, AmountInput, InlineEdit, Kpi | ☑ | ☐ |
+| Situația 7a–7e | Heatmap, DataTable, SmsPreview, SegmentCounter, ProgressToast | ☑ | ☐ |
+| Personal 23a–23m | DataTable(groupBy), DayGrid(code/bar), LockedContent, Tabs, ProfileLayout, Timeline | ☑ | ☐ |
+| Grupe 4a–4c | Board, TonePicker, AvatarGroup, ProgressBar(capacitate) | ☑ | ☐ |
+| Bazin 22a–22d | WeekGrid, TimeSlots, DayGrid, Kpi | ☑ | ☐ |
+| Vizite | MonthCalendar, WeekGrid, DataTable | ☑ | ☐ |
+| De rezolvat 9a–9c, 14c | TaskRow, InlineEdit, MasterDetail, DiffTable, Kbd | ☑ | ☐ |
+| De notificat 8a | MasterDetail, SmsPreview | ☑ | ☐ |
+| Administrare 10a–10e, 11a–11d, 12a, 13c, 14b, 16a | Timeline, Tabs, Toggle, Disclosure, DataTable, SmsPreview, CopyField, Slider | ☑ | ☐ |
+| Raport 19a/19b | Kpi, DataTable, PrintOptionsDialog | ☑ | ☐ |
+| Tipăriri 16x, 23k, 24x | PrintHeader, PrintTable, SignatureLine, PrintFooter, ThermalBlock | ☑ | ☐ |
+| Pornire 20a–20c, 21a–21c | Wizard, StepList, LoadingBar | ☑ | ☐ |
+| Shell | NavRail, BranchSelector, SyncStatusCard, TodoCard, GlobalSearch, AppBanner, PageHeader | ☑ | ☐ |
+
+R1–R7 pe error, fără mecanism de allowlist centralizat, de la §3 final (30.09.2026) — vezi `docs/design/verificare/README.md` pentru excepțiile permanente rămase (hit-area/tabele-de-tipărit) și captura vizuală neefectuată (nepornit backend-ul peste baza de producție).
 
 ## 4. Definiția lui „gata” pentru faza DS
 

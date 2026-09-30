@@ -1,6 +1,6 @@
 import { useAppSession } from '@shared/api/session';
 import { AttendanceDot, useAttendance } from '@shared/attendance';
-import { ProfileSection } from '@shared/ui';
+import { EMPTY_STATES, EmptyState, ProfileSection, resolveEmptyStateTitle } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { formatDate, formatMonthName } from '#shared/format/date-format.mjs';
 import { attendanceKey, summarizeMonth } from '#features/attendance/index.web.mjs';
@@ -43,7 +43,11 @@ export function ChildAttendanceSection({ childId, month }: ChildAttendanceSectio
         ))}
       </div>
       {excusedAbsences.length === 0 ? (
-        <p className={styles.notice}>Nicio absență motivată luna aceasta.</p>
+        <EmptyState
+          size="compact"
+          variant={EMPTY_STATES['fisa.absences'].variant}
+          title={resolveEmptyStateTitle(EMPTY_STATES['fisa.absences'], { luna: formatMonthName(month) })}
+        />
       ) : (
         <ul className={styles.attendanceExcusedList}>
           {excusedAbsences.map(absence => (

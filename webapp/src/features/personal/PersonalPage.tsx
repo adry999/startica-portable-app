@@ -111,6 +111,7 @@ export function PersonalPage({ month }: PersonalPageProps) {
       onOpenStaff={id => navigate(`/personal/${id}`)}
       staffFormTarget={staffFormTarget}
       onCloseStaffForm={() => setStaffFormTarget(null)}
+      onAddStaff={() => setStaffFormTarget('new')}
     />
   );
 }

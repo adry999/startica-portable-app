@@ -68,6 +68,6 @@ describe('ChildAttendanceSection', () => {
     await loadedSession();
     render(<ChildAttendanceSection childId="c1" month="2026-09" />);
 
-    expect(await screen.findByText('Nicio absență motivată luna aceasta.')).toBeInTheDocument();
+    expect(await screen.findByText('Nicio absență motivată în septembrie 2026.')).toBeInTheDocument();
   });
 });
