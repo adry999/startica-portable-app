@@ -5,6 +5,8 @@ import {
   Card,
   ConfirmDeleteDialog,
   DataTable,
+  EMPTY_STATES,
+  EmptyState,
   FilterPills,
   Icon,
   IconButton,
@@ -14,13 +16,14 @@ import {
   SearchSelect,
   SegmentedControl,
   SelectionBar,
+  resolveEmptyStateTitle,
   useToast,
   useTopbarActions,
   type BadgeTone,
   type DataTableColumn,
   type PillTone,
 } from '@shared/ui';
-import { formatAge, formatDate } from '#shared/format/date-format.mjs';
+import { formatAge, formatDate, formatDayLabel, formatMonthName } from '#shared/format/date-format.mjs';
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
@@ -58,21 +61,10 @@ const STATUS_PILL_CLASS: Record<VisitStatus, keyof typeof styles> = {
 
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
 
+// R7: `formatMonthName` întoarce „septembrie 2026" (nu majusculă — folosit și în text adresat
+// direct părinților); antetul calendarului cere „Septembrie 2026", ca în children/BirthdaysPage.tsx.
 function monthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-');
-  const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('ro-RO', {
-    month: 'long',
-    year: 'numeric',
-  });
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
-function dayLabel(dateStr: string): string {
-  const label = new Date(`${dateStr}T00:00:00`).toLocaleDateString('ro-RO', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const label = formatMonthName(monthKey);
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -316,6 +308,36 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     },
   ];
 
+  // R9: „Fără rezultate" (filtre/căutare active) e generic și în afara catalogului — DataTable îl
+  // arată singur cât timp `hasActiveFilters` e adevărat; abia sub el, tabelul chiar gol (nicio
+  // vizită înregistrată vreodată) arată catalogul `vizite.first`.
+  const activeFilterChips: { label: string; onClear: () => void }[] = [];
+  if (visitsData.search) {
+    activeFilterChips.push({ label: `Căutare: ${visitsData.search}`, onClear: () => visitsData.setSearch('') });
+  }
+  if (visitsData.statusFilter) {
+    activeFilterChips.push({
+      label: `Statut: ${STATUS_LABEL[visitsData.statusFilter as VisitStatus]}`,
+      onClear: () => visitsData.setStatusFilter(''),
+    });
+  }
+  if (visitsData.showArchived) {
+    activeFilterChips.push({ label: 'Arhivate', onClear: () => visitsData.setShowArchived(false) });
+  }
+  if (visitsData.selectedDate) {
+    activeFilterChips.push({
+      label: formatDate(visitsData.selectedDate),
+      onClear: () => visitsData.setSelectedDate(null),
+    });
+  }
+
+  function clearVisitFilters() {
+    visitsData.setSearch('');
+    visitsData.setStatusFilter('');
+    visitsData.setShowArchived(false);
+    visitsData.setSelectedDate(null);
+  }
+
   return (
     <>
       <div className={styles.funnelRow}>
@@ -404,14 +426,18 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
 
           {visitsData.selectedDate && selectedDayVisits.length === 0 && (
             <Card className={styles.detailEmpty}>
-              <p>Nicio vizită programată în această zi.</p>
-              <Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>
+              <EmptyState
+                size="compact"
+                variant={EMPTY_STATES['vizite.day'].variant}
+                title={resolveEmptyStateTitle(EMPTY_STATES['vizite.day'])}
+                action={{ label: EMPTY_STATES['vizite.day'].actionLabel ?? '', onClick: () => setFormTarget('new') }}
+              />
             </Card>
           )}
 
           {selectedDayVisits.map(visit => (
             <Card key={visit.id} className={styles.detailCard}>
-              <span className={styles.detailEyebrow}>{dayLabel(visit.date)}</span>
+              <span className={styles.detailEyebrow}>{formatDayLabel(visit.date)}</span>
               <div className={styles.detailHead}>
                 <span className={styles.detailTime}>{visit.time}</span>
                 <div className={styles.detailWho}>
@@ -480,7 +506,11 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           <Card className={styles.upcomingCard}>
             <span className={styles.detailSectionLabel}>Următoarele vizite</span>
             {upcoming.length === 0 ? (
-              <p className={styles.dim}>Nicio altă vizită programată luna aceasta.</p>
+              <EmptyState
+                size="compact"
+                variant={EMPTY_STATES['vizite.month.rest'].variant}
+                title={resolveEmptyStateTitle(EMPTY_STATES['vizite.month.rest'])}
+              />
             ) : (
               upcoming.map(visit => (
                 <Button
@@ -594,7 +624,10 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           onSelectedRowKeysChange={setSelectedRowKeys}
           onRowClick={row => visitsData.setSelectedDate(row.date)}
           rowClassName={row => (row.date === visitsData.selectedDate ? styles.selectedDayRow : undefined)}
-          emptyState={<p>Nicio vizită nu corespunde filtrelor curente.</p>}
+          empty="vizite.first"
+          hasActiveFilters={activeFilterChips.length > 0}
+          activeFilterLabels={activeFilterChips.map(chip => chip.label)}
+          onClearFilters={clearVisitFilters}
         />
         <p className={styles.tableHint}>Click pe rând deschide vizita în calendar.</p>
       </Card>
