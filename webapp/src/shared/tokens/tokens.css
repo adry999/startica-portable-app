@@ -45,6 +45,9 @@
 :root {
   /* Culori de bază — identice cu web/styles/base.css, nu redenumite. */
   --orange: #ef8a1d;
+  /* Fundal pentru text alb (buton primar, insigne pline, pastila „azi") — contrast 4,7:1 cu alb.
+     `--orange` nu mai poartă text alb (TOKENS.md „--orange-strong (nou, 30.09)"). */
+  --orange-strong: #b85a00;
   --orange-soft: #fcead3;
   --slate: #3a4750;
   --muted: #6b7780;
@@ -60,6 +63,10 @@
   --cream: #fffaf0;
   --border: #ede7dc;
   --white: #fff;
+  /* Voal peste conținut, sub un dialog/panou modal (Dialog, UnsavedChangesDialog). */
+  --overlay: rgba(58, 71, 80, 0.4);
+  /* Suprafață „sticlă" pe fundal colorat (Grupe: GroupTile/GroupCardCompact). */
+  --white-a60: rgba(255, 255, 255, 0.6);
 
   /* Adăugate pentru redesign (text pe fundaluri soft, contrast >= 4.5:1). */
   --orange-ink: #a34f00;
@@ -71,6 +78,8 @@
   --neutral-softer: #f7f4ee;
   --success-dot: #3f9a6b;
   --row-divider: #f3eee5;
+  /* Linia dintre rânduri pe fundal cald (Grupe — GroupsPage). */
+  --row-divider-warm: #f1e8d6;
   --input-border: #c9c4ba;
   --sand: #f1ece2;
   --sand-soft: #faf7f1;
@@ -88,12 +97,16 @@
      cu bordură punctată, ca să se distingă de „Concediu” deja consumat, la fel de deschis la culoare. */
   --leave-planned: #f0d77a;
   --leave-planned-border: #b89a00;
+  /* Codul „CO” (concediu odihnă) din pontaj (Personal, DECIZII.md §17). */
+  --code-co: #e0b400;
 
   /* Tonurile grupelor (03-grupe.md §3/§5b.2) — fundal/text/bară per ton, 8 în total.
      galben/roz/verde/portocaliu refolosesc tokenii de bază de mai sus (bara galben/roz/verde e nouă). */
   --yellow-bar: #d9a400;
   --pink-bar: #d9577c;
   --mint-bar: #3f9a6b;
+  /* Bara „luna curentă" din graficul de cheltuieli (Dashboard → BarChart). */
+  --mint-bar-current: #5fb58a;
   --teal-soft: #dff1f0;
   --teal-ink: #1f6464;
   --teal-bar: #3a9c9c;
@@ -140,8 +153,8 @@
   /* Umbre. */
   --shadow-card: 0 8px 24px rgba(58, 71, 80, 0.1);
   --shadow-button-primary: 0 8px 18px rgba(239, 138, 29, 0.32);
-  /* Buton primar de antet (00-comun A) — umbră mai mică decât cea din corpul paginii. */
-  --shadow-button-header: 0 4px 10px rgba(239, 138, 29, 0.28);
+  /* Buton primar de antet (00-comun A) — umbră mai mică decât cea din corpul paginii, pe --orange-strong. */
+  --shadow-button-header: 0 4px 10px rgba(184, 90, 0, 0.28);
   --shadow-floating-bar: 0 12px 28px rgba(58, 71, 80, 0.25);
   --shadow-panel: -20px 0 60px rgba(58, 71, 80, 0.2);
   /* Opțiunea activă dintr-un SegmentedControl — umbră mică, nu „plutește” (DESIGN.md §Suprafețe). */
@@ -155,6 +168,11 @@
   --text-secondary: #5b666e;
   /* Text stins pe bara slate de selecție (SelectionBar — acțiuni secundare). */
   --on-slate-muted: #b9c1c6;
+
+  /* Tipar (PrintHeader/PrintTable/PrintFooter/ThermalBlock) — alb-negru real, nu tonurile de ecran. */
+  --print-ink: #000;
+  --print-muted: #333;
+  --print-rule: #ccc;
 
   /* Mișcare (COMPONENTE.md §0h/33c) — se animă doar opacity/transform/max-height. */
   --motion-instant: 80ms;

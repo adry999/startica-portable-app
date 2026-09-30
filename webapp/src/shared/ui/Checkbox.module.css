@@ -13,8 +13,8 @@
 }
 
 .box.on {
-  background: var(--orange);
-  border-color: var(--orange);
+  background: var(--orange-strong);
+  border-color: var(--orange-strong);
 }
 
 .box:disabled {
