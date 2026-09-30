@@ -17,7 +17,7 @@
   gap: var(--space-8);
   padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-sm);
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--border);
   text-align: left;
 }
