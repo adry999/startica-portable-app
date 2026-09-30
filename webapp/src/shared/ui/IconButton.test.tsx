@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { IconButton } from './IconButton';
 
@@ -22,5 +23,10 @@ describe('IconButton', () => {
   it('e dezactivat cât `disabled` e adevărat', () => {
     render(<IconButton icon="more-horizontal" ariaLabel="Mai multe acțiuni" disabled onClick={() => {}} />);
     expect(screen.getByLabelText('Mai multe acțiuni')).toBeDisabled();
+  });
+
+  it('fără încălcări axe (R6)', async () => {
+    const { container } = render(<IconButton icon="close" ariaLabel="Închide" onClick={() => {}} />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 });
