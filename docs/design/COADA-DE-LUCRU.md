@@ -581,7 +581,13 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 964/964 teste) — verzi.
 
-**Urmează:** Prezența, Cheltuieli, Situația, Personal, Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 3 — Prezența:** `SaveIndicator` mutat din `attendance/` în `@shared/ui` (era deja generic). `AttendanceUndoControl` mutat ca `UndoHistory`; logica de stivă (dublată aproape identic în `useAttendanceDay.ts`/`useAttendanceMonth.ts`) extrasă în `useUndoStack<TValue>()` (`@shared/state`). `Popover` nou (minim, doar ce are nevoie `ExcuseReasonPopover`). `WeeklySheetDialog`/`MonthView` rescrise. `ChildTile` rămâne buton brut — nicio potrivire fără suprascriere totală, fără al doilea loc de folosire.
+
+**Runda 4 — Cheltuieli:** `ExpenseFormDrawer`/`DailyExpensesView`/`ExpensesCategoryManager`/`ExpensesPage` rescrise. Nu s-a unificat `SettingsList` cu Servicii (model de date diferit). Rămân neatinse: dropdown-ul „Nearhivate” (așteaptă `FilterMenu`), chip-urile de culoare pe categorie (prima folosire a unui viitor `ChipSelect`).
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 983/983 teste) — verzi după fiecare rundă.
+
+**Urmează:** Situația, Personal, Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
