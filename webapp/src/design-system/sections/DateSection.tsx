@@ -6,10 +6,12 @@ import {
   DiffTable,
   Kpi,
   ListToolbar,
+  Legend,
   PersonCell,
   ProfileLayout,
   ProfileNotFound,
   ProfileSection,
+  ProgressBar,
   RowMenu,
   SelectionBar,
   ServiceBadge,
@@ -292,6 +294,45 @@ export function DateSection() {
               { key: 'phone', label: 'Telefon', local: '069123456', remote: '069999999', differs: true },
             ]}
             note="Rândurile galbene diferă. Celelalte câmpuri sunt identice."
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ProgressBar"
+        importLine="import { ProgressBar } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §28e — simplu/segmentat/capacitate"
+      >
+        <DemoRow label="simple">
+          <ProgressBar value={62} tone="orange" label="Completare taxe" />
+        </DemoRow>
+        <DemoRow label="segmented">
+          <ProgressBar
+            variant="segmented"
+            segments={[
+              { value: 45, tone: 'mint' },
+              { value: 30, tone: 'orange' },
+              { value: 15, tone: 'yellow' },
+            ]}
+          />
+        </DemoRow>
+        <DemoRow label="capacity">
+          <ProgressBar variant="capacity" filled={8} total={10} label="Locuri ocupate" />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Legend"
+        importLine="import { Legend } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §28e — explicația culorilor unui grafic"
+      >
+        <DemoRow label="control">
+          <Legend
+            items={[
+              { tone: 'mint', label: 'Cash 12 450 lei' },
+              { tone: 'orange', label: 'Card 8 200 lei' },
+              { tone: 'yellow', label: 'Transfer 3 100 lei' },
+            ]}
           />
         </DemoRow>
       </ComponentShowcase>

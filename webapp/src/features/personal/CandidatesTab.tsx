@@ -75,11 +75,7 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
       />
 
       {sorted.length === 0 ? (
-        <EmptyState
-          variant="first-step"
-          title="Niciun candidat încă"
-          action={{ label: '+ Candidat', onClick: onNew }}
-        />
+        <EmptyState variant="first" title="Niciun candidat încă" action={{ label: '+ Candidat', onClick: onNew }} />
       ) : (
         <DataTable
           columns={columns}

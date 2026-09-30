@@ -1,5 +1,7 @@
 import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Badge } from './Badge';
+import { EmptyState } from './EmptyState';
+import { EMPTY_STATES, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 import styles from './DataTable.module.css';
 
 export interface DataTableColumn<Row> {
@@ -25,7 +27,17 @@ export interface DataTableProps<Row> {
   rows: Row[];
   rowKey: (row: Row) => string;
   pageSize?: number;
+  /** Stare goală scrisă manual — dacă e dată, are prioritate peste `empty` (R9, retro-compatibil). */
   emptyState?: ReactNode;
+  /** Cheie din `empty-states.ts` — DataTable alege singur varianta (first/done/period), cu excepția
+   * „Fără rezultate", care are mereu prioritate cât timp `hasActiveFilters` e adevărat (30-stari-goale.md). */
+  empty?: EmptyStateKey;
+  emptyParams?: Record<string, string>;
+  hasActiveFilters?: boolean;
+  activeFilterLabels?: string[];
+  onClearFilters?: () => void;
+  /** Butonul din stările `first`/`period` — necesar doar dacă cheia din `empty` are `actionLabel`. */
+  onEmptyAction?: () => void;
   onRowClick?: (row: Row) => void;
   /** Clasă opțională per rând (ex. evidențierea rândului care corespunde zilei alese în alt panou). */
   rowClassName?: (row: Row) => string | undefined;
@@ -52,6 +64,12 @@ export function DataTable<Row>({
   rowKey,
   pageSize = 10,
   emptyState,
+  empty,
+  emptyParams,
+  hasActiveFilters = false,
+  activeFilterLabels,
+  onClearFilters,
+  onEmptyAction,
   onRowClick,
   rowClassName,
   selectable = false,
@@ -129,8 +147,32 @@ export function DataTable<Row>({
     onSelectedRowKeysChange(next);
   }
 
-  if (rows.length === 0 && emptyState) {
-    return <div className={styles.empty}>{emptyState}</div>;
+  const resolvedEmptyState =
+    emptyState ??
+    (hasActiveFilters ? (
+      <EmptyState
+        variant="no-results"
+        title="Fără rezultate"
+        activeFilters={activeFilterLabels}
+        onClearFilters={onClearFilters}
+      />
+    ) : empty ? (
+      (() => {
+        const entry = EMPTY_STATES[empty];
+        return (
+          <EmptyState
+            variant={entry.variant}
+            title={resolveEmptyStateTitle(entry, emptyParams)}
+            action={
+              entry.actionLabel && onEmptyAction ? { label: entry.actionLabel, onClick: onEmptyAction } : undefined
+            }
+          />
+        );
+      })()
+    ) : undefined);
+
+  if (rows.length === 0 && resolvedEmptyState) {
+    return <div className={styles.empty}>{resolvedEmptyState}</div>;
   }
 
   const allOnPageSelected = pageRows.length > 0 && pageRows.every(row => selectedRowKeys?.has(rowKey(row)));

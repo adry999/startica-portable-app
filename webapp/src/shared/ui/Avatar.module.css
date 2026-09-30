@@ -1,0 +1,56 @@
+.avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.orange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.teal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.blue {
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.purple {
+  background: var(--purple-soft);
+  color: var(--purple-ink);
+}
+
+.coral {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+}

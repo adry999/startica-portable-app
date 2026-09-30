@@ -1,0 +1,45 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  flex: none;
+}
+
+.orange {
+  background: var(--orange);
+}
+
+.mint {
+  background: var(--mint-bar);
+}
+
+.yellow {
+  background: var(--yellow-bar);
+}
+
+.teal {
+  background: var(--teal-bar);
+}
+
+.pink {
+  background: var(--pink-bar);
+}
+
+.neutral {
+  background: var(--subtle);
+}

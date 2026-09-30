@@ -103,11 +103,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
 
   if (rows.length === 0) {
     return (
-      <EmptyState
-        variant="resolved"
-        title="Totul e verificat"
-        description="Nu mai sunt fișe sau achitări de corectat."
-      />
+      <EmptyState variant="done" title="Totul e verificat" description="Nu mai sunt fișe sau achitări de corectat." />
     );
   }
 

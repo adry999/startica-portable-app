@@ -1,3 +1,6 @@
+import { Spinner, Tooltip } from '@shared/ui';
+import { ComponentShowcase } from '../ComponentShowcase';
+import { DemoRow } from '../DemoRow';
 import { COLOR_TOKEN_GROUPS, RADIUS_TOKENS, readCssVariable, SHADOW_TOKENS, SPACING_TOKENS } from '../tokens-reference';
 import styles from './FundamenteSection.module.css';
 
@@ -88,6 +91,31 @@ export function FundamenteSection() {
           ))}
         </div>
       </div>
+
+      <ComponentShowcase
+        name="Spinner"
+        importLine="import { Spinner } from '@shared/ui';"
+        reference="DS Incarcare si stari.dc.html §29a — 12/16/24/40, currentColor"
+      >
+        <DemoRow label="size">
+          <Spinner size={12} />
+          <Spinner size={16} />
+          <Spinner size={24} />
+          <Spinner size={40} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Tooltip"
+        importLine="import { Tooltip } from '@shared/ui';"
+        reference="DS Componente.dc.html §28g — balon la hover/focus"
+      >
+        <DemoRow label="control">
+          <Tooltip content="Șterge rândul">
+            <button type="button">Acțiune</button>
+          </Tooltip>
+        </DemoRow>
+      </ComponentShowcase>
     </div>
   );
 }

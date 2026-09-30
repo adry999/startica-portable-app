@@ -1,0 +1,26 @@
+.notice {
+  border-radius: var(--radius-md);
+  padding: var(--space-12) var(--space-14);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.info {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.note {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.error {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.done {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}

@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import {
+  Avatar,
   Badge,
+  CountBadge,
   Icon,
   LoadingBar,
+  Notice,
   PrintFooter,
   PrintHeader,
   PrintTable,
@@ -296,6 +299,47 @@ export function AlteleSection() {
               { value: 'branches', label: 'Filiale' },
             ]}
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Avatar"
+        importLine="import { Avatar } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §28e — 26/32/38/64/84"
+      >
+        <DemoRow label="size">
+          <Avatar name="Coceva Alisa" size={26} />
+          <Avatar name="Coceva Alisa" size={32} />
+          <Avatar name="Coceva Alisa" size={38} />
+          <Avatar name="Coceva Alisa" size={64} />
+          <Avatar name="Coceva Alisa" size={84} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="CountBadge"
+        importLine="import { CountBadge } from '@shared/ui';"
+        reference="DS Componente.dc.html §28b — roșu = acțiune, neutru = informativ"
+      >
+        <DemoRow label="tone">
+          <CountBadge count={3} tone="action" />
+          <CountBadge count={12} tone="informative" />
+        </DemoRow>
+        <DemoRow label="max">
+          <CountBadge count={140} max={99} tone="action" />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Notice"
+        importLine="import { Notice } from '@shared/ui';"
+        reference="DS Componente.dc.html §28c — info/notă/eroare/gata"
+      >
+        <DemoRow label="tone">
+          <Notice tone="info">Informație obișnuită.</Notice>
+          <Notice tone="note">O notă de atenție.</Notice>
+          <Notice tone="error">A apărut o eroare.</Notice>
+          <Notice tone="done">Totul e la zi.</Notice>
         </DemoRow>
       </ComponentShowcase>
     </div>

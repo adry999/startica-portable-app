@@ -1,0 +1,47 @@
+.wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.bubble {
+  position: absolute;
+  z-index: var(--z-popover);
+  background: var(--slate);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: var(--space-6) var(--space-10);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-card);
+  pointer-events: none;
+}
+
+.top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: var(--space-6);
+}
+
+.bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: var(--space-6);
+}
+
+.left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: var(--space-6);
+}
+
+.right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: var(--space-6);
+}

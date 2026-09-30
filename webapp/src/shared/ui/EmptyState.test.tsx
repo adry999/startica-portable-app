@@ -23,22 +23,35 @@ describe('EmptyState', () => {
     expect(screen.queryByRole('button', { name: 'Șterge filtrele' })).not.toBeInTheDocument();
   });
 
-  it('randează varianta resolved cu textul în tonul mint', () => {
-    render(<EmptyState variant="resolved" title="Totul e rezolvat" description="Nicio achitare fără copil asociat." />);
+  it('randează varianta done cu textul în tonul mint', () => {
+    render(<EmptyState variant="done" title="Totul e rezolvat" description="Nicio achitare fără copil asociat." />);
     expect(screen.getByText('Totul e rezolvat')).toBeInTheDocument();
     expect(screen.getByText('Nicio achitare fără copil asociat.')).toBeInTheDocument();
   });
 
-  it('randează CTA-ul din varianta first-step și declanșează onClick', async () => {
+  it('randează CTA-ul din varianta first și declanșează onClick', async () => {
     const onClick = vi.fn();
     render(
       <EmptyState
-        variant="first-step"
+        variant="first"
         title="Nicio cheltuială în septembrie"
         action={{ label: '+ Cheltuială nouă', onClick }}
       />,
     );
     await userEvent.click(screen.getByRole('button', { name: '+ Cheltuială nouă' }));
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('randează varianta period, fără puncte, cu CTA opțional', async () => {
+    const onClick = vi.fn();
+    render(
+      <EmptyState
+        variant="period"
+        title="Nicio achitare în septembrie"
+        action={{ label: '+ Achitare nouă', onClick }}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
     expect(onClick).toHaveBeenCalledOnce();
   });
 });

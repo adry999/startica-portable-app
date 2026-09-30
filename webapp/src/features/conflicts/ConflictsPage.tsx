@@ -17,7 +17,7 @@ export function ConflictsPage() {
   if (conflicts.length === 0) {
     return (
       <div className={styles.page}>
-        <EmptyState variant="resolved" title="Nu există conflicte." />
+        <EmptyState variant="done" title="Nu există conflicte." />
       </div>
     );
   }

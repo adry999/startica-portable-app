@@ -74,7 +74,7 @@ export function AssignPage({ month }: AssignPageProps) {
     return <p className={styles.notice}>{assignData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   if (assignData.rows.length === 0) {
-    return <EmptyState variant="resolved" title="Nu există achitări neasociate." />;
+    return <EmptyState variant="done" title="Nu există achitări neasociate." />;
   }
 
   function fillSuggested() {

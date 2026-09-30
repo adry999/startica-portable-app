@@ -6,9 +6,11 @@ import {
   Dialog,
   Drawer,
   EmptyState,
+  EMPTY_STATES,
   LockedContent,
   LoadingState,
   Popover,
+  resolveEmptyStateTitle,
   SaveIndicator,
   Skeleton,
   SmsConfirmDialog,
@@ -228,20 +230,53 @@ export function FeedbackSection() {
             onClearFilters={() => {}}
           />
         </DemoRow>
-        <DemoRow label="resolved">
+        <DemoRow label="done">
           <EmptyState
-            variant="resolved"
+            variant="done"
             title="Totul e rezolvat"
             description="Nicio achitare fără copil asociat. Lista se completează singură la următorul import."
           />
         </DemoRow>
-        <DemoRow label="first-step">
+        <DemoRow label="first">
           <EmptyState
-            variant="first-step"
+            variant="first"
             title="Nicio cheltuială în septembrie"
             description="Adaugă prima cheltuială ca să vezi diferența pe Dashboard."
             action={{ label: '+ Cheltuială nouă', onClick: () => {} }}
           />
+        </DemoRow>
+        <DemoRow label="period">
+          <EmptyState
+            variant="period"
+            title="Nicio achitare în septembrie"
+            action={{ label: '+ Achitare nouă', onClick: () => {} }}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="EMPTY_STATES"
+        importLine="import { EMPTY_STATES, resolveEmptyStateTitle } from '@shared/ui';"
+        reference='30-stari-goale.md §35b — catalogul de texte, dat prin DataTable.empty="&lt;cheie&gt;"'
+      >
+        <DemoRow label="control">
+          <ul className={styles.emptyStatesCatalog}>
+            {Object.entries(EMPTY_STATES).map(([key, entry]) => (
+              <li key={key}>
+                <code>{key}</code> ({entry.variant}) — {resolveEmptyStateTitle(entry, { luna: 'septembrie' })}
+              </li>
+            ))}
+          </ul>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="resolveEmptyStateTitle"
+        importLine="import { resolveEmptyStateTitle } from '@shared/ui';"
+        reference="30-stari-goale.md §35b — interpolează {luna}/{Zi}/{data} în titlul din catalog"
+      >
+        <DemoRow label="control">
+          <code>{resolveEmptyStateTitle(EMPTY_STATES['achitari.period'], { luna: 'octombrie' })}</code>
         </DemoRow>
       </ComponentShowcase>
 

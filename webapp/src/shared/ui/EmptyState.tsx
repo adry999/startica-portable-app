@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Button } from './Button';
 import styles from './EmptyState.module.css';
 
-export type EmptyStateVariant = 'no-results' | 'resolved' | 'first-step';
+export type EmptyStateVariant = 'no-results' | 'first' | 'done' | 'period';
 
 export interface EmptyStateAction {
   label: string;
@@ -10,20 +10,21 @@ export interface EmptyStateAction {
 }
 
 export interface EmptyStateProps {
-  /** `'no-results'` (implicit) — filtre fără rezultate · `'resolved'` — coadă golită · `'first-step'` — primul element. */
+  /** `'no-results'` (implicit) — filtre/căutare fără rezultate (prioritate peste orice altă variantă, 30-stari-goale.md)
+   * · `'first'` — modulul n-a avut niciodată date · `'done'` — coadă golită · `'period'` — perioada afișată n-are date. */
   variant?: EmptyStateVariant;
   title: string;
   description?: ReactNode;
   /** Doar `no-results`: etichetele filtrelor active, ex. `['Arhivați', 'Grupa Mars']`. */
   activeFilters?: string[];
   onClearFilters?: () => void;
-  /** Doar `first-step`: CTA primar, ex. „+ Cheltuială nouă”. */
+  /** `first`/`period`: CTA primar, ex. „+ Cheltuială nouă” — pe `period` doar dacă acțiunea are sens pe perioada afișată. */
   action?: EmptyStateAction;
 }
 
 /**
- * Cele trei stări de listă goală din 13-formulare.md §15e — se dă drept `DataTable.emptyState`
- * (sau randată direct, pentru liste care nu sunt un `DataTable`).
+ * Cele patru stări de listă goală din 30-stari-goale.md — se dă drept `DataTable.empty`
+ * (cheie din `empty-states.ts`) sau randată direct, pentru liste care nu sunt un `DataTable`.
  */
 export function EmptyState({
   variant = 'no-results',
@@ -33,18 +34,37 @@ export function EmptyState({
   onClearFilters,
   action,
 }: EmptyStateProps) {
-  if (variant === 'resolved') {
+  if (variant === 'done') {
     return (
-      <div className={styles.resolved}>
+      <div className={styles.done}>
         <strong className={styles.title}>{title}</strong>
-        {description && <p className={styles.resolvedText}>{description}</p>}
+        {description && <p className={styles.doneText}>{description}</p>}
       </div>
     );
   }
 
-  if (variant === 'first-step') {
+  if (variant === 'first') {
     return (
-      <div className={styles.firstStep}>
+      <div className={styles.first}>
+        <div className={styles.dots} aria-hidden="true">
+          <span className={styles.dotOrange} />
+          <span className={styles.dotYellow} />
+          <span className={styles.dotMint} />
+        </div>
+        <strong className={styles.title}>{title}</strong>
+        {description && <p className={styles.text}>{description}</p>}
+        {action && (
+          <Button variant="primary" onClick={action.onClick}>
+            {action.label}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (variant === 'period') {
+    return (
+      <div className={styles.period}>
         <strong className={styles.title}>{title}</strong>
         {description && <p className={styles.text}>{description}</p>}
         {action && (
@@ -58,11 +78,6 @@ export function EmptyState({
 
   return (
     <div className={styles.noResults}>
-      <div className={styles.dots} aria-hidden="true">
-        <span className={styles.dotOrange} />
-        <span className={styles.dotYellow} />
-        <span className={styles.dotMint} />
-      </div>
       <strong className={styles.title}>{title}</strong>
       {activeFilters && activeFilters.length > 0 && (
         <p className={styles.text}>Filtre active: {activeFilters.join(' · ')}</p>

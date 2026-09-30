@@ -1,0 +1,63 @@
+.track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--sand);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width var(--motion-slow) var(--motion-ease);
+}
+
+.segmented {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.segment {
+  display: block;
+  flex: none;
+  height: 100%;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.orange {
+  background: var(--orange);
+}
+
+.mint {
+  background: var(--mint-bar);
+}
+
+.yellow {
+  background: var(--yellow-bar);
+}
+
+.teal {
+  background: var(--teal-bar);
+}
+
+.pink {
+  background: var(--pink-bar);
+}
+
+.neutral {
+  background: var(--subtle);
+}

@@ -287,7 +287,7 @@ export function FeeSetupPage() {
           emptyState={
             feeSetupData.filter === 'missing' ? (
               <EmptyState
-                variant="resolved"
+                variant="done"
                 title="Totul e completat"
                 description="Toți copiii nearhivați au taxă și grupă."
               />

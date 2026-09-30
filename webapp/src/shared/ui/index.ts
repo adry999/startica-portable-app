@@ -1,5 +1,6 @@
 export { BnmRateLink, type BnmRateLinkProps } from './BnmRateLink';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
+export { CountBadge, type CountBadgeProps } from './CountBadge';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
 export {
   IconButton,
@@ -11,6 +12,7 @@ export {
 export { Icon, type IconName, type IconProps } from './Icon';
 export { Card, type CardProps, type CardTone } from './Card';
 export { Kpi, type KpiProps, type KpiState } from './Kpi';
+export { Notice, type NoticeProps } from './Notice';
 export { Checkbox, type CheckboxProps } from './Checkbox';
 export { Field, type FieldProps } from './Field';
 export { SearchInput, type SearchInputProps } from './SearchInput';
@@ -35,9 +37,15 @@ export { Dialog, type DialogProps } from './Dialog';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
 export { EmptyState, type EmptyStateAction, type EmptyStateProps, type EmptyStateVariant } from './EmptyState';
+export { EMPTY_STATES, resolveEmptyStateTitle, type EmptyStateCatalogEntry, type EmptyStateKey } from './empty-states';
 export { MonthPicker, type MonthPickerProps } from './MonthPicker';
 export { SearchSelect, type SearchSelectOption, type SearchSelectProps } from './SearchSelect';
 export { FilterPills, type FilterPillGroup, type FilterPillsProps, type PillTone } from './FilterPills';
+export { ProgressBar, type ProgressBarProps, type ProgressBarSegment, type ProgressBarTone } from './ProgressBar';
+export { Legend, type LegendProps, type LegendItem, type LegendTone } from './Legend';
+export { Avatar, type AvatarProps } from './Avatar';
+export { Spinner, type SpinnerProps } from './Spinner';
+export { Tooltip, type TooltipProps } from './Tooltip';
 export { FilterMenu, type FilterMenuOption, type FilterMenuProps } from './FilterMenu';
 export { ActiveFilters, type ActiveFilterChip, type ActiveFiltersProps } from './ActiveFilters';
 export { PeriodFilter, type PeriodFilterProps } from './PeriodFilter';
