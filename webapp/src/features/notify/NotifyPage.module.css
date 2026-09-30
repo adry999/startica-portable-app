@@ -42,49 +42,13 @@
   background: var(--subtle);
 }
 
-.btnPrimary {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: 8px 18px;
-  font-weight: 800;
-  font-size: 15px;
-  box-shadow: 0 4px 10px rgba(239, 138, 29, 0.28);
-}
-
-.btnPrimary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.btnPrimarySmall {
-  border: none;
-  background: var(--orange);
-  color: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-10) var(--space-20);
-  font-weight: 800;
-  font-size: 14px;
+.sendButton,
+.copyButton {
   white-space: nowrap;
 }
 
-.btnPrimarySmall:disabled,
-.btnGhostSmall:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btnGhostSmall {
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-10) var(--space-18);
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--slate);
-  white-space: nowrap;
+.sendButton {
+  font-size: 14px !important;
 }
 
 .content {
@@ -265,19 +229,13 @@
 }
 
 .linkGhost {
-  border: none;
-  background: none;
-  font-weight: 800;
-  font-size: 13px;
-  color: var(--muted);
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--muted) !important;
 }
 
 .hintLink {
-  border: none;
-  background: none;
-  color: var(--pink-ink);
-  font-weight: 700;
-  font-size: 12px;
+  font-size: 12px !important;
   text-decoration: underline;
 }
 

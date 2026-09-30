@@ -129,15 +129,15 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
         <span className={styles.statusDot} />
         {smsConfigured ? 'SMS conectat' : 'sms.md neconectat'}
       </span>
-      <button
-        type="button"
-        className={styles.btnPrimary}
+      <Button
+        variant="primary"
+        size="header"
         disabled={!smsConfigured || batchPlan.messages.length === 0}
         title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
         onClick={() => setDialog({ mode: 'bulk', recipients: notifyData.rows.map(recipientView) })}
       >
         Trimite tuturor · {batchPlan.messages.length}
-      </button>
+      </Button>
       <Button variant="ghost" onClick={() => void copyAll()}>
         Copiază toate mesajele
       </Button>
@@ -225,9 +225,9 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
               {tab === 'sent'
                 ? `${sentThisMonth} mesaje trimise luna aceasta.`
                 : `${failedThisMonth} mesaje eșuate luna aceasta.`}{' '}
-              <button type="button" className={styles.hintLink} onClick={() => onNavigate('notifications')}>
+              <Button variant="danger" className={styles.hintLink} onClick={() => onNavigate('notifications')}>
                 Vezi jurnalul SMS
-              </button>
+              </Button>
             </p>
           )}
 
@@ -293,9 +293,9 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
               {activeRow.hasUnassignedHint && (
                 <p className={styles.tabNotice}>
                   Există o plată fără copil asociat care s-ar putea potrivi cu {activeRow.name}.{' '}
-                  <button type="button" className={styles.hintLink} onClick={() => onNavigate('assign')}>
+                  <Button variant="danger" className={styles.hintLink} onClick={() => onNavigate('assign')}>
                     posibilă plată neasociată
-                  </button>
+                  </Button>
                 </p>
               )}
 
@@ -307,13 +307,14 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
               <span className={styles.editHint}>Șablonul și textul se pot alege la trimitere.</span>
 
               <footer className={styles.previewFooter}>
-                <button type="button" className={styles.linkGhost} onClick={() => setActiveId(null)}>
+                <Button variant="link" className={styles.linkGhost} onClick={() => setActiveId(null)}>
                   Nu trimite
-                </button>
+                </Button>
                 <div className={styles.previewActions}>
-                  <button
-                    type="button"
-                    className={styles.btnPrimarySmall}
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className={styles.sendButton}
                     disabled={!smsConfigured}
                     title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
                     onClick={() =>
@@ -321,14 +322,15 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                     }
                   >
                     Trimite SMS
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnGhostSmall}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className={styles.copyButton}
                     onClick={() => void copyOne(activeRow.message)}
                   >
                     Copiază
-                  </button>
+                  </Button>
                 </div>
               </footer>
             </>
