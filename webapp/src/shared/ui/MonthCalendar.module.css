@@ -43,21 +43,31 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  width: 100%;
   min-height: 84px;
   padding: var(--space-6);
-}
-
-.day[role='button'] {
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.day[role='button']:hover {
+.day:disabled {
+  cursor: default;
+}
+
+.day:not(:disabled):hover {
   background: var(--sand-soft);
 }
 
-.day[role='button']:focus-visible {
+.day:focus-visible {
   outline: 2px solid var(--orange-ink);
   outline-offset: -2px;
+}
+
+.selected {
+  background: var(--orange-soft);
 }
 
 .adjacent {

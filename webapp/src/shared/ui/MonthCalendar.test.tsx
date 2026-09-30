@@ -46,20 +46,49 @@ describe('MonthCalendar', () => {
 
   it('zilele din altă lună au marcajul `adjacent`', () => {
     render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} />);
-    const firstDay = screen.getByText('1').closest('div');
+    const firstDay = screen.getByText('1').closest('button');
     expect(firstDay?.className).toMatch(/adjacent/);
   });
 
-  it('apelează onDayClick cu data zilei la click', async () => {
-    const onDayClick = vi.fn();
-    render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onDayClick={onDayClick} />);
-    await userEvent.click(screen.getByRole('button', { name: /^2/ }));
-    expect(onDayClick).toHaveBeenCalledWith('2026-09-02');
+  it('zilele sunt butoane, chiar și fără onSelect (dezactivate)', () => {
+    render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} />);
+    expect(screen.getByRole('button', { name: /^2$/ })).toBeDisabled();
+  });
+
+  it('apelează onSelect cu data zilei la click', async () => {
+    const onSelect = vi.fn();
+    render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onSelect={onSelect} />);
+    await userEvent.click(screen.getByRole('button', { name: /^2$/ }));
+    expect(onSelect).toHaveBeenCalledWith('2026-09-02');
+  });
+
+  it('ziua selectată primește marcajul `selected`', () => {
+    render(
+      <MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} selected="2026-09-02" onSelect={() => {}} />,
+    );
+    expect(screen.getByRole('button', { name: /^2$/ }).className).toMatch(/selected/);
+  });
+
+  it('cellHeight fixează înălțimea minimă a celulei', () => {
+    render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} cellHeight={140} onSelect={() => {}} />);
+    expect(screen.getByRole('button', { name: /^2$/ })).toHaveStyle({ minHeight: '140px' });
+  });
+
+  it('renderCell înlocuiește conținutul implicit al celulei', () => {
+    render(
+      <MonthCalendar
+        weekdayLabels={weekdayLabels}
+        days={makeDays()}
+        renderCell={day => <span>Ziua custom {day.dayNumber}</span>}
+      />,
+    );
+    expect(screen.getByText('Ziua custom 2')).toBeInTheDocument();
+    expect(screen.queryByText('Aniversare Maria')).not.toBeInTheDocument();
   });
 
   it('fără încălcări axe (R6)', async () => {
     const { container } = render(
-      <MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onDayClick={() => {}} />,
+      <MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onSelect={() => {}} />,
     );
     expect(await axe(container)).toHaveNoViolations();
   });

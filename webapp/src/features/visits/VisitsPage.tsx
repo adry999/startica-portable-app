@@ -11,6 +11,7 @@ import {
   Icon,
   IconButton,
   LoadingState,
+  MonthCalendar,
   RowMenu,
   SearchInput,
   SearchSelect,
@@ -21,6 +22,7 @@ import {
   useTopbarActions,
   type BadgeTone,
   type DataTableColumn,
+  type MonthCalendarDay,
   type PillTone,
 } from '@shared/ui';
 import { capitalize, formatAge, formatDate, formatDayLabel, formatMonthName } from '#shared/format/date-format.mjs';
@@ -197,6 +199,15 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   const selectedDayVisits = visitsData.selectedDate
     ? (visitsData.weeks.flat().find(day => day.date === visitsData.selectedDate)?.visits ?? [])
     : [];
+
+  const visitsByDate = new Map(visitsData.weeks.flat().map(day => [day.date, day.visits]));
+  const monthCalendarDays: MonthCalendarDay[] = visitsData.weeks.flat().map(day => ({
+    date: day.date,
+    dayNumber: day.day,
+    isCurrentMonth: day.inMonth,
+    isToday: day.isToday,
+    events: [],
+  }));
 
   const quickFilter: 'all' | 'scheduled' | 'archived' = visitsData.showArchived
     ? 'archived'
@@ -378,40 +389,33 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             />
           </div>
 
-          <div className={styles.calendarGrid}>
-            {WEEKDAY_LABELS.map(label => (
-              <div key={label} className={styles.calendarHeadCell}>
-                {label}
-              </div>
-            ))}
-            {visitsData.weeks.flat().map(day => (
-              <button
-                key={day.date}
-                type="button"
-                className={[
-                  styles.calendarCell,
-                  day.inMonth ? '' : styles.calendarCellOutside,
-                  day.isToday ? styles.calendarCellToday : '',
-                  visitsData.selectedDate === day.date ? styles.calendarCellSelected : '',
-                ].join(' ')}
-                onClick={() => visitsData.setSelectedDate(visitsData.selectedDate === day.date ? null : day.date)}
-              >
-                <strong>{day.day}</strong>
-                {day.visits.length > 3 ? (
-                  <small className={styles.dim}>{day.visits.length} vizite</small>
-                ) : (
-                  day.visits.map(visit => (
-                    <span
-                      key={visit.id}
-                      className={`${styles.calendarChip} ${styles[STATUS_CHIP_CLASS[visit.status]]}`}
-                    >
-                      {visit.time} {visit.name}
-                    </span>
-                  ))
-                )}
-              </button>
-            ))}
-          </div>
+          <MonthCalendar
+            weekdayLabels={WEEKDAY_LABELS}
+            days={monthCalendarDays}
+            selected={visitsData.selectedDate ?? undefined}
+            onSelect={date => visitsData.setSelectedDate(visitsData.selectedDate === date ? null : date)}
+            cellHeight={110}
+            renderCell={day => {
+              const visits = visitsByDate.get(day.date) ?? [];
+              return (
+                <>
+                  <strong className={styles.calendarDayNumber}>{day.dayNumber}</strong>
+                  {visits.length > 3 ? (
+                    <small className={styles.dim}>{visits.length} vizite</small>
+                  ) : (
+                    visits.map(visit => (
+                      <span
+                        key={visit.id}
+                        className={`${styles.calendarChip} ${styles[STATUS_CHIP_CLASS[visit.status]]}`}
+                      >
+                        {visit.time} {visit.name}
+                      </span>
+                    ))
+                  )}
+                </>
+              );
+            }}
+          />
         </Card>
 
         <div className={styles.detailColumn}>

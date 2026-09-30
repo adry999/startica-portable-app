@@ -178,7 +178,7 @@ export function GriduriSection() {
           <MonthCalendar
             weekdayLabels={MONTH_CALENDAR_WEEKDAYS}
             days={buildMonthCalendarDays()}
-            onDayClick={() => {}}
+            onSelect={() => {}}
           />
         </DemoRow>
       </ComponentShowcase>

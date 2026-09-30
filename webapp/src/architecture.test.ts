@@ -179,13 +179,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // hit-area pe tot rândul, exact același tipar ca notify/NotifyPage.tsx; un `Button` ar impune
     // propriul fundal/padding și ar sparge layout-ul din 11-de-rezolvat.md §9b.
     'review/ReviewPage.tsx',
-    // Celula zilei din calendarul lunar (04-vizite.md §3) — hit-area pe toată celula, cu numărul zilei
-    // și pastilele de vizite în interior. `MonthCalendar` (@shared/ui) există, dar n-are stare
-    // „selectată" și randează celula ca `div role="button"`, nu ca `<button>` — VisitsPage.test.tsx
-    // selectează explicit celula prin `button[class*="calendarCellToday"]`, deci un `<button>` propriu
-    // e comportamentul testat, nu doar o scăpare; forțarea `MonthCalendar` ar cere extinderea API-ului
-    // ei (în afara scopului acestei migrări) și ar rupe testele. Consemnat în INTREBARI.md.
-    'visits/VisitsPage.tsx',
   ];
 
   it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {

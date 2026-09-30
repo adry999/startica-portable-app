@@ -165,7 +165,7 @@ describe('VisitsPage', () => {
     const user = userEvent.setup();
 
     // Butoanele rapide de statut trăiesc doar în panoul zilei din calendar, nu mai apar pe rândul tabelului.
-    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    const todayCell = container.querySelector('button[class*="today"]') as HTMLButtonElement;
     await user.click(todayCell);
 
     // Maria Ionescu e deja Efectuată, deci scopăm căutarea la cardul lui Andrei ca să nu ne ciocnim de al ei.
@@ -187,7 +187,7 @@ describe('VisitsPage', () => {
     const user = userEvent.setup();
 
     // Toate cele 3 vizite fixture cad în aceeași zi — selectarea zilei arată panourile de detalii ale tuturor.
-    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    const todayCell = container.querySelector('button[class*="today"]') as HTMLButtonElement;
     await user.click(todayCell);
 
     expect(screen.getAllByRole('button', { name: 'S-a înscris' })).toHaveLength(1);
@@ -206,7 +206,7 @@ describe('VisitsPage', () => {
     const { container } = renderPage();
     const user = userEvent.setup();
 
-    const todayCell = container.querySelector('button[class*="calendarCellToday"]') as HTMLButtonElement;
+    const todayCell = container.querySelector('button[class*="today"]') as HTMLButtonElement;
     await user.click(todayCell);
     await user.click(screen.getByRole('button', { name: 'S-a înscris' }));
 
