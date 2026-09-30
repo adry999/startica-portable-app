@@ -49,7 +49,7 @@
   min-height: 92px;
   padding: 7px;
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -121,7 +121,7 @@
 
 .side {
   border-left: 1px solid var(--border);
-  background: #fff;
+  background: var(--white);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;

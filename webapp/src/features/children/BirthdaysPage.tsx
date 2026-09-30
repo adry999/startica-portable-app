@@ -1,7 +1,18 @@
 import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Button, FilterPills, MonthStepper, useTopbarActions, useTopbarTitle } from '@shared/ui';
+import {
+  Button,
+  EMPTY_STATES,
+  EmptyState,
+  FilterPills,
+  MonthStepper,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
+  useTopbarActions,
+  useTopbarTitle,
+} from '@shared/ui';
 import { pluralRo } from '@shared/format/plural-ro';
+import { formatMonthName, formatMonthOnly } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useBirthdays, type BirthdaysGroupOption } from './useBirthdays';
 import styles from './BirthdaysPage.module.css';
@@ -13,11 +24,7 @@ function cx(...classes: Array<string | false | null | undefined>): string {
 }
 
 function monthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-');
-  const label = new Date(Number(year), Number(month) - 1, 1).toLocaleDateString('ro-RO', {
-    month: 'long',
-    year: 'numeric',
-  });
+  const label = formatMonthName(monthKey);
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -136,11 +143,13 @@ export function BirthdaysPage() {
           <h2 className={styles.sideTitle}>Toată luna</h2>
           {birthdaysData.status === 'loading' && <p className={styles.empty}>Se încarcă…</p>}
           {birthdaysData.status !== 'loading' && birthdaysData.list.length === 0 && (
-            <p className={styles.empty}>
-              {birthdaysData.group === 'all'
-                ? 'Nicio zi de naștere în luna aceasta.'
-                : 'Nicio zi de naștere pentru filtrul ales.'}
-            </p>
+            <EmptyState
+              variant={EMPTY_STATES['zilenastere.period'].variant}
+              title={resolveEmptyStateTitle(EMPTY_STATES['zilenastere.period'], {
+                luna: formatMonthOnly(birthdaysData.month),
+              })}
+              description={resolveEmptyStateText(EMPTY_STATES['zilenastere.period'])}
+            />
           )}
           {birthdaysData.list.map(entry => (
             <Link

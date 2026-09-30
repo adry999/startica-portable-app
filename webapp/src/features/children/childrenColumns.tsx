@@ -1,4 +1,5 @@
 import { Badge, PersonCell, RowMenu, groupTone, type DataTableColumn } from '@shared/ui';
+import { formatMonthOnly } from '#shared/format/date-format.mjs';
 import type { Group } from '@contracts/record-types.mjs';
 import type { ChildRow } from './useChildren';
 import styles from './ChildrenPage.module.css';
@@ -19,7 +20,7 @@ export function buildChildrenColumns({
   onToggleArchived,
   onRequestDelete,
 }: ChildrenColumnsOptions): DataTableColumn<ChildRow>[] {
-  const currentMonthName = new Date(`${month}-01T12:00:00`).toLocaleDateString('ro-RO', { month: 'long' });
+  const currentMonthName = formatMonthOnly(month);
   return [
     {
       key: 'name',

@@ -11,6 +11,9 @@ export const formatMonthLabel = v => {
 // Lună tip „2026-09” devine „septembrie 2026”, pentru text adresat direct părinților.
 export const formatMonthName = v =>
   v ? new Date(v + '-01T12:00:00').toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }) : '—';
+// Lună tip „2026-09” devine „septembrie”, fără an — pentru antete de coloană (ex. „Plată septembrie”).
+export const formatMonthOnly = v =>
+  v ? new Date(v + '-01T12:00:00').toLocaleDateString('ro-RO', { month: 'long' }) : '—';
 export const formatDateTime = v => (v ? new Date(v).toLocaleString('ro-RO') : 'niciodată');
 
 // „24 septembrie 2026” — fără ziua săptămânii, pentru antetul confirmării de plată (16b).

@@ -170,9 +170,7 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'attendance/WeeklySheetDialog.module.css',
     'backup/BackupPage.module.css',
     'backup/KindergartenSettings.module.css',
-    'children/BirthdaysPage.module.css',
     'children/ChildFormDrawer.module.css',
-    'children/ChildrenPage.module.css',
     'conflicts/ConflictsPage.module.css',
     'expenses/ExpensesPage.module.css',
     'fee-setup/FeeSetupPage.module.css',
@@ -250,8 +248,6 @@ describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format �
   const RAW_FORMAT_PATTERN = /\.(toLocaleDateString|toLocaleString|toFixed)\(/;
 
   const ALLOWED: readonly string[] = [
-    'children/BirthdaysPage.tsx',
-    'children/childrenColumns.tsx',
     'groups/GroupTeamPicker.tsx',
     'payments/PaymentFormDrawer.tsx',
     'payments/PaymentsByMonth.tsx',
@@ -324,6 +320,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   const IMPORT_ALLOWED: readonly string[] = [
     'assign/AssignPage.tsx',
     'backup/SyncSettings.tsx',
+    'children/BirthdaysPage.tsx',
     'children/ChildProfileView.tsx',
     'children/ChildrenPage.tsx',
     'conflicts/ConflictsPage.tsx',

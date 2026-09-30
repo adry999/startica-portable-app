@@ -42,7 +42,7 @@ Pașii 2–8 se pot face în paralel pe fișiere disjuncte. Pasul 9 începe pe u
 | Modul | Componente folosite (de bifat) | R1–R8 | Captură = artboard |
 |---|---|---|---|
 | Achitări 5a/5b/15b | DataTable, ListToolbar, FilterMenu, PeriodFilter, ActiveFilters, SelectionBar, Kpi, MasterDetail, AmountInput, ChoiceCards, SegmentedControl, SplitButton, PrintOptionsDialog | ☐ | ☐ |
-| Copii 2a/2b/2c/15a | DataTable, FilterPills, ProfileLayout, NoteList, DocumentCard, MultiSelect, FormSection, PhoneInput, DateInput, HoverCard | ☐ | ☐ |
+| Copii 2a/2b/2c/15a | DataTable, FilterPills, ProfileLayout, NoteList, MultiSelect, FormSection, PhoneInput, DateInput, HoverCard | ☐ | ☐ |
 | Prezența 18a–18d | DayGrid(dot), GroupSection, UndoHistory, SaveIndicator, Popover (motiv), Notice | ☐ | ☐ |
 | Cheltuieli 6a/6b/15c | DataTable, ChipSelect, AmountInput, InlineEdit, Kpi | ☐ | ☐ |
 | Situația 7a–7e | Heatmap, DataTable, SmsPreview, SegmentCounter, ProgressToast | ☐ | ☐ |

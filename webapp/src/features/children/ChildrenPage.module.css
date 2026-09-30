@@ -20,7 +20,7 @@
   flex-direction: row;
   align-items: center;
   gap: 16px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   padding: 16px 20px;
 }
 
@@ -72,7 +72,7 @@
 .tableCard {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -184,8 +184,8 @@
   color: var(--slate);
 }
 
-/* Nu există un token identic cu #a3361f din design — cea mai apropiată nuanță existentă
-   e --coral-ink (#9a3f1c), ca să nu se introducă o culoare hex nouă (CLAUDE.md §Design). */
+/* Nuanța din design n-are token identic — cea mai apropiată nuanță existentă e --coral-ink,
+   ca să nu se introducă o culoare hex nouă (CLAUDE.md §Design). */
 .healthValue {
   color: var(--coral-ink);
 }

@@ -56,6 +56,6 @@ describe('BirthdaysPage — sesiunea nu se încarcă', () => {
     renderPage();
 
     expect(screen.getByText(/Conexiune întreruptă/)).toBeInTheDocument();
-    expect(screen.queryByText('Nicio zi de naștere în luna aceasta.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nicio zi de naștere în septembrie')).not.toBeInTheDocument();
   });
 });
