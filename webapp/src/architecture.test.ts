@@ -200,8 +200,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'report/ReportCategoriesPanel.module.css',
     'report/ReportMethodsPanel.module.css',
     'review/ReviewPage.module.css',
-    'status/PrintOptionsDialog.module.css',
-    'status/StatusPage.module.css',
     'stickers/StickerLabel.module.css',
     'visits/VisitsPage.module.css',
   ];
@@ -309,8 +307,6 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'report/ReportCategoriesPanel.tsx',
     'report/ReportDaysTable.tsx',
     'report/ReportMethodsPanel.tsx',
-    'status/PaymentHeatmap.test.tsx',
-    'status/PaymentHeatmap.tsx',
     'visits/VisitsPage.tsx',
   ];
 
@@ -331,6 +327,9 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'payments/PaymentsTable.tsx',
     'personal/CandidatesTab.tsx',
     'review/ReviewPage.tsx',
+    // Genuin nou (07-situatia.md §4, PaymentHeatmap.tsx) — starea goală a hărții An școlar
+    // (`situatia.year.period`) nu mai e text hardcodat, ci `EmptyState` cu cheie din catalog (R9).
+    'status/PaymentHeatmap.tsx',
   ];
 
   it('nicio încălcare nouă de text literal „Niciun/Nicio" în afara listei de excepții', () => {

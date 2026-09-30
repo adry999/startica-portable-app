@@ -1,6 +1,6 @@
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { initials } from '@shared/format/initials';
-import { groupTone } from '@shared/ui';
+import { EMPTY_STATES, EmptyState, groupTone, resolveEmptyStateText, resolveEmptyStateTitle } from '@shared/ui';
 import type { ToneableGroup } from '@shared/ui/group-tone';
 import type { HeatCellKind, HeatRowView } from './useSchoolYearStatus';
 import styles from './PaymentHeatmap.module.css';
@@ -20,10 +20,12 @@ export interface PaymentHeatmapProps {
   groups?: ToneableGroup[];
   monthLabels: string[];
   currentMonth: string | null;
+  /** Anul școlar afișat (ex. „2025–2026”), pentru textul stării goale (situatia.year.period). */
+  yearLabel?: string;
 }
 
 /** Harta copil × 12 luni pentru An școlar — pură, fără sesiune, folosită doar de `YearView`. */
-export function PaymentHeatmap({ rows, groups = [], monthLabels, currentMonth }: PaymentHeatmapProps) {
+export function PaymentHeatmap({ rows, groups = [], monthLabels, currentMonth, yearLabel }: PaymentHeatmapProps) {
   const gridStyle = { gridTemplateColumns: `230px repeat(${monthLabels.length}, minmax(0, 1fr)) 130px` };
   const currentMonthIndex = rows[0]?.cells.findIndex(cell => cell.month === currentMonth) ?? -1;
 
@@ -39,7 +41,17 @@ export function PaymentHeatmap({ rows, groups = [], monthLabels, currentMonth }:
       </div>
 
       {rows.length === 0 ? (
-        <p className={styles.empty}>Niciun copil cu obligație în anul ales.</p>
+        <EmptyState
+          variant="period"
+          title={resolveEmptyStateTitle(
+            EMPTY_STATES['situatia.year.period'],
+            yearLabel ? { an: yearLabel } : undefined,
+          )}
+          description={resolveEmptyStateText(
+            EMPTY_STATES['situatia.year.period'],
+            yearLabel ? { an: yearLabel } : undefined,
+          )}
+        />
       ) : (
         <div className={styles.table}>
           <div className={styles.headRow} style={gridStyle}>

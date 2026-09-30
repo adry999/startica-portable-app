@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle } from '@shared/ui';
 import { PaymentHeatmap } from './PaymentHeatmap';
 import type { HeatRowView } from './useSchoolYearStatus';
 
@@ -56,8 +57,16 @@ describe('PaymentHeatmap', () => {
     expect(within(row).getByText('200,00 €')).toBeInTheDocument();
   });
 
-  it('arată starea goală când nu sunt copii cu obligație', () => {
+  it('arată starea goală din catalog (situatia.year.period) când nu sunt copii cu obligație', () => {
+    const entry = EMPTY_STATES['situatia.year.period'];
+    render(<PaymentHeatmap rows={[]} monthLabels={monthLabels} currentMonth={null} yearLabel="2026–2027" />);
+    expect(screen.getByText(resolveEmptyStateTitle(entry, { an: '2026–2027' }))).toBeInTheDocument();
+    expect(screen.getByText(resolveEmptyStateText(entry, { an: '2026–2027' }) ?? '')).toBeInTheDocument();
+  });
+
+  it('folosește fallback-ul din catalog când nu se dă yearLabel', () => {
+    const entry = EMPTY_STATES['situatia.year.period'];
     render(<PaymentHeatmap rows={[]} monthLabels={monthLabels} currentMonth={null} />);
-    expect(screen.getByText('Niciun copil cu obligație în anul ales.')).toBeInTheDocument();
+    expect(screen.getByText(resolveEmptyStateTitle(entry))).toBeInTheDocument();
   });
 });

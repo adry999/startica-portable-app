@@ -361,6 +361,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
           <YearView
             data={yearData}
             groups={statusData.groups}
+            yearLabel={`${startYear}–${startYear + 1}`}
             smsConfigured={smsConfigured}
             onNotifyYear={openYearNotify}
           />
@@ -614,11 +615,13 @@ function MonthView({
 function YearView({
   data,
   groups,
+  yearLabel,
   smsConfigured,
   onNotifyYear,
 }: {
   data: SchoolYearData;
   groups: ToneableGroup[];
+  yearLabel: string;
   smsConfigured: boolean;
   onNotifyYear: () => void;
 }) {
@@ -675,6 +678,7 @@ function YearView({
           groups={groups}
           monthLabels={data.monthLabels}
           currentMonth={data.currentMonth}
+          yearLabel={yearLabel}
         />
       </Card>
     </>

@@ -40,12 +40,6 @@
   background: var(--sand-soft);
 }
 
-.empty {
-  color: var(--subtle);
-  padding: 0 var(--space-16) var(--space-16);
-  margin: 0;
-}
-
 .table {
   display: flex;
   flex-direction: column;
