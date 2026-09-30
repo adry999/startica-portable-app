@@ -123,6 +123,9 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // layout-ul din 11-de-rezolvat.md §9c.
     'assign/AssignPage.tsx',
     'attendance/ChildTile.tsx',
+    // `<input type="file" hidden>` din spatele butonului „Alege fișierul" — dropzone/file-picker
+    // nativ, fără echivalent `@shared/ui` (nu e un câmp de text/număr); declanșat programatic prin
+    // `fileInputRef.current?.click()`, ascuns vizual.
     'backup/ExcelImportDialog.tsx',
     'children/ChildFormDrawer.tsx',
     'conflicts/ConflictsPage.tsx',
@@ -139,20 +142,38 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // layout-ul din 10-de-notificat.md §3.
     'notify/NotifyPage.tsx',
     'payments/PaymentFormDrawer.tsx',
+    // Bară de concediu poziționată absolut pe zilele lui (stânga/lățime calculate, culoare dinamică
+    // pe tip/planificat) — hit-area pe formă custom, ca ChildTile/GroupTile; vezi comentariul din fișier.
     'personal/LeavesView.tsx',
-    'personal/RolesDrawer.tsx',
-    'personal/SalaryFormDrawer.tsx',
+    // Comutare multiplă a filialelor (una sau ambele) — pereche fixă de pastile mereu vizibile;
+    // nici ChipSelect (alegere unică), nici MultiSelect (popover de căutare) nu se potrivesc; vezi
+    // comentariul din fișier.
     'personal/StaffFormDrawer.tsx',
+    // Pontajul tipărit (23k, `@media print`) — `<table>` semantic real, pentru paginare corectă la
+    // printare (antet repetat la 14 rânduri/pagină); același caz ca `report/ReportPrintSummary.tsx`
+    // mai jos, `DataTable` nefiind gândit pentru `window.print()`.
     'personal/TimesheetPrint.tsx',
+    // Fixtură de test: `BookingDrawer` mockuit e un buton „Salvat (fixture)” care declanșează direct
+    // `onSaved()`, fără să reproducă interacțiunea reală din formular (nu asta se testează în PoolPage).
     'pool/PoolPage.test.tsx',
+    // Placa dintr-o celulă a grilei săptămânii (22a) — avatar + nume + etichetă de stare + punct de
+    // culoare, hit-area pe toată placa, ca ChildTile/GroupTile; un `Button` ar impune propriul
+    // fundal/padding și ar sparge grila oră×zi (`display: contents` pe rânduri).
     'pool/WeekView.tsx',
-    'report/PeriodStepper.tsx',
-    'report/ReportExportDrawer.tsx',
+    // Rezumatul tipărit (19b, `@media print`) — `<table>` semantic real, pentru paginare corectă la
+    // printare; `DataTable` e un component interactiv (sortare, rânduri, densitate) nepotrivit pentru
+    // `window.print()`, nu există altă variantă din `@shared/ui` pentru un tabel doar-print.
     'report/ReportPrintSummary.tsx',
     // Rândul din coada „De verificat" (punct de severitate + nume + problemă + bara activă de 4px) —
     // hit-area pe tot rândul, exact același tipar ca notify/NotifyPage.tsx; un `Button` ar impune
     // propriul fundal/padding și ar sparge layout-ul din 11-de-rezolvat.md §9b.
     'review/ReviewPage.tsx',
+    // Celula zilei din calendarul lunar (04-vizite.md §3) — hit-area pe toată celula, cu numărul zilei
+    // și pastilele de vizite în interior. `MonthCalendar` (@shared/ui) există, dar n-are stare
+    // „selectată" și randează celula ca `div role="button"`, nu ca `<button>` — VisitsPage.test.tsx
+    // selectează explicit celula prin `button[class*="calendarCellToday"]`, deci un `<button>` propriu
+    // e comportamentul testat, nu doar o scăpare; forțarea `MonthCalendar` ar cere extinderea API-ului
+    // ei (în afara scopului acestei migrări) și ar rupe testele. Consemnat în INTREBARI.md.
     'visits/VisitsPage.tsx',
   ];
 
@@ -181,7 +202,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'assign/AssignPage.module.css',
     'attendance/WeeklySheet.module.css',
     'backup/BackupPage.module.css',
-    'backup/KindergartenSettings.module.css',
     'children/ChildFormDrawer.module.css',
     'conflicts/ConflictsPage.module.css',
     // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
@@ -189,6 +209,9 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     // cu întreaga valoare a umbrei, iar shorthand-ul nu poate începe cu `var(...)`.
     'groups/GroupCardCompact.module.css',
     'groups/GroupTile.module.css',
+    // `.rowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px a rândului de
+    // șablon selectat (14-sms.md §11b), același shorthand acceptat ca la `notify/NotifyPage.module.css`
+    // mai jos; fundalul `#fff` de pe `.row` a fost mutat pe `var(--white)` (14-sms val 2).
     'notifications/SmsTemplatesPanel.module.css',
     // `.rowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px, același
     // shorthand acceptat ca în `payments/PaymentsByMonth.module.css` (10-de-notificat.md §3).
@@ -201,27 +224,29 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'payments/PaymentReceipt.module.css',
     'payments/PaymentReceiptThermal.module.css',
     'payments/PaymentsByMonth.module.css',
+    // `.card { border-radius: 22px; }` — vezi comentariul din fișier (același caz ca
+    // assign/AssignPage.module.css/backup/BackupPage.module.css). `.legendBar { border-radius: 2px; }`
+    // — bară de 8px înălțime, cel mai mic token (5px) ar rotunji-o vizibil spre pilulă.
     'personal/LeavesView.module.css',
-    'personal/SalariesView.module.css',
+    // `.bar { border-radius: 4px 4px 0 0; }` — colț de sus al coloanei din graficul lunar (23h);
+    // --radius-5 (5px) e cel mai apropiat, dar nu identic, vezi comentariul din fișier.
     'personal/SalaryHistoryDrawer.module.css',
-    'personal/StaffFormDrawer.module.css',
-    'personal/StaffProfilePage.module.css',
-    'personal/TeamView.module.css',
-    'personal/TimesheetPrint.module.css',
-    'personal/TimesheetPrintDialog.module.css',
+    // CO `#e0b400` (DECIZII.md #17) și antetul departamentului `#5b666e` (ALINIERE-DESIGN A8, Pontaj
+    // 23b) — culori exacte din spec, fără token identic; `.departmentSquare`/`.todayPill` (3px/6px)
+    // — radius fără corespondent exact în scara de tokeni, vezi comentariile din fișier.
     'personal/TimesheetView.module.css',
     'pool/MonthView.module.css',
     'pool/PoolReceiptLabel.module.css',
     'pool/WeekView.module.css',
-    'report/PeriodStepper.module.css',
+    // `.dot { border-radius: 3px; }` — pătrat rotunjit 10×10 din legenda categoriilor (19a); 3px pe o
+    // cutie de 10px n-are corespondent în scara de tokeni (--radius-5 = 5px ar rotunji punctul într-un
+    // cerc complet, schimbând forma din artboard).
     'report/ReportCategoriesPanel.module.css',
-    'report/ReportMethodsPanel.module.css',
     // `.queueRowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px a rândului din
     // coada „De verificat" (11-de-rezolvat.md §9b), același shorthand acceptat ca în
     // `notify/NotifyPage.module.css`/`payments/PaymentsByMonth.module.css` mai sus.
     'review/ReviewPage.module.css',
     'stickers/StickerLabel.module.css',
-    'visits/VisitsPage.module.css',
   ];
 
   it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
@@ -263,12 +288,7 @@ describe('R4 — lucide-react se importă doar în shared/ui/Icon.tsx', () => {
 describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format în features/**', () => {
   const RAW_FORMAT_PATTERN = /\.(toLocaleDateString|toLocaleString|toFixed)\(/;
 
-  const ALLOWED: readonly string[] = [
-    'payments/PaymentFormDrawer.tsx',
-    'personal/SalariesView.tsx',
-    'pool/MonthView.tsx',
-    'visits/VisitsPage.tsx',
-  ];
+  const ALLOWED: readonly string[] = ['payments/PaymentFormDrawer.tsx'];
 
   it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
     const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
@@ -300,10 +320,9 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'assign/AssignPage.tsx',
     'attendance/WeeklySheetDialog.tsx',
     'audit-log/AuditLogPage.tsx',
+    // Test-ul verifică textul catalogului („planuri.first”) chiar prin `screen.findByText(...)` —
+    // inevitabil conține litera „Niciun”, la fel ca celelalte teste `.test.tsx` din listă.
     'backup/ExchangeRateSettings.test.tsx',
-    'backup/ExchangeRateSettings.tsx',
-    'backup/PoolSettings.tsx',
-    'backup/ServicesSettings.tsx',
     'children/BirthdaysPage.error.test.tsx',
     'children/BirthdaysPage.tsx',
     'children/ChildAttendanceSection.test.tsx',
@@ -319,18 +338,19 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     // catalog nu se potrivește, textul rămâne literal, ca în spec.
     'groups/GroupTeamPicker.test.tsx',
     'groups/GroupTeamPicker.tsx',
+    // Testul menționează doar textul afișat de SmsMessagesPanel.tsx mai jos, ca să verifice starea
+    // fără rezultate a jurnalului SMS — mențiune de test, nu text nou, exceptare permanentă ca la
+    // celelalte `*.test.tsx` din listă.
     'notifications/NotificationsPage.test.tsx',
+    // „Niciun SMS pentru filtrele alese” pe tabelul jurnalului SMS (14-sms.md §11a) — text de
+    // căutare/filtre fără rezultate, intenționat în afara catalogului (empty-states.ts, header-ul
+    // fișierului), ca AssignPage/GroupsBoard mai sus.
     'notifications/SmsMessagesPanel.tsx',
     'payments/DayClosingReceipt.tsx',
     'payments/PaymentFormDrawer.test.tsx',
     'payments/PaymentFormDrawer.tsx',
     'personal/CandidatesTab.test.tsx',
     'personal/TeamView.tsx',
-    'pool/MonthView.tsx',
-    'report/ReportCategoriesPanel.tsx',
-    'report/ReportDaysTable.tsx',
-    'report/ReportMethodsPanel.tsx',
-    'visits/VisitsPage.tsx',
   ];
 
   const IMPORT_ALLOWED: readonly string[] = [
@@ -356,11 +376,29 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     // INTREBARI.md.
     'notify/NotifyPage.tsx',
     'payments/PaymentsTable.tsx',
+    // 24-personal.md §23l — starea „Niciun candidat încă" vine din `DataTable.empty="candidati.first"`
+    // (catalog); rămâne un import direct doar pentru „Nimeni nu se potrivește căutării." — text de
+    // căutare fără rezultate, generic pentru acest ecran, în afara catalogului, ca AssignPage/GroupsBoard.
     'personal/CandidatesTab.tsx',
+    // Genuin nou (23-bazin.md §22c) — tabelul „Pe copii” golit („Nicio programare în luna asta”)
+    // nu mai e text hardcodat, ci `EmptyState` cu cheia din catalog (`bazin.month.period`, R9).
+    'pool/MonthView.tsx',
+    // Genuin nou (20-raport-contabil.md §19a) — panourile „Cheltuieli pe categorii”/„Încasări pe
+    // metode” și tabelul „Pe zile” foloseau text hardcodat; golite trec pe `EmptyState` cu cheile din
+    // catalog (`raport.expenses`/`raport.income`, compact; `raport.period`, R9).
+    'report/ReportCategoriesPanel.tsx',
+    'report/ReportDaysTable.tsx',
+    'report/ReportMethodsPanel.tsx',
     'review/ReviewPage.tsx',
     // Genuin nou (07-situatia.md §4, PaymentHeatmap.tsx) — starea goală a hărții An școlar
     // (`situatia.year.period`) nu mai e text hardcodat, ci `EmptyState` cu cheie din catalog (R9).
     'status/PaymentHeatmap.tsx',
+    // Genuin nou (04-vizite.md §3) — panoul zilei fără vizite (`vizite.day`, compact, cu „+ Programează”)
+    // și „Următoarele vizite” golit (`vizite.month.rest`, compact) nu sunt un `DataTable`, deci
+    // `EmptyState` e randat direct, ca în ChildProfileView.tsx/DashboardPage.tsx mai sus; textul
+    // „Nicio vizită nu corespunde filtrelor curente” de pe tabelul „Toate vizitele” a fost înlocuit cu
+    // `DataTable.empty="vizite.first"` + `hasActiveFilters`, care nu mai trece prin acest fișier.
+    'visits/VisitsPage.tsx',
   ];
 
   it('nicio încălcare nouă de text literal „Niciun/Nicio" în afara listei de excepții', () => {
