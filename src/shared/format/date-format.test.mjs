@@ -8,6 +8,7 @@ import {
   formatDayLabel,
   formatDateLong,
   formatShortDayMonth,
+  formatDayMonthNumeric,
 } from './date-format.mjs';
 
 test('formatMonthName scrie luna în litere, pentru text adresat direct părinților', () => {
@@ -56,4 +57,12 @@ test('formatShortDayMonth scrie ziua și luna scurtă, pentru pastila de concedi
 
 test('formatShortDayMonth arată liniuță pentru dată lipsă', () => {
   assert.equal(formatShortDayMonth(''), '—');
+});
+
+test('formatDayMonthNumeric scrie ziua și luna cu două cifre, pentru pastila „Plătit" din Salarii', () => {
+  assert.equal(formatDayMonthNumeric('2026-09-05T12:00:00.000Z'), '05.09');
+});
+
+test('formatDayMonthNumeric arată liniuță pentru dată lipsă', () => {
+  assert.equal(formatDayMonthNumeric(''), '—');
 });

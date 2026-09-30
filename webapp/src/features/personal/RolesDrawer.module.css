@@ -67,18 +67,3 @@
   flex: 1;
   min-width: 0;
 }
-
-.removeButton {
-  border: 0;
-  background: none;
-  color: var(--pink-ink);
-  font-weight: 700;
-  font-size: 12px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.removeButton:disabled {
-  color: var(--subtle);
-  cursor: not-allowed;
-}

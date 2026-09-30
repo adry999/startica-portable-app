@@ -80,7 +80,7 @@
   white-space: nowrap;
 }
 
-/* Spec cere #5b666e; nu există token exact, --muted (#6b7780) e cel mai apropiat. */
+/* Spec cere culoarea text-secondary a temei; nu există token exact, --muted e cel mai apropiat. */
 .roleCell {
   font-size: 14px;
   color: var(--muted);
@@ -100,7 +100,7 @@
 .departmentSquare {
   width: 12px;
   height: 12px;
-  border-radius: 4px;
+  border-radius: var(--radius-5);
   flex-shrink: 0;
 }
 

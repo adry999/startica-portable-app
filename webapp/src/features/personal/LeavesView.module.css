@@ -3,6 +3,8 @@
   color: var(--muted);
 }
 
+/* 22px — nicio variabilă din tokens.css nu are exact această valoare (20 sau 24 cele mai apropiate),
+   același caz ca assign/AssignPage.module.css și backup/BackupPage.module.css. */
 .card {
   gap: 0;
   padding: 0;
@@ -50,6 +52,8 @@
   white-space: nowrap;
 }
 
+/* 2px — bară de legendă de 8px înălțime; cel mai mic token (--radius-5, 5px) ar rotunji-o aproape
+   la formă de pilulă, schimbând vizibil forma din artboard. */
 .legendBar {
   width: 18px;
   height: 8px;
@@ -153,7 +157,7 @@
   bottom: 3px;
   width: auto !important;
   height: auto !important;
-  border-radius: 4px !important;
+  border-radius: var(--radius-5) !important;
   padding: 0 !important;
   cursor: pointer;
 }

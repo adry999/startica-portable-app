@@ -11,7 +11,7 @@
 .dot {
   width: 20px;
   height: 20px;
-  border-radius: 6px;
+  border-radius: var(--radius-5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,7 +28,7 @@
 }
 
 .dot[data-kind='future'] {
-  background: #fff;
+  background: var(--white);
   border: 1px dashed var(--border);
 }
 
@@ -44,5 +44,5 @@
 
 .dot[data-kind='A'] {
   background: var(--muted);
-  color: #fff;
+  color: var(--white);
 }

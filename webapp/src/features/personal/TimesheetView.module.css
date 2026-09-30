@@ -33,6 +33,8 @@
   color: #5b666e;
 }
 
+/* Pătrat 8px (ALINIERE-DESIGN A8, Pontaj 23b) — 3px n-are token exact; --radius-5 (5px) pe o
+   cutie de 8px ar rotunji-o aproape de cerc, schimbând forma din artboard. */
 .departmentSquare {
   width: 8px;
   height: 8px;
@@ -56,6 +58,7 @@
   text-align: center;
 }
 
+/* 6px n-are token exact pe pastila zilei curente din antetul coloanelor (lățime 20px). */
 .todayPill {
   display: inline-block;
   min-width: 20px;
@@ -84,7 +87,7 @@
   color: var(--subtle);
 }
 
-/* 24-personal.md #23b: fiecare celulă e o singură pastilă (fundal + text), nu celulă + pastilă
+/* 24-personal.md, ecran 23b: fiecare celulă e o singură pastilă (fundal + text), nu celulă + pastilă
    suprapusă — altfel apar dungi vizuale între fundalul celulei și pastila codului. */
 .cell {
   display: flex;
@@ -92,7 +95,7 @@
   justify-content: center;
   height: 22px;
   margin: 0 1px;
-  border-radius: 5px;
+  border-radius: var(--radius-5);
   font-size: 10px;
   font-weight: 800;
   color: var(--white);
@@ -155,7 +158,7 @@
   color: var(--muted);
 }
 
-/* 24-personal.md #23b: legenda stă deasupra tabelului — „Lucrat” în stânga, codurile în dreapta. */
+/* 24-personal.md, ecran 23b: legenda stă deasupra tabelului — „Lucrat” în stânga, codurile în dreapta. */
 .legend {
   display: flex;
   align-items: center;
@@ -185,7 +188,7 @@
   justify-content: center;
   width: 18px;
   height: 18px;
-  border-radius: 5px;
+  border-radius: var(--radius-5);
   font-size: 10px;
   font-weight: 800;
   color: var(--white);

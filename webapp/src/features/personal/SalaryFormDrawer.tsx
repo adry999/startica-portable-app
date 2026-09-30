@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, Field, NumberInput, Select, useToast } from '@shared/ui';
+import { Button, Drawer, Field, MonthInput, NumberInput, Select, useToast } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Salary, SalaryMode, Staff } from '@shared/personal/personal.types';
 import styles from './SalaryFormDrawer.module.css';
@@ -71,12 +71,9 @@ export function SalaryFormDrawer({ staff, onClose, onSubmit }: SalaryFormDrawerP
             <NumberInput id="salary-amount" required min={0} value={amount} onChange={setAmount} />
           </Field>
         )}
-        {/* type="month" rămâne brut — nu există încă `MonthInput` în @shared/ui (COMPONENTE.md
-            §0/25b), la fel ca rândul de alocare din PaymentFormDrawer și feeFrom din ChildFormDrawer. */}
-        <label className={styles.field}>
-          Valabil din luna
-          <input required type="month" value={validFrom} onChange={event => setValidFrom(event.target.value)} />
-        </label>
+        <Field label="Valabil din luna" htmlFor="salary-valid-from">
+          <MonthInput id="salary-valid-from" required value={validFrom} onChange={setValidFrom} />
+        </Field>
         {mode === 'bazin' && <p className={styles.notice}>Salariul unui antrenor de bazin vine din 23-Bazin.</p>}
       </form>
     </Drawer>

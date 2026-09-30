@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Checkbox,
+  Dialog,
   Field,
   LoadingState,
   RowMenu,
@@ -12,6 +13,7 @@ import {
   useToast,
 } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
+import { formatDayMonthNumeric } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useSalaries } from './useSalaries';
@@ -39,10 +41,6 @@ export function previousMonth(date: string): string {
   const year = Number(date.slice(0, 4));
   const monthIndex = Number(date.slice(5, 7));
   return monthIndex === 1 ? `${year - 1}-12` : `${year}-${String(monthIndex - 1).padStart(2, '0')}`;
-}
-
-function formatDayMonth(iso: string): string {
-  return new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit' });
 }
 
 /** Salarii (23c), în spatele PinGate (23d) — plata unui salariu = o cheltuială, minus avansurile lunii. */
@@ -224,7 +222,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
                 ) : row.mode === 'bazin' ? (
                   <Badge tone="mint">Din Bazin</Badge>
                 ) : row.paid ? (
-                  <Badge tone="mint">Plătit {formatDayMonth(row.paid.paidAt)}</Badge>
+                  <Badge tone="mint">Plătit {formatDayMonthNumeric(row.paid.paidAt)}</Badge>
                 ) : (
                   <Badge tone="yellow">De plătit</Badge>
                 )}
@@ -254,38 +252,35 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
         <strong>Bazin</strong>: calculat din programările Bazinului, plătit separat.
       </p>
 
-      {payDialogOpen && (
-        <div className={styles.overlay} onClick={() => setPayDialogOpen(false)}>
-          <div
-            className={styles.payDialog}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Confirmă plata"
-            onClick={event => event.stopPropagation()}
-          >
-            <h2 className={styles.payDialogTitle}>Plătește {selected.size} salarii</h2>
-            <p className={styles.payDialogTotal}>
-              Total: <strong>{formatMoney(selectedTotal)}</strong>
-            </p>
-            <Field label="Metoda plății" htmlFor="salaries-pay-method">
-              <Select
-                id="salaries-pay-method"
-                value={method}
-                onChange={setMethod}
-                options={METHODS.map(option => ({ value: option, label: option }))}
-              />
-            </Field>
-            <div className={styles.payDialogActions}>
-              <Button variant="outline" onClick={() => setPayDialogOpen(false)}>
-                Anulează
-              </Button>
-              <Button disabled={paying} onClick={() => void payment()}>
-                Plătește · {formatMoney(selectedTotal)}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={payDialogOpen}
+        title="Confirmă plata"
+        width={420}
+        onClose={() => setPayDialogOpen(false)}
+        shouldBlockClose={() => paying}
+        footer={
+          <>
+            <Button variant="outline" disabled={paying} onClick={() => setPayDialogOpen(false)}>
+              Anulează
+            </Button>
+            <Button disabled={paying} onClick={() => void payment()}>
+              Plătește · {formatMoney(selectedTotal)}
+            </Button>
+          </>
+        }
+      >
+        <p className={styles.payDialogTotal}>
+          Total: <strong>{formatMoney(selectedTotal)}</strong>
+        </p>
+        <Field label="Metoda plății" htmlFor="salaries-pay-method">
+          <Select
+            id="salaries-pay-method"
+            value={method}
+            onChange={setMethod}
+            options={METHODS.map(option => ({ value: option, label: option }))}
+          />
+        </Field>
+      </Dialog>
 
       {/* C2: key={staff?.id ?? 'closed'} — fără el, suma/modul angajatului anterior rămân în
           formular la deschiderea pentru un alt angajat (bani). */}

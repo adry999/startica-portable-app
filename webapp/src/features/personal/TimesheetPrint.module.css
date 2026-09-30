@@ -6,7 +6,7 @@
   .printSheet {
     display: flex;
     flex-direction: column;
-    color: #000;
+    color: var(--print-ink);
   }
 }
 
@@ -27,7 +27,7 @@
   justify-content: space-between;
   gap: var(--space-16);
   padding-bottom: var(--space-10);
-  border-bottom: 2px solid #000;
+  border-bottom: 2px solid var(--print-ink);
 }
 
 .printTitle {
@@ -40,7 +40,7 @@
 .printSubtitle {
   margin: 0;
   font-size: 11px;
-  color: #333;
+  color: var(--print-muted);
 }
 
 .printKindergarten {
@@ -66,7 +66,7 @@
 .printTable td {
   padding: 3px 4px;
   text-align: center;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-rule);
 }
 
 .printTable td:nth-child(2) {
@@ -77,8 +77,8 @@
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
-  border-top: 1px solid #000;
-  border-bottom: 1px solid #000;
+  border-top: 1px solid var(--print-ink);
+  border-bottom: 1px solid var(--print-ink);
 }
 
 .printDayCol {
@@ -88,7 +88,7 @@
 .printLegend {
   margin: 0;
   font-size: 9px;
-  color: #333;
+  color: var(--print-muted);
 }
 
 .printSignatures {

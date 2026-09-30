@@ -22,7 +22,7 @@
 .branchPill,
 .branchPillActive {
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--white);
   border-radius: var(--radius-pill);
   padding: 6px 14px;
   font-weight: 800;
@@ -32,6 +32,6 @@
 
 .branchPillActive {
   background: var(--slate);
-  color: #fff;
+  color: var(--white);
   border-color: var(--slate);
 }

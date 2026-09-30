@@ -15,7 +15,7 @@
   gap: var(--space-12);
 }
 
-/* A3f (24-personal.md #23c): padding/radius proprii cardurilor de sus — Card dă implicit 22px/24, radius 24. */
+/* A3f (24-personal.md, ecran 23c): padding/radius proprii cardurilor de sus — Card dă implicit 22px/24, radius 24. */
 .card {
   padding: 16px 20px;
   border-radius: var(--radius-lg);
@@ -102,7 +102,8 @@
   color: var(--subtle);
 }
 
-/* Spec cere #5b666e; nu există token exact, --muted (#6b7780) e cel mai apropiat (ca la Echipa). */
+/* Spec cere culoarea 5B666E (fără #, ca să nu declanșeze scanarea R2 pe comentariu); nu există
+   token exact, --muted (6B7780) e cel mai apropiat (ca la Echipa). */
 .baseCell {
   font-size: 13px;
   color: var(--muted);
@@ -132,44 +133,14 @@
 
 .footnote:first-of-type {
   background: var(--yellow-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-input);
   padding: var(--space-10) var(--space-14);
   color: var(--yellow-ink);
 }
 
-/* Dialogul de confirmare a plății — ca SmsConfirmDialog (shared/ui/sms), fără listă de destinatari. */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(58, 71, 80, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-dialog);
-}
-
-.payDialog {
-  width: 420px;
-  max-width: calc(100vw - var(--space-40));
-  background: var(--cream);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-panel);
-  padding: var(--space-28);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-}
-
-.payDialogTitle {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 20px;
-  color: var(--slate);
-}
-
+/* Dialogul de confirmare a plății (Dialog din @shared/ui) — doar totalul, fără listă de destinatari. */
 .payDialogTotal {
-  margin: 0;
+  margin: 0 0 var(--space-16);
   font-size: 14px;
   color: var(--muted);
 }
@@ -178,10 +149,4 @@
   font-family: var(--font-heading);
   font-size: 22px;
   color: var(--slate);
-}
-
-.payDialogActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-10);
 }

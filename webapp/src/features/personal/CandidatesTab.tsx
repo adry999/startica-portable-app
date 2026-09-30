@@ -40,6 +40,7 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
 
   const columns = buildCandidateColumns();
   const trailing = query ? `${filtered.length} din ${sorted.length}` : `${sorted.length} persoane`;
+  const searching = query.length > 0;
 
   async function handleSave(input: CandidateFormInput) {
     try {
@@ -74,17 +75,20 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
         trailing={trailing}
       />
 
-      {sorted.length === 0 ? (
-        <EmptyState variant="first" title="Niciun candidat încă" action={{ label: '+ Candidat', onClick: onNew }} />
-      ) : (
-        <DataTable
-          columns={columns}
-          rows={filtered}
-          rowKey={candidate => candidate.id}
-          onRowClick={onOpenRow}
-          emptyState={<EmptyState variant="no-results" title="Nimeni nu se potrivește căutării." />}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={candidate => candidate.id}
+        onRowClick={onOpenRow}
+        empty="candidati.first"
+        onEmptyAction={onNew}
+        // Căutare fără rezultate — text propriu, generic pentru acest ecran, în afara catalogului
+        // (empty-states.ts, header-ul fișierului: „Fără rezultate" are mereu prioritate); starea de
+        // listă complet goală vine din DataTable + cheia candidati.first, mai sus.
+        emptyState={
+          searching ? <EmptyState variant="no-results" title="Nimeni nu se potrivește căutării." /> : undefined
+        }
+      />
 
       <CandidateFormDrawer target={formTarget} onSubmit={handleSave} onDelete={handleDelete} onClose={onCloseForm} />
     </div>

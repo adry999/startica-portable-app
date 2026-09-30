@@ -98,6 +98,10 @@ export function LeavesView() {
                 {staffLeaves.map(leave => {
                   const bar = leaveYearBar(leave, year);
                   const label = `${person.name}: ${formatLeaveRange(leave.from, leave.to)}`;
+                  // Hit-area pe o bară poziționată absolut pe zilele concediului (stânga/lățime din
+                  // `leaveYearBar` + culoare dinamică din `leaveBarStyle`) — un `Button`/`IconButton`
+                  // ar impune propriul fundal/padding/dimensiune fixă, incompatibile cu poziționarea
+                  // pe pistă (R1, ca ChildTile/GroupTile).
                   return (
                     <button
                       key={leave.id}

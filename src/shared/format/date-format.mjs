@@ -63,6 +63,15 @@ export const formatShortDayMonth = v => {
   return `${date.getDate()} ${MONTHS_RO[date.getMonth()].toLocaleLowerCase('ro-RO')}`;
 };
 
+// „05.09" — ziua și luna cu două cifre, pentru pastila „Plătit ⋯” din lista Salarii (24-personal.md #23c).
+// Primește un timestamp ISO complet (paidAt = new Date().toISOString()), nu doar o dată — nu i se
+// adaugă 'T12:00:00' ca la restul funcțiilor de mai sus, altfel parsarea ar eșua.
+export const formatDayMonthNumeric = v => {
+  if (!v) return '—';
+  const date = new Date(v);
+  return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
 /** Vârsta în ani întregi (rotunjită în jos) — pentru filtrare/sugestii pe interval, nu afișare. */
 export const ageInYears = v => {
   if (!v) return null;

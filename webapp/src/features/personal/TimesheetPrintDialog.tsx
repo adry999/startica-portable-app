@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Field, SegmentedControl, Select } from '@shared/ui';
+import { Button, Dialog, Field, SegmentedControl, Select } from '@shared/ui';
 import type { Department, Staff } from '@shared/personal/personal.types';
 import styles from './TimesheetPrintDialog.module.css';
 
@@ -37,19 +37,22 @@ export function TimesheetPrintDialog({ open, departments, staff, onCancel, onCon
   const [targetId, setTargetId] = useState('');
   const [display, setDisplay] = useState<TimesheetPrintDisplay>('hours');
 
-  if (!open) return null;
-
   return (
-    <div className={styles.overlay} onClick={onCancel}>
-      <div
-        className={styles.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Tipărește pontajul"
-        onClick={event => event.stopPropagation()}
-      >
-        <h2 className={styles.title}>Tipărește pontajul</h2>
-
+    <Dialog
+      open={open}
+      title="Tipărește pontajul"
+      width={380}
+      onClose={onCancel}
+      footer={
+        <>
+          <Button variant="white" onClick={onCancel}>
+            Anulează
+          </Button>
+          <Button onClick={() => onConfirm({ scope, targetId: targetId || undefined, display })}>Tipărește</Button>
+        </>
+      }
+    >
+      <div className={styles.form}>
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Ce tipăresc?</span>
           <SegmentedControl ariaLabel="Ce tipăresc?" value={scope} onChange={setScope} options={SCOPE_OPTIONS} />
@@ -88,14 +91,7 @@ export function TimesheetPrintDialog({ open, departments, staff, onCancel, onCon
             options={DISPLAY_OPTIONS}
           />
         </div>
-
-        <div className={styles.actions}>
-          <Button variant="white" onClick={onCancel}>
-            Anulează
-          </Button>
-          <Button onClick={() => onConfirm({ scope, targetId: targetId || undefined, display })}>Tipărește</Button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }

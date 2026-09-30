@@ -28,6 +28,8 @@
   color: var(--subtle);
 }
 
+/* Coloana graficului lunar — colț de sus rotunjit 4px; --radius-5 (5px) e cel mai apropiat, dar
+   nu identic, ca la alte valori literale deja aliniate din acest modul (vezi 23h). */
 .bar {
   width: 100%;
   background: var(--mint);

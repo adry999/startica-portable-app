@@ -163,9 +163,9 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
                   value={department.name}
                   onChange={value => renameDepartment(department.id, value)}
                 />
-                <button type="button" className={styles.removeButton} onClick={() => removeDepartment(department.id)}>
+                <Button variant="danger" onClick={() => removeDepartment(department.id)}>
                   Șterge
-                </button>
+                </Button>
               </div>
               <ul className={styles.roleList}>
                 {roles
@@ -178,15 +178,14 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
                         value={role.name}
                         onChange={value => renameRole(role.id, value)}
                       />
-                      <button
-                        type="button"
-                        className={styles.removeButton}
+                      <Button
+                        variant="danger"
                         disabled={roleHasStaff(role.id)}
                         title={roleHasStaff(role.id) ? 'Funcția are angajați' : undefined}
                         onClick={() => removeRole(role.id)}
                       >
                         Șterge
-                      </button>
+                      </Button>
                     </li>
                   ))}
               </ul>

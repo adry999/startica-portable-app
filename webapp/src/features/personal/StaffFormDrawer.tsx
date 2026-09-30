@@ -123,6 +123,9 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
         </Field>
         <div className={styles.field}>
           Filiala
+          {/* Comutare multiplă independentă (una sau ambele filiale, 24-personal.md §Date) — nici
+              ChipSelect (radiogroup, alegere unică), nici MultiSelect (popover cu căutare, pentru
+              liste lungi) nu se potrivesc unei perechi fixe de pastile mereu vizibile (R1). */}
           <div className={styles.branchToggles} role="group" aria-label="Filiale">
             {session.state.branches.map(branch => (
               <button
