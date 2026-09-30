@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   Button,
   Card,
+  EMPTY_STATES,
   Field,
   LoadingState,
   NumberInput,
@@ -9,6 +10,7 @@ import {
   TextInput,
   TimeInput,
   Toggle,
+  resolveEmptyStateTitle,
   useToast,
 } from '@shared/ui';
 import { usePoolSettings } from '@shared/pool/usePool';
@@ -133,7 +135,7 @@ export function PoolSettings() {
         <p className={backupStyles.notice}>
           Antrenorii se aleg din Personal, funcția „Antrenor bazin”.{' '}
           {pool.coaches.length === 0
-            ? 'Niciun antrenor încă — adaugă-l în Personal.'
+            ? `${resolveEmptyStateTitle(EMPTY_STATES['bazin.coach'])} ${EMPTY_STATES['bazin.coach'].actionLabel}.`
             : `${pool.coaches.length} antrenor(i) disponibil(i).`}
         </p>
         <Button type="submit" disabled={busy}>

@@ -141,7 +141,7 @@ describe('ExchangeRateSettings', () => {
     renderComponent();
     const user = userEvent.setup();
 
-    await screen.findByText('Niciun plan adăugat încă.');
+    await screen.findByText('Niciun plan adăugat');
     await user.click(screen.getByText('+ Adaugă plan'));
 
     await user.type(screen.getByLabelText('Nume plan'), 'Program mediu');
@@ -196,7 +196,7 @@ describe('ExchangeRateSettings', () => {
     renderComponent();
     const user = userEvent.setup();
 
-    await screen.findByText('Niciun plan adăugat încă.');
+    await screen.findByText('Niciun plan adăugat');
     expect(readDirtyForms()).toEqual([]);
 
     await user.click(screen.getByText('+ Adaugă plan'));

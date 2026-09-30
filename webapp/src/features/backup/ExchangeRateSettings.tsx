@@ -1,5 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Badge, BnmRateLink, Button, Card, Field, NumberInput, TextInput, useToast, type BadgeTone } from '@shared/ui';
+import {
+  Badge,
+  BnmRateLink,
+  Button,
+  Card,
+  EMPTY_STATES,
+  Field,
+  NumberInput,
+  TextInput,
+  resolveEmptyStateTitle,
+  useToast,
+  type BadgeTone,
+} from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -120,7 +132,7 @@ export function ExchangeRateSettings() {
         <h3 className={backupStyles.panelTitle}>Planuri</h3>
 
         {localPresets.length === 0 ? (
-          <p className={backupStyles.notice}>Niciun plan adăugat încă.</p>
+          <p className={backupStyles.notice}>{resolveEmptyStateTitle(EMPTY_STATES['planuri.first'])}</p>
         ) : (
           <div className={styles.planList}>
             {localPresets.map((preset, index) => (
@@ -273,7 +285,7 @@ export function ExchangeRateSettings() {
         <Card>
           <h4 className={styles.subtitle}>Ultimele zile</h4>
           {exchangeRates.lastFiveDays.length === 0 ? (
-            <p className={backupStyles.notice}>Niciun curs înregistrat încă.</p>
+            <p className={backupStyles.notice}>{resolveEmptyStateTitle(EMPTY_STATES['curs.period'])}</p>
           ) : (
             <ul className={styles.lastFiveList}>
               {exchangeRates.lastFiveDays.map(entry => (

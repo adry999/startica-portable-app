@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Drawer,
+  EMPTY_STATES,
   Field,
   LoadingState,
   NumberInput,
@@ -12,6 +13,7 @@ import {
   TextInput,
   TonePicker,
   Toggle,
+  resolveEmptyStateTitle,
   useToast,
 } from '@shared/ui';
 import { SERVICE_TONES } from '@domain/record-schema.mjs';
@@ -108,7 +110,7 @@ export function ServicesSettings() {
         ariaLabel="Servicii"
         isDraggable={() => !data.busy}
         onReorder={(draggedId, targetId) => void data.reorderServices(draggedId, targetId)}
-        emptyMessage="Niciun serviciu încă."
+        emptyMessage={resolveEmptyStateTitle(EMPTY_STATES['servicii.first'])}
         renderName={service => (
           <>
             <ServiceBadge service={service} />

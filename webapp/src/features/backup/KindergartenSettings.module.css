@@ -105,7 +105,9 @@
 
 .previewBody span {
   height: 8px;
-  border-radius: 4px;
+  /* --radius-pill (999px) se plafonează automat la jumătate din înălțime (4px) pe o bară de 8px —
+     randare identică cu literalul de dinainte, fără token nou. */
+  border-radius: var(--radius-pill);
   background: var(--neutral-soft);
 }
 
