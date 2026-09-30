@@ -4,6 +4,8 @@ import {
   AmountInput,
   Button,
   Checkbox,
+  ChipSelect,
+  ChoiceCards,
   DateInput,
   DayStepper,
   Field,
@@ -61,6 +63,8 @@ export function ButoaneInputSection() {
   const [checkboxOn, setCheckboxOn] = useState(true);
   const [checkboxOff, setCheckboxOff] = useState(false);
   const [toneValue, setToneValue] = useState<string>(SERVICE_TONES[0]);
+  const [chipValue, setChipValue] = useState('1');
+  const [choiceValue, setChoiceValue] = useState('09:00');
 
   const filterGroups: FilterPillGroup<string>[] = [
     {
@@ -389,6 +393,54 @@ export function ButoaneInputSection() {
             value={segmentValue}
             onChange={setSegmentValue}
             ariaLabel="Comutator vizualizare"
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ChipSelect"
+        importLine="import { ChipSelect } from '@shared/ui';"
+        reference="COMPONENTE.md §2, id 22b — pastile de alegere unică · Bazin, Programare nouă (Ziua)"
+      >
+        <DemoRow label="control">
+          <ChipSelect
+            ariaLabel="Ziua"
+            value={chipValue}
+            onChange={setChipValue}
+            options={[
+              { value: '1', label: 'Lu' },
+              { value: '2', label: 'Ma' },
+              { value: '3', label: 'Mi' },
+              { value: '4', label: 'Jo' },
+              { value: '5', label: 'Vi' },
+            ]}
+          />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <ChipSelect
+            ariaLabel="Opțiune dezactivată"
+            value=""
+            onChange={() => {}}
+            options={[{ value: 'x', label: 'Indisponibil', disabled: true }]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ChoiceCards"
+        importLine="import { ChoiceCards } from '@shared/ui';"
+        reference="COMPONENTE.md §2, id 22b — carduri selectabile, `disabled` pentru ora plină · Bazin, Programare nouă (Ora)"
+      >
+        <DemoRow label="control">
+          <ChoiceCards
+            ariaLabel="Ora"
+            value={choiceValue}
+            onChange={setChoiceValue}
+            options={[
+              { value: '09:00', title: '09:00', sub: '2 copii' },
+              { value: '09:30', title: '09:30', sub: '0 copii' },
+              { value: '10:00', title: '10:00', sub: '4 copii', disabled: true },
+            ]}
           />
         </DemoRow>
       </ComponentShowcase>

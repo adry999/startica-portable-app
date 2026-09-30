@@ -1,6 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Card, ConfirmDeleteDialog, Drawer, RowMenu, useToast, groupTone } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmDeleteDialog,
+  DateInput,
+  Drawer,
+  Field,
+  RowMenu,
+  useToast,
+  groupTone,
+} from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
@@ -241,10 +252,9 @@ export function MonthView({
         }
       >
         <div className={styles.endForm}>
-          <label className={styles.field}>
-            Ultima zi
-            <input type="date" value={endDate} onChange={event => setEndDate(event.target.value)} />
-          </label>
+          <Field label="Ultima zi" htmlFor="end-booking-date">
+            <DateInput id="end-booking-date" value={endDate} onChange={setEndDate} />
+          </Field>
           {endError && <p className={styles.error}>{endError}</p>}
         </div>
       </Drawer>

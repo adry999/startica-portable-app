@@ -14,6 +14,8 @@ export { AmountInput, type AmountInputProps } from './AmountInput';
 export { TextArea, type TextAreaProps } from './TextArea';
 export { Select, type SelectOption, type SelectProps } from './Select';
 export { PhoneInput, type PhoneInputProps } from './PhoneInput';
+export { ChipSelect, type ChipOption, type ChipSelectProps } from './ChipSelect';
+export { ChoiceCards, type ChoiceCardOption, type ChoiceCardsProps } from './ChoiceCards';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Toggle, type ToggleProps } from './Toggle';
 export { Drawer, type DrawerProps } from './Drawer';

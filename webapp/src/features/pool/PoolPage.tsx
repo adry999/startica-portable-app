@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
+import { Button, IconButton, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today, shiftDays } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -54,17 +54,19 @@ export function PoolPage({ month }: PoolPageProps) {
       {mode === 'week' ? (
         <>
           <div className={styles.weekNav}>
-            <button
-              type="button"
-              aria-label="Săptămâna anterioară"
+            <IconButton
+              icon="‹"
+              ariaLabel="Săptămâna anterioară"
+              className={styles.arrow}
               onClick={() => setWeekDate(shiftDays(weekDate, -7))}
-            >
-              ‹
-            </button>
+            />
             <span>{weekRangeLabel(weekDate)}</span>
-            <button type="button" aria-label="Săptămâna următoare" onClick={() => setWeekDate(shiftDays(weekDate, 7))}>
-              ›
-            </button>
+            <IconButton
+              icon="›"
+              ariaLabel="Săptămâna următoare"
+              className={styles.arrow}
+              onClick={() => setWeekDate(shiftDays(weekDate, 7))}
+            />
           </div>
           {settings.settings && <Button onClick={() => setBookingOpen(true)}>+ Programare nouă</Button>}
         </>

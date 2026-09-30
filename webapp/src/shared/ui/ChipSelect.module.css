@@ -1,0 +1,27 @@
+.group {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-14);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--neutral-soft);
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.active {
+  background: var(--slate);
+  color: var(--white);
+}

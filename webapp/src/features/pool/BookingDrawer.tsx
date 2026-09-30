@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Drawer, SearchSelect, useToast } from '@shared/ui';
+import { Button, ChipSelect, ChoiceCards, DateInput, Drawer, Field, SearchSelect, Select, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 import { slotTimes } from '#features/pool/index.web.mjs';
@@ -8,11 +8,11 @@ import { saveBooking, type WeekDay } from '@shared/pool/usePool';
 import styles from './BookingDrawer.module.css';
 
 const WEEKDAYS = [
-  { value: 1, label: 'Lu' },
-  { value: 2, label: 'Ma' },
-  { value: 3, label: 'Mi' },
-  { value: 4, label: 'Jo' },
-  { value: 5, label: 'Vi' },
+  { value: '1', label: 'Lu' },
+  { value: '2', label: 'Ma' },
+  { value: '3', label: 'Mi' },
+  { value: '4', label: 'Jo' },
+  { value: '5', label: 'Vi' },
 ];
 
 export interface BookingDrawerProps {
@@ -92,7 +92,7 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
       }
     >
       <div className={styles.form}>
-        <label className={styles.field}>
+        <div className={styles.field}>
           Copil
           <SearchSelect
             options={childOptions}
@@ -101,69 +101,48 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
             ariaLabel="Copil"
             placeholder="Caută copilul…"
           />
-        </label>
-        <label className={styles.field}>
-          Antrenor
-          <select value={coachId} onChange={event => setCoachId(event.target.value)}>
-            <option value="" disabled>
-              Alege antrenorul
-            </option>
-            {coaches.map(coach => (
-              <option key={coach.id} value={coach.id}>
-                {coach.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        </div>
+        <Field label="Antrenor" htmlFor="booking-coach">
+          <Select
+            id="booking-coach"
+            value={coachId}
+            onChange={setCoachId}
+            placeholder="Alege antrenorul"
+            options={coaches.map(coach => ({ value: coach.id, label: coach.name }))}
+          />
+        </Field>
         <div className={styles.field}>
           Ziua
-          <div className={styles.weekdays}>
-            {WEEKDAYS.map(day => (
-              <button
-                key={day.value}
-                type="button"
-                className={weekday === day.value ? styles.weekdayActive : styles.weekday}
-                onClick={() => setWeekday(day.value)}
-              >
-                {day.label}
-              </button>
-            ))}
-          </div>
+          <ChipSelect
+            ariaLabel="Ziua"
+            value={String(weekday)}
+            onChange={value => setWeekday(Number(value))}
+            options={WEEKDAYS}
+          />
         </div>
         <div className={styles.field}>
           Ora
-          <div className={styles.hours}>
-            {times.map(slot => {
+          <ChoiceCards
+            ariaLabel="Ora"
+            value={time}
+            onChange={setTime}
+            columns={times.length}
+            options={times.map(slot => {
               const taken = daySlots.find(daySlot => daySlot.time === slot)?.entries.length ?? 0;
               const full = settings.seatsPerSlot != null && taken >= settings.seatsPerSlot;
-              const active = time === slot;
-              return (
-                <button
-                  key={slot}
-                  type="button"
-                  disabled={full}
-                  className={[styles.hourCard, active ? styles.hourCardActive : '', full ? styles.hourCardFull : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => setTime(slot)}
-                >
-                  <span className={styles.hourTime}>{slot}</span>
-                  <span className={styles.hourSeats}>{taken === 1 ? '1 copil' : `${taken} copii`}</span>
-                </button>
-              );
+              return {
+                value: slot,
+                title: slot,
+                sub: taken === 1 ? '1 copil' : `${taken} copii`,
+                disabled: full,
+              };
             })}
-          </div>
+          />
         </div>
         <div className={styles.grid2}>
-          <label className={styles.field}>
-            Începând cu
-            <input
-              type="date"
-              className={styles.dateInput}
-              value={startDate}
-              onChange={event => setStartDate(event.target.value)}
-            />
-          </label>
+          <Field label="Începând cu" htmlFor="booking-start-date">
+            <DateInput id="booking-start-date" value={startDate} onChange={setStartDate} />
+          </Field>
           <div className={styles.field}>
             Se repetă
             <span className={styles.staticValue}>Săptămânal</span>

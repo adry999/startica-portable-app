@@ -31,9 +31,9 @@ export function PoolReceiptPage() {
   if (!row) {
     return (
       <>
-        <button type="button" onClick={() => navigate('/bazin')}>
+        <Button variant="outline" onClick={() => navigate('/bazin')}>
           ← Bazin
-        </button>
+        </Button>
         <p>Copilul nu are programări la bazin în luna asta.</p>
       </>
     );

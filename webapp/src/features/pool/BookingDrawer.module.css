@@ -13,17 +13,6 @@
   color: var(--muted);
 }
 
-.field input,
-.field select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-  color: var(--slate);
-}
-
-.dateInput,
 .staticValue {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
@@ -32,77 +21,7 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--slate);
-}
-
-.staticValue {
   background: var(--white);
-}
-
-.weekdays {
-  display: flex;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.weekday,
-.weekdayActive {
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-14);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  background: var(--neutral-soft);
-  color: var(--slate);
-  cursor: pointer;
-}
-
-.weekdayActive {
-  background: var(--slate);
-  color: var(--white);
-}
-
-.hours {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-6);
-}
-
-.hourCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: var(--space-8) var(--space-4);
-  border-radius: var(--radius-input);
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  color: var(--slate);
-  cursor: pointer;
-  font: inherit;
-}
-
-.hourCardActive {
-  background: var(--orange-soft);
-  border-color: var(--orange);
-  color: var(--orange-ink);
-}
-
-.hourCardFull {
-  background: var(--cream);
-  border-style: dashed;
-  color: var(--subtle);
-  cursor: not-allowed;
-}
-
-.hourTime {
-  font-weight: 800;
-  font-size: 14px;
-}
-
-.hourSeats {
-  font-weight: 700;
-  font-size: 10px;
 }
 
 .grid2 {
