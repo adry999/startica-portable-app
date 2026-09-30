@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, IconButton, SearchInput } from '@shared/ui';
+import { Badge, Button, Icon, IconButton, SearchInput } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
@@ -177,7 +177,7 @@ export function GroupTeamPicker({
                         </span>
                       )}
                       <IconButton
-                        icon="×"
+                        icon={<Icon name="close" />}
                         ariaLabel={`Scoate ${person?.name ?? ''} din echipă`}
                         onClick={() => removeMember(member.staffId, role)}
                       />

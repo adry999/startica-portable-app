@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { FilterPills, SearchInput } from '@shared/ui';
+import { FilterPills, Icon, SearchInput } from '@shared/ui';
 import { categoryStyleFor } from './useExpenses';
 import { METHOD_TONE } from './expenseColumns';
 import styles from './ExpensesPage.module.css';
@@ -37,7 +37,9 @@ function ArchiveFilterDropdown({
 
   return (
     <details ref={detailsRef} className={styles.archiveDropdown}>
-      <summary>{ARCHIVE_LABEL[value]} ▾</summary>
+      <summary>
+        {ARCHIVE_LABEL[value]} <Icon name="chevron-down" size={14} />
+      </summary>
       <div className={styles.archiveDropdownPanel} role="menu">
         {ARCHIVE_OPTIONS.map(option => (
           <button

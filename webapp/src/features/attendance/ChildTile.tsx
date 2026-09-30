@@ -1,4 +1,5 @@
-import type { PillTone } from '@shared/ui';
+import type { ReactNode } from 'react';
+import { Icon, type PillTone } from '@shared/ui';
 import { STATUS_LABEL } from '@shared/attendance';
 import type { AttendanceStatus } from '#features/attendance/attendance.types.d.mts';
 import styles from './DayView.module.css';
@@ -25,7 +26,11 @@ const MARK_CLASS: Record<'present' | 'absent' | 'excused' | 'unmarked', string> 
   unmarked: styles.markUnmarked,
 };
 
-const MARK_SYMBOL: Record<'present' | 'absent' | 'excused', string> = { present: '✓', absent: '×', excused: 'M' };
+const MARK_SYMBOL: Record<'present' | 'absent' | 'excused', ReactNode> = {
+  present: <Icon name="check" size={14} />,
+  absent: <Icon name="close" size={14} />,
+  excused: 'M',
+};
 
 const STATUS_TEXT_CLASS: Record<'present' | 'absent' | 'excused' | 'unmarked', string> = {
   present: styles.tileStatusPresent,

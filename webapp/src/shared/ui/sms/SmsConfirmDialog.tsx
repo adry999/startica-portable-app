@@ -5,6 +5,7 @@ import { stripDiacritics } from '#shared/format/strip-diacritics.mjs';
 import { ScrollArea } from '../ScrollArea';
 import { SegmentedControl } from '../SegmentedControl';
 import { Checkbox } from '../Checkbox';
+import { Icon } from '../Icon';
 // SmsSegmentCounter e definit în shared/sms (Task 16) — e stateless (nu are fetch), deci
 // reutilizarea lui aici nu rupe regula „shared/ui fără fetch" a acestui dialog.
 import { SmsSegmentCounter, type SmsSendResultView, type SmsTemplateView } from '@shared/sms';
@@ -301,7 +302,7 @@ export function SmsConfirmDialog({
                   disabled={previewIndex === 0}
                   onClick={() => setPreviewIndex(index => Math.max(0, index - 1))}
                 >
-                  ‹
+                  <Icon name="chevron-left" />
                 </button>
                 <div>
                   <p className={styles.bubble}>
@@ -318,7 +319,7 @@ export function SmsConfirmDialog({
                   disabled={previewIndex >= checkedRecipients.length - 1}
                   onClick={() => setPreviewIndex(index => Math.min(checkedRecipients.length - 1, index + 1))}
                 >
-                  ›
+                  <Icon name="chevron-right" />
                 </button>
               </div>
             )}

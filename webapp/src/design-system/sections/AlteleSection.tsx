@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Badge,
+  Icon,
   LoadingBar,
   PrintFooter,
   PrintHeader,
@@ -105,6 +106,38 @@ export function AlteleSection() {
                 ))}
               </ul>
             </ScrollArea>
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Icon"
+        importLine="import { Icon } from '@shared/ui';"
+        reference="DS Fundamente 2.dc.html#33a — set Lucide, linie 2, 14/16/20/24 · singurul fișier care importă lucide-react"
+      >
+        <DemoRow label="set">
+          <div className={styles.iconRow}>
+            <Icon name="search" />
+            <Icon name="more-horizontal" />
+            <Icon name="chevron-down" />
+            <Icon name="chevron-up" />
+            <Icon name="chevron-left" />
+            <Icon name="chevron-right" />
+            <Icon name="close" />
+            <Icon name="check" />
+            <Icon name="menu" />
+            <Icon name="grip-vertical" />
+            <Icon name="undo" />
+            <Icon name="external-link" />
+            <Icon name="sort-toggle" />
+          </div>
+        </DemoRow>
+        <DemoRow label="mărimi">
+          <div className={styles.iconRow}>
+            <Icon name="check" size={14} />
+            <Icon name="check" size={16} />
+            <Icon name="check" size={20} />
+            <Icon name="check" size={24} />
           </div>
         </DemoRow>
       </ComponentShowcase>

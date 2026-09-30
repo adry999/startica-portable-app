@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollArea, SearchInput, useToast } from '@shared/ui';
+import { Icon, ScrollArea, SearchInput, useToast } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { GroupTile } from './GroupTile';
 import type { GroupsData } from './useGroups';
@@ -80,7 +80,7 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
                 }}
               >
                 <span className={styles.poolHandle} aria-hidden="true">
-                  ⋮⋮
+                  <Icon name="grip-vertical" />
                 </span>
                 <span className={styles.poolAvatar}>{initials(child.name)}</span>
                 <span className={styles.poolName}>{child.name}</span>

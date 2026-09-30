@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { Icon } from './Icon';
 import { ScrollArea } from './ScrollArea';
 import styles from './SearchSelect.module.css';
 
@@ -136,8 +137,8 @@ export function SearchSelect({
         }}
       >
         {selected ? selected.label : <span className={styles.placeholder}>{placeholder}</span>}
-        <span className={styles.caret} aria-hidden="true">
-          ▾
+        <span className={styles.caret}>
+          <Icon name="chevron-down" size={14} />
         </span>
       </button>
 

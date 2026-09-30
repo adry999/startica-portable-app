@@ -27,11 +27,10 @@
 }
 
 .handle {
+  display: inline-flex;
   border: none;
   background: none;
   padding: 2px;
-  font-weight: 800;
-  letter-spacing: -2px;
   color: currentColor;
   opacity: 0.55;
   cursor: grab;

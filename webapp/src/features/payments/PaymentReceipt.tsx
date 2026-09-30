@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Badge, Button, groupTone, SignatureLine } from '@shared/ui';
+import { Badge, Button, groupTone, Icon, SignatureLine } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatDateLong } from '#shared/format/date-format.mjs';
@@ -262,7 +262,15 @@ function ReceiptA4Third({ data }: { data: PaymentReceiptData }) {
                 {data.yearMonths.map(cell => (
                   <div key={cell.month} className={`${styles.yearBandCell} ${styles[cell.kind]}`}>
                     <span>{cell.label.slice(0, 3)}</span>
-                    <span>{cell.kind === 'paid' ? '✓' : cell.kind === 'partial' ? 'Parțial' : '—'}</span>
+                    <span>
+                      {cell.kind === 'paid' ? (
+                        <Icon name="check" size={14} />
+                      ) : cell.kind === 'partial' ? (
+                        'Parțial'
+                      ) : (
+                        '—'
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

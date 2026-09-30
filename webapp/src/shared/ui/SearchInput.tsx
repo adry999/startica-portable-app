@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import styles from './SearchInput.module.css';
 
 export interface SearchInputProps {
@@ -13,8 +14,8 @@ export function SearchInput({ value, onChange, placeholder, ariaLabel, className
   const classes = className ? `${styles.wrap} ${className}` : styles.wrap;
   return (
     <span className={classes}>
-      <span className={styles.icon} aria-hidden="true">
-        ⌕
+      <span className={styles.icon}>
+        <Icon name="search" size={14} />
       </span>
       <input
         className={styles.input}

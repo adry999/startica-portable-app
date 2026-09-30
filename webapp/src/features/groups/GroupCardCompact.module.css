@@ -35,8 +35,7 @@
 /* A3d: mânerul stă în rând, în stânga numelui — nu absolut, nu mai împinge numele cu padding-right. */
 .handle {
   flex: none;
-  font-weight: 800;
-  letter-spacing: -2px;
+  display: inline-flex;
   opacity: 0.55;
 }
 

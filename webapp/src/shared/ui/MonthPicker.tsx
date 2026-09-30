@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { today } from '@domain/calendar-month.mjs';
+import { Icon } from './Icon';
 import styles from './MonthPicker.module.css';
 
 const MONTH_NAMES = [
@@ -87,7 +88,7 @@ export function MonthPicker({ value, onChange }: MonthPickerProps) {
           pick(`${month === 1 ? year - 1 : year}-${String(month === 1 ? 12 : month - 1).padStart(2, '0')}`)
         }
       >
-        ‹
+        <Icon name="chevron-left" />
       </button>
       <button
         type="button"
@@ -106,18 +107,18 @@ export function MonthPicker({ value, onChange }: MonthPickerProps) {
           pick(`${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, '0')}`)
         }
       >
-        ›
+        <Icon name="chevron-right" />
       </button>
 
       {open && (
         <div className={styles.menu} role="dialog" aria-label="Alege luna">
           <div className={styles.menuHead}>
             <button type="button" aria-label="Anul precedent" onClick={() => setMenuYear(y => y - 1)}>
-              ‹
+              <Icon name="chevron-left" />
             </button>
             <strong>{menuYear}</strong>
             <button type="button" aria-label="Anul următor" onClick={() => setMenuYear(y => y + 1)}>
-              ›
+              <Icon name="chevron-right" />
             </button>
           </div>
           <div className={styles.options} role="listbox" aria-label="Alege luna">

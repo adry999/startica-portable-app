@@ -12,18 +12,18 @@ describe('UndoHistory', () => {
     render(
       <UndoHistory history={[]} canUndo={false} onUndoLast={() => {}} onUndoUntil={() => {}} onUndoAll={() => {}} />,
     );
-    expect(screen.getByText('↶ Anulează')).toBeDisabled();
+    expect(screen.getByTitle('Anulează ultima acțiune (Ctrl+Z)')).toBeDisabled();
     fireEvent.click(screen.getByLabelText('Istoricul zilei'));
     expect(screen.getByText('Anulează tot')).toBeDisabled();
     expect(screen.getByText('Nicio modificare încă azi.')).toBeInTheDocument();
   });
 
-  it('apelează onUndoLast la clic pe „↶ Anulează"', () => {
+  it('apelează onUndoLast la clic pe „Anulează"', () => {
     const onUndoLast = vi.fn();
     render(
       <UndoHistory history={HISTORY} canUndo onUndoLast={onUndoLast} onUndoUntil={() => {}} onUndoAll={() => {}} />,
     );
-    fireEvent.click(screen.getByText('↶ Anulează'));
+    fireEvent.click(screen.getByTitle('Anulează ultima acțiune (Ctrl+Z)'));
     expect(onUndoLast).toHaveBeenCalledTimes(1);
   });
 
@@ -33,8 +33,8 @@ describe('UndoHistory', () => {
     expect(screen.getByText('Ana: Prezent → Absent')).toBeInTheDocument();
     expect(screen.getByText('Bogdan: Nemarcat → Prezent')).toBeInTheDocument();
     const rowButtons = screen.getAllByRole('button', { name: /Anulează/ });
-    expect(rowButtons.map(button => button.textContent)).toEqual([
-      '↶ Anulează',
+    expect(rowButtons.map(button => button.textContent?.trim())).toEqual([
+      'Anulează',
       'Anulează tot',
       'Anulează',
       'Anulează până aici',

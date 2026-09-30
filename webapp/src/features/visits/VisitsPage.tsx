@@ -6,6 +6,7 @@ import {
   ConfirmDeleteDialog,
   DataTable,
   FilterPills,
+  Icon,
   IconButton,
   LoadingState,
   RowMenu,
@@ -346,13 +347,13 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             </Button>
             <IconButton
               className={styles.arrowButton}
-              icon="‹"
+              icon={<Icon name="chevron-left" />}
               ariaLabel="Luna anterioară"
               onClick={visitsData.goToPreviousMonth}
             />
             <IconButton
               className={styles.arrowButton}
-              icon="›"
+              icon={<Icon name="chevron-right" />}
               ariaLabel="Luna următoare"
               onClick={visitsData.goToNextMonth}
             />
@@ -541,8 +542,13 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             ]}
           />
           {visitsData.selectedDate && (
-            <Button variant="ghost" onClick={() => visitsData.setSelectedDate(null)}>
-              {formatDate(visitsData.selectedDate)} ×
+            <Button
+              variant="ghost"
+              className={styles.selectedDateClear}
+              onClick={() => visitsData.setSelectedDate(null)}
+            >
+              {formatDate(visitsData.selectedDate)}
+              <Icon name="close" size={14} />
             </Button>
           )}
         </div>

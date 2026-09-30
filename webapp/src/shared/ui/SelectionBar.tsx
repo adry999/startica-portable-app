@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Icon } from './Icon';
 import styles from './SelectionBar.module.css';
 
 export interface SelectionBarProps {
@@ -21,7 +22,7 @@ export function SelectionBar({ label, children, onCancel, floating = false }: Se
       {children}
       {onCancel && (
         <button type="button" className={styles.cancel} onClick={onCancel}>
-          Anulează ×
+          Anulează <Icon name="close" size={14} />
         </button>
       )}
     </div>

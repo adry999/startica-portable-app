@@ -28,8 +28,8 @@
 
 .caret {
   flex: none;
+  display: flex;
   color: var(--muted);
-  font-size: 11px;
 }
 
 .menu {

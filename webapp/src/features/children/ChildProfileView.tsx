@@ -5,6 +5,7 @@ import {
   BnmRateLink,
   Button,
   DataTable,
+  Icon,
   IconButton,
   LoadingState,
   ProfileLayout,
@@ -510,7 +511,7 @@ export function ChildProfileView({
                         </small>
                       </span>
                       <IconButton
-                        icon="×"
+                        icon={<Icon name="close" />}
                         ariaLabel={`Șterge ${alias.alias}`}
                         onClick={() => void deleteAlias(alias)}
                       />

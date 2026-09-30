@@ -37,6 +37,9 @@
 
 .cancel {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
   opacity: 0.8;
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Icon } from '@shared/ui';
 import { requestJson } from '@shared/api/session';
 import { branchInitials } from '#shared/domain/branch.mjs';
 import styles from './BranchSelector.module.css';
@@ -115,8 +116,8 @@ export function BranchSelector({ branch, branches, onSwitch, onManage }: BranchS
           <span className={styles.eyebrow}>Filiala</span>
           <span className={styles.name}>{branch.name}</span>
         </span>
-        <span className={styles.caret} aria-hidden="true">
-          {open ? '▴' : '▾'}
+        <span className={styles.caret}>
+          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={14} />
         </span>
       </button>
 
@@ -149,8 +150,8 @@ export function BranchSelector({ branch, branches, onSwitch, onManage }: BranchS
                     <span className={styles.rowMeta}>{meta}</span>
                   </span>
                   {current && (
-                    <span className={`${styles.check} ${styles[`ink-${item.color}`] ?? ''}`} aria-hidden="true">
-                      ✓
+                    <span className={`${styles.check} ${styles[`ink-${item.color}`] ?? ''}`}>
+                      <Icon name="check" size={14} />
                     </span>
                   )}
                 </button>

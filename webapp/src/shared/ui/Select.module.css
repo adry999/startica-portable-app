@@ -50,7 +50,7 @@
 
 .caret {
   flex: none;
-  font-size: 12px;
+  display: flex;
   color: var(--muted);
   pointer-events: none;
 }

@@ -63,3 +63,10 @@
   width: 100%;
   max-width: 420px;
 }
+
+.iconRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  color: var(--slate);
+}

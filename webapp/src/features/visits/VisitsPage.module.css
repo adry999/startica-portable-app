@@ -412,6 +412,12 @@
   flex-wrap: wrap;
 }
 
+.selectedDateClear {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .filterSelect {
   flex: none;
   width: 170px;

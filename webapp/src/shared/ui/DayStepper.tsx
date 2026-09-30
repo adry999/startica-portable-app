@@ -1,5 +1,6 @@
 import { formatDayLabel } from '#shared/format/date-format.mjs';
 import { shiftDays } from '#shared/domain/calendar-month.mjs';
+import { Icon } from './Icon';
 import styles from './DayStepper.module.css';
 
 export interface DayStepperProps {
@@ -21,7 +22,7 @@ export function DayStepper({ value, onChange, max, label }: DayStepperProps) {
         className={styles.arrow}
         onClick={() => onChange(shiftDays(value, -1))}
       >
-        ‹
+        <Icon name="chevron-left" />
       </button>
       <span className={styles.label}>{label ?? formatDayLabel(value)}</span>
       <button
@@ -31,7 +32,7 @@ export function DayStepper({ value, onChange, max, label }: DayStepperProps) {
         disabled={value >= max}
         onClick={() => onChange(shiftDays(value, 1))}
       >
-        ›
+        <Icon name="chevron-right" />
       </button>
     </div>
   );

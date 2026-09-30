@@ -5,6 +5,7 @@ import {
   Card,
   Checkbox,
   EmptyState,
+  Icon,
   LoadingState,
   ScrollArea,
   SearchInput,
@@ -179,8 +180,8 @@ export function AssignPage({ month }: AssignPageProps) {
             </div>
 
             <div className={styles.altChildField}>
-              <span className={styles.altChildIcon} aria-hidden="true">
-                ⌕
+              <span className={styles.altChildIcon}>
+                <Icon name="search" size={14} />
               </span>
               <SearchSelect
                 value={active.selectedChildId}

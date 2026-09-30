@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import styles from './MonthStepper.module.css';
 
 const MONTH_NAMES = [
@@ -33,13 +34,13 @@ export function MonthStepper({ value, onPrev, onNext, tone = 'yellow' }: MonthSt
   return (
     <div className={rootClass}>
       <button type="button" aria-label="Luna anterioară" className={arrowClass} onClick={onPrev}>
-        ‹
+        <Icon name="chevron-left" />
       </button>
       <span className={styles.label}>
         {MONTH_NAMES[month - 1]} {year}
       </span>
       <button type="button" aria-label="Luna următoare" className={arrowClass} onClick={onNext}>
-        ›
+        <Icon name="chevron-right" />
       </button>
     </div>
   );

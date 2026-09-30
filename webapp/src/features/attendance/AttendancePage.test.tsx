@@ -136,7 +136,7 @@ describe('AttendancePage · Ziua', () => {
     await waitForDebounce();
     posted.length = 0;
 
-    await user.click(screen.getByRole('button', { name: '↶ Anulează' }));
+    await user.click(screen.getByTitle('Anulează ultima acțiune (Ctrl+Z)'));
     expect(screen.getByRole('button', { name: 'Ana Popescu: Nemarcat' })).toBeInTheDocument();
 
     await waitForDebounce();

@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import styles from './ActiveFilters.module.css';
 
 export interface ActiveFilterChip {
@@ -22,7 +23,7 @@ export function ActiveFilters({ filters, onReset }: ActiveFiltersProps) {
       <span className={styles.label}>Filtre active:</span>
       {filters.map(filter => (
         <button key={filter.key} type="button" className={styles.chip} onClick={filter.onClear}>
-          {filter.label} <span aria-hidden="true">×</span>
+          {filter.label} <Icon name="close" size={14} />
         </button>
       ))}
       <button type="button" className={styles.reset} onClick={onReset}>

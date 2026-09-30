@@ -415,7 +415,7 @@ describe('ChildrenPage', () => {
     await user.click(within(activeRow).getByRole('checkbox'));
     let selectionBar = screen.getByText('1 selectați').closest('div')!;
     expect(within(selectionBar).queryByRole('button', { name: 'Șterge definitiv' })).not.toBeInTheDocument();
-    await user.click(within(selectionBar).getByRole('button', { name: 'Anulează ×' }));
+    await user.click(within(selectionBar).getByRole('button', { name: 'Anulează' }));
 
     await user.click(screen.getByRole('radio', { name: /Arhivați/ }));
     const archivedRow = screen.getByText('Ionuț Marin').closest('tr')!;

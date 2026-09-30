@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Icon } from './Icon';
 import { ScrollArea } from './ScrollArea';
 import styles from './Drawer.module.css';
 
@@ -50,7 +51,7 @@ export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, fo
         <header className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
           <button type="button" className={styles.close} aria-label="Închide" onClick={requestClose}>
-            ×
+            <Icon name="close" />
           </button>
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>

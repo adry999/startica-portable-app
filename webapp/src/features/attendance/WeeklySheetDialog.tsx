@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Checkbox, IconButton, groupTone, type PillTone } from '@shared/ui';
+import { Button, Checkbox, Icon, IconButton, groupTone, type PillTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -117,14 +117,14 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
           <span className={styles.label}>Săptămâna</span>
           <div className={styles.stepper}>
             <IconButton
-              icon="‹"
+              icon={<Icon name="chevron-left" />}
               ariaLabel="Săptămâna anterioară"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, -7))}
             />
             <span className={styles.stepperLabel}>{formatWeekRangeShort(week)}</span>
             <IconButton
-              icon="›"
+              icon={<Icon name="chevron-right" />}
               ariaLabel="Săptămâna următoare"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, 7))}
@@ -166,7 +166,7 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
                   setPreviewGroupId(group.id);
                 }}
               >
-                {selected ? '✓' : '+'} {group.name} {childCountByGroup.get(group.id) ?? 0}
+                {selected ? <Icon name="check" size={14} /> : '+'} {group.name} {childCountByGroup.get(group.id) ?? 0}
               </Button>
             );
           })}

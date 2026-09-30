@@ -75,7 +75,7 @@ describe('StartupScreen', () => {
     expect(screen.queryByText(/Sincronizez/)).not.toBeInTheDocument();
 
     const serverStep = screen.getByText('Pornesc serverul local').closest('li');
-    expect(serverStep).toHaveTextContent('✓');
+    expect(serverStep?.querySelector('.lucide-check')).toBeInTheDocument();
     expect(serverStep?.textContent).toMatch(/0,2 s/);
 
     // ALINIERE-DESIGN.md A8 „Încărcare 21a”: versiunea are prefixul „v”.

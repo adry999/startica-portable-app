@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
-import { RowMenu } from '@shared/ui';
+import { Icon, RowMenu } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
@@ -96,7 +96,7 @@ export function GroupTile({
           }}
           onDragEnd={() => setBeingDragged(false)}
         >
-          ⋮⋮
+          <Icon name="grip-vertical" />
         </button>
         {onEdit ? (
           <button type="button" className={styles.name} onClick={onEdit}>

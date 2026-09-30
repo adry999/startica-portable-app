@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { Icon } from './Icon';
 import styles from './SettingsList.module.css';
 
 export interface SettingsListItem {
@@ -87,8 +88,8 @@ export function SettingsList<T extends SettingsListItem>({
             }
           >
             {onReorder && (
-              <span className={styles.handle} aria-hidden="true">
-                ⋮⋮
+              <span className={styles.handle}>
+                <Icon name="grip-vertical" />
               </span>
             )}
             <div className={styles.name}>{renderName(item)}</div>

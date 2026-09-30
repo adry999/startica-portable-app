@@ -196,14 +196,7 @@
 }
 
 .removeRow {
-  border: none;
   background: var(--neutral-soft);
-  border-radius: var(--radius-sm);
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-  cursor: pointer;
-  flex: none;
 }
 
 .field {

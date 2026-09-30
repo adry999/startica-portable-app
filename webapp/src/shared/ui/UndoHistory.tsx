@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { UndoHistoryEntry } from '@shared/state/useUndoStack';
+import { Icon } from './Icon';
 import styles from './UndoHistory.module.css';
 
 export type { UndoHistoryEntry };
@@ -31,11 +32,11 @@ export function UndoHistory({ history, canUndo, onUndoLast, onUndoUntil, onUndoA
         title="Anulează ultima acțiune (Ctrl+Z)"
         onClick={onUndoLast}
       >
-        ↶ Anulează
+        <Icon name="undo" size={14} /> Anulează
       </button>
       <details ref={detailsRef} className={styles.history} onClick={event => event.stopPropagation()}>
         <summary aria-label="Istoricul zilei" title="Istoricul zilei">
-          {history.length} ▾
+          {history.length} <Icon name="chevron-down" size={14} />
         </summary>
         <div className={styles.panel}>
           <div className={styles.panelHead}>

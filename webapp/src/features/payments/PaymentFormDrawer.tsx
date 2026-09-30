@@ -8,6 +8,8 @@ import {
   Drawer,
   Field,
   groupTone,
+  Icon,
+  IconButton,
   NumberInput,
   PersonCell,
   SearchSelect,
@@ -539,14 +541,12 @@ export function PaymentFormDrawer({
                         />
                       </Field>
                     </div>
-                    <button
-                      type="button"
+                    <IconButton
+                      icon={<Icon name="close" />}
                       className={styles.removeRow}
-                      aria-label="Elimină repartizarea"
+                      ariaLabel="Elimină repartizarea"
                       onClick={() => removeAllocationRow(index)}
-                    >
-                      ×
-                    </button>
+                    />
                   </div>
                 ))}
               </div>

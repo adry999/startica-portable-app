@@ -239,7 +239,6 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
       <RowMenu
         ariaLabel="Mai multe opțiuni"
-        trigger="⋯"
         items={[{ label: 'Administrează categorii', onClick: () => setCategoryDrawerOpen(true) }]}
       />
     </div>,

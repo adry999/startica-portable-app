@@ -30,9 +30,9 @@
 }
 
 .handle {
+  display: flex;
+  align-items: center;
   color: var(--input-border);
-  font-weight: 800;
-  letter-spacing: -2px;
   opacity: 0.55;
 }
 

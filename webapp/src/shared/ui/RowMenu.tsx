@@ -1,4 +1,5 @@
 import { useRef, type ReactNode } from 'react';
+import { Icon } from './Icon';
 import styles from './RowMenu.module.css';
 
 export interface RowMenuItem {
@@ -12,12 +13,17 @@ export interface RowMenuItem {
 export interface RowMenuProps {
   items: RowMenuItem[];
   ariaLabel?: string;
-  /** Declanșatorul meniului — implicit „⋯” (rândurile de tabel); text pentru meniuri ca „Mută în grupă” din bara de selecție. */
+  /** Declanșatorul meniului — implicit iconița „mai multe” (rândurile de tabel); text pentru meniuri
+   * ca „Mută în grupă” din bara de selecție. */
   trigger?: ReactNode;
 }
 
-/** Meniul ⋯ de pe rândul unui tabel — un singur loc, în loc de câte o copie per ecran. */
-export function RowMenu({ items, ariaLabel = 'Mai multe acțiuni', trigger = '⋯' }: RowMenuProps) {
+/** Meniul „mai multe” de pe rândul unui tabel — un singur loc, în loc de câte o copie per ecran. */
+export function RowMenu({
+  items,
+  ariaLabel = 'Mai multe acțiuni',
+  trigger = <Icon name="more-horizontal" />,
+}: RowMenuProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
   return (

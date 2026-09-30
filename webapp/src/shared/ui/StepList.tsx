@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import styles from './StepList.module.css';
 
 export interface StepListItem {
@@ -20,9 +21,7 @@ export function StepList({ steps, className }: StepListProps) {
     <ol className={classes}>
       {steps.map(step => (
         <li key={step.key} className={`${styles.step} ${styles[step.status]}`}>
-          <span className={styles.marker} aria-hidden="true">
-            {step.status === 'done' ? '✓' : ''}
-          </span>
+          <span className={styles.marker}>{step.status === 'done' && <Icon name="check" size={14} />}</span>
           <span className={styles.label}>{step.label}</span>
           <span className={styles.duration}>{step.duration}</span>
         </li>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MonthPicker, ScrollArea, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
+import { Icon, MonthPicker, ScrollArea, useTopbarActionsSlot, useTopbarTitleSlot } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { BNM_HOME_URL, latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
@@ -144,8 +144,8 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
               <strong className={styles.ratePillRate}>{formatRate(todaysRate)} lei</strong>
               <small className={styles.ratePillCaption}>{ratePillCaption}</small>
             </span>
-            <span className={styles.ratePillArrow} aria-hidden="true">
-              ↗
+            <span className={styles.ratePillArrow}>
+              <Icon name="external-link" size={14} />
             </span>
           </a>
         )}

@@ -275,7 +275,7 @@ describe('VisitsPage', () => {
     await user.click(within(activeRow).getByRole('checkbox', { name: 'Selectează rândul' }));
     let selectionBar = screen.getByText('1 selectate').closest('div')!;
     expect(within(selectionBar).queryByRole('button', { name: 'Șterge definitiv' })).not.toBeInTheDocument();
-    await user.click(within(selectionBar).getByRole('button', { name: 'Anulează ×' }));
+    await user.click(within(selectionBar).getByRole('button', { name: 'Anulează' }));
 
     await user.click(screen.getByRole('radio', { name: /Arhivate/ }));
     const archivedRow = within(screen.getByRole('table')).getByText('Vlad Rusu').closest('tr')!;

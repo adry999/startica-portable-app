@@ -4,6 +4,7 @@ import {
   Card,
   ConfirmDeleteDialog,
   Field,
+  Icon,
   IconButton,
   LoadingState,
   NumberInput,
@@ -343,7 +344,7 @@ function GroupEditor({
               <span className={styles.memberName}>{member.name}</span>
               <span className={styles.memberAge}>{member.ageLabel}</span>
               <IconButton
-                icon="×"
+                icon={<Icon name="close" />}
                 ariaLabel={`Scoate ${member.name} din grupă`}
                 title="Scoate din grupă"
                 onClick={() => onRemove(member.id)}

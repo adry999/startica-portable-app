@@ -1,3 +1,4 @@
+import { Icon } from './Icon';
 import styles from './Select.module.css';
 
 export interface SelectOption {
@@ -59,8 +60,8 @@ export function Select({
           </option>
         ))}
       </select>
-      <span className={styles.caret} aria-hidden="true">
-        ▾
+      <span className={styles.caret}>
+        <Icon name="chevron-down" size={14} />
       </span>
     </div>
   );

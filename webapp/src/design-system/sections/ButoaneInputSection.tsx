@@ -12,6 +12,7 @@ import {
   FileInput,
   FilterPills,
   groupTone,
+  Icon,
   IconButton,
   MonthPicker,
   MonthStepper,
@@ -128,11 +129,16 @@ export function ButoaneInputSection() {
         reference="DS Componente.dc.html §28a — × 36 rotund (închidere) / ⋯ 32 radius 10"
       >
         <DemoRow label="size">
-          <IconButton icon="×" ariaLabel="Închide" size="lg" onClick={() => {}} />
-          <IconButton icon="⋯" ariaLabel="Mai multe acțiuni" size="sm" onClick={() => {}} />
+          <IconButton icon={<Icon name="close" />} ariaLabel="Închide" size="lg" onClick={() => {}} />
+          <IconButton
+            icon={<Icon name="more-horizontal" />}
+            ariaLabel="Mai multe acțiuni"
+            size="sm"
+            onClick={() => {}}
+          />
         </DemoRow>
         <DemoRow label="disabled">
-          <IconButton icon="×" ariaLabel="Închide" size="lg" disabled onClick={() => {}} />
+          <IconButton icon={<Icon name="close" />} ariaLabel="Închide" size="lg" disabled onClick={() => {}} />
         </DemoRow>
       </ComponentShowcase>
 

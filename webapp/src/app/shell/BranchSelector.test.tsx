@@ -40,7 +40,7 @@ describe('BranchSelector', () => {
     expect(trigger.className).toMatch(/orange/);
   });
 
-  it('dropdown-ul listează filialele cu ✓ pe cea curentă și se închide la Esc', async () => {
+  it('dropdown-ul listează filialele cu bifă pe cea curentă și se închide la Esc', async () => {
     const user = userEvent.setup();
     render(
       <BranchSelector branch={buiucani} branches={[buiucani, botanica]} onSwitch={() => {}} onManage={() => {}} />,
@@ -49,9 +49,9 @@ describe('BranchSelector', () => {
     await user.click(screen.getByRole('button', { name: /Buiucani/ }));
     expect(screen.getByText('Schimbă filiala')).toBeInTheDocument();
     const buiucaniRow = screen.getByRole('button', { name: /Buiucani.*copii/ });
-    expect(buiucaniRow).toHaveTextContent('✓');
+    expect(buiucaniRow.querySelector('.lucide-check')).toBeInTheDocument();
     const botanicaRow = screen.getByRole('button', { name: /Botanica.*copii/ });
-    expect(botanicaRow).not.toHaveTextContent('✓');
+    expect(botanicaRow.querySelector('.lucide-check')).not.toBeInTheDocument();
     await waitFor(() => expect(buiucaniRow).toHaveTextContent('99 copii'));
 
     await user.keyboard('{Escape}');

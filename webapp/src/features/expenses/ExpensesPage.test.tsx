@@ -471,7 +471,7 @@ describe('ExpensesPage', () => {
     await user.click(within(activeRow).getByLabelText('Mai multe acțiuni'));
     expect(within(activeRow).getByRole('button', { name: 'Șterge definitiv' })).toBeDisabled();
 
-    await user.click(screen.getByText('Nearhivate ▾'));
+    await user.click(screen.getByText('Nearhivate', { selector: 'summary' }));
     await user.click(screen.getByRole('menuitemradio', { name: 'Arhivate' }));
     const archivedRow = screen.getByText('Chirie sediu').closest('tr')!;
     await user.click(within(archivedRow).getByLabelText('Mai multe acțiuni'));
@@ -491,7 +491,7 @@ describe('ExpensesPage', () => {
     renderPage();
     const user = userEvent.setup();
 
-    await user.click(screen.getByText('Nearhivate ▾'));
+    await user.click(screen.getByText('Nearhivate', { selector: 'summary' }));
     await user.click(screen.getByRole('menuitemradio', { name: 'Arhivate' }));
     const row = screen.getByText('Chirie sediu').closest('tr')!;
     await user.click(within(row).getByRole('checkbox'));

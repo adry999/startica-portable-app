@@ -16,13 +16,13 @@ describe('PhoneInput', () => {
 
   it('nu arată niciun mesaj cât câmpul e gol', () => {
     render(<PhoneInput value="" onChange={() => {}} ariaLabel="Telefon" />);
-    expect(screen.queryByText(/^✓/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\+373/)).not.toBeInTheDocument();
     expect(screen.queryByText('Numărul nu e un mobil moldovenesc valid.')).not.toBeInTheDocument();
   });
 
   it('arată confirmarea E.164 pentru un număr valid', () => {
     render(<PhoneInput value="069123456" onChange={() => {}} ariaLabel="Telefon" />);
-    expect(screen.getByText('✓ +37369123456')).toBeInTheDocument();
+    expect(screen.getByText('+37369123456')).toBeInTheDocument();
     expect(screen.getByLabelText('Telefon')).not.toHaveAttribute('aria-invalid');
   });
 

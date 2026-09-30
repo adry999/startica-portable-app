@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RowMenu } from '@shared/ui';
+import { Icon, RowMenu } from '@shared/ui';
 import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
 import { capacityPillLabel } from './groupStatePill';
@@ -79,7 +79,7 @@ export function GroupCardCompact({
     >
       <div className={styles.headRow}>
         <span className={styles.handle} aria-hidden="true">
-          ⋮⋮
+          <Icon name="grip-vertical" />
         </span>
         <p className={styles.name}>{group.name}</p>
         <strong className={styles.occupancy}>{group.occupancyLabel}</strong>

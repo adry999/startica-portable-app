@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
+import { Button, Drawer, Icon, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { ageInYears } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
@@ -234,7 +234,8 @@ export function GroupFormDrawer({
         />
 
         <p className={styles.orderNote}>
-          Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu „⋮⋮”.
+          Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu mânerul{' '}
+          <Icon name="grip-vertical" size={14} style={{ verticalAlign: 'text-bottom' }} />.
         </p>
       </form>
     </Drawer>

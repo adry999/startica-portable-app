@@ -1,4 +1,5 @@
 import { normalizeMoldovanPhone } from '#shared/domain/phone-number.mjs';
+import { Icon } from './Icon';
 import styles from './PhoneInput.module.css';
 
 export interface PhoneInputProps {
@@ -53,7 +54,13 @@ export function PhoneInput({
       </div>
       {trimmed !== '' && (
         <p id={statusId} className={normalized ? styles.success : styles.error}>
-          {normalized ? `✓ ${normalized}` : 'Numărul nu e un mobil moldovenesc valid.'}
+          {normalized ? (
+            <>
+              <Icon name="check" size={14} /> {normalized}
+            </>
+          ) : (
+            'Numărul nu e un mobil moldovenesc valid.'
+          )}
         </p>
       )}
     </div>
