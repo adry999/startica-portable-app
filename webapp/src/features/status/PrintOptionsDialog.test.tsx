@@ -23,9 +23,9 @@ describe('PrintOptionsDialog', () => {
     render(<PrintOptionsDialog open={true} onCancel={vi.fn()} onConfirm={onConfirm} />);
     const user = userEvent.setup();
 
-    await user.click(screen.getByLabelText('Toți copiii'));
+    await user.click(screen.getByRole('radio', { name: 'Toți copiii' }));
     await user.click(screen.getByLabelText('Cu telefon')); // dezactivează
-    await user.click(screen.getByLabelText('Vertical'));
+    await user.click(screen.getByRole('radio', { name: 'Vertical' }));
     await user.click(screen.getByRole('button', { name: 'Tipărește' }));
 
     expect(onConfirm).toHaveBeenCalledWith({ scope: 'all', showPhone: false, orientation: 'portrait' });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@shared/ui';
+import { Button, Checkbox, SegmentedControl } from '@shared/ui';
 import styles from './PrintOptionsDialog.module.css';
 
 export type PrintScope = 'filtered' | 'all';
@@ -19,6 +19,16 @@ export interface PrintOptionsDialogProps {
 
 const DEFAULT_OPTIONS: PrintOptions = { scope: 'filtered', showPhone: true, orientation: 'landscape' };
 
+const SCOPE_OPTIONS = [
+  { value: 'filtered', label: 'Filtrul curent' },
+  { value: 'all', label: 'Toți copiii' },
+] as const;
+
+const ORIENTATION_OPTIONS = [
+  { value: 'landscape', label: 'Orizontal' },
+  { value: 'portrait', label: 'Vertical' },
+] as const;
+
 /** Dialogul „Ce tipăresc?” de la butonul Tipărește din Situația plăților (16c). */
 export function PrintOptionsDialog({ open, onCancel, onConfirm }: PrintOptionsDialogProps) {
   const [options, setOptions] = useState<PrintOptions>(DEFAULT_OPTIONS);
@@ -36,61 +46,37 @@ export function PrintOptionsDialog({ open, onCancel, onConfirm }: PrintOptionsDi
       >
         <h2 className={styles.title}>Tipărește situația plăților</h2>
 
-        <fieldset className={styles.field}>
-          <legend>Ce tipăresc?</legend>
-          <label>
-            <input
-              type="radio"
-              name="print-scope"
-              checked={options.scope === 'filtered'}
-              onChange={() => setOptions(current => ({ ...current, scope: 'filtered' }))}
-            />
-            Filtrul curent
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="print-scope"
-              checked={options.scope === 'all'}
-              onChange={() => setOptions(current => ({ ...current, scope: 'all' }))}
-            />
-            Toți copiii
-          </label>
-        </fieldset>
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Ce tipăresc?</span>
+          <SegmentedControl
+            ariaLabel="Ce tipăresc?"
+            value={options.scope}
+            onChange={scope => setOptions(current => ({ ...current, scope }))}
+            options={SCOPE_OPTIONS}
+          />
+        </div>
 
-        <fieldset className={styles.field}>
-          <legend>Coloane</legend>
-          <label>
-            <input
-              type="checkbox"
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Coloane</span>
+          <div className={styles.checkboxRow}>
+            <Checkbox
               checked={options.showPhone}
-              onChange={event => setOptions(current => ({ ...current, showPhone: event.target.checked }))}
+              onChange={showPhone => setOptions(current => ({ ...current, showPhone }))}
+              ariaLabel="Cu telefon"
             />
-            Cu telefon
-          </label>
-        </fieldset>
+            <span>Cu telefon</span>
+          </div>
+        </div>
 
-        <fieldset className={styles.field}>
-          <legend>Orientare</legend>
-          <label>
-            <input
-              type="radio"
-              name="print-orientation"
-              checked={options.orientation === 'landscape'}
-              onChange={() => setOptions(current => ({ ...current, orientation: 'landscape' }))}
-            />
-            Orizontal
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="print-orientation"
-              checked={options.orientation === 'portrait'}
-              onChange={() => setOptions(current => ({ ...current, orientation: 'portrait' }))}
-            />
-            Vertical
-          </label>
-        </fieldset>
+        <div className={styles.field}>
+          <span className={styles.fieldLabel}>Orientare</span>
+          <SegmentedControl
+            ariaLabel="Orientare"
+            value={options.orientation}
+            onChange={orientation => setOptions(current => ({ ...current, orientation }))}
+            options={ORIENTATION_OPTIONS}
+          />
+        </div>
 
         <div className={styles.actions}>
           <Button variant="white" onClick={onCancel}>

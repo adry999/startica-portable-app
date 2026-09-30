@@ -9,15 +9,6 @@
   gap: var(--space-12);
 }
 
-.yearSelect {
-  border: 1.5px solid var(--border);
-  background: var(--white);
-  border-radius: var(--radius-pill);
-  padding: var(--space-8) var(--space-16);
-  font: 800 14px var(--font-body);
-  color: var(--slate);
-}
-
 .tableCard {
   padding: 0;
   overflow: hidden;
@@ -90,9 +81,6 @@
 }
 
 .cardLink {
-  border: none;
-  background: none;
-  padding: 0;
   color: var(--yellow-ink);
   font-size: 12px;
   font-weight: 800;

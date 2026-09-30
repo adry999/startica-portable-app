@@ -8,6 +8,7 @@ import {
   LoadingState,
   MonthPicker,
   SearchInput,
+  Select,
   SegmentedControl,
   SmsConfirmDialog,
   groupTone,
@@ -325,18 +326,12 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
       {mode === 'month' ? (
         <MonthPicker value={month} onChange={onMonthChange} />
       ) : (
-        <select
-          className={styles.yearSelect}
-          aria-label="Anul școlar"
-          value={startYear}
-          onChange={event => setStartYear(Number(event.target.value))}
-        >
-          {yearData.schoolYearOptions.map(year => (
-            <option key={year} value={year}>
-              {schoolYearLabel(year)}
-            </option>
-          ))}
-        </select>
+        <Select
+          ariaLabel="Anul școlar"
+          value={String(startYear)}
+          onChange={value => setStartYear(Number(value))}
+          options={yearData.schoolYearOptions.map(year => ({ value: String(year), label: schoolYearLabel(year) }))}
+        />
       )}
       <Button variant="ghost" disabled={mode !== 'month'} onClick={() => setPrintDialogOpen(true)}>
         Tipărește
@@ -546,9 +541,9 @@ function MonthView({
             {data.missingFeeCount}
           </strong>
           {data.missingFeeCount > 0 && (
-            <button type="button" className={styles.cardLink} onClick={() => onNavigate('fees')}>
+            <Button variant="link" className={styles.cardLink} onClick={() => onNavigate('fees')}>
               Completează →
-            </button>
+            </Button>
           )}
         </Card>
       </div>
