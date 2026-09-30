@@ -593,7 +593,13 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 988/988 teste) — verzi după fiecare rundă.
 
-**6 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal). **Urmează:** Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 7 — Bazin:** `BookingDrawer`/`MonthView`/`PoolPage`/`PoolReceiptPage` rescrise. `ChipSelect`+`ChoiceCards` noi (22b — zile/ore cu locuri), API minim. `WeekView` rămâne local — spec-ul `WeekGrid` (30g) nu se potrivește și are un singur loc de folosire.
+
+**Runda 8 — Grupe:** `GroupFormDrawer`/`GroupsPage`/`GroupTeamPicker` rescrise; `TonePicker` a primit tonul `green` (îi lipsea din cele 8) + prop `titleFor`. Rămân brute, deliberat: mânerul ⋮⋮ (drag&drop real, neatins) și pastilele compuse avatar+nume+ton. `Board`/`@shared/dnd`/`DragHandle` rămân pentru o lucrare dedicată separată.
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 994/994 teste) — verzi după fiecare rundă.
+
+**8 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe). **Urmează:** Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
