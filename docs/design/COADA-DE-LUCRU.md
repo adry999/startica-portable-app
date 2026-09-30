@@ -567,5 +567,17 @@ Lucrat cu 3 subagenți paraleli (Sonnet), fișiere separate, integrate și verif
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 924/924 teste) — verzi.
 
+## 2026-09-30 — PROMPT-CLAUDE-CODE-3.md, punctul 4 — design system, faza mare — ÎN LUCRU
+
+Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți paraleli, commit după fiecare rundă verificată. Metodologie aleasă la conflict între cele două documente: `DS-IMPLEMENTARE.md` (pașii 1-8 "bibliotecă întâi") vs. `COMPONENTE.md` §4 "Ordine" ("extrage componentele **în punctul din ALINIERE care le folosește prima dată**, nu într-un pas separat înainte") — s-a ales **§4** (extragere la prima folosire reală, pe modul), pentru că e reconfirmarea explicită mai recentă și e exact ce practica deja sesiunea asta (Checkbox/TextField/TextArea extrase la 15b/11c-11d). `DS-IMPLEMENTARE.md` rămâne folosit ca listă de componente și ca ordinea celor 16 module (pasul 9), nu ca plan de construcție speculativă.
+
+**Runda 0 — fundamente:** tokeni lipsă adăugați (`--radius-5`, `--shadow-popover`, `--shadow-drag`, `--text-secondary`, `--on-slate-muted`, `--error-bg-soft`, scara `--motion-*`), `TonePicker` aliniat la 32c (fundal `-soft`, selectat `-ink` + ✓, aria-label românesc), `Field` + `TextInput` extrase ca bază comună.
+
+**Runda 1 — modulul Achitări (5a/5b/15b), primul din pasul 9:** `NumberInput`, `DateInput`, `AmountInput` (sumă/dată/repartizare), `PeriodFilter` (versiune minimă, doar intervalul folosit deja), `ActiveFilters`, `IconButton` (doar lg/sm) — extrase la folosirea lor reală în `PaymentFormDrawer`/`PaymentsTable`/`PaymentDetailPanel`/`PaymentsByMonth`. Rămân neatinse, deliberat: „Luna” (repartizare manuală, `type=month`, așteaptă un `MonthInput` real), butoanele-link simple (niciun variant `Button` nu le acoperă azi), pastilele de scurtătură lună/bazin (`ChipSelect` e scopat pe alte ecrane). **Nu am bifat rândul Achitări din `DS-IMPLEMENTARE.md` §3** — R1-R8 nu sunt încă la "error" pe tot repo-ul, rămân cele 3 excepții de mai sus, și nu s-a făcut captură la 1440px comparată cu artboard-ul (fără browser deschis în această rundă).
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 955/955 teste) — verzi după fiecare rundă.
+
+**Urmează:** modulul Copii (2a/2b/2c/15a), apoi Prezența, Cheltuieli, ... per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
