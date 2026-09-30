@@ -1,0 +1,54 @@
+.columnMenu {
+  position: relative;
+  display: inline-block;
+}
+
+.columnMenu summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  list-style: none;
+  cursor: pointer;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+}
+
+.columnMenu summary:hover {
+  background: var(--neutral-soft);
+}
+
+.columnMenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  background: var(--white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  min-width: 180px;
+  padding: var(--space-10);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+  cursor: pointer;
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+}

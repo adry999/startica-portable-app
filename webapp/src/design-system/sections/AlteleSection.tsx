@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Avatar,
   Badge,
+  ColumnMenu,
   CopyField,
   CountBadge,
   Icon,
@@ -9,6 +10,7 @@ import {
   LoadingBar,
   NumberStepper,
   Notice,
+  Pagination,
   PrintFooter,
   PrintHeader,
   PrintTable,
@@ -17,6 +19,7 @@ import {
   SignatureLine,
   Slider,
   StepList,
+  TableFooter,
   Tabs,
   ThermalBlock,
   ThermalRule,
@@ -387,6 +390,48 @@ export function AlteleSection() {
       >
         <DemoRow label="control">
           <Kbd>Ctrl+K</Kbd> <Kbd>Esc</Kbd> <Kbd>Ctrl+Z</Kbd>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ColumnMenu"
+        importLine="import { ColumnMenu } from '@shared/ui';"
+        reference="Chrome de tabel — alegerea coloanelor vizibile"
+      >
+        <DemoRow label="control">
+          <ColumnMenu
+            ariaLabel="Coloane"
+            columns={[
+              { key: 'name', label: 'Nume', locked: true },
+              { key: 'phone', label: 'Telefon' },
+              { key: 'group', label: 'Grupă' },
+            ]}
+            visibleKeys={['name', 'phone']}
+            onChange={() => {}}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Pagination"
+        importLine="import { Pagination } from '@shared/ui';"
+        reference="Chrome de tabel — navigare pagini"
+      >
+        <DemoRow label="control">
+          <Pagination ariaLabel="Pagini" page={2} totalPages={5} onPageChange={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TableFooter"
+        importLine="import { TableFooter, Pagination } from '@shared/ui';"
+        reference="Chrome de tabel — subsol cu total și paginare"
+      >
+        <DemoRow label="control">
+          <TableFooter
+            summary="24 de rezultate"
+            pagination={<Pagination ariaLabel="Pagini" page={1} totalPages={3} onPageChange={() => {}} />}
+          />
         </DemoRow>
       </ComponentShowcase>
     </div>

@@ -1,7 +1,13 @@
-import { Board, type BoardColumn } from '@shared/ui/Board';
-import { DayGrid, type DayGridRow } from '@shared/ui/DayGrid';
-import { MonthCalendar, type MonthCalendarDay } from '@shared/ui/MonthCalendar';
-import { WeekGrid, type WeekGridEvent } from '@shared/ui/WeekGrid';
+import {
+  Board,
+  type BoardColumn,
+  DayGrid,
+  type DayGridRow,
+  MonthCalendar,
+  type MonthCalendarDay,
+  WeekGrid,
+  type WeekGridEvent,
+} from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import styles from './GriduriSection.module.css';

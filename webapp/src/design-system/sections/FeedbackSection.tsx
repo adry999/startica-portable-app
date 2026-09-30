@@ -5,6 +5,7 @@ import {
   ConfirmDeleteDialog,
   ConfirmDialog,
   Dialog,
+  Disclosure,
   Drawer,
   EmptyState,
   EMPTY_STATES,
@@ -14,6 +15,8 @@ import {
   LockedContent,
   LoadingState,
   Popover,
+  PrintOptionsDialog,
+  ProgressToast,
   resolveEmptyStateTitle,
   SaveIndicator,
   Skeleton,
@@ -40,6 +43,7 @@ export function FeedbackSection() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [lockedContentUnlocked, setLockedContentUnlocked] = useState(false);
   const [unsavedChangesOpen, setUnsavedChangesOpen] = useState(false);
+  const [printOptionsOpen, setPrintOptionsOpen] = useState(false);
 
   return (
     <div className={styles.section}>
@@ -445,6 +449,52 @@ export function FeedbackSection() {
             onStay={() => setUnsavedChangesOpen(false)}
             onSaveAndContinue={() => setUnsavedChangesOpen(false)}
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ProgressToast"
+        importLine="import { ProgressToast } from '@shared/ui';"
+        reference="COMPONENTE.md §0i · Toast de progres pentru operații lungi (export/import)"
+      >
+        <DemoRow label="control">
+          <ProgressToast
+            title="Se exportă situația plăților…"
+            progress={62}
+            detail="62 din 100 de copii"
+            onCancel={() => {}}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PrintOptionsDialog"
+        importLine="import { PrintOptionsDialog } from '@shared/ui';"
+        reference="COMPONENTE.md §0i — dialog de opțiuni înainte de printare"
+      >
+        <DemoRow label="control">
+          <button type="button" onClick={() => setPrintOptionsOpen(true)}>
+            Printează
+          </button>
+          <PrintOptionsDialog
+            open={printOptionsOpen}
+            onClose={() => setPrintOptionsOpen(false)}
+            onPrint={() => setPrintOptionsOpen(false)}
+          >
+            <p>Conținutul formularului de opțiuni — doar demonstrativ, fără date reale.</p>
+          </PrintOptionsDialog>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Disclosure"
+        importLine="import { Disclosure } from '@shared/ui';"
+        reference="COMPONENTE.md §0f — secțiune pliabilă"
+      >
+        <DemoRow label="control">
+          <Disclosure title="Detalii suplimentare" defaultOpen>
+            <p>Conținutul secțiunii pliabile.</p>
+          </Disclosure>
         </DemoRow>
       </ComponentShowcase>
 

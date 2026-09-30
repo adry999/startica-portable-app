@@ -14,9 +14,8 @@ export interface BreadcrumbProps {
 
 /** Fir de ariadnă (COMPONENTE.md §0c, 28d) — ex. „Copii › Ionescu Maria”. */
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
-  const classes = className ? `${styles.root} ${className}` : styles.root;
   return (
-    <nav aria-label="Fir de ariadnă" className={classes}>
+    <nav aria-label="Fir de ariadnă" className={className}>
       <ol className={styles.list}>
         {items.map((item, index) => (
           <li key={item.label} className={styles.item}>

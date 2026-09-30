@@ -12,8 +12,11 @@ import {
   FileInput,
   FilterMenu,
   FilterPills,
+  FormGrid,
+  FormSection,
   groupTone,
   IconButton,
+  InlineEdit,
   MonthInput,
   MonthPicker,
   MonthStepper,
@@ -718,6 +721,47 @@ export function ButoaneInputSection() {
               { value: 'c', label: 'Grupa Mijlocii' },
             ]}
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="FormSection"
+        importLine="import { FormSection } from '@shared/ui';"
+        reference="DS-IMPLEMENTARE.md §3 — structură de formular, grupare de câmpuri cu titlu"
+      >
+        <DemoRow label="control">
+          <FormSection title="Date de contact" description="Folosite pentru notificări SMS.">
+            <p>Câmpurile formularului ar veni aici.</p>
+          </FormSection>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="FormGrid"
+        importLine="import { FormGrid } from '@shared/ui';"
+        reference="DS-IMPLEMENTARE.md §3 — structură de formular, grilă responzivă de câmpuri"
+      >
+        <DemoRow label="control">
+          <FormGrid>
+            <div>Câmp 1</div>
+            <div>Câmp 2</div>
+          </FormGrid>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="InlineEdit"
+        importLine="import { InlineEdit } from '@shared/ui';"
+        reference="COMPONENTE.md §0i, 34d — editare directă pe clic"
+      >
+        <DemoRow label="control">
+          <InlineEdit ariaLabel="Nume" value="Ionescu Maria" onSave={() => {}} />
+        </DemoRow>
+        <DemoRow label="gol (placeholder)">
+          <InlineEdit ariaLabel="Poreclă" value="" onSave={() => {}} placeholder="Fără poreclă" />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <InlineEdit ariaLabel="Nume" value="Ionescu Maria" onSave={() => {}} disabled />
         </DemoRow>
       </ComponentShowcase>
 

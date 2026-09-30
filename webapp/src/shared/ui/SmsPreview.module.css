@@ -1,0 +1,31 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 320px;
+}
+
+.bubble {
+  background: var(--mint-soft);
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-14) var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.sender {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.message {
+  margin: 0;
+  color: var(--slate);
+  white-space: pre-wrap;
+}
+
+.counter {
+  align-self: flex-end;
+}

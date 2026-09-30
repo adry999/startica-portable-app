@@ -1,4 +1,14 @@
-import { Breadcrumb, PageHeader, Spinner, SplitButton, Tooltip } from '@shared/ui';
+import {
+  AvatarGroup,
+  Breadcrumb,
+  DocumentCard,
+  PageHeader,
+  SegmentCounter,
+  SmsPreview,
+  Spinner,
+  SplitButton,
+  Tooltip,
+} from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import { COLOR_TOKEN_GROUPS, RADIUS_TOKENS, readCssVariable, SHADOW_TOKENS, SPACING_TOKENS } from '../tokens-reference';
@@ -154,6 +164,58 @@ export function FundamenteSection() {
               { value: 'pdf', label: 'Exportă PDF', onClick: () => {} },
               { value: 'excel', label: 'Exportă Excel', onClick: () => {} },
             ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SegmentCounter"
+        importLine="import { SegmentCounter } from '@shared/ui';"
+        reference="COMPONENTE.md §0g — contor de caractere/segmente SMS"
+      >
+        <DemoRow label="control">
+          <SegmentCounter text="Buna ziua! Va reamintim ca maine este ziua de achitare a taxei lunare." />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SmsPreview"
+        importLine="import { SmsPreview } from '@shared/ui';"
+        reference="COMPONENTE.md §0g — previzualizare SMS"
+      >
+        <DemoRow label="control">
+          <SmsPreview
+            senderName="Grădinița Pitici"
+            message="Bună ziua! Vă reamintim că mâine este ziua de achitare a taxei lunare."
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="DocumentCard"
+        importLine="import { DocumentCard } from '@shared/ui';"
+        reference="COMPONENTE.md §0i — document încărcat"
+      >
+        <DemoRow label="control">
+          <DocumentCard fileName="Certificat_medical.pdf" meta="PDF · 240 KB" onOpen={() => {}} onRemove={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="AvatarGroup"
+        importLine="import { AvatarGroup } from '@shared/ui';"
+        reference="COMPONENTE.md §0e — grup de avataruri suprapuse"
+      >
+        <DemoRow label="control">
+          <AvatarGroup
+            items={[
+              { name: 'Ionescu Maria' },
+              { name: 'Popescu Andrei' },
+              { name: 'Rusu Ana' },
+              { name: 'Marin Elena' },
+              { name: 'Coceva Alisa' },
+            ]}
+            maxVisible={3}
           />
         </DemoRow>
       </ComponentShowcase>

@@ -1,0 +1,52 @@
+.root {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-8) var(--space-14);
+  background: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.option {
+  width: 100%;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-10);
+  font: inherit;
+  font-weight: 700;
+  color: var(--slate);
+  text-align: left;
+}
+
+.option:hover {
+  background: var(--neutral-soft);
+}
+
+.selected {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.selected:hover {
+  background: var(--orange-soft);
+}

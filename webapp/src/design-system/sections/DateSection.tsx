@@ -21,7 +21,11 @@ import {
   ServiceBadge,
   serviceTone,
   StatCard,
+  TaskRow,
   TimePicker,
+  Timeline,
+  NoteList,
+  TodoCard,
   type DataTableColumn,
 } from '@shared/ui';
 import { ComponentShowcase } from '../ComponentShowcase';
@@ -446,6 +450,79 @@ export function DateSection() {
       >
         <DemoRow label="control">
           <PinInput ariaLabel="PIN" value="12" onChange={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Timeline"
+        importLine="import { Timeline } from '@shared/ui';"
+        reference="COMPONENTE.md §0f, 31e — istoric cronologic (fișa angajatului)"
+      >
+        <DemoRow label="control">
+          <Timeline
+            entries={[
+              {
+                key: 't1',
+                timestamp: '12 septembrie 2026, 14:30',
+                title: 'Angajare',
+                description: 'Contract semnat pe perioadă nedeterminată.',
+              },
+              {
+                key: 't2',
+                timestamp: '1 octombrie 2026, 09:00',
+                title: 'Promovare',
+                description: 'Educator principal, Grupa Delfin.',
+              },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="NoteList"
+        importLine="import { NoteList } from '@shared/ui';"
+        reference="COMPONENTE.md §2 — note libere pe fișa copilului/angajatului"
+      >
+        <DemoRow label="control">
+          <NoteList
+            notes={[
+              {
+                key: 'n1',
+                author: 'Educator Rusu Ana',
+                date: '12 septembrie 2026',
+                text: 'Alergie nouă confirmată — nuci.',
+              },
+              {
+                key: 'n2',
+                author: 'Admin',
+                date: '1 septembrie 2026',
+                text: 'Contract reînnoit pentru anul școlar curent.',
+              },
+            ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TodoCard"
+        importLine="import { TodoCard } from '@shared/ui';"
+        reference="COMPONENTE.md §0i, 34k — element de rezolvat, pe dashboard"
+      >
+        <DemoRow label="control">
+          <TodoCard title="Certificate medicale expirate" detail="3 copii" onClick={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TaskRow"
+        importLine="import { TaskRow } from '@shared/ui';"
+        reference="COMPONENTE.md §0i, 34k — rând de bifat într-o listă"
+      >
+        <DemoRow label="control">
+          <TaskRow label="Trimite notificare părinți" done={false} meta="Scadent azi" onToggle={() => {}} />
+        </DemoRow>
+        <DemoRow label="done">
+          <TaskRow label="Trimite notificare părinți" done={true} onToggle={() => {}} />
         </DemoRow>
       </ComponentShowcase>
     </div>

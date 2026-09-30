@@ -6,6 +6,7 @@ import { DateSection } from './sections/DateSection';
 import { FeedbackSection } from './sections/FeedbackSection';
 import { FundamenteSection } from './sections/FundamenteSection';
 import { GriduriSection } from './sections/GriduriSection';
+import { ShellSection } from './sections/ShellSection';
 import styles from './DesignSystemPage.module.css';
 
 const SECTIONS = [
@@ -15,6 +16,7 @@ const SECTIONS = [
   { id: 'feedback', label: 'Feedback' },
   { id: 'altele', label: 'Altele' },
   { id: 'grile', label: 'Grile' },
+  { id: 'aplicatie', label: 'Aplicație' },
 ] as const;
 
 /**
@@ -65,6 +67,9 @@ export function DesignSystemPage() {
             </section>
             <section id="grile">
               <GriduriSection />
+            </section>
+            <section id="aplicatie">
+              <ShellSection />
             </section>
           </main>
         </div>

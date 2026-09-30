@@ -1,0 +1,13 @@
+.title {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.detail {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: 13px;
+  color: var(--muted);
+}

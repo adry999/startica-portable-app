@@ -1,0 +1,17 @@
+.root {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-16);
+  min-height: 0;
+}
+
+.master {
+  flex: none;
+  overflow-y: auto;
+}
+
+.detail {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}

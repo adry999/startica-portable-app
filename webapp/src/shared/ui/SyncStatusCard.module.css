@@ -1,0 +1,38 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  padding: var(--space-12) var(--space-14);
+}
+
+.indicator {
+  flex: none;
+  display: flex;
+  color: var(--orange);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot.synced {
+  background: var(--success-dot);
+}
+
+.dot.error {
+  background: var(--raspberry);
+}
+
+.dot.offline {
+  background: var(--subtle);
+}
+
+.message {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}

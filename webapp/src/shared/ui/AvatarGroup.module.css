@@ -1,0 +1,24 @@
+.row {
+  display: flex;
+}
+
+.ring {
+  display: flex;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--white);
+}
+
+.ring:not(:first-child) {
+  margin-left: -8px;
+}
+
+.overflow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--neutral-soft);
+  color: var(--muted);
+  font-family: var(--font-heading);
+  font-weight: 800;
+}

@@ -1,0 +1,11 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.indicator {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
