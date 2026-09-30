@@ -68,7 +68,7 @@ Referință: `Copii.dc.html#2b`. Model de date: `screens/28-fisa-copilului-date.
 - **Note:** fiecare notă padding `12px 14px`, radius 14, 14px, line-height 1.45; cea mai recentă `#fdf3d2` cu meta `#7a5d00`, restul `#f7f4ee` cu meta `#9aa3a9`. Meta: „24.09.2026, 13:10 · Ala (Recepție)” + „· editată” + ⋯ (Editează / Șterge cu toast „Anulează”). Formular: caset `#f7f4ee` border 2px `--orange`, textarea albă, „Renunță” + „Salvează”. Date: notă = `{id, text, createdAt, updatedAt?, author, deletedAt?}` stocată separat de copil (spec 28).
 - **Plătitori reținuți:** sub titlu textul „Transferurile de la ei se propun direct pentru <prenume> la Asociere achitări.” (link). Rând grid `1fr auto auto`: nume uppercase 800 + „IBAN MD24 … 4417” / „fără IBAN, doar numele” 12px; „din 14.09.2026 · 3 achitări” 12px `#9aa3a9`; × rotund 28.
 - **Contract (StatCard):** sub „din 01.09.2025 · program mediu”.
-- **Documente:** vezi A9 (backend). Până atunci rămâne placeholder, dar cu textul „PDF, JPG, PNG · max. 10 MB” în antet.
+- **Documente:** scos din design 30.09. Cardul și placeholderul se șterg din fișă.
 - Criterii: capturat la 1440px arată ca 2b; relația părinților apare; notele au autor și se pot edita/șterge.
 
 ## A3b. Achitare nouă (15b) — `payments/PaymentFormDrawer.tsx` + `.module.css`
@@ -250,7 +250,7 @@ Referință: `Achitari.dc.html#5a` (pastila + filtrul Serviciu), `Formulare.dc.h
   - Bonul de zi, Raportul contabil și exportul primesc coloana Serviciu.
 - Criterii: o plată de bazin nu scade taxa grădiniței; Asociere achitări arată încasările de bazin mutate; după migrare nicio cheltuială activă nu mai e încasare de bazin; testele `usePayments`/`obligation` acoperă filtrarea pe serviciu.
 
-## A9. Documente pe fișă (backend + UI) — după A3
+## A9. ~~Documente pe fișă~~ — scos din design 30.09, nu se face
 Spec `screens/28-fisa-copilului-date.md`: PDF/JPG/PNG ≤ 10 MB, stocare pe server, sincronizate, stare descărcare vizibilă. Kind separat de `children` (ca notele și `payer_aliases`), endpointuri upload/download cu validare tip+mărime. UI: grilă 3 col, rând fișier padding `10px 12px` radius 14 fundal `--cream` border `#f1e8d6`, icon tip 34×40 radius 8, nume 13/800 ellipsis, dată/stare 11px.
 
 ---

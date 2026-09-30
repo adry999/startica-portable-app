@@ -9,7 +9,7 @@ Suprascrie `docs/design/` cu tot conținutul din `design_final_startica/` (inclu
 În `architecture.test.ts` adaugă R1, R2, R3, R4, R7, R8 și R9 (vezi `DS-IMPLEMENTARE.md` §1), **ca warning** cu listă de excepții = fișierele din audit §3. Lista doar scade. Un fișier nou în listă = test roșu. Când lista e goală, regula devine error.
 
 ## 2. Fundamente (blocant pentru tot restul)
-- `lucide-react` + `@shared/ui/Icon` (`name`, `size` 14/16/18/20/24, `aria-label` sau `aria-hidden`). `IconButton` primește `icon: IconName`, nu text.
+- `lucide-react` + `@shared/ui/Icon` (`name`, `size` 14/16/20/24 (33b), `aria-label` sau `aria-hidden`). `IconButton` primește `icon: IconName`, nu text.
 - `tokens.css`: `--orange-strong: #b85a00`, `--shadow-button-header: 0 4px 10px rgba(184,90,0,.28)`, `--text-secondary: #5b666e`, `--code-co: #e0b400`, `--white`, `--overlay: rgba(58,71,80,.4)`, `--white-a60`, `--shadow-drag`, `--mint-bar-current: #5fb58a`, `--row-divider-warm: #f1e8d6`, `--print-ink: #000`, `--print-muted: #333`, `--print-rule: #ccc`.
 - **Contrast:** `Button` primar, pastila „azi”, `Badge` plin portocaliu, pasul activ din `StepList` → fundal `--orange-strong`. `--orange` rămâne doar pentru accente fără text alb. Test: nicio regulă cu `color: var(--white)` pe `background: var(--orange)` în `@shared/ui`.
 

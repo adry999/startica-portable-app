@@ -33,13 +33,15 @@ Punctele din `docs/design/COADA-DE-LUCRU.md` care au nevoie de o decizie a utili
 
 Nu blochează A2/A3: relația părinților și persoanele autorizate se pot construi acum (schema există); notele cu autor/editare/ștergere la fel; documentele și IBAN-ul plătitorilor rămân cu ce era înainte (placeholder, respectiv fără IBAN) până la un plan tehnic dedicat.
 
-## ⏳ Modulul 2 (Copii) — CF-2, fișa copilului: „Plătitori reținuți” lipsesc din modelul de date
+## ✅ Modulul 2 (Copii) — CF-2, fișa copilului: „Plătitori reținuți” lipsesc din modelul de date
 
 **Actualizat 2026-09-29:** „Date personale” (IDNP + adresă) s-a implementat între timp — `Child.idnp`/`Child.address` există în schemă, în `ChildFormDrawer` și în `ChildProfileView` (verificat direct în cod, nu doar din audit). Rămâne deschis doar „Plătitori reținuți”: niciun concept `payer_aliases` nu există în cod — nici schemă, nici API, nici UI. Nu e tweak de UI, e funcție nouă (schemă + backend + UI + ștergere alias).
 
 Decizie necesară: (a) adăugăm un tabel/câmp nou pentru plătitori reținuți (plan tehnic separat, ca la EUR/BNM sau filiale), sau (b) rămâne amânat definitiv?
 
 Până la răspuns: fișa copilului rămâne fără „Plătitori reținuți" — restul din CF-1…CF-10 e închis (vezi `COADA-DE-LUCRU.md`).
+
+**Rezolvat 30.09, 12:30** (vezi `RASPUNSURI-30-09.md` punctul 2): cardul se face acum din `payerAliases` existent — nume, „din dd.mm.yyyy”, „N achitări”, ștergere alias (toast „Anulează”). IBAN mascat rămâne amânat, cu plan tehnic separat (`iban`, `nameKey`, `extractPayer()`); până atunci rândul arată „fără IBAN, doar numele”.
 
 ## ✅ Achitări — „Tipărește chitanța” (punctul 5) — confirmat amânat
 Rămâne amânat, se reia împreună cu ecranul 16b (`screens/15-tiparire.md`). Nimic de schimbat acum.
@@ -73,13 +75,15 @@ Ecran separat, plan scris înainte de cod (`docs/superpowers/plans/`). Ordinea: 
 ## ✅ Raport contabil (punctul 14) — selectorul de filială din export — rezolvat, implementat
 `20-raport-contabil.md` 19b cerea „Filiala (Ambele pe foi separate / una)”, amânat provizoriu până la filiale (Faza 6 a designului, `2026-09-27-filiale.md` Faza 4 a planului). Implementat: `ReportExportDrawer.tsx` arată grupul „Filiala” doar când sunt mai multe filiale (`GET /api/branches`), cu opțiunile „<filiala curentă>” și „Ambele (o foaie pe filială)”; pe PDF grupul e dezactivat („PDF-ul tipărește filiala deschisă”, PDF rămâne pe filiala curentă). „Ambele” citește celelalte filiale read-only (`GET /api/branches/records?id=`), calculează raportul cu `buildForRecords` (peste `buildAccountingReport`, pur) și scrie un Excel cu `buildMultiBranchWorkbook`: o pereche de foi Încasări/Cheltuieli per filială + un Rezumat comun cu total. Criteriul din `20-raport-contabil.md` e bifat.
 
-## ⏳ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — redeschis 30.09, blocaj arhitectural
+## ✅ Încărcare (punctul 12) — pasul „Sincronizez” și „Lucrez fără legătură” — redeschis 30.09, blocaj arhitectural
 Decizia veche (mai jos, tăiată) presupunea că nu există server de sincronizare. Între timp `src/features/sync/` există (Faza 6 nu mai e exclusă), deci „Lucrez fără legătură” + „Ultima sincronizare” pe 21c ar avea sens — dar codul actual nu poate arăta corect acest ecran:
 - `app-session-store.mjs` (`load()`) cheamă `/api/sync/status` **abia după** ce `/api/state` a reușit și `ready` a devenit `true` (`accept()` setează `ready=true` imediat ce state-ul vine) — sincronizarea explicit „nu blochează pornirea”. Deci exact în scenariul 21c (15s+, `/api/state` nu răspunde), pasul de sincronizare nici n-a apucat să pornească — nu e el cel blocat.
 - `lastSyncedAt` există doar în memorie în `sync-engine.service.mjs`, resetat la fiecare pornire a serverului, nescris niciodată în `sync.json` sau altundeva persistent. `session.routes.mjs`'s `syncSummary()` nu-l expune deloc (`{configured, deviceName, serverUrl}`).
 Ca să afișăm o „Ultima sincronizare” reală pe 21c ar trebui persistat `lastSyncedAt` în sync engine — schimbare de backend mai mare decât UI-ul din punctul 2, pe cod de sincronizare deja verificat/sensibil. Decizie: **nu implementez acum** butonul „Lucrez fără legătură” + ora ultimei sincronizări pe 21c; rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri” (ca înainte). Restul punctului 2 (21a, 21b) merge înainte. Revine ca task separat când se persistă `lastSyncedAt`.
 
 ~~Nu există server comun (Faza 6 exclusă): pasul de sincronizare nu apare (spec-ul permite asta), iar pe 21c butonul „Lucrez fără legătură” nu are sens fără server comun — rămân „Încearcă din nou” și varianta cu eroarea bazei locale + „Deschide dosarul cu backupuri”.~~
+
+**Rezolvat 30.09, 12:30** (vezi `RASPUNSURI-30-09.md` punctul 5): da, ca task separat, după terminarea migrării pasului 4 (§4 din `PROMPT-CLAUDE-CODE-5.md`). Întâi se persistă `lastSyncedAt` în `sync.json` (`sync-engine.service.mjs`), expus în `/api/session` (`syncSummary`), apoi 21c după `Incarcare.dc.html`. Plan scurt în `docs/superpowers/plans/` înainte de cod.
 
 ## ✅ Personal + Bazin (`docs/superpowers/plans/2026-09-27-personal-bazin.md`) — 6 întrebări deschise, decise provizoriu și deja implementate
 Planul le listează cu recomandarea pe care o și urmează în cod; mutate aici ca să nu se piardă, cu răspunsul deja construit:
@@ -153,7 +157,7 @@ Lista completă (143 rânduri, id/dată/sumă) e reproductibilă oricând cu `no
 
 Textul alb pe fundal `--orange` (butonul principal peste tot în aplicație) avea contrast **2,4:1** — sub minimul WCAG AA. Rezolvat cu varianta 1: token nou `--orange-strong` (#b85a00, contrast 4,7:1 cu alb), aplicat doar acolo unde stă text/iconițe albe pe portocaliu — `Button.primary`, `Checkbox.box.on` (bifa albă pe fundal bifat). `--orange` rămâne neschimbat pentru restul (badge-uri soft, accente, evidențieri fără text alb deasupra). Vezi `TOKENS.md` și `DECIZII.md` (secțiunea „30.09 — Contrast buton primar”).
 
-## ⏳ Pasul 4 (migrare module) — §3 din DS-IMPLEMENTARE.md e nebifat, deși toate cele 15 module au deja commit „punctul 4 — migrarea X”
+## ✅ Pasul 4 (migrare module) — §3 din DS-IMPLEMENTARE.md e nebifat, deși toate cele 15 module au deja commit „punctul 4 — migrarea X”
 
 Verificare 30.09, după terminarea completă a pasului 3 (toate cele ~60 de componente din `@shared/ui` există acum, ultimul val fiind MasterDetail/Wizard/NavRail/GlobalSearch/BranchSelector/SyncStatusCard/FormSection/ColumnMenu/etc.). Toate cele 15 module au deja câte un commit “punctul 4 — migrarea X pe componente” (`ce20807`…`40cf9a1`, 15/15) — DAR acele commit-uri au fost făcute **înainte** ca lotul mare de componente noi din pasul 3 (val 3-5, ~30 de componente: `MasterDetail`, `Wizard`, `SplitButton`, `PrintOptionsDialog`, `FilterMenu`, `ActiveFilters`, `ListToolbar`, `Kpi`, `AmountInput`, `ChoiceCards`, `SmsPreview`, `SegmentCounter`, `DocumentCard`, `NoteList`, `FormSection`, `InlineEdit`, `TaskRow`, `AvatarGroup`, `TonePicker`-adiacente etc.) să existe.
 
@@ -165,6 +169,8 @@ Verificat concret pe Achitări (checklist cere: `DataTable, ListToolbar, FilterM
 3. Sau o cale de mijloc: doar componentele ușor de adăugat fără restructurare de layout (ex. `SplitButton` în loc de un buton simplu de export, `PrintOptionsDialog` în loc de printare directă) se adaugă acum, iar cele care ar cere restructurare de layout (`MasterDetail`, `Board`, `Wizard`) rămân notate ca datorie/follow-up separat, per ecran.
 
 Nimic schimbat în cod pe baza asta — aștept alegerea ta. Între timp continui alte părți sigure/reversibile ale pasului 5 (lista „Nu se face”) care nu ating ecranele deja migrate.
+
+**Rezolvat 30.09, 12:30** (vezi `RASPUNSURI-30-09.md` punctul 1 și `PROMPT-CLAUDE-CODE-5.md`): varianta 1 — toate cele 15 module, modul cu modul, cu captură design lângă cod după fiecare. Restructurarea de layout (`MasterDetail`, `Board`, `Wizard`) intră. Ordinea: Dashboard, Copii, Achitări, Prezența, apoi restul (§2 din PROMPT-5).
 
 ## ✅ R3 (arhitectură DS) — caracterul „×” exclus din verificarea automată de iconițe-brute — decizie tehnică, nu de business
 

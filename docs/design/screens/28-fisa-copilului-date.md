@@ -9,7 +9,7 @@ Plan tehnic în `docs/superpowers/plans/` înainte de cod, ca la EUR/BNM și fil
 - „Date personale” = data nașterii + **alergii și date medicale** (`healthNotes`, există) + **persoane autorizate să ridice copilul**. Fără IDNP, adresă, certificat.
 - Părinții rămân **2 sloturi fixe**; se adaugă doar relația (Mamă/Tată/Bunic…).
 - **Note:** listă cu text, dată, autor; editabile; ștergerea are „Anulează”.
-- **Documente:** orice PDF/JPG/PNG, max. 10 MB, **se sincronizează prin server**.
+- ~~**Documente:**~~ **scos din design 30.09.** Nu se construiește `child_documents`, nici stocarea de fișiere. Secțiunile 2.3 și 4 de mai jos rămân doar ca istoric.
 - **Plătitori reținuți:** nume din extras + IBAN când există; **pe filială** (plățile sunt pe filială).
 - Nota veche (`Child.notes`) devine prima notă din listă, la migrare.
 

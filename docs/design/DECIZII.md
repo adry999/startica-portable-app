@@ -46,3 +46,12 @@ Toate deciziile de produs din sesiunile de design. **Au prioritate** față de o
 
 ## 30.09 — Contrast buton primar
 Varianta (a): `--orange-strong` #b85a00 pentru orice fundal cu text alb (4,7:1). `--orange` #ef8a1d rămâne pentru accente fără text. Aplicat în toate fișierele de design.
+
+## 30.09, 12:30 — Răspunsuri înainte de pasul 4
+- **Al doilea val de migrare:** da, toate cele 15 module, modul cu modul, cu captură design lângă cod după fiecare. Ordinea: Dashboard, Copii, Achitări, Prezența, apoi restul.
+- **Plătitori reținuți (CF-2):** cardul se face acum din `payerAliases` existent (nume, din data, N achitări, ștergere). IBAN mascat mai târziu, cu plan tehnic (`iban`, `nameKey`, `extractPayer`). Până atunci rândul arată „fără IBAN, doar numele”.
+- **Documentele copilului:** scoase din design. Fără `child_documents`, fără `DocumentCard`.
+- **Notele ca tabel separat (`child_notes`):** amânat până la sincronizare reală pe mai multe calculatoare în aceeași filială.
+- **21c „Lucrez fără legătură” + „Ultima sincronizare”:** task separat după migrare; întâi se salvează `lastSyncedAt` în motorul de sincronizare.
+- **Stări goale pentru restul listelor:** textele sunt în design (`Stari goale.dc.html` 35c, 35d, 35e). Se copiază exact în `empty-states.ts`.
+- **Spinner în buton:** se adaugă mărimea 14 în `Spinner` (spec 29b).

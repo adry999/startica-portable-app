@@ -12,7 +12,7 @@
   <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
     <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Prezenta.dc.html">Prezența</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Formulare.dc.html#15e">Liste goale (15e)</a><a href="Sms.dc.html">Mesaje SMS</a><span style="font-weight:800;color:#3a4750">Stări goale</span></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Stări goale pe ecrane</h1>
-    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#35a">35a</a>–<a href="#35b">35b</a>: ce apare pe fiecare ecran când nu are încă date. Se folosesc cele 3 variante din <a href="Formulare.dc.html#15e">15e</a>, cu textul fiecărui ecran.</p>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty"><a href="#35a">35a</a>–<a href="#35b">35b</a>: ecranele principale. <a href="#35c">35c</a>: pagini, file și panouri. <a href="#35d">35d</a>: varianta compactă din interiorul unui card. <a href="#35e">35e</a>: ce nu intră în catalog. Toate textele stau în <code>@shared/ui/empty-states.ts</code>, cu cheia de sub fiecare exemplu.</p>
   </div>
 
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
@@ -68,6 +68,60 @@
       </div>
     </div>
 
+    <div id="35c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">35c</span><span style="font-size:16px;font-weight:700">Pagini, file și panouri</span></div>
+      <div style="width:1440px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+        <sc-for list="{{ panels }}" as="e" hint-placeholder-count="16">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;flex-wrap:wrap"><span style="letter-spacing:.08em;text-transform:uppercase;color:#6b7780">{{ e.screen }}</span><span style="padding:2px 8px;border-radius:999px;background:{{ e.tagBg }};color:{{ e.tagFg }}">{{ e.kind }}</span></div>
+            <div style="min-height:170px;box-sizing:border-box;background:{{ e.bg }};border-radius:20px;border:{{ e.bd }};padding:22px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center">
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;line-height:1.15">{{ e.title }}</span>
+              <span style="font-size:13px;line-height:1.45;color:{{ e.sub }};text-wrap:pretty">{{ e.text }}</span>
+              <sc-if value="{{ e.cta }}" hint-placeholder-val="{{ true }}"><span style="margin-top:4px;padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px">{{ e.cta }}</span></sc-if>
+            </div>
+            <code style="font-size:11px;color:#6b7780">{{ e.key }}</code>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div id="35d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">35d</span><span style="font-size:16px;font-weight:700">Compact, în interiorul unui card</span></div>
+      <div style="width:1440px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start">
+        <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:6px 22px">
+          <sc-for list="{{ compact }}" as="c" hint-placeholder-count="14">
+            <div style="display:grid;grid-template-columns:200px minmax(0,1fr) 190px;gap:16px;align-items:baseline;padding:11px 0;border-top:1px solid #f3eee5;font-size:13px">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7780">{{ c.screen }}</span>
+              <span style="color:#6b7780;text-wrap:pretty">{{ c.text }} <a href="#35d">{{ c.link }}</a></span>
+              <code style="font-size:11px;color:#6b7780">{{ c.key }}</code>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:18px 22px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Note</span>
+            <span style="font-size:13px;color:#6b7780;padding:8px 0">Nicio notă încă. <a href="#35d">+ Notă</a></span>
+          </div>
+          <div style="padding:16px 20px;border-radius:16px;background:#fff;border:1px solid #ede7dc;font-size:13px;line-height:1.55;color:#5b666e;display:flex;flex-direction:column;gap:6px">
+            <span><b style="color:#3a4750">Compact</b> · <code>EmptyState size="compact"</code>: un rând, 13px <code>--muted</code>, fără chenar, fără puncte, padding 8px 0. Acțiunea e link, nu buton.</span>
+            <span>Se folosește doar în interiorul unui card care are deja titlu. O listă care ocupă pagina sau fila folosește varianta mare (35b, 35c).</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="35e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#3a4750;color:#fff;border-radius:10px;padding:2px 12px">35e</span><span style="font-size:16px;font-weight:700">Nu sunt stări goale, nu intră în catalog</span></div>
+      <div style="width:1440px;box-sizing:border-box;background:#fff;border-radius:20px;border:1px solid #ede7dc;padding:6px 22px">
+        <sc-for list="{{ notEmpty }}" as="n" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;padding:11px 0;border-top:1px solid #f3eee5;font-size:13px">
+            <span style="font-weight:800">{{ n.what }}</span>
+            <span style="color:#6b7780;text-wrap:pretty">{{ n.rule }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
   </div>
 </section>
 </x-dc>
@@ -88,9 +142,55 @@ class Component extends DCLogic {
       ['Bazin', 'prima', 'Niciun copil la bazin', 'Înscrie copiii la bazin din fișa lor sau de aici.', '+ Înscrie la bazin'],
       ['Situația plăților', 'gata', 'Toți au achitat septembrie', 'Nicio restanță în filială. Luna următoare apare pe 1 octombrie.', ''],
       ['De notificat', 'gata', 'Nimeni de notificat', 'Toți părinții cu restanțe au primit SMS. Lista se completează după scadență.', ''],
-      ['Mesaje SMS', 'prima', 'Niciun SMS trimis', 'Mesajele trimise din Situația plăților sau cu „+ SMS nou” apar aici, cu starea de livrare.', '+ SMS nou']
+      ['Mesaje SMS', 'prima', 'Niciun SMS trimis', 'Mesajele trimise din Situația plăților sau cu „+ SMS nou” apar aici, cu starea de livrare.', '+ SMS nou'],
+      ['Cheltuieli', 'luna', 'Nicio cheltuială în octombrie', 'Cheltuielile lunii apar aici pe măsură ce le înregistrezi.', '+ Cheltuială nouă']
     ].map(([screen, k, title, text, cta]) => { const c = K[k]; return { screen, title, text, cta, kind: c[0], tagBg: c[1], tagFg: c[2], bg: c[3], bd: c[4], sub: c[5] }; });
-    return { kpis: ['Copii activi', 'În grupe', 'Taxa lunii', 'Restanțe'], empties };
+    const panels = [
+      ['copii.first', 'Copii (35a)', 'prima', 'Încă nu e niciun copil în {filiala}', 'Adaugă primul copil cu datele părinților și contractul. După asta apar grupele, prezența și taxele lui.', '+ Copil nou'],
+      ['derezolvat.done', 'De rezolvat', 'gata', 'Nimic de rezolvat', 'Taxele, verificările și asocierile sunt la zi.', ''],
+      ['asociere.done', 'Asociere achitări', 'gata', 'Toate achitările sunt asociate', 'Achitările noi din extras apar aici până le legi de un copil.', ''],
+      ['conflicte.done', 'Conflicte', 'gata', 'Niciun conflict', 'Modificările de pe celelalte calculatoare s-au unit fără probleme.', ''],
+      ['taxe.first', 'Taxe și grupe', 'prima', 'Niciun copil activ', 'Taxele se completează după ce adaugi copii.', '+ Copil nou'],
+      ['candidati.first', 'Personal · Candidați', 'prima', 'Niciun candidat încă', 'Ține aici persoanele cu care ai vorbit pentru un post.', '+ Candidat'],
+      ['istoric.first', 'Administrare · Istoric', 'prima', 'Nicio modificare înregistrată', 'Tot ce se adaugă, se editează sau se șterge apare aici, cu ora și calculatorul.', ''],
+      ['servicii.first', 'Setări · Servicii', 'prima', 'Niciun serviciu încă', 'Adaugă serviciile plătite separat de taxă, de exemplu bazinul.', '+ Serviciu nou'],
+      ['planuri.first', 'Setări · Curs valutar', 'prima', 'Niciun plan adăugat', 'Planurile în euro se aleg apoi la contractul copilului.', '+ Plan'],
+      ['curs.period', 'Setări · Istoric curs', 'luna', 'Niciun curs înregistrat', 'Cursul BNM se descarcă singur la pornire, când e internet.', 'Descarcă acum'],
+      ['zilenastere.period', 'Zile de naștere', 'luna', 'Nicio zi de naștere în {luna}', 'Alege altă lună din antet.', ''],
+      ['prezenta.nochildren', 'Prezența · Ziua', 'luna', 'Niciun copil înscris pe {data}', 'Copiii apar aici din ziua în care le începe contractul.', ''],
+      ['situatia.year.period', 'Situația · An școlar', 'luna', 'Niciun copil cu taxă în {an}', 'Harta apare după ce copiii au o taxă în anul școlar ales.', ''],
+      ['bazin.month.period', 'Bazin · Luna', 'luna', 'Nicio programare în {luna}', 'Programările făcute în Săptămâna apar aici, cu totalul pe copil.', ''],
+      ['raport.period', 'Raport contabil', 'luna', 'Nicio mișcare în perioada aleasă', 'Alege altă perioadă din antet.', ''],
+      ['bonzi.period', 'Închiderea zilei', 'luna', 'Nicio achitare pe {data}', 'Bonul se tipărește doar pentru zile cu încasări.', '']
+    ].map(([key, screen, k, title, text, cta]) => { const c = K[k]; return { key, screen, title, text, cta, kind: c[0], tagBg: c[1], tagFg: c[2], bg: c[3], bd: c[4], sub: c[5] }; });
+    const compact = [
+      ['dashboard.attention.done', 'Dashboard · Necesită atenție', 'Nimic de rezolvat azi.', ''],
+      ['dashboard.birthdays', 'Dashboard · Zile de naștere', 'Nicio zi de naștere în următoarele 5 zile.', ''],
+      ['dashboard.visits', 'Dashboard · Vizite', 'Nicio vizită azi sau mâine.', 'Programează'],
+      ['fisa.notes', 'Fișa copilului · Note', 'Nicio notă încă.', '+ Notă'],
+      ['fisa.pickup', 'Fișa · Pot ridica copilul', 'Nicio persoană adăugată.', '+ Adaugă'],
+      ['fisa.payers', 'Fișa · Plătitori reținuți', 'Niciun plătitor reținut. Se adaugă când bifezi „Ține minte plătitorul” la', 'Asociere achitări'],
+      ['fisa.absences', 'Fișa · Prezența', 'Nicio absență motivată în {luna}.', ''],
+      ['grupe.members', 'Grupe · Copii în grupă', 'Niciun copil în grupă. Caută mai sus sau trage-i din Tablă.', ''],
+      ['grupe.pool.done', 'Grupe · Fără grupă', 'Toți copiii au grupă.', ''],
+      ['prezenta.month.group', 'Prezența · Luna', 'Niciun copil în această grupă.', ''],
+      ['vizite.day', 'Vizite · ziua aleasă', 'Nicio vizită în această zi.', '+ Programează'],
+      ['vizite.month.rest', 'Vizite · restul lunii', 'Nicio altă vizită luna aceasta.', ''],
+      ['cheltuieli.categories', 'Cheltuieli · Categorii', 'Nicio categorie proprie. Se folosesc cele implicite.', '+ Categorie'],
+      ['bazin.coach', 'Setări · Bazin, antrenor', 'Niciun antrenor. Adaugă-l în', 'Personal'],
+      ['raport.income', 'Raport · Metode', 'Nicio încasare în perioada aleasă.', ''],
+      ['raport.expenses', 'Raport · Categorii', 'Nicio cheltuială în perioada aleasă.', ''],
+      ['asociere.suggestions', 'Asociere · Sugestii', 'Nicio sugestie. Caută copilul mai jos.', '']
+    ].map(([key, screen, text, link]) => ({ key, screen, text, link }));
+    const notEmpty = [
+      ['Căutare sau filtre fără rezultat', '„Niciun rezultat pentru „{căutare}”” sau „Niciun rezultat pentru filtrele alese” + filtrele active + „Șterge filtrele” (15e). Text generat de EmptyState variant="no-results", nu cheie în catalog.'],
+      ['Liste din dropdown (SearchSelect, MultiSelect, GroupTeamPicker)', '„Niciun rezultat” vine din componentă (prop emptyLabel implicit), nu din ecran.'],
+      ['Sloturi goale într-un câmp', '„Niciun asistent”, „Niciun înlocuitor” sunt valori afișate ale câmpului, nu stări goale.'],
+      ['Erori de validare și toast-uri', '„Nu ai ales niciun copil.”, „Nicio potrivire unică găsită.” rămân la locul lor (texte de eroare, R9 nu se aplică).'],
+      ['Opțiuni de select', '„Niciodată” e o opțiune, nu o stare goală.'],
+      ['Indicii în formular', '„Niciun curs cunoscut pentru această dată, completează manual” e text de ajutor sub câmp (Field hint).']
+    ].map(([what, rule]) => ({ what, rule }));
+    return { kpis: ['Copii activi', 'În grupe', 'Taxa lunii', 'Restanțe'], empties, panels, compact, notEmpty };
   }
 }
 </script>

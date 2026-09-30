@@ -151,7 +151,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `DiffTable` | 34e | Câmp / al meu / al lor, rândurile diferite pe galben, alegere pe câmp + „tot al meu / al lor”, rezolvare cu loading. |
 | `LockedContent` + `usePinLock` | 34f | Blocat (suma nu e în DOM), verificare, deschis cu numărătoare inversă. Greșeli: tremurat + încercări, blocare după 5. |
 | `UnsavedChangesDialog` + `useUnsavedGuard` | 34g | Renunță / Rămân / Salvez și continui. Numește formularul și câmpurile. Apare la panou, navigare, filială, închiderea aplicației. |
-| `DocumentCard` + `DocumentGrid` | 34h | Încărcat / se încarcă % / doar pe server / eroare / prea mare. ⋯ Deschide / Descarcă / Redenumește / Șterge. (Pentru A9.) |
+| ~~`DocumentCard` + `DocumentGrid`~~ | 34h | **Scos 30.09** odată cu documentele copilului. Nu e folosit de niciun ecran; se șterge din `@shared/ui` și din `/design-system`. |
 | `HoverCard` | 34i | 400 ms intrare, 200 ms ieșire, nu apare pe tactil, schelet, cache. |
 | `MultiSelect` | 34j | Chip-uri cu avatar, Backspace, „și încă N”, acțiune de grup în subsol, spinner la căutare. |
 | `TodoCard` + `TaskRow` | 34k | Contoare pe categorii, reîmprospătare în fundal. Rândul rezolvat se estompează, apoi dispare. |

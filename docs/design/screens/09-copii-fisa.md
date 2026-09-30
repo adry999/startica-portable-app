@@ -32,7 +32,6 @@ Titlul din antet rămâne „Copii” (`VIEW_TITLES`). În conținut, primul râ
     <div className={s.right}>
       <div className={s.mini}>Sold (mint) · Taxă lunară (yellow) · Contract (alb)</div>  {/* grid 3 col */}
       <Card>Istoric plăți: lună · dată · metodă · sumă · badge; ⋯ → Tipărește confirmarea</Card>
-      <Card>Documente: grid 3, icon PDF colorat, „+ Încarcă”</Card>
     </div>
   </div>
 </div>
