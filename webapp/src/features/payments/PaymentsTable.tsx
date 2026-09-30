@@ -4,20 +4,21 @@ import {
   ActiveFilters,
   Badge,
   Button,
-  Card,
   ConfirmDeleteDialog,
   DataTable,
   EmptyState,
   FilterPills,
+  Kpi,
+  ListToolbar,
   PeriodFilter,
   RowMenu,
-  SearchInput,
   SegmentedControl,
   SelectionBar,
   ServiceBadge,
   groupTone,
   useToast,
   type BadgeTone,
+  type CardTone,
   type PillTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -181,13 +182,15 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
       <SummaryCards summary={data.summary} method={data.method} />
 
       <div className={styles.tableCard}>
-        <div className={styles.toolbar}>
-          <SearchInput
-            value={data.search}
-            onChange={data.setSearch}
-            placeholder="Caută copil, plătitor sau sumă"
-            ariaLabel="Căutare achitări"
-          />
+        <ListToolbar
+          className={styles.toolbar}
+          search={{
+            value: data.search,
+            onChange: data.setSearch,
+            placeholder: 'Caută copil, plătitor sau sumă',
+            ariaLabel: 'Căutare achitări',
+          }}
+        >
           <PeriodFilter
             from={data.monthFrom}
             to={data.monthTo}
@@ -200,7 +203,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
             onChange={data.setArchiveFilter}
             ariaLabel="Filtru arhivare"
           />
-        </div>
+        </ListToolbar>
 
         <FilterPills
           groups={[
@@ -417,34 +420,41 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
   );
 }
 
-const METHOD_ACTIVE_CLASS: Record<string, string> = {
-  Cash: 'summaryActiveCash',
-  Card: 'summaryActiveCard',
-  Transfer: 'summaryActiveTransfer',
-};
-
 function SummaryCards({ summary, method }: { summary: PaymentsData['summary']; method: string }) {
-  const activeClass = (methodName: string) =>
-    method === methodName ? ` ${styles.summaryActive} ${styles[METHOD_ACTIVE_CLASS[methodName]]}` : '';
+  const activeTone = (methodName: string): CardTone | undefined =>
+    method === methodName ? (METHOD_TONE[methodName] as CardTone) : undefined;
 
   return (
     <div className={styles.summaryRow}>
-      <Card tone="orange" decorative className={styles.summaryCard}>
-        <p className={styles.summaryLabel}>Total filtrat · {summary.count} achitări</p>
-        <strong className={styles.summaryValueLg}>{formatMoney(summary.total)}</strong>
-      </Card>
-      <Card tone="white" className={styles.summaryCard + activeClass('Cash')}>
-        <p className={styles.summaryLabel}>Cash · {summary.cashCount}</p>
-        <strong className={styles.summaryValue}>{formatMoney(summary.cash)}</strong>
-      </Card>
-      <Card tone="white" className={styles.summaryCard + activeClass('Card')}>
-        <p className={styles.summaryLabel}>Card · {summary.cardCount}</p>
-        <strong className={styles.summaryValue}>{formatMoney(summary.card)}</strong>
-      </Card>
-      <Card tone="mint" className={styles.summaryCard + activeClass('Transfer')}>
-        <p className={styles.summaryLabel}>Transfer · {summary.transferCount}</p>
-        <strong className={styles.summaryValue}>{formatMoney(summary.transfer)}</strong>
-      </Card>
+      <Kpi
+        tone="orange"
+        decorative
+        size="lg"
+        className={styles.summaryCard}
+        label={`Total filtrat · ${summary.count} achitări`}
+        value={formatMoney(summary.total)}
+      />
+      <Kpi
+        tone="white"
+        activeTone={activeTone('Cash')}
+        className={styles.summaryCard}
+        label={`Cash · ${summary.cashCount}`}
+        value={formatMoney(summary.cash)}
+      />
+      <Kpi
+        tone="white"
+        activeTone={activeTone('Card')}
+        className={styles.summaryCard}
+        label={`Card · ${summary.cardCount}`}
+        value={formatMoney(summary.card)}
+      />
+      <Kpi
+        tone="mint"
+        activeTone={activeTone('Transfer')}
+        className={styles.summaryCard}
+        label={`Transfer · ${summary.transferCount}`}
+        value={formatMoney(summary.transfer)}
+      />
     </div>
   );
 }

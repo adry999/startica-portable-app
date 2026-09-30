@@ -1,6 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatLongDate, formatMonthName, formatMonthOnly, formatDayLabel, formatDateLong } from './date-format.mjs';
+import {
+  formatLongDate,
+  formatMonthName,
+  formatMonthOnly,
+  formatMonthAbbrev,
+  formatDayLabel,
+  formatDateLong,
+} from './date-format.mjs';
 
 test('formatMonthName scrie luna în litere, pentru text adresat direct părinților', () => {
   assert.equal(formatMonthName('2026-09'), 'septembrie 2026');
@@ -32,4 +39,12 @@ test('formatDateLong scrie data fără ziua săptămânii, pentru antetul confir
 
 test('formatDateLong arată liniuță pentru dată lipsă', () => {
   assert.equal(formatDateLong(''), '—');
+});
+
+test('formatMonthAbbrev scrie luna scurtă (3 litere), fără an, pentru rândul unei liste', () => {
+  assert.equal(formatMonthAbbrev('2026-09-24'), 'Sep');
+});
+
+test('formatMonthAbbrev arată gol pentru dată lipsă', () => {
+  assert.equal(formatMonthAbbrev(''), '');
 });

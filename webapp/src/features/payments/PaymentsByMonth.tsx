@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button, FilterPills, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { formatMonthName } from '#shared/format/date-format.mjs';
+import { formatMonthAbbrev, formatMonthName } from '#shared/format/date-format.mjs';
 import { PaymentDetailPanel } from './PaymentDetailPanel';
 import type { PaymentRowView, PaymentsData } from './usePayments';
 import styles from './PaymentsByMonth.module.css';
@@ -15,10 +15,6 @@ export interface PaymentsByMonthProps {
 
 function dayOfMonth(date: string): string {
   return date.slice(8, 10);
-}
-
-function monthAbbrev(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString('ro-RO', { month: 'short' }).replace('.', '');
 }
 
 /** Mod Pe luni (05-achitari.md §4) — listă grupată pe lună + panou de detaliu (400px), fără formular de asociere. */
@@ -70,26 +66,21 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
     <div className={styles.layout}>
       <div className={styles.main}>
         <div className={styles.filterRow}>
-          <div className={styles.pills}>
-            <Button
-              className={monthFilter === 'all' ? styles.pillActive : styles.pillNeutral}
-              onClick={() => selectMonthFilter('all')}
-            >
-              Toate · {data.rows.length}
-            </Button>
-            <Button
-              className={monthFilter === 'unassigned' ? styles.pillActive : styles.pillPink}
-              onClick={() => selectMonthFilter('unassigned')}
-            >
-              Neasociate · {unassignedCount}
-            </Button>
-            <Button
-              className={monthFilter === 'archived' ? styles.pillActive : styles.pillNeutral}
-              onClick={() => selectMonthFilter('archived')}
-            >
-              Arhivate
-            </Button>
-          </div>
+          <FilterPills
+            className={styles.pills}
+            groups={[
+              {
+                label: '',
+                value: monthFilter,
+                onChange: value => selectMonthFilter(value as MonthFilter),
+                options: [
+                  { value: 'all', label: `Toate · ${data.rows.length}`, tone: 'neutral' },
+                  { value: 'unassigned', label: `Neasociate · ${unassignedCount}`, tone: 'pink' },
+                  { value: 'archived', label: 'Arhivate', tone: 'neutral' },
+                ],
+              },
+            ]}
+          />
           <SearchInput
             className={styles.search}
             value={data.search}
@@ -165,7 +156,7 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
                     >
                       <span className={styles.rowDay}>
                         <strong>{dayOfMonth(row.date)}</strong>
-                        <small>{monthAbbrev(row.date)}</small>
+                        <small>{formatMonthAbbrev(row.date)}</small>
                       </span>
                       <span className={styles.rowChild}>
                         <strong>{row.unassigned ? '—' : row.childLabel}</strong>

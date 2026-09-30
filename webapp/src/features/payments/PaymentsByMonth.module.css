@@ -19,29 +19,8 @@
 }
 
 .pills {
-  display: flex;
-  gap: var(--space-6);
-}
-
-.pillActive,
-.pillNeutral,
-.pillPink {
-  font-size: 14px !important;
-}
-
-.pillActive {
-  background: var(--slate) !important;
-  color: var(--white) !important;
-}
-
-.pillNeutral {
-  background: var(--neutral-soft) !important;
-  color: var(--muted) !important;
-}
-
-.pillPink {
-  background: var(--pink-soft) !important;
-  color: var(--pink-ink) !important;
+  padding: 0;
+  border-bottom: none;
 }
 
 .search {

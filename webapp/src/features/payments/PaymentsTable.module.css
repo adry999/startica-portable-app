@@ -8,52 +8,10 @@
   min-height: 96px;
 }
 
-.summaryLabel {
-  margin: 0 0 var(--space-4);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.summaryValue {
-  display: block;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 26px;
-  line-height: 1.1;
-}
-
-.summaryValueLg {
-  display: block;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 32px;
-  line-height: 1.1;
-}
-
-.summaryActive {
-  border-width: 2px !important;
-  border-style: solid !important;
-}
-
-.summaryActiveCash {
-  border-color: var(--orange-ink) !important;
-}
-
-.summaryActiveCard {
-  border-color: var(--yellow-ink) !important;
-}
-
-.summaryActiveTransfer {
-  border-color: var(--mint-ink) !important;
-}
-
 .tableCard {
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   display: flex;
   flex-direction: column;

@@ -8,6 +8,8 @@ export const formatMonthLabel = v => {
   const [year, month] = v.split('-');
   return `${year} ${MONTHS_RO[Number(month) - 1] || month}`;
 };
+// Dată tip „2026-09-24” devine „Sep” — luna scurtă, sub ziua mare din rândul unei liste (ex. Achitări pe luni).
+export const formatMonthAbbrev = v => (v ? MONTHS_RO[Number(v.slice(5, 7)) - 1] || '' : '');
 // Lună tip „2026-09” devine „septembrie 2026”, pentru text adresat direct părinților.
 export const formatMonthName = v =>
   v ? new Date(v + '-01T12:00:00').toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }) : '—';

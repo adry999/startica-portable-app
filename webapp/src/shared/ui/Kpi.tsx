@@ -14,6 +14,9 @@ export interface KpiProps {
   state?: KpiState;
   /** Folosit doar când `state === 'error'`. */
   onRetry?: () => void;
+  /** Contur 2px în culoarea „ink” a acestui ton — independent de `tone` (fundalul poate rămâne alb),
+   * pentru un card dintr-un grup unde unul e „selectat” (ex. cardul metodei filtrate, 05-achitari.md §3). */
+  activeTone?: CardTone;
   className?: string;
   children?: ReactNode;
 }
@@ -26,6 +29,7 @@ export function Kpi({
   value,
   state = 'ready',
   onRetry,
+  activeTone,
   className,
   children,
 }: KpiProps) {
@@ -58,8 +62,14 @@ export function Kpi({
     );
   }
 
+  const activeClass = activeTone ? styles[`active${activeTone.charAt(0).toUpperCase()}${activeTone.slice(1)}`] : null;
+
   return (
-    <Card tone={tone} decorative={decorative} className={className}>
+    <Card
+      tone={tone}
+      decorative={decorative}
+      className={[activeClass, className].filter(Boolean).join(' ') || undefined}
+    >
       <div className={[styles.content, state === 'refreshing' ? styles.refreshing : null].filter(Boolean).join(' ')}>
         <p className={styles.label}>{label}</p>
         <strong className={[styles.value, size === 'lg' ? styles.valueLg : null].filter(Boolean).join(' ')}>

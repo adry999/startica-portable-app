@@ -51,4 +51,14 @@ describe('Kpi', () => {
     const { container } = render(<Kpi label="Încasări" value="45 320 lei" />);
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it('activeTone adaugă un contur în „ink”, independent de fundalul tone', () => {
+    const { container } = render(<Kpi tone="white" activeTone="orange" label="Cash" value="12 000 lei" />);
+    expect(container.firstElementChild?.className).toMatch(/activeOrange/);
+  });
+
+  it('fără activeTone, cardul nu are conturul „active”', () => {
+    const { container } = render(<Kpi label="Cash" value="12 000 lei" />);
+    expect(container.firstElementChild?.className).not.toMatch(/active[A-Z]/);
+  });
 });

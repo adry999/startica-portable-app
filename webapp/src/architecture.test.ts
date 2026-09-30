@@ -185,7 +185,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'payments/PaymentReceipt.module.css',
     'payments/PaymentReceiptThermal.module.css',
     'payments/PaymentsByMonth.module.css',
-    'payments/PaymentsTable.module.css',
     'personal/LeavesView.module.css',
     'personal/SalariesView.module.css',
     'personal/SalaryHistoryDrawer.module.css',
@@ -250,7 +249,6 @@ describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format �
   const ALLOWED: readonly string[] = [
     'groups/GroupTeamPicker.tsx',
     'payments/PaymentFormDrawer.tsx',
-    'payments/PaymentsByMonth.tsx',
     'personal/SalariesView.tsx',
     'pool/MonthView.tsx',
     'visits/VisitsPage.tsx',

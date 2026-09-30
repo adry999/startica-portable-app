@@ -31,6 +31,40 @@
   border: 1.5px dashed var(--raspberry) !important;
 }
 
+/* `activeTone` — contur 2px în „ink”, independent de fundalul cardului (ex. cardul metodei
+   filtrate din 05-achitari.md §3, fundal alb dar contur colorat pe metoda aleasă). */
+.activeOrange {
+  border: 2px solid var(--orange-ink) !important;
+}
+
+.activeMint {
+  border: 2px solid var(--mint-ink) !important;
+}
+
+.activeYellow {
+  border: 2px solid var(--yellow-ink) !important;
+}
+
+.activePink {
+  border: 2px solid var(--pink-ink) !important;
+}
+
+.activeTeal {
+  border: 2px solid var(--teal-ink) !important;
+}
+
+.activeBlue {
+  border: 2px solid var(--blue-ink) !important;
+}
+
+.activePurple {
+  border: 2px solid var(--purple-ink) !important;
+}
+
+.activeCoral {
+  border: 2px solid var(--coral-ink) !important;
+}
+
 .retry {
   align-self: flex-start;
   margin: 0;

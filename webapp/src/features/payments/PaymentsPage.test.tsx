@@ -614,7 +614,7 @@ describe('PaymentsPage', () => {
       renderPage();
 
       await user.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
-      await user.click(screen.getByRole('button', { name: /Neasociate ·/ }));
+      await user.click(screen.getByRole('radio', { name: /Neasociate ·/ }));
 
       expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
       expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);

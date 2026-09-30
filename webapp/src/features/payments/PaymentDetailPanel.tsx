@@ -44,7 +44,11 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
               {payment.unassigned ? 'neasociat' : payment.childLabel}
             </strong>
           </div>
-          <Button className={styles.assignLink} onClick={() => navigate(`/asociere-achitari?id=${payment.id}`)}>
+          <Button
+            variant="link"
+            className={styles.assignLink}
+            onClick={() => navigate(`/asociere-achitari?id=${payment.id}`)}
+          >
             Asociază în De rezolvat →
           </Button>
         </div>
@@ -76,7 +80,7 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
       </div>
 
       <div className={styles.footer}>
-        <Button className={styles.archiveLink} onClick={() => onToggleArchived(payment)}>
+        <Button variant="danger" onClick={() => onToggleArchived(payment)}>
           {payment.archived ? 'Dezarhivează' : 'Arhivează'}
         </Button>
         <Button

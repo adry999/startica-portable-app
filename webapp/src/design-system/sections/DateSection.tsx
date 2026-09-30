@@ -285,6 +285,9 @@ export function DateSection() {
         <DemoRow label="error">
           <Kpi tone="dashed" label="Avansuri" value="—" state="error" onRetry={() => {}} />
         </DemoRow>
+        <DemoRow label="activeTone">
+          <Kpi tone="white" activeTone="orange" label="Cash · 4" value="12 000 lei" />
+        </DemoRow>
       </ComponentShowcase>
 
       <ComponentShowcase
