@@ -577,7 +577,11 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 955/955 teste) — verzi după fiecare rundă.
 
-**Urmează:** modulul Copii (2a/2b/2c/15a), apoi Prezența, Cheltuieli, ... per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 2 — modulul Copii (2a/2b/2c/15a):** `Select` (2-8 opțiuni: Relație, Statut, Monedă), `PhoneInput` (validare `normalizeMoldovanPhone`, telefoane părinți + persoane de ridicare). `Button` a primit varianta `link` (înlocuiește 4 copii ale aceluiași CSS local — încălcare directă a regulii „nu dubla o componentă”). `TextInput`/`TextArea` extinse cu props (`required`/`inputMode`/`onKeyDown`). `ChildProfileView` folosea deja `ProfileLayout`/`StatCard` dintr-o migrare anterioară — nimic de făcut acolo. Rămân neatinse: cele 2 câmpuri `type=month`, cardurile-pastilă de taxă/grupă. `Kpi` pe `Card` nu s-a extras din `ChildrenStatsRow` (un singur loc de folosire, prematur).
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 964/964 teste) — verzi.
+
+**Urmează:** Prezența, Cheltuieli, Situația, Personal, Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
