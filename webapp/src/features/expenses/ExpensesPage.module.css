@@ -17,16 +17,6 @@
   color: var(--slate);
 }
 
-.editorField input,
-.editorField textarea {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-  resize: vertical;
-}
-
 .headerActions {
   display: flex;
   align-items: center;
@@ -43,20 +33,6 @@
 .footerRight {
   display: flex;
   gap: var(--space-8);
-}
-
-/* FM-2 (15c): suma cheltuielii, randată mare, ca un KPI. */
-.amountField {
-  gap: var(--space-8);
-}
-
-.amountInput {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 40px;
-  border: none !important;
-  padding: 0 !important;
-  color: var(--slate);
 }
 
 .categoryChips {
@@ -82,14 +58,11 @@
   border-color: var(--chip-color);
 }
 
-.btnGhostSmall {
-  border: 1px solid var(--input-border);
-  background: none;
-  border-radius: var(--radius-pill);
+/* Dublăm selectorul ca să batem cu siguranță `.btn`/`.ghost` din Button.module.css (aceeași
+   specificitate, ordinea foilor de stil între module CSS diferite nu e garantată). */
+.btnGhostSmall.btnGhostSmall {
   padding: var(--space-6) var(--space-12);
-  font-weight: 700;
   font-size: 12px;
-  color: var(--slate);
   white-space: nowrap;
 }
 
@@ -208,22 +181,10 @@
   font-weight: 700;
 }
 
-.chip button {
-  border: none;
-  background: none;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 800;
-  line-height: 1;
-  padding: 0 var(--space-6);
-}
-
-.chipLabel {
+.chipLabel.chipLabel {
   color: inherit;
   font-size: 12px;
   font-weight: 700;
-  padding: 0;
-  cursor: pointer;
 }
 
 .chipLabel:hover {
@@ -231,26 +192,19 @@
 }
 
 .chipEditInput {
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: inherit;
-  outline: none;
+  min-width: 90px;
+}
+
+.chipDelete.chipDelete {
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  color: var(--muted);
 }
 
 .chipForm {
   display: flex;
   gap: var(--space-6);
-}
-
-.chipForm input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-10);
-  font: inherit;
-  font-size: 12px;
 }
 
 .toolbar {
@@ -391,31 +345,6 @@
   grid-template-columns: 160px minmax(0, 1fr) 140px 150px auto;
   gap: var(--space-10);
   align-items: center;
-}
-
-.quickAddAmount,
-.quickAddDesc,
-.quickAddDate,
-.quickAddMethod {
-  border: none;
-  border-radius: 14px;
-  background: var(--white);
-  padding: var(--space-12) var(--space-14);
-  font: inherit;
-  font-size: 14px;
-  color: var(--slate);
-}
-
-.quickAddSubmit {
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--orange);
-  color: #fff;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 16px;
-  padding: var(--space-12) var(--space-20);
-  white-space: nowrap;
 }
 
 .quickAddChips {

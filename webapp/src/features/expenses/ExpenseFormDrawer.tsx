@@ -1,11 +1,14 @@
 import { useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { AmountInput, Button, DateInput, Drawer, Field, Select, TextArea, TextInput } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
 import { GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
 import { categoryStyleFor, type ExpenseFormInput } from './useExpenses';
+import { METHOD_LABEL } from './expenseColumns';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
+
+const METHOD_OPTIONS = Object.entries(METHOD_LABEL).map(([value, label]) => ({ value, label }));
 
 export function ExpenseFormDrawer({
   target,
@@ -102,23 +105,21 @@ export function ExpenseFormDrawer({
       }
     >
       <form id="expense-form-drawer" className={styles.editorForm} onSubmit={handleSubmit}>
-        <label className={styles.editorField}>
-          Data cheltuielii
-          <input type="date" required value={date} onChange={event => setDate(event.target.value)} />
-        </label>
-        <label className={`${styles.editorField} ${styles.amountField}`}>
-          Suma
-          <input
-            ref={amountInputRef}
-            type="number"
+        <Field label="Data cheltuielii" htmlFor="expense-date">
+          <DateInput id="expense-date" required value={date} onChange={setDate} />
+        </Field>
+        <Field label="Suma" htmlFor="expense-amount">
+          <AmountInput
+            id="expense-amount"
+            inputRef={amountInputRef}
             required
             min={0.01}
             step="0.01"
-            className={styles.amountInput}
             value={amount}
-            onChange={event => setAmount(event.target.value)}
+            onChange={setAmount}
+            currency="lei"
           />
-        </label>
+        </Field>
         <div className={styles.editorField}>
           Categorie
           <div className={styles.categoryChips} role="radiogroup" aria-label="Categorie">
@@ -142,23 +143,21 @@ export function ExpenseFormDrawer({
             })}
           </div>
         </div>
-        <label className={styles.editorField}>
-          Metodă
-          <select value={method} onChange={event => setMethod(event.target.value)}>
-            {editing && !method ? <option value="">Nespecificată</option> : null}
-            <option value="cash">Cash</option>
-            <option value="card">Card</option>
-            <option value="transfer">Transfer</option>
-          </select>
-        </label>
-        <label className={styles.editorField}>
-          Descriere
-          <input type="text" value={description} onChange={event => setDescription(event.target.value)} />
-        </label>
-        <label className={styles.editorField}>
-          Observații
-          <textarea value={notes} onChange={event => setNotes(event.target.value)} rows={3} />
-        </label>
+        <Field label="Metodă" htmlFor="expense-method">
+          <Select
+            id="expense-method"
+            value={method}
+            onChange={setMethod}
+            options={METHOD_OPTIONS}
+            placeholder={editing && !method ? 'Nespecificată' : undefined}
+          />
+        </Field>
+        <Field label="Descriere" htmlFor="expense-description">
+          <TextInput id="expense-description" value={description} onChange={setDescription} />
+        </Field>
+        <Field label="Observații" htmlFor="expense-notes">
+          <TextArea id="expense-notes" rows={3} value={notes} onChange={setNotes} />
+        </Field>
       </form>
     </Drawer>
   );

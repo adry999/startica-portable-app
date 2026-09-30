@@ -291,13 +291,13 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             }
             onCancel={() => setSelectedRowKeys(new Set())}
           >
-            <button type="button" className={styles.selectionArchive} onClick={() => void archiveSelected()}>
+            <Button className={styles.selectionArchive} onClick={() => void archiveSelected()}>
               {archiveFilter === 'archived' ? 'Dezarhivează selectate' : 'Arhivează selectate'}
-            </button>
+            </Button>
             {showDeleteForever && (
-              <button type="button" className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
+              <Button className={styles.selectionDeleteForever} onClick={() => setBulkDeleteOpen(true)}>
                 Șterge definitiv
-              </button>
+              </Button>
             )}
           </SelectionBar>
         )}

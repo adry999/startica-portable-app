@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useToast } from '@shared/ui';
+import { Button, IconButton, TextInput, useToast } from '@shared/ui';
 import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseCategory } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
@@ -60,13 +60,12 @@ export function ExpensesCategoryManager({
           categories.map(category =>
             editingCategoryId === category.id ? (
               <span key={category.id} className={styles.chip}>
-                <input
-                  autoFocus
+                <TextInput
                   className={styles.chipEditInput}
-                  style={{ width: `${Math.max(4, editingCategoryName.length)}ch` }}
+                  autoFocus
                   value={editingCategoryName}
-                  aria-label={`Redenumește ${category.name}`}
-                  onChange={event => setEditingCategoryName(event.target.value)}
+                  ariaLabel={`Redenumește ${category.name}`}
+                  onChange={setEditingCategoryName}
                   onBlur={() => void commitEditingCategory()}
                   onKeyDown={event => {
                     if (event.key === 'Enter') {
@@ -80,24 +79,23 @@ export function ExpensesCategoryManager({
               </span>
             ) : (
               <span key={category.id} className={styles.chip}>
-                <button
-                  type="button"
+                <Button
+                  variant="link"
                   className={styles.chipLabel}
                   title="Redenumește categoria"
                   onClick={() => startEditingCategory(category.id, category.name)}
                 >
                   {category.name}
-                </button>
+                </Button>
                 {/* „General” e permanentă — destinația cheltuielilor rămase fără categorie — deci nu se poate șterge. */}
                 {category.id !== GENERAL_CATEGORY_ID && (
-                  <button
-                    type="button"
-                    aria-label={`Șterge ${category.name}`}
+                  <IconButton
+                    className={styles.chipDelete}
+                    icon="×"
+                    ariaLabel={`Șterge ${category.name}`}
                     title="Șterge categoria"
                     onClick={() => onRequestDelete(category)}
-                  >
-                    ×
-                  </button>
+                  />
                 )}
               </span>
             ),
@@ -105,15 +103,15 @@ export function ExpensesCategoryManager({
         )}
       </div>
       <form className={styles.chipForm} onSubmit={handleCreateCategory}>
-        <input
+        <TextInput
           value={newCategoryName}
-          onChange={event => setNewCategoryName(event.target.value)}
+          onChange={setNewCategoryName}
           placeholder="Categorie nouă"
-          aria-label="Categoria nouă"
+          ariaLabel="Categoria nouă"
         />
-        <button type="submit" className={styles.btnGhostSmall}>
+        <Button type="submit" variant="ghost" className={styles.btnGhostSmall}>
           + Adaugă
-        </button>
+        </Button>
       </form>
     </div>
   );

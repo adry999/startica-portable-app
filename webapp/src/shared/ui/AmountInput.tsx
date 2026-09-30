@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import styles from './AmountInput.module.css';
 
 export interface AmountInputProps {
@@ -20,6 +20,8 @@ export interface AmountInputProps {
   /** Pastile de scurtătură sub câmp, ex. „1 lună · 9.600”. */
   shortcuts?: ReactNode;
   className?: string;
+  /** Acces direct la `<input>` — ex. refocus după „Salvează și adaugă alta” (FM-2). */
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 /** Suma mare a formularului (`COMPONENTE.md` §2, id 25d) — Baloo 40 (36 în dialog) + monedă, caset orange/cream. */
@@ -39,6 +41,7 @@ export function AmountInput({
   size = 'default',
   shortcuts,
   className,
+  inputRef,
 }: AmountInputProps) {
   const classes = [styles.box, size === 'dialog' ? styles.dialog : '', invalid ? styles.invalid : '', className ?? '']
     .filter(Boolean)
@@ -47,6 +50,7 @@ export function AmountInput({
     <>
       <div className={classes}>
         <input
+          ref={inputRef}
           id={id}
           className={styles.input}
           type="number"

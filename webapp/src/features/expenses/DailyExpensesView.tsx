@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Button, DateInput, NumberInput, Select, TextInput } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -6,6 +7,8 @@ import { categoryStyleFor, type ExpenseFormInput } from './useExpenses';
 import { METHOD_LABEL } from './expenseColumns';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
+
+const METHOD_OPTIONS = Object.entries(METHOD_LABEL).map(([value, label]) => ({ value, label }));
 
 export interface DailyGroup {
   date: string;
@@ -49,44 +52,11 @@ function QuickAddExpense({
     <form className={styles.quickAdd} onSubmit={handleSubmit}>
       <span className={styles.quickAddTitle}>Adaugă rapid</span>
       <div className={styles.quickAddRow}>
-        <input
-          className={styles.quickAddAmount}
-          type="number"
-          min="0"
-          step="0.01"
-          placeholder="Sumă"
-          aria-label="Sumă"
-          value={amount}
-          onChange={event => setAmount(event.target.value)}
-        />
-        <input
-          className={styles.quickAddDesc}
-          type="text"
-          placeholder="Descriere"
-          aria-label="Descriere"
-          value={description}
-          onChange={event => setDescription(event.target.value)}
-        />
-        <input
-          className={styles.quickAddDate}
-          type="date"
-          aria-label="Data"
-          value={date}
-          onChange={event => setDate(event.target.value)}
-        />
-        <select
-          className={styles.quickAddMethod}
-          aria-label="Metodă"
-          value={method}
-          onChange={event => setMethod(event.target.value)}
-        >
-          <option value="cash">Cash</option>
-          <option value="card">Card</option>
-          <option value="transfer">Transfer</option>
-        </select>
-        <button type="submit" className={styles.quickAddSubmit}>
-          Adaugă
-        </button>
+        <NumberInput min={0} step="0.01" placeholder="Sumă" ariaLabel="Sumă" value={amount} onChange={setAmount} />
+        <TextInput placeholder="Descriere" ariaLabel="Descriere" value={description} onChange={setDescription} />
+        <DateInput ariaLabel="Data" value={date} onChange={setDate} />
+        <Select ariaLabel="Metodă" value={method} onChange={setMethod} options={METHOD_OPTIONS} />
+        <Button type="submit">Adaugă</Button>
       </div>
       <div className={styles.quickAddChips}>
         {categoryNames.map(name => (
