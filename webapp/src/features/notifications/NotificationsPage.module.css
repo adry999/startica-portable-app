@@ -147,15 +147,6 @@
   color: var(--slate);
 }
 
-/* Doar pentru „Ora rezumatului” (input type="time" brut — nu există încă `TimeInput` în @shared/ui). */
-.detailField input[type='time'] {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
-  font: inherit;
-  font-size: 13px;
-}
-
 /* Lățime compactă pentru NumberInput în rândurile „cu N zile” / „orizont” / „minute înainte”. */
 .compactNumber {
   width: 84px;

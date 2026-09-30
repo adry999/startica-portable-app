@@ -1,5 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Button, Card, Field, LoadingState, NumberInput, Select, TextInput, Toggle, useToast } from '@shared/ui';
+import {
+  Button,
+  Card,
+  Field,
+  LoadingState,
+  NumberInput,
+  Select,
+  TextInput,
+  TimeInput,
+  Toggle,
+  useToast,
+} from '@shared/ui';
 import { usePoolSettings } from '@shared/pool/usePool';
 import type { PoolSettings as PoolSettingsValue } from '#features/pool/pool.types.d.mts';
 import backupStyles from './BackupPage.module.css';
@@ -66,24 +77,16 @@ export function PoolSettings() {
             suffix="minute"
           />
         </Field>
-        {/* type="time" rămâne brut — nu există încă un `TimeInput`/`TimePicker` în @shared/ui
-            (COMPONENTE.md §0e/30c), la fel ca type="month" din ChildFormDrawer. */}
-        <label className={styles.field}>
-          Program de la
-          <input
-            type="time"
+        <Field label="Program de la" htmlFor="pool-hours-from">
+          <TimeInput
+            id="pool-hours-from"
             value={form.hoursFrom}
-            onChange={event => setForm({ ...form, hoursFrom: event.target.value })}
+            onChange={value => setForm({ ...form, hoursFrom: value })}
           />
-        </label>
-        <label className={styles.field}>
-          Program până la
-          <input
-            type="time"
-            value={form.hoursTo}
-            onChange={event => setForm({ ...form, hoursTo: event.target.value })}
-          />
-        </label>
+        </Field>
+        <Field label="Program până la" htmlFor="pool-hours-to">
+          <TimeInput id="pool-hours-to" value={form.hoursTo} onChange={value => setForm({ ...form, hoursTo: value })} />
+        </Field>
         <Field label="Locuri pe oră (gol = fără limită)" htmlFor="pool-seats">
           <NumberInput
             id="pool-seats"

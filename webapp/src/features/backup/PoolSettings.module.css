@@ -6,20 +6,3 @@
   font-weight: 700;
   color: var(--slate);
 }
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
-.field input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-}

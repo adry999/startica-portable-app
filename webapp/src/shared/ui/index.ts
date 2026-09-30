@@ -10,6 +10,7 @@ export { TextField, type TextFieldProps } from './TextField';
 export { TextInput, type TextInputProps } from './TextInput';
 export { NumberInput, type NumberInputProps } from './NumberInput';
 export { DateInput, type DateInputProps } from './DateInput';
+export { TimeInput, type TimeInputProps } from './TimeInput';
 export { AmountInput, type AmountInputProps } from './AmountInput';
 export { TextArea, type TextAreaProps } from './TextArea';
 export { Select, type SelectOption, type SelectProps } from './Select';

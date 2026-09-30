@@ -8,6 +8,7 @@ import {
   Select,
   SegmentedControl,
   TextInput,
+  TimeInput,
   Toggle,
   useToast,
   useTopbarActions,
@@ -279,14 +280,12 @@ function PreferencesSection() {
           </div>
 
           <div className={styles.settingRow}>
-            {/* type="time" rămâne brut — nu există încă un `TimeInput` în @shared/ui
-                (la fel ca în VisitFormDrawer/PoolSettings). */}
             <label className={styles.detailField}>
               Ora rezumatului
-              <input
-                type="time"
+              <TimeInput
+                className={styles.compactNumber}
                 value={prefs.values.digestTime}
-                onChange={event => prefs.setField('digestTime', event.target.value)}
+                onChange={value => prefs.setField('digestTime', value)}
               />
             </label>
             <p className={styles.hint}>

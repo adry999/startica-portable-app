@@ -25,6 +25,7 @@ import {
   TextArea,
   TextField,
   TextInput,
+  TimeInput,
   Toggle,
   TonePicker,
   type FilterPillGroup,
@@ -56,6 +57,7 @@ export function ButoaneInputSection() {
   const [fileInputValue, setFileInputValue] = useState('');
   const [numberInputValue, setNumberInputValue] = useState('');
   const [dateInputValue, setDateInputValue] = useState('2026-09-30');
+  const [timeInputValue, setTimeInputValue] = useState('09:00');
   const [amountInputValue, setAmountInputValue] = useState('');
   const [fieldValue, setFieldValue] = useState('');
   const [periodFrom, setPeriodFrom] = useState(DEMO_MONTH);
@@ -325,6 +327,22 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <DateInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TimeInput"
+        importLine="import { TimeInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0e/30c — aceeași formă ca DateInput · Bazin (Program), Vizite, Notificări (Ora rezumatului)"
+      >
+        <DemoRow label="control">
+          <TimeInput value={timeInputValue} onChange={setTimeInputValue} ariaLabel="Ora" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <TimeInput value="" onChange={() => {}} ariaLabel="Ora" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <TimeInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
         </DemoRow>
       </ComponentShowcase>
 

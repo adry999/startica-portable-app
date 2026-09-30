@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput } from '@shared/ui';
+import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput, TimeInput } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -83,17 +83,8 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
           <Field label="Data vizitei" htmlFor="visit-date">
             <DateInput id="visit-date" required value={values.date} onChange={value => setDateOrTime('date', value)} />
           </Field>
-          {/* type="time" rămâne brut — nu există încă un `TimeInput` în @shared/ui (nici în
-              COMPONENTE.md §0), la fel ca la Notificări/Backup. */}
           <Field label="Ora vizitei" htmlFor="visit-time">
-            <input
-              id="visit-time"
-              required
-              type="time"
-              className={styles.rawInput}
-              value={values.time}
-              onChange={event => setDateOrTime('time', event.target.value)}
-            />
+            <TimeInput id="visit-time" required value={values.time} onChange={value => setDateOrTime('time', value)} />
           </Field>
           {editing && (
             <Field label="Statut" htmlFor="visit-status">
