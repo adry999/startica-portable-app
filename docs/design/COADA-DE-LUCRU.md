@@ -599,7 +599,11 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 994/994 teste) — verzi după fiecare rundă.
 
-**8 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe). **Urmează:** Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 9 — Vizite:** `VisitFormDrawer`/`EnrollDrawer`/`VisitsPage` rescrise, nicio componentă nouă necesară. Rămân brute: `type="time"` (fără `TimeInput`) și celula grilei lunare (`MonthCalendar` 30h nu se potrivește — implementarea diferă de spec, un singur loc de folosire).
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 994/994 teste) — verzi.
+
+**9 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite). **Urmează:** De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
