@@ -1,0 +1,98 @@
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-10);
+  height: 160px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-4);
+}
+
+.group {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-6);
+  height: 100%;
+}
+
+.pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.bar {
+  display: block;
+  width: 13px;
+  min-height: 2px;
+  border-top-left-radius: var(--radius-5);
+  border-top-right-radius: var(--radius-5);
+}
+
+.barPrimary {
+  background: var(--orange-bar-past);
+}
+
+.barPrimaryCurrent {
+  background: var(--orange);
+}
+
+.barSecondary {
+  background: var(--mint);
+}
+
+.barSecondaryCurrent {
+  background: var(--mint-bar-current);
+}
+
+.monthLabel {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--subtle);
+}
+
+.skeletonBar {
+  display: block;
+  flex: 1;
+  border-radius: var(--radius-5);
+  background: linear-gradient(90deg, var(--sand) 0px, var(--sand-soft) 160px, var(--sand) 320px);
+  background-size: 800px 100%;
+  animation: bar-chart-shimmer 1.4s linear infinite;
+}
+
+.spinner {
+  align-self: center;
+}
+
+.emptyText {
+  margin: 0;
+  padding: var(--space-40) 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@keyframes bar-chart-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar {
+    animation: none;
+    background: var(--sand);
+  }
+}

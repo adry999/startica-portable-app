@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Badge,
+  BarChart,
   Card,
   DataTable,
   DiffTable,
@@ -318,6 +319,40 @@ export function DateSection() {
         </DemoRow>
         <DemoRow label="capacity">
           <ProgressBar variant="capacity" filled={8} total={10} label="Locuri ocupate" />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="BarChart"
+        importLine="import { BarChart } from '@shared/ui';"
+        reference="DS Date si grafice.dc.html §30d — 2 serii, luna curentă intensă"
+      >
+        <DemoRow label="ready">
+          <BarChart
+            ariaLabel="Încasări și cheltuieli pe ultimele 6 luni"
+            series={[
+              { label: 'Apr', value: 32000 },
+              { label: 'Mai', value: 38000 },
+              { label: 'Iun', value: 29000 },
+              { label: 'Iul', value: 41000 },
+              { label: 'Aug', value: 35000 },
+              { label: 'Sep', value: 45000, current: true },
+            ]}
+            secondarySeries={[
+              { label: 'Apr', value: 21000 },
+              { label: 'Mai', value: 24000 },
+              { label: 'Iun', value: 19000 },
+              { label: 'Iul', value: 27000 },
+              { label: 'Aug', value: 23000 },
+              { label: 'Sep', value: 29000, current: true },
+            ]}
+          />
+        </DemoRow>
+        <DemoRow label="loading">
+          <BarChart ariaLabel="Se încarcă" series={[]} state="loading" />
+        </DemoRow>
+        <DemoRow label="empty">
+          <BarChart ariaLabel="Fără date" series={[]} state="empty" />
         </DemoRow>
       </ComponentShowcase>
 

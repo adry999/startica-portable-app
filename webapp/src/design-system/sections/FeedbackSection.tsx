@@ -7,6 +7,8 @@ import {
   Drawer,
   EmptyState,
   EMPTY_STATES,
+  ErrorState,
+  InlineError,
   LockedContent,
   LoadingState,
   Popover,
@@ -251,6 +253,30 @@ export function FeedbackSection() {
             title="Nicio achitare în septembrie"
             action={{ label: '+ Achitare nouă', onClick: () => {} }}
           />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ErrorState"
+        importLine="import { ErrorState } from '@shared/ui';"
+        reference="DS Incarcare si stari.dc.html §29g — eroare de secțiune, cu reîncercare"
+      >
+        <DemoRow label="control">
+          <ErrorState
+            description="Verifică legătura și încearcă din nou."
+            technicalDetail="fetch failed: ECONNREFUSED"
+            onRetry={() => {}}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="InlineError"
+        importLine="import { InlineError } from '@shared/ui';"
+        reference="DS Incarcare si stari.dc.html §29g — eroare lângă un câmp"
+      >
+        <DemoRow label="control">
+          <InlineError message="Numărul de telefon nu e valid." />
         </DemoRow>
       </ComponentShowcase>
 
