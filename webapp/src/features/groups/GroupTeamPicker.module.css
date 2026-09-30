@@ -116,23 +116,8 @@
   border-color: var(--slate);
 }
 
-.removeButton {
-  border: none;
-  background: none;
-  color: var(--pink-ink);
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1;
-}
-
 .addButton {
   align-self: flex-start;
-  border: 1.5px solid var(--border);
-  background: #fff;
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-weight: 800;
-  font-size: 13px;
   white-space: nowrap;
 }
 

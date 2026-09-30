@@ -63,7 +63,7 @@ describe('GroupFormDrawer', () => {
     renderDrawer({ onSubmit });
 
     await userEvent.type(screen.getByLabelText('Nume grupă'), 'Pinguini');
-    await userEvent.click(screen.getByLabelText('Culoare roz'));
+    await userEvent.click(screen.getByRole('radio', { name: 'Roz' }));
     await userEvent.click(screen.getByRole('button', { name: 'Creează grupa' }));
 
     expect(onSubmit).toHaveBeenCalledWith('Pinguini', '14', 'pink', '', '', []);
@@ -75,7 +75,7 @@ describe('GroupFormDrawer', () => {
       { id: 'g2', tone: 'pink' } as unknown as GroupCardView,
     ];
     renderDrawer({ groups });
-    expect(screen.getByLabelText('Culoare turcoaz')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('radio', { name: 'Turcoaz' })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('trimite formularul la submit (echivalent cu Enter într-un câmp)', async () => {

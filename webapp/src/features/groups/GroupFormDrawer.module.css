@@ -13,14 +13,6 @@
   color: var(--slate);
 }
 
-.field input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-}
-
 .row {
   display: flex;
   gap: var(--space-16);
@@ -32,43 +24,14 @@
   min-width: 120px;
 }
 
-.swatchRow {
-  display: flex;
-  gap: var(--space-8);
-  flex-wrap: wrap;
-}
-
-.swatch {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-sm);
-  border: 2px solid transparent;
-  cursor: pointer;
-}
-
-.swatchActive {
-  box-shadow: 0 0 0 2px var(--slate);
-}
-
 .stepper {
   display: flex;
   align-items: center;
   gap: var(--space-6);
 }
 
-.stepper input {
-  width: 60px;
-  text-align: center;
-}
-
-.stepper button {
-  width: 28px;
-  height: 28px;
-  flex: none;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-sm);
-  background: var(--white);
-  font-weight: 800;
+.capacityInput {
+  width: 72px;
 }
 
 .orderNote {

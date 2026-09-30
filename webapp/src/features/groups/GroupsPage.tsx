@@ -3,9 +3,13 @@ import {
   Button,
   Card,
   ConfirmDeleteDialog,
+  Field,
+  IconButton,
   LoadingState,
+  NumberInput,
   SearchSelect,
   SegmentedControl,
+  TextInput,
   useToast,
   useTopbarActions,
 } from '@shared/ui';
@@ -296,21 +300,19 @@ function GroupEditor({
       </div>
 
       <form className={styles.editorRow} onSubmit={handleSave}>
-        <label className={styles.field}>
-          Nume
-          <input value={name} onChange={event => setName(event.target.value)} aria-label="Nume grupă" />
-        </label>
-        <label className={styles.field}>
-          Capacitate
-          <input
+        <Field label="Nume" htmlFor="edit-group-name">
+          <TextInput id="edit-group-name" ariaLabel="Nume grupă" value={name} onChange={setName} />
+        </Field>
+        <Field label="Capacitate" htmlFor="edit-group-capacity">
+          <NumberInput
+            id="edit-group-capacity"
             value={capacityRaw}
-            onChange={event => setCapacityRaw(event.target.value)}
-            type="number"
+            onChange={setCapacityRaw}
             min={1}
             max={1000}
-            aria-label="Capacitate"
+            step={1}
           />
-        </label>
+        </Field>
         <Button type="submit">Salvează</Button>
       </form>
 
@@ -340,15 +342,12 @@ function GroupEditor({
               <span className={styles.avatar}>{member.name[0]?.toUpperCase()}</span>
               <span className={styles.memberName}>{member.name}</span>
               <span className={styles.memberAge}>{member.ageLabel}</span>
-              <button
-                type="button"
-                className={styles.removeButton}
-                aria-label={`Scoate ${member.name} din grupă`}
+              <IconButton
+                icon="×"
+                ariaLabel={`Scoate ${member.name} din grupă`}
                 title="Scoate din grupă"
                 onClick={() => onRemove(member.id)}
-              >
-                ×
-              </button>
+              />
             </div>
           ))}
         </div>
@@ -366,9 +365,8 @@ function GroupEditor({
       />
 
       <div className={styles.deleteRow}>
-        <button
-          type="button"
-          className={styles.deleteButton}
+        <Button
+          variant="danger"
           onClick={onDelete}
           disabled={group.blocksDelete}
           title={
@@ -378,7 +376,7 @@ function GroupEditor({
           }
         >
           Șterge grupa {group.name}
-        </button>
+        </Button>
       </div>
     </Card>
   );

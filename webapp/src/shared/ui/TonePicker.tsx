@@ -11,6 +11,8 @@ const TONE_SOFT: Record<string, string> = {
   blue: 'var(--blue-soft)',
   purple: 'var(--purple-soft)',
   coral: 'var(--coral-soft)',
+  // `green` (BOARD_TONE_PALETTE, Grupe) refolosește tokenii `--mint-*` — vezi groupBoardTone.ts.
+  green: 'var(--mint-soft)',
 };
 
 const TONE_INK: Record<string, string> = {
@@ -22,6 +24,7 @@ const TONE_INK: Record<string, string> = {
   blue: 'var(--blue-ink)',
   purple: 'var(--purple-ink)',
   coral: 'var(--coral-ink)',
+  green: 'var(--mint-ink)',
 };
 
 const TONE_NAME_RO: Record<string, string> = {
@@ -33,6 +36,7 @@ const TONE_NAME_RO: Record<string, string> = {
   blue: 'Albastru',
   purple: 'Mov',
   coral: 'Corai',
+  green: 'Verde',
 };
 
 export interface TonePickerProps {
@@ -41,11 +45,13 @@ export interface TonePickerProps {
   value: string;
   onChange: (tone: string) => void;
   ariaLabel: string;
+  /** `title` per pătrat — ex. „folosită de Ursuleți” / „liberă” (Grupă nouă, 03-grupe.md §5b.3). */
+  titleFor?: (tone: string) => string | undefined;
 }
 
 /** 8 pătrate de ton, 32×32 (32c, COMPONENTE.md „TonePicker" — Grupă nouă, Serviciu nou):
  * fundal `-soft` mereu, selectat = border 2px `-ink` + ✓. */
-export function TonePicker({ tones, value, onChange, ariaLabel }: TonePickerProps) {
+export function TonePicker({ tones, value, onChange, ariaLabel, titleFor }: TonePickerProps) {
   return (
     <div className={styles.row} role="radiogroup" aria-label={ariaLabel}>
       {tones.map(tone => {
@@ -57,6 +63,7 @@ export function TonePicker({ tones, value, onChange, ariaLabel }: TonePickerProp
             role="radio"
             aria-checked={selected}
             aria-label={TONE_NAME_RO[tone] ?? tone}
+            title={titleFor?.(tone)}
             className={styles.swatch}
             style={{
               background: TONE_SOFT[tone] ?? tone,

@@ -65,24 +65,6 @@
   flex-wrap: wrap;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-.field input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-10);
-  font: inherit;
-  color: var(--slate);
-  min-width: 160px;
-}
-
 .editorSubtitleRow {
   display: flex;
   align-items: center;
@@ -157,26 +139,7 @@
   white-space: nowrap;
 }
 
-.removeButton {
-  border: none;
-  background: none;
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--muted);
-  line-height: 1;
-  padding: 0 var(--space-4);
-}
-
 .deleteRow {
   display: flex;
   justify-content: flex-end;
-}
-
-.deleteButton {
-  border: none;
-  background: none;
-  color: var(--raspberry);
-  font-weight: 800;
-  font-size: 13px;
-  padding: 0;
 }

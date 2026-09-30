@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, SearchInput } from '@shared/ui';
+import { Badge, Button, IconButton, SearchInput } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
@@ -176,22 +176,19 @@ export function GroupTeamPicker({
                           ))}
                         </span>
                       )}
-                      <button
-                        type="button"
-                        className={styles.removeButton}
-                        aria-label={`Scoate ${person?.name ?? ''} din echipă`}
+                      <IconButton
+                        icon="×"
+                        ariaLabel={`Scoate ${person?.name ?? ''} din echipă`}
                         onClick={() => removeMember(member.staffId, role)}
-                      >
-                        ×
-                      </button>
+                      />
                     </li>
                   );
                 })}
               </ul>
 
-              <button type="button" className={styles.addButton} onClick={() => setOpenRole(isOpen ? null : role)}>
+              <Button variant="outline" className={styles.addButton} onClick={() => setOpenRole(isOpen ? null : role)}>
                 {role === 'principal' && members.length > 0 ? 'Schimbă' : ROLE_ADD_LABEL[role]}
-              </button>
+              </Button>
 
               {isOpen && (
                 <div className={styles.searchPanel}>

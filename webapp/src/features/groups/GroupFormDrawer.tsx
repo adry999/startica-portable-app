@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer } from '@shared/ui';
+import { Button, Drawer, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { ageInYears } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import { GroupTile } from './GroupTile';
 import { GroupTeamPicker } from './GroupTeamPicker';
-import { BOARD_TONE_COLORS, BOARD_TONE_PALETTE, firstUnusedTone, type BoardTone } from './groupBoardTone';
+import { BOARD_TONE_PALETTE, firstUnusedTone, type BoardTone } from './groupBoardTone';
 import type { GroupCardView, UnassignedChild } from './useGroups';
 import styles from './GroupFormDrawer.module.css';
 
@@ -29,17 +29,6 @@ export interface GroupFormDrawerProps {
 }
 
 const DEFAULT_CAPACITY = 14;
-
-const TONE_LABEL: Record<BoardTone, string> = {
-  yellow: 'galben',
-  pink: 'roz',
-  teal: 'turcoaz',
-  green: 'verde',
-  blue: 'albastru',
-  orange: 'portocaliu',
-  purple: 'lila',
-  coral: 'coral',
-};
 
 /** Drawer 4c „Grupă nouă” (03-grupe.md §5b) — previzualizare live + culoare + capacitate + vârstă. */
 export function GroupFormDrawer({
@@ -177,81 +166,59 @@ export function GroupFormDrawer({
 
         <label className={styles.field}>
           Nume grupă
-          <input value={name} onChange={event => setName(event.target.value)} autoFocus placeholder="ex. Ursuleți" />
+          <TextInput value={name} onChange={setName} autoFocus placeholder="ex. Ursuleți" />
         </label>
 
         <div className={styles.field}>
           Culoare
-          <div className={styles.swatchRow}>
-            {BOARD_TONE_PALETTE.map(option => {
-              const usedBy = usedByTone.get(option);
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  className={`${styles.swatch} ${tone === option ? styles.swatchActive : ''}`}
-                  style={{ background: BOARD_TONE_COLORS[option].soft, borderColor: BOARD_TONE_COLORS[option].bar }}
-                  aria-label={`Culoare ${TONE_LABEL[option]}`}
-                  aria-pressed={tone === option}
-                  title={usedBy ? `folosită de ${usedBy}` : 'liberă'}
-                  onClick={() => setTone(option)}
-                />
-              );
-            })}
-          </div>
+          <TonePicker
+            ariaLabel="Culoare"
+            tones={BOARD_TONE_PALETTE}
+            value={tone}
+            onChange={value => setTone(value as BoardTone)}
+            titleFor={option => {
+              const usedBy = usedByTone.get(option as BoardTone);
+              return usedBy ? `folosită de ${usedBy}` : 'liberă';
+            }}
+          />
         </div>
 
         <div className={styles.row}>
           <div className={styles.field}>
-            {/* Label separat de `<input>`, nu unul care-l înfășoară: un <label> care conține și
+            {/* Label separat de control, nu unul care-l înfășoară: un <label> care conține și
                 cele două butoane +/- (labelabile ca orice control) ar face `getByLabelText`/lectorul
                 de ecran să lege eticheta de primul buton, nu de input. */}
             <label htmlFor="new-group-capacity">Capacitate</label>
             <div className={styles.stepper}>
-              <button
-                type="button"
+              <IconButton
+                icon="−"
+                ariaLabel="Scade capacitatea"
                 onClick={() => setCapacityRaw(String(Math.max(1, Number(capacityRaw || DEFAULT_CAPACITY) - 1)))}
-                aria-label="Scade capacitatea"
-              >
-                −
-              </button>
-              <input
+              />
+              <NumberInput
                 id="new-group-capacity"
+                className={styles.capacityInput}
                 value={capacityRaw}
-                onChange={event => setCapacityRaw(event.target.value)}
-                type="number"
+                onChange={setCapacityRaw}
                 min={1}
                 max={1000}
+                step={1}
               />
-              <button
-                type="button"
+              <IconButton
+                icon="+"
+                ariaLabel="Crește capacitatea"
                 onClick={() => setCapacityRaw(String(Math.min(1000, Number(capacityRaw || DEFAULT_CAPACITY) + 1)))}
-                aria-label="Crește capacitatea"
-              >
-                +
-              </button>
+              />
             </div>
           </div>
 
           <label className={styles.field}>
             Vârstă minimă (ani)
-            <input
-              value={ageMinRaw}
-              onChange={event => setAgeMinRaw(event.target.value)}
-              type="number"
-              min={0}
-              max={18}
-            />
+            <NumberInput value={ageMinRaw} onChange={setAgeMinRaw} min={0} max={18} step={1} />
           </label>
           <label className={styles.field}>
             Vârstă maximă (ani)
-            <input
-              value={ageMaxRaw}
-              onChange={event => setAgeMaxRaw(event.target.value)}
-              type="number"
-              min={0}
-              max={18}
-            />
+            <NumberInput value={ageMaxRaw} onChange={setAgeMaxRaw} min={0} max={18} step={1} />
           </label>
         </div>
 
