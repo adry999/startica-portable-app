@@ -617,7 +617,13 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 1005/1005 teste) — verzi.
 
-**13 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite, De rezolvat, De notificat, Administrare, Raport). **Urmează:** Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9. **Candidat clar pentru o rundă dedicată:** `TimeInput` — 3 locuri (Bazin, Vizite, Notificări) cu `type="time"` brut și același comentariu. **Pentru Tipăriri:** `PrintTable` are deja 2 consumatori reali potențiali în plus față de spec (`ReportPrintSummary`, posibil `PrintOptionsDialog`-urile din Achitări/Situația) — verificat cu spec-ul lor în față când vine rândul modulului.
+**13 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite, De rezolvat, De notificat, Administrare, Raport). **Candidat clar pentru o rundă dedicată:** `TimeInput` — 3 locuri (Bazin, Vizite, Notificări) cu `type="time"` brut și același comentariu.
+
+**Runda 14 — Tipăriri (32f):** 5 componente noi — `SignatureLine` (6+ locuri: PaymentReceipt ×4, DayClosingReceipt, PaymentReceiptThermal), `PrintHeader`/`PrintTable`/`PrintFooter` (extrase din StatusPrint.tsx, singurul loc cu forma exactă antet+tabel-cu-cap-repetat+subsol; subsolul de totaluri rămâne `<tr>` dat de apelant, colSpan e specific fiecărui ecran), `ThermalBlock`+`ThermalRule` (schela bonului 58mm — DayClosingReceipt, PaymentReceiptThermal, PoolReceiptLabel/PoolReceiptPage). Verificat că `ReportPrintSummary` (Runda 13, decizia rămâne) nu se potrivește cu `PrintTable` (n-are thead, formă diferită) — nu s-a forțat. `WeeklySheet.tsx` rămâne neatins — semnătura e text simplu inline, nu forma bară+etichetă. `StickerPrintPage` (editor pe ecran, nu tipăritură-schelă) migrat separat pe `ChipSelect`/`TextInput`/`NumberInput` — ChipSelect a acoperit toate cele 4 grupuri de alegere.
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 1012/1012 teste) — verzi.
+
+**14 din 15 module gata.** **Urmează:** Pornire (20a-20c, 21a-21c) — ultimul modul din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
