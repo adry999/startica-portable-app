@@ -613,7 +613,11 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 1005/1005 teste) — verzi.
 
-**12 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite, De rezolvat, De notificat, Administrare). **Urmează:** Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9. **De revizitat:** decizia „nu generalizăm `PrintOptionsDialog`” (Runda 5) — Raport e al doilea consumator real citat în COMPONENTE.md, verificăm cu spec-ul lui în față. **Candidat clar pentru o rundă dedicată:** `TimeInput` — acum 3 locuri (Bazin, Vizite, Notificări) cu `type="time"` brut și același comentariu.
+**Runda 13 — Raport:** modulul era deja aproape complet — cardurile de sumar și tabelul „Pe zile” sunt grid-uri div/span, nicio nevoie de `Kpi`/`DataTable`. Rămâneau doar 2 butoane-link brute → `Button variant="link"`. `ReportPrintSummary` rămâne neatins — cele 2 `<table>` sunt conținut A4 doar la print (`@media print`), nu grile pe ecran; candidat pentru viitorul `PrintTable` din Tipăriri. **Decizia „nu generalizăm `PrintOptionsDialog`” (Runda 5) rămâne** — nu s-a mai pus problema în acest modul, `ReportExportDrawer` are propriul flux de export/print, fără `PrintOptionsDialog`.
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 1005/1005 teste) — verzi.
+
+**13 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite, De rezolvat, De notificat, Administrare, Raport). **Urmează:** Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9. **Candidat clar pentru o rundă dedicată:** `TimeInput` — 3 locuri (Bazin, Vizite, Notificări) cu `type="time"` brut și același comentariu. **Pentru Tipăriri:** `PrintTable` are deja 2 consumatori reali potențiali în plus față de spec (`ReportPrintSummary`, posibil `PrintOptionsDialog`-urile din Achitări/Situația) — verificat cu spec-ul lor în față când vine rândul modulului.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
