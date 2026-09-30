@@ -8,6 +8,7 @@ import {
   Drawer,
   SearchInput,
   SegmentedControl,
+  Select,
   SmsConfirmDialog,
   useToast,
   type DataTableColumn,
@@ -193,9 +194,9 @@ export function SmsMessagesPanel() {
               </Badge>
             ))}
           </div>
-          <button type="button" className={styles.allMonthsLink} onClick={() => setMonthsOpen(true)}>
+          <Button type="button" variant="link" className={styles.allMonthsLink} onClick={() => setMonthsOpen(true)}>
             Toate lunile →
-          </button>
+          </Button>
         </Card>
       </div>
 
@@ -217,31 +218,19 @@ export function SmsMessagesPanel() {
               placeholder="Caută destinatar sau telefon"
               ariaLabel="Caută în jurnalul SMS"
             />
-            <select
-              className={styles.select}
-              aria-label="Șablon"
+            <Select
+              ariaLabel="Șablon"
               value={log.templateId ?? ''}
-              onChange={event => log.setTemplateId(event.target.value || null)}
-            >
-              <option value="">Toate șabloanele</option>
-              {log.templateOptions.map(option => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className={styles.select}
-              aria-label="Perioadă"
+              onChange={value => log.setTemplateId(value || null)}
+              placeholder="Toate șabloanele"
+              options={log.templateOptions.map(option => ({ value: option.id, label: option.name }))}
+            />
+            <Select
+              ariaLabel="Perioadă"
               value={periodValueOf(log.period)}
-              onChange={event => log.setPeriod(periodFromValue(event.target.value))}
-            >
-              {Object.entries(PERIOD_LABEL).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+              onChange={value => log.setPeriod(periodFromValue(value))}
+              options={Object.entries(PERIOD_LABEL).map(([value, label]) => ({ value, label }))}
+            />
           </div>
 
           <DataTable
@@ -295,26 +284,18 @@ export function SmsMessagesPanel() {
           </Button>
         }
       >
-        <table className={styles.monthlyTable}>
-          <thead>
-            <tr>
-              <th>Lună</th>
-              <th>Mesaje</th>
-              <th>SMS</th>
-              <th>Eșuate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {log.monthly.map(row => (
-              <tr key={row.month}>
-                <td>{formatMonthName(row.month)}</td>
-                <td>{row.sent}</td>
-                <td>{row.segments}</td>
-                <td>{row.failed}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <DataTable
+          bare
+          pageSize={log.monthly.length || 1}
+          columns={[
+            { key: 'month', header: 'Lună', render: row => formatMonthName(row.month) },
+            { key: 'sent', header: 'Mesaje', render: row => row.sent },
+            { key: 'segments', header: 'SMS', render: row => row.segments },
+            { key: 'failed', header: 'Eșuate', render: row => row.failed },
+          ]}
+          rows={log.monthly}
+          rowKey={row => row.month}
+        />
       </Drawer>
     </>
   );

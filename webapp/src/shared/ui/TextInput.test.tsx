@@ -1,3 +1,4 @@
+import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -22,5 +23,11 @@ describe('TextInput', () => {
   it('e dezactivat cât `disabled` e adevărat', () => {
     render(<TextInput value="" onChange={() => {}} ariaLabel="Nume" disabled />);
     expect(screen.getByLabelText('Nume')).toBeDisabled();
+  });
+
+  it('expune `<input>` prin inputRef, pentru focus programatic', () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<TextInput value="" onChange={() => {}} ariaLabel="Nume" inputRef={ref} />);
+    expect(ref.current).toBe(screen.getByLabelText('Nume'));
   });
 });

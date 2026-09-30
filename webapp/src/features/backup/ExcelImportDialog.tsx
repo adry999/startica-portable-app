@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { Button, Drawer, Field, TextInput, useToast } from '@shared/ui';
 import type { ExcelImportData } from './useExcelTransfer';
 import styles from './ExcelImportDialog.module.css';
 
@@ -47,10 +47,23 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
         aplicației sau formatul vechi V5.
       </p>
 
-      <label className={styles.field}>
+      <div className={styles.field}>
         Fișier Excel
-        <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={pickFile} />
-      </label>
+        <div className={styles.filePicker}>
+          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+            Alege fișierul
+          </Button>
+          {data.fileName && <span className={styles.fileName}>{data.fileName}</span>}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          hidden
+          aria-label="Fișier Excel"
+          onChange={pickFile}
+        />
+      </div>
 
       {data.loading && <p className={styles.notice}>Se previzualizează…</p>}
       {data.pickError && <p className={styles.error}>{data.pickError}</p>}
@@ -82,10 +95,9 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
         </div>
       )}
 
-      <label className={styles.field}>
-        Scrie IMPORT pentru a înlocui datele
-        <input value={data.confirmText} onChange={event => data.setConfirmText(event.target.value)} />
-      </label>
+      <Field label="Scrie IMPORT pentru a înlocui datele" htmlFor="excel-import-confirm">
+        <TextInput id="excel-import-confirm" value={data.confirmText} onChange={data.setConfirmText} />
+      </Field>
     </Drawer>
   );
 }

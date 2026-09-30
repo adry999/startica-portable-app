@@ -84,8 +84,16 @@ describe('BackupPage', () => {
   });
 
   it('arată un mesaj de încărcare, apoi starea backup-ului', () => {
-    renderPage();
-    expect(screen.getByText('Se încarcă starea backup-ului…')).toBeInTheDocument();
+    vi.useFakeTimers();
+    try {
+      renderPage();
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(screen.getByRole('status', { name: 'Se încarcă…' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('A7: antetul filei arată „Startica v<versiune>”', async () => {

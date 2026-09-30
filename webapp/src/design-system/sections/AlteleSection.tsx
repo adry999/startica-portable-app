@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import {
+  Badge,
   ScrollArea,
+  SettingsList,
   TopbarActionsProvider,
   useTopbarActions,
   useTopbarActionsSlot,
@@ -10,6 +13,19 @@ import { ComponentShowcase } from '../ComponentShowcase';
 import { DemoRow } from '../DemoRow';
 import styles from './AlteleSection.module.css';
 
+interface DemoSettingsItem {
+  id: string;
+  name: string;
+  count: number;
+  hidden: boolean;
+}
+
+const DEMO_SETTINGS_ITEMS: DemoSettingsItem[] = [
+  { id: 'gradinita', name: 'Grădiniță', count: 12, hidden: false },
+  { id: 'bazin', name: 'Bazin', count: 4, hidden: false },
+  { id: 'excursie', name: 'Excursie', count: 0, hidden: true },
+];
+
 /**
  * Restul exporturilor din `@shared/ui`, care nu sunt componente vizuale de sine stătătoare:
  * `TopbarActionsProvider` ține slotul de butoane/titlu al antetului (randat de `AppShell`,
@@ -17,9 +33,55 @@ import styles from './AlteleSection.module.css';
  * care apelează hook-urile.
  */
 export function AlteleSection() {
+  const [items, setItems] = useState(DEMO_SETTINGS_ITEMS);
+
+  function reorder(draggedId: string, targetId: string) {
+    setItems(current => {
+      const next = [...current];
+      const from = next.findIndex(item => item.id === draggedId);
+      const to = next.findIndex(item => item.id === targetId);
+      if (from === -1 || to === -1) return current;
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
   return (
     <div className={styles.section}>
       <h2 className={styles.heading}>Altele</h2>
+
+      <ComponentShowcase
+        name="SettingsList"
+        importLine="import { SettingsList } from '@shared/ui';"
+        reference="COMPONENTE.md §2 · Backup și setări → Servicii (backup/ServicesSettings.tsx)"
+      >
+        <DemoRow label="control">
+          <div className={styles.frame} data-export="SettingsList">
+            <SettingsList
+              items={items}
+              ariaLabel="Servicii (demo)"
+              onReorder={reorder}
+              renderName={item => item.name}
+              renderCount={item => `${item.count} ${item.count === 1 ? 'achitare' : 'achitări'}`}
+              renderStatus={item => (
+                <Badge tone={item.hidden ? 'neutral' : 'mint'}>{item.hidden ? 'Ascuns' : 'Activ'}</Badge>
+              )}
+              renderActions={() => <button type="button">Editează</button>}
+            />
+          </div>
+        </DemoRow>
+        <DemoRow label="gol">
+          <div className={styles.frame}>
+            <SettingsList<DemoSettingsItem>
+              items={[]}
+              ariaLabel="Servicii (demo, gol)"
+              renderName={item => item.name}
+              emptyMessage="Niciun element încă."
+            />
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
 
       <ComponentShowcase
         name="ScrollArea"

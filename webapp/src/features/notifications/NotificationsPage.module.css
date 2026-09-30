@@ -90,14 +90,6 @@
   color: var(--slate);
 }
 
-.field input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-}
-
 .hint {
   margin: 0;
   font-size: 12px;
@@ -155,14 +147,18 @@
   color: var(--slate);
 }
 
-.detailField input,
-.detailField select {
+/* Doar pentru „Ora rezumatului” (input type="time" brut — nu există încă `TimeInput` în @shared/ui). */
+.detailField input[type='time'] {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
   padding: var(--space-6) var(--space-8);
   font: inherit;
   font-size: 13px;
-  width: 90px;
+}
+
+/* Lățime compactă pentru NumberInput în rândurile „cu N zile” / „orizont” / „minute înainte”. */
+.compactNumber {
+  width: 84px;
 }
 
 /* Reutilizată de SmsProviderCard/SmsTemplatesPanel (checkbox + etichetă) — nu redenumi fără să

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button, SegmentedControl } from '@shared/ui';
+import { Button, Field, SegmentedControl, TextInput } from '@shared/ui';
 import backupStyles from './BackupPage.module.css';
 import type { ConnectInput, ConnectResult } from './useSyncSettings';
 
@@ -56,31 +56,28 @@ export function ConnectServerForm({
         ]}
       />
 
-      <label className={backupStyles.field}>
-        Adresa serverului
-        <input
+      <Field label="Adresa serverului" htmlFor="connect-server-url">
+        <TextInput
+          id="connect-server-url"
           value={serverUrl}
-          onChange={event => setServerUrl(event.target.value)}
+          onChange={setServerUrl}
           placeholder="https://sync.exemplu.md"
         />
-      </label>
+      </Field>
 
       {mode === 'code' ? (
-        <label className={backupStyles.field}>
-          Codul de conectare
-          <input value={code} onChange={event => setCode(event.target.value)} placeholder="123456" maxLength={6} />
-        </label>
+        <Field label="Codul de conectare" htmlFor="connect-code">
+          <TextInput id="connect-code" value={code} onChange={setCode} placeholder="123456" maxLength={6} />
+        </Field>
       ) : (
-        <label className={backupStyles.field}>
-          Cheia de instalare
-          <input value={setupKey} onChange={event => setSetupKey(event.target.value)} />
-        </label>
+        <Field label="Cheia de instalare" htmlFor="connect-setup-key">
+          <TextInput id="connect-setup-key" value={setupKey} onChange={setSetupKey} />
+        </Field>
       )}
 
-      <label className={backupStyles.field}>
-        Numele acestui calculator
-        <input value={deviceName} onChange={event => setDeviceName(event.target.value)} placeholder={suggestedName} />
-      </label>
+      <Field label="Numele acestui calculator" htmlFor="connect-device-name">
+        <TextInput id="connect-device-name" value={deviceName} onChange={setDeviceName} placeholder={suggestedName} />
+      </Field>
 
       <Button type="submit" disabled={connecting || !canSubmit}>
         {connecting ? 'Se conectează…' : 'Conectează'}

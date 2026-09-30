@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Badge, Button, LoadingState, useToast } from '@shared/ui';
+import { Badge, Button, Field, LoadingState, TextInput, TonePicker, useToast } from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { BRANCH_COLORS, branchInitials } from '@domain/branch.mjs';
 import type { BranchSummary } from '@shared/api/branches';
@@ -93,18 +93,17 @@ export function BranchesSettings() {
 
       {addOpen && (
         <form className={styles.addForm} onSubmit={event => void submitAdd(event)}>
-          <label className={backupStyles.field}>
-            Nume
-            <input value={addName} onChange={event => setAddName(event.target.value)} placeholder="ex. Botanica" />
-          </label>
-          <label className={backupStyles.field}>
-            Adresă
-            <input
+          <Field label="Nume" htmlFor="branch-add-name">
+            <TextInput id="branch-add-name" value={addName} onChange={setAddName} placeholder="ex. Botanica" />
+          </Field>
+          <Field label="Adresă" htmlFor="branch-add-address">
+            <TextInput
+              id="branch-add-address"
               value={addAddress}
-              onChange={event => setAddAddress(event.target.value)}
+              onChange={setAddAddress}
               placeholder="ex. bd. Exemplu 5, Chișinău"
             />
-          </label>
+          </Field>
           <div className={backupStyles.toolbar}>
             <Button variant="ghost" type="button" onClick={() => setAddOpen(false)}>
               Anulează
@@ -132,10 +131,10 @@ export function BranchesSettings() {
               <div className={styles.info}>
                 {isRenaming ? (
                   <div className={styles.renameRow}>
-                    <input
+                    <TextInput
                       value={renameValue}
-                      onChange={event => setRenameValue(event.target.value)}
-                      aria-label={`Numele filialei ${branch.name}`}
+                      onChange={setRenameValue}
+                      ariaLabel={`Numele filialei ${branch.name}`}
                     />
                     <Button variant="ghost" onClick={cancelRename} disabled={busy}>
                       Anulează
@@ -155,19 +154,13 @@ export function BranchesSettings() {
                   {branch.children} copii · {branch.groups} grupe · salvat {formatDateTime(branch.lastLocal)}
                 </span>
                 {colorPickerId === branch.id && (
-                  <div className={styles.colorPicker} role="radiogroup" aria-label={`Culoarea filialei ${branch.name}`}>
-                    {BRANCH_COLORS.map((color: string) => (
-                      <button
-                        key={color}
-                        type="button"
-                        role="radio"
-                        aria-checked={branch.color === color}
-                        aria-label={color}
-                        className={styles.swatch}
-                        style={{ background: `var(--${color})` }}
-                        onClick={() => void chooseColor(branch.id, color)}
-                      />
-                    ))}
+                  <div className={styles.colorPicker}>
+                    <TonePicker
+                      tones={BRANCH_COLORS}
+                      value={branch.color}
+                      onChange={color => void chooseColor(branch.id, color)}
+                      ariaLabel={`Culoarea filialei ${branch.name}`}
+                    />
                   </div>
                 )}
               </div>

@@ -147,8 +147,8 @@ describe('ExchangeRateSettings', () => {
     await user.type(screen.getByLabelText('Nume plan'), 'Program mediu');
     await user.type(screen.getByLabelText('Orarul planului'), '8:00–17:00');
     await user.type(screen.getByLabelText('Descrierea planului'), 'Toate mesele, somn de zi.');
-    await user.clear(screen.getByLabelText('Preț lunar în euro'));
-    await user.type(screen.getByLabelText('Preț lunar în euro'), '350');
+    await user.clear(screen.getByLabelText('Preț lunar'));
+    await user.type(screen.getByLabelText('Preț lunar'), '350');
 
     expect(screen.getByText('≈ 6.867,00 lei')).toBeInTheDocument();
 

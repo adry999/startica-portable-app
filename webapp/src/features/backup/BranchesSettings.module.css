@@ -92,27 +92,11 @@
   gap: var(--space-8);
 }
 
-.renameRow input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 6px var(--space-10);
-  font: inherit;
-  font-size: 14px;
+.renameRow > *:first-child {
   flex: 1;
   min-width: 0;
 }
 
 .colorPicker {
-  display: flex;
-  gap: var(--space-8);
   margin-top: var(--space-4);
-}
-
-.swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid var(--white);
-  box-shadow: 0 0 0 1.5px var(--border);
-  padding: 0;
 }

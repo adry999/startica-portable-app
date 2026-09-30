@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, useToast } from '@shared/ui';
+import { Badge, Button, Card, Checkbox, NumberInput, PhoneInput, TextInput, useToast } from '@shared/ui';
 import { useSmsStatus } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import styles from './SmsProviderCard.module.css';
@@ -81,25 +81,14 @@ export function SmsProviderCard() {
 
       <div className={notificationsStyles.field}>
         <label htmlFor="sms-provider-sender">Expeditor</label>
-        <input
-          id="sms-provider-sender"
-          value={sender}
-          maxLength={15}
-          onChange={event => setSender(event.target.value)}
-        />
+        <TextInput id="sms-provider-sender" value={sender} maxLength={15} onChange={setSender} />
         <p className={notificationsStyles.hint}>Numele aprobat în dashboard-ul sms.md.</p>
       </div>
 
       {showTokenField ? (
         <div className={notificationsStyles.field}>
           <label htmlFor="sms-provider-token">Cheie API</label>
-          <input
-            id="sms-provider-token"
-            type="password"
-            autoComplete="off"
-            value={token}
-            onChange={event => setToken(event.target.value)}
-          />
+          <TextInput id="sms-provider-token" type="password" autoComplete="off" value={token} onChange={setToken} />
           <p className={notificationsStyles.hint}>
             Cheia trebuie să aibă drepturile: trimitere SMS, citire status mesaj, sold cont, expeditori activi.
           </p>
@@ -114,24 +103,19 @@ export function SmsProviderCard() {
         </div>
       )}
 
-      <label className={notificationsStyles.toggleField}>
-        <input
-          type="checkbox"
-          checked={limitEnabled}
-          onChange={event => setLimitEnabled(event.target.checked)}
-          aria-label="Activează limita lunară"
-        />
+      <div className={notificationsStyles.toggleField}>
+        <Checkbox checked={limitEnabled} onChange={setLimitEnabled} ariaLabel="Activează limita lunară" />
         <span>Activează limita lunară</span>
-      </label>
+      </div>
       {limitEnabled && (
         <label className={notificationsStyles.detailField}>
           Limită lunară
-          <input
-            type="number"
+          <NumberInput
+            className={notificationsStyles.compactNumber}
             min={1}
             max={MONTHLY_LIMIT_MAX}
-            value={limitValue}
-            onChange={event => setLimitValue(Number(event.target.value))}
+            value={String(limitValue)}
+            onChange={value => setLimitValue(Number(value))}
           />
         </label>
       )}
@@ -174,7 +158,7 @@ export function SmsProviderCard() {
         <div className={styles.testRow}>
           <label className={notificationsStyles.field}>
             Telefon pentru test
-            <input value={testPhone} onChange={event => setTestPhone(event.target.value)} />
+            <PhoneInput value={testPhone} onChange={setTestPhone} placeholder="069123456" />
           </label>
           <Button type="button" variant="ghost" onClick={() => void confirmTest()}>
             Trimite — costă 1 SMS (≈ {formatMoney(TEST_SMS_COST_LEI)})

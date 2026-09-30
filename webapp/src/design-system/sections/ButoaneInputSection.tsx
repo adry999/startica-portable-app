@@ -9,6 +9,7 @@ import {
   DateInput,
   DayStepper,
   Field,
+  FileInput,
   FilterPills,
   groupTone,
   IconButton,
@@ -52,6 +53,7 @@ export function ButoaneInputSection() {
   const [textInputValue, setTextInputValue] = useState('');
   const [selectRelationValue, setSelectRelationValue] = useState('');
   const [phoneInputValue, setPhoneInputValue] = useState('');
+  const [fileInputValue, setFileInputValue] = useState('');
   const [numberInputValue, setNumberInputValue] = useState('');
   const [dateInputValue, setDateInputValue] = useState('2026-09-30');
   const [amountInputValue, setAmountInputValue] = useState('');
@@ -276,6 +278,34 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <PhoneInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="FileInput"
+        importLine="import { FileInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25b — zonă punctată, click sau drag & drop · Backup și setări 16a (logo grădiniță)"
+      >
+        <DemoRow label="gol">
+          <FileInput
+            ariaLabel="Logo grădiniță"
+            accept="image/*"
+            onSelect={file => setFileInputValue(URL.createObjectURL(file))}
+            placeholder={<span>G</span>}
+          />
+        </DemoRow>
+        <DemoRow label="cu previzualizare">
+          <FileInput
+            ariaLabel="Logo grădiniță"
+            accept="image/*"
+            value={fileInputValue || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"/>'}
+            onSelect={file => setFileInputValue(URL.createObjectURL(file))}
+            onClear={() => setFileInputValue('')}
+            placeholder={<span>G</span>}
+          />
+        </DemoRow>
+        <DemoRow label="dezactivat">
+          <FileInput ariaLabel="Câmp dezactivat" onSelect={() => {}} placeholder={<span>G</span>} disabled />
         </DemoRow>
       </ComponentShowcase>
 

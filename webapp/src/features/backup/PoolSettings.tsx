@@ -1,8 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Button, Card, LoadingState, Toggle, useToast } from '@shared/ui';
+import { Button, Card, Field, LoadingState, NumberInput, Select, TextInput, Toggle, useToast } from '@shared/ui';
 import { usePoolSettings } from '@shared/pool/usePool';
 import type { PoolSettings as PoolSettingsValue } from '#features/pool/pool.types.d.mts';
 import backupStyles from './BackupPage.module.css';
+import styles from './PoolSettings.module.css';
+
+const COACH_PAY_MODE_OPTIONS: { value: PoolSettingsValue['coachPayMode']; label: string }[] = [
+  { value: 'per_child', label: 'Pe copil prezent' },
+  { value: 'per_session', label: 'Pe ședință ținută' },
+];
 
 /** Fila „Bazin” din Backup și setări (22d) — formular pe setările per filială, cu semințele ca prefill. */
 export function PoolSettings() {
@@ -36,31 +42,33 @@ export function PoolSettings() {
     <Card className={backupStyles.panel}>
       <h3 className={backupStyles.panelTitle}>Bazin</h3>
       <form className={backupStyles.form} onSubmit={event => void save(event)}>
-        <label className={backupStyles.field}>
+        <label className={styles.toggleRow}>
           <Toggle checked={form.enabled} onChange={enabled => setForm({ ...form, enabled })} />
           Folosim bazinul la această filială
         </label>
-        <label className={backupStyles.field}>
-          Preț per ședință (lei)
-          <input
-            type="number"
+        <Field label="Preț per ședință (lei)" htmlFor="pool-price">
+          <NumberInput
+            id="pool-price"
             min={1}
             step={1}
-            value={form.pricePerSession}
-            onChange={event => setForm({ ...form, pricePerSession: Number(event.target.value) })}
+            value={String(form.pricePerSession)}
+            onChange={value => setForm({ ...form, pricePerSession: Number(value) })}
+            suffix="lei"
           />
-        </label>
-        <label className={backupStyles.field}>
-          Durata ședinței (minute)
-          <input
-            type="number"
+        </Field>
+        <Field label="Durata ședinței (minute)" htmlFor="pool-duration">
+          <NumberInput
+            id="pool-duration"
             min={5}
             step={5}
-            value={form.durationMin}
-            onChange={event => setForm({ ...form, durationMin: Number(event.target.value) })}
+            value={String(form.durationMin)}
+            onChange={value => setForm({ ...form, durationMin: Number(value) })}
+            suffix="minute"
           />
-        </label>
-        <label className={backupStyles.field}>
+        </Field>
+        {/* type="time" rămâne brut — nu există încă un `TimeInput`/`TimePicker` în @shared/ui
+            (COMPONENTE.md §0e/30c), la fel ca type="month" din ChildFormDrawer. */}
+        <label className={styles.field}>
           Program de la
           <input
             type="time"
@@ -68,7 +76,7 @@ export function PoolSettings() {
             onChange={event => setForm({ ...form, hoursFrom: event.target.value })}
           />
         </label>
-        <label className={backupStyles.field}>
+        <label className={styles.field}>
           Program până la
           <input
             type="time"
@@ -76,54 +84,49 @@ export function PoolSettings() {
             onChange={event => setForm({ ...form, hoursTo: event.target.value })}
           />
         </label>
-        <label className={backupStyles.field}>
-          Locuri pe oră (gol = fără limită)
-          <input
-            type="number"
+        <Field label="Locuri pe oră (gol = fără limită)" htmlFor="pool-seats">
+          <NumberInput
+            id="pool-seats"
             min={1}
-            value={form.seatsPerSlot ?? ''}
-            onChange={event =>
-              setForm({ ...form, seatsPerSlot: event.target.value ? Number(event.target.value) : null })
-            }
+            step={1}
+            value={form.seatsPerSlot != null ? String(form.seatsPerSlot) : ''}
+            onChange={value => setForm({ ...form, seatsPerSlot: value ? Number(value) : null })}
           />
-        </label>
-        <label className={backupStyles.field}>
+        </Field>
+        <label className={styles.toggleRow}>
           <Toggle
             checked={form.chargeUnexcusedAbsence}
             onChange={chargeUnexcusedAbsence => setForm({ ...form, chargeUnexcusedAbsence })}
           />
           Lipsa nemotivată se taxează
         </label>
-        <label className={backupStyles.field}>
-          Plata antrenorului
-          <select
+        <Field label="Plata antrenorului" htmlFor="pool-coach-pay-mode">
+          <Select
+            id="pool-coach-pay-mode"
             value={form.coachPayMode}
-            onChange={event =>
-              setForm({ ...form, coachPayMode: event.target.value as PoolSettingsValue['coachPayMode'] })
-            }
-          >
-            <option value="per_child">Pe copil prezent</option>
-            <option value="per_session">Pe ședință ținută</option>
-          </select>
-        </label>
-        <label className={backupStyles.field}>
-          Tarif antrenor (lei)
-          <input
-            type="number"
-            min={1}
-            value={form.coachRate}
-            onChange={event => setForm({ ...form, coachRate: Number(event.target.value) })}
+            onChange={value => setForm({ ...form, coachPayMode: value as PoolSettingsValue['coachPayMode'] })}
+            options={COACH_PAY_MODE_OPTIONS}
           />
-        </label>
-        <label className={backupStyles.field}>
-          Ce aduce copilul (pe bonul de 58 mm)
-          <input
+        </Field>
+        <Field label="Tarif antrenor (lei)" htmlFor="pool-coach-rate">
+          <NumberInput
+            id="pool-coach-rate"
+            min={1}
+            step={1}
+            value={String(form.coachRate)}
+            onChange={value => setForm({ ...form, coachRate: Number(value) })}
+            suffix="lei"
+          />
+        </Field>
+        <Field label="Ce aduce copilul (pe bonul de 58 mm)" htmlFor="pool-items-note">
+          <TextInput
+            id="pool-items-note"
             value={form.itemsNote}
             maxLength={300}
             placeholder="Costum de baie, cască, prosop, papuci."
-            onChange={event => setForm({ ...form, itemsNote: event.target.value })}
+            onChange={value => setForm({ ...form, itemsNote: value })}
           />
-        </label>
+        </Field>
         <p className={backupStyles.notice}>
           Antrenorii se aleg din Personal, funcția „Antrenor bazin”.{' '}
           {pool.coaches.length === 0

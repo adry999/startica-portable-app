@@ -1,5 +1,18 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Badge, Button, Card, Drawer, SegmentedControl, useToast, type BadgeTone, type CardTone } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  Drawer,
+  Field,
+  LoadingState,
+  SegmentedControl,
+  Select,
+  TextInput,
+  useToast,
+  type BadgeTone,
+  type CardTone,
+} from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatDateTime } from '#shared/format/date-format.mjs';
@@ -194,7 +207,7 @@ export function BackupPage() {
     }
   }
 
-  if (!backupData.ready) return <p className={styles.notice}>Se încarcă starea backup-ului…</p>;
+  if (!backupData.ready) return <LoadingState />;
 
   return (
     <>
@@ -254,9 +267,9 @@ export function BackupPage() {
                   <span className={styles.statusHeadline}>{card.headline}</span>
                   <span className={styles.statusSubtitle}>{card.subtitle}</span>
                   {card.label === '③ Copie externă' && card.warning && (
-                    <button type="button" className={styles.statusCta} onClick={focusExternalDirInput}>
+                    <Button className={styles.statusCta} onClick={focusExternalDirInput}>
                       Alege un stick sau un folder
-                    </button>
+                    </Button>
                   )}
                 </Card>
               ))}
@@ -294,15 +307,15 @@ export function BackupPage() {
               </div>
 
               <form className={styles.form} onSubmit={event => void saveSettings(event)}>
-                <label className={styles.field}>
-                  Folder Google Drive sau altă destinație externă
-                  <input
-                    ref={externalDirInputRef}
+                <Field label="Folder Google Drive sau altă destinație externă" htmlFor="backup-external-dir">
+                  <TextInput
+                    id="backup-external-dir"
+                    inputRef={externalDirInputRef}
                     value={backupData.externalDirInput}
-                    onChange={event => backupData.setExternalDirInput(event.target.value)}
+                    onChange={backupData.setExternalDirInput}
                     placeholder="G:\My Drive\Startica_Backup"
                   />
-                </label>
+                </Field>
                 <p className={styles.hint}>
                   Folderul trebuie să existe. Aplicația verifică fișierul copiat; confirmă sincronizarea în Google
                   Drive. Copiile externe urmează aceeași păstrare ca cele locale; coșul Google Drive le mai ține 30 de
@@ -358,38 +371,29 @@ export function BackupPage() {
           </Button>
         }
       >
-        <fieldset className={styles.sourceField}>
-          <legend>Sursă</legend>
-          <label>
-            <input
-              type="radio"
-              name="restoreSource"
-              checked={restore.source === 'local'}
-              onChange={() => restore.setSource('local')}
-            />
-            Backupuri locale
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="restoreSource"
-              checked={restore.source === 'extern'}
-              onChange={() => restore.setSource('extern')}
-            />
-            Din folderul extern
-          </label>
-        </fieldset>
+        <div className={styles.field}>
+          Sursă
+          <SegmentedControl
+            ariaLabel="Sursă"
+            value={restore.source}
+            onChange={restore.setSource}
+            options={[
+              { value: 'local', label: 'Backupuri locale' },
+              { value: 'extern', label: 'Din folderul extern' },
+            ]}
+          />
+        </div>
 
         {restore.source === 'extern' && (
           <div className={styles.externalFields}>
-            <label className={styles.field}>
-              Folderul extern (calea completă)
-              <input
+            <Field label="Folderul extern (calea completă)" htmlFor="restore-external-folder">
+              <TextInput
+                id="restore-external-folder"
                 value={restore.externalFolder}
-                onChange={event => restore.setExternalFolder(event.target.value)}
+                onChange={restore.setExternalFolder}
                 placeholder="ex. G:\My Drive\Startica-backup"
               />
-            </label>
+            </Field>
             <Button variant="ghost" onClick={() => void restore.loadExternalBackups()}>
               Caută copii
             </Button>
@@ -399,16 +403,14 @@ export function BackupPage() {
           </div>
         )}
 
-        <label className={styles.field}>
-          Backup
-          <select value={restore.selectedName} onChange={event => restore.setSelectedName(event.target.value)}>
-            {restore.options.map(option => (
-              <option key={option.name} value={option.name}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Field label="Backup" htmlFor="restore-backup-name">
+          <Select
+            id="restore-backup-name"
+            value={restore.selectedName}
+            onChange={restore.setSelectedName}
+            options={restore.options.map(option => ({ value: option.name, label: option.label }))}
+          />
+        </Field>
 
         {restore.loadingBackups && <p className={styles.notice}>Se încarcă…</p>}
         {restore.backupsError && <p className={styles.error}>{restore.backupsError}</p>}
@@ -432,10 +434,9 @@ export function BackupPage() {
         )}
         {restore.previewError && <p className={styles.error}>{restore.previewError}</p>}
 
-        <label className={styles.field}>
-          Scrie RESTAUREAZA
-          <input value={restore.confirmText} onChange={event => restore.setConfirmText(event.target.value)} />
-        </label>
+        <Field label="Scrie RESTAUREAZA" htmlFor="restore-confirm-text">
+          <TextInput id="restore-confirm-text" value={restore.confirmText} onChange={restore.setConfirmText} />
+        </Field>
       </Drawer>
     </>
   );

@@ -109,7 +109,7 @@ describe('BranchesSettings', () => {
 
     const colorButtons = screen.getAllByRole('button', { name: 'Culoare' });
     await user.click(colorButtons[1]);
-    await user.click(screen.getByRole('radio', { name: 'pink' }));
+    await user.click(screen.getByRole('radio', { name: 'Roz' }));
 
     await vi.waitFor(() => expect(branches.find(branch => branch.id === 'BR-2')?.color).toBe('pink'));
   });

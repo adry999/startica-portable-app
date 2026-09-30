@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, ConfirmDeleteDialog, useToast } from '@shared/ui';
+import { Badge, Button, Checkbox, ConfirmDeleteDialog, TextArea, TextInput, useToast } from '@shared/ui';
 import { useSmsTemplates, SmsSegmentCounter, type SmsTemplateView } from '@shared/sms';
 import { finalizeSmsText } from '#features/sms-notify/index.web.mjs';
 import { evaluateChildrenForMonth } from '#features/billing/index.web.mjs';
@@ -119,15 +119,16 @@ export function SmsTemplatesPanel() {
       <div>
         <div className={styles.list}>
           {templatesData.templates.map(template => (
-            <button
+            <Button
               key={template.id}
               type="button"
+              variant="ghost"
               className={`${styles.row} ${template.id === selectedId ? styles.rowActive : ''}`}
               onClick={() => selectTemplate(template)}
             >
               <span className={styles.rowName}>{template.name}</span>
               {template.isDefault && <Badge tone="mint">Implicit</Badge>}
-            </button>
+            </Button>
           ))}
           <Button type="button" variant="ghost" onClick={startNewTemplate}>
             + Șablon nou
@@ -139,10 +140,10 @@ export function SmsTemplatesPanel() {
       <div className={styles.editor}>
         <div className={notificationsStyles.field}>
           <label htmlFor="sms-template-name">Nume</label>
-          <input
+          <TextInput
             id="sms-template-name"
             value={draft.name}
-            onChange={event => setDraft(current => ({ ...current, name: event.target.value }))}
+            onChange={value => setDraft(current => ({ ...current, name: value }))}
           />
         </div>
 
@@ -150,38 +151,36 @@ export function SmsTemplatesPanel() {
           <label htmlFor="sms-template-body">Text</label>
           <div className={styles.pills}>
             {SMS_TEMPLATE_VARIABLES.map(variable => (
-              <button key={variable} type="button" className={styles.pill} onClick={() => insertVariable(variable)}>
+              <Button key={variable} type="button" className={styles.pill} onClick={() => insertVariable(variable)}>
                 {variable}
-              </button>
+              </Button>
             ))}
           </div>
-          <textarea
+          <TextArea
             id="sms-template-body"
             ref={textareaRef}
             className={styles.textarea}
             value={draft.body}
-            onChange={event => setDraft(current => ({ ...current, body: event.target.value }))}
+            onChange={value => setDraft(current => ({ ...current, body: value }))}
           />
         </div>
 
-        <label className={notificationsStyles.toggleField}>
-          <input
-            type="checkbox"
+        <div className={notificationsStyles.toggleField}>
+          <Checkbox
             checked={draft.stripDiacritics}
-            onChange={event => setDraft(current => ({ ...current, stripDiacritics: event.target.checked }))}
-            aria-label="Fără diacritice la trimitere"
+            onChange={value => setDraft(current => ({ ...current, stripDiacritics: value }))}
+            ariaLabel="Fără diacritice la trimitere"
           />
           <span>Fără diacritice la trimitere</span>
-        </label>
-        <label className={notificationsStyles.toggleField}>
-          <input
-            type="checkbox"
+        </div>
+        <div className={notificationsStyles.toggleField}>
+          <Checkbox
             checked={draft.isDefault}
-            onChange={event => setDraft(current => ({ ...current, isDefault: event.target.checked }))}
-            aria-label="Implicit pentru Notifică"
+            onChange={value => setDraft(current => ({ ...current, isDefault: value }))}
+            ariaLabel="Implicit pentru Notifică"
           />
           <span>Implicit pentru Notifică</span>
-        </label>
+        </div>
 
         <p className={styles.preview}>{previewFinal.text}</p>
         <SmsSegmentCounter text={previewFinal.text} unitCost={0.3} />
@@ -192,9 +191,9 @@ export function SmsTemplatesPanel() {
         <div className={styles.footer}>
           <div className={styles.footerMeta}>
             {selectedId && !draft.isDefault && (
-              <button type="button" className={styles.deleteLink} onClick={() => setConfirmingDelete(true)}>
+              <Button type="button" variant="danger" onClick={() => setConfirmingDelete(true)}>
                 Șterge șablonul
-              </button>
+              </Button>
             )}
             {selectedId && (
               <span className={styles.usageCount}>Folosit de {templatesData.usageCountById[selectedId] ?? 0} ori</span>

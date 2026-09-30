@@ -14,6 +14,7 @@ export { AmountInput, type AmountInputProps } from './AmountInput';
 export { TextArea, type TextAreaProps } from './TextArea';
 export { Select, type SelectOption, type SelectProps } from './Select';
 export { PhoneInput, type PhoneInputProps } from './PhoneInput';
+export { FileInput, type FileInputProps } from './FileInput';
 export { ChipSelect, type ChipOption, type ChipSelectProps } from './ChipSelect';
 export { ChoiceCards, type ChoiceCardOption, type ChoiceCardsProps } from './ChoiceCards';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
@@ -42,6 +43,7 @@ export {
 } from './ProfileLayout';
 export { groupTone } from './group-tone';
 export { ServiceBadge, serviceTone, type ServiceBadgeInput, type ServiceBadgeProps } from './ServiceBadge';
+export { SettingsList, type SettingsListItem, type SettingsListProps } from './SettingsList';
 export { TonePicker, type TonePickerProps } from './TonePicker';
 export { MonthStepper, type MonthStepperProps } from './MonthStepper';
 export { DayStepper, type DayStepperProps } from './DayStepper';

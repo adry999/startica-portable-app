@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Badge, BnmRateLink, Button, Card, useToast, type BadgeTone } from '@shared/ui';
+import { Badge, BnmRateLink, Button, Card, Field, NumberInput, TextInput, useToast, type BadgeTone } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -128,43 +128,38 @@ export function ExchangeRateSettings() {
                 <span className={`${styles.planStripe} ${styles[planTone(index)]}`} aria-hidden="true" />
                 <div className={styles.planInfo}>
                   <div className={styles.planNameRow}>
-                    <input
+                    <TextInput
                       className={styles.planNameInput}
                       value={preset.name}
-                      onChange={event => updatePreset(preset.id, { name: event.target.value })}
+                      onChange={value => updatePreset(preset.id, { name: value })}
                       placeholder="Nume plan"
-                      aria-label="Nume plan"
+                      ariaLabel="Nume plan"
                     />
-                    <input
+                    <TextInput
                       className={styles.planHoursInput}
                       value={preset.hours ?? ''}
-                      onChange={event => updatePreset(preset.id, { hours: event.target.value })}
+                      onChange={value => updatePreset(preset.id, { hours: value })}
                       placeholder="Orar, ex. 8:00–17:00"
-                      aria-label="Orarul planului"
+                      ariaLabel="Orarul planului"
                     />
                   </div>
-                  <input
-                    className={styles.planDescInput}
+                  <TextInput
                     value={preset.description ?? ''}
-                    onChange={event => updatePreset(preset.id, { description: event.target.value })}
+                    onChange={value => updatePreset(preset.id, { description: value })}
                     placeholder="Descriere scurtă"
-                    aria-label="Descrierea planului"
+                    ariaLabel="Descrierea planului"
                   />
                 </div>
-                <label className={styles.planPriceField}>
-                  Preț lunar
-                  <span className={styles.planPriceValue}>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={preset.priceEur}
-                      onChange={event => updatePreset(preset.id, { priceEur: Number(event.target.value) })}
-                      aria-label="Preț lunar în euro"
-                    />
-                    <span className={styles.eur}>€</span>
-                  </span>
-                </label>
+                <Field label="Preț lunar" htmlFor={`plan-price-${preset.id}`}>
+                  <NumberInput
+                    id={`plan-price-${preset.id}`}
+                    step="0.01"
+                    min={0}
+                    value={String(preset.priceEur)}
+                    onChange={value => updatePreset(preset.id, { priceEur: Number(value) })}
+                    suffix="€"
+                  />
+                </Field>
                 <div className={styles.planTodayRate}>
                   <span className={styles.planTodayRateLabel}>la cursul de azi</span>
                   <span className={styles.planTodayRateValue}>
@@ -244,18 +239,17 @@ export function ExchangeRateSettings() {
           <Card className={styles.correctionCard}>
             <form className={styles.correctionForm} onSubmit={event => void submitCorrection(event)}>
               <span className={styles.correctionTitle}>Curs corectat pentru azi</span>
-              <label className={backupStyles.field}>
-                Curs
-                <input
-                  type="number"
+              <Field label="Curs" htmlFor="rate-correction-input">
+                <NumberInput
+                  id="rate-correction-input"
                   step="0.0001"
-                  min="0"
+                  min={0}
                   value={correctionInput}
-                  onChange={event => setCorrectionInput(event.target.value)}
+                  onChange={setCorrectionInput}
                   placeholder="ex. 19,7400"
                   autoFocus
                 />
-              </label>
+              </Field>
               <span className={styles.correctionHint}>Se aplică doar achitărilor din ziua de azi.</span>
               <div className={styles.correctionActions}>
                 <Button

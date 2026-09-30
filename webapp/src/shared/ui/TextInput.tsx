@@ -1,4 +1,4 @@
-import type { FocusEvent, KeyboardEvent, ReactNode } from 'react';
+import type { FocusEvent, KeyboardEvent, ReactNode, Ref } from 'react';
 import styles from './TextInput.module.css';
 
 export interface TextInputProps {
@@ -15,12 +15,15 @@ export interface TextInputProps {
   autoFocus?: boolean;
   maxLength?: number;
   inputMode?: 'text' | 'numeric' | 'decimal' | 'tel' | 'email' | 'search' | 'url' | 'none';
+  autoComplete?: string;
   prefix?: ReactNode;
   suffix?: ReactNode;
   className?: string;
   onBlur?: (event: FocusEvent<HTMLInputElement>) => void;
   /** Scurtături de tastatură (ex. Enter salvează, Esc renunță) — ex. redenumirea inline a unei categorii. */
   onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  /** Acces direct la `<input>` — ex. focus programatic pe o eroare de configurare (Backup și setări). */
+  inputRef?: Ref<HTMLInputElement>;
 }
 
 /** Câmp de text pe o singură linie (25a, `COMPONENTE.md` §0) — folosit direct sau prin `Field`. */
@@ -38,17 +41,20 @@ export function TextInput({
   autoFocus,
   maxLength,
   inputMode,
+  autoComplete,
   prefix,
   suffix,
   className,
   onBlur,
   onKeyDown,
+  inputRef,
 }: TextInputProps) {
   const classes = [styles.box, invalid ? styles.invalid : '', className ?? ''].filter(Boolean).join(' ');
   return (
     <div className={classes}>
       {prefix && <span className={styles.affix}>{prefix}</span>}
       <input
+        ref={inputRef}
         id={id}
         className={styles.input}
         type={type}
@@ -65,6 +71,7 @@ export function TextInput({
         autoFocus={autoFocus}
         maxLength={maxLength}
         inputMode={inputMode}
+        autoComplete={autoComplete}
       />
       {suffix && <span className={styles.affix}>{suffix}</span>}
     </div>

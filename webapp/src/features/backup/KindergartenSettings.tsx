@@ -1,5 +1,16 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { Button, Card, LoadingState, SegmentedControl, useToast } from '@shared/ui';
+import { useEffect, useState } from 'react';
+import {
+  Button,
+  Card,
+  Field,
+  FileInput,
+  LoadingState,
+  NumberInput,
+  SegmentedControl,
+  TextArea,
+  TextInput,
+  useToast,
+} from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { usePinStatus } from '@shared/personal/usePinStatus';
 import { useUiScale, type UiScale } from '@shared/state/ui-scale';
@@ -52,7 +63,6 @@ export function KindergartenSettings() {
   const toast = useToast();
   const [form, setForm] = useState<KindergartenSettingsData | null>(null);
   const [saving, setSaving] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // Formularul se editează liber în memorie; se resincronizează cu ce a trimis serverul
   // fie la prima încărcare, fie după ce operatorul apasă „Renunță”.
@@ -101,16 +111,12 @@ export function KindergartenSettings() {
     }
   }
 
-  async function changeLogo(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  async function changeLogo(file: File) {
     try {
       const logoDataUrl = await readFileAsDataUrl(file);
       updateField('logoDataUrl', logoDataUrl);
     } catch {
       toast.show({ message: 'Logo-ul nu a putut fi citit.' });
-    } finally {
-      event.target.value = '';
     }
   }
 
@@ -120,41 +126,28 @@ export function KindergartenSettings() {
         <Card className={backupStyles.panel}>
           <span className={styles.sectionLabel}>1 · Identitate</span>
           <div className={styles.logoRow}>
-            <div className={styles.logoBox} style={{ background: form.logoDataUrl ? undefined : 'var(--orange-soft)' }}>
-              {form.logoDataUrl ? (
-                <img src={form.logoDataUrl} alt="Logo" />
-              ) : (
-                (form.displayName || form.name).charAt(0).toUpperCase() || 'G'
-              )}
-            </div>
+            <FileInput
+              value={form.logoDataUrl || undefined}
+              onSelect={file => void changeLogo(file)}
+              onClear={() => updateField('logoDataUrl', '')}
+              accept="image/*"
+              ariaLabel="Logo grădiniță"
+              placeholder={<span>{(form.displayName || form.name).charAt(0).toUpperCase() || 'G'}</span>}
+            />
             <div className={styles.logoInfo}>
               <strong>Logo pe documente</strong>
               <p>SVG sau PNG, pe fundal transparent. Apare pe confirmări și rapoarte.</p>
-              <div className={styles.logoActions}>
-                <Button variant="outline" onClick={() => logoInputRef.current?.click()}>
-                  Schimbă
-                </Button>
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={event => void changeLogo(event)}
-                />
-                {form.logoDataUrl && (
-                  <button type="button" className={styles.removeLogo} onClick={() => updateField('logoDataUrl', '')}>
-                    Șterge logo-ul
-                  </button>
-                )}
-              </div>
             </div>
           </div>
           <div className={styles.fieldsGrid}>
             {IDENTITY_FIELDS.map(({ label, key }) => (
-              <label key={key} className={styles.field}>
-                {label}
-                <input value={String(form[key] ?? '')} onChange={event => updateField(key, event.target.value)} />
-              </label>
+              <Field key={key} label={label} htmlFor={`kg-${key}`}>
+                <TextInput
+                  id={`kg-${key}`}
+                  value={String(form[key] ?? '')}
+                  onChange={value => updateField(key, value)}
+                />
+              </Field>
             ))}
           </div>
         </Card>
@@ -163,10 +156,13 @@ export function KindergartenSettings() {
           <span className={styles.sectionLabel}>2 · Contact și plăți</span>
           <div className={styles.fieldsGrid}>
             {CONTACT_FIELDS.map(({ label, key }) => (
-              <label key={key} className={styles.field}>
-                {label}
-                <input value={String(form[key] ?? '')} onChange={event => updateField(key, event.target.value)} />
-              </label>
+              <Field key={key} label={label} htmlFor={`kg-${key}`}>
+                <TextInput
+                  id={`kg-${key}`}
+                  value={String(form[key] ?? '')}
+                  onChange={value => updateField(key, value)}
+                />
+              </Field>
             ))}
           </div>
         </Card>
@@ -174,34 +170,33 @@ export function KindergartenSettings() {
         <Card className={backupStyles.panel}>
           <span className={styles.sectionLabel}>3 · Confirmări de plată</span>
           <div className={styles.fieldsGrid}>
-            <label className={styles.field}>
-              Următorul număr
-              <input
-                type="number"
+            <Field label="Următorul număr" htmlFor="kg-next-receipt-number">
+              <NumberInput
+                id="kg-next-receipt-number"
                 min={1}
                 step={1}
-                value={form.nextReceiptNumber}
-                onChange={event => updateField('nextReceiptNumber', Number(event.target.value))}
+                value={String(form.nextReceiptNumber)}
+                onChange={value => updateField('nextReceiptNumber', Number(value))}
               />
-            </label>
-            <label className={styles.field}>
-              Semnătură
-              <input
+            </Field>
+            <Field label="Semnătură" htmlFor="kg-signature-label">
+              <TextInput
+                id="kg-signature-label"
                 value={form.signatureLabel}
-                onChange={event => updateField('signatureLabel', event.target.value)}
+                onChange={value => updateField('signatureLabel', value)}
                 placeholder="ex. Administrator: Ciobanu Maria"
               />
-            </label>
+            </Field>
           </div>
-          <label className={styles.field}>
-            Mențiune în subsol
-            <textarea
+          <Field label="Mențiune în subsol" htmlFor="kg-footer-note">
+            <TextArea
+              id="kg-footer-note"
               value={form.footerNote}
-              onChange={event => updateField('footerNote', event.target.value)}
+              onChange={value => updateField('footerNote', value)}
               placeholder="Document intern de confirmare a plății. Nu ține locul bonului fiscal."
             />
-          </label>
-          <label className={styles.field}>
+          </Field>
+          <div className={styles.field}>
             Format
             <SegmentedControl
               ariaLabel="Formatul confirmării de plată"
@@ -209,7 +204,7 @@ export function KindergartenSettings() {
               onChange={value => updateField('receiptFormat', value)}
               options={RECEIPT_FORMAT_OPTIONS}
             />
-          </label>
+          </div>
         </Card>
 
         <AdminPinCard />
@@ -293,20 +288,19 @@ function AdminPinCard() {
         }}
       >
         {pin.configured && (
-          <label className={styles.field}>
-            PIN curent
-            <input
+          <Field label="PIN curent" htmlFor="kg-pin-current">
+            <TextInput
+              id="kg-pin-current"
               type="password"
               inputMode="numeric"
               value={currentPin}
-              onChange={event => setCurrentPin(event.target.value)}
+              onChange={setCurrentPin}
             />
-          </label>
+          </Field>
         )}
-        <label className={styles.field}>
-          {pin.configured ? 'PIN nou' : 'Setează PIN (4–6 cifre)'}
-          <input type="password" inputMode="numeric" value={newPin} onChange={event => setNewPin(event.target.value)} />
-        </label>
+        <Field label={pin.configured ? 'PIN nou' : 'Setează PIN (4–6 cifre)'} htmlFor="kg-pin-new">
+          <TextInput id="kg-pin-new" type="password" inputMode="numeric" value={newPin} onChange={setNewPin} />
+        </Field>
         <Button type="submit" disabled={saving || newPin.length < 4}>
           {pin.configured ? 'Schimbă PIN-ul' : 'Setează PIN-ul'}
         </Button>
@@ -322,10 +316,10 @@ function UiScaleCard() {
   return (
     <Card className={backupStyles.panel}>
       <span className={styles.sectionLabel}>5 · Interfață</span>
-      <label className={styles.field}>
+      <div className={styles.field}>
         Mărimea interfeței
         <SegmentedControl ariaLabel="Mărimea interfeței" value={scale} onChange={setScale} options={UI_SCALE_OPTIONS} />
-      </label>
+      </div>
       <p className={styles.notice}>
         Se ține minte doar pe acest calculator. Tipăriturile (ex. Pontaj) rămân la mărimea reală, indiferent de această
         setare.

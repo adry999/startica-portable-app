@@ -8,12 +8,7 @@
 }
 
 .noticeLink {
-  border: 0;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-weight: 800;
-  color: var(--orange-ink);
+  font-size: inherit;
 }
 
 .headerProgress {
@@ -67,41 +62,6 @@
 .bulkLabel {
   color: var(--white);
   opacity: 0.75;
-}
-
-.bulkPill {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--white);
-  padding: 7px 12px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.bulkPill option {
-  color: var(--slate);
-}
-
-/* Scopate la `table`, nu la tot `.tableCard` — altfel câștigă (specificitate) în fața pastilelor
-   din bara de selecție (`.bulkPill`), care stau tot în interiorul cardului tabelului. */
-.tableCard table select,
-.tableCard table input {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
-  font: inherit;
-  font-size: 13px;
-  width: 100%;
-}
-
-.missing {
-  border: 1.5px solid var(--pink) !important;
-}
-
-.missing::placeholder {
-  color: var(--subtle);
 }
 
 .childCell {

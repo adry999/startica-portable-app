@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import { forwardRef, type KeyboardEvent } from 'react';
 import styles from './TextArea.module.css';
 
 export interface TextAreaProps {
@@ -18,23 +18,27 @@ export interface TextAreaProps {
 }
 
 /** Câmp de text liber pe mai multe linii — ex. SMS manual (11c/11d „Text liber”), Observații (15b). */
-export function TextArea({
-  id,
-  value,
-  onChange,
-  placeholder,
-  ariaLabel,
-  ariaDescribedBy,
-  rows = 4,
-  maxLength,
-  disabled,
-  autoFocus,
-  className,
-  onKeyDown,
-}: TextAreaProps) {
+export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
+  {
+    id,
+    value,
+    onChange,
+    placeholder,
+    ariaLabel,
+    ariaDescribedBy,
+    rows = 4,
+    maxLength,
+    disabled,
+    autoFocus,
+    className,
+    onKeyDown,
+  },
+  ref,
+) {
   const classes = className ? `${styles.textarea} ${className}` : styles.textarea;
   return (
     <textarea
+      ref={ref}
       id={id}
       className={classes}
       value={value}
@@ -49,4 +53,4 @@ export function TextArea({
       autoFocus={autoFocus}
     />
   );
-}
+});

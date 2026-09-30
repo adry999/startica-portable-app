@@ -6,9 +6,11 @@ import {
   DataTable,
   EmptyState,
   LoadingState,
+  NumberInput,
   RowMenu,
   SearchInput,
   SegmentedControl,
+  Select,
   SelectionBar,
   groupTone,
   useToast,
@@ -128,36 +130,26 @@ export function FeeSetupPage() {
       key: 'group',
       header: 'Grupă',
       render: row => (
-        <select
-          className={row.groupId ? undefined : styles.missing}
+        <Select
+          invalid={!row.groupId}
           value={row.groupId}
-          onChange={event => feeSetupData.setGroupId(row.id, event.target.value)}
-          aria-label={`Grupă pentru ${row.name}`}
-        >
-          <option value="">Fără grupă</option>
-          {feeSetupData.groupOptions.map(group => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
+          onChange={value => feeSetupData.setGroupId(row.id, value)}
+          ariaLabel={`Grupă pentru ${row.name}`}
+          placeholder="Fără grupă"
+          options={feeSetupData.groupOptions.map(group => ({ value: group.id, label: group.name }))}
+        />
       ),
     },
     {
       key: 'currency',
       header: 'Monedă',
       render: row => (
-        <select
+        <Select
           value={row.currency}
-          onChange={event => feeSetupData.setCurrency(row.id, event.target.value as FeeCurrency)}
-          aria-label={`Monedă pentru ${row.name}`}
-        >
-          {CURRENCY_OPTIONS.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          onChange={value => feeSetupData.setCurrency(row.id, value as FeeCurrency)}
+          ariaLabel={`Monedă pentru ${row.name}`}
+          options={CURRENCY_OPTIONS}
+        />
       ),
     },
     {
@@ -168,15 +160,14 @@ export function FeeSetupPage() {
         const showLeiEquivalent = row.currency === 'EUR' && row.fee !== '' && !Number.isNaN(amount) && todaysRate;
         return (
           <div className={styles.feeCell}>
-            <input
-              className={row.fee === '' ? styles.missing : undefined}
-              type="number"
+            <NumberInput
+              invalid={row.fee === ''}
               min={0}
               step="0.01"
               placeholder="taxă"
               value={row.fee}
-              onChange={event => feeSetupData.setFee(row.id, event.target.value)}
-              aria-label={`Taxă lunară pentru ${row.name}`}
+              onChange={value => feeSetupData.setFee(row.id, value)}
+              ariaLabel={`Taxă lunară pentru ${row.name}`}
             />
             {showLeiEquivalent && (
               <span className={styles.feeEquivalent}>
@@ -224,9 +215,9 @@ export function FeeSetupPage() {
         {feeSetupData.missingCount > 0 ? (
           <>
             Fără taxă și grupă, achitările acestor copii nu pot fi calculate în{' '}
-            <button type="button" className={styles.noticeLink} onClick={() => navigate('/situatia-platilor')}>
+            <Button variant="link" className={styles.noticeLink} onClick={() => navigate('/situatia-platilor')}>
               Situația plăților
-            </button>
+            </Button>
             . Completează rândurile de mai jos sau selectează mai mulți copii și aplică aceleași valori.
           </>
         ) : (
@@ -256,42 +247,28 @@ export function FeeSetupPage() {
             onCancel={() => feeSetupData.setSelectedRowKeys(new Set())}
           >
             <span className={styles.bulkLabel}>Aplică:</span>
-            <select
-              className={styles.bulkPill}
-              aria-label="Grupă de aplicat pe selecție"
+            <Select
+              ariaLabel="Grupă de aplicat pe selecție"
               value={feeSetupData.bulkGroupId}
-              onChange={event => feeSetupData.setBulkGroupId(event.target.value)}
-            >
-              <option value="">Grupă ▾</option>
-              {feeSetupData.groupOptions.map(group => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className={styles.bulkPill}
-              type="number"
+              onChange={feeSetupData.setBulkGroupId}
+              placeholder="Grupă"
+              options={feeSetupData.groupOptions.map(group => ({ value: group.id, label: group.name }))}
+            />
+            <NumberInput
               min={0}
               step="0.01"
               placeholder="Taxă"
-              aria-label="Taxă de aplicat pe selecție"
+              ariaLabel="Taxă de aplicat pe selecție"
               value={feeSetupData.bulkAmount}
-              onChange={event => feeSetupData.setBulkAmount(event.target.value)}
+              onChange={feeSetupData.setBulkAmount}
             />
-            <select
-              className={styles.bulkPill}
-              aria-label="Monedă de aplicat pe selecție"
+            <Select
+              ariaLabel="Monedă de aplicat pe selecție"
               value={feeSetupData.bulkCurrency}
-              onChange={event => feeSetupData.setBulkCurrency(event.target.value as FeeCurrency | '')}
-            >
-              <option value="">Monedă ▾</option>
-              {CURRENCY_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              onChange={value => feeSetupData.setBulkCurrency(value as FeeCurrency | '')}
+              placeholder="Monedă"
+              options={CURRENCY_OPTIONS}
+            />
             <Button size="md" onClick={() => applyBulk(feeSetupData, toast)}>
               Aplică la {selectedCount}
             </Button>

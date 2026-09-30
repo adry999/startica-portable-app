@@ -1,5 +1,17 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Button, Card, LoadingState, SegmentedControl, Toggle, useToast, useTopbarActions } from '@shared/ui';
+import {
+  Button,
+  Card,
+  Checkbox,
+  LoadingState,
+  NumberInput,
+  Select,
+  SegmentedControl,
+  TextInput,
+  Toggle,
+  useToast,
+  useTopbarActions,
+} from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { useTelegramStatus, type TelegramStatusData, type TelegramStatusView } from './useTelegramStatus';
@@ -116,12 +128,13 @@ function TelegramSection({ telegram }: { telegram: TelegramStatusData }) {
         <form className={styles.form} onSubmit={event => void connect(event)}>
           <label className={styles.field}>
             Token-ul botului
-            <input
+            <TextInput
               type="password"
               autoComplete="off"
+              ariaLabel="Token-ul botului"
               placeholder="123456789:AAH…"
               value={telegram.tokenInput}
-              onChange={event => telegram.setTokenInput(event.target.value)}
+              onChange={telegram.setTokenInput}
             />
           </label>
           <p className={styles.hint}>
@@ -194,17 +207,16 @@ function PreferencesSection() {
           checked={prefs.values.overdueEnabled}
           onChange={value => prefs.setField('overdueEnabled', value)}
         >
-          <select
-            aria-label="Detalii restanțe"
+          <Select
+            ariaLabel="Detalii restanțe"
             value={prefs.values.overdueCadence}
-            onChange={event =>
-              prefs.setField('overdueCadence', event.target.value as typeof prefs.values.overdueCadence)
-            }
-          >
-            <option value="daily">Zilnic</option>
-            <option value="monday">Doar luni</option>
-            <option value="never">Niciodată</option>
-          </select>
+            onChange={value => prefs.setField('overdueCadence', value as typeof prefs.values.overdueCadence)}
+            options={[
+              { value: 'daily', label: 'Zilnic' },
+              { value: 'monday', label: 'Doar luni' },
+              { value: 'never', label: 'Niciodată' },
+            ]}
+          />
         </ToggleRow>
 
         <ToggleRow
@@ -215,14 +227,14 @@ function PreferencesSection() {
         >
           <label className={styles.detailField}>
             cu
-            <input
-              type="number"
-              aria-label="Cu câte zile înainte"
+            <NumberInput
+              className={styles.compactNumber}
+              ariaLabel="Cu câte zile înainte"
               min={0}
               max={14}
               step={1}
-              value={prefs.values.birthdaysDaysBefore}
-              onChange={event => prefs.setField('birthdaysDaysBefore', Number(event.target.value))}
+              value={String(prefs.values.birthdaysDaysBefore)}
+              onChange={value => prefs.setField('birthdaysDaysBefore', Number(value))}
             />
             zile înainte
           </label>
@@ -236,14 +248,14 @@ function PreferencesSection() {
         >
           <label className={styles.detailField}>
             orizont
-            <input
-              type="number"
-              aria-label="Orizont, în zile de la azi"
+            <NumberInput
+              className={styles.compactNumber}
+              ariaLabel="Orizont, în zile de la azi"
               min={0}
               max={14}
               step={1}
-              value={prefs.values.visitsHorizonDays}
-              onChange={event => prefs.setField('visitsHorizonDays', Number(event.target.value))}
+              value={String(prefs.values.visitsHorizonDays)}
+              onChange={value => prefs.setField('visitsHorizonDays', Number(value))}
             />
             zile
           </label>
@@ -256,17 +268,19 @@ function PreferencesSection() {
         <summary className={styles.detailsSummary}>Detalii</summary>
         <div className={styles.settingsList}>
           <div className={styles.settingRow}>
-            <label className={styles.toggleField}>
-              <input
-                type="checkbox"
+            <div className={styles.toggleField}>
+              <Checkbox
                 checked={prefs.values.nothingToReportEnabled}
-                onChange={event => prefs.setField('nothingToReportEnabled', event.target.checked)}
+                onChange={value => prefs.setField('nothingToReportEnabled', value)}
+                ariaLabel="Trimite și „Nimic de semnalat” într-o zi goală"
               />
               <span>Trimite și „Nimic de semnalat" într-o zi goală</span>
-            </label>
+            </div>
           </div>
 
           <div className={styles.settingRow}>
+            {/* type="time" rămâne brut — nu există încă un `TimeInput` în @shared/ui
+                (la fel ca în VisitFormDrawer/PoolSettings). */}
             <label className={styles.detailField}>
               Ora rezumatului
               <input
@@ -285,34 +299,35 @@ function PreferencesSection() {
           <legend>Memento-uri Windows</legend>
           <div className={styles.settingsList}>
             <div className={styles.settingRow}>
-              <label className={styles.toggleField}>
-                <input
-                  type="checkbox"
+              <div className={styles.toggleField}>
+                <Checkbox
                   checked={prefs.values.windowsVisitsTodayEnabled}
-                  onChange={event => prefs.setField('windowsVisitsTodayEnabled', event.target.checked)}
+                  onChange={value => prefs.setField('windowsVisitsTodayEnabled', value)}
+                  ariaLabel="Vizite azi"
                 />
                 <span>Vizite azi</span>
-              </label>
+              </div>
               <p className={styles.hint}>Cere fereastra Startica deschisă cât timp aplicația rulează.</p>
             </div>
             <div className={styles.settingRow}>
-              <label className={styles.toggleField}>
-                <input
-                  type="checkbox"
+              <div className={styles.toggleField}>
+                <Checkbox
                   checked={prefs.values.windowsVisitSoonEnabled}
-                  onChange={event => prefs.setField('windowsVisitSoonEnabled', event.target.checked)}
+                  onChange={value => prefs.setField('windowsVisitSoonEnabled', value)}
+                  ariaLabel="Vizită în curând"
                 />
                 <span>Vizită în curând</span>
-              </label>
+              </div>
               <label className={styles.detailField}>
                 Cu câte minute înainte
-                <input
-                  type="number"
+                <NumberInput
+                  className={styles.compactNumber}
+                  ariaLabel="Cu câte minute înainte"
                   min={5}
                   max={120}
                   step={5}
-                  value={prefs.values.windowsVisitSoonMinutes}
-                  onChange={event => prefs.setField('windowsVisitSoonMinutes', Number(event.target.value))}
+                  value={String(prefs.values.windowsVisitSoonMinutes)}
+                  onChange={value => prefs.setField('windowsVisitSoonMinutes', Number(value))}
                 />
               </label>
             </div>

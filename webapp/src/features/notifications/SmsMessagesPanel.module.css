@@ -35,11 +35,6 @@
 
 .allMonthsLink {
   align-self: flex-start;
-  border: none;
-  background: none;
-  color: var(--orange-ink);
-  font-weight: 700;
-  padding: 0;
 }
 
 .grid {
@@ -60,14 +55,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-10);
-}
-
-.select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-10);
-  font: inherit;
-  background: var(--white);
 }
 
 .childName {
@@ -177,16 +164,4 @@
 .fixLink {
   color: var(--orange-ink);
   font-weight: 700;
-}
-
-.monthlyTable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.monthlyTable th,
-.monthlyTable td {
-  text-align: left;
-  padding: var(--space-8) var(--space-6);
-  border-bottom: 1px solid var(--row-divider);
 }
