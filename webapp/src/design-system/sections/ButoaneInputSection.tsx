@@ -3,6 +3,7 @@ import {
   Button,
   Checkbox,
   DayStepper,
+  Field,
   FilterPills,
   groupTone,
   MonthPicker,
@@ -12,6 +13,7 @@ import {
   SegmentedControl,
   TextArea,
   TextField,
+  TextInput,
   Toggle,
   TonePicker,
   type FilterPillGroup,
@@ -37,6 +39,8 @@ export function ButoaneInputSection() {
   const [day, setDay] = useState(DEMO_DAY);
   const [textAreaValue, setTextAreaValue] = useState('');
   const [textFieldValue, setTextFieldValue] = useState('');
+  const [textInputValue, setTextInputValue] = useState('');
+  const [fieldValue, setFieldValue] = useState('');
   const [toggleOn, setToggleOn] = useState(true);
   const [toggleOff, setToggleOff] = useState(false);
   const [checkboxOn, setCheckboxOn] = useState(true);
@@ -146,6 +150,58 @@ export function ButoaneInputSection() {
         </DemoRow>
         <DemoRow label="disabled">
           <TextField value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="TextInput"
+        importLine="import { TextInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25a — câmp de bază pentru toate formularele"
+      >
+        <DemoRow label="control">
+          <TextInput value={textInputValue} onChange={setTextInputValue} placeholder="ex. Excursie" ariaLabel="Nume" />
+        </DemoRow>
+        <DemoRow label="cu prefix/sufix">
+          <TextInput value="150" onChange={() => {}} ariaLabel="Preț" suffix="lei" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <TextInput value="abc" onChange={() => {}} ariaLabel="Sumă" invalid />
+        </DemoRow>
+        <DemoRow label="disabled">
+          <TextInput value="" onChange={() => {}} ariaLabel="Câmp dezactivat" disabled />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Field"
+        importLine="import { Field, TextInput } from '@shared/ui';"
+        reference="COMPONENTE.md §0/25a — etichetă + ajutor/eroare pentru orice control de formular"
+      >
+        <DemoRow label="control">
+          <Field label="Nume" htmlFor="ds-field-nume" hint="Cum apare în listă">
+            <TextInput
+              id="ds-field-nume"
+              value={fieldValue}
+              onChange={setFieldValue}
+              ariaDescribedBy="ds-field-nume-desc"
+            />
+          </Field>
+        </DemoRow>
+        <DemoRow label="opțional">
+          <Field label="Poreclă" htmlFor="ds-field-porecla" optional>
+            <TextInput id="ds-field-porecla" value="" onChange={() => {}} />
+          </Field>
+        </DemoRow>
+        <DemoRow label="eroare">
+          <Field label="Telefon" htmlFor="ds-field-telefon" error="Telefonul nu e valid">
+            <TextInput
+              id="ds-field-telefon"
+              value="078"
+              onChange={() => {}}
+              invalid
+              ariaDescribedBy="ds-field-telefon-desc"
+            />
+          </Field>
         </DemoRow>
       </ComponentShowcase>
 
