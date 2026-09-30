@@ -15,6 +15,11 @@ export interface EmptyStateProps {
   variant?: EmptyStateVariant;
   title: string;
   description?: ReactNode;
+  /** `'compact'` (35d) — un rând 13px `--muted`, fără chenar și fără puncte, padding 8px 0, acțiunea
+   * ca link. Doar în interiorul unui card care are deja propriul titlu — ignoră decorul specific
+   * variantei (puncte pe `first`, fundal mint pe `done`), varianta rămâne relevantă doar pentru
+   * alegerea automată din `DataTable`/catalog. */
+  size?: 'compact';
   /** Doar `no-results`: etichetele filtrelor active, ex. `['Arhivați', 'Grupa Mars']`. */
   activeFilters?: string[];
   onClearFilters?: () => void;
@@ -30,10 +35,24 @@ export function EmptyState({
   variant = 'no-results',
   title,
   description,
+  size,
   activeFilters,
   onClearFilters,
   action,
 }: EmptyStateProps) {
+  if (size === 'compact') {
+    return (
+      <div className={styles.compact}>
+        <span className={styles.compactText}>{title}</span>
+        {action && (
+          <Button variant="link" onClick={action.onClick}>
+            {action.label}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   if (variant === 'done') {
     return (
       <div className={styles.done}>

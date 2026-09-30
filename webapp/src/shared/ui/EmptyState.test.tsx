@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import { EmptyState } from './EmptyState';
 
@@ -53,5 +54,27 @@ describe('EmptyState', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
     expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('size="compact" randează un rând simplu, fără puncte/chenar, acțiunea ca link', async () => {
+    const onClick = vi.fn();
+    const { container } = render(
+      <EmptyState size="compact" variant="first" title="Nicio notă încă." action={{ label: '+ Notă', onClick }} />,
+    );
+    expect(container.querySelector('[class*="dots"]')).not.toBeInTheDocument();
+    const action = screen.getByRole('button', { name: '+ Notă' });
+    expect(action.className).toMatch(/link/);
+    await userEvent.click(action);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('size="compact" fără acțiune arată doar textul', () => {
+    render(<EmptyState size="compact" title="Toți copiii au grupă." />);
+    expect(screen.getByText('Toți copiii au grupă.')).toBeInTheDocument();
+  });
+
+  it('fără încălcări axe (R6)', async () => {
+    const { container } = render(<EmptyState variant="first" title="Nicio grupă încă" />);
+    expect(await axe(container)).toHaveNoViolations();
   });
 });

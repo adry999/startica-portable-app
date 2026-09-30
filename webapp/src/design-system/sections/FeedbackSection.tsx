@@ -262,6 +262,9 @@ export function FeedbackSection() {
             action={{ label: '+ Achitare nouă', onClick: () => {} }}
           />
         </DemoRow>
+        <DemoRow label="compact (35d, în interiorul unui card)">
+          <EmptyState size="compact" title="Nicio notă încă." action={{ label: '+ Notă', onClick: () => {} }} />
+        </DemoRow>
       </ComponentShowcase>
 
       <ComponentShowcase
