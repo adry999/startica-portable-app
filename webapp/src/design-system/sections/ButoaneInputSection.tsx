@@ -10,9 +10,11 @@ import {
   DayStepper,
   Field,
   FileInput,
+  FilterMenu,
   FilterPills,
   groupTone,
   IconButton,
+  MonthInput,
   MonthPicker,
   MonthStepper,
   NumberInput,
@@ -348,6 +350,19 @@ export function ButoaneInputSection() {
       </ComponentShowcase>
 
       <ComponentShowcase
+        name="MonthInput"
+        importLine="import { MonthInput } from '@shared/ui';"
+        reference="DS Componente formular.dc.html §25b — variantă lună (Perioadă, Raport)"
+      >
+        <DemoRow label="control">
+          <MonthInput value="2026-09" onChange={() => {}} ariaLabel="Luna" />
+        </DemoRow>
+        <DemoRow label="invalid">
+          <MonthInput value="" onChange={() => {}} ariaLabel="Luna" invalid />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
         name="TimeInput"
         importLine="import { TimeInput } from '@shared/ui';"
         reference="COMPONENTE.md §0e/30c — aceeași formă ca DateInput · Bazin (Program), Vizite, Notificări (Ora rezumatului)"
@@ -570,6 +585,33 @@ export function ButoaneInputSection() {
               { key: 'group', label: 'Grupa: Curcubeu', onClear: () => {} },
             ]}
             onReset={() => {}}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="FilterMenu"
+        importLine="import { FilterMenu } from '@shared/ui';"
+        reference="DS Tabel si filtre.dc.html §27e — meniu de filtrare peste Popover"
+      >
+        <DemoRow label="control">
+          <FilterMenu
+            label="Metodă"
+            options={[
+              { value: 'cash', label: 'Cash', count: 12 },
+              { value: 'card', label: 'Card', count: 4 },
+            ]}
+            selected={['cash']}
+            onChange={() => {}}
+          />
+        </DemoRow>
+        <DemoRow label="contoare în schelet">
+          <FilterMenu
+            label="Grupă"
+            options={[{ value: 'a', label: 'Grupa mare' }]}
+            selected={[]}
+            onChange={() => {}}
+            countsLoading
           />
         </DemoRow>
       </ComponentShowcase>

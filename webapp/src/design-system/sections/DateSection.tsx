@@ -3,6 +3,8 @@ import {
   Badge,
   Card,
   DataTable,
+  DiffTable,
+  Kpi,
   ListToolbar,
   PersonCell,
   ProfileLayout,
@@ -251,6 +253,45 @@ export function DateSection() {
               { label: 'Șterge definitiv', onClick: () => {}, danger: true },
               { label: 'Indisponibil', onClick: () => {}, disabled: true, title: 'Doar administratorul poate' },
             ]}
+          />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Kpi"
+        importLine="import { Kpi } from '@shared/ui';"
+        reference="DS Componente.dc.html §28c — KPI cu tone/size/emphasis/decorative"
+      >
+        <DemoRow label="ready">
+          <Kpi tone="orange" decorative="lg" size="lg" label="Încasări" value="45 320 lei" />
+        </DemoRow>
+        <DemoRow label="loading">
+          <Kpi tone="mint" label="Cheltuieli" value="—" state="loading" />
+        </DemoRow>
+        <DemoRow label="refreshing">
+          <Kpi tone="yellow" label="Diferență" value="12 100 lei" state="refreshing" />
+        </DemoRow>
+        <DemoRow label="error">
+          <Kpi tone="dashed" label="Avansuri" value="—" state="error" onRetry={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="DiffTable"
+        importLine="import { DiffTable } from '@shared/ui';"
+        reference="DS Componente 2.dc.html §34e — Conflicte, comparație locală/de la distanță"
+      >
+        <DemoRow label="control">
+          <DiffTable
+            columns={[
+              { key: 'local', label: 'Pe acest calculator' },
+              { key: 'remote', label: 'Pe LAPTOP-ANA' },
+            ]}
+            rows={[
+              { key: 'name', label: 'Nume', local: 'Ionescu Maria', remote: 'Ionescu Maria', differs: false },
+              { key: 'phone', label: 'Telefon', local: '069123456', remote: '069999999', differs: true },
+            ]}
+            note="Rândurile galbene diferă. Celelalte câmpuri sunt identice."
           />
         </DemoRow>
       </ComponentShowcase>

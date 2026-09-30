@@ -57,6 +57,13 @@
   opacity: 1;
 }
 
+/* Buton plin roz — confirmarea unei acțiuni distructive într-un Dialog (ex. ConfirmDialog tone="danger"). */
+.danger-solid {
+  background: var(--raspberry);
+  color: var(--white);
+  box-shadow: none;
+}
+
 .lg {
   padding: var(--space-10) var(--space-20);
 }

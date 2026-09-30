@@ -1,0 +1,89 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.refreshing {
+  opacity: 0.5;
+}
+
+.label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: var(--text-eyebrow-letter-spacing);
+}
+
+.value {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 22px;
+}
+
+.valueLg {
+  font-size: 32px;
+}
+
+/* Bordură ruptă roz — starea de eroare a KPI-ului, indiferent de tonul cardului (COMPONENTE.md §0d). */
+.error {
+  border: 1.5px dashed var(--raspberry) !important;
+}
+
+.retry {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--raspberry);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.block {
+  display: block;
+  border-radius: var(--radius-xs);
+  background: linear-gradient(90deg, var(--sand) 0px, var(--sand-soft) 160px, var(--sand) 320px);
+  background-size: 800px 100%;
+  animation: kpi-shimmer 1.4s linear infinite;
+}
+
+.blockLabel {
+  width: 40%;
+  height: 12px;
+}
+
+.blockValue {
+  width: 60%;
+  height: 26px;
+}
+
+.blockValueLg {
+  height: 34px;
+}
+
+@keyframes kpi-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+    background: var(--sand);
+  }
+}

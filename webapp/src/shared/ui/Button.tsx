@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'ghost' | 'white' | 'outline' | 'link' | 'danger';
+export type ButtonVariant = 'primary' | 'ghost' | 'white' | 'outline' | 'link' | 'danger' | 'danger-solid';
 export type ButtonSize = 'md' | 'lg' | 'header';
 
 export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {

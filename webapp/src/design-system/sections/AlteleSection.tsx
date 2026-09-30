@@ -10,6 +10,7 @@ import {
   SettingsList,
   SignatureLine,
   StepList,
+  Tabs,
   ThermalBlock,
   ThermalRule,
   TopbarActionsProvider,
@@ -276,6 +277,25 @@ export function AlteleSection() {
           <TopbarActionsProvider>
             <TopbarActionsDemo />
           </TopbarActionsProvider>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Tabs"
+        importLine="import { Tabs } from '@shared/ui';"
+        reference="DS Componente.dc.html §28d — navigare între subpagini (ex. Backup și setări)"
+      >
+        <DemoRow label="control">
+          <Tabs
+            ariaLabel="Filă Backup și setări"
+            value="backup"
+            onChange={() => {}}
+            options={[
+              { value: 'backup', label: 'Backup' },
+              { value: 'curs', label: 'Planuri și curs' },
+              { value: 'branches', label: 'Filiale' },
+            ]}
+          />
         </DemoRow>
       </ComponentShowcase>
     </div>

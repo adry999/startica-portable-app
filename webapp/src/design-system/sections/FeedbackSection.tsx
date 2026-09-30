@@ -2,6 +2,8 @@ import { useState } from 'react';
 import {
   BnmRateLink,
   ConfirmDeleteDialog,
+  ConfirmDialog,
+  Dialog,
   Drawer,
   EmptyState,
   LockedContent,
@@ -23,6 +25,9 @@ export function FeedbackSection() {
   const toast = useToast();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmDialogDangerOpen, setConfirmDialogDangerOpen] = useState(false);
   const [smsSingleOpen, setSmsSingleOpen] = useState(false);
   const [smsBulkOpen, setSmsBulkOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -112,6 +117,64 @@ export function FeedbackSection() {
           >
             <p>Conținutul formularului — doar demonstrativ, fără date reale.</p>
           </Drawer>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="Dialog"
+        importLine="import { Dialog } from '@shared/ui';"
+        reference="DS Componente.dc.html §28g — panou modal centrat, scurt"
+      >
+        <DemoRow label="control">
+          <button type="button" onClick={() => setDialogOpen(true)}>
+            Deschide dialogul
+          </button>
+          <Dialog
+            open={dialogOpen}
+            title="Trimite rezumatul acum?"
+            onClose={() => setDialogOpen(false)}
+            footer={
+              <button type="button" onClick={() => setDialogOpen(false)}>
+                Trimite
+              </button>
+            }
+          >
+            <p>Conținut scurt — doar demonstrativ, fără date reale.</p>
+          </Dialog>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ConfirmDialog"
+        importLine="import { ConfirmDialog } from '@shared/ui';"
+        reference="DS Componente.dc.html §28g — confirmare da/nu peste Dialog"
+      >
+        <DemoRow label="control (default)">
+          <button type="button" onClick={() => setConfirmDialogOpen(true)}>
+            Arhivează categoria
+          </button>
+          <ConfirmDialog
+            open={confirmDialogOpen}
+            title="Arhivezi categoria „Materiale”?"
+            description="Cheltuielile existente rămân neschimbate."
+            confirmLabel="Arhivează"
+            onConfirm={() => setConfirmDialogOpen(false)}
+            onCancel={() => setConfirmDialogOpen(false)}
+          />
+        </DemoRow>
+        <DemoRow label="tone danger">
+          <button type="button" onClick={() => setConfirmDialogDangerOpen(true)}>
+            Șterge grupa
+          </button>
+          <ConfirmDialog
+            open={confirmDialogDangerOpen}
+            title="Ștergi grupa „Fluturași”?"
+            description="Acțiunea nu poate fi anulată."
+            confirmLabel="Șterge"
+            tone="danger"
+            onConfirm={() => setConfirmDialogDangerOpen(false)}
+            onCancel={() => setConfirmDialogDangerOpen(false)}
+          />
         </DemoRow>
       </ComponentShowcase>
 

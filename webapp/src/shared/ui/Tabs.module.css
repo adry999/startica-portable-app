@@ -1,0 +1,26 @@
+.tablist {
+  display: flex;
+  gap: var(--space-24);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  background: transparent;
+  padding: var(--space-10) var(--space-4);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.tab:hover {
+  color: var(--slate);
+}
+
+.active {
+  border-bottom-color: var(--orange);
+  color: var(--slate);
+  font-weight: 800;
+}

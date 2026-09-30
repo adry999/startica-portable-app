@@ -1,0 +1,53 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.table {
+  display: grid;
+  grid-template-columns: 140px 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.head,
+.row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  padding: var(--space-10) var(--space-12);
+  border-bottom: 1px solid var(--border);
+}
+
+.head {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--sand);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowDiffers {
+  background: var(--yellow-soft);
+  font-weight: 800;
+}
+
+.fieldName {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.rowDiffers .fieldName {
+  color: inherit;
+  font-weight: 800;
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
