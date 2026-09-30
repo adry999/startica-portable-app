@@ -4,33 +4,14 @@
   gap: var(--space-16);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
-  flex: 1;
-}
-
-.field input,
-.field textarea {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-  resize: vertical;
-}
-
 .row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
 }
 
-.narrow {
-  flex: 0 0 110px;
+.rowNarrow {
+  grid-template-columns: 1fr 110px;
 }
 
 .footer {

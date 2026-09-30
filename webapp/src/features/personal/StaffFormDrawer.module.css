@@ -13,16 +13,6 @@
   color: var(--slate);
 }
 
-.field input,
-.field select,
-.field textarea {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: var(--space-8) var(--space-12);
-  font: inherit;
-  font-size: 13px;
-}
-
 .branchToggles {
   display: flex;
   gap: var(--space-8);

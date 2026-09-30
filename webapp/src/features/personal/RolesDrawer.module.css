@@ -22,26 +22,6 @@
   color: var(--orange-ink);
 }
 
-.settingsField {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
-.settingsField input {
-  width: 80px;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 6px var(--space-10);
-  font: inherit;
-  font-size: 13px;
-  text-align: right;
-}
-
 .settingsCheckbox {
   display: flex;
   align-items: center;
@@ -74,10 +54,6 @@
   gap: var(--space-8);
 }
 
-.departmentRow input {
-  font-weight: 800;
-}
-
 .roleList {
   list-style: none;
   margin: 0;
@@ -87,17 +63,9 @@
   gap: var(--space-8);
 }
 
-.departmentRow input,
-.roleRow input,
-.addRow input,
-.addRow select {
+.rowField {
   flex: 1;
   min-width: 0;
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 6px var(--space-10);
-  font: inherit;
-  font-size: 13px;
 }
 
 .removeButton {
@@ -113,14 +81,4 @@
 .removeButton:disabled {
   color: var(--subtle);
   cursor: not-allowed;
-}
-
-.addRow button {
-  border: 1.5px solid var(--border);
-  background: #fff;
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-weight: 800;
-  font-size: 13px;
-  white-space: nowrap;
 }

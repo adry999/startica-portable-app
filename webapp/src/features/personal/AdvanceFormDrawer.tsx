@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { AmountInput, Button, DateInput, Drawer, Field, Select, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Staff } from '@shared/personal/personal.types';
@@ -64,31 +64,20 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
           void handleSubmit();
         }}
       >
-        <label className={styles.field}>
-          Sumă (lei)
-          <input
-            required
-            type="number"
-            min={0}
-            step="0.01"
-            value={amount}
-            onChange={event => setAmount(event.target.value)}
+        <Field label="Sumă (lei)" htmlFor="advance-amount">
+          <AmountInput id="advance-amount" required min={0} currency="lei" value={amount} onChange={setAmount} />
+        </Field>
+        <Field label="Data" htmlFor="advance-date">
+          <DateInput id="advance-date" required value={date} onChange={setDate} />
+        </Field>
+        <Field label="Metoda" htmlFor="advance-method">
+          <Select
+            id="advance-method"
+            value={method}
+            onChange={setMethod}
+            options={METHODS.map(option => ({ value: option, label: option }))}
           />
-        </label>
-        <label className={styles.field}>
-          Data
-          <input required type="date" value={date} onChange={event => setDate(event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          Metoda
-          <select value={method} onChange={event => setMethod(event.target.value)}>
-            {METHODS.map(option => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+        </Field>
       </form>
     </Drawer>
   );

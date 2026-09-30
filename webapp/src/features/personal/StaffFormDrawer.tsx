@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextInput, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -109,20 +109,18 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
           void handleSubmit();
         }}
       >
-        <label className={styles.field}>
-          Nume angajat
-          <input required value={values.name} onChange={event => setField('name', event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          Funcția
-          <select required value={values.roleId} onChange={event => setField('roleId', event.target.value)}>
-            {rolesSorted.map(role => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Field label="Nume angajat" htmlFor="staff-name">
+          <TextInput id="staff-name" required value={values.name} onChange={value => setField('name', value)} />
+        </Field>
+        <Field label="Funcția" htmlFor="staff-role">
+          <Select
+            id="staff-role"
+            required
+            value={values.roleId}
+            onChange={value => setField('roleId', value)}
+            options={rolesSorted.map(role => ({ value: role.id, label: role.name }))}
+          />
+        </Field>
         <div className={styles.field}>
           Filiala
           <div className={styles.branchToggles} role="group" aria-label="Filiale">
@@ -138,26 +136,26 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
             ))}
           </div>
         </div>
-        <label className={styles.field}>
-          Telefon
-          <input type="tel" value={values.phone} onChange={event => setField('phone', event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          Data nașterii
-          <input type="date" value={values.birth} onChange={event => setField('birth', event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          IDNP
-          <input value={values.idnp} onChange={event => setField('idnp', event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          Adresă
-          <input value={values.address} onChange={event => setField('address', event.target.value)} />
-        </label>
-        <label className={styles.field}>
-          Data angajării
-          <input required type="date" value={values.since} onChange={event => setField('since', event.target.value)} />
-        </label>
+        <Field label="Telefon" htmlFor="staff-phone">
+          <PhoneInput id="staff-phone" value={values.phone} onChange={value => setField('phone', value)} />
+        </Field>
+        <Field label="Data nașterii" htmlFor="staff-birth">
+          <DateInput id="staff-birth" value={values.birth} onChange={value => setField('birth', value)} />
+        </Field>
+        <Field label="IDNP" htmlFor="staff-idnp">
+          <TextInput
+            id="staff-idnp"
+            inputMode="numeric"
+            value={values.idnp}
+            onChange={value => setField('idnp', value.replace(/\D/g, '').slice(0, 13))}
+          />
+        </Field>
+        <Field label="Adresă" htmlFor="staff-address">
+          <TextInput id="staff-address" value={values.address} onChange={value => setField('address', value)} />
+        </Field>
+        <Field label="Data angajării" htmlFor="staff-since">
+          <DateInput id="staff-since" required value={values.since} onChange={value => setField('since', value)} />
+        </Field>
       </form>
     </Drawer>
   );

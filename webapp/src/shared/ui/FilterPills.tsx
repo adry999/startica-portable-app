@@ -15,12 +15,14 @@ export interface FilterPillsProps {
   groups: FilterPillGroup<string>[];
   /** Contor la capătul barei, ex. „12 zile de naștere". */
   trailing?: ReactNode;
+  /** Ecranul apelant poate anula bordura/padding-ul barei (ex. Personal 23a — pastile pe același rând cu căutarea). */
+  className?: string;
 }
 
 /** Bara de filtre cu pastile colorate — sub bara de căutare, în Copii, Vizite, Achitări, Cheltuieli, Situația și Zile de naștere. */
-export function FilterPills({ groups, trailing }: FilterPillsProps) {
+export function FilterPills({ groups, trailing, className }: FilterPillsProps) {
   return (
-    <div className={styles.bar} role="toolbar">
+    <div className={className ? `${styles.bar} ${className}` : styles.bar} role="toolbar">
       {groups.map((group, index) => (
         <Fragment key={group.label}>
           {index > 0 && <span className={styles.sep} aria-hidden="true" />}

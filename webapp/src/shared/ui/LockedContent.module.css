@@ -32,6 +32,10 @@
   border-radius: var(--radius-input);
 }
 
+.pinInput:disabled {
+  opacity: 0.6;
+}
+
 .pinInputError {
   border-color: var(--pink-ink);
   animation: shake 0.3s;
@@ -57,6 +61,12 @@
   font-size: 13px;
 }
 
+.attemptsHint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 12px;
+}
+
 .hint {
   margin: 0;
   color: var(--subtle);
@@ -71,7 +81,7 @@
 
 .lockButton {
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--white);
   border-radius: var(--radius-pill);
   padding: 6px 14px;
   font-weight: 800;

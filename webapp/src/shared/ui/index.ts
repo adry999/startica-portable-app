@@ -67,3 +67,4 @@ export { useDelayedLoading } from './useDelayedLoading';
 export { SaveIndicator, type SaveIndicatorProps } from './SaveIndicator';
 export { UndoHistory, type UndoHistoryEntry, type UndoHistoryProps } from './UndoHistory';
 export { Popover, type PopoverProps } from './Popover';
+export { LockedContent, type LockedContentProps } from './LockedContent';

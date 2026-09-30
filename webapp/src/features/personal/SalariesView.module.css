@@ -109,14 +109,7 @@
 }
 
 .setSalaryLink {
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
   font-size: 13px;
-  font-weight: 800;
-  color: var(--orange-ink);
-  cursor: pointer;
   text-align: left;
 }
 
@@ -185,24 +178,6 @@
   font-family: var(--font-heading);
   font-size: 22px;
   color: var(--slate);
-}
-
-.payDialogField {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
-.payDialogField select {
-  border: 1px solid var(--input-border);
-  border-radius: var(--radius-input);
-  padding: 11px 14px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
 }
 
 .payDialogActions {

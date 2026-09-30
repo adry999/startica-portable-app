@@ -45,6 +45,18 @@
   font-weight: 700;
 }
 
+/* Link fără chenar/fundal, în roz — acțiuni distructive în text (ex. „Șterge” dintr-un rând). */
+.danger {
+  padding: 0;
+  color: var(--pink-ink);
+  font-weight: 700;
+}
+
+.danger:disabled {
+  color: var(--subtle);
+  opacity: 1;
+}
+
 .lg {
   padding: var(--space-10) var(--space-20);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, DataTable, LoadingState, SearchInput, type PillTone } from '@shared/ui';
+import { Button, DataTable, FilterPills, LoadingState, SearchInput, type PillTone } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -99,7 +99,7 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
 
   return (
     <div className={styles.root}>
-      <div className={styles.toolbar} role="toolbar">
+      <div className={styles.toolbar}>
         <SearchInput
           className={styles.search}
           value={search}
@@ -107,20 +107,17 @@ export function TeamView({ onOpenStaff, staffFormTarget, onCloseStaffForm }: Tea
           ariaLabel="Caută angajat"
           placeholder="Caută angajat"
         />
-        <div role="radiogroup" aria-label="Departament" className={styles.pillGroup}>
-          {departmentOptions.map(option => (
-            <button
-              key={option.value}
-              type="button"
-              role="radio"
-              aria-checked={option.value === departmentFilter}
-              className={`${styles.pill} ${styles[option.tone]} ${option.value === departmentFilter ? styles.pillActive : ''}`}
-              onClick={() => setDepartmentFilter(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <FilterPills
+          className={styles.inlinePills}
+          groups={[
+            {
+              label: 'Departament',
+              options: departmentOptions,
+              value: departmentFilter,
+              onChange: setDepartmentFilter,
+            },
+          ]}
+        />
         <span className={styles.trailing}>
           {staffCountLabel} · {onLeaveCount} în concediu azi
         </span>

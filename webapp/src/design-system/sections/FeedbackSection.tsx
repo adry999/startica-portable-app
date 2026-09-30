@@ -4,6 +4,7 @@ import {
   ConfirmDeleteDialog,
   Drawer,
   EmptyState,
+  LockedContent,
   LoadingState,
   Popover,
   SaveIndicator,
@@ -25,6 +26,7 @@ export function FeedbackSection() {
   const [smsSingleOpen, setSmsSingleOpen] = useState(false);
   const [smsBulkOpen, setSmsBulkOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [lockedContentUnlocked, setLockedContentUnlocked] = useState(false);
 
   return (
     <div className={styles.section}>
@@ -233,6 +235,32 @@ export function FeedbackSection() {
         </DemoRow>
         <DemoRow label="fără istoric">
           <UndoHistory history={[]} canUndo={false} onUndoLast={() => {}} onUndoUntil={() => {}} onUndoAll={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="LockedContent"
+        importLine="import { LockedContent } from '@shared/ui';"
+        reference="COMPONENTE.md §0i (34f) · prima folosire în features/personal/PinGate.tsx — PIN-ul demo e „1234”"
+      >
+        <DemoRow label="control">
+          <div className={styles.frame}>
+            <LockedContent
+              unlocked={lockedContentUnlocked}
+              onUnlock={async pin => {
+                if (pin !== '1234') return { ok: false, message: 'PIN greșit.' };
+                setLockedContentUnlocked(true);
+                return { ok: true, message: '' };
+              }}
+              onLock={() => setLockedContentUnlocked(false)}
+              title="Salariile sunt protejate"
+              subtitle="Introdu PIN-ul administrator (4–6 cifre)."
+              inputAriaLabel="PIN demo"
+              hint="Demo: PIN-ul corect e 1234."
+            >
+              <p>Conținutul protejat, vizibil doar deblocat.</p>
+            </LockedContent>
+          </div>
         </DemoRow>
       </ComponentShowcase>
 

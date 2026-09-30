@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Card, LoadingState, RowMenu, SegmentedControl, useToast } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  LoadingState,
+  RowMenu,
+  SegmentedControl,
+  Select,
+  useToast,
+} from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -177,22 +188,22 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
               className={`${styles.row} ${selected.has(row.staff.id) ? styles.rowSelected : ''}`}
               onClick={() => setHistoryStaffId(row.staff.id)}
             >
-              <input
-                type="checkbox"
-                aria-label={`Selectează ${row.staff.name}`}
-                checked={selected.has(row.staff.id)}
-                disabled={!selectable}
-                onClick={event => event.stopPropagation()}
-                onChange={() => toggle(row.staff.id)}
-              />
+              <span style={{ display: 'contents' }} onClick={event => event.stopPropagation()}>
+                <Checkbox
+                  ariaLabel={`Selectează ${row.staff.name}`}
+                  checked={selected.has(row.staff.id)}
+                  disabled={!selectable}
+                  onChange={() => toggle(row.staff.id)}
+                />
+              </span>
               <span className={styles.employeeCell}>
                 <strong>{row.staff.name}</strong>
                 <small>{personal.roleName(row.staff.roleId)}</small>
               </span>
               <span>{row.mode ? <Badge tone="neutral">{MODE_LABEL[row.mode]}</Badge> : '—'}</span>
               {row.mode === null ? (
-                <button
-                  type="button"
+                <Button
+                  variant="link"
                   className={styles.setSalaryLink}
                   onClick={event => {
                     event.stopPropagation();
@@ -200,7 +211,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
                   }}
                 >
                   + Setează salariul
-                </button>
+                </Button>
               ) : (
                 <span className={styles.baseCell}>{row.base}</span>
               )}
@@ -256,16 +267,14 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
             <p className={styles.payDialogTotal}>
               Total: <strong>{formatMoney(selectedTotal)}</strong>
             </p>
-            <label className={styles.payDialogField}>
-              Metoda plății
-              <select value={method} onChange={event => setMethod(event.target.value)} aria-label="Metoda plății">
-                {METHODS.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Field label="Metoda plății" htmlFor="salaries-pay-method">
+              <Select
+                id="salaries-pay-method"
+                value={method}
+                onChange={setMethod}
+                options={METHODS.map(option => ({ value: option, label: option }))}
+              />
+            </Field>
             <div className={styles.payDialogActions}>
               <Button variant="outline" onClick={() => setPayDialogOpen(false)}>
                 Anulează

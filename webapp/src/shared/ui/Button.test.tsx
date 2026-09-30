@@ -15,6 +15,11 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Anulează' }).className).toMatch(/ghost/);
   });
 
+  it('aplică varianta danger pentru acțiuni distructive în text', () => {
+    render(<Button variant="danger">Șterge</Button>);
+    expect(screen.getByRole('button', { name: 'Șterge' }).className).toMatch(/danger/);
+  });
+
   it('declanșează onClick când e apăsat', async () => {
     const onClick = vi.fn();
     render(<Button onClick={onClick}>Adaugă</Button>);

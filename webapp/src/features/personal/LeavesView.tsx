@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Badge, Button, Card, LoadingState, groupTone } from '@shared/ui';
+import { useMemo, useState, type CSSProperties } from 'react';
+import { Badge, Button, Card, IconButton, LoadingState, groupTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -15,6 +15,13 @@ const MONTH_LABELS = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'S
 /** Grupa din echipa căreia îi aparține angajatul (doar educatorii/asistenții sunt în `group.team`). */
 function groupForStaff(staffId: string, groups: Group[]): Group | null {
   return groups.find(group => group.team?.some(member => member.staffId === staffId)) ?? null;
+}
+
+/** Culoarea barei: planificat > CM > implicit (CO/FP) — planificatul are prioritate chiar pe CM. */
+function leaveBarStyle(leave: Leave): CSSProperties {
+  if (leave.planned) return { background: 'var(--leave-planned)', border: '1.5px dashed var(--leave-planned-border)' };
+  if (leave.type === 'CM') return { background: 'var(--raspberry)' };
+  return { background: 'var(--yellow-bar)' };
 }
 
 /** Concedii (23f) — o pistă pe an per angajat, bare pe zile (nu pe luni), cu avertizare de suprapunere. */
@@ -90,15 +97,15 @@ export function LeavesView() {
               <span className={styles.trackBars}>
                 {staffLeaves.map(leave => {
                   const bar = leaveYearBar(leave, year);
+                  const label = `${person.name}: ${formatLeaveRange(leave.from, leave.to)}`;
                   return (
-                    <button
+                    <IconButton
                       key={leave.id}
-                      type="button"
+                      icon={null}
+                      ariaLabel={label}
+                      title={label}
                       className={styles.leaveBar}
-                      data-type={leave.type}
-                      data-planned={leave.planned || undefined}
-                      style={{ left: `${bar.leftPct}%`, width: `${bar.widthPct}%` }}
-                      title={`${person.name}: ${formatLeaveRange(leave.from, leave.to)}`}
+                      style={{ left: `${bar.leftPct}%`, width: `${bar.widthPct}%`, ...leaveBarStyle(leave) }}
                       onClick={() => setDrawerTarget(leave)}
                     />
                   );

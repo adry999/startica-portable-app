@@ -13,8 +13,7 @@
   color: var(--slate);
 }
 
-.field input,
-.field select {
+.field input {
   border: 1px solid var(--input-border);
   border-radius: var(--radius-input);
   padding: var(--space-8) var(--space-12);

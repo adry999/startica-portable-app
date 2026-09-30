@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { Button, Checkbox, Drawer, Field, NumberInput, Select, TextInput, useToast } from '@shared/ui';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import type { Department, PersonalSettings, Role } from '@shared/personal/personal.types';
@@ -129,25 +129,22 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
       <div className={styles.root}>
         <div className={styles.settingsGroup}>
           <p className={styles.settingsTitle}>Setări concedii și salarii</p>
-          <label className={styles.settingsField}>
-            Zile de concediu anual
-            <input
-              type="number"
+          <Field label="Zile de concediu anual" htmlFor="roles-annual-leave-days">
+            <NumberInput
+              id="roles-annual-leave-days"
               min={0}
               max={365}
-              value={settings.annualLeaveDays}
-              onChange={event =>
-                setSettings(previous => ({ ...previous, annualLeaveDays: Number(event.target.value) }))
-              }
+              value={String(settings.annualLeaveDays)}
+              onChange={value => setSettings(previous => ({ ...previous, annualLeaveDays: Number(value) }))}
             />
-          </label>
+          </Field>
           <label className={styles.settingsCheckbox}>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={settings.deductOnlyUnexcused}
-              onChange={event => setSettings(previous => ({ ...previous, deductOnlyUnexcused: event.target.checked }))}
+              onChange={checked => setSettings(previous => ({ ...previous, deductOnlyUnexcused: checked }))}
+              ariaLabel="Scade din salariu doar absențele nemotivate (A)"
             />
-            Scade din salariu doar absențele nemotivate (A)
+            <span>Scade din salariu doar absențele nemotivate (A)</span>
           </label>
           <p className={styles.settingsHint}>
             Debifat: se scad și învoirile (I) și zilele fără plată (FP), nu doar absențele nemotivate.
@@ -160,9 +157,11 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
           .map(department => (
             <div key={department.id} className={styles.departmentGroup}>
               <div className={styles.departmentRow}>
-                <input
+                <TextInput
+                  ariaLabel="Nume departament"
+                  className={styles.rowField}
                   value={department.name}
-                  onChange={event => renameDepartment(department.id, event.target.value)}
+                  onChange={value => renameDepartment(department.id, value)}
                 />
                 <button type="button" className={styles.removeButton} onClick={() => removeDepartment(department.id)}>
                   Șterge
@@ -173,7 +172,12 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
                   .filter(role => role.departmentId === department.id)
                   .map(role => (
                     <li key={role.id} className={styles.roleRow}>
-                      <input value={role.name} onChange={event => renameRole(role.id, event.target.value)} />
+                      <TextInput
+                        ariaLabel="Nume funcție"
+                        className={styles.rowField}
+                        value={role.name}
+                        onChange={value => renameRole(role.id, value)}
+                      />
                       <button
                         type="button"
                         className={styles.removeButton}
@@ -190,32 +194,36 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
           ))}
 
         <div className={styles.addRow}>
-          <input
+          <TextInput
+            ariaLabel="Departament nou"
+            className={styles.rowField}
             placeholder="Departament nou"
             value={newDepartmentName}
-            onChange={event => setNewDepartmentName(event.target.value)}
+            onChange={setNewDepartmentName}
           />
-          <button type="button" onClick={addDepartment}>
+          <Button variant="outline" onClick={addDepartment}>
             + Adaugă
-          </button>
+          </Button>
         </div>
 
         <div className={styles.addRow}>
-          <select value={newRoleDepartmentId} onChange={event => setNewRoleDepartmentId(event.target.value)}>
-            {departments.map(department => (
-              <option key={department.id} value={department.id}>
-                {department.name}
-              </option>
-            ))}
-          </select>
-          <input
+          <Select
+            ariaLabel="Departamentul funcției noi"
+            className={styles.rowField}
+            value={newRoleDepartmentId}
+            onChange={setNewRoleDepartmentId}
+            options={departments.map(department => ({ value: department.id, label: department.name }))}
+          />
+          <TextInput
+            ariaLabel="Funcție nouă"
+            className={styles.rowField}
             placeholder="Funcție nouă"
             value={newRoleName}
-            onChange={event => setNewRoleName(event.target.value)}
+            onChange={setNewRoleName}
           />
-          <button type="button" onClick={addRole}>
+          <Button variant="outline" onClick={addRole}>
             + Adaugă
-          </button>
+          </Button>
         </div>
       </div>
     </Drawer>

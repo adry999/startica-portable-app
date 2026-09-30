@@ -24,16 +24,3 @@
   text-transform: uppercase;
   color: var(--subtle);
 }
-
-.removeButton {
-  border: none;
-  background: none;
-  color: var(--pink-ink);
-  font-weight: 700;
-  font-size: 12px;
-}
-
-.removeButton:disabled {
-  color: var(--subtle);
-  cursor: not-allowed;
-}

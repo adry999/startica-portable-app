@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Badge, Card, LoadingState, useToast } from '@shared/ui';
+import { Badge, Button, Card, LoadingState, useToast } from '@shared/ui';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
@@ -72,15 +72,14 @@ export function AdvancesTab() {
               <Badge tone={deducted ? 'mint' : 'yellow'}>{deducted ? 'Scăzut' : 'De scăzut'}</Badge>
             </span>
             <span>
-              <button
-                type="button"
-                className={styles.removeButton}
+              <Button
+                variant="danger"
                 disabled={deducted}
                 title={deducted ? 'Avansul a fost deja scăzut' : undefined}
                 onClick={() => void remove(advance.id)}
               >
                 Șterge
-              </button>
+              </Button>
             </span>
           </div>
         );

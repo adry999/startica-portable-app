@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Button, ConfirmDeleteDialog, Drawer } from '@shared/ui';
+import { Button, ConfirmDeleteDialog, Drawer, Field, NumberInput, PhoneInput, TextArea, TextInput } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import type { CandidateFormInput } from './useCandidates';
 import type { Candidate } from '@shared/personal/personal.types';
@@ -83,38 +83,31 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
         }
       >
         <form id="candidate-form-drawer" className={styles.form} onSubmit={handleSubmit}>
-          <label className={styles.field}>
-            Nume, prenume
-            <input autoFocus required type="text" value={name} onChange={event => setName(event.target.value)} />
-          </label>
-          <div className={styles.row}>
-            <label className={styles.field}>
-              Poziție
-              <input type="text" value={position} onChange={event => setPosition(event.target.value)} />
-            </label>
-            <label className={`${styles.field} ${styles.narrow}`}>
-              Vârstă
-              <input type="number" min={0} max={120} value={age} onChange={event => setAge(event.target.value)} />
-            </label>
+          <Field label="Nume, prenume" htmlFor="candidate-name">
+            <TextInput id="candidate-name" autoFocus required value={name} onChange={setName} />
+          </Field>
+          <div className={`${styles.row} ${styles.rowNarrow}`}>
+            <Field label="Poziție" htmlFor="candidate-position">
+              <TextInput id="candidate-position" value={position} onChange={setPosition} />
+            </Field>
+            <Field label="Vârstă" htmlFor="candidate-age">
+              <NumberInput id="candidate-age" min={0} max={120} value={age} onChange={setAge} />
+            </Field>
           </div>
-          <label className={styles.field}>
-            Experiență
-            <input type="text" value={experience} onChange={event => setExperience(event.target.value)} />
-          </label>
+          <Field label="Experiență" htmlFor="candidate-experience">
+            <TextInput id="candidate-experience" value={experience} onChange={setExperience} />
+          </Field>
           <div className={styles.row}>
-            <label className={styles.field}>
-              Unde locuiește
-              <input type="text" value={city} onChange={event => setCity(event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              Telefon
-              <input type="tel" value={phone} onChange={event => setPhone(event.target.value)} />
-            </label>
+            <Field label="Unde locuiește" htmlFor="candidate-city">
+              <TextInput id="candidate-city" value={city} onChange={setCity} />
+            </Field>
+            <Field label="Telefon" htmlFor="candidate-phone">
+              <PhoneInput id="candidate-phone" value={phone} onChange={setPhone} />
+            </Field>
           </div>
-          <label className={styles.field}>
-            Notițe
-            <textarea rows={5} value={notes} onChange={event => setNotes(event.target.value)} />
-          </label>
+          <Field label="Notițe" htmlFor="candidate-notes">
+            <TextArea id="candidate-notes" rows={5} value={notes} onChange={setNotes} />
+          </Field>
         </form>
       </Drawer>
 

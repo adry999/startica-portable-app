@@ -24,25 +24,10 @@
   border-radius: var(--radius-pill);
 }
 
-.pillGroup {
-  display: flex;
-  gap: var(--space-8);
-  flex-wrap: wrap;
-}
-
-.pill {
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: 6px 14px;
-  font-family: var(--font-body);
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.pillActive {
-  background: var(--slate);
-  color: #fff;
+/* FilterPills e proiectat ca rând separat, cu bordură/padding proprii — aici stă pe rândul căutării. */
+.inlinePills {
+  padding: 0;
+  border-bottom: none;
 }
 
 .trailing {
@@ -50,31 +35,6 @@
   font-size: 13px;
   color: var(--muted);
   white-space: nowrap;
-}
-
-.orange {
-  background: var(--orange-soft);
-  color: var(--orange-ink);
-}
-
-.mint {
-  background: var(--mint-soft);
-  color: var(--mint-ink);
-}
-
-.yellow {
-  background: var(--yellow-soft);
-  color: var(--yellow-ink);
-}
-
-.pink {
-  background: var(--pink-soft);
-  color: var(--pink-ink);
-}
-
-.neutral {
-  background: var(--neutral-soft);
-  color: var(--slate);
 }
 
 /* Coloana Angajat: avatar 36px în tonul departamentului (ALINIERE-DESIGN A3f · 23a). */

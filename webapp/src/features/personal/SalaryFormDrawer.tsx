@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { Button, Drawer, Field, NumberInput, Select, useToast } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Salary, SalaryMode, Staff } from '@shared/personal/personal.types';
 import styles from './SalaryFormDrawer.module.css';
@@ -58,29 +58,21 @@ export function SalaryFormDrawer({ staff, onClose, onSubmit }: SalaryFormDrawerP
           void handleSubmit();
         }}
       >
-        <label className={styles.field}>
-          Mod
-          <select value={mode} onChange={event => setMode(event.target.value as SalaryMode)}>
-            {MODE_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Field label="Mod" htmlFor="salary-mode">
+          <Select
+            id="salary-mode"
+            value={mode}
+            onChange={value => setMode(value as SalaryMode)}
+            options={MODE_OPTIONS}
+          />
+        </Field>
         {mode !== 'bazin' && (
-          <label className={styles.field}>
-            Sumă (lei)
-            <input
-              required
-              type="number"
-              min={0}
-              step="0.01"
-              value={amount}
-              onChange={event => setAmount(event.target.value)}
-            />
-          </label>
+          <Field label="Sumă (lei)" htmlFor="salary-amount">
+            <NumberInput id="salary-amount" required min={0} value={amount} onChange={setAmount} />
+          </Field>
         )}
+        {/* type="month" rămâne brut — nu există încă `MonthInput` în @shared/ui (COMPONENTE.md
+            §0/25b), la fel ca rândul de alocare din PaymentFormDrawer și feeFrom din ChildFormDrawer. */}
         <label className={styles.field}>
           Valabil din luna
           <input required type="month" value={validFrom} onChange={event => setValidFrom(event.target.value)} />

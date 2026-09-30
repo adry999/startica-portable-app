@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Button, ConfirmDeleteDialog, Drawer, useToast } from '@shared/ui';
+import {
+  Button,
+  Checkbox,
+  ConfirmDeleteDialog,
+  DateInput,
+  Drawer,
+  Field,
+  Select,
+  TextArea,
+  useToast,
+} from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Leave, LeaveType, Staff } from '@shared/personal/personal.types';
 import styles from './LeaveFormDrawer.module.css';
@@ -100,42 +110,36 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
             void handleSubmit();
           }}
         >
-          <label className={styles.field}>
-            Angajat
-            <select required value={staffId} onChange={event => setStaffId(event.target.value)}>
-              {staffSorted.map(person => (
-                <option key={person.id} value={person.id}>
-                  {person.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.field}>
-            Tip
-            <select value={type} onChange={event => setType(event.target.value as LeaveType)}>
-              {LEAVE_TYPES.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.field}>
-            De la
-            <input required type="date" value={from} onChange={event => setFrom(event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Până la
-            <input required type="date" value={to} onChange={event => setTo(event.target.value)} />
-          </label>
+          <Field label="Angajat" htmlFor="leave-staff">
+            <Select
+              id="leave-staff"
+              required
+              value={staffId}
+              onChange={setStaffId}
+              options={staffSorted.map(person => ({ value: person.id, label: person.name }))}
+            />
+          </Field>
+          <Field label="Tip" htmlFor="leave-type">
+            <Select
+              id="leave-type"
+              value={type}
+              onChange={value => setType(value as LeaveType)}
+              options={LEAVE_TYPES}
+            />
+          </Field>
+          <Field label="De la" htmlFor="leave-from">
+            <DateInput id="leave-from" required value={from} onChange={setFrom} />
+          </Field>
+          <Field label="Până la" htmlFor="leave-to">
+            <DateInput id="leave-to" required value={to} onChange={setTo} />
+          </Field>
           <label className={styles.checkboxField}>
-            <input type="checkbox" checked={planned} onChange={event => setPlanned(event.target.checked)} />
-            Planificat (viitor)
+            <Checkbox checked={planned} onChange={setPlanned} ariaLabel="Planificat (viitor)" />
+            <span>Planificat (viitor)</span>
           </label>
-          <label className={styles.field}>
-            Notă
-            <textarea rows={2} value={note} onChange={event => setNote(event.target.value)} />
-          </label>
+          <Field label="Notă" htmlFor="leave-note">
+            <TextArea id="leave-note" rows={2} value={note} onChange={setNote} />
+          </Field>
         </form>
       </Drawer>
 

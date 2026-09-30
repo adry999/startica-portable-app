@@ -99,6 +99,7 @@ export function ButoaneInputSection() {
           <Button variant="white">White</Button>
           <Button variant="outline">Outline</Button>
           <Button variant="link">Link</Button>
+          <Button variant="danger">Danger</Button>
         </DemoRow>
         <DemoRow label="size">
           <Button size="md">Mărime md</Button>
