@@ -272,9 +272,9 @@ export function ReportExportDrawer({ open, onClose, anchorMonth, data, onOpenAss
                 {report.unassignedCount} {report.unassignedCount === 1 ? 'achitare neasociată' : 'achitări neasociate'}
               </b>{' '}
               în perioada aleasă apar în foaia Încasări cu copilul „—”.{' '}
-              <button type="button" className={styles.warningLink} onClick={onOpenAssign}>
+              <Button variant="link" onClick={onOpenAssign}>
                 Asociază-le întâi →
-              </button>
+              </Button>
             </span>
           </div>
         )}

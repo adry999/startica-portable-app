@@ -141,15 +141,6 @@
   line-height: 1.45;
 }
 
-.warningLink {
-  border: none;
-  background: none;
-  color: var(--orange-ink);
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0;
-}
-
 .footer {
   display: flex;
   align-items: center;

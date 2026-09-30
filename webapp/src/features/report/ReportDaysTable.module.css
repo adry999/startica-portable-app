@@ -23,13 +23,6 @@
 
 .link {
   margin-left: auto;
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--orange-ink);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
 }
 
 .headRow {

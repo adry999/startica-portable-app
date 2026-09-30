@@ -1,4 +1,4 @@
-import { Card } from '@shared/ui';
+import { Button, Card } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { AccountingReport, ReportMode } from './useAccountingReport';
@@ -33,9 +33,9 @@ export function ReportDaysTable({ report, mode, onOpenPayments }: ReportDaysTabl
       <div className={styles.head}>
         <span className={styles.title}>Pe zile</span>
         <span className={styles.hint}>doar zilele cu mișcări</span>
-        <button type="button" className={styles.link} onClick={onOpenPayments}>
+        <Button variant="link" className={styles.link} onClick={onOpenPayments}>
           Deschide în Achitări →
-        </button>
+        </Button>
       </div>
       <div className={styles.headRow}>
         <span>Data</span>
