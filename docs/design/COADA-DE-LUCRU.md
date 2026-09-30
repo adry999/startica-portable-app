@@ -587,7 +587,13 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 983/983 teste) — verzi după fiecare rundă.
 
-**Urmează:** Situația, Personal, Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 5 — Situația:** `PrintOptionsDialog` (local) și `StatusPage` rescrise. Nu s-a generalizat `PrintOptionsDialog` — spec-ul comun (34l) cere `ChoiceCards`+previzualizare+memorie, nimic din astea nu există încă. `PaymentHeatmap` rămâne local, semnalat ca viitor candidat pentru `Heatmap` (30e) — valorile lui diferă de spec, fără un al doilea loc de folosire care să confirme varianta corectă.
+
+**Runda 6 — Personal:** 6 formulare (Staff/Candidate/Roles/Advance/Salary/Leave) rescrise, nicio componentă nouă necesară. `PinGate` (PIN administrator, salarii) → `LockedContent`+`usePinLock` noi (34f) — blocajul real de 5 încercări/60s rămâne pe server (`pin.service.mjs`), UI-ul doar reflectă local. `TimesheetPrintDialog` rescris local. `Button` a primit varianta `danger`, `FilterPills` a primit `className`.
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 988/988 teste) — verzi după fiecare rundă.
+
+**6 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal). **Urmează:** Grupe, Bazin, Vizite, De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
