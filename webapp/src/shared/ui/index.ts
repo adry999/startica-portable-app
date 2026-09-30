@@ -77,3 +77,5 @@ export { PrintHeader, type PrintHeaderProps } from './PrintHeader';
 export { PrintTable, type PrintTableColumn, type PrintTableProps } from './PrintTable';
 export { PrintFooter, type PrintFooterProps } from './PrintFooter';
 export { ThermalBlock, ThermalRule, type ThermalBlockProps, type ThermalRuleProps } from './ThermalBlock';
+export { LoadingBar, type LoadingBarProps } from './LoadingBar';
+export { StepList, type StepListItem, type StepListProps } from './StepList';

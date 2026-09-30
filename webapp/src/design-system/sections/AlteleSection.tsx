@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import {
   Badge,
+  LoadingBar,
   PrintFooter,
   PrintHeader,
   PrintTable,
   ScrollArea,
   SettingsList,
   SignatureLine,
+  StepList,
   ThermalBlock,
   ThermalRule,
   TopbarActionsProvider,
@@ -199,6 +201,36 @@ export function AlteleSection() {
             <span>Total: 1 250 lei</span>
             <ThermalRule variant="dashed" />
           </ThermalBlock>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="LoadingBar"
+        importLine="import { LoadingBar } from '@shared/ui';"
+        reference="Incarcare.dc.html#21a — bară + rândul cu pasul curent/procent (Pornire, StartupScreen.tsx)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <LoadingBar percent={64} stepLabel="Citesc baza de date…" />
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="StepList"
+        importLine="import { StepList } from '@shared/ui';"
+        reference="Incarcare.dc.html#21a — lista pașilor cu bulină și durată (Pornire, StartupScreen.tsx)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <StepList
+              steps={[
+                { key: 'server', label: 'Pornesc serverul local', status: 'done', duration: '0,4 s' },
+                { key: 'database', label: 'Citesc baza de date', status: 'current' },
+                { key: 'dashboard', label: 'Pregătesc Dashboard-ul', status: 'pending' },
+              ]}
+            />
+          </div>
         </DemoRow>
       </ComponentShowcase>
 

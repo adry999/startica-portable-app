@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
-import { Button, useDelayedLoading } from '@shared/ui';
+import { Button, LoadingBar, StepList, useDelayedLoading } from '@shared/ui';
 import styles from './StartupScreen.module.css';
 
 const REVEAL_DELAY_MS = 1000;
@@ -138,26 +138,8 @@ export function StartupScreen() {
       <div className={styles.card}>
         <img src="/assets/startica-icon.svg" alt="" className={styles.icon} />
         <img src="/assets/startica-logo.svg" alt="Startica" className={styles.logo} />
-        <div className={styles.progressGroup}>
-          <div className={styles.progressTrack}>
-            <span className={styles.progressBar} style={{ width: `${pct}%` }} />
-          </div>
-          <div className={styles.progressMeta}>
-            <span className={styles.progressStepLabel}>{currentStepLabel}</span>
-            <span>{pct}%</span>
-          </div>
-        </div>
-        <ol className={styles.steps}>
-          {steps.map(step => (
-            <li key={step.key} className={`${styles.step} ${styles[step.status]}`}>
-              <span className={styles.marker} aria-hidden="true">
-                {step.status === 'done' ? '✓' : ''}
-              </span>
-              <span className={styles.label}>{step.label}</span>
-              <span className={styles.duration}>{step.duration}</span>
-            </li>
-          ))}
-        </ol>
+        <LoadingBar percent={pct} stepLabel={currentStepLabel} />
+        <StepList steps={steps} />
         {/* Filiala e cunoscută din pasul 2 (/api/session a răspuns) — 21a. */}
         <span className={styles.version}>
           {session.state.branch ? `Filiala ${session.state.branch.name} · ` : ''}v{session.state.version}
