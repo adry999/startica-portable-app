@@ -280,9 +280,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   /** R9 mai precis (PROMPT-CLAUDE-CODE-5.md §1.4): numără doar liniile unde „Niciun/Nicio” apare
    * într-un text randat direct pe ecran, nu în erori aruncate, toast-uri sau props de indiciu/opțiune. */
   function hasUnexpectedEmptyText(text: string): boolean {
-    return text
-      .split('\n')
-      .some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
+    return text.split('\n').some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
   }
 
   const TEXT_ALLOWED: readonly string[] = [
@@ -328,6 +326,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   const IMPORT_ALLOWED: readonly string[] = [
     'assign/AssignPage.tsx',
     'backup/SyncSettings.tsx',
+    'children/ChildProfileView.tsx',
     'children/ChildrenPage.tsx',
     'conflicts/ConflictsPage.tsx',
     'fee-setup/FeeSetupPage.tsx',

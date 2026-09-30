@@ -5,6 +5,8 @@ import {
   BnmRateLink,
   Button,
   DataTable,
+  EMPTY_STATES,
+  EmptyState,
   IconButton,
   LoadingState,
   ProfileLayout,
@@ -15,6 +17,7 @@ import {
   StatCard,
   TextArea,
   groupTone,
+  resolveEmptyStateTitle,
   useToast,
   type DataTableColumn,
   type PillTone,
@@ -168,10 +171,16 @@ export function ChildProfileView({
   }
 
   // CF-2 (09-copii-fisa.md): „Plătitorii reținuți se pot șterge din fișă” — ștergere directă,
-  // fără arhivare (vezi /api/payer-alias-delete din feature-ul payer-aliases).
+  // fără arhivare (vezi /api/payer-alias-delete din feature-ul payer-aliases). „Anulează” re-creează
+  // aliasul cu același id, prin /api/record (create), pentru că nu există pas de arhivare aici.
   async function deleteAlias(alias: PayerAlias) {
     try {
       await session.mutate('/api/payer-alias-delete', { id: alias.id });
+      toast.show({
+        message: 'Plătitor șters.',
+        actionLabel: 'Anulează',
+        onAction: () => void session.mutate('/api/record', { type: 'payerAliases', mode: 'create', record: alias }),
+      });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -472,19 +481,6 @@ export function ChildProfileView({
               />
             </ProfileSection>
 
-            {/* CF-7 (09-copii-fisa.md): nu există stocare de documente încă — placeholder gol,
-                „+ Încarcă” dezactivat, până se decide o funcție reală de upload. */}
-            <ProfileSection title="Documente">
-              <div className={styles.documentsGrid}>
-                <span className={styles.documentSlot} />
-                <span className={styles.documentSlot} />
-                <span className={styles.documentSlot} />
-              </div>
-              <Button variant="outline" disabled title="În curând">
-                + Încarcă
-              </Button>
-            </ProfileSection>
-
             <ProfileSection title="Plătitori reținuți">
               <p className={styles.aliasIntro}>
                 Transferurile de la ei se propun direct pentru {child.firstName || child.name} la{' '}
@@ -494,7 +490,12 @@ export function ChildProfileView({
                 .
               </p>
               {profileData.payerAliases.length === 0 ? (
-                <p>Niciun plătitor reținut încă.</p>
+                <EmptyState
+                  variant={EMPTY_STATES['fisa.payers'].variant}
+                  size="compact"
+                  title={resolveEmptyStateTitle(EMPTY_STATES['fisa.payers'])}
+                  action={{ label: EMPTY_STATES['fisa.payers'].actionLabel ?? '', onClick: () => onNavigate('assign') }}
+                />
               ) : (
                 profileData.payerAliases.map(alias => {
                   const usageCount = profileData.payments.filter(
@@ -504,10 +505,11 @@ export function ChildProfileView({
                     <div key={alias.id} className={styles.aliasRow}>
                       <span className={styles.aliasName}>
                         <strong>{alias.alias}</strong>
-                        <small>
-                          din {formatDate(alias.createdAt.slice(0, 10))}
-                          {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
-                        </small>
+                        <small>fără IBAN, doar numele</small>
+                      </span>
+                      <span className={styles.aliasMeta}>
+                        din {formatDate(alias.createdAt.slice(0, 10))}
+                        {usageCount > 0 ? ` · ${usageCount} achitări` : ''}
                       </span>
                       <IconButton
                         icon="close"

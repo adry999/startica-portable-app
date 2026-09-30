@@ -1,7 +1,6 @@
 import {
   AvatarGroup,
   Breadcrumb,
-  DocumentCard,
   PageHeader,
   SegmentCounter,
   SmsPreview,
@@ -189,16 +188,6 @@ export function FundamenteSection() {
             senderName="Grădinița Pitici"
             message="Bună ziua! Vă reamintim că mâine este ziua de achitare a taxei lunare."
           />
-        </DemoRow>
-      </ComponentShowcase>
-
-      <ComponentShowcase
-        name="DocumentCard"
-        importLine="import { DocumentCard } from '@shared/ui';"
-        reference="COMPONENTE.md §0i — document încărcat"
-      >
-        <DemoRow label="control">
-          <DocumentCard fileName="Certificat_medical.pdf" meta="PDF · 240 KB" onOpen={() => {}} onRemove={() => {}} />
         </DemoRow>
       </ComponentShowcase>
 

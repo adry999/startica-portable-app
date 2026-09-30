@@ -267,42 +267,33 @@
 }
 
 .aliasRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
-  padding: var(--space-6) 0;
+  gap: var(--space-14);
+  padding: var(--space-10) 0;
+  border-top: 1px solid var(--row-divider);
+  font-size: 14px;
 }
 
 .aliasName {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  min-width: 0;
 }
 
 .aliasName strong {
-  text-transform: uppercase;
-  font-size: 13px;
+  font-weight: 800;
 }
 
 .aliasName small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
-/* Documente (CF-7, 09-copii-fisa.md): placeholder gol, nicio stocare reală încă. */
-.documentsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-8);
-  margin-bottom: var(--space-10);
-}
-
-.documentSlot {
-  aspect-ratio: 3 / 4;
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--neutral-softer);
+.aliasMeta {
+  font-size: 12px;
+  color: var(--subtle);
 }
 
 .groupRow {

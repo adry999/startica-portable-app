@@ -153,7 +153,6 @@ export { PrintOptionsDialog, type PrintOptionsDialogProps } from './PrintOptions
 export { Disclosure, type DisclosureProps } from './Disclosure';
 export { SegmentCounter, type SegmentCounterProps } from './SegmentCounter';
 export { SmsPreview, type SmsPreviewProps } from './SmsPreview';
-export { DocumentCard, type DocumentCardProps } from './DocumentCard';
 export { AvatarGroup, type AvatarGroupItem, type AvatarGroupProps } from './AvatarGroup';
 export { MasterDetail, type MasterDetailProps } from './MasterDetail';
 export { Wizard, type WizardStep, type WizardProps } from './Wizard';

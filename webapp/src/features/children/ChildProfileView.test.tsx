@@ -132,15 +132,6 @@ describe('ChildProfileView', () => {
     expect(currentState.children[0].notes[0].text).toBe('notă proaspătă');
   });
 
-  it('cardul Documente e un placeholder gol, cu „+ Încarcă” dezactivat (CF-7)', async () => {
-    await loadedSession();
-    renderProfile();
-
-    await screen.findByText('notă veche');
-    expect(screen.getByText('Documente')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '+ Încarcă' })).toBeDisabled();
-  });
-
   it('cardul Date personale arată IDNP și adresă când sunt completate (CF-2)', async () => {
     currentState = fixtureState({ idnp: '2001234567890', address: 'Str. Ștefan cel Mare 1' });
     await loadedSession();
@@ -167,7 +158,8 @@ describe('ChildProfileView', () => {
 
     await screen.findByText('notă veche');
     expect(screen.getByText('Plătitori reținuți')).toBeInTheDocument();
-    expect(screen.getByText('Niciun plătitor reținut încă.')).toBeInTheDocument();
+    expect(screen.getByText(/Niciun plătitor reținut\. Se adaugă când bifezi/)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Asociere achitări' }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('cardul Plătitori reținuți arată aliasurile copilului, iar × le șterge din fișă (CF-2)', async () => {
