@@ -38,8 +38,7 @@ export function Button({
     .join(' ');
   return (
     <button type={type} className={classes} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
-      {/* Spinner 14 din spec (29b) nu există în setul Spinner (12/16/24/40) — 12 e cel mai apropiat. */}
-      {loading && <Spinner size={12} className={styles.spinner} />}
+      {loading && <Spinner size={14} className={styles.spinner} />}
       {children}
     </button>
   );

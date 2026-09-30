@@ -105,10 +105,11 @@ export function FundamenteSection() {
       <ComponentShowcase
         name="Spinner"
         importLine="import { Spinner } from '@shared/ui';"
-        reference="DS Incarcare si stari.dc.html §29a — 12/16/24/40, currentColor"
+        reference="DS Incarcare si stari.dc.html §29a/29b — 12/14/16/24/40, currentColor"
       >
         <DemoRow label="size">
           <Spinner size={12} />
+          <Spinner size={14} />
           <Spinner size={16} />
           <Spinner size={24} />
           <Spinner size={40} />

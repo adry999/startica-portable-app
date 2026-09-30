@@ -1,7 +1,7 @@
 import styles from './Spinner.module.css';
 
 export interface SpinnerProps {
-  size?: 12 | 16 | 24 | 40;
+  size?: 12 | 14 | 16 | 24 | 40;
   ariaLabel?: string;
   className?: string;
 }

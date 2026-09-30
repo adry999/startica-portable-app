@@ -28,6 +28,16 @@
   border-width: 1.5px;
 }
 
+.size14 {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
+}
+
+.size14::before {
+  border-width: 1.5px;
+}
+
 .size16 {
   width: 16px;
   height: 16px;
