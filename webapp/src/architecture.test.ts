@@ -271,6 +271,19 @@ describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format �
 describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text literal sau import direct', () => {
   const EMPTY_TEXT_PATTERN = /\bNiciun\w*|\bNicio\w*/;
   const DIRECT_IMPORT_PATTERN = /import\s*\{[^}]*\bEmptyState\b[^}]*\}\s*from\s*['"]@shared\/ui['"]/;
+  // 30-stari-goale.md §35e — nu sunt stări goale, nu intră în regulă: text aruncat (throw/toast),
+  // props `label`/`hint`/`emptyLabel` (indicii sub câmp, sloturi goale de câmp, `emptyLabel` din
+  // componente ca SearchSelect/MultiSelect) și opțiuni de select (`value`/valoare de listă simplă).
+  const EMPTY_TEXT_EXEMPT_LINE_PATTERN =
+    /throw\s+new\s+Error\(|\btoast\.(show|error|success|info|warning)\(|\b(label|hint|emptyLabel)\s*[:=]\s*/;
+
+  /** R9 mai precis (PROMPT-CLAUDE-CODE-5.md §1.4): numără doar liniile unde „Niciun/Nicio” apare
+   * într-un text randat direct pe ecran, nu în erori aruncate, toast-uri sau props de indiciu/opțiune. */
+  function hasUnexpectedEmptyText(text: string): boolean {
+    return text
+      .split('\n')
+      .some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
+  }
 
   const TEXT_ALLOWED: readonly string[] = [
     'assign/AssignPage.tsx',
@@ -297,13 +310,11 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'groups/GroupTeamPicker.test.tsx',
     'groups/GroupTeamPicker.tsx',
     'notifications/NotificationsPage.test.tsx',
-    'notifications/NotificationsPage.tsx',
     'notifications/SmsMessagesPanel.tsx',
     'payments/DayClosingReceipt.tsx',
     'payments/PaymentFormDrawer.test.tsx',
     'payments/PaymentFormDrawer.tsx',
     'personal/CandidatesTab.test.tsx',
-    'personal/CandidatesTab.tsx',
     'personal/TeamView.tsx',
     'pool/MonthView.tsx',
     'report/ReportCategoriesPanel.tsx',
@@ -327,7 +338,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
 
   it('nicio încălcare nouă de text literal „Niciun/Nicio" în afara listei de excepții', () => {
     const files = collectFeatureFilesByName(/\.tsx$/);
-    const actual = featureFilesMatching(files, text => EMPTY_TEXT_PATTERN.test(text));
+    const actual = featureFilesMatching(files, hasUnexpectedEmptyText);
     expect(unexpectedViolations(actual, TEXT_ALLOWED)).toEqual([]);
   });
 
