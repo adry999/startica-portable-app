@@ -111,7 +111,7 @@ describe('StickerPrintPage', () => {
     expect(screen.getByDisplayValue('Avram Maria')).toBeInTheDocument();
 
     await act(async () => {
-      screen.getByRole('button', { name: 'Alergie' }).click();
+      screen.getByRole('radio', { name: 'Alergie' }).click();
     });
 
     expect(screen.getByDisplayValue('Fără arahide')).toBeInTheDocument();

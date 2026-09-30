@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Badge, Button, groupTone } from '@shared/ui';
+import { Badge, Button, groupTone, SignatureLine } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatDateLong } from '#shared/format/date-format.mjs';
@@ -28,9 +28,9 @@ export function PaymentReceipt() {
   if (receipt.status === 'not-found' || !receipt.payment)
     return (
       <>
-        <button type="button" onClick={() => navigate('/achitari')}>
+        <Button variant="white" onClick={() => navigate('/achitari')}>
           ← Achitări
-        </button>
+        </Button>
         <p>Achitarea nu a putut fi găsită.</p>
       </>
     );
@@ -148,14 +148,10 @@ function ReceiptA5({ data, appVersion }: { data: PaymentReceiptData; appVersion:
       )}
 
       <div className={styles.signatures}>
-        <div className={styles.signatureLine}>
-          <span className={styles.signatureRule} />
-          <span>Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}</span>
-        </div>
-        <div className={styles.signatureLine}>
-          <span className={styles.signatureRule} />
-          <span>Plătitor</span>
-        </div>
+        <SignatureLine>
+          Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}
+        </SignatureLine>
+        <SignatureLine>Plătitor</SignatureLine>
       </div>
 
       <p className={styles.footer}>
@@ -208,14 +204,10 @@ function ReceiptA4Third({ data }: { data: PaymentReceiptData }) {
           <span className={styles.kindergartenCopyTotalAmount}>{formatMoney(data.total)}</span>
         </div>
         <div className={styles.kindergartenCopySignatures}>
-          <div className={styles.signatureLine}>
-            <span className={styles.signatureRule} />
-            <span>Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}</span>
-          </div>
-          <div className={styles.signatureLine}>
-            <span className={styles.signatureRule} />
-            <span>Plătitor</span>
-          </div>
+          <SignatureLine>
+            Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}
+          </SignatureLine>
+          <SignatureLine>Plătitor</SignatureLine>
         </div>
       </div>
 
@@ -315,10 +307,9 @@ function ReceiptA4Third({ data }: { data: PaymentReceiptData }) {
                 </>
               )}
             </div>
-            <div className={styles.signatureLine}>
-              <span className={styles.signatureRule} />
-              <span>Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}</span>
-            </div>
+            <SignatureLine>
+              Primit: {kindergarten?.signatureLabel || kindergarten?.administrator || 'administrator'}
+            </SignatureLine>
           </div>
           <div className={styles.parentFooter}>
             <span>

@@ -1,0 +1,38 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.table thead {
+  /* Chrome repetă rândul de cap de tabel pe fiecare pagină tipărită. */
+  display: table-header-group;
+}
+
+.table th,
+.table td {
+  padding: 7px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--row-divider);
+}
+
+.table thead th {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-top: 1px solid var(--slate);
+  border-bottom: 1px solid var(--slate);
+}
+
+.amountCol {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table tfoot td {
+  font-weight: 800;
+  border-top: 1px solid var(--slate);
+  border-bottom: none;
+}

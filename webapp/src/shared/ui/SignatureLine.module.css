@@ -1,0 +1,10 @@
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.rule {
+  height: 34px;
+  border-bottom: 1px solid var(--slate);
+}

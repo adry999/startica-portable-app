@@ -1,3 +1,4 @@
+import { ThermalRule } from '@shared/ui';
 import styles from './PoolReceiptLabel.module.css';
 
 export interface PoolSessionCell {
@@ -44,9 +45,9 @@ export function PoolReceiptLabel({
   const chargeableSessions = sessions.filter(session => !session.dashed).length;
   const monthlyTotal = Math.round(chargeableSessions * pricePerSession * 100) / 100;
   return (
-    <div className={styles.bon}>
+    <>
       {logoDataUrl && <img src={logoDataUrl} alt="" className={styles.logo} />}
-      <div className={styles.ruleSolid} />
+      <ThermalRule />
       <div className={styles.titleBlock}>
         <span className={styles.eyebrow}>{monthTitle}</span>
         <span className={styles.childName}>{childName}</span>
@@ -74,8 +75,8 @@ export function PoolReceiptLabel({
         <br />
         Linie punctată = ziua liberă, nu se taxează.
       </span>
-      <div className={styles.ruleDashed} />
+      <ThermalRule variant="dashed" />
       <span className={styles.note}>{itemsNote}</span>
-    </div>
+    </>
   );
 }

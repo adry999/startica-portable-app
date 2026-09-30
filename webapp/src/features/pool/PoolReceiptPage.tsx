@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Button } from '@shared/ui';
+import { Button, ThermalBlock } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import { usePoolMonth, usePoolSettings } from '@shared/pool/usePool';
@@ -8,7 +8,6 @@ import { formatMonthName } from '#shared/format/date-format.mjs';
 import { expandBooking } from '#features/pool/index.web.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import { PoolReceiptLabel, type PoolSessionCell } from './PoolReceiptLabel';
-import styles from './PoolReceiptPage.module.css';
 
 const WEEKDAYS = ['Luni', 'Marți', 'Miercuri', 'Joi', 'Vineri'];
 const MONTHS_SHORT = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'noi', 'dec'];
@@ -61,14 +60,16 @@ export function PoolReceiptPage() {
   const itemsNote = poolSettings.settings?.itemsNote ?? poolSettings.seed?.itemsNote ?? '';
 
   return (
-    <div className={styles.page}>
-      <style>{'@page { size: 58mm auto; margin: 0; }'}</style>
-      <div className={styles.toolbar}>
-        <Button variant="white" onClick={() => navigate(-1)}>
-          ← Înapoi
-        </Button>
-        <Button onClick={() => window.print()}>Tipărește</Button>
-      </div>
+    <ThermalBlock
+      actions={
+        <>
+          <Button variant="white" onClick={() => navigate(-1)}>
+            ← Înapoi
+          </Button>
+          <Button onClick={() => window.print()}>Tipărește</Button>
+        </>
+      }
+    >
       <PoolReceiptLabel
         childName={child?.name ?? row.childId}
         groupName={groupName}
@@ -80,6 +81,6 @@ export function PoolReceiptPage() {
         itemsNote={itemsNote}
         logoDataUrl={kindergarten.settings?.logoDataUrl}
       />
-    </div>
+    </ThermalBlock>
   );
 }

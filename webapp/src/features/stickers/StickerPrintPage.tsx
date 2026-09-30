@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
-import { Button } from '@shared/ui';
+import { Button, ChipSelect, Field, NumberInput, TextInput } from '@shared/ui';
 import { StickerLabel } from './StickerLabel';
 import {
   STICKER_DECOR_OPTIONS,
@@ -86,72 +86,59 @@ export function StickerPrintPage() {
 
       {!isGroupMode && (
         <div className={styles.editor}>
-          <FieldGroup label="Model">
-            {STICKER_TEMPLATE_ORDER.map(key => (
-              <Pill key={key} active={key === templateKey} onClick={() => pickTemplate(key)}>
-                {STICKER_TEMPLATES[key].label}
-              </Pill>
-            ))}
-          </FieldGroup>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldGroupLabel}>Model</span>
+            <ChipSelect
+              ariaLabel="Model"
+              value={templateKey}
+              onChange={pickTemplate}
+              options={STICKER_TEMPLATE_ORDER.map(key => ({ value: key, label: STICKER_TEMPLATES[key].label }))}
+            />
+          </div>
 
-          <FieldGroup label="Mărime etichetă">
-            {STICKER_SIZE_OPTIONS.map(option => (
-              <Pill key={option.value} active={option.value === size} onClick={() => setSize(option.value)}>
-                {option.label}
-              </Pill>
-            ))}
-          </FieldGroup>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldGroupLabel}>Mărime etichetă</span>
+            <ChipSelect ariaLabel="Mărime etichetă" value={size} onChange={setSize} options={STICKER_SIZE_OPTIONS} />
+          </div>
 
-          <label className={styles.field}>
-            Text mare
-            <input value={line1} onChange={event => setLine1(event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Rândul 2
-            <input value={line2} onChange={event => setLine2(event.target.value)} />
-          </label>
-          <label className={styles.field}>
-            Rândul 3 (opțional)
-            <input value={line3} onChange={event => setLine3(event.target.value)} />
-          </label>
+          <Field label="Text mare" htmlFor="sticker-line1">
+            <TextInput id="sticker-line1" value={line1} onChange={setLine1} />
+          </Field>
+          <Field label="Rândul 2" htmlFor="sticker-line2">
+            <TextInput id="sticker-line2" value={line2} onChange={setLine2} />
+          </Field>
+          <Field label="Rândul 3" htmlFor="sticker-line3" optional>
+            <TextInput id="sticker-line3" value={line3} onChange={setLine3} />
+          </Field>
 
-          <FieldGroup label="Decor">
-            {STICKER_DECOR_OPTIONS.map(option => (
-              <Pill key={option.value} active={option.value === decor} onClick={() => setDecor(option.value)}>
-                {option.label}
-              </Pill>
-            ))}
-          </FieldGroup>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldGroupLabel}>Decor</span>
+            <ChipSelect ariaLabel="Decor" value={decor} onChange={setDecor} options={STICKER_DECOR_OPTIONS} />
+          </div>
 
-          <label className={styles.field}>
-            Copii
-            <input
-              type="number"
+          <Field label="Copii" htmlFor="sticker-copies">
+            <NumberInput
+              id="sticker-copies"
               min={1}
               max={200}
-              value={copies}
-              onChange={event => setCopies(Math.max(1, Number(event.target.value) || 1))}
+              step={1}
+              value={String(copies)}
+              onChange={value => setCopies(Math.max(1, Number(value) || 1))}
             />
-          </label>
+          </Field>
         </div>
       )}
 
       {isGroupMode && (
         <div className={styles.editor}>
-          <FieldGroup label="Mărime etichetă">
-            {STICKER_SIZE_OPTIONS.map(option => (
-              <Pill key={option.value} active={option.value === size} onClick={() => setSize(option.value)}>
-                {option.label}
-              </Pill>
-            ))}
-          </FieldGroup>
-          <FieldGroup label="Decor">
-            {STICKER_DECOR_OPTIONS.map(option => (
-              <Pill key={option.value} active={option.value === decor} onClick={() => setDecor(option.value)}>
-                {option.label}
-              </Pill>
-            ))}
-          </FieldGroup>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldGroupLabel}>Mărime etichetă</span>
+            <ChipSelect ariaLabel="Mărime etichetă" value={size} onChange={setSize} options={STICKER_SIZE_OPTIONS} />
+          </div>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldGroupLabel}>Decor</span>
+            <ChipSelect ariaLabel="Decor" value={decor} onChange={setDecor} options={STICKER_DECOR_OPTIONS} />
+          </div>
           <p className={styles.notice}>{groupChildren.length} copii activi în grupă.</p>
         </div>
       )}
@@ -186,22 +173,5 @@ export function StickerPrintPage() {
         ))}
       </div>
     </div>
-  );
-}
-
-function FieldGroup({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className={styles.fieldGroup}>
-      <span className={styles.fieldGroupLabel}>{label}</span>
-      <div className={styles.pillRow}>{children}</div>
-    </div>
-  );
-}
-
-function Pill({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button type="button" className={`${styles.pill} ${active ? styles.pillActive : ''}`} onClick={onClick}>
-      {children}
-    </button>
   );
 }

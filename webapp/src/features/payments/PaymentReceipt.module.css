@@ -202,17 +202,6 @@
   color: var(--muted);
 }
 
-.signatureLine {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.signatureRule {
-  height: 34px;
-  border-bottom: 1px solid var(--slate);
-}
-
 .footer {
   margin: 0;
   font-size: 9px;

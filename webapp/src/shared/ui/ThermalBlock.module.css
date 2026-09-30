@@ -1,0 +1,51 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--space-10);
+  align-self: flex-start;
+}
+
+@media print {
+  .toolbar {
+    display: none;
+  }
+
+  .page {
+    align-items: stretch;
+  }
+}
+
+/* Lățime utilă 48 mm — în mm, nu px, ca previzualizarea de pe ecran să fie exact lățimea tipărită. */
+.bon {
+  width: 48mm;
+  box-sizing: border-box;
+  background: var(--white);
+  box-shadow: var(--shadow-card);
+  padding: 18px 16px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #000;
+  font-size: 14px;
+  font-family: var(--font-body), Arial, sans-serif;
+}
+
+@media print {
+  .bon {
+    box-shadow: none;
+  }
+}
+
+.ruleSolid {
+  border-top: 2px solid #000;
+}
+
+.ruleDashed {
+  border-top: 1px dashed #000;
+}

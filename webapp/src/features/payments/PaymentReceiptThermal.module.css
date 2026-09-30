@@ -1,33 +1,3 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-16);
-  align-items: center;
-}
-
-.toolbar {
-  display: flex;
-  gap: var(--space-10);
-  align-self: flex-start;
-}
-
-/* Lățime utilă 48 mm (384 px la 203 dpi, specificația SK58) — mm, nu px, ca previzualizarea de pe ecran
-   să fie exact lățimea tipărită: px CSS e mereu 1/96", indiferent de dpi-ul imprimantei, deci un px
-   fix ar rupe altfel rândurile pe ecran față de bon. */
-.bon {
-  width: 48mm;
-  box-sizing: border-box;
-  background: var(--white);
-  box-shadow: var(--shadow-card);
-  padding: 18px 16px 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: #000;
-  font-size: 14px;
-  font-family: var(--font-body), Arial, sans-serif;
-}
-
 .logo {
   height: 40px;
   width: auto;
@@ -39,14 +9,6 @@
   text-align: center;
   font-size: 12px;
   line-height: 1.35;
-}
-
-.ruleSolid {
-  border-top: 2px solid #000;
-}
-
-.ruleDashed {
-  border-top: 1px dashed #000;
 }
 
 .titleBlock {
@@ -160,18 +122,6 @@
   font-size: 11px;
 }
 
-.signature {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-}
-
-.signatureRule {
-  height: 26px;
-  border-bottom: 1px solid #000;
-}
-
 .thanks {
   text-align: center;
   font-family: var(--font-heading);
@@ -182,18 +132,4 @@
 .footer {
   text-align: center;
   font-size: 11px;
-}
-
-@media print {
-  .toolbar {
-    display: none;
-  }
-
-  .page {
-    align-items: stretch;
-  }
-
-  .bon {
-    box-shadow: none;
-  }
 }

@@ -1,0 +1,39 @@
+.header {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-16);
+  padding-bottom: var(--space-14);
+  border-bottom: 2px solid var(--orange);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: var(--space-16);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.aside {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}

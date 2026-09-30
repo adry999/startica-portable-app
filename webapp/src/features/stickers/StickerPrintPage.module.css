@@ -39,44 +39,6 @@
   color: var(--muted);
 }
 
-.pillRow {
-  display: flex;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.pill {
-  border: 0;
-  border-radius: var(--radius-pill);
-  padding: 7px 13px;
-  font: 800 13px var(--font-body);
-  background: var(--neutral-soft);
-  color: var(--slate);
-  cursor: pointer;
-}
-
-.pillActive {
-  background: var(--slate);
-  color: var(--white);
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.field input {
-  padding: 10px 14px;
-  border-radius: var(--radius-input);
-  border: 1px solid var(--input-border);
-  font: 600 14px var(--font-body);
-  color: var(--slate);
-}
-
 .notice {
   margin: 0;
   font-size: 13px;

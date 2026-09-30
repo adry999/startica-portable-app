@@ -72,3 +72,8 @@ export { SaveIndicator, type SaveIndicatorProps } from './SaveIndicator';
 export { UndoHistory, type UndoHistoryEntry, type UndoHistoryProps } from './UndoHistory';
 export { Popover, type PopoverProps } from './Popover';
 export { LockedContent, type LockedContentProps } from './LockedContent';
+export { SignatureLine, type SignatureLineProps } from './SignatureLine';
+export { PrintHeader, type PrintHeaderProps } from './PrintHeader';
+export { PrintTable, type PrintTableColumn, type PrintTableProps } from './PrintTable';
+export { PrintFooter, type PrintFooterProps } from './PrintFooter';
+export { ThermalBlock, ThermalRule, type ThermalBlockProps, type ThermalRuleProps } from './ThermalBlock';

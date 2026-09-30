@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import {
   Badge,
+  PrintFooter,
+  PrintHeader,
+  PrintTable,
   ScrollArea,
   SettingsList,
+  SignatureLine,
+  ThermalBlock,
+  ThermalRule,
   TopbarActionsProvider,
   useTopbarActions,
   useTopbarActionsSlot,
@@ -98,6 +104,101 @@ export function AlteleSection() {
               </ul>
             </ScrollArea>
           </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SignatureLine"
+        importLine="import { SignatureLine } from '@shared/ui';"
+        reference="DS Componente.dc.html#32f — bară + etichetă (Achitări, Bazin: PaymentReceipt/PaymentReceiptThermal/DayClosingReceipt)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <SignatureLine>Primit: administrator</SignatureLine>
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PrintHeader"
+        importLine="import { PrintHeader } from '@shared/ui';"
+        reference="DS Componente.dc.html#32f — antet A4 (Situația plăților, StatusPrint.tsx)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <PrintHeader
+              title="Situația plăților · septembrie 2026"
+              subtitle="Situație la 30.09.2026 · filtru: toți"
+              aside={
+                <>
+                  <span>Grădinița Startica</span>
+                  <span>IDNO 1234567890123</span>
+                </>
+              }
+            />
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PrintTable"
+        importLine="import { PrintTable } from '@shared/ui';"
+        reference="DS Componente.dc.html#32f — tabel A4, cap repetat pe fiecare pagină (Situația plăților, StatusPrint.tsx)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <PrintTable
+              columns={[
+                { key: 'name', header: 'Copil', render: (row: { name: string; amount: number }) => row.name },
+                {
+                  key: 'amount',
+                  header: 'Rest',
+                  align: 'end',
+                  render: (row: { name: string; amount: number }) => `${row.amount} lei`,
+                },
+              ]}
+              rows={[
+                { name: 'Ana Popescu', amount: 0 },
+                { name: 'Ion Rusu', amount: 350 },
+              ]}
+              rowKey={row => row.name}
+              footer={
+                <tr>
+                  <td>Total · 2 copii</td>
+                  <td style={{ textAlign: 'right' }}>350 lei</td>
+                </tr>
+              }
+            />
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="PrintFooter"
+        importLine="import { PrintFooter } from '@shared/ui';"
+        reference="DS Componente.dc.html#32f — subsol A4 (Situația plăților, StatusPrint.tsx)"
+      >
+        <DemoRow label="demo">
+          <div className={styles.frame}>
+            <PrintFooter printedAt="2026-09-30T10:00:00.000Z">Sume în lei.</PrintFooter>
+          </div>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="ThermalBlock"
+        importLine="import { ThermalBlock, ThermalRule } from '@shared/ui';"
+        reference="DS Componente.dc.html#32f — bon 58mm (Achitări/Bazin: PaymentReceiptThermal, DayClosingReceipt, PoolReceiptLabel)"
+      >
+        <DemoRow label="demo">
+          <ThermalBlock actions={<button type="button">Tipărește</button>}>
+            <span>ÎNCHIDEREA ZILEI</span>
+            <div data-export="ThermalRule">
+              <ThermalRule />
+            </div>
+            <span>Total: 1 250 lei</span>
+            <ThermalRule variant="dashed" />
+          </ThermalBlock>
         </DemoRow>
       </ComponentShowcase>
 
