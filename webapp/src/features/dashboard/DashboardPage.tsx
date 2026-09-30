@@ -1,6 +1,17 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, LoadingState } from '@shared/ui';
+import {
+  Button,
+  Card,
+  EMPTY_STATES,
+  EmptyState,
+  Legend,
+  LoadingState,
+  ProgressBar,
+  Tooltip,
+  resolveEmptyStateTitle,
+  type LegendTone,
+  type ProgressBarTone,
+} from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -25,16 +36,7 @@ const MONTH_NAMES = [
 ];
 
 const METHOD_LABELS: Record<string, string> = { Cash: 'Cash', Card: 'Card', Transfer: 'Transfer' };
-const METHOD_BAR_CLASS: Record<string, string> = {
-  Cash: styles.methodCash,
-  Card: styles.methodCard,
-  Transfer: styles.methodTransfer,
-};
-const METHOD_DOT_CLASS: Record<string, string> = {
-  Cash: styles.legendDotCash,
-  Card: styles.legendDotCard,
-  Transfer: styles.legendDotTransfer,
-};
+const METHOD_TONE: Record<string, ProgressBarTone & LegendTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
 const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
   urgent: styles.tonePink,
   review: styles.toneYellow,
@@ -65,7 +67,6 @@ export interface DashboardPageProps {
 export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   const dashboardData = useDashboard(month);
   const navigate = useNavigate();
-  const [activeBar, setActiveBar] = useState<string | null>(null);
 
   if (dashboardData.status === 'loading') return <LoadingState />;
   if (dashboardData.status === 'failed')
@@ -86,35 +87,33 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
         <Card tone="orange" decorative="lg" className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelIncome}`}>Încasări</p>
           <strong className={styles.kpiValue}>{formatKpiMoney(dashboardData.income)}</strong>
-          <div className={styles.methodBar}>
-            {Object.entries(dashboardData.byMethod)
-              .filter(([method, value]) => METHOD_BAR_CLASS[method] && value > 0)
-              .map(([method, value]) => (
-                <span
-                  key={method}
-                  className={METHOD_BAR_CLASS[method]}
-                  style={{ width: `${(value / Math.max(1, dashboardData.income)) * 100}%` }}
-                />
-              ))}
-          </div>
-          <div className={styles.methodLegend}>
-            {Object.entries(dashboardData.byMethod)
+          <ProgressBar
+            variant="segmented"
+            className={styles.methodBar}
+            segments={Object.entries(dashboardData.byMethod)
+              .filter(([method, value]) => METHOD_TONE[method] && value > 0)
+              .map(([method, value]) => ({
+                tone: METHOD_TONE[method],
+                value: (value / Math.max(1, dashboardData.income)) * 100,
+              }))}
+          />
+          <Legend
+            className={styles.methodLegend}
+            items={Object.entries(dashboardData.byMethod)
               .filter(([method, value]) => METHOD_LABELS[method] && value > 0)
-              .map(([method, value]) => (
-                <span key={method} className={styles.legendItem}>
-                  <span className={`${styles.legendDot} ${METHOD_DOT_CLASS[method]}`} />
-                  {METHOD_LABELS[method]} {formatCompactMoney(value)}
-                </span>
-              ))}
-          </div>
+              .map(([method, value]) => ({
+                tone: METHOD_TONE[method],
+                label: `${METHOD_LABELS[method]} ${formatCompactMoney(value)}`,
+              }))}
+          />
         </Card>
 
         <Card tone="mint" decorative className={styles.kpiCard}>
           <p className={`${styles.kpiLabel} ${styles.kpiLabelExpense}`}>Cheltuieli</p>
           <strong className={`${styles.kpiValue} ${styles.kpiValueSm}`}>{formatKpiMoney(dashboardData.expense)}</strong>
-          <button type="button" className={styles.mintLink} onClick={() => onNavigate('expenses', { nou: '1' })}>
+          <Button variant="link" className={styles.mintLink} onClick={() => onNavigate('expenses', { nou: '1' })}>
             + Adaugă cheltuială
-          </button>
+          </Button>
         </Card>
 
         <Card tone="yellow" decorative className={styles.kpiCard}>
@@ -137,53 +136,42 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               <p className={styles.panelTitle}>Evoluția încasărilor</p>
               <p className={styles.panelSubtitle}>Ultimele 12 luni</p>
             </div>
-            <div className={styles.chartLegend}>
-              <span className={styles.legendItem}>
-                <span className={`${styles.legendSquare} ${styles.legendSquareIncome}`} />
-                Încasări
-              </span>
-              <span className={styles.legendItem}>
-                <span className={`${styles.legendSquare} ${styles.legendSquareExpense}`} />
-                Cheltuieli
-              </span>
-            </div>
+            <Legend
+              className={styles.chartLegend}
+              items={[
+                { tone: 'orange', label: 'Încasări' },
+                { tone: 'mint', label: 'Cheltuieli' },
+              ]}
+            />
           </div>
           <div className={styles.bars}>
             {chartMonths.map((bar, index) => {
-              const isActive = activeBar === bar.month;
               const isCurrent = index === currentMonthIndex;
               const diff = bar.income - bar.expense;
               return (
                 <div key={bar.month} className={styles.barColumn}>
-                  {isActive && (
-                    <div className={styles.barTooltip} role="tooltip">
-                      <strong>
-                        {capitalize(fullMonthLabel(bar.month))} · diferență {formatCompactMoney(diff)} lei
-                      </strong>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className={styles.barPair}
-                    onMouseEnter={() => setActiveBar(bar.month)}
-                    onMouseLeave={() => setActiveBar(current => (current === bar.month ? null : current))}
-                    onFocus={() => setActiveBar(bar.month)}
-                    onBlur={() => setActiveBar(current => (current === bar.month ? null : current))}
-                    aria-label={`${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`}
+                  <Tooltip
+                    content={`${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`}
                   >
-                    <span
-                      className={`${styles.barIncome} ${isCurrent ? styles.barIncomeCurrent : ''} ${
-                        bar.income === 0 ? styles.barNoData : ''
-                      } ${isActive ? styles.barActive : ''}`}
-                      style={{ height: bar.income === 0 ? 5 : Math.max(6, (bar.income / maxRevenue) * 100) }}
-                    />
-                    <span
-                      className={`${styles.barExpense} ${isCurrent ? styles.barExpenseCurrent : ''} ${
-                        bar.expense === 0 ? styles.barNoData : ''
-                      } ${isActive ? styles.barActive : ''}`}
-                      style={{ height: bar.expense === 0 ? 5 : Math.max(6, (bar.expense / maxRevenue) * 100) }}
-                    />
-                  </button>
+                    <button
+                      type="button"
+                      className={styles.barPair}
+                      aria-label={`${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`}
+                    >
+                      <span
+                        className={`${styles.barIncome} ${isCurrent ? styles.barIncomeCurrent : ''} ${
+                          bar.income === 0 ? styles.barNoData : ''
+                        }`}
+                        style={{ height: bar.income === 0 ? 5 : Math.max(6, (bar.income / maxRevenue) * 100) }}
+                      />
+                      <span
+                        className={`${styles.barExpense} ${isCurrent ? styles.barExpenseCurrent : ''} ${
+                          bar.expense === 0 ? styles.barNoData : ''
+                        }`}
+                        style={{ height: bar.expense === 0 ? 5 : Math.max(6, (bar.expense / maxRevenue) * 100) }}
+                      />
+                    </button>
+                  </Tooltip>
                 </div>
               );
             })}
@@ -203,14 +191,11 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
             <p className={styles.panelTitle}>Rezolvă pentru date corecte</p>
           </div>
           {dashboardData.allClear ? (
-            <div className={styles.attentionEmpty}>
-              <strong>Nicio acțiune în listele urmărite.</strong>
-              <span>
-                {dashboardData.hasAnyRecords
-                  ? 'Nu există notificări, înregistrări de verificat sau achitări neasociate.'
-                  : 'Nu sunt copii sau achitări înregistrate încă.'}
-              </span>
-            </div>
+            <EmptyState
+              variant={EMPTY_STATES['dashboard.attention.done'].variant}
+              size="compact"
+              title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.attention.done'])}
+            />
           ) : (
             <div className={styles.attentionList}>
               {dashboardData.attentionItems.map(item => (
@@ -229,7 +214,11 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               <p className={styles.panelTitle}>În următoarele 5 zile</p>
             </div>
             {dashboardData.upcomingBirthdays.length === 0 && (
-              <p className={styles.notice}>Nicio zi de naștere în următoarele 5 zile.</p>
+              <EmptyState
+                variant={EMPTY_STATES['dashboard.birthdays'].variant}
+                size="compact"
+                title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.birthdays'])}
+              />
             )}
             {dashboardData.upcomingBirthdays.map(
               (row: { child: { id: string; name: string }; daysUntil: number; turningAge: number }, index: number) => (
@@ -253,13 +242,13 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
           <div className={styles.birthdaysMonth}>
             <div className={styles.birthdaysMonthHead}>
               <strong>Toată luna {MONTH_NAMES[Number(month.slice(5, 7)) - 1]}</strong>
-              <button
-                type="button"
+              <Button
+                variant="link"
                 className={styles.birthdaysCalendarLink}
                 onClick={() => navigate(`/copii/zile-de-nastere?luna=${month}`)}
               >
                 Vezi calendarul →
-              </button>
+              </Button>
             </div>
             <div className={styles.birthdaysCalendar}>
               {dashboardData.birthdayWeeks
