@@ -199,6 +199,8 @@
   font-weight: 800;
 }
 
+/* De notificat.dc.html#8a: colț „coadă de bulă” (6px stânga-jos) — formă asimetrică din artboard,
+   fără corespondent în scara de tokeni (--radius-md-lg=16/--radius-lg=20), deci rămâne px literal. */
 .bubble {
   margin: 0;
   padding: 16px 18px;

@@ -131,6 +131,9 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // tile compact, cu `currentColor` moștenit din tonul dinamic al grupei; un `Button`/`IconButton`
     // ar impune propriul fundal/padding și ar sparge nuanțarea pe ton (ca ChildTile în attendance).
     'groups/GroupTile.tsx',
+    // Rândul din coada de notificări (avatar + nume + sumă + bara activă de 4px) — hit-area pe tot
+    // rândul, ca ChildTile/GroupTile; un `Button` ar impune propriul fundal/padding și ar sparge
+    // layout-ul din 10-de-notificat.md §3.
     'notify/NotifyPage.tsx',
     'payments/PaymentFormDrawer.tsx',
     'personal/LeavesView.tsx',
@@ -178,6 +181,11 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'groups/GroupCardCompact.module.css',
     'groups/GroupTile.module.css',
     'notifications/SmsTemplatesPanel.module.css',
+    // `.rowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px, același
+    // shorthand acceptat ca în `payments/PaymentsByMonth.module.css` (10-de-notificat.md §3).
+    // `.queue`/`.preview { border-radius: 22px; }` și `.bubble` (colț asimetric 18/18/18/6) —
+    // valori exacte din artboard, fără corespondent în scara de tokeni (20/24) — vezi comentariile
+    // din fișier.
     'notify/NotifyPage.module.css',
     'payments/DayClosingReceipt.module.css',
     'payments/PaymentFormDrawer.module.css',
@@ -324,6 +332,11 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'fee-setup/FeeSetupPage.tsx',
     'groups/GroupsBoard.tsx',
     'groups/GroupsPage.tsx',
+    // Genuin nou (10-de-notificat.md) — coada golită trece pe `EmptyState variant="done"` pentru
+    // decorul consecvent cu restul modulelor; textul rămâne calculat în useNotify.ts (depinde de
+    // fișele „De verificat”, nu doar de rows.length), deci nu vine dintr-o cheie de catalog — vezi
+    // INTREBARI.md.
+    'notify/NotifyPage.tsx',
     'payments/PaymentsTable.tsx',
     'personal/CandidatesTab.tsx',
     'review/ReviewPage.tsx',

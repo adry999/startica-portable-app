@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  EmptyState,
   LoadingState,
   SegmentedControl,
   SmsConfirmDialog,
@@ -233,7 +234,11 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
 
           {tab === 'toSend' &&
             (notifyData.rows.length === 0 ? (
-              <p className={styles.empty}>{notifyData.emptyMessage}</p>
+              // Textul e calculat în useNotify.ts (depinde de fișele „De verificat”, nu doar de
+              // rows.length) — nu vine din catalogul empty-states.ts (denotificat.done), dar tot
+              // folosim EmptyState pentru decorul „coadă golită” consecvent cu restul modulelor
+              // (INTREBARI.md — „De notificat — stare goală dinamică”).
+              <EmptyState variant="done" title={notifyData.emptyMessage} />
             ) : (
               <div className={styles.rows}>
                 {notifyData.rows.map(row => {
