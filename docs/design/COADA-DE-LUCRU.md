@@ -632,9 +632,10 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 **15 din 15 module gata — faza de migrare pe module (pasul 9, COMPONENTE.md §4) e completă.**
 
 ## Ce rămâne deschis după cele 15 module
-- **`TimeInput`** — 3 locuri (`PoolSettings`, `VisitFormDrawer`, `NotificationsPage`) cu `<input type="time">` brut, documentat identic de 3 ori. Candidat clar pentru o mini-rundă dedicată.
-- **`Icon` + `lucide-react`** (33a) — `⋮⋮`/`⌕`/`▾`/etc. rămân caractere brute în `SettingsList`, `groups/` și alte câteva locuri. Decizie sitewide (dependință nouă + componentă nouă), amânată explicit de mai multe ori — nu s-a forțat într-un singur loc.
-- **Wizard** (Prima pornire, 20a-20c) — ecran nou, nu migrare.
+
+- ~~`TimeInput`~~ — **făcut.** Componentă nouă (aceeași formă ca `DateInput`), aplicată pe cele 3 locuri (`PoolSettings`, `VisitFormDrawer`, `NotificationsPage`).
+- ~~`Icon` + `lucide-react`~~ — **făcut.** `lucide-react` adăugat (pinned 1.49.0), `Icon` nou în `shared/ui`, singurul fișier care-l importă. Audit dedicat (fork) a citit toate cele 55 de fișiere cu caractere ⌕⋯▾×‹›✓☰⋮↶↗▲▼⇅ și a separat randările reale de mențiunile din comentarii — migrat pe 5 agenți paraleli + câteva fixuri directe (`RowMenu`, `BranchSelector`, `Topbar`, `StepList`, `ExpensesPage`). R3/R4 (verificare automată — ESLint/grep în CI) rămân neautomatizate, pt că nu există ESLint în proiect; asta ține de pasul 10, nu de migrare.
+- **Wizard** (Prima pornire, 20a-20c) — ecran nou, nu migrare. Neînceput.
 - **Pasul 10 din DS-IMPLEMENTARE.md** — promovarea R1-R8 la „error” pe tot repo-ul, ștergerea CSS local mort rămas, capturile la 1440px comparate cu artboard-urile pentru fiecare ecran — nefăcut încă pentru niciun modul (semnalat de la Runda 1, nerevizitat).
 - **Punctul 5** (decizia de contrast buton primar) — rămâne deschisă în `INTREBARI.md`; până se decide, fără text alb nou pe `--orange`.
 
