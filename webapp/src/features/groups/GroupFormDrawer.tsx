@@ -191,7 +191,7 @@ export function GroupFormDrawer({
             <label htmlFor="new-group-capacity">Capacitate</label>
             <div className={styles.stepper}>
               <IconButton
-                icon="−"
+                icon="minus"
                 ariaLabel="Scade capacitatea"
                 onClick={() => setCapacityRaw(String(Math.max(1, Number(capacityRaw || DEFAULT_CAPACITY) - 1)))}
               />
@@ -205,7 +205,7 @@ export function GroupFormDrawer({
                 step={1}
               />
               <IconButton
-                icon="+"
+                icon="plus"
                 ariaLabel="Crește capacitatea"
                 onClick={() => setCapacityRaw(String(Math.min(1000, Number(capacityRaw || DEFAULT_CAPACITY) + 1)))}
               />

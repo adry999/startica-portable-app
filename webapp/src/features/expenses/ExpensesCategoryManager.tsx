@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button, Icon, IconButton, TextInput, useToast } from '@shared/ui';
+import { Button, IconButton, TextInput, useToast } from '@shared/ui';
 import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseCategory } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
@@ -91,7 +91,7 @@ export function ExpensesCategoryManager({
                 {category.id !== GENERAL_CATEGORY_ID && (
                   <IconButton
                     className={styles.chipDelete}
-                    icon={<Icon name="close" size={14} />}
+                    icon="close"
                     ariaLabel={`Șterge ${category.name}`}
                     title="Șterge categoria"
                     onClick={() => onRequestDelete(category)}

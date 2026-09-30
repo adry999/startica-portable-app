@@ -131,6 +131,7 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     'groups/GroupTile.tsx',
     'notify/NotifyPage.tsx',
     'payments/PaymentFormDrawer.tsx',
+    'personal/LeavesView.tsx',
     'personal/RolesDrawer.tsx',
     'personal/SalaryFormDrawer.tsx',
     'personal/StaffFormDrawer.tsx',

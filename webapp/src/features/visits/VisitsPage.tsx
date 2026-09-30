@@ -347,13 +347,13 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
             </Button>
             <IconButton
               className={styles.arrowButton}
-              icon={<Icon name="chevron-left" />}
+              icon="chevron-left"
               ariaLabel="Luna anterioară"
               onClick={visitsData.goToPreviousMonth}
             />
             <IconButton
               className={styles.arrowButton}
-              icon={<Icon name="chevron-right" />}
+              icon="chevron-right"
               ariaLabel="Luna următoare"
               onClick={visitsData.goToNextMonth}
             />

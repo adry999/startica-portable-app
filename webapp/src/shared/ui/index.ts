@@ -1,7 +1,13 @@
 export { BnmRateLink, type BnmRateLinkProps } from './BnmRateLink';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { Button, type ButtonProps, type ButtonVariant } from './Button';
-export { IconButton, type IconButtonProps, type IconButtonSize } from './IconButton';
+export {
+  IconButton,
+  type IconButtonProps,
+  type IconButtonSize,
+  StatusIconButton,
+  type StatusIconButtonProps,
+} from './IconButton';
 export { Icon, type IconName, type IconProps } from './Icon';
 export { Card, type CardProps, type CardTone } from './Card';
 export { Checkbox, type CheckboxProps } from './Checkbox';

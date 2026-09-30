@@ -12,7 +12,6 @@ import {
   FileInput,
   FilterPills,
   groupTone,
-  Icon,
   IconButton,
   MonthPicker,
   MonthStepper,
@@ -23,6 +22,7 @@ import {
   SearchSelect,
   SegmentedControl,
   Select,
+  StatusIconButton,
   TextArea,
   TextField,
   TextInput,
@@ -31,6 +31,7 @@ import {
   TonePicker,
   type FilterPillGroup,
 } from '@shared/ui';
+import { AttendanceDot } from '@shared/attendance';
 import { SERVICE_TONES } from '@domain/record-schema.mjs';
 import { shiftMonth } from '@shared/format/month-shift';
 import { ComponentShowcase } from '../ComponentShowcase';
@@ -129,16 +130,26 @@ export function ButoaneInputSection() {
         reference="DS Componente.dc.html §28a — × 36 rotund (închidere) / ⋯ 32 radius 10"
       >
         <DemoRow label="size">
-          <IconButton icon={<Icon name="close" />} ariaLabel="Închide" size="lg" onClick={() => {}} />
-          <IconButton
-            icon={<Icon name="more-horizontal" />}
-            ariaLabel="Mai multe acțiuni"
-            size="sm"
-            onClick={() => {}}
-          />
+          <IconButton icon="close" ariaLabel="Închide" size="lg" onClick={() => {}} />
+          <IconButton icon="more-horizontal" ariaLabel="Mai multe acțiuni" size="sm" onClick={() => {}} />
         </DemoRow>
         <DemoRow label="disabled">
-          <IconButton icon={<Icon name="close" />} ariaLabel="Închide" size="lg" disabled onClick={() => {}} />
+          <IconButton icon="close" ariaLabel="Închide" size="lg" disabled onClick={() => {}} />
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="StatusIconButton"
+        importLine="import { StatusIconButton } from '@shared/ui';"
+        reference="Prezența → Luna (18b) — celulă clicabilă cu AttendanceDot, nu o iconiță Lucide"
+      >
+        <DemoRow label="control">
+          <StatusIconButton ariaLabel="12 septembrie: prezent" onClick={() => {}}>
+            <AttendanceDot kind="present" />
+          </StatusIconButton>
+        </DemoRow>
+        <DemoRow label="fără conținut (bară poziționată, ex. Concedii)">
+          <StatusIconButton ariaLabel="Concediu 1-15 iulie" style={{ width: 80 }} onClick={() => {}} />
         </DemoRow>
       </ComponentShowcase>
 

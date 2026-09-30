@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Button, Icon, IconButton } from '@shared/ui';
+import { Button, IconButton } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { PaymentRowView } from './usePayments';
 import styles from './PaymentDetailPanel.module.css';
@@ -23,7 +23,7 @@ export function PaymentDetailPanel({ payment, onClose, onEdit, onToggleArchived 
       <div className={`${styles.header} ${payment.unassigned ? styles.headerPink : styles.headerMint}`}>
         <div className={styles.headerTop}>
           <span className={styles.headerEyebrow}>Achitare · {payment.dateLabel}</span>
-          <IconButton icon={<Icon name="close" />} ariaLabel="Închide panoul" size="lg" onClick={onClose} />
+          <IconButton icon="close" ariaLabel="Închide panoul" size="lg" onClick={onClose} />
         </div>
         <strong className={styles.headerAmount}>{formatMoney(payment.total)}</strong>
         <p className={styles.headerSubtitle}>

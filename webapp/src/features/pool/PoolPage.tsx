@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Icon, IconButton, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
+import { Button, IconButton, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today, shiftDays } from '@domain/calendar-month.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -55,14 +55,14 @@ export function PoolPage({ month }: PoolPageProps) {
         <>
           <div className={styles.weekNav}>
             <IconButton
-              icon={<Icon name="chevron-left" />}
+              icon="chevron-left"
               ariaLabel="Săptămâna anterioară"
               className={styles.arrow}
               onClick={() => setWeekDate(shiftDays(weekDate, -7))}
             />
             <span>{weekRangeLabel(weekDate)}</span>
             <IconButton
-              icon={<Icon name="chevron-right" />}
+              icon="chevron-right"
               ariaLabel="Săptămâna următoare"
               className={styles.arrow}
               onClick={() => setWeekDate(shiftDays(weekDate, 7))}

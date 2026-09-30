@@ -5,7 +5,6 @@ import {
   DateInput,
   Drawer,
   Field,
-  Icon,
   IconButton,
   NumberInput,
   PhoneInput,
@@ -470,7 +469,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                       />
                       <IconButton
                         className={styles.removeRow}
-                        icon={<Icon name="close" />}
+                        icon="close"
                         ariaLabel="Șterge persoana autorizată"
                         onClick={() => removePickupPerson(index)}
                       />

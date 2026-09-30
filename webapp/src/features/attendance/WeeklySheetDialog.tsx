@@ -117,14 +117,14 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
           <span className={styles.label}>Săptămâna</span>
           <div className={styles.stepper}>
             <IconButton
-              icon={<Icon name="chevron-left" />}
+              icon="chevron-left"
               ariaLabel="Săptămâna anterioară"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, -7))}
             />
             <span className={styles.stepperLabel}>{formatWeekRangeShort(week)}</span>
             <IconButton
-              icon={<Icon name="chevron-right" />}
+              icon="chevron-right"
               ariaLabel="Săptămâna următoare"
               className={styles.arrow}
               onClick={() => setWeek(current => shiftDays(current, 7))}

@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { Badge, Button, Card, IconButton, LoadingState, groupTone } from '@shared/ui';
+import { Badge, Button, Card, LoadingState, groupTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -99,10 +99,10 @@ export function LeavesView() {
                   const bar = leaveYearBar(leave, year);
                   const label = `${person.name}: ${formatLeaveRange(leave.from, leave.to)}`;
                   return (
-                    <IconButton
+                    <button
                       key={leave.id}
-                      icon={null}
-                      ariaLabel={label}
+                      type="button"
+                      aria-label={label}
                       title={label}
                       className={styles.leaveBar}
                       style={{ left: `${bar.leftPct}%`, width: `${bar.widthPct}%`, ...leaveBarStyle(leave) }}

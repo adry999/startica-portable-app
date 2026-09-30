@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, FilterPills, IconButton, LoadingState, groupTone, type PillTone } from '@shared/ui';
+import { Card, FilterPills, LoadingState, StatusIconButton, groupTone, type PillTone } from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { formatMonthName } from '#shared/format/date-format.mjs';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
@@ -86,12 +86,13 @@ export function MonthView({ month, data }: MonthViewProps) {
                     cell.kind === 'absent' ||
                     cell.kind === 'excused' ||
                     cell.kind === 'unmarked' ? (
-                      <IconButton
-                        icon={<AttendanceDot kind={cell.kind} />}
+                      <StatusIconButton
                         ariaLabel={`${row.name}: ${cell.date}`}
                         className={styles.cellButton}
                         onClick={() => handleCycle(row.id, cell.date)}
-                      />
+                      >
+                        <AttendanceDot kind={cell.kind} />
+                      </StatusIconButton>
                     ) : cell.kind === 'future' ? (
                       <AttendanceDot kind="future" />
                     ) : null}

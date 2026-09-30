@@ -8,7 +8,9 @@ import {
   ChevronUp,
   GripVertical,
   Menu,
+  Minus,
   MoreHorizontal,
+  Plus,
   Search,
   Undo2,
   X,
@@ -30,6 +32,8 @@ const ICONS = {
   undo: Undo2,
   'external-link': ArrowUpRight,
   'sort-toggle': ArrowUpDown,
+  minus: Minus,
+  plus: Plus,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;
