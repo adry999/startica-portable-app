@@ -34,7 +34,7 @@
 
 .tableCard {
   padding: 0;
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border);
   overflow: hidden;
   overflow-x: auto;
@@ -58,7 +58,7 @@
 
 .dataRow {
   padding: 0 16px;
-  border-bottom: 1px solid #f3eee5;
+  border-bottom: 1px solid var(--row-divider);
 }
 
 .footRow {
@@ -97,9 +97,9 @@
   display: inline-block;
   min-width: 20px;
   padding: 3px 0;
-  border-radius: 6px;
+  border-radius: var(--radius-5);
   background: var(--orange);
-  color: #fff;
+  color: var(--white);
 }
 
 .nameCell {
@@ -156,7 +156,7 @@
 
 .footNote {
   padding: var(--space-12) var(--space-16);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--yellow-soft);
   font-size: 13px;
   color: var(--slate);

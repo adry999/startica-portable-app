@@ -136,6 +136,7 @@ export function AttendancePage({ month }: AttendancePageProps) {
       ) : (
         <DayView
           data={dayData}
+          date={date}
           onOpenWeeklySheet={() => setWeeklySheetOpen(true)}
           weeklySheetIsMonday={isCurrentMonday}
         />

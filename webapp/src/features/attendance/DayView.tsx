@@ -1,5 +1,16 @@
 import { useState } from 'react';
-import { Button, FilterPills, LoadingState, groupTone, type PillTone } from '@shared/ui';
+import {
+  Button,
+  EMPTY_STATES,
+  EmptyState,
+  FilterPills,
+  LoadingState,
+  groupTone,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
+  type PillTone,
+} from '@shared/ui';
+import { formatDate } from '#shared/format/date-format.mjs';
 import { ChildTile } from './ChildTile';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
 import type { AttendanceDayData } from './useAttendanceDay';
@@ -19,6 +30,8 @@ const SECTION_TONE_CLASS: Record<PillTone, string> = {
 
 export interface DayViewProps {
   data: AttendanceDayData;
+  /** Data afișată (ISO), interpolată în textul stării goale (catalogul prezenta.nochildren). */
+  date: string;
   /** Deschide fereastra „Foi de prezență pe săptămână” (26-foaie-saptamana.md §3). */
   onOpenWeeklySheet: () => void;
   /** Lunea, butonul e principal (portocaliu plin); în celelalte zile, contur portocaliu. */
@@ -26,7 +39,7 @@ export interface DayViewProps {
 }
 
 /** Ecranul Ziua (18a): 4 carduri, filtru de grupă, o secțiune de plăci per grupă. */
-export function DayView({ data, onOpenWeeklySheet, weeklySheetIsMonday }: DayViewProps) {
+export function DayView({ data, date, onOpenWeeklySheet, weeklySheetIsMonday }: DayViewProps) {
   const [excuseTarget, setExcuseTarget] = useState<string | null>(null);
 
   if (data.status === 'loading') return <LoadingState />;
@@ -113,7 +126,13 @@ export function DayView({ data, onOpenWeeklySheet, weeklySheetIsMonday }: DayVie
         }
       />
 
-      {data.sections.length === 0 && <p className={styles.notice}>Niciun copil înscris la această dată.</p>}
+      {data.sections.length === 0 && (
+        <EmptyState
+          variant={EMPTY_STATES['prezenta.nochildren'].variant}
+          title={resolveEmptyStateTitle(EMPTY_STATES['prezenta.nochildren'], { data: formatDate(date) })}
+          description={resolveEmptyStateText(EMPTY_STATES['prezenta.nochildren'])}
+        />
+      )}
 
       {data.sections.map(section => (
         <div key={section.key} className={`${styles.section} ${SECTION_TONE_CLASS[section.tone]}`}>

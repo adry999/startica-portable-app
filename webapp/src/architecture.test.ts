@@ -164,10 +164,7 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
 
   const ALLOWED: readonly string[] = [
     'assign/AssignPage.module.css',
-    'attendance/DayView.module.css',
-    'attendance/MonthView.module.css',
     'attendance/WeeklySheet.module.css',
-    'attendance/WeeklySheetDialog.module.css',
     'backup/BackupPage.module.css',
     'backup/KindergartenSettings.module.css',
     'children/ChildFormDrawer.module.css',
@@ -278,8 +275,6 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
 
   const TEXT_ALLOWED: readonly string[] = [
     'assign/AssignPage.tsx',
-    'attendance/DayView.tsx',
-    'attendance/MonthView.tsx',
     'attendance/WeeklySheetDialog.tsx',
     'audit-log/AuditLogPage.tsx',
     'backup/ExchangeRateSettings.test.tsx',
@@ -317,6 +312,8 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
 
   const IMPORT_ALLOWED: readonly string[] = [
     'assign/AssignPage.tsx',
+    'attendance/DayView.tsx',
+    'attendance/MonthView.tsx',
     'backup/SyncSettings.tsx',
     'children/BirthdaysPage.tsx',
     'children/ChildProfileView.tsx',

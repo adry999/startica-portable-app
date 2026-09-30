@@ -10,13 +10,13 @@
 }
 
 /* A3c: cele 4 carduri mari devin o bandă compactă, un singur card alb cu 4 contoare pe un rând
-   și o bară de progres pe rândul 2 — vezi Prezenta.dc.html#18a (actualizat 29.09). */
+   și o bară de progres pe rândul 2 — vezi ecranul Ziua din Prezenta.dc.html (actualizat 29.09). */
 .summary {
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
   padding: var(--space-12) var(--space-18);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--white);
 }
@@ -132,7 +132,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-12);
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   border: 1.5px solid var(--border);
   padding: 14px 16px 16px;
 }
@@ -189,8 +189,8 @@
 .sectionMeta {
   font-size: 13px;
   font-weight: 700;
-  /* #5b666e din 18a — niciun token exact (--muted e #6b7780), la fel ca la Pontaj (A8, 23b). */
-  color: #5b666e;
+  /* Nuanța din 18a n-are token identic — cea mai apropiată nuanță existentă e --muted, la fel ca la Pontaj (A8, 23b). */
+  color: var(--muted);
 }
 
 /* Numele grupei trece în -ink-ul tonului secțiunii lui (A3c: fără buton la dreapta a antetului). */
@@ -238,9 +238,9 @@
   align-items: center;
   gap: var(--space-8);
   padding: var(--space-10) var(--space-12);
-  border-radius: 16px;
+  border-radius: var(--radius-md-lg);
   border: 1.5px solid var(--border);
-  background: #fff;
+  background: var(--white);
   text-align: left;
   cursor: pointer;
 }
@@ -261,7 +261,7 @@
 }
 
 .tileUnmarked {
-  background: #fff;
+  background: var(--white);
   border-color: var(--border);
 }
 
@@ -369,7 +369,7 @@
   justify-content: center;
   font-weight: 800;
   font-size: 12px;
-  color: #fff;
+  color: var(--white);
 }
 
 .markPresent {
@@ -386,13 +386,13 @@
 }
 
 .markUnmarked {
-  background: #fff;
+  background: var(--white);
   border: 1.5px solid var(--input-border);
 }
 
 .footNote {
   padding: var(--space-12) var(--space-16);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: var(--yellow-soft);
   font-size: 13px;
   color: var(--slate);

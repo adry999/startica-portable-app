@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Card, FilterPills, LoadingState, StatusIconButton, groupTone, type PillTone } from '@shared/ui';
+import {
+  Card,
+  EMPTY_STATES,
+  EmptyState,
+  FilterPills,
+  LoadingState,
+  StatusIconButton,
+  groupTone,
+  resolveEmptyStateTitle,
+  type PillTone,
+} from '@shared/ui';
 import { AttendanceDot } from '@shared/attendance';
 import { formatMonthName } from '#shared/format/date-format.mjs';
 import { ExcuseReasonPopover } from './ExcuseReasonPopover';
@@ -57,7 +67,11 @@ export function MonthView({ month, data }: MonthViewProps) {
       </h2>
 
       {data.rows.length === 0 ? (
-        <p className={styles.notice}>Niciun copil în această grupă.</p>
+        <EmptyState
+          variant={EMPTY_STATES['prezenta.month.group'].variant}
+          size={EMPTY_STATES['prezenta.month.group'].size}
+          title={resolveEmptyStateTitle(EMPTY_STATES['prezenta.month.group'])}
+        />
       ) : (
         <>
           <Card className={styles.tableCard}>
