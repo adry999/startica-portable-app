@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button, DateInput, NumberInput, Select, TextInput } from '@shared/ui';
+import { Button, ChipSelect, DateInput, NumberInput, Select, TextInput } from '@shared/ui';
 import { today } from '@domain/calendar-month.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -58,18 +58,12 @@ function QuickAddExpense({
         <Select ariaLabel="Metodă" value={method} onChange={setMethod} options={METHOD_OPTIONS} />
         <Button type="submit">Adaugă</Button>
       </div>
-      <div className={styles.quickAddChips}>
-        {categoryNames.map(name => (
-          <button
-            key={name}
-            type="button"
-            className={name === category ? `${styles.quickAddChip} ${styles.quickAddChipActive}` : styles.quickAddChip}
-            onClick={() => setCategory(name)}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      <ChipSelect
+        ariaLabel="Categorie"
+        value={category}
+        onChange={setCategory}
+        options={categoryNames.map(name => ({ value: name, label: name }))}
+      />
     </form>
   );
 }

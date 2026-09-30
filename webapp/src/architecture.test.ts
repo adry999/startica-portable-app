@@ -124,9 +124,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     'children/ChildFormDrawer.tsx',
     'conflicts/ConflictsPage.tsx',
     'dashboard/DashboardPage.tsx',
-    'expenses/DailyExpensesView.tsx',
-    'expenses/ExpenseFormDrawer.tsx',
-    'expenses/ExpensesFilters.tsx',
     // Rândul candidatului din căutare (avatar + nume + pastilă) e un hit-area pe tot rândul, ca
     // ChildTile — și togglurile de zi L-V (22×22, comutare multiplă, nu `Button`) n-au variantă potrivită.
     'groups/GroupTeamPicker.tsx',
@@ -174,7 +171,6 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'backup/KindergartenSettings.module.css',
     'children/ChildFormDrawer.module.css',
     'conflicts/ConflictsPage.module.css',
-    'expenses/ExpensesPage.module.css',
     'fee-setup/FeeSetupPage.module.css',
     // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
     // shared/ui (Board, DateInput, NumberInput…), unde nu e scanată de R2; nu există un token
@@ -293,7 +289,6 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'children/ChildProfileView.test.tsx',
     'children/ChildProfileView.tsx',
     'children/ChildrenPage.tsx',
-    'expenses/ExpensesCategoryManager.tsx',
     'fee-setup/FeeSetupPage.tsx',
     // „Niciun rezultat pentru căutare” pe panoul „Fără grupă” — text de căutare fără rezultate,
     // intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca AssignPage/AuditLogPage.
@@ -329,6 +324,7 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'children/ChildrenPage.tsx',
     'conflicts/ConflictsPage.tsx',
     'dashboard/DashboardPage.tsx',
+    'expenses/ExpensesCategoryManager.tsx',
     'fee-setup/FeeSetupPage.tsx',
     'groups/GroupsBoard.tsx',
     'groups/GroupsPage.tsx',

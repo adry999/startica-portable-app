@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { FilterPills, Icon, SearchInput } from '@shared/ui';
+import { useState } from 'react';
+import { Button, FilterPills, Icon, Popover, SearchInput } from '@shared/ui';
 import { categoryStyleFor } from './useExpenses';
 import { METHOD_TONE } from './expenseColumns';
 import styles from './ExpensesPage.module.css';
@@ -33,30 +33,41 @@ function ArchiveFilterDropdown({
   value: ArchiveFilter;
   onChange: (value: ArchiveFilter) => void;
 }) {
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
 
   return (
-    <details ref={detailsRef} className={styles.archiveDropdown}>
-      <summary>
+    <div className={styles.archiveDropdown}>
+      <Button
+        variant="outline"
+        className={styles.archiveDropdownTrigger}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(current => !current)}
+      >
         {ARCHIVE_LABEL[value]} <Icon name="chevron-down" size={14} />
-      </summary>
-      <div className={styles.archiveDropdownPanel} role="menu">
-        {ARCHIVE_OPTIONS.map(option => (
-          <button
-            key={option}
-            type="button"
-            role="menuitemradio"
-            aria-checked={option === value}
-            onClick={() => {
-              onChange(option);
-              if (detailsRef.current) detailsRef.current.open = false;
-            }}
-          >
-            {ARCHIVE_LABEL[option]}
-          </button>
-        ))}
-      </div>
-    </details>
+      </Button>
+      {open && (
+        <Popover onClose={() => setOpen(false)} ariaLabel="Filtru arhivare" className={styles.archiveDropdownPanel}>
+          <div role="menu" className={styles.archiveDropdownMenu}>
+            {ARCHIVE_OPTIONS.map(option => (
+              <Button
+                key={option}
+                variant="ghost"
+                className={styles.archiveDropdownOption}
+                role="menuitemradio"
+                aria-checked={option === value}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+              >
+                {ARCHIVE_LABEL[option]}
+              </Button>
+            ))}
+          </div>
+        </Popover>
+      )}
+    </div>
   );
 }
 

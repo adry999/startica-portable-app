@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Button, IconButton, TextInput, useToast } from '@shared/ui';
+import { Button, EMPTY_STATES, EmptyState, IconButton, TextInput, resolveEmptyStateTitle, useToast } from '@shared/ui';
 import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseCategory } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
@@ -55,7 +55,11 @@ export function ExpensesCategoryManager({
     <div className={styles.chipsRow}>
       <div className={styles.chips}>
         {categories.length === 0 ? (
-          <span className={styles.notice}>Nicio categorie adăugată încă — se folosesc doar sugestiile implicite.</span>
+          <EmptyState
+            variant={EMPTY_STATES['cheltuieli.categories'].variant}
+            size={EMPTY_STATES['cheltuieli.categories'].size}
+            title={resolveEmptyStateTitle(EMPTY_STATES['cheltuieli.categories'])}
+          />
         ) : (
           categories.map(category =>
             editingCategoryId === category.id ? (

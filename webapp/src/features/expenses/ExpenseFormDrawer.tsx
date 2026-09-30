@@ -1,5 +1,5 @@
-import { useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { AmountInput, Button, DateInput, Drawer, Field, Select, TextArea, TextInput } from '@shared/ui';
+import { useRef, useState, type FormEvent } from 'react';
+import { AmountInput, Button, DateInput, Drawer, Field, FilterPills, Select, TextArea, TextInput } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
 import { GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
@@ -122,26 +122,17 @@ export function ExpenseFormDrawer({
         </Field>
         <div className={styles.editorField}>
           Categorie
-          <div className={styles.categoryChips} role="radiogroup" aria-label="Categorie">
-            {categoryNames.map(name => {
-              const { color } = categoryStyleFor(name);
-              const selected = name === category;
-              return (
-                <button
-                  key={name}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  className={styles.categoryChip}
-                  data-selected={selected || undefined}
-                  style={{ '--chip-color': color } as CSSProperties}
-                  onClick={() => setCategory(name)}
-                >
-                  {name}
-                </button>
-              );
-            })}
-          </div>
+          <FilterPills
+            className={styles.categoryChips}
+            groups={[
+              {
+                label: '',
+                value: category,
+                onChange: setCategory,
+                options: categoryNames.map(name => ({ value: name, label: name, tone: categoryStyleFor(name).tone })),
+              },
+            ]}
+          />
         </div>
         <Field label="Metodă" htmlFor="expense-method">
           <Select
