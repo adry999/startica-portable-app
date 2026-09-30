@@ -4,7 +4,7 @@ Din runda trecută, următoarele sunt verificate în cod: B3 complet (Servicii 1
 
 ## 0. Pachetul de design nu e complet în repo
 În `docs/design/` lipsesc fișierele create după 29.09, 19:56. Copiază-le din `design_final_startica/` (suprascrie):
-- `DS Fundamente.dc.html`, `DS Fundamente 2.dc.html`, `DS Componente.dc.html`, `DS Componente 2.dc.html`, `DS Tabel si filtre.dc.html`, `Componente formular.dc.html`, `DS Incarcare si stari.dc.html`, `DS Date si grafice.dc.html`, `DS Tipare de pagina.dc.html`, `DS Diverse.dc.html`
+- `DS Fundamente.dc.html`, `DS Fundamente 2.dc.html`, `DS Componente.dc.html`, `DS Componente 2.dc.html`, `DS Tabel si filtre.dc.html`, `Componente formular.dc.html`, `DS Incarcare si stari.dc.html`, `Stari goale.dc.html`, `screens/30-stari-goale.md`, `DS Date si grafice.dc.html`, `DS Tipare de pagina.dc.html`, `DS Diverse.dc.html`
 - `DS-IMPLEMENTARE.md`, `AUDIT-DESIGN-COD.md`, `COMPONENTE.md` (§0–§0i), `ECRANE.md`, `CLAUDE-md-snippet.md` (secțiunea „Design system” → în `CLAUDE.md` din rădăcină)
 - `Sms.dc.html` (11c/11d), `Administrare.dc.html` (10e, fără „Zonă periculoasă”), `Personal.dc.html` (23m marcat respins), `De notificat.dc.html` („SMS conectat”), `Formulare.dc.html` (15b „…prin SMS”)
 
@@ -27,10 +27,11 @@ Commit separat: `docs(design): design system 25–34 + DS-IMPLEMENTARE`.
 Tot planul, regulile R1–R8 și evidența pe module sunt în `docs/design/DS-IMPLEMENTARE.md`. Specul e în `COMPONENTE.md` §0–§0i. Regula: ecranele se construiesc doar din componente din `@shared/ui`.
 - `TonePicker` există deja, dar diferă de 32c: fundalul pătratului = `-soft`, selectat = border 2px `-ink` + ✓, `aria-label` cu numele românesc („Portocaliu”, „Mentă”…). Aliniază-l.
 - `ServicesSettings` (nou) are deja 2 `<input>` brute, caracterul ⋮⋮, „Se încarcă…” ca text și eroare ca `<p>`. Intră în migrare odată cu Administrare.
+- **Stări goale automate (29h, 35a/35b, `screens/30-stari-goale.md`):** `EmptyState` cu 4 variante, aleasă de `DataTable`/`Board`/`MonthCalendar`/`DayGrid`/`Kpi` din `state`. Textele doar în `@shared/ui/empty-states.ts`. Ecranele dau doar `empty="<cheie>"`. Regula R9 le verifică.
 - Nu începe migrarea ecranelor (pasul 9) înainte ca pașii 1–8 să fie gata pentru componentele de care are nevoie modulul.
 
-## 5. O singură decizie deschisă
-- **Contrast buton primar** (alb pe `--orange` = 2,4, sub WCAG): `--orange-strong` / text slate / excepție de brand. Până la decizie, nu adăuga alte texte albe pe `--orange`.
+## 5. Contrast buton primar — decis 30.09
+- Token nou `--orange-strong: #b85a00` (alb pe el = 4,7:1, trece AA). Toate fundalurile cu text alb (buton primar, pastila „azi”, insigne pline, pasul activ) trec pe `--orange-strong`; umbra butonului `rgba(184,90,0,.28)`. `--orange` (#ef8a1d) rămâne pentru accente fără text alb: bare, puncte, borduri de focus, cercuri decorative. Test: nicio pereche `color: #fff` / `var(--white)` pe `--orange` în `@shared/ui`. Designul e deja actualizat.
 
 ## Nu se face (decis 29.09, 23:19)
 23m (salariul pe fișă), numele în cheltuiala de salariu, „Probleme la backup”, „Zonă periculoasă”, Import CSV copii, Telegram pentru părinți. A9 (documente) rămâne amânat.

@@ -51,7 +51,7 @@
                 <span style="position:relative;padding:9px 16px;border-radius:999px;background:#fff;font-weight:800;font-size:14px">Sincronizează acum</span>
               </div>
               <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
-                <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Calculatoare conectate</span><span onClick="{{ openAdd }}" style="padding:8px 16px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:13px;cursor:pointer">+ Conectează un calculator</span></div>
+                <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Calculatoare conectate</span><span onClick="{{ openAdd }}" style="padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px;cursor:pointer">+ Conectează un calculator</span></div>
                 <sc-for list="{{ devices }}" as="d" hint-placeholder-count="3">
                   <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 170px 120px;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid #f3eee5;background:{{ d.rowBg }}">
                     <span style="width:44px;height:44px;border-radius:12px;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-size:20px">▭</span>
@@ -112,7 +112,7 @@
             </sc-for>
           </div>
           <span style="font-size:13px;color:#6b7780">Rândurile galbene diferă. Celelalte câmpuri sunt identice.</span>
-          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><span style="padding:10px 16px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Păstrează varianta de pe acest calculator</span><span style="padding:10px 18px;border-radius:999px;background:#ef8a1d;color:#fff;font-weight:800;font-size:14px">Păstrează varianta de pe {{ cur.dev }}</span></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><span style="padding:10px 16px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Păstrează varianta de pe acest calculator</span><span style="padding:10px 18px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:14px">Păstrează varianta de pe {{ cur.dev }}</span></div>
         </div>
       </div>
       <span style="font-size:13px;color:#6b7780;max-width:1100px">Achitările nu intră în conflict: două achitări introduse pe calculatoare diferite se păstrează amândouă. Dacă par dublate (același copil, aceeași sumă, aceeași zi), apar în De verificat.</span>

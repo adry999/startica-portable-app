@@ -42,3 +42,7 @@ Toate deciziile de produs din sesiunile de design. **Au prioritate** față de o
 ## Deschise (de întrebat utilizatorul dacă apar)
 - Dacă backend-ul poate trimite confirmarea pe Telegram (altfel bifa se ascunde).
 - Ce anume „nu e în logică” la salarii — cele 5 verificări din A3f dau răspunsul.
+
+
+## 30.09 — Contrast buton primar
+Varianta (a): `--orange-strong` #b85a00 pentru orice fundal cu text alb (4,7:1). `--orange` #ef8a1d rămâne pentru accente fără text. Aplicat în toate fișierele de design.

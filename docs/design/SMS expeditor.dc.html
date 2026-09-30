@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#ef8a1d}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:36px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:960px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Sms.dc.html">Mesaje SMS</a><a href="Sms.dc.html#11b">Șabloane și furnizor</a><span style="font-weight:800;color:#3a4750">Numele expeditorului</span></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Cum arată SMS-ul la părinte</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Mesajele de la grădiniță și de la bazin, cu cele patru variante de expeditor. Textele sunt cele din șabloane, fără diacritice, cum pleacă prin sms.md. Numele expeditorului poate avea cel mult 11 caractere și se înregistrează o singură dată la furnizor.</p>
+  </div>
+
+  <sc-for list="{{ sets }}" as="set" hint-placeholder-count="2">
+  <div style="display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;align-items:baseline;gap:14px"><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:30px;margin:0">{{ set.title }}</h2><span style="font-size:15px;color:#6b7780">{{ set.sub }}</span></div>
+  <div style="display:flex;gap:40px;flex-wrap:nowrap;align-items:flex-start;width:max-content">
+    <sc-for list="{{ set.senders }}" as="s" hint-placeholder-count="4">
+      <div id="{{ s.id }}" style="display:flex;flex-direction:column;gap:16px;width:340px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:{{ s.badge }};color:#fff;border-radius:10px;padding:2px 12px">{{ s.id }}</span><span style="font-size:16px;font-weight:800">{{ s.name }}</span><sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Recomandat</span></sc-if></div>
+        <div style="width:340px;height:700px;box-sizing:border-box;padding:12px;border-radius:52px;background:#1d2226;box-shadow:0 30px 70px rgba(58,71,80,.22)">
+          <div style="width:100%;height:100%;border-radius:42px;background:#fff;overflow:hidden;display:flex;flex-direction:column;font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 28px 0;font-size:14px;font-weight:600;color:#111"><span>9:41</span><span style="width:96px;height:26px;border-radius:99px;background:#1d2226"></span><span style="font-size:12px">5G ▮</span></div>
+            <div style="display:flex;align-items:center;padding:10px 16px 12px;border-bottom:1px solid #e5e5ea;background:#f7f7f8">
+              <span style="width:28px;font-size:26px;line-height:1;color:#0a84ff">‹</span>
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+                <span style="width:46px;height:46px;border-radius:50%;background:linear-gradient(#a7acb4,#868b93);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600">{{ s.initial }}</span>
+                <span style="font-size:13px;font-weight:600;color:#111">{{ s.name }} ›</span>
+              </div>
+              <span style="width:28px"></span>
+            </div>
+            <div style="flex:1;padding:14px 14px 0;display:flex;flex-direction:column;gap:6px;overflow:hidden">
+              <span style="align-self:center;font-size:11px;font-weight:600;color:#8e8e93;padding-bottom:4px">Text Message · Azi</span>
+              <sc-for list="{{ s.msgs }}" as="m" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:3px;padding-bottom:6px">
+                  <div style="max-width:250px;align-self:flex-start;padding:9px 13px;border-radius:18px 18px 18px 5px;background:#e9e9eb;font-size:14px;line-height:1.35;color:#111">{{ m.text }}</div>
+                  <span style="font-size:10px;color:#8e8e93;padding-left:6px">{{ m.time }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="padding:8px 14px 10px;display:flex;flex-direction:column;align-items:center;gap:10px">
+              <span style="font-size:11px;color:#8e8e93;text-align:center">Nu poți răspunde. Expeditorul nu acceptă răspunsuri.</span>
+              <span style="width:120px;height:5px;border-radius:99px;background:#111"></span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:18px;background:#fff;border:1px solid #ede7dc">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#f4f1ea">
+            <span style="width:30px;height:30px;border-radius:8px;background:#34c759;flex-shrink:0"></span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column"><div style="display:flex;font-size:13px;font-weight:800"><span style="flex:1">{{ s.name }}</span><span style="font-size:11px;font-weight:600;color:#9aa3a9">acum</span></div><span style="font-size:12px;color:#5b666e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.preview }}</span></div>
+          </div>
+          <sc-if value="{{ s.showNote }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;line-height:1.5;color:#5b666e;text-wrap:pretty">{{ s.note }}</span></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  </div>
+  </sc-for>
+
+  <div style="max-width:960px;padding:22px 26px;border-radius:22px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:8px">
+    <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px">Recomandare: Startica</span>
+    <span style="font-size:15px;line-height:1.55;color:#5b666e;text-wrap:pretty">Se scrie la fel ca logo-ul și ca semnătura din mesaje („… Va multumim! Startica”). Se citește ușor în lista de notificări și arată ca un nume, nu ca o reclamă. După înregistrare se completează în Administrare → Notificări → Șabloane → Furnizor SMS → Expeditor (<a href="Sms.dc.html#11b">11b</a>).</span>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const M = a => a.map(([text, time]) => ({ text, time }));
+    const kg = M([
+      ['Buna ziua, Andrei! Va reamintim ca taxa Startica pentru Timur, luna septembrie 2026, de 9.600 lei, avea scadenta pe 20. Va multumim! Startica', '09:12'],
+      ['Buna ziua, Valentin! Am primit 5.000 lei pentru Maria, rest de achitat 4.993 lei. Va multumim! Startica', '11:30'],
+      ['Buna ziua, Lilia! Am primit plata de 12.981 lei pentru Ilinca. Va multumim! Startica', '14:05'],
+      ['Buna ziua, Lilia! Maine, 1 octombrie, gradinita se deschide la ora 9:00 din cauza lucrarilor la apa. Startica', '17:48']
+    ]);
+    const pool = M([
+      ['Buna ziua, Andrei! Timur este programat la bazin in fiecare marti, la 16:00, incepand cu 7 octombrie. Antrenor: Victor. Startica', '10:05'],
+      ['Buna ziua! Maine, 1 octombrie, la 16:00, Timur are antrenament la bazin. Nu uitati casca si papucii. Startica', '18:00'],
+      ['Buna ziua, Andrei! Timur nu a venit azi la bazin (16:00). Daca a fost bolnav, anuntati-ne ca sa fie motivat. Startica', '16:20'],
+      ['Buna ziua, Andrei! Bazin, septembrie: Timur a avut 4 sedinte x 150 lei = 600 lei. Suma s-a adaugat la taxa lunii. Startica', '09:30']
+    ]);
+    const S = [
+      ['1', 'startica.md', 'Arată adresa site-ului. Pare mai degrabă un domeniu decât un nume. Are exact 11 caractere, maximul permis.', false],
+      ['2', 'startica', 'Discret, dar arată ca un cont tehnic, nu ca numele grădiniței. Nu se potrivește cu logo-ul.', false],
+      ['3', 'Startica', 'La fel ca logo-ul și semnătura din mesaje. Arată ca un nume propriu, ca un contact salvat.', true],
+      ['4', 'STARTICA', 'Se vede cel mai tare, dar cu majuscule pare reclamă sau alertă. Mai ales pe lângă mesaje de bani.', false]
+    ];
+    const mk = (pre, msgs, showNote) => S.map(([n, name, note, rec]) => ({ id: pre + n, name, initial: 'S', note, rec, showNote, msgs, preview: msgs[0].text, badge: rec ? '#b85a00' : '#3a4750' }));
+    const sets = [
+      { title: 'Grădiniță', sub: 'restanță · plată parțială · confirmare plată · mesaj liber', senders: mk('S', kg, true) },
+      { title: 'Bazin', sub: 'programare nouă · reamintire antrenament · absență · suma lunii', senders: mk('B', pool, false) }
+    ];
+    return { sets };
+  }
+}
+</script>
+</body>
+</html>

@@ -308,7 +308,7 @@ class Component extends DCLogic {
       histList: hist.map((e, i) => ({ label: e.label, time: e.time, w: e.bulk ? '800' : '600', undo: undoTo(i), btn: i === hist.length - 1 ? 'Anulează' : 'Anulează până aici' })).reverse(),
       undoAll: undoTo(0),
       markAll: () => bulk(all, 'toate grupele'), nmCount: cnt(''), markAllLbl: cnt('') ? 'Nemarcații (' + cnt('') + ') → prezenți' : 'Toți sunt marcați',
-      markAllBg: cnt('') ? '#ef8a1d' : '#c9c4ba', markAllSh: cnt('') ? '0 4px 10px rgba(239,138,29,.28)' : 'none', markAllCur: cnt('') ? 'pointer' : 'default'
+      markAllBg: cnt('') ? '#ef8a1d' : '#c9c4ba', markAllSh: cnt('') ? '0 4px 10px rgba(184,90,0,.28)' : 'none', markAllCur: cnt('') ? 'pointer' : 'default'
     };
     const tot = all.length;
     const stats = [['prezenți', cnt('p'), '#3f9a6b', '#3f9a6b', '#2e6b4c', '#3f9a6b'], ['absenți', cnt('a'), '#e9527c', '#e9527c', '#b0284f', '#e9527c'], ['motivați', cnt('m'), '#e0b400', '#e0b400', '#7a5d00', '#e0b400'], ['nemarcați', cnt(''), '#fff', '#c9c4ba', '#3a4750', 'transparent']].map(([l, v, dot, dotBd, num, bar], i) => ({ l, v: String(v), dot, dotBd, num: v ? num : '#c9c4ba', bar, w: tot ? (v / tot * 100).toFixed(1) : 0, sep: i < 3 ? '1px solid #f3eee5' : 'none' }));

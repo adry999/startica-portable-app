@@ -195,7 +195,6 @@ Referință: `De rezolvat.dc.html#9c`, spec `screens/11-de-rezolvat.md` §9c.
 Referință: `Administrare.dc.html#10c`, `#10b`.
 - **10c:** sub file, 3 carduri de stare `repeat(3,1fr)` gap 14 (padding `20px 22px`, radius 22): două `--mint-soft`, al treilea `--yellow-soft` + border 2px `--yellow` când există o problemă (ex. backup extern lipsă). Apoi `minmax(0,1.3fr) minmax(0,1fr)` gap 16: stânga „Copii de siguranță” ca listă în card; dreapta cardul „Grădinița” (grid `auto 1fr`) + card border 1.5px `--pink` cu acțiunea periculoasă.
 - **10b:** `minmax(0,1fr) minmax(0,1.3fr)` gap 16: stânga cardul Telegram, dreapta lista de comutatoare.
-- **Descope 29.09** (`INTREBARI.md`/`RASPUNSURI.md` §A7): „Probleme la backup” (10b), „Zonă periculoasă” (10c, cardul border `--pink`) și „Importă copii din CSV” nu se construiesc — rămân doar în `.dc.html`, nu se mai tratează ca goluri de implementat.
 
 ## A8. Diferențe mici (un singur commit)
 - **Antet (toate modulele):** eyebrow-ul nu mai conține filiala („Organizare”, nu „Organizare · Filiala 1 Buiucani”). Filiala apare doar în butonul-dropdown de filiale din meniul lateral. Actualizează și `screens/17-filiale.md`.

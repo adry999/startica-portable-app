@@ -125,3 +125,7 @@ Pe Prezența (18a) chenarul și avatarul au nevoie de două nuanțe noi per ton 
 | A (absență personal) | `--muted` | — | alb |
 | Serviciu Grădiniță | — | `--neutral-soft` | `#5b666e` |
 | Serviciu Bazin | — | `--blue-soft` | `--blue-ink` |
+
+
+## `--orange-strong` (nou, 30.09)
+`#b85a00` — fundal pentru text alb (buton primar, insigne pline, pastila „azi”). Contrast cu alb 4,7:1. Umbra buton: `rgba(184,90,0,.28)`. `--orange` nu mai poartă text alb.

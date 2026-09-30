@@ -56,7 +56,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |
 | `Pagination` | 27a | „Pe pagină 25 ▾” · „1–24 din 24” · ‹ 1 2 3 › (32×32 radius 10, pagina activă slate). Se resetează la schimbarea filtrelor. |
 | `groupBy` + restrângere | 27f | Antet de grup `#faf7f1`, Baloo 15, contor, sumă pe grup, ▼/▶. |
-| Gol / fără rezultate / încărcare | 27f | `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
+| Gol / fără rezultate / încărcare | 27f · 29h | Automat din `state` + `empty="<cheie>"` (29h). `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
 | `SelectionBar` | 27g | În linie (Copii, Cheltuieli) sau `floating` (Achitări). „Selectează toate N”. Slot danger. Esc = Anulează. |
 | `ColumnMenu` + `density` **nou** | 27h | ⚙ în bară: coloane vizibile (tragere pentru ordine, cele obligatorii blocate) + Normal/Compact. Se ține minte local, per tabel. |
 | Export | 27h | „Exportă” deschide panoul comun (ca 19b): Excel/CSV/PDF, filtrate / toate / selecția. |
@@ -178,7 +178,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `Toast` (+action) | Toast slate cu „↶ Anulează” | arhivări, note | Opțiune `persistent` (fără auto-închidere) — rămâne pentru cazuri viitoare; momentan nefolosită (marcarea în masă a fost scoasă). |
 | `MonthStepper` / `DayStepper` | „‹ Septembrie 2026 ›” | Dashboard, Situația, Salarii, Pontaj, Prezența | Salarii: blochează lunile neîncheiate (`max`). |
 | `ProfileLayout` / `ProfileSection` / `StatCard` | Fișa copilului, fișa angajatului | 2b, 23j | Grila `minmax(0,1fr) minmax(0,1.35fr)` (A3); prop `columns` ca 23j să-și păstreze proporția. |
-| `EmptyState` | 3 variante | liste | Aliniat. |
+| `EmptyState` | 4 variante (`first` · `done` · `period` · `noResults`) | toate listele, grilele, Dashboard | **Automat** (29h): `DataTable`/`Board`/`MonthCalendar`/`DayGrid` primesc `empty="<cheie>"` și aleg varianta din `state`. Textele doar în `@shared/ui/empty-states.ts` (35b). Ecranele nu randează stare goală proprie. |
 | `ScrollArea` | Bara subțire 15g | meniu, panouri, popover-e | Aliniat. |
 | `BnmRateLink` | ↗ spre bnm.md | curs în 12a/12b | Folosit și de pastila nouă de curs (vezi 2). |
 | `groupTone()` | Tonul grupei | peste tot | Să citească `group.tone` ales manual, nu doar poziția (inconsistență semnalată în COADA). |
