@@ -603,7 +603,13 @@ Confirmat cu utilizatorul: se continuă acum, în runde succesive de subagenți 
 
 `npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 994/994 teste) — verzi.
 
-**9 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite). **Urmează:** De rezolvat, De notificat, Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
+**Runda 10 — De rezolvat** (assign/conflicts/review): `AssignPage`/`ReviewPage` rescrise pe Checkbox/Button. `conflicts/` neatins — `DiffTable` (34e) ar cere alegere pe câmp, care nu există azi în `ConflictDetail` (doar rezolvare în bloc); construirea ei ar fi funcție nouă pe cod de sincronizare, nu refactor.
+
+**Runda 11 — De notificat** (NotifyPage): 6/7 butoane brute → Button. `MasterDetail`/`SmsPreview` nu s-au extras (layout nu se potrivește / deja acoperit de SmsConfirmDialog).
+
+`npm run check` (root, 1190/1192 + 2 skip) + webapp (typecheck curat, 994/994 teste) — verzi.
+
+**11 din 15 module gata** (Achitări, Copii, Prezența, Cheltuieli, Situația, Personal, Bazin, Grupe, Vizite, De rezolvat, De notificat). **Urmează:** Administrare, Raport, Tipăriri, Pornire — per ordinea din `DS-IMPLEMENTARE.md` §2.9.
 
 ## De discutat cu utilizatorul
 - **Sincronizare 14b/14c** — rezolvat: motorul a fost reparat (auditul final de mai sus, S-1..S-5), UI-ul (Task 9-12) era deja construit peste el; nu mai e o alegere de făcut.
