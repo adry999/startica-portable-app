@@ -8,7 +8,7 @@
 .indicator {
   flex: none;
   display: flex;
-  color: var(--orange);
+  color: var(--orange-ink);
 }
 
 .dot {

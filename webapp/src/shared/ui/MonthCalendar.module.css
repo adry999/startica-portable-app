@@ -77,7 +77,7 @@
   min-width: 20px;
   padding: 0 var(--space-4);
   border-radius: var(--radius-pill);
-  background: var(--orange);
+  background: var(--orange-strong);
   color: var(--white);
 }
 

@@ -33,6 +33,14 @@
   box-shadow: none;
 }
 
+.primary:hover:not(:disabled) {
+  background: var(--orange-strong-hover);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--orange-strong-pressed);
+}
+
 .ghost {
   border: 1px solid var(--input-border);
   background: none;

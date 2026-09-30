@@ -431,6 +431,51 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   });
 });
 
+/**
+ * R10 (PROMPT-CLAUDE-CODE-6.md §1.6) — `--orange` nu mai poartă text, nici alb (buton/pastilă
+ * plină trece pe `--orange-strong`), nici direct pe el (text pe alb/crem trece pe `--orange-ink`).
+ * Fără allowlist de la început — `--orange` a fost golit complet de text de la 30.09 încoace.
+ */
+describe('R10 — --orange rămâne doar bordură/punct/bară/fundal soft, fără text peste', () => {
+  const BG_ORANGE_PATTERN = /(?<![-\w])background(?:-color)?\s*:\s*var\(--orange\)\s*[;)]/;
+  const COLOR_WHITE_PATTERN = /(?<![-\w])color\s*:\s*var\(--white\)\s*[;)]/;
+  const COLOR_ORANGE_PATTERN = /(?<![-\w])color\s*:\s*var\(--orange\)\s*[;)]/;
+
+  function collectModuleCssFiles(): string[] {
+    return readdirSync(SRC_ROOT, { withFileTypes: true, recursive: true })
+      .filter(entry => entry.isFile() && entry.name.endsWith('.module.css'))
+      .map(entry => join(entry.parentPath, entry.name));
+  }
+
+  function toSrcRelative(absolutePath: string): string {
+    return relative(SRC_ROOT, absolutePath).split(sep).join('/');
+  }
+
+  function stripCssComments(text: string): string {
+    return text.replace(/\/\*[\s\S]*?\*\//g, '');
+  }
+
+  /** Un bloc de regulă CSS ține de la ultima `}`/`{` până la `{` proprie — nu e nevoie de un
+   * parser real, `--orange` fiind mereu folosit ca `proprietate: valoare;` simplu în acest cod. */
+  function cssBlocks(text: string): string[] {
+    return stripCssComments(text).match(/[^{}]*\{[^{}]*\}/g) ?? [];
+  }
+
+  it('niciun bloc cu fundal --orange + text alb, și niciun text direct pe --orange', () => {
+    const violations = collectModuleCssFiles()
+      .flatMap(file => {
+        const blocks = cssBlocks(readFileSync(file, 'utf8'));
+        const hasViolation = blocks.some(
+          block =>
+            (BG_ORANGE_PATTERN.test(block) && COLOR_WHITE_PATTERN.test(block)) || COLOR_ORANGE_PATTERN.test(block),
+        );
+        return hasViolation ? [toSrcRelative(file)] : [];
+      })
+      .sort();
+    expect(violations).toEqual([]);
+  });
+});
+
 describe('granițele dintre module (webapp/src/features)', () => {
   it('niciun fișier dintr-un feature nu importă direct dintr-un alt feature', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-feature');

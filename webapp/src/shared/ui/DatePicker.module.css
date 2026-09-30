@@ -73,7 +73,7 @@
 }
 
 .selected {
-  background: var(--orange);
+  background: var(--orange-strong);
   color: var(--white);
 }
 

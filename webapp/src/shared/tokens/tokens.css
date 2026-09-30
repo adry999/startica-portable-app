@@ -48,6 +48,9 @@
   /* Fundal pentru text alb (buton primar, insigne pline, pastila „azi") — contrast 4,7:1 cu alb.
      `--orange` nu mai poartă text alb (TOKENS.md „--orange-strong (nou, 30.09)"). */
   --orange-strong: #b85a00;
+  /* Stările Button primary/SplitButton pe --orange-strong (AUDIT-DESIGN-30-09-final.md A). */
+  --orange-strong-hover: #a34f00;
+  --orange-strong-pressed: #8a4300;
   --orange-soft: #fcead3;
   --slate: #3a4750;
   --muted: #6b7780;
