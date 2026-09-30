@@ -11,32 +11,6 @@
   color: var(--muted);
 }
 
-.pills {
-  display: flex;
-  gap: var(--space-8);
-  flex-wrap: wrap;
-}
-
-.pill,
-.pillActive {
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
-}
-
-.pill {
-  background: var(--neutral-soft);
-  color: var(--slate);
-}
-
-.pillActive {
-  background: var(--slate);
-  color: var(--white);
-}
-
 .intervalInputs {
   display: flex;
   align-items: center;
@@ -45,70 +19,10 @@
   color: var(--muted);
 }
 
-.intervalInputs input {
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-input);
-  padding: 6px 10px;
-  font: inherit;
-}
-
-.branchOptions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.branchOption {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--slate);
-}
-
 .hint {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
-}
-
-.formatGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-10);
-}
-
-.formatCard,
-.formatCardActive {
-  padding: 14px 16px;
-  border-radius: var(--radius-md-lg);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  text-align: left;
-  cursor: pointer;
-  background: var(--white);
-}
-
-.formatCard {
-  border: 1.5px solid var(--border);
-}
-
-.formatCardActive {
-  border: 2px solid var(--orange);
-  background: var(--cream);
-}
-
-.formatTitle {
-  font-weight: 800;
-  font-size: 15px;
-}
-
-.formatHint {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.4;
 }
 
 .checkboxes {

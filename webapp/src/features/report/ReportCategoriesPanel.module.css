@@ -29,6 +29,8 @@
   font-size: 14px;
 }
 
+/* Pătrat rotunjit 10×10, nu cerc — 3px pe o cutie de 10px n-are corespondent în scara de tokeni
+   (5px ar rotunji punctul într-un cerc complet, schimbând forma din artboard). Rămâne literal (R2). */
 .dot {
   width: 10px;
   height: 10px;
@@ -52,17 +54,11 @@
 
 .bar {
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
   background: var(--neutral-soft);
   display: flex;
 }
 
 .barFill {
-  border-radius: 4px;
-}
-
-.empty {
-  margin: 0;
-  color: var(--subtle);
-  font-size: 14px;
+  border-radius: var(--radius-pill);
 }

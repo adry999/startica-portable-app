@@ -3,7 +3,7 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--yellow-soft);
-  border: 1px solid #f6e3a6;
+  border: 1px solid var(--yellow-border);
   border-radius: var(--radius-pill);
   padding: var(--space-4);
 }

@@ -1,4 +1,4 @@
-import { Icon, MonthPicker } from '@shared/ui';
+import { IconButton, MonthPicker } from '@shared/ui';
 import type { ReportMode, ReportPeriod } from './useAccountingReport';
 import styles from './PeriodStepper.module.css';
 
@@ -25,23 +25,19 @@ export function PeriodStepper({ mode, anchorMonth, period, onAnchorMonthChange }
 
   return (
     <div className={styles.root}>
-      <button
-        type="button"
-        aria-label="Perioada anterioară"
+      <IconButton
+        icon="chevron-left"
+        ariaLabel="Perioada anterioară"
         className={styles.arrow}
         onClick={() => onAnchorMonthChange(shiftAnchorMonth(anchorMonth, mode, -1))}
-      >
-        <Icon name="chevron-left" />
-      </button>
+      />
       <span className={styles.label}>{period.label}</span>
-      <button
-        type="button"
-        aria-label="Perioada următoare"
+      <IconButton
+        icon="chevron-right"
+        ariaLabel="Perioada următoare"
         className={styles.arrow}
         onClick={() => onAnchorMonthChange(shiftAnchorMonth(anchorMonth, mode, 1))}
-      >
-        <Icon name="chevron-right" />
-      </button>
+      />
     </div>
   );
 }

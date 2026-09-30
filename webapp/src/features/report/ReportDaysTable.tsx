@@ -1,4 +1,4 @@
-import { Button, Card } from '@shared/ui';
+import { Button, Card, EMPTY_STATES, EmptyState, resolveEmptyStateText, resolveEmptyStateTitle } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { AccountingReport, ReportMode } from './useAccountingReport';
@@ -55,7 +55,13 @@ export function ReportDaysTable({ report, mode, onOpenPayments }: ReportDaysTabl
           <span className={`${styles.alignEnd} ${styles.balance}`}>{formatSigned(day.balance)}</span>
         </div>
       ))}
-      {!report.days.length && <p className={styles.empty}>Nicio mișcare în această perioadă.</p>}
+      {!report.days.length && (
+        <EmptyState
+          variant={EMPTY_STATES['raport.period'].variant}
+          title={resolveEmptyStateTitle(EMPTY_STATES['raport.period'])}
+          description={resolveEmptyStateText(EMPTY_STATES['raport.period'])}
+        />
+      )}
       <div className={styles.totalRow}>
         <span>{TOTAL_LABEL[mode]}</span>
         <span className={styles.alignEnd}>{formatMoney(totals.cash)}</span>

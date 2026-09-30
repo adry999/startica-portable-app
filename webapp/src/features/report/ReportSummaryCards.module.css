@@ -12,32 +12,3 @@
 .soldCard {
   border: 2px solid var(--slate);
 }
-
-.mintLabel,
-.pinkLabel,
-.soldLabel {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.mintLabel {
-  color: var(--mint-ink);
-}
-
-.pinkLabel {
-  color: var(--pink-ink);
-}
-
-.soldLabel {
-  color: var(--muted);
-}
-
-.value {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 32px;
-  line-height: 1.1;
-  color: var(--slate);
-}

@@ -61,12 +61,6 @@
   text-align: right;
 }
 
-.empty {
-  margin: 0;
-  padding: 16px 20px;
-  color: var(--subtle);
-}
-
 .totalRow {
   display: grid;
   grid-template-columns: 120px 1fr 1fr 1fr 1fr;

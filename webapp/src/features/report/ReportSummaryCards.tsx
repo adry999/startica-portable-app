@@ -1,4 +1,4 @@
-import { Card } from '@shared/ui';
+import { Kpi } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { AccountingReport } from './useAccountingReport';
 import styles from './ReportSummaryCards.module.css';
@@ -15,18 +15,29 @@ function formatSigned(amount: number): string {
 export function ReportSummaryCards({ report }: ReportSummaryCardsProps) {
   return (
     <div className={styles.row}>
-      <Card tone="mint" decorative className={styles.card}>
-        <span className={styles.mintLabel}>Încasări · {report.incomeCount} achitări</span>
-        <strong className={styles.value}>{formatMoney(report.income)}</strong>
-      </Card>
-      <Card tone="pink" decorative className={styles.card}>
-        <span className={styles.pinkLabel}>Cheltuieli · {report.expenseCount}</span>
-        <strong className={styles.value}>{formatMoney(report.expense)}</strong>
-      </Card>
-      <Card tone="white" className={`${styles.card} ${styles.soldCard}`}>
-        <span className={styles.soldLabel}>Sold al perioadei</span>
-        <strong className={styles.value}>{formatSigned(report.balance)}</strong>
-      </Card>
+      <Kpi
+        tone="mint"
+        decorative
+        size="lg"
+        className={styles.card}
+        label={`Încasări · ${report.incomeCount} achitări`}
+        value={formatMoney(report.income)}
+      />
+      <Kpi
+        tone="pink"
+        decorative
+        size="lg"
+        className={styles.card}
+        label={`Cheltuieli · ${report.expenseCount}`}
+        value={formatMoney(report.expense)}
+      />
+      <Kpi
+        tone="white"
+        size="lg"
+        className={`${styles.card} ${styles.soldCard}`}
+        label="Sold al perioadei"
+        value={formatSigned(report.balance)}
+      />
     </div>
   );
 }

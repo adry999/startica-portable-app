@@ -1,4 +1,4 @@
-import { Card } from '@shared/ui';
+import { Card, EMPTY_STATES, EmptyState, resolveEmptyStateTitle } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { reportCategoryStyleFor } from './report-category-style';
 import type { AccountingReport } from './useAccountingReport';
@@ -33,7 +33,13 @@ export function ReportCategoriesPanel({ report }: ReportCategoriesPanelProps) {
             </div>
           );
         })}
-        {!report.byCategory.length && <p className={styles.empty}>Nicio cheltuială în această perioadă.</p>}
+        {!report.byCategory.length && (
+          <EmptyState
+            variant={EMPTY_STATES['raport.expenses'].variant}
+            size={EMPTY_STATES['raport.expenses'].size}
+            title={resolveEmptyStateTitle(EMPTY_STATES['raport.expenses'])}
+          />
+        )}
       </div>
     </Card>
   );

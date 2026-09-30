@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, useToast } from '@shared/ui';
+import { Button, Checkbox, ChipSelect, ChoiceCards, DateInput, Drawer, RadioGroup, useToast } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { reportPeriodBounds } from '#features/report/index.web.mjs';
 import { fetchBranches, fetchBranchRecords, type BranchSummary } from '@shared/api/branches';
@@ -138,51 +138,22 @@ export function ReportExportDrawer({ open, onClose, anchorMonth, data, onOpenAss
       >
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Perioada</span>
-          <div className={styles.pills}>
-            <button
-              type="button"
-              className={periodKind === 'month' ? styles.pillActive : styles.pill}
-              onClick={() => setPeriodKind('month')}
-            >
-              {monthPeriod.label}
-            </button>
-            <button
-              type="button"
-              className={periodKind === 'quarter' ? styles.pillActive : styles.pill}
-              onClick={() => setPeriodKind('quarter')}
-            >
-              {quarterPeriod.label}
-            </button>
-            <button
-              type="button"
-              className={periodKind === 'year' ? styles.pillActive : styles.pill}
-              onClick={() => setPeriodKind('year')}
-            >
-              {yearPeriod.label}
-            </button>
-            <button
-              type="button"
-              className={periodKind === 'interval' ? styles.pillActive : styles.pill}
-              onClick={() => setPeriodKind('interval')}
-            >
-              Altă perioadă…
-            </button>
-          </div>
+          <ChipSelect<ExportPeriodKind>
+            ariaLabel="Perioada"
+            value={periodKind}
+            onChange={setPeriodKind}
+            options={[
+              { value: 'month', label: monthPeriod.label },
+              { value: 'quarter', label: quarterPeriod.label },
+              { value: 'year', label: yearPeriod.label },
+              { value: 'interval', label: 'Altă perioadă…' },
+            ]}
+          />
           {periodKind === 'interval' && (
             <div className={styles.intervalInputs}>
-              <input
-                type="date"
-                aria-label="De la data"
-                value={intervalFrom}
-                onChange={event => setIntervalFrom(event.target.value)}
-              />
-              <span>–</span>
-              <input
-                type="date"
-                aria-label="Până la data"
-                value={intervalTo}
-                onChange={event => setIntervalTo(event.target.value)}
-              />
+              <DateInput value={intervalFrom} onChange={setIntervalFrom} ariaLabel="De la data" />
+              <span aria-hidden="true">–</span>
+              <DateInput value={intervalTo} onChange={setIntervalTo} ariaLabel="Până la data" />
             </div>
           )}
         </div>
@@ -190,77 +161,58 @@ export function ReportExportDrawer({ open, onClose, anchorMonth, data, onOpenAss
         {hasMultipleBranches && (
           <div className={styles.field}>
             <span className={styles.fieldLabel}>Filiala</span>
-            <div className={styles.branchOptions}>
-              <label className={styles.branchOption}>
-                <input
-                  type="radio"
-                  name="branchFilter"
-                  checked={branchFilter === 'current'}
-                  disabled={format === 'pdf'}
-                  onChange={() => setBranchFilter('current')}
-                />
-                <span>{currentBranch?.name ?? 'Filiala curentă'}</span>
-              </label>
-              <label className={styles.branchOption}>
-                <input
-                  type="radio"
-                  name="branchFilter"
-                  checked={branchFilter === 'both'}
-                  disabled={format === 'pdf'}
-                  onChange={() => setBranchFilter('both')}
-                />
-                <span>Ambele (o foaie pe filială)</span>
-              </label>
-            </div>
+            <RadioGroup
+              name="branchFilter"
+              ariaLabel="Filiala"
+              disabled={format === 'pdf'}
+              value={branchFilter}
+              onChange={value => setBranchFilter(value as BranchFilter)}
+              options={[
+                { value: 'current', label: currentBranch?.name ?? 'Filiala curentă' },
+                { value: 'both', label: 'Ambele (o foaie pe filială)' },
+              ]}
+            />
             {format === 'pdf' && <p className={styles.hint}>PDF-ul tipărește filiala deschisă.</p>}
           </div>
         )}
 
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Format</span>
-          <div className={styles.formatGrid}>
-            <button
-              type="button"
-              className={format === 'excel' ? styles.formatCardActive : styles.formatCard}
-              onClick={() => setFormat('excel')}
-            >
-              <span className={styles.formatTitle}>Excel (.xlsx)</span>
-              <span className={styles.formatHint}>Foi: Rezumat, Încasări, Cheltuieli. Un rând pe operațiune.</span>
-            </button>
-            <button
-              type="button"
-              className={format === 'pdf' ? styles.formatCardActive : styles.formatCard}
-              onClick={() => setFormat('pdf')}
-            >
-              <span className={styles.formatTitle}>PDF</span>
-              <span className={styles.formatHint}>Rezumatul perioadei pe o pagină A4.</span>
-            </button>
-          </div>
+          <ChoiceCards<ExportFormat>
+            ariaLabel="Format"
+            columns={2}
+            value={format}
+            onChange={setFormat}
+            options={[
+              {
+                value: 'excel',
+                title: 'Excel (.xlsx)',
+                sub: 'Foi: Rezumat, Încasări, Cheltuieli. Un rând pe operațiune.',
+              },
+              { value: 'pdf', title: 'PDF', sub: 'Rezumatul perioadei pe o pagină A4.' },
+            ]}
+          />
         </div>
 
         <div className={styles.checkboxes}>
           <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={includePayerNames}
-              onChange={event => setIncludePayerNames(event.target.checked)}
+              onChange={setIncludePayerNames}
+              ariaLabel="Include numele plătitorilor"
             />
             <span>Include numele plătitorilor</span>
           </label>
           <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={includeEurDetails}
-              onChange={event => setIncludeEurDetails(event.target.checked)}
+              onChange={setIncludeEurDetails}
+              ariaLabel="Sumele în EUR cu cursul și echivalentul în lei"
             />
             <span>Sumele în EUR cu cursul și echivalentul în lei</span>
           </label>
           <label className={styles.checkboxRow}>
-            <input
-              type="checkbox"
-              checked={includeArchived}
-              onChange={event => setIncludeArchived(event.target.checked)}
-            />
+            <Checkbox checked={includeArchived} onChange={setIncludeArchived} ariaLabel="Include achitările arhivate" />
             <span>Include achitările arhivate</span>
           </label>
         </div>

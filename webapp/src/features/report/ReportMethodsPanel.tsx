@@ -1,4 +1,4 @@
-import { BnmRateLink, Card } from '@shared/ui';
+import { BnmRateLink, Card, EMPTY_STATES, EmptyState, resolveEmptyStateTitle } from '@shared/ui';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -27,7 +27,13 @@ export function ReportMethodsPanel({ report }: ReportMethodsPanelProps) {
             </span>
           </div>
         ))}
-        {!report.byMethod.length && <p className={styles.empty}>Nicio încasare în această perioadă.</p>}
+        {!report.byMethod.length && (
+          <EmptyState
+            variant={EMPTY_STATES['raport.income'].variant}
+            size={EMPTY_STATES['raport.income'].size}
+            title={resolveEmptyStateTitle(EMPTY_STATES['raport.income'])}
+          />
+        )}
       </div>
 
       {report.eurRows.length > 0 && (

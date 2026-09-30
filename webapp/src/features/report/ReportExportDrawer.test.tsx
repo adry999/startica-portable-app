@@ -101,7 +101,7 @@ describe('ReportExportDrawer', () => {
     expect(currentOption).not.toBeDisabled();
     expect(bothOption).not.toBeDisabled();
 
-    await user.click(screen.getByRole('button', { name: /^PDF/ }));
+    await user.click(screen.getByRole('radio', { name: /^PDF/ }));
 
     expect(currentOption).toBeDisabled();
     expect(bothOption).toBeDisabled();
