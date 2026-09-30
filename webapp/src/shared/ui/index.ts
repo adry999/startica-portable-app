@@ -37,7 +37,13 @@ export { Dialog, type DialogProps } from './Dialog';
 export { ToastProvider, useToast } from './Toast';
 export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
 export { EmptyState, type EmptyStateAction, type EmptyStateProps, type EmptyStateVariant } from './EmptyState';
-export { EMPTY_STATES, resolveEmptyStateTitle, type EmptyStateCatalogEntry, type EmptyStateKey } from './empty-states';
+export {
+  EMPTY_STATES,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
+  type EmptyStateCatalogEntry,
+  type EmptyStateKey,
+} from './empty-states';
 export { ErrorState, type ErrorStateProps } from './ErrorState';
 export { InlineError, type InlineErrorProps } from './InlineError';
 export { BarChart, type BarChartProps, type BarChartSeries } from './BarChart';

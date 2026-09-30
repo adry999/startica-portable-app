@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Badge } from './Badge';
 import { EmptyState } from './EmptyState';
-import { EMPTY_STATES, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
+import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 import styles from './DataTable.module.css';
 
 export interface DataTableColumn<Row> {
@@ -38,6 +38,8 @@ export interface DataTableProps<Row> {
   onClearFilters?: () => void;
   /** Butonul din stările `first`/`period` — necesar doar dacă cheia din `empty` are `actionLabel`. */
   onEmptyAction?: () => void;
+  /** Butonul secundar (ex. `copii.first` — „Din vizitele programate”) — necesar doar dacă cheia din `empty` are `secondaryActionLabel`. */
+  onEmptySecondaryAction?: () => void;
   onRowClick?: (row: Row) => void;
   /** Clasă opțională per rând (ex. evidențierea rândului care corespunde zilei alese în alt panou). */
   rowClassName?: (row: Row) => string | undefined;
@@ -70,6 +72,7 @@ export function DataTable<Row>({
   activeFilterLabels,
   onClearFilters,
   onEmptyAction,
+  onEmptySecondaryAction,
   onRowClick,
   rowClassName,
   selectable = false,
@@ -163,8 +166,14 @@ export function DataTable<Row>({
           <EmptyState
             variant={entry.variant}
             title={resolveEmptyStateTitle(entry, emptyParams)}
+            description={resolveEmptyStateText(entry, emptyParams)}
             action={
               entry.actionLabel && onEmptyAction ? { label: entry.actionLabel, onClick: onEmptyAction } : undefined
+            }
+            secondaryAction={
+              entry.secondaryActionLabel && onEmptySecondaryAction
+                ? { label: entry.secondaryActionLabel, onClick: onEmptySecondaryAction }
+                : undefined
             }
           />
         );

@@ -25,6 +25,8 @@ export interface EmptyStateProps {
   onClearFilters?: () => void;
   /** `first`/`period`: CTA primar, ex. „+ Cheltuială nouă” — pe `period` doar dacă acțiunea are sens pe perioada afișată. */
   action?: EmptyStateAction;
+  /** Doar `first` (35a, `copii.first` — „Din vizitele programate”): buton secundar, arătat doar când apelantul îl dă (ex. doar dacă există vizite programate). */
+  secondaryAction?: EmptyStateAction;
 }
 
 /**
@@ -39,6 +41,7 @@ export function EmptyState({
   activeFilters,
   onClearFilters,
   action,
+  secondaryAction,
 }: EmptyStateProps) {
   if (size === 'compact') {
     return (
@@ -72,10 +75,19 @@ export function EmptyState({
         </div>
         <strong className={styles.title}>{title}</strong>
         {description && <p className={styles.text}>{description}</p>}
-        {action && (
-          <Button variant="primary" onClick={action.onClick}>
-            {action.label}
-          </Button>
+        {(action || secondaryAction) && (
+          <div className={styles.actions}>
+            {action && (
+              <Button variant="primary" onClick={action.onClick}>
+                {action.label}
+              </Button>
+            )}
+            {secondaryAction && (
+              <Button variant="outline" onClick={secondaryAction.onClick}>
+                {secondaryAction.label}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     );

@@ -84,6 +84,11 @@
   color: var(--mint-ink);
 }
 
+.actions {
+  display: flex;
+  gap: var(--space-10);
+}
+
 .compact {
   display: flex;
   align-items: baseline;

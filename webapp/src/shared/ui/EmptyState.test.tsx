@@ -68,6 +68,20 @@ describe('EmptyState', () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it('randează butonul secundar pe lângă cel primar, pe varianta first', async () => {
+    const onSecondary = vi.fn();
+    render(
+      <EmptyState
+        variant="first"
+        title="Încă nu e niciun copil în Filiala 1"
+        action={{ label: '+ Copil nou', onClick: () => {} }}
+        secondaryAction={{ label: 'Din vizitele programate', onClick: onSecondary }}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Din vizitele programate' }));
+    expect(onSecondary).toHaveBeenCalledOnce();
+  });
+
   it('size="compact" fără acțiune arată doar textul', () => {
     render(<EmptyState size="compact" title="Toți copiii au grupă." />);
     expect(screen.getByText('Toți copiii au grupă.')).toBeInTheDocument();

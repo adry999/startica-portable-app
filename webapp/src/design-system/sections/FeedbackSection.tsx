@@ -17,6 +17,7 @@ import {
   Popover,
   PrintOptionsDialog,
   ProgressToast,
+  resolveEmptyStateText,
   resolveEmptyStateTitle,
   SaveIndicator,
   Skeleton,
@@ -314,6 +315,16 @@ export function FeedbackSection() {
       >
         <DemoRow label="control">
           <code>{resolveEmptyStateTitle(EMPTY_STATES['achitari.period'], { luna: 'octombrie' })}</code>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="resolveEmptyStateText"
+        importLine="import { resolveEmptyStateText } from '@shared/ui';"
+        reference="30-stari-goale.md §35b–35c — paragraful de sub titlu, undefined pe cheile compact (35d)"
+      >
+        <DemoRow label="control">
+          <code>{resolveEmptyStateText(EMPTY_STATES['achitari.period'])}</code>
         </DemoRow>
       </ComponentShowcase>
 
