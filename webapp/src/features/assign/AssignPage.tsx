@@ -4,12 +4,15 @@ import {
   Button,
   Card,
   Checkbox,
+  EMPTY_STATES,
   EmptyState,
   Icon,
   LoadingState,
   ScrollArea,
   SearchInput,
   SearchSelect,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
   useToast,
   useTopbarActions,
 } from '@shared/ui';
@@ -74,7 +77,13 @@ export function AssignPage({ month }: AssignPageProps) {
     return <p className={styles.notice}>{assignData.failureMessage || 'Datele nu au putut fi încărcate.'}</p>;
 
   if (assignData.rows.length === 0) {
-    return <EmptyState variant="done" title="Nu există achitări neasociate." />;
+    return (
+      <EmptyState
+        variant={EMPTY_STATES['asociere.done'].variant}
+        title={resolveEmptyStateTitle(EMPTY_STATES['asociere.done'])}
+        description={resolveEmptyStateText(EMPTY_STATES['asociere.done'])}
+      />
+    );
   }
 
   function fillSuggested() {
@@ -166,7 +175,11 @@ export function AssignPage({ month }: AssignPageProps) {
             <span className={styles.suggestionsTitle}>Sugestii</span>
             <div className={styles.suggestions}>
               {matchedOptions.length === 0 ? (
-                <p className={styles.noSuggestions}>Nicio sugestie — caută mai jos.</p>
+                <EmptyState
+                  size={EMPTY_STATES['asociere.suggestions'].size}
+                  variant={EMPTY_STATES['asociere.suggestions'].variant}
+                  title={resolveEmptyStateTitle(EMPTY_STATES['asociere.suggestions'])}
+                />
               ) : (
                 matchedOptions.map(option => (
                   <SuggestionCard

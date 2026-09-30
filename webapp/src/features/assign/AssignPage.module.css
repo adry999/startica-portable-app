@@ -190,6 +190,8 @@
   padding: var(--space-10) var(--space-12);
   border-radius: var(--radius-md);
   background: var(--neutral-softer);
+  /* monospace, cerut explicit de spec (11-de-rezolvat.md §9c: "monospace 13px") pentru textul
+     de bancă — nu există un token de font monospace în tokens.css (doar --font-heading/--font-body). */
   font-family: monospace;
   font-size: 13px;
   color: var(--muted);
@@ -204,12 +206,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-10);
-}
-
-.noSuggestions {
-  margin: 0;
-  font-size: 13px;
-  color: var(--subtle);
 }
 
 .suggestionCard {

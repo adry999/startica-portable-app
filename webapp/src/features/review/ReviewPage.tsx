@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Kbd,
   LoadingState,
   ScrollArea,
   SearchInput,
@@ -149,7 +150,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
               <span style={{ width: `${((activeIndex + 1) / rows.length) * 100}%` }} />
             </div>
             <span className={styles.skipHint}>
-              Sari peste <kbd>S</kbd>
+              Sari peste <Kbd>S</Kbd>
             </span>
           </div>
 

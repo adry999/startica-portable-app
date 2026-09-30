@@ -294,7 +294,7 @@ export function FeeSetupPage() {
             ) : (
               <EmptyState
                 variant="no-results"
-                title="Niciun copil"
+                title="Nimeni nu se potrivește căutării."
                 activeFilters={feeSetupData.search ? [`Căutare „${feeSetupData.search}”`] : undefined}
                 onClearFilters={feeSetupData.search ? () => feeSetupData.setSearch('') : undefined}
               />

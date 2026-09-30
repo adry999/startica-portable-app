@@ -212,7 +212,7 @@ describe('AssignPage', () => {
     await loadedSession();
     renderPage();
 
-    expect(screen.getByText('Nu există achitări neasociate.')).toBeInTheDocument();
+    expect(screen.getByText('Toate achitările sunt asociate')).toBeInTheDocument();
   });
 
   it('arată luna formatată, nu cheia brută, în cardul de risc', async () => {

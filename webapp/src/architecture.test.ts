@@ -118,6 +118,9 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
   const RAW_TAG_PATTERN = /<(input|select|textarea|button|table|dialog)\b/;
 
   const ALLOWED: readonly string[] = [
+    // Rândul din coada de achitări neasociate (dată + text sursă + sumă) — hit-area pe tot rândul,
+    // ca ChildTile/GroupTile/NotifyPage; un `Button` ar impune propriul fundal/padding și ar sparge
+    // layout-ul din 11-de-rezolvat.md §9c.
     'assign/AssignPage.tsx',
     'attendance/ChildTile.tsx',
     'backup/ExcelImportDialog.tsx',
@@ -146,6 +149,9 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     'report/PeriodStepper.tsx',
     'report/ReportExportDrawer.tsx',
     'report/ReportPrintSummary.tsx',
+    // Rândul din coada „De verificat" (punct de severitate + nume + problemă + bara activă de 4px) —
+    // hit-area pe tot rândul, exact același tipar ca notify/NotifyPage.tsx; un `Button` ar impune
+    // propriul fundal/padding și ar sparge layout-ul din 11-de-rezolvat.md §9b.
     'review/ReviewPage.tsx',
     'visits/VisitsPage.tsx',
   ];
@@ -168,13 +174,16 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
   ];
 
   const ALLOWED: readonly string[] = [
+    // `.bankBox { font-family: monospace; }` — cerut explicit de spec (11-de-rezolvat.md §9c:
+    // „monospace 13px"), fără token de font monospace în tokens.css. `.queueCard`/`.suggestionCard`
+    // `border-radius: 22px`/`18px` — valori exacte din artboard, fără corespondent exact în scara de
+    // tokeni (20/24, resp. 16/20), același caz ca `notify/NotifyPage.module.css` mai jos.
     'assign/AssignPage.module.css',
     'attendance/WeeklySheet.module.css',
     'backup/BackupPage.module.css',
     'backup/KindergartenSettings.module.css',
     'children/ChildFormDrawer.module.css',
     'conflicts/ConflictsPage.module.css',
-    'fee-setup/FeeSetupPage.module.css',
     // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
     // shared/ui (Board, DateInput, NumberInput…), unde nu e scanată de R2; nu există un token
     // cu întreaga valoare a umbrei, iar shorthand-ul nu poate începe cu `var(...)`.
@@ -207,6 +216,9 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     'report/PeriodStepper.module.css',
     'report/ReportCategoriesPanel.module.css',
     'report/ReportMethodsPanel.module.css',
+    // `.queueRowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px a rândului din
+    // coada „De verificat" (11-de-rezolvat.md §9b), același shorthand acceptat ca în
+    // `notify/NotifyPage.module.css`/`payments/PaymentsByMonth.module.css` mai sus.
     'review/ReviewPage.module.css',
     'stickers/StickerLabel.module.css',
     'visits/VisitsPage.module.css',
@@ -281,6 +293,10 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   }
 
   const TEXT_ALLOWED: readonly string[] = [
+    // „Niciun rezultat pentru căutare” pe coada de achitări neasociate — text de căutare fără
+    // rezultate, intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca
+    // GroupsBoard/AuditLogPage. Starea „done”/„fără sugestii” folosesc deja catalogul (asociere.done/
+    // asociere.suggestions, vezi IMPORT_ALLOWED mai jos).
     'assign/AssignPage.tsx',
     'attendance/WeeklySheetDialog.tsx',
     'audit-log/AuditLogPage.tsx',
@@ -295,7 +311,6 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'children/ChildProfileView.test.tsx',
     'children/ChildProfileView.tsx',
     'children/ChildrenPage.tsx',
-    'fee-setup/FeeSetupPage.tsx',
     // „Niciun rezultat pentru căutare” pe panoul „Fără grupă” — text de căutare fără rezultate,
     // intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca AssignPage/AuditLogPage.
     'groups/GroupsBoard.tsx',
@@ -319,6 +334,9 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
   ];
 
   const IMPORT_ALLOWED: readonly string[] = [
+    // Coada nu e un `DataTable` (listă custom + panou de detaliu) — `EmptyState` randat direct
+    // pentru „toate achitările asociate” (`asociere.done`) și, compact, pentru „nicio sugestie”
+    // (`asociere.suggestions`), ambele din catalog.
     'assign/AssignPage.tsx',
     'attendance/DayView.tsx',
     'attendance/MonthView.tsx',
