@@ -54,7 +54,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `ActiveFilters` **nou** | 27a | Rând de chip-uri „Cheie: valoare ×” + „Șterge filtrele”. Apare doar dacă e activ cel puțin un filtru. |
 | Contor rezultate | 27a | „**24** din 146” în dreapta barei. |
 | `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |
-| `Pagination` | 27a | „Pe pagină 25 ▾” · „1–24 din 24” · ‹ 1 2 3 › (32×32 radius 10, pagina activă slate). Se resetează la schimbarea filtrelor. |
+| `Pagination` | 27a · 38a | „Pe pagină 25 ▾” · „26–50 din 312” · ‹ 1 2 3 4 … 13 › (32×32 radius 10, pagina activă slate). Maximum 7 poziții, prima și ultima mereu vizibile, „…” 13/800 `--subtle`, săgețile dezactivate la capete. Ascunsă la o singură pagină. Logica în `pageWindow(page, total)`, funcție pură. Se resetează la schimbarea filtrelor. **01.10:** în cod e încă v1 („Pagina X din Y”). |
 | `groupBy` + restrângere | 27f | Antet de grup `#faf7f1`, Baloo 15, contor, sumă pe grup, ▼/▶. |
 | Gol / fără rezultate / încărcare | 27f · 29h | Automat din `state` + `empty="<cheie>"` (29h). `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
 | `SelectionBar` | 27g | În linie (Copii, Cheltuieli) sau `floating` (Achitări). „Selectează toate N”. Slot danger. Esc = Anulează. |
@@ -192,7 +192,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `CurrencyRatePill` | Pastila „€ 19,92 lei · Curs BNM · azi ↗”, link spre bnm.md | Dashboard (1a), Planuri și curs (12f), Achitare nouă cu taxă € (12b) | Cerc 30 `--mint-soft` „€”, Baloo 15/800, sub 11/700 `--subtle`, padding `6px 12px 6px 6px`, pill, border `--border`, hover border `--border-hover`. Construită peste `BnmRateLink`. |
 | `AmountInput` | Suma mare: Baloo 40 (36 în dialog) + monedă 18/700 `--subtle`, caset `14px 18px` radius 16 border 1.5px `--orange` fundal `--cream` | 15b, 15c, Avans (23g), Programare bazin | + slot `shortcuts` (pastile „1 lună · 9.600”). |
 | `ChoiceCards` | Carduri selectabile (radius 12–14, border 1.5px; selectat 2px `--orange` + `--orange-soft`), titlu 14/800 + sub 12px | 15a (programe), 22b (ore cu locuri), 10d (tonuri, ca swatch) | `disabled` pentru ora plină; `columns`. |
-| `ChipSelect` | Pastile de alegere unică/multiplă, `7–9px 14–16px` 13/800, selectat = ton plin sau slate | 15a (grupă cu „3 locuri”), 15c (categorie), 22b (zile), Pontaj tipărit | `tone` per opțiune, `sub` opțional. |
+| `ChipSelect` | Pastile de alegere unică/multiplă, `7–9px 14–16px` 13/800, selectat = ton plin sau slate. **38b:** la grupă, `count` = „8/12” (ocupare/capacitate) sau „8” fără capacitate; plină = text `--pink-ink` + notă sub pastile | 15a (grupă cu „8/12”), 15c (categorie), 22b (zile), Pontaj tipărit | `tone` per opțiune, `sub` opțional. |
 | `TonePicker` | 8 pătrate 32×32 radius 10, selectat border 2px `-ink` | 4c (Grupă nouă), 10d (Serviciu nou) | Valoare = `PillTone`. |
 | `DragHandle` + `setDragGhost()` | Mânerul ⋮⋮ (opacity .55, hover fundal alb) și imaginea de tragere: copie rotită −2°, border 2px `--orange`, umbră `0 18px 36px rgba(58,71,80,.22)`; sursa = loc gol punctat, ținta = inel `0 0 0 3px var(--orange)` | Grupe (grupe + copii), 10d Servicii, categorii cheltuieli | Utilitar în `@shared/dnd`; tranziție 120ms. |
 | `UndoHistory` + `useUndoStack()` | „↶ Anulează | N ▾” + popover „Modificări azi” (oră, etichetă, „Anulează” / „Anulează până aici”, „Anulează tot”), Ctrl+Z | Prezența Ziua, Prezența Luna, Pontaj | Stiva per zi și filială, persistată; anularea = mutație normală (sync + Istoric). |
@@ -204,6 +204,18 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 
 ## 3. Storybook (fostă pagina `/design-system`)
 Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2 și pentru variantele noi din tabelul 1: `Button danger`, `SegmentedControl field`, `Badge sm`, `PersonCell sm/md`, `SelectionBar` cu danger, `ConfirmDeleteDialog` cu listă, `AttendanceDot` pe 3 mărimi. Fiecare secțiune arată toate stările. Scara de tokeni (culori, tipografie pe roluri, raze, umbre) din `TOKENS.md` apare sus pe pagină.
+
+## 3b. Noi după feedback 01.10 — `Feedback 01-10.dc.html`
+
+| Componentă | Id | Valori |
+|---|---|---|
+| `autoComplete` implicit | F4 | Toate câmpurile din `@shared/ui` (`TextInput`, `NumberInput`, `PhoneInput`, `AmountInput`, `DateInput`, `TimeInput`, `TextArea`, `Select`, `GlobalSearch`) și `<form>` din `Drawer`/`Dialog` au `autoComplete="off"`. Se poate suprascrie doar explicit. |
+| `RateCalendar` **nou** | 38e | Grilă lună 7 coloane, celulă 46px radius 10: ziua 11/800 `--subtle` + cursul 11/700. Weekend/sărbătoare = `--neutral-soft`, cursul zilei lucrătoare dinainte, `--subtle`. Corectat manual = `--yellow-soft`. Antet cu `MonthStepper`. Subsol: ora ultimei preluări + „Vezi încă 10 zile” (link). |
+| `RateCard` (cardul de curs) | 38e | Cardul existent din 12a + rândul „Mâine, zz.ll: X lei ▲/▼ diferența” pe alb, radius 12, doar după ce BNM a publicat. |
+| `EditableList` (mod `view` / `edit`) | 38d · 38f | Lista de planuri și lista de funcții: în `view` doar citire + „+ Adaugă” (primar) și „Editează” (secundar). În `edit`: câmpuri, `×` doar pe elementele nefolosite (altfel inactiv, tooltip „Folosit de N”), „Salvează” inactiv până la prima modificare, „Anulează” revine la `view`. |
+| `ChildLockedRow` | 38c | Rândul copilului fixat în Achitare nouă: avatar cu tonul grupei, nume 15/800, „grupă · contract · scadență” 12px, „Schimbă” 13/800 `--orange-ink`. Fundal `--cream`, border `--border`, radius 16. |
+| `ArrearsRow` | 38c | „Are restanță: Lună · sumă” pe `--pink-soft`, radius 12, text `--pink-ink`; acțiune „Bifează ca s-o acoperi”. |
+| `BackupContents` | 38g | Rezumat (Baloo 22) + rânduri tip · sursă · număr, din `manifest.json`. Același bloc în previzualizarea restaurării. |
 
 ## 4. Ordine
 Extrage componentele **în punctul din ALINIERE care le folosește prima dată**, nu într-un pas separat înainte: `AmountInput` + `ChipSelect` + `ChoiceCards` în A2/A3b, `NoteList` în A3, `UndoHistory` + `SaveIndicator` + `GroupSection` în A3c, `DragHandle` în A8 (Grupe), `SelectionBar danger` + `ConfirmDeleteDialog items` în B2, `ServiceBadge` + `SettingsList` + `TonePicker` în B3, `Kpi` + `CurrencyRatePill` în A8 (Dashboard). La al doilea ecran care o folosește, doar o reutilizezi.

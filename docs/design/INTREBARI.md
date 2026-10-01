@@ -1,5 +1,9 @@
 # Întrebări / decizii blocate
 
+## ⚠️ §0 (PROMPT-8) — niciun `design_final_startica/` de copiat găsit pe disc (01.10, seara)
+
+PROMPT-CLAUDE-CODE-8.md §0 cere „Copiază `design_final_startica/` peste `docs/design/`”, dar n-am găsit niciun asemenea folder/arhivă pe disc (verificat rădăcina repo, `%TEMP%`, Desktop, Downloads — doar extragerile vechi, deja consumate, din sesiunea PROMPT-7). În schimb, conținutul nou era deja prezent direct în `docs/design/`: `Feedback 01-10.dc.html`, `FEEDBACK-01-10.md`, `PROMPT-CLAUDE-CODE-8.md` (netrasate) și `COMPONENTE.md` deja avea §3b (rândurile 38a–38g) adăugat. Am tratat asta ca „pachetul e deja aplicat” — am mutat doar `PROMPT-CLAUDE-CODE-7.md` în `arhiva/` și am comis ce era deja pe disc, fără pas separat de copiere. Dacă mai există un pachet undeva (alt folder, altă mașină), spune calea și fac diff-ul cerut separat.
+
 ## ⚠️ §0 — pachetul `design_final_startica/` suprascrie documentație încă validă (01.10, rezolvat la copiere)
 
 Pachetul predă `docs/design/` dintr-un export mai vechi decât încheierea PROMPT-6 din această sesiune — deși PROMPT-7 însuși spune „PROMPT-6 e închis integral”. Suprascrierea brută ar fi șters 3 lucruri încă adevărate în cod:
