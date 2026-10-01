@@ -80,7 +80,7 @@ describe('RolesDrawer', () => {
     vi.unstubAllGlobals();
   });
 
-  it('o funcție cu angajați nu are buton de ștergere activ', async () => {
+  it('F8: o funcție cu angajați nu are buton de ștergere activ, cu tooltip corect', async () => {
     await loadedSession();
     await act(() => reloadPersonal());
 
@@ -90,13 +90,75 @@ describe('RolesDrawer', () => {
       </ToastProvider>,
     );
 
-    const educatorRow = (await screen.findByDisplayValue('Educator')).closest('li')!;
-    const removeButton = educatorRow.querySelector('button')!;
-    expect(removeButton).toBeDisabled();
+    await screen.findByText('Educator');
+    await userEvent.click(screen.getByRole('button', { name: 'Editează funcțiile' }));
 
-    const asistentRow = screen.getByDisplayValue('Asistent educator').closest('li')!;
-    const asistentRemove = asistentRow.querySelector('button')!;
+    // Ordinea rândurilor urmează `order`: Educator (1 angajat, STF-1), apoi Asistent educator (0).
+    const [educatorRemove, asistentRemove] = screen.getAllByRole('button', { name: 'Șterge funcții' });
+    expect(educatorRemove).toBeDisabled();
     expect(asistentRemove).not.toBeDisabled();
+
+    await userEvent.hover(educatorRemove.parentElement!);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Folosit de 1 angajat');
+  });
+
+  it('F8: ștergerea unei funcții fără angajați o scoate din listă', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Asistent educator');
+    await userEvent.click(screen.getByRole('button', { name: 'Editează funcțiile' }));
+
+    const [, asistentRemove] = screen.getAllByRole('button', { name: 'Șterge funcții' });
+    await userEvent.click(asistentRemove);
+
+    expect(screen.queryByDisplayValue('Asistent educator')).not.toBeInTheDocument();
+  });
+
+  it('F8: „+ Adaugă funcția” din view trece direct în edit, cu un rând nou gol', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Educator');
+    await userEvent.click(screen.getByRole('button', { name: '+ Adaugă funcția' }));
+
+    const nameInputs = screen.getAllByLabelText('Nume funcție');
+    expect(nameInputs).toHaveLength(3);
+    expect(nameInputs[2]).toHaveValue('');
+
+    const departmentSelects = screen.getAllByLabelText('Departamentul funcției');
+    expect(departmentSelects[2]).toHaveValue('DEP-1');
+  });
+
+  it('F8: redenumirea unei funcții în modul de editare actualizează câmpul', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Educator');
+    await userEvent.click(screen.getByRole('button', { name: 'Editează funcțiile' }));
+
+    const [educatorInput] = screen.getAllByLabelText('Nume funcție');
+    await userEvent.type(educatorInput, ' principal');
+
+    expect(educatorInput).toHaveValue('Educator principal');
   });
 
   // 13b (m10): editarea unui departament/funcție trebuie înregistrată ca formular nesalvat,
@@ -111,15 +173,31 @@ describe('RolesDrawer', () => {
       </ToastProvider>,
     );
 
-    await screen.findByDisplayValue('Educator');
+    await screen.findByDisplayValue('Educatori');
     expect(readDirtyForms()).toEqual([]);
 
-    // „Educatori” apare și ca text de opțiune în select-ul de funcție nouă — luăm câmpul de nume.
-    const [departmentInput] = screen.getAllByDisplayValue('Educatori');
+    const departmentInput = screen.getByDisplayValue('Educatori');
     await userEvent.type(departmentInput, ' II');
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o modificare la funcții');
+  });
+
+  // F8: secțiunea de departamente nu e afectată de rescrierea funcțiilor pe EditableList —
+  // rămâne cu câmpuri directe, fără mod view/edit propriu.
+  it('F8: secțiunea de departamente rămâne neschimbată (câmp direct, fără mod view/edit)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <RolesDrawer open onClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    const departmentInput = await screen.findByDisplayValue('Educatori');
+    expect(departmentInput).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editează departamentele' })).not.toBeInTheDocument();
   });
 
   // A3f (verificarea 5, ALINIERE-DESIGN.md): backend + hook existau deja (`/api/personal/settings`,
