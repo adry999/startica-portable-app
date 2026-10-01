@@ -54,7 +54,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `ActiveFilters` **nou** | 27a | Rând de chip-uri „Cheie: valoare ×” + „Șterge filtrele”. Apare doar dacă e activ cel puțin un filtru. |
 | Contor rezultate | 27a | „**24** din 146” în dreapta barei. |
 | `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |
-| `Pagination` | 27a · 38a | „Pe pagină 25 ▾” · „26–50 din 312” · ‹ 1 2 3 4 … 13 › (32×32 radius 10, pagina activă slate). Maximum 7 poziții, prima și ultima mereu vizibile, „…” 13/800 `--subtle`, săgețile dezactivate la capete. Ascunsă la o singură pagină. Logica în `pageWindow(page, total)`, funcție pură. Se resetează la schimbarea filtrelor. **01.10:** în cod e încă v1 („Pagina X din Y”). |
+| `Pagination` | 27a · 38a | „Pe pagină 25 ▾” (opțional, via `onPageSizeChange`, `Select size="sm"`) · „26–50 din 312” · ‹ 1 2 3 4 … 13 › (32×32 radius 10, pagina activă slate). Maximum 7 poziții, prima și ultima mereu vizibile, „…” 13/800 `--subtle`, săgețile dezactivate la capete. Ascunsă la o singură pagină. Logica în `pageWindow(page, total)`, funcție pură (`page-window.ts`). `DataTable` o folosește implicit (25/pagină) și resetează la pagina 1 la schimbarea setului de rânduri. |
 | `groupBy` + restrângere | 27f | Antet de grup `#faf7f1`, Baloo 15, contor, sumă pe grup, ▼/▶. |
 | Gol / fără rezultate / încărcare | 27f · 29h | Automat din `state` + `empty="<cheie>"` (29h). `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
 | `SelectionBar` | 27g | În linie (Copii, Cheltuieli) sau `floating` (Achitări). „Selectează toate N”. Slot danger. Esc = Anulează. |
