@@ -29,8 +29,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  /* #5b666e (ALINIERE-DESIGN A8, Pontaj 23b) — niciun token exact, ca la alte valori literale deja aliniate. */
-  color: #5b666e;
+  color: var(--text-secondary);
 }
 
 /* Pătrat 8px (ALINIERE-DESIGN A8, Pontaj 23b) — 3px n-are token exact; --radius-5 (5px) pe o
@@ -58,12 +57,11 @@
   text-align: center;
 }
 
-/* 6px n-are token exact pe pastila zilei curente din antetul coloanelor (lățime 20px). */
 .todayPill {
   display: inline-block;
   min-width: 20px;
   padding: 3px 0;
-  border-radius: 6px;
+  border-radius: var(--radius-5);
   background: var(--orange-strong);
   color: var(--white);
 }
@@ -121,8 +119,7 @@
 }
 
 .cell[data-kind='CO'] {
-  /* #e0b400 (ALINIERE-DESIGN A8, Pontaj 23b; DECIZII.md #17) — niciun token exact, --yellow-bar e apropiat dar nu identic. */
-  background: #e0b400;
+  background: var(--code-co);
 }
 
 .cell[data-kind='CM'] {
@@ -199,8 +196,7 @@
 }
 
 .legendSquare[data-kind='CO'] {
-  /* #e0b400 (ALINIERE-DESIGN A8, Pontaj 23b; DECIZII.md #17) — aceeași culoare ca pastila CO din tabel. */
-  background: #e0b400;
+  background: var(--code-co);
 }
 
 .legendSquare[data-kind='CM'] {

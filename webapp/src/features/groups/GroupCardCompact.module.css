@@ -23,7 +23,7 @@
 }
 
 .dragOver {
-  box-shadow: 0 0 0 3px var(--orange);
+  box-shadow: var(--shadow-ring-drag);
 }
 
 /* Cardul sursă devine loc gol cât timp e tras (A8, 4a/4b) — culoarea vine din style inline (tonul grupei). */

@@ -140,63 +140,31 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
   const CSS_VIOLATION_PATTERNS = [
     /#[0-9a-fA-F]{3,8}\b/,
     /\brgba?\(/,
-    /box-shadow:(?!\s*var\()\s*\S/,
+    // `none` e un reset (ex. @media print), nu o valoare de design care are nevoie de token.
+    /box-shadow:(?!\s*(?:var\(|none\b))\s*\S/,
     /font-family:(?!\s*var\()\s*\S/,
     /border-radius:\s*\d+px/,
     /z-index:\s*\d/,
   ];
 
   const ALLOWED: readonly string[] = [
-    // `.bankBox { font-family: monospace; }` — cerut explicit de spec (11-de-rezolvat.md §9c:
-    // „monospace 13px"), fără token de font monospace în tokens.css. `.queueCard`/`.suggestionCard`
-    // `border-radius: 22px`/`18px` — valori exacte din artboard, fără corespondent exact în scara de
-    // tokeni (20/24, resp. 16/20), același caz ca `notify/NotifyPage.module.css` mai jos.
-    'assign/AssignPage.module.css',
-    'attendance/WeeklySheet.module.css',
-    'backup/BackupPage.module.css',
-    'conflicts/ConflictsPage.module.css',
-    // `.dragOver { box-shadow: 0 0 0 3px var(--orange); }` — inel de tragere, aceeași formă în tot
-    // shared/ui (Board, DateInput, NumberInput…), unde nu e scanată de R2; nu există un token
-    // cu întreaga valoare a umbrei, iar shorthand-ul nu poate începe cu `var(...)`.
-    'groups/GroupCardCompact.module.css',
-    'groups/GroupTile.module.css',
-    // `.rowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px a rândului de
-    // șablon selectat (14-sms.md §11b), același shorthand acceptat ca la `notify/NotifyPage.module.css`
-    // mai jos; fundalul `#fff` de pe `.row` a fost mutat pe `var(--white)` (14-sms val 2).
-    'notifications/SmsTemplatesPanel.module.css',
-    // `.rowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px, același
-    // shorthand acceptat ca în `payments/PaymentsByMonth.module.css` (10-de-notificat.md §3).
-    // `.queue`/`.preview { border-radius: 22px; }` și `.bubble` (colț asimetric 18/18/18/6) —
-    // valori exacte din artboard, fără corespondent în scara de tokeni (20/24) — vezi comentariile
-    // din fișier.
+    // `.bubble { border-radius: 18px 18px 18px 6px; }` — colț „coadă de bulă” (6px stânga-jos, De
+    // notificat.dc.html#8a), formă asimetrică din artboard fără corespondent într-un singur token.
     'notify/NotifyPage.module.css',
-    'payments/DayClosingReceipt.module.css',
+    // `.cutLine { z-index: 1; }` — stacking local al liniei de tăiere peste chitanță, nu ține de
+    // scara globală (--z-sticky/popover/drawer/toast/dialog). `.childAvatar { box-shadow: 0 0 0 2px
+    // var(--mint); }` — inel unic de avatar, altă culoare/grosime decât --shadow-ring-drag.
     'payments/PaymentReceipt.module.css',
-    'payments/PaymentReceiptThermal.module.css',
-    'payments/PaymentsByMonth.module.css',
-    // `.card { border-radius: 22px; }` — vezi comentariul din fișier (același caz ca
-    // assign/AssignPage.module.css/backup/BackupPage.module.css). `.legendBar { border-radius: 2px; }`
-    // — bară de 8px înălțime, cel mai mic token (5px) ar rotunji-o vizibil spre pilulă.
+    // `.legendBar { border-radius: 2px; }` — bară de legendă de 8px înălțime; cel mai mic token
+    // (--radius-5, 5px) ar rotunji-o aproape de formă de pilulă, schimbând vizibil forma din artboard.
     'personal/LeavesView.module.css',
-    // `.bar { border-radius: 4px 4px 0 0; }` — colț de sus al coloanei din graficul lunar (23h);
-    // --radius-5 (5px) e cel mai apropiat, dar nu identic, vezi comentariul din fișier.
-    'personal/SalaryHistoryDrawer.module.css',
-    // CO `#e0b400` (DECIZII.md #17) și antetul departamentului `#5b666e` (ALINIERE-DESIGN A8, Pontaj
-    // 23b) — culori exacte din spec, fără token identic; `.departmentSquare`/`.todayPill` (3px/6px)
-    // — radius fără corespondent exact în scara de tokeni, vezi comentariile din fișier.
+    // `.departmentSquare { border-radius: 3px; }` — pătrat 8×8 (Pontaj 23b); --radius-5 (5px) pe o
+    // cutie atât de mică ar rotunji-o aproape de cerc, schimbând forma din artboard.
     'personal/TimesheetView.module.css',
-    'pool/MonthView.module.css',
-    'pool/PoolReceiptLabel.module.css',
-    'pool/WeekView.module.css',
     // `.dot { border-radius: 3px; }` — pătrat rotunjit 10×10 din legenda categoriilor (19a); 3px pe o
     // cutie de 10px n-are corespondent în scara de tokeni (--radius-5 = 5px ar rotunji punctul într-un
     // cerc complet, schimbând forma din artboard).
     'report/ReportCategoriesPanel.module.css',
-    // `.queueRowActive { box-shadow: inset 4px 0 0 var(--orange); }` — bara activă de 4px a rândului din
-    // coada „De verificat" (11-de-rezolvat.md §9b), același shorthand acceptat ca în
-    // `notify/NotifyPage.module.css`/`payments/PaymentsByMonth.module.css` mai sus.
-    'review/ReviewPage.module.css',
-    'stickers/StickerLabel.module.css',
   ];
 
   /** Un comentariu `/* ... *\/` care doar explică o valoare (ex. „#15a”, un id de artboard, sau

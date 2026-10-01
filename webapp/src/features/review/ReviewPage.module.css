@@ -51,7 +51,7 @@
 
 .queueRowActive {
   background: var(--cream);
-  box-shadow: inset 4px 0 0 var(--orange);
+  box-shadow: var(--shadow-row-active);
 }
 
 .dot {

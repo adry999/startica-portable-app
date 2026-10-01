@@ -131,3 +131,9 @@ Pe Prezența (18a) chenarul și avatarul au nevoie de două nuanțe noi per ton 
 `#b85a00` — fundal pentru text alb (buton primar, insigne pline, pastila „azi”). Contrast cu alb 4,7:1. Umbra buton: `rgba(184,90,0,.28)`. `--orange` nu mai poartă text alb.
 
 Stări pentru fundal `--orange-strong`: hover `--orange-strong-hover` = `#a34f00` (= `--orange-ink`), apăsat `--orange-strong-pressed` = `#8a4300` (nou), dezactivat `--sand` cu text `--subtle`, loading opacitate .75. Text portocaliu pe alb/crem = mereu `--orange-ink`.
+
+## Tokeni noi R2 (01.10, PROMPT-CLAUDE-CODE-6.md §2)
+- `--shadow-row-active: inset 4px 0 0 var(--orange)` — bara activă de 4px a unui rând selectat dintr-o listă (Achitări, De notificat, De verificat, SMS). Înlocuiește `box-shadow: inset 4px 0 0 var(--orange)` literal din module.
+- `--font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace` — coduri/sume aliniate pe coloane (bon termic, tabele de tipărit). Înlocuiește `font-family: monospace` literal din module.
+- `--shadow-ring-drag: 0 0 0 3px var(--orange)` — inel de tragere peste un card/coloană (Board, Grupe). Înlocuiește `box-shadow: 0 0 0 3px var(--orange)` literal din module.
+- `--print-paper: #fff` (nou) — alături de `--print-ink`/`--print-muted`/`--print-rule` deja existente, pentru tipar alb-negru real (bon termic, etichete, chitanțe). Înlocuiește `#fff`/`#000` literale din modulele de tipărire.

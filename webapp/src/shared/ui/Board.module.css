@@ -17,7 +17,7 @@
 }
 
 .dropTarget {
-  box-shadow: 0 0 0 3px var(--orange);
+  box-shadow: var(--shadow-ring-drag);
 }
 
 .disabled {

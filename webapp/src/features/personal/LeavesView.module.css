@@ -3,12 +3,10 @@
   color: var(--muted);
 }
 
-/* 22px — nicio variabilă din tokens.css nu are exact această valoare (20 sau 24 cele mai apropiate),
-   același caz ca assign/AssignPage.module.css și backup/BackupPage.module.css. */
 .card {
   gap: 0;
   padding: 0;
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 

@@ -71,8 +71,8 @@
 }
 
 .countedBox {
-  border: 1.5px solid #000;
-  border-radius: 8px;
+  border: 1.5px solid var(--print-ink);
+  border-radius: var(--radius-xs);
   padding: 8px 10px;
   display: flex;
   flex-direction: column;

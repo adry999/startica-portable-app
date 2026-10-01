@@ -8,12 +8,12 @@
   display: flex;
   align-items: center;
   gap: 3mm;
-  color: #000;
+  color: var(--print-ink);
   border: none;
 }
 
 .chenar {
-  border: 0.8mm double #000;
+  border: 0.8mm double var(--print-ink);
 }
 
 .dotSolidBig {
@@ -23,7 +23,7 @@
   width: 20mm;
   height: 20mm;
   border-radius: 50%;
-  border: 0.5mm solid #000;
+  border: 0.5mm solid var(--print-ink);
 }
 
 .dotSolidSmall {
@@ -33,7 +33,7 @@
   width: 7mm;
   height: 7mm;
   border-radius: 50%;
-  background: #000;
+  background: var(--print-ink);
 }
 
 .dotDashed {
@@ -43,7 +43,7 @@
   width: 9mm;
   height: 9mm;
   border-radius: 50%;
-  border: 0.5mm dashed #000;
+  border: 0.5mm dashed var(--print-ink);
 }
 
 .icon {
@@ -65,7 +65,7 @@
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  border: 1px solid #000;
+  border: 1px solid var(--print-ink);
   border-radius: var(--radius-pill);
   padding: 1px 7px;
   margin-bottom: 2px;

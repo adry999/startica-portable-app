@@ -22,10 +22,8 @@
 
 .statusCard {
   gap: var(--space-6);
-  /* 20px/22px + radius 22 (A7): Card implicit dă 22px/24px + radius 24 — niciun token
-     exact pentru 22, literal ca la alte carduri deja aliniate (Copii, Asociere achitări). */
   padding: 20px 22px;
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
 }
 
 .statusCardWarningYellow {

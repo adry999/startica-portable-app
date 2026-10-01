@@ -38,7 +38,7 @@
 }
 
 .rowActive {
-  box-shadow: inset 4px 0 0 var(--orange);
+  box-shadow: var(--shadow-row-active);
   background: var(--sand);
 }
 
@@ -79,7 +79,7 @@
   display: grid;
   grid-template-columns: 140px 1fr 1fr;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 

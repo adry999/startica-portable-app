@@ -74,8 +74,8 @@
 }
 
 .restBox {
-  border: 1.5px solid #000;
-  border-radius: 8px;
+  border: 1.5px solid var(--print-ink);
+  border-radius: var(--radius-xs);
   padding: 8px 10px;
   font-size: 13px;
   display: flex;
@@ -94,7 +94,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--print-ink);
   font-size: 9px;
   font-weight: 800;
   display: flex;
@@ -103,18 +103,18 @@
 }
 
 .monthDot.paid {
-  background: #000;
-  color: #fff;
+  background: var(--print-ink);
+  color: var(--print-paper);
 }
 
 .monthDot.partial {
-  background: linear-gradient(90deg, #000 50%, #fff 50%);
-  color: #000;
+  background: linear-gradient(90deg, var(--print-ink) 50%, var(--print-paper) 50%);
+  color: var(--print-ink);
 }
 
 .monthDot.other {
-  background: #fff;
-  color: #000;
+  background: var(--print-paper);
+  color: var(--print-ink);
 }
 
 .monthLegend {

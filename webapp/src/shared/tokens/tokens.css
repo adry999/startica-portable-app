@@ -139,6 +139,8 @@
   /* Tipografie. */
   --font-heading: 'Baloo 2', Arial, sans-serif;
   --font-body: Nunito, Arial, sans-serif;
+  /* Pentru coduri/sume aliniate pe coloane (bon termic, tabele de tipărit) — fără token anterior. */
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
   --text-eyebrow-letter-spacing: 0.09em;
 
   /* Raze — 8-10 (celule, butoane mici), 12 (inputuri), 14-16 (rânduri, casete),
@@ -166,6 +168,10 @@
   --shadow-popover: 0 16px 32px rgba(58, 71, 80, 0.16);
   /* Copia trasă la drag&drop (Grupe, Servicii/categorii — TOKENS.md §Umbre). */
   --shadow-drag: 0 18px 36px rgba(58, 71, 80, 0.22);
+  /* Bara activă de 4px a unui rând selectat dintr-o listă (Achitări/De notificat/De verificat/SMS). */
+  --shadow-row-active: inset 4px 0 0 var(--orange);
+  /* Inel de tragere peste un card/coloană (Board, Grupe — dragOver). */
+  --shadow-ring-drag: 0 0 0 3px var(--orange);
 
   /* Text secundar mai închis decât --muted (COMPONENTE.md §0c/26a — Achitari, Administrare, Cheltuieli, Copii, Dashboard, De rezolvat…). */
   --text-secondary: #5b666e;
@@ -174,6 +180,7 @@
 
   /* Tipar (PrintHeader/PrintTable/PrintFooter/ThermalBlock) — alb-negru real, nu tonurile de ecran. */
   --print-ink: #000;
+  --print-paper: #fff;
   --print-muted: #333;
   --print-rule: #ccc;
 

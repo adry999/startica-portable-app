@@ -56,9 +56,7 @@
 .queueCard {
   padding: 0;
   overflow: hidden;
-  /* 22px — nicio variabilă din tokens.css nu are exact această valoare (20 sau 24 cele mai
-     apropiate); același literal folosit deja la card-tabel (00-comun.md §E) și în alte ecrane. */
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
 }
 
 .queueToolbar {
@@ -104,7 +102,7 @@
 
 .queueRowActive {
   background: var(--cream);
-  box-shadow: inset 4px 0 0 var(--orange);
+  box-shadow: var(--shadow-row-active);
 }
 
 .queueDate {
@@ -190,9 +188,7 @@
   padding: var(--space-10) var(--space-12);
   border-radius: var(--radius-md);
   background: var(--neutral-softer);
-  /* monospace, cerut explicit de spec (11-de-rezolvat.md §9c: "monospace 13px") pentru textul
-     de bancă — nu există un token de font monospace în tokens.css (doar --font-heading/--font-body). */
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   color: var(--muted);
 }
@@ -213,9 +209,7 @@
   align-items: center;
   gap: var(--space-14);
   padding: var(--space-14) var(--space-16);
-  /* 18px — la fel ca radius-ul cardurilor de statistici din Bazin (A4): niciun token exact,
-     16 (--radius-md-lg) e cel mai apropiat de jos, 20 (--radius-lg) de sus. */
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1.5px solid var(--border);
 }
 
