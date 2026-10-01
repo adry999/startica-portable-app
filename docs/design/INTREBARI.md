@@ -1,5 +1,11 @@
 # Întrebări / decizii blocate
 
+## ✅ §3 — incident: copia izolată de date a scris un backup real pe Google Drive — rezolvat 01.10
+
+Primul test al `scripts/dev-data-copy.mjs` (server pornit pe `.tmp/data-copy/`, cu `STARTICA_HOME` izolat) a scris totuși un fișier real în `D:\Google Drive\` — `startica_2026-10-01T10-02-28-562Z_pornire_15fe8499.db`. Motiv: setarea `externalDir` (calea de backup extern) stă ÎN `startica.db`, nu derivă din `STARTICA_HOME` — copiind baza întreagă, serverul pe copie a moștenit calea reală, iar backup-ul automat de pornire (`main.mjs`, `app.backup('pornire')`) a scris acolo. Fișierul e un backup valid (nicio dată reală corupt/pierdut), dar e o scriere neintenționată în afara `.tmp/`. Utilizatorul a șters manual fișierul din Google Drive.
+
+**Rezolvat:** `copyDevData()` neutralizează acum `externalDir` (DELETE direct din `settings`, cu `node:sqlite`) în fiecare `startica.db` din copie, imediat după copiere, înainte de orice pornire a serverului. Verificat: a doua rulare arată `externalDir: ""`, 0 scrieri externe, numărul de fișiere din Google Drive neschimbat.
+
 ## ✅ B1 — diagnosticul plăților mixte — rezolvat, decizie (b) Cash provizoriu
 
 Rulat `scripts/diagnostic/b1-payment-methods.mjs` (doar citire) pe `Startica_Date/startica.db`: **811 plăți totale, 7 cu tender necunoscut** (`→ „Altele”`). Nicio valoare brută nu e `numerar`/`card bancar`/`virament` (adică `normalizeTenderMethod()` din pasul 2 nu rezolvă niciuna din cele 7) și **niciuna nu are câmpuri brute cu suma pe metodă** (`cash`/`card`/`cashAmount`/`cardAmount`/`transferAmount` — toate lipsă), deci migrarea automată din pasul 3 nu are ce folosi ca sursă:
