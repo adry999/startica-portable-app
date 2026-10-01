@@ -40,7 +40,7 @@ export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, fo
 
   return (
     <div className={styles.overlay} onClick={requestClose}>
-      <aside
+      <div
         className={styles.panel}
         style={{ width }}
         role="dialog"
@@ -56,7 +56,7 @@ export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, fo
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
         {footer && <footer className={styles.footer}>{footer}</footer>}
-      </aside>
+      </div>
     </div>
   );
 }
