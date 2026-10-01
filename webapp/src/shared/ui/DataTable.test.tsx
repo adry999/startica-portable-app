@@ -155,6 +155,49 @@ describe('DataTable', () => {
   });
 });
 
+describe('DataTable - paginare ferestruită', () => {
+  const manyRows: Child[] = Array.from({ length: 31 }, (_, i) => ({
+    id: `c${i + 1}`,
+    name: `Copil ${i + 1}`,
+    fee: 100 * (i + 1),
+  }));
+
+  it('nu afișează ellipsis când sunt puține pagini', () => {
+    render(<DataTable columns={columns} rows={manyRows.slice(0, 7)} rowKey={c => c.id} pageSize={1} />);
+    expect(screen.queryByText('…')).not.toBeInTheDocument();
+    for (let page = 1; page <= 7; page += 1) {
+      expect(screen.getByRole('button', { name: String(page) })).toBeInTheDocument();
+    }
+  });
+
+  it('afișează primă/ultimă pagină, vecinii curentei și ellipsis pentru goluri', () => {
+    render(<DataTable columns={columns} rows={manyRows} rowKey={c => c.id} pageSize={1} />);
+    expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '31' })).toBeInTheDocument();
+    expect(screen.getAllByText('…').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: '15' })).not.toBeInTheDocument();
+  });
+
+  it('nu randează butoane pentru paginile sărite și actualizează fereastra la schimbarea paginii', async () => {
+    render(<DataTable columns={columns} rows={manyRows} rowKey={c => c.id} pageSize={1} />);
+    await userEvent.click(screen.getByRole('button', { name: '31' }));
+    expect(screen.getByText('Copil 31')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '30' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '31' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '15' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '2' })).not.toBeInTheDocument();
+  });
+
+  it('click pe un buton din fereastra de paginare schimbă pagina afișată', async () => {
+    render(<DataTable columns={columns} rows={manyRows} rowKey={c => c.id} pageSize={1} />);
+    await userEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByText('Copil 2')).toBeInTheDocument();
+    expect(screen.queryByText('Copil 1')).not.toBeInTheDocument();
+  });
+});
+
 describe('DataTable groupBy', () => {
   const staff: Staff[] = [
     { id: 's1', name: 'Ana', departmentId: 'DEP-B' },

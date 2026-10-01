@@ -135,7 +135,7 @@ export function useSchoolYearStatus(startYear: number | null): SchoolYearData {
       sold: row.sold.amount,
       soldCurrency: row.sold.currency as Currency,
     }));
-  const monthLabels = months.map(month => formatMonthLabel(month).slice(5));
+  const monthLabels = months.map(month => formatMonthLabel(month).split(' ')[0]);
   const currentMonth = months.includes(todayMonth) ? todayMonth : null;
   const summary: SchoolYearSummaryView = {
     overdueChildren: yearSummary.overdueChildren,

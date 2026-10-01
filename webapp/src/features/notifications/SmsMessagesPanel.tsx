@@ -54,9 +54,9 @@ const PERIOD_LABEL: Record<string, string> = {
   all: 'Toate lunile',
 };
 
-/** Doar prima parte a lui „2026 Sep" (formatMonthLabel) — pastilele „SMS pe luni" nu au an. */
+/** Doar prima parte a lui „Sep 2026" (formatMonthLabel) — pastilele „SMS pe luni" nu au an. */
 function monthShortLabel(month: string): string {
-  return formatMonthLabel(month).split(' ')[1] ?? month;
+  return formatMonthLabel(month).split(' ')[0] ?? month;
 }
 
 function periodValueOf(period: SmsLogPeriodDays): string {

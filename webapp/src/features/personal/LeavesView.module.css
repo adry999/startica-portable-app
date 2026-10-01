@@ -50,12 +50,12 @@
   white-space: nowrap;
 }
 
-/* 2px — bară de legendă de 8px înălțime; cel mai mic token (--radius-5, 5px) ar rotunji-o aproape
-   la formă de pilulă, schimbând vizibil forma din artboard. */
+/* 2px — bară de legendă de 8px înălțime; rotunjit la --radius-5 (TOKENS.md „Corespondență”:
+   5–6 → --radius-5), PROMPT-CLAUDE-CODE-6.md §2. */
 .legendBar {
   width: 18px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-5);
   background: var(--yellow-bar);
 }
 

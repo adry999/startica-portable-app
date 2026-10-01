@@ -29,12 +29,12 @@
   font-size: 14px;
 }
 
-/* Pătrat rotunjit 10×10, nu cerc — 3px pe o cutie de 10px n-are corespondent în scara de tokeni
-   (5px ar rotunji punctul într-un cerc complet, schimbând forma din artboard). Rămâne literal (R2). */
+/* Pătrat rotunjit 10×10 — rotunjit la --radius-5 (TOKENS.md „Corespondență”: 5–6 → --radius-5),
+   PROMPT-CLAUDE-CODE-6.md §2. */
 .dot {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius-5);
   align-self: center;
 }
 

@@ -4,9 +4,12 @@ import {
   Button,
   Card,
   DataTable,
+  EMPTY_STATES,
   EmptyState,
   LoadingState,
   NumberInput,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
   RowMenu,
   SearchInput,
   SegmentedControl,
@@ -287,9 +290,9 @@ export function FeeSetupPage() {
           emptyState={
             feeSetupData.filter === 'missing' ? (
               <EmptyState
-                variant="done"
-                title="Totul e completat"
-                description="Toți copiii nearhivați au taxă și grupă."
+                variant={EMPTY_STATES['taxe.done'].variant}
+                title={resolveEmptyStateTitle(EMPTY_STATES['taxe.done'])}
+                description={resolveEmptyStateText(EMPTY_STATES['taxe.done'])}
               />
             ) : (
               <EmptyState

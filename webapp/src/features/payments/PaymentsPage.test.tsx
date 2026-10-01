@@ -244,7 +244,7 @@ describe('PaymentsPage', () => {
 
     await userEvent.click(screen.getByRole('radio', { name: 'Pe luna încasării' }));
 
-    expect(screen.getAllByText(/^2026 Sep/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/^Sep 2026/).length).toBeGreaterThan(0);
   });
 
   it('adaugă o achitare nouă din formular', async () => {
@@ -496,6 +496,54 @@ describe('PaymentsPage', () => {
     expect((within(dialog).getByLabelText('Cash') as HTMLInputElement).value).toBe('120');
     expect((within(dialog).getByLabelText('Card') as HTMLInputElement).value).toBe('80');
     expect(within(dialog).getByText(`Total: ${formatMoney(200)}`)).toBeInTheDocument();
+  });
+
+  it('coloana Metodă arată suma doar când plata e despărțită pe mai multe metode', async () => {
+    const stateWithMixedPayment = {
+      ...fixtureState,
+      payments: [
+        ...fixtureState.payments,
+        {
+          id: 'p5',
+          date: '2026-09-15',
+          childId: 'c2',
+          amount: 200,
+          method: 'Cash + Card',
+          tenders: [
+            { method: 'Cash', amount: 120 },
+            { method: 'Card', amount: 80 },
+          ],
+          allocations: [],
+          archived: false,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: stateWithMixedPayment, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderPage();
+
+    const table = screen.getByRole('table');
+
+    const singleTenderRow = within(table).getByText('Andrei Popescu').closest('tr')!;
+    expect(within(singleTenderRow).getByText('Cash')).toBeInTheDocument();
+    expect(within(singleTenderRow).queryByText(`Cash ${formatMoney(1500)}`)).not.toBeInTheDocument();
+    // Suma apare o singură dată pe rând (coloana Total) — nu și repetată în coloana Metodă.
+    expect(within(singleTenderRow).getAllByText(formatMoney(1500))).toHaveLength(1);
+
+    const splitTenderRow = within(table).getByText('Maria Ionescu').closest('tr')!;
+    expect(within(splitTenderRow).getByText(`Cash ${formatMoney(120)}`)).toBeInTheDocument();
+    expect(within(splitTenderRow).getByText(`Card ${formatMoney(80)}`)).toBeInTheDocument();
   });
 
   it('B3: coloana Serviciu arată pastila corectă și grupul FilterPills „Serviciu” filtrează rândurile', async () => {

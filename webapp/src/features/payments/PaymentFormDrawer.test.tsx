@@ -336,7 +336,7 @@ describe('PaymentFormDrawer', () => {
     await pickChild(user, 'Elena Rusu');
     await user.type(sumInput(), '1000');
 
-    expect(screen.getByText('Niciun curs cunoscut pentru această dată — completează manual')).toBeInTheDocument();
+    expect(screen.getByText('Curs necunoscut pentru această dată — completează manual')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
 
     await user.click(saveButton());

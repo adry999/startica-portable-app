@@ -36,6 +36,7 @@ Textele complete (titlu + text + buton) sunt în design; se copiază exact.
 | asociere.done | Asociere achitări | done | Toate achitările sunt asociate | — |
 | conflicte.done | Conflicte | done | Niciun conflict | — |
 | taxe.first | Taxe și grupe | first | Niciun copil activ | + Copil nou |
+| taxe.done | Taxe și grupe (filtru „Fără taxă") | done | Totul e completat | — |
 | candidati.first | Personal · Candidați | first | Niciun candidat încă | + Candidat |
 | istoric.first | Administrare · Istoric | first | Nicio modificare înregistrată | — |
 | servicii.first | Setări · Servicii | first | Niciun serviciu încă | + Serviciu nou |

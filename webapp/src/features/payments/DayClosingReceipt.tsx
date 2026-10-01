@@ -38,7 +38,7 @@ export function DayClosingReceipt() {
           <ThermalRule />
 
           {closing.rows.length === 0 ? (
-            <p className={styles.notice}>Nicio achitare în această zi.</p>
+            <p className={styles.notice}>Zi fără achitări.</p>
           ) : (
             closing.rows.map(row => (
               <div key={row.id} className={styles.paymentRow}>

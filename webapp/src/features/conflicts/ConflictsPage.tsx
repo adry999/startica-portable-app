@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Card, EmptyState, LoadingState, SelectableRow, useToast } from '@shared/ui';
+import {
+  Card,
+  EMPTY_STATES,
+  EmptyState,
+  LoadingState,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
+  SelectableRow,
+  useToast,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { kindLabel } from './field-labels';
 import { useConflicts } from './useConflicts';
@@ -17,7 +26,11 @@ export function ConflictsPage() {
   if (conflicts.length === 0) {
     return (
       <div className={styles.page}>
-        <EmptyState variant="done" title="Nu există conflicte." />
+        <EmptyState
+          variant={EMPTY_STATES['conflicte.done'].variant}
+          title={resolveEmptyStateTitle(EMPTY_STATES['conflicte.done'])}
+          description={resolveEmptyStateText(EMPTY_STATES['conflicte.done'])}
+        />
       </div>
     );
   }

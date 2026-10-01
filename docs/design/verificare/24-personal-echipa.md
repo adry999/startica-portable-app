@@ -112,7 +112,13 @@ de nicio regulă R1–R9. Nu s-a scris nimic în `INTREBARI.md` pentru acest mod
   `personal/StaffProfilePage.module.css`, `personal/TeamView.module.css` scoase din R2 `ALLOWED`;
   niciun entry nou adăugat (doar comentarii pe excepțiile rămase, deja existente).
 
-**Captură 1440×900 vs. artboard:** efectuată 01.10 — `24-personal-echipa.png` (stânga artboard, dreapta
-aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; paragraful de sub
-„Niciun candidat încă” (Candidați, listă goală) și rotunjimile ≤1px (departamentSquare, punctele din
-pontajul lunii) corespund artboard-ului.
+**Captură 1440×900 vs. artboard:** efectuată 01.10, regenerată după corecție — `24-personal-echipa.png`
+(stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Un revizor extern a găsit un
+bug real ratat de prima trecere: coloana „Azi" arăta „Lucrează" în loc de „La lucru" (text implicit
+hardcodat în `staffColumns.tsx`, fără cheie de catalog) — reparat și reconfirmat în captura curentă.
+
+Verificate cu codul, nu doar presupuse: avatarul cu o singură literă (Valeria/Ala — nume de un singur
+cuvânt în copia de date, `initials()` e corect; nu e bug de componentă) și anteturile de departament
+(deja stilizate cu `departmentSquare`/badge de ton, identic cu artboard-ul — diferența vizuală bănuită
+inițial nu există în cod). Restul diferențelor sunt doar date de test (paragraful de sub „Niciun candidat
+încă”, rotunjimile ≤1px corespund artboard-ului).

@@ -1,5 +1,27 @@
 # Întrebări / decizii blocate
 
+## ✅ §3 — incident: capturile arătau codul vechi, nu codul curent — rezolvat 01.10
+
+În timpul corecției de mai jos (R2/R9 + bug-uri vizuale), repararea paginării din `DataTable` nu se vedea deloc în captura regenerată — codul era corect, testele treceau, dar imaginea arăta tot comportamentul vechi. Motiv: `src/core/server/http/static-assets.mjs` servește `webapp/dist` (bundle precompilat prin `npm run build`), nu sursa live — iar `scripts/design-capture.mjs` pornea serverul pe copia izolată fără să reconstruiască `dist` întâi. Toate cele 18 capturi din prima trecere a §3 (inclusiv cele „verificate" vizual de mine) arătau de fapt un build mai vechi decât multe din schimbările acestei sesiuni.
+
+**Rezolvat:** `design-capture.mjs` rulează acum `npm run build` în `webapp/` înainte de orice captură. Toate cele 18 capturi au fost regenerate cu `dist` proaspăt; cele 2 module cu bug-uri reale reparate (Achitări, Personal — Echipa) au fost reverificate vizual pe captura nouă și confirmă reparația.
+
+## ⏳ §3 — PeriodFilter: presetările din spec rămân neconstruite (01.10, decizie veche confirmată)
+
+Revizorul a semnalat că Achitări folosește încă `<input type="month">` în loc de dropdown-ul cu presetări din artboard. Verificat: `PeriodFilter.tsx` are deja acest gol documentat explicit în propriul comentariu JSDoc, de dinainte de această sesiune — „Presetările din spec (luna curentă, luna trecută, 30 zile, an școlar, tot) rămân pentru ecranul care le va folosi efectiv prima dată — nu sunt construite speculativ aici." Nu e datorie nouă din §2/§3.
+
+Nu am implementat presetările acum: „30 de zile" cere interval pe zile, nu pe lună (`from`/`to` sunt azi `YYYY-MM`), iar „An școlar" trebuie să respecte aceeași semantică folosită în altă parte a aplicației (Situația plăților) — o extensie reală de API/logică de date, exact cazul din regulile de sesiune („te oprești dacă o extensie de componentă schimbă logica de date"). Rămâne task separat, cu design propriu pentru conversia `from`/`to`, nu un patch grăbit peste o sesiune deja încărcată de corecții.
+
+## ✅ §2/§3 — corecție: excepțiile R2/R9 nu erau închise + bug-uri vizuale reale ratate la §3 — rezolvat 01.10
+
+Un revizor extern a verificat 6 din cele 18 capturi §3 și a găsit: (1) `architecture.test.ts` avea încă 5 excepții R2 și 9+24 excepții R9, deși PROMPT-CLAUDE-CODE-6.md §2 cerea explicit ≤1 excepție totală (doar R3 `WeeklySheet.tsx`) și ștergerea mecanismului de allowlist pentru R2/R9; (2) clasificarea „doar date de test" de la §3 a ratat bug-uri reale la Achitări, Personal.
+
+Corectat:
+- **R2** — 4 din 5 excepții s-au închis rotunjind razele la cea mai apropiată `--radius-*` din TOKENS.md „Corespondență" (judecata mea anterioară de „păstrare a formei" a fost greșită — instrucțiunea §2 e explicită și are prioritate); a 5-a (`PaymentReceipt.module.css`) s-a închis cu un token nou (`--shadow-ring-mint`) și o rafinare a regexului de `z-index` (sub 10 = stacking local, nu intră în scara globală). Allowlist-ul R2 e acum gol.
+- **R9** — textul de căutare/filtre fără rezultate (politică deja documentată în header-ul `empty-states.ts`) e acum exclus structural prin regex, nu prin listă de fișiere; 4 texte reformulate fără „Niciun/Nicio" (WeeklySheetDialog, GroupTeamPicker ×2, DayClosingReceipt, PaymentFormDrawer); `ConflictsPage`/`ReviewPage` trec pe catalog (`conflicte.done`/`derezolvat.done`, chei deja existente, nefolosite până acum); `FeeSetupPage` are cheie nouă `taxe.done`. Regula de import direct a fost rescrisă să verifice `variant` literal (catalogul nu acoperă `'no-results'` — structural, nu datorie). Allowlist-ul R9 e acum gol. Întregul `architecture.test.ts` are o singură excepție rămasă în tot fișierul: `attendance/WeeklySheet.tsx` (R3), exact cum cere §2.
+- **Bug-uri vizuale reale** (Achitări: paginare fără elipsă/overflow, coloana Metodă dublează suma, luna „2026 Iun" → „Iun 2026", pastilele Grupă pe 2 rânduri — acceptat, vezi mai sus pentru PeriodFilter; Personal: „Lucrează" → „La lucru") — reparate în cod, cu teste actualizate.
+- **Nu erau bug-uri** (verificat cu cod, nu presupus): Copii „Plată" gol (decizie A8/2a, intenționat), avatare gri la copii fără grupă (ton de grupă, intenționat), inițială unică la Personal (artefact de date de test, nu bug de componentă), anteturile de departament din Personal (deja stilizate corect în cod — posibil artefact de rezoluție în captură).
+
 ## ✅ §3 — incident: copia izolată de date a scris un backup real pe Google Drive — rezolvat 01.10
 
 Primul test al `scripts/dev-data-copy.mjs` (server pornit pe `.tmp/data-copy/`, cu `STARTICA_HOME` izolat) a scris totuși un fișier real în `D:\Google Drive\` — `startica_2026-10-01T10-02-28-562Z_pornire_15fe8499.db`. Motiv: setarea `externalDir` (calea de backup extern) stă ÎN `startica.db`, nu derivă din `STARTICA_HOME` — copiind baza întreagă, serverul pe copie a moștenit calea reală, iar backup-ul automat de pornire (`main.mjs`, `app.backup('pornire')`) a scris acolo. Fișierul e un backup valid (nicio dată reală corupt/pierdut), dar e o scriere neintenționată în afara `.tmp/`. Utilizatorul a șters manual fișierul din Google Drive.

@@ -198,12 +198,12 @@
   font-weight: 800;
 }
 
-/* De notificat.dc.html#8a: colț „coadă de bulă” (6px stânga-jos) — formă asimetrică din artboard,
-   fără corespondent în scara de tokeni (--radius-md-lg=16/--radius-lg=20), deci rămâne px literal. */
+/* De notificat.dc.html#8a: colț „coadă de bulă” (6px stânga-jos) — rotunjit la scara de tokeni
+   (TOKENS.md „Corespondență”: 18–20 → --radius-lg, 5–6 → --radius-5), PROMPT-CLAUDE-CODE-6.md §2. */
 .bubble {
   margin: 0;
   padding: 16px 18px;
-  border-radius: 18px 18px 18px 6px;
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-5);
   background: var(--mint-soft);
   font-size: 15px;
   line-height: 1.55;

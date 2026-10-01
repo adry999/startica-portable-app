@@ -23,6 +23,7 @@ const KEYS_35C: EmptyStateKey[] = [
   'asociere.done',
   'conflicte.done',
   'taxe.first',
+  'taxe.done',
   'candidati.first',
   'istoric.first',
   'servicii.first',

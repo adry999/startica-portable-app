@@ -144,27 +144,9 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     /box-shadow:(?!\s*(?:var\(|none\b))\s*\S/,
     /font-family:(?!\s*var\()\s*\S/,
     /border-radius:\s*\d+px/,
-    /z-index:\s*\d/,
-  ];
-
-  const ALLOWED: readonly string[] = [
-    // `.bubble { border-radius: 18px 18px 18px 6px; }` — colț „coadă de bulă” (6px stânga-jos, De
-    // notificat.dc.html#8a), formă asimetrică din artboard fără corespondent într-un singur token.
-    'notify/NotifyPage.module.css',
-    // `.cutLine { z-index: 1; }` — stacking local al liniei de tăiere peste chitanță, nu ține de
-    // scara globală (--z-sticky/popover/drawer/toast/dialog). `.childAvatar { box-shadow: 0 0 0 2px
-    // var(--mint); }` — inel unic de avatar, altă culoare/grosime decât --shadow-ring-drag.
-    'payments/PaymentReceipt.module.css',
-    // `.legendBar { border-radius: 2px; }` — bară de legendă de 8px înălțime; cel mai mic token
-    // (--radius-5, 5px) ar rotunji-o aproape de formă de pilulă, schimbând vizibil forma din artboard.
-    'personal/LeavesView.module.css',
-    // `.departmentSquare { border-radius: 3px; }` — pătrat 8×8 (Pontaj 23b); --radius-5 (5px) pe o
-    // cutie atât de mică ar rotunji-o aproape de cerc, schimbând forma din artboard.
-    'personal/TimesheetView.module.css',
-    // `.dot { border-radius: 3px; }` — pătrat rotunjit 10×10 din legenda categoriilor (19a); 3px pe o
-    // cutie de 10px n-are corespondent în scara de tokeni (--radius-5 = 5px ar rotunji punctul într-un
-    // cerc complet, schimbând forma din artboard).
-    'report/ReportCategoriesPanel.module.css',
+    // Scara globală (--z-sticky=10 … --z-dialog=400) începe la 10 — un z-index cu o singură cifră
+    // (0-9) e stacking local (ex. o linie peste propriul card), nu poate intra în conflict cu ea.
+    /z-index:\s*(?:[1-9]\d|\d{3,})\b/,
   ];
 
   /** Un comentariu `/* ... *\/` care doar explică o valoare (ex. „#15a”, un id de artboard, sau
@@ -173,12 +155,16 @@ describe('R2 — fără hex/rgb/box-shadow/font-family/border-radius-px/z-index 
     return text.replace(/\/\*[\s\S]*?\*\//g, '');
   }
 
+  // Allowlist golit (PROMPT-CLAUDE-CODE-6.md §2) — ultimele 5 excepții închise: razele off-scale
+  // s-au rotunjit la cel mai apropiat --radius-* (TOKENS.md „Corespondență”), `z-index: 1` e acum
+  // exclus structural mai sus (stacking local, sub scara globală), iar inelul de avatar al chitanței
+  // are propriul token (--shadow-ring-mint).
   it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
     const files = collectFeatureFilesByName(/\.module\.css$/);
     const actual = featureFilesMatching(files, text =>
       CSS_VIOLATION_PATTERNS.some(p => p.test(stripCssComments(text))),
     );
-    expect(unexpectedViolations(actual, ALLOWED)).toEqual([]);
+    expect(actual).toEqual([]);
   });
 });
 
@@ -223,117 +209,67 @@ describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format �
 
 describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text literal sau import direct', () => {
   const EMPTY_TEXT_PATTERN = /\bNiciun\w*|\bNicio\w*/;
-  const DIRECT_IMPORT_PATTERN = /import\s*\{[^}]*\bEmptyState\b[^}]*\}\s*from\s*['"]@shared\/ui['"]/;
+  // `EmptyStateCatalogEntry.variant` e doar 'first' | 'done' | 'period' — 'no-results' (implicit
+  // când `variant` lipsește, vezi EmptyState.tsx) nu există în catalog, pentru că textul lui e
+  // generic, generat direct de consumator (empty-states.ts, header-ul fișierului). Un `<EmptyState>`
+  // cu `title`/`description` literal e o încălcare reală doar când `variant` e una din cele 3
+  // catalogate — altfel catalogul n-ar putea reprezenta oricum acel caz.
+  const CATALOG_VARIANT_PATTERN = /^(first|done|period)$/;
+
+  function hasUnmigratedEmptyState(text: string): boolean {
+    const tags = stripComments(text).match(/<EmptyState\b[\s\S]*?\/?>/g) ?? [];
+    return tags.some(tag => {
+      if (!/\b(title|description)\s*=\s*["']/.test(tag)) return false;
+      const variantMatch = tag.match(/\bvariant\s*=\s*["']([\w-]+)["']/);
+      const variant = variantMatch ? variantMatch[1] : 'no-results';
+      return CATALOG_VARIANT_PATTERN.test(variant);
+    });
+  }
   // 30-stari-goale.md §35e — nu sunt stări goale, nu intră în regulă: text aruncat (throw/toast),
   // props `label`/`hint`/`emptyLabel` (indicii sub câmp, sloturi goale de câmp, `emptyLabel` din
   // componente ca SearchSelect/MultiSelect) și opțiuni de select (`value`/valoare de listă simplă).
+  // empty-states.ts (header): „Fără rezultate" (căutare/filtre active) are prioritate peste orice
+  // cheie din catalog și textul ei e generic, generat direct de consumator — nu intră în R9.
+  const SEARCH_EMPTY_PATTERN = /c[ăa]ut|filtr/i;
   const EMPTY_TEXT_EXEMPT_LINE_PATTERN =
     /throw\s+new\s+Error\(|\btoast\.(show|error|success|info|warning)\(|\b(label|hint|emptyLabel)\s*[:=]\s*/;
 
   /** R9 mai precis (PROMPT-CLAUDE-CODE-5.md §1.4): numără doar liniile unde „Niciun/Nicio” apare
-   * într-un text randat direct pe ecran, nu în comentarii, erori aruncate, toast-uri sau props de
-   * indiciu/opțiune. */
+   * într-un text randat direct pe ecran, nu în comentarii, erori aruncate, toast-uri, props de
+   * indiciu/opțiune, sau text de căutare/filtre fără rezultate (vezi mai sus). */
   function hasUnexpectedEmptyText(text: string): boolean {
     return stripComments(text)
       .split('\n')
-      .some(line => EMPTY_TEXT_PATTERN.test(line) && !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line));
+      .some(
+        line =>
+          EMPTY_TEXT_PATTERN.test(line) &&
+          !EMPTY_TEXT_EXEMPT_LINE_PATTERN.test(line) &&
+          !SEARCH_EMPTY_PATTERN.test(line),
+      );
   }
 
-  // Fișierele `.test.tsx` sunt excluse structural mai jos (ca la R1/R3/R7) — un test care verifică
-  // textul catalogului prin `screen.findByText(...)` conține inevitabil „Niciun/Nicio”, fără să fie
-  // text nou hardcodat.
-  const TEXT_ALLOWED: readonly string[] = [
-    // „Niciun rezultat pentru căutare” pe coada de achitări neasociate — text de căutare fără
-    // rezultate, intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca
-    // GroupsBoard/AuditLogPage. Starea „done”/„fără sugestii” folosesc deja catalogul (asociere.done/
-    // asociere.suggestions, vezi IMPORT_ALLOWED mai jos).
-    'assign/AssignPage.tsx',
-    'attendance/WeeklySheetDialog.tsx',
-    'audit-log/AuditLogPage.tsx',
-    // „Niciun copil nu corespunde filtrelor curente” — text de căutare/filtre fără rezultate,
-    // intenționat în afara catalogului, ca AssignPage/AuditLogPage.
-    'children/ChildrenPage.tsx',
-    // „Niciun rezultat pentru căutare” pe panoul „Fără grupă” — text de căutare fără rezultate,
-    // intenționat în afara catalogului (empty-states.ts, header-ul fișierului), ca AssignPage/AuditLogPage.
-    'groups/GroupsBoard.tsx',
-    // „Niciun asistent" / „Niciun înlocuitor" (03-grupe.md §5c) — indicii scurte pe rolul unui bloc din
-    // Echipa grupei, nu o stare goală de listă/pagină (fără ilustrație, fără acțiune); niciun cheie din
-    // catalog nu se potrivește, textul rămâne literal, ca în spec.
-    'groups/GroupTeamPicker.tsx',
-    // „Niciun SMS pentru filtrele alese” pe tabelul jurnalului SMS (14-sms.md §11a) — text de
-    // căutare/filtre fără rezultate, intenționat în afara catalogului (empty-states.ts, header-ul
-    // fișierului), ca AssignPage/GroupsBoard mai sus.
-    'notifications/SmsMessagesPanel.tsx',
-    // „Nicio achitare în această zi.” — linie pe chitanța tipărită a închiderii zilei (thermal
-    // receipt), nu o stare goală de ecran/listă; catalogul empty-states.ts nu acoperă tipăriri.
-    'payments/DayClosingReceipt.tsx',
-    // „Niciun curs cunoscut pentru această dată — completează manual” — indiciu inline lângă câmpul
-    // de curs valutar (fallback când BNM n-are cursul zilei), nu o stare goală de listă/pagină.
-    'payments/PaymentFormDrawer.tsx',
-  ];
-
-  const IMPORT_ALLOWED: readonly string[] = [
-    // Coada nu e un `DataTable` (listă custom + panou de detaliu) — `EmptyState` randat direct
-    // pentru „toate achitările asociate” (`asociere.done`) și, compact, pentru „nicio sugestie”
-    // (`asociere.suggestions`), ambele din catalog.
-    'assign/AssignPage.tsx',
-    'attendance/DayView.tsx',
-    'attendance/MonthView.tsx',
-    'backup/SyncSettings.tsx',
-    'children/BirthdaysPage.tsx',
-    // Genuin nou (§3 final) — „Nicio absență motivată în {luna}.” nu mai e text hardcodat, ci
-    // `EmptyState` cu cheia din catalog (`fisa.absences`, compact).
-    'children/ChildAttendanceSection.tsx',
-    // Include și „Nicio notă încă.” (`fisa.notes`, compact, genuin nou §3 final), alături de
-    // `fisa.payers` deja cablat.
-    'children/ChildProfileView.tsx',
-    'children/ChildrenPage.tsx',
-    'conflicts/ConflictsPage.tsx',
-    'dashboard/DashboardPage.tsx',
-    'expenses/ExpensesCategoryManager.tsx',
-    'fee-setup/FeeSetupPage.tsx',
-    'groups/GroupsBoard.tsx',
-    'groups/GroupsPage.tsx',
-    // Coada golită nu e un `DataTable` — `EmptyState` cu cheia din catalog (`denotificat.done`,
-    // PROMPT-CLAUDE-CODE-6.md §2): titlu static din catalog, nota dinamică „N fișe nu pot fi
-    // evaluate” (fișele „De verificat”, din useNotify.ts) e un `params.nefise` în `text`.
-    'notify/NotifyPage.tsx',
-    'payments/PaymentsTable.tsx',
-    // 24-personal.md §23l — starea „Niciun candidat încă" vine din `DataTable.empty="candidati.first"`
-    // (catalog); rămâne un import direct doar pentru „Nimeni nu se potrivește căutării." — text de
-    // căutare fără rezultate, generic pentru acest ecran, în afara catalogului, ca AssignPage/GroupsBoard.
-    'personal/CandidatesTab.tsx',
-    // Genuin nou (23-bazin.md §22c) — tabelul „Pe copii” golit („Nicio programare în luna asta”)
-    // nu mai e text hardcodat, ci `EmptyState` cu cheia din catalog (`bazin.month.period`, R9).
-    'pool/MonthView.tsx',
-    // Genuin nou (20-raport-contabil.md §19a) — panourile „Cheltuieli pe categorii”/„Încasări pe
-    // metode” și tabelul „Pe zile” foloseau text hardcodat; golite trec pe `EmptyState` cu cheile din
-    // catalog (`raport.expenses`/`raport.income`, compact; `raport.period`, R9).
-    'report/ReportCategoriesPanel.tsx',
-    'report/ReportDaysTable.tsx',
-    'report/ReportMethodsPanel.tsx',
-    'review/ReviewPage.tsx',
-    // Genuin nou (07-situatia.md §4, PaymentHeatmap.tsx) — starea goală a hărții An școlar
-    // (`situatia.year.period`) nu mai e text hardcodat, ci `EmptyState` cu cheie din catalog (R9).
-    'status/PaymentHeatmap.tsx',
-    // Genuin nou (04-vizite.md §3) — panoul zilei fără vizite (`vizite.day`, compact, cu „+ Programează”)
-    // și „Următoarele vizite” golit (`vizite.month.rest`, compact) nu sunt un `DataTable`, deci
-    // `EmptyState` e randat direct, ca în ChildProfileView.tsx/DashboardPage.tsx mai sus; textul
-    // „Nicio vizită nu corespunde filtrelor curente” de pe tabelul „Toate vizitele” a fost înlocuit cu
-    // `DataTable.empty="vizite.first"` + `hasActiveFilters`, care nu mai trece prin acest fișier.
-    'visits/VisitsPage.tsx',
-  ];
+  // Allowlist golit (PROMPT-CLAUDE-CODE-6.md §2) — textele de căutare/filtre fără rezultate sunt
+  // acum excluse structural mai sus; restul (WeeklySheetDialog „Niciuna" → „Fără grupe",
+  // GroupTeamPicker „Niciun asistent/înlocuitor" → „Fără asistent/înlocuitor", DayClosingReceipt
+  // „Nicio achitare în această zi." → „Zi fără achitări.", PaymentFormDrawer „Niciun curs cunoscut…"
+  // → „Curs necunoscut…") au fost reformulate, fără cheie de catalog nouă.
 
   it('nicio încălcare nouă de text literal „Niciun/Nicio" în afara listei de excepții', () => {
     const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
     const actual = featureFilesMatching(files, hasUnexpectedEmptyText);
-    expect(unexpectedViolations(actual, TEXT_ALLOWED)).toEqual([]);
+    expect(actual).toEqual([]);
   });
 
-  it('niciun import direct nou al EmptyState în afara listei de excepții', () => {
+  // Allowlist golit (PROMPT-CLAUDE-CODE-6.md §2) — `ConflictsPage`/`ReviewPage`/`FeeSetupPage`
+  // (starea „done”) au trecut pe catalog (`conflicte.done`/`derezolvat.done`/`taxe.done`, acesta din
+  // urmă nou); restul (`ChildrenPage`/`PaymentsTable`/`CandidatesTab`/`SyncSettings`/a doua stare din
+  // `FeeSetupPage`) rămân cu `title`/`description` literal doar pe `variant="no-results"` (implicit
+  // sau explicit) — structural în afara catalogului (`EmptyStateCatalogEntry.variant` nu include
+  // `'no-results'`), nu datorie.
+  it('niciun `<EmptyState>` cu title/description literal pe o variantă din catalog', () => {
     const files = collectFeatureFilesByName(/\.tsx$/);
-    const actual = featureFilesMatching(files, text => DIRECT_IMPORT_PATTERN.test(text));
-    expect(unexpectedViolations(actual, IMPORT_ALLOWED)).toEqual([]);
+    const actual = featureFilesMatching(files, hasUnmigratedEmptyState);
+    expect(actual).toEqual([]);
   });
 });
 

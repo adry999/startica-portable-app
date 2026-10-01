@@ -55,6 +55,28 @@ export interface DataTableProps<Row> {
 
 type SortDirection = 'asc' | 'desc';
 
+type PageItem = number | 'ellipsis';
+
+/** Pagini de afișat: toate dacă încap, altfel primă/ultimă + curentă ± 1, cu „…” pentru goluri. */
+function buildPageItems(pageCount: number, currentPage: number): PageItem[] {
+  if (pageCount <= 7) {
+    return Array.from({ length: pageCount }, (_, index) => index);
+  }
+  const shown = new Set<number>([0, pageCount - 1]);
+  for (let index = currentPage - 1; index <= currentPage + 1; index += 1) {
+    if (index >= 0 && index < pageCount) shown.add(index);
+  }
+  const sorted = Array.from(shown).sort((a, b) => a - b);
+  const items: PageItem[] = [];
+  let previous: number | null = null;
+  for (const page of sorted) {
+    if (previous !== null && page - previous > 1) items.push('ellipsis');
+    items.push(page);
+    previous = page;
+  }
+  return items;
+}
+
 /**
  * Tabel generic: sortare pe coloană + paginare + selecție, scrise o singură dată.
  * Filtrarea rămâne responsabilitatea ecranului (`rows` e deja filtrat) — DataTable
@@ -278,18 +300,24 @@ export function DataTable<Row>({
             {sortedRows.length}
           </Badge>
           <div className={styles.pageButtons}>
-            {Array.from({ length: pageCount }, (_, index) => (
-              <button
-                key={index}
-                type="button"
-                className={
-                  index === currentPage ? `${styles.pageButton} ${styles.pageButtonActive}` : styles.pageButton
-                }
-                onClick={() => setPage(index)}
-              >
-                {index + 1}
-              </button>
-            ))}
+            {buildPageItems(pageCount, currentPage).map((item, itemIndex) =>
+              item === 'ellipsis' ? (
+                <span key={`ellipsis-${itemIndex}`} className={styles.pageEllipsis} aria-hidden="true">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  className={
+                    item === currentPage ? `${styles.pageButton} ${styles.pageButtonActive}` : styles.pageButton
+                  }
+                  onClick={() => setPage(item)}
+                >
+                  {item + 1}
+                </button>
+              ),
+            )}
           </div>
         </div>
       )}

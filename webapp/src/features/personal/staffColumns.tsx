@@ -112,7 +112,7 @@ export function buildStaffColumns({
       render: person => {
         const code = todayCodes.get(person.id) as TimesheetRow['code'] | undefined;
         const badge = code === 'CO' || code === 'CM' || code === 'A' ? TODAY_BADGE[code] : null;
-        return <Badge tone={badge?.tone ?? 'mint'}>{badge?.label ?? 'Lucrează'}</Badge>;
+        return <Badge tone={badge?.tone ?? 'mint'}>{badge?.label ?? 'La lucru'}</Badge>;
       },
     },
   ];

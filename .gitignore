@@ -48,3 +48,6 @@ sync.json
 # ─── Server local ─────────────────────────────────────────────────────────────
 # Portul pe care ascultă serverul, scris în STARTICA_HOME la pornire (main.mjs).
 startica.port
+
+*storybook.log
+storybook-static

@@ -11,7 +11,8 @@ export interface FilterPillGroup<T extends string> {
 }
 
 export interface FilterPillsProps {
-  /** 1-2 grupuri, separate vizual printr-un despărțitor. */
+  /** Orice număr de grupuri, separate vizual printr-un despărțitor; bara trece pe al doilea rând
+   * dacă nu încap (`flex-wrap: wrap`, ca în artboard — Achitări are 3: Metodă, Grupa, Serviciu). */
   groups: FilterPillGroup<string>[];
   /** Contor la capătul barei, ex. „12 zile de naștere". */
   trailing?: ReactNode;

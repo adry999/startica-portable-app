@@ -7,6 +7,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { copyDevData, startCopyServer } from './dev-data-copy.mjs';
 
@@ -163,6 +164,16 @@ async function main() {
   if (modules.length === 0) throw new Error(`Niciun modul nu corespunde filtrului „${filter}”.`);
 
   mkdirSync(VERIFICARE_ROOT, { recursive: true });
+
+  // Backend-ul servește `webapp/dist` (prebuilt, src/core/server/http/static-assets.mjs), nu sursa
+  // live — fără acest build, capturile arată codul de la ultimul `npm run build`, nu codul curent
+  // (incident constatat 01.10, vezi INTREBARI.md).
+  console.log('[design-capture] construiesc webapp/dist cu codul curent…');
+  execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'build'], {
+    cwd: join(REPO_ROOT, 'webapp'),
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
 
   console.log('[design-capture] pregătesc copia izolată de date…');
   const copyRoot = copyDevData();

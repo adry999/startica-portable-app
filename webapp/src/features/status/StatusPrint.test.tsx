@@ -59,7 +59,7 @@ describe('StatusPrint', () => {
     renderPrint({ kindergarten: { displayName: 'Grădinița Startica', idno: '1000600000000' } as never });
 
     expect(screen.getByText('Grădinița Startica')).toBeInTheDocument();
-    expect(screen.getByText(/Situația plăților · 2026 Sep/)).toBeInTheDocument();
+    expect(screen.getByText(/Situația plăților · Sep 2026/)).toBeInTheDocument();
     expect(screen.getByText(/filtru: toate grupele/)).toBeInTheDocument();
 
     const table = screen.getByRole('table');

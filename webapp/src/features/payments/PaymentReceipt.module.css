@@ -463,7 +463,7 @@
   background: var(--mint);
   color: var(--mint-ink);
   border: 3px solid var(--white);
-  box-shadow: 0 0 0 2px var(--mint);
+  box-shadow: var(--shadow-ring-mint);
   display: flex;
   align-items: center;
   justify-content: center;

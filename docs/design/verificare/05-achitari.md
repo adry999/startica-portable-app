@@ -31,4 +31,13 @@ Nicio schimbare din această trecere nu a atins `usePayments.ts` (calculul sumar
 - `npm run check` (root) — verde.
 - `architecture.test.ts`: `PaymentsTable.module.css` scos din excepțiile R2 (border-radius fixat); `PaymentsByMonth.tsx` scos din excepțiile R7 (`formatMonthAbbrev`). `PaymentsByMonth.module.css` rămâne în R2 — `box-shadow: inset 4px 0 0 var(--orange)` e un fals-pozitiv al regexului (valoarea folosește tokenul corect, dar regexul cere ca valoarea să *înceapă* cu `var(`, nu doar să-l conțină).
 
-**Captură 1440×900 vs. artboard:** efectuată 01.10 — `05-achitari.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test și starea de interacțiune (nimic selectat/filtrat într-o captură automată, dintr-un context nou fără localStorage); modul Pe luni și cardurile de sumar (`activeTone`) corespund artboard-ului.
+**Captură 1440×900 vs. artboard:** efectuată 01.10, regenerată după corecții — `05-achitari.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Un revizor extern a verificat atent captura inițială și a găsit bug-uri reale ratate de prima trecere; reparate și reconfirmate în captura curentă:
+- paginarea nu avea elipsă (1…31 ieșea din card) — `DataTable` are acum ferestruire cu „…" (`shared/ui/DataTable.tsx`);
+- coloana Metodă dubla suma pe plățile cu o singură metodă — arată suma doar la plățile împărțite pe 2+ metode (`PaymentsTable.tsx`);
+- luna apărea „2026 Iun" (an-lună) — `formatMonthLabel` (`shared/format/date-format.mjs`) e acum lună-an („Iun 2026"), peste tot unde se folosește.
+
+Rămase, verificate și documentate ca fiind corecte, nu bug-uri:
+- pastilele Grupă trec pe al doilea rând la 3 grupuri — artboard-ul însuși are `flex-wrap:wrap` pe acest rând; `FilterPills` nu are limită de grupuri (COMPONENTE.md §0).
+- perioada se alege din 2 câmpuri `type="month"`, nu dintr-un dropdown cu presetări — gol pre-existent, documentat în `PeriodFilter.tsx` și în `docs/design/INTREBARI.md` (necesită conversie reală de logică de date, task separat).
+
+Diferențele rămase sunt doar date de test.

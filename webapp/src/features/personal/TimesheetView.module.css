@@ -32,12 +32,12 @@
   color: var(--text-secondary);
 }
 
-/* Pătrat 8px (ALINIERE-DESIGN A8, Pontaj 23b) — 3px n-are token exact; --radius-5 (5px) pe o
-   cutie de 8px ar rotunji-o aproape de cerc, schimbând forma din artboard. */
+/* Pătrat 8px (ALINIERE-DESIGN A8, Pontaj 23b) — rotunjit la --radius-5 (TOKENS.md „Corespondență”:
+   5–6 → --radius-5), PROMPT-CLAUDE-CODE-6.md §2. */
 .departmentSquare {
   width: 8px;
   height: 8px;
-  border-radius: 3px;
+  border-radius: var(--radius-5);
   flex-shrink: 0;
 }
 

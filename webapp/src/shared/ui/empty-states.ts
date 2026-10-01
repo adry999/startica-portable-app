@@ -27,6 +27,7 @@ export type EmptyStateKey =
   | 'asociere.done'
   | 'conflicte.done'
   | 'taxe.first'
+  | 'taxe.done'
   | 'candidati.first'
   | 'istoric.first'
   | 'servicii.first'
@@ -166,6 +167,11 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
     title: 'Niciun copil activ',
     text: 'Taxele se completează după ce adaugi copii.',
     actionLabel: '+ Copil nou',
+  },
+  'taxe.done': {
+    variant: 'done',
+    title: 'Totul e completat',
+    text: 'Toți copiii nearhivați au taxă și grupă.',
   },
   'candidati.first': {
     variant: 'first',

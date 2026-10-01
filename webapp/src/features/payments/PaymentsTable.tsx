@@ -335,7 +335,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                 <span className={styles.badgeStack}>
                   {row.tenders.map(tender => (
                     <Badge key={tender.method} tone={METHOD_TONE[tender.method] ?? 'neutral'}>
-                      {tender.method} {formatMoney(tender.amount)}
+                      {row.tenders.length > 1 ? `${tender.method} ${formatMoney(tender.amount)}` : tender.method}
                     </Badge>
                   ))}
                 </span>

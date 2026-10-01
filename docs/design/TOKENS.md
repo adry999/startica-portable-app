@@ -137,3 +137,4 @@ Stări pentru fundal `--orange-strong`: hover `--orange-strong-hover` = `#a34f00
 - `--font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace` — coduri/sume aliniate pe coloane (bon termic, tabele de tipărit). Înlocuiește `font-family: monospace` literal din module.
 - `--shadow-ring-drag: 0 0 0 3px var(--orange)` — inel de tragere peste un card/coloană (Board, Grupe). Înlocuiește `box-shadow: 0 0 0 3px var(--orange)` literal din module.
 - `--print-paper: #fff` (nou) — alături de `--print-ink`/`--print-muted`/`--print-rule` deja existente, pentru tipar alb-negru real (bon termic, etichete, chitanțe). Înlocuiește `#fff`/`#000` literale din modulele de tipărire.
+- `--shadow-ring-mint: 0 0 0 2px var(--mint)` — inel de avatar pe chitanța de plată (PaymentReceipt). Înlocuiește `box-shadow: 0 0 0 2px var(--mint)` literal din modul (R2, închidere finală §3).

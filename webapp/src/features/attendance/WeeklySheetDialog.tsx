@@ -140,7 +140,7 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
               Toate
             </Button>
             <Button variant="link" className={styles.linkButton} onClick={() => setSelectedGroupIds([])}>
-              Niciuna
+              Fără grupe
             </Button>
           </div>
         </div>

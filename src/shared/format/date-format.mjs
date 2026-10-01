@@ -6,11 +6,11 @@ export const capitalize = v => (v ? v.charAt(0).toUpperCase() + v.slice(1) : v);
 export const formatDate = v => (v ? new Date(v + 'T12:00:00').toLocaleDateString('ro-RO') : '—');
 
 const MONTHS_RO = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
-// Lună tip „2026-09” devine „2026 Sep”, mai lizibil în listele de repartizare.
+// Lună tip „2026-09” devine „Sep 2026”, mai lizibil în listele de repartizare.
 export const formatMonthLabel = v => {
   if (!v) return '—';
   const [year, month] = v.split('-');
-  return `${year} ${MONTHS_RO[Number(month) - 1] || month}`;
+  return `${MONTHS_RO[Number(month) - 1] || month} ${year}`;
 };
 // Dată tip „2026-09-24” devine „Sep” — luna scurtă, sub ziua mare din rândul unei liste (ex. Achitări pe luni).
 export const formatMonthAbbrev = v => (v ? MONTHS_RO[Number(v.slice(5, 7)) - 1] || '' : '');

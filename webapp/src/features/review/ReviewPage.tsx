@@ -4,9 +4,12 @@ import {
   Badge,
   Button,
   Card,
+  EMPTY_STATES,
   EmptyState,
   Kbd,
   LoadingState,
+  resolveEmptyStateText,
+  resolveEmptyStateTitle,
   ScrollArea,
   SearchInput,
   SegmentedControl,
@@ -102,7 +105,11 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
 
   if (rows.length === 0) {
     return (
-      <EmptyState variant="done" title="Totul e verificat" description="Nu mai sunt fișe sau achitări de corectat." />
+      <EmptyState
+        variant={EMPTY_STATES['derezolvat.done'].variant}
+        title={resolveEmptyStateTitle(EMPTY_STATES['derezolvat.done'])}
+        description={resolveEmptyStateText(EMPTY_STATES['derezolvat.done'])}
+      />
     );
   }
 

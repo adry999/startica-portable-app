@@ -464,7 +464,7 @@ export function PaymentFormDrawer({
                   ? 'Curs manual pentru această plată'
                   : bnmRate !== undefined
                     ? `BNM ${formatDate(values.date)} · ${formatRate(bnmRate)}`
-                    : 'Niciun curs cunoscut pentru această dată — completează manual'}
+                    : 'Curs necunoscut pentru această dată — completează manual'}
                 {values.date && <BnmRateLink date={values.date} />}
               </p>
             </>

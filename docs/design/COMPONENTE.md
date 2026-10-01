@@ -165,7 +165,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 |---|---|---|---|
 | `Button` (primary/ghost/white/outline · md/lg/header) | Buton primar antet Baloo 15/700 `8px 18px`; secundar Nunito 14/800 `8px 16px` alb, border 1.5px | toate antetele | Varianta secundară de antet = `outline` + `size="header"` trebuie să dea exact `8px 16px` 14/800 (acum outline are alt padding). Variantă nouă `danger` (`--pink-ink` plin, alb) pentru „Șterge N copii” (15h). |
 | `SegmentedControl` | Comutator mod (Tabel/Pe luni, Ziua/Luna), Metodă, Serviciu, Suma liberă/fixă | antete, 15b, 10d | Variantă `size="field"` (radius 12, opțiune `8px 0`, flex:1 — în formulare) vs. `pill` (antet, radius 999). |
-| `FilterPills` | „Grupa · Toate · Mars…”, „Metodă”, „Serviciu” | Copii, Achitări, Cheltuieli, Prezența, Pontaj, Situația | Suportă deja 1–2 grupuri; Achitări are 3 (Metodă · Grupa · Serviciu) → scoate limita. |
+| `FilterPills` | „Grupa · Toate · Mars…”, „Metodă”, „Serviciu” | Copii, Achitări, Cheltuieli, Prezența, Pontaj, Situația | ✅ Fără limită de grupuri (§0); Achitări are 3 (Metodă · Grupa · Serviciu), aceeași trecere pe al doilea rând ca în artboard. |
 | `Badge` | Pastile de stare, serviciu, cod pontaj | peste tot | Adaugă `size="sm"` (11px, `2px 8px`) pentru insigna „+1”, „implicit”, „editată”. |
 | `Card` (tone, decorative) | Carduri albe radius 22 border; KPI soft radius 20 cu cerc | peste tot | Radius: design folosește **22** pentru cardurile mari de conținut și **20** pentru KPI — verifică `Card.module.css`. |
 | `PersonCell` (md/lg) | Avatar + nume + sub | Copii, Personal, Candidați, Achitări (Pe luni), De notificat, fișe | Avatar 36–38 în listă (acum 30). Adaugă `size="sm"` 26 (Prezența Luna, Bazin Luna) și `size="md"` = 38. |

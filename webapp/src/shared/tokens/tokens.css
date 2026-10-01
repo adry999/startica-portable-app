@@ -172,6 +172,8 @@
   --shadow-row-active: inset 4px 0 0 var(--orange);
   /* Inel de tragere peste un card/coloană (Board, Grupe — dragOver). */
   --shadow-ring-drag: 0 0 0 3px var(--orange);
+  /* Inel de avatar pe chitanța de plată (PaymentReceipt — copilul plătitor). */
+  --shadow-ring-mint: 0 0 0 2px var(--mint);
 
   /* Text secundar mai închis decât --muted (COMPONENTE.md §0c/26a — Achitari, Administrare, Cheltuieli, Copii, Dashboard, De rezolvat…). */
   --text-secondary: #5b666e;

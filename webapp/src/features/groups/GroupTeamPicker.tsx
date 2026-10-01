@@ -142,8 +142,8 @@ export function GroupTeamPicker({
                   {role === 'principal'
                     ? 'Fără educator principal'
                     : role === 'asistent'
-                      ? 'Niciun asistent'
-                      : 'Niciun înlocuitor'}
+                      ? 'Fără asistent'
+                      : 'Fără înlocuitor'}
                 </p>
               )}
 
