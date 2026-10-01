@@ -129,33 +129,13 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
   // comportamentul (vezi comentariul din fișierul sursă, la linia încălcării). Fișierele `.test.tsx`
   // (mock-uri de componente) sunt excluse structural mai jos, ca la R3/R7/R9.
   const ALLOWED: readonly string[] = [
-    // Rândul din coada de achitări neasociate (dată + text sursă + sumă) — hit-area pe tot rândul,
-    // ca ChildTile/GroupTile/NotifyPage; un `Button` ar impune propriul fundal/padding și ar sparge
-    // layout-ul din 11-de-rezolvat.md §9c.
-    'assign/AssignPage.tsx',
-    // Placa copilului (attendance) — hit-area pe toată placa, cu `currentColor` moștenit din statusul
-    // zilei; un `Button` ar impune propriul fundal/padding.
-    'attendance/ChildTile.tsx',
     // Grupul „Grupă” (pastilă cu tooltip nativ de capacitate + nuanță de ton per-grupă) — vezi
     // comentariul din fișier.
     'children/ChildFormDrawer.tsx',
-    // Rândul din lista de conflicte — hit-area pe tot rândul, ca ChildTile/GroupTile.
-    'conflicts/ConflictsPage.tsx',
     // Bara graficului lunar (formă/înălțime dinamică per venit/cheltuială, fără text, cu Tooltip) și
     // acțiunea „→” din cardul „De văzut” cu culoare de ton moștenită (`color: inherit`) — `Button
     // variant="link"` ar forța orange peste tonul roz/galben/mint al cardului.
     'dashboard/DashboardPage.tsx',
-    // Rândul candidatului din căutare (avatar + nume + pastilă) e un hit-area pe tot rândul, ca
-    // ChildTile — și togglurile de zi L-V (22×22, comutare multiplă, nu `Button`) n-au variantă potrivită.
-    'groups/GroupTeamPicker.tsx',
-    // Mâner de tragere, numele-ca-buton-de-editare, pastila „Editează" și „+N" — patru roluri într-un
-    // tile compact, cu `currentColor` moștenit din tonul dinamic al grupei; un `Button`/`IconButton`
-    // ar impune propriul fundal/padding și ar sparge nuanțarea pe ton (ca ChildTile în attendance).
-    'groups/GroupTile.tsx',
-    // Rândul din coada de notificări (avatar + nume + sumă + bara activă de 4px) — hit-area pe tot
-    // rândul, ca ChildTile/GroupTile; un `Button` ar impune propriul fundal/padding și ar sparge
-    // layout-ul din 10-de-notificat.md §3.
-    'notify/NotifyPage.tsx',
     // Bară de concediu poziționată absolut pe zilele lui (stânga/lățime calculate, culoare dinamică
     // pe tip/planificat) — hit-area pe formă custom, ca ChildTile/GroupTile; vezi comentariul din fișier.
     'personal/LeavesView.tsx',
@@ -175,10 +155,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // printare; `DataTable` e un component interactiv (sortare, rânduri, densitate) nepotrivit pentru
     // `window.print()`, nu există altă variantă din `@shared/ui` pentru un tabel doar-print.
     'report/ReportPrintSummary.tsx',
-    // Rândul din coada „De verificat" (punct de severitate + nume + problemă + bara activă de 4px) —
-    // hit-area pe tot rândul, exact același tipar ca notify/NotifyPage.tsx; un `Button` ar impune
-    // propriul fundal/padding și ar sparge layout-ul din 11-de-rezolvat.md §9b.
-    'review/ReviewPage.tsx',
   ];
 
   it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {

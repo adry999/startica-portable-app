@@ -1,7 +1,15 @@
-.root {
-  all: unset;
+/* Specificitate zero (:where) — resetul cedează mereu în fața clasei proprii a apelantului
+   (ex. `.tile`), indiferent de ordinea de încărcare a celor două module CSS în bundle. */
+:where(.root) {
   box-sizing: border-box;
   display: block;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
   cursor: pointer;
 }
 

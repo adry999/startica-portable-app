@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
-import { Icon, RowMenu } from '@shared/ui';
+import { Icon, RowMenu, SelectableTile } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
@@ -82,8 +82,7 @@ export function GroupTile({
       }}
     >
       <div className={styles.head}>
-        <button
-          type="button"
+        <SelectableTile
           className={styles.handle}
           draggable={!busy}
           aria-label={`Mută grupa ${group.name}`}
@@ -97,24 +96,23 @@ export function GroupTile({
           onDragEnd={() => setBeingDragged(false)}
         >
           <Icon name="grip-vertical" />
-        </button>
+        </SelectableTile>
         {onEdit ? (
-          <button type="button" className={styles.name} onClick={onEdit}>
+          <SelectableTile className={styles.name} onClick={onEdit}>
             {group.name}
-          </button>
+          </SelectableTile>
         ) : (
           <p className={styles.name}>{group.name}</p>
         )}
         {onEdit && (
-          <button
-            type="button"
+          <SelectableTile
             className={styles.editButton}
             style={{ color: colors.ink }}
             onClick={onEdit}
             aria-label={`Editează grupa ${group.name}`}
           >
             Editează
-          </button>
+          </SelectableTile>
         )}
         {pillLabel && (
           <span
@@ -173,9 +171,9 @@ export function GroupTile({
             </span>
           ))}
           {extra > 0 && (
-            <button type="button" className={styles.moreButton} onClick={onExpandOverflow}>
+            <SelectableTile className={styles.moreButton} onClick={onExpandOverflow}>
               +{extra}
-            </button>
+            </SelectableTile>
           )}
         </div>
       )}

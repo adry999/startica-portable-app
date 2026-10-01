@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, IconButton, SearchInput } from '@shared/ui';
+import { Badge, Button, IconButton, SearchInput, SelectableRow, SelectableTile } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { formatShortDayMonth } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
@@ -162,14 +162,13 @@ export function GroupTeamPicker({
                       {showDays && (
                         <span className={styles.days}>
                           {DAY_LABELS.map((label, index) => (
-                            <button
+                            <SelectableTile
                               key={label}
-                              type="button"
                               className={(member.days ?? []).includes(index + 1) ? styles.dayActive : styles.day}
                               onClick={() => toggleDay(member.staffId, index + 1)}
                             >
                               {label}
-                            </button>
+                            </SelectableTile>
                           ))}
                         </span>
                       )}
@@ -200,11 +199,7 @@ export function GroupTeamPicker({
                       const other = otherAssignment.get(person.id);
                       return (
                         <li key={person.id}>
-                          <button
-                            type="button"
-                            className={styles.candidateRow}
-                            onClick={() => addMember(role, person.id)}
-                          >
+                          <SelectableRow className={styles.candidateRow} onClick={() => addMember(role, person.id)}>
                             <span className={styles.avatar}>{initials(person.name)}</span>
                             <span className={styles.name}>{person.name}</span>
                             {other ? (
@@ -219,7 +214,7 @@ export function GroupTeamPicker({
                             ) : (
                               <Badge tone="mint">Liberă</Badge>
                             )}
-                          </button>
+                          </SelectableRow>
                         </li>
                       );
                     })}

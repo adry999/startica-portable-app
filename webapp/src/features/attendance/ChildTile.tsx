@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Icon, type PillTone } from '@shared/ui';
+import { Icon, SelectableTile, type PillTone } from '@shared/ui';
 import { STATUS_LABEL } from '@shared/attendance';
 import type { AttendanceStatus } from '#features/attendance/attendance.types.d.mts';
 import styles from './DayView.module.css';
@@ -46,8 +46,7 @@ export function ChildTile({ name, initials, status, tone, onClick }: ChildTilePr
   const dimmed = status === 'absent' || status === 'excused';
 
   return (
-    <button
-      type="button"
+    <SelectableTile
       aria-pressed={status !== null}
       aria-label={`${name}: ${label}`}
       className={`${styles.tile} ${STATUS_CLASS[kind]}`}
@@ -61,6 +60,6 @@ export function ChildTile({ name, initials, status, tone, onClick }: ChildTilePr
         <span className={`${styles.tileStatus} ${STATUS_TEXT_CLASS[kind]}`}>{label}</span>
       </span>
       <span className={`${styles.mark} ${MARK_CLASS[kind]}`}>{status ? MARK_SYMBOL[status] : ''}</span>
-    </button>
+    </SelectableTile>
   );
 }

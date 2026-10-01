@@ -11,6 +11,7 @@ import {
   ScrollArea,
   SearchInput,
   SearchSelect,
+  SelectableRow,
   resolveEmptyStateText,
   resolveEmptyStateTitle,
   useToast,
@@ -248,8 +249,7 @@ function PaymentRow({ row, active, onSelect }: { row: AssignRowView; active: boo
   const { day, month } = splitDateLabel(row.dateLabel);
   const details = row.monthLines.length > 0 ? row.monthLines.join(', ') : 'fără lună alocată';
   return (
-    <button
-      type="button"
+    <SelectableRow
       className={active ? `${styles.queueRow} ${styles.queueRowActive}` : styles.queueRow}
       aria-current={active}
       onClick={onSelect}
@@ -265,7 +265,7 @@ function PaymentRow({ row, active, onSelect }: { row: AssignRowView; active: boo
         </small>
       </span>
       <strong className={styles.queueAmount}>{row.amountLabel}</strong>
-    </button>
+    </SelectableRow>
   );
 }
 

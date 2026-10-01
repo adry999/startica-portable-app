@@ -6,6 +6,7 @@ import {
   EmptyState,
   LoadingState,
   SegmentedControl,
+  SelectableRow,
   SmsConfirmDialog,
   useToast,
   useTopbarActions,
@@ -245,9 +246,8 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                   const notifiedToday = lastNotified.notifiedToday(row.id, todayStr);
                   const parentName = row.contacts[0]?.name ?? row.name;
                   return (
-                    <button
+                    <SelectableRow
                       key={row.id}
-                      type="button"
                       className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
                       aria-pressed={row.id === activeId}
                       onClick={() => setActiveId(row.id)}
@@ -279,7 +279,7 @@ export function NotifyPage({ month, onNavigate }: NotifyPageProps) {
                             dreapta, când acest rând e activ. */}
                         {row.hasUnassignedHint && <Badge tone="pink">plată neasociată?</Badge>}
                       </span>
-                    </button>
+                    </SelectableRow>
                   );
                 })}
               </div>

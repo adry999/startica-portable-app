@@ -10,6 +10,7 @@ import {
   ScrollArea,
   SearchInput,
   SegmentedControl,
+  SelectableRow,
   useToast,
   useTopbarActions,
 } from '@shared/ui';
@@ -119,9 +120,8 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
         </div>
         <ScrollArea className={styles.queueList}>
           {rows.map(row => (
-            <button
+            <SelectableRow
               key={rowKey(row)}
-              type="button"
               className={row === active ? `${styles.queueRow} ${styles.queueRowActive}` : styles.queueRow}
               aria-current={row === active}
               onClick={() => setActiveKey(rowKey(row))}
@@ -132,7 +132,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
                 <small>{row.reasons[0]}</small>
               </span>
               <span className={styles.queueType}>{TYPE_LABEL[row.type]}</span>
-            </button>
+            </SelectableRow>
           ))}
         </ScrollArea>
       </Card>

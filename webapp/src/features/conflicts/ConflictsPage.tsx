@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, EmptyState, LoadingState, useToast } from '@shared/ui';
+import { Card, EmptyState, LoadingState, SelectableRow, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { kindLabel } from './field-labels';
 import { useConflicts } from './useConflicts';
@@ -44,9 +44,8 @@ export function ConflictsPage() {
           {conflicts.length} {conflicts.length === 1 ? 'conflict' : 'conflicte'}
         </p>
         {conflicts.map(conflict => (
-          <button
+          <SelectableRow
             key={conflict.id}
-            type="button"
             className={conflict.id === active.id ? `${styles.row} ${styles.rowActive}` : styles.row}
             onClick={() => setActiveId(conflict.id)}
           >
@@ -55,7 +54,7 @@ export function ConflictsPage() {
               {kindLabel(conflict.kind)} · {conflict.subtitle}
               {conflict.dataset === 'comun' ? ' · Comun' : ''}
             </span>
-          </button>
+          </SelectableRow>
         ))}
       </Card>
 
