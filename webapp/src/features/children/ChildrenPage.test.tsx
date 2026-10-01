@@ -213,9 +213,10 @@ describe('ChildrenPage', () => {
   it('C-10: schimbarea unui filtru resetează paginarea la pagina 1', async () => {
     const bigFixture = {
       ...fixtureState,
-      children: Array.from({ length: 12 }, (_, index) => ({
+      // 30 ca să depășească pageSize implicit (25) — vezi Pagination/DataTable (F1).
+      children: Array.from({ length: 30 }, (_, index) => ({
         id: `big-${index}`,
-        name: `Copil ${String.fromCharCode(65 + index)}`,
+        name: `Copil ${String(index + 1).padStart(2, '0')}`,
         status: 'Activ',
         groupId: null,
         parent: 'Un părinte',
@@ -243,17 +244,17 @@ describe('ChildrenPage', () => {
     await act(() => session.result.current.load());
 
     renderPage();
-    expect(screen.getByText('Copil A')).toBeInTheDocument();
+    expect(screen.getByText('Copil 01')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '2' }));
-    expect(screen.getByText('Copil K')).toBeInTheDocument();
-    expect(screen.queryByText('Copil A')).not.toBeInTheDocument();
+    expect(screen.getByText('Copil 26')).toBeInTheDocument();
+    expect(screen.queryByText('Copil 01')).not.toBeInTheDocument();
 
-    // Filtrarea nu schimbă numărul de rânduri (toți 12 corespund în continuare „Copil”),
+    // Filtrarea nu schimbă numărul de rânduri (toți 30 corespund în continuare „Copil”),
     // deci fără cheia derivată din filtre DataTable ar rămâne clamp-uit pe aceeași pagină.
     await userEvent.type(screen.getByLabelText('Caută copil'), 'Copil');
-    expect(screen.getByText('Copil A')).toBeInTheDocument();
-    expect(screen.queryByText('Copil K')).not.toBeInTheDocument();
+    expect(screen.getByText('Copil 01')).toBeInTheDocument();
+    expect(screen.queryByText('Copil 26')).not.toBeInTheDocument();
   });
 
   it('deschide fișa copilului la click pe rând și revine la listă din breadcrumb', async () => {
