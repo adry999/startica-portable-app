@@ -9,6 +9,9 @@ Toate deciziile de produs din sesiunile de design. **Au prioritate** față de o
 4. **Ștergere definitivă doar din „Arhivate”**, cu selecție multiplă și „Scrie ȘTERGE” (15h, B2). În „Active” există doar Arhivează.
 5. **Butoane din antet**: un singur stil primar (Baloo 15/700, `8px 18px`, portocaliu, umbră de antet) și un singur stil secundar (Nunito 14/800, `8px 16px`, alb, border 1.5px `--border`).
 
+## Actualizări (01.10)
+- **Versiunile noi se descarcă din GitHub Releases**, nu de pe VPS. Repo public de release, `latest.json` + instaler ca asset-uri; VPS-ul rămâne doar server de sincronizare. Detalii în `screens/32-actualizari.md`.
+
 ## Dashboard
 6. Pastila curs € stă între căutare și selectorul de lună.
 7. „Evoluția încasărilor” are **două coloane pe lună** (încasări portocaliu, cheltuieli verde), max. 13px fiecare, aceeași scală; comutatorul Încasări/Cheltuieli dispare; tooltip cu diferența.

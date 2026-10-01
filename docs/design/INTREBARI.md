@@ -1,5 +1,16 @@
 # Întrebări / decizii blocate
 
+## ⚠️ §0 — pachetul `design_final_startica/` suprascrie documentație încă validă (01.10, rezolvat la copiere)
+
+Pachetul predă `docs/design/` dintr-un export mai vechi decât încheierea PROMPT-6 din această sesiune — deși PROMPT-7 însuși spune „PROMPT-6 e închis integral”. Suprascrierea brută ar fi șters 3 lucruri încă adevărate în cod:
+- `TOKENS.md` — secțiunea „Tokeni noi R2” (cei 5 tokeni, toți încă definiți în `tokens.css` și folosiți în module).
+- `COMPONENTE.md` — rândul FilterPills redevenise „de făcut”, deși fix-ul e verificat (Achitări are 3 pastile, trece pe al doilea rând, fără limită în cod).
+- `screens/30-stari-goale.md` — rândul `taxe.done` a dispărut, deși cheia există în `empty-states.ts`, e folosită în `FeeSetupPage.tsx` și are poveste Storybook.
+
+Am re-adăugat manual cele 3 bucăți peste conținutul proaspăt copiat (restul pachetului intră neschimbat). `screens/21-incarcare.md` — checkbox-ul de la 21c a rămas nebifat (pachetul nu știe de implementarea din această sesiune); las-o așa, per instrucțiunea explicită primită să nu o reversez eu.
+
+**Pentru viitor:** dacă pachetul de design se regenerează dintr-un export care nu include deciziile/tokenii adăugați direct în `docs/design/*.md` de sesiunile de cod, o copiere „cu suprascriere” va pierde tăcut acest gen de documentație — merită verificat diff-ul complet la fiecare `§0`, nu doar presupus corect.
+
 ## ⏳ Teste 2.1.0 — bug-uri raportate de utilizator pe instalerul testat (01.10, de investigat)
 
 Doi bug-uri raportate în timpul testării `Startica_Setup_2.1.0.exe`, înainte de a începe §5. Verificat: niciunul nu vine din commit-urile acestei sesiuni (§2/§3/§4 nu ating fișierele implicate) — par preexistente, doar observate acum.

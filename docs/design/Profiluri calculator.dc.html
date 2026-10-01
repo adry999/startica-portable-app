@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"></meta><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&amp;family=Nunito:wght@400;600;700;800&amp;display=swap"></link><style>body{margin:0;background:#efe9de;font-family:Nunito,sans-serif;color:#3a4750}a{color:#a34f00;text-decoration:none;font-weight:700}a:hover{color:#8a4300}</style></helmet>
+<section style="padding:64px 72px 96px;display:flex;flex-direction:column;gap:56px">
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1000px">
+    <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Prezenta.dc.html">Prezența</a><a href="Vizite.dc.html">Vizite</a><a href="Bazin.dc.html">Bazin</a><span style="font-weight:800;color:#3a4750">Profiluri calculator</span></div>
+    <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Profiluri de calculator</h1>
+    <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Un calculator conectat poate avea acces doar la câteva module. Profilul se alege când îl conectezi și se poate schimba oricând de pe un calculator cu profil Complet. Serverul trimite pe calculator doar datele permise de profil, deci achitările, cheltuielile și salariile nu ajung deloc acolo.</p>
+  </div>
+
+  <div id="36a" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36a</span><span style="font-size:16px;font-weight:700">Conectează un calculator → alege profilul (pasul 1 din 2)</span></div>
+    <div style="width:880px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:20px 28px;border-bottom:1px solid #ede7dc">
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;color:#a34f00">Pasul 1 din 2</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Ce poate face calculatorul nou?</span></div>
+        <span style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-size:18px;color:#6b7780">×</span>
+      </div>
+      <div style="padding:22px 28px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ profiles }}" as="p" hint-placeholder-count="5">
+            <div onClick="{{ p.pick }}" style="display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;align-items:start;padding:14px 16px;border-radius:16px;border:{{ p.bd }};background:{{ p.bg }};cursor:pointer">
+              <span style="width:18px;height:18px;margin-top:2px;border-radius:50%;border:{{ p.radioBd }};box-sizing:border-box;display:flex;align-items:center;justify-content:center"><sc-if value="{{ p.on }}"><span style="width:8px;height:8px;border-radius:50%;background:#b85a00"></span></sc-if></span>
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-weight:800;font-size:15px">{{ p.name }}</span><span style="font-size:13px;color:#6b7780;line-height:1.45">{{ p.desc }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:18px;background:#fffaf0;border:1px solid #ede7dc;align-self:start">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Pe acest calculator</span>
+          <sc-for list="{{ sel.rows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:8px;height:8px;border-radius:3px;background:{{ r.dot }}"></span><span style="flex:1;font-weight:700">{{ r.m }}</span><span style="font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.lvl }}</span></div>
+          </sc-for>
+          <div style="height:1px;background:#ede7dc"></div>
+          <span style="font-size:13px;color:#6b7780;line-height:1.45">{{ sel.note }}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 28px;border-top:1px solid #ede7dc;background:#fffaf0">
+        <span style="flex:1;font-size:13px;color:#6b7780">Profilul se poate schimba după conectare.</span>
+        <span style="padding:10px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px">Renunță</span>
+        <span style="padding:10px 18px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:14px;box-shadow:0 6px 16px rgba(184,90,0,.28)">Generează codul</span>
+      </div>
+    </div>
+    <span style="font-size:13px;color:#6b7780;max-width:880px">Pasul 2 e codul de conectare din <a href="Sincronizare.dc.html#14b">14b</a>, cu o linie în plus sub cod: „Profil: Educator”. Click pe un profil schimbă rezumatul din dreapta.</span>
+  </div>
+
+  <div id="36b" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36b</span><span style="font-size:16px;font-weight:700">Profil Personalizat → acces pe module</span></div>
+    <div style="width:880px;background:#fff;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);display:flex;flex-direction:column;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:20px 28px;border-bottom:1px solid #ede7dc">
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;font-weight:800;color:#a34f00">Pasul 1 din 2 · Personalizat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Alege accesul pe fiecare modul</span></div>
+        <span style="font-size:13px;font-weight:800;color:#a34f00">← Înapoi la profiluri</span>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 330px 96px;gap:16px;padding:10px 28px;background:#faf7f1;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6b7780"><span>Modul</span><span>Acces</span><span>PIN la intrare</span></div>
+        <sc-for list="{{ matrix }}" as="m" hint-placeholder-count="10">
+          <sc-if value="{{ m.head }}"><div style="padding:14px 28px 6px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9aa3a9">{{ m.head }}</div></sc-if>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) 330px 96px;gap:16px;align-items:center;padding:9px 28px;border-top:1px solid #f3eee5">
+            <div style="display:flex;flex-direction:column;gap:1px;min-width:0"><span style="font-weight:800;font-size:14px;color:{{ m.fg }}">{{ m.name }}</span><sc-if value="{{ m.hint }}"><span style="font-size:12px;color:#6b7780">{{ m.hint }}</span></sc-if></div>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#f1ece2;font-size:13px;font-weight:800;opacity:{{ m.op }}">
+              <sc-for list="{{ m.opts }}" as="o"><span onClick="{{ o.pick }}" style="flex:1;text-align:center;padding:6px 10px;border-radius:999px;background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }};cursor:{{ o.cur }}">{{ o.l }}</span></sc-for>
+            </div>
+            <span onClick="{{ m.pinToggle }}" style="justify-self:center;width:40px;height:24px;border-radius:999px;background:{{ m.pinBg }};opacity:{{ m.pinOp }};display:flex;align-items:center;padding:3px;box-sizing:border-box;justify-content:{{ m.pinJ }};cursor:pointer"><span style="width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.2)"></span></span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 28px;border-top:1px solid #ede7dc;background:#fffaf0">
+        <span style="flex:1;font-size:13px;color:#6b7780">{{ matrixSummary }}</span>
+        <span style="padding:10px 18px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:14px;box-shadow:0 6px 16px rgba(184,90,0,.28)">Generează codul</span>
+      </div>
+    </div>
+    <span style="font-size:13px;color:#6b7780;max-width:880px">Administrare, Salarii și Sincronizare rămân doar pe calculatoarele cu profil Complet, de aceea sunt blocate aici. „Modifică” la Achitări sau Cheltuieli aduce pe calculator și datele financiare. „PIN la intrare” cere PIN-ul calculatorului la fiecare deschidere a modulului (<a href="#36h">36h</a>); e activ implicit pe Achitări, Cheltuieli, Raport și De rezolvat și se poate seta și pe profilul Complet.</span>
+  </div>
+
+  <div id="36c" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36c</span><span style="font-size:16px;font-weight:700">Sincronizare → Calculatoare conectate, cu profil</span></div>
+    <div style="width:1040px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);padding:24px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start">
+      <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
+        <div style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid #ede7dc"><span style="flex:1;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Calculatoare conectate</span><span style="padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px">+ Conectează un calculator</span></div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 130px 150px 24px;gap:14px;padding:9px 20px;background:#faf7f1;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6b7780"><span>Calculator</span><span>Profil</span><span>Stare</span><span></span></div>
+        <sc-for list="{{ devices }}" as="d" hint-placeholder-count="5">
+          <div onClick="{{ d.pick }}" style="display:grid;grid-template-columns:minmax(0,1fr) 130px 150px 24px;gap:14px;align-items:center;padding:13px 20px;border-top:1px solid #f3eee5;background:{{ d.bg }};box-shadow:{{ d.sh }};cursor:pointer">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:800;font-size:15px">{{ d.name }}</span><sc-if value="{{ d.me }}"><span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;background:#fcead3;color:#a34f00">Acest calculator</span></sc-if></div><span style="font-size:12px;color:#6b7780">{{ d.meta }}</span></div>
+            <span style="justify-self:start;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:{{ d.pBg }};color:{{ d.pFg }}">{{ d.profile }}</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:{{ d.fg }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ d.dot }}"></span>{{ d.status }}</span>
+            <span style="color:#9aa3a9;font-size:16px">›</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">{{ dev.name }}</span>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;flex:1">Profil {{ dev.profile }}</span><span style="font-size:13px;font-weight:800;color:#a34f00">Schimbă</span></div>
+        <sc-for list="{{ dev.rows }}" as="r" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="flex:1;font-weight:700">{{ r.m }}</span><span style="font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.lvl }}</span></div>
+        </sc-for>
+        <div style="height:1px;background:#ede7dc"></div>
+        <span style="font-size:13px;color:#6b7780;line-height:1.45">{{ dev.note }}</span>
+        <a href="#36g" style="align-self:flex-start;font-size:13px;font-weight:800;color:#a34f00">Vezi istoricul calculatorului →</a>
+        <sc-if value="{{ dev.canRevoke }}"><span style="align-self:flex-start;font-size:13px;font-weight:800;color:#b0284f">Deconectează calculatorul</span></sc-if>
+      </div>
+    </div>
+    <span style="font-size:13px;color:#6b7780;max-width:1040px">La schimbarea profilului, calculatorul primește datele noi la următoarea sincronizare. Dacă profilul se restrânge, datele care nu mai sunt permise se șterg de pe acel calculator, inclusiv din backupul lui local.</span>
+  </div>
+
+  <div id="36d" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36d</span><span style="font-size:16px;font-weight:700">Meniul pe fiecare profil</span></div>
+    <div style="display:flex;gap:20px;align-items:stretch">
+      <sc-for list="{{ sidebars }}" as="s" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:12px;font-weight:800;color:#6b7780">{{ s.title }}</span>
+          <aside style="width:248px;min-height:560px;background:#fff;border:1px solid #ede7dc;border-radius:20px;display:flex;flex-direction:column;padding:24px 16px 16px;gap:20px;box-sizing:border-box;box-shadow:0 16px 40px rgba(58,71,80,.1)">
+            <img src="web/assets/startica-logo.svg" alt="Startica" style="height:42px;align-self:center"></img>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:-4px;padding:8px 12px 8px 8px;border-radius:14px;border:1.5px solid #f6e3a6;background:#fdf3d2">
+              <span style="width:30px;height:30px;border-radius:9px;background:#e0b400;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:15px">1</span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#7a5d00">Filiala</span><span style="font-size:14px;font-weight:800">Buiucani</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <sc-for list="{{ s.items }}" as="it"><div style="display:flex;align-items:center;gap:11px;padding:8px 12px;border-radius:12px;background:{{ it.bg }};color:{{ it.fg }};font-weight:{{ it.w }};font-size:14px"><span style="width:8px;height:8px;border-radius:3px;background:{{ it.dot }}"></span><span style="flex:1">{{ it.l }}</span><sc-if value="{{ it.ro }}"><span style="font-size:11px;font-weight:700;color:#6b7780">doar citire</span></sc-if></div></sc-for>
+            </div>
+            <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:14px;background:#fffaf0;border:1px solid #ede7dc">
+              <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700"><span style="width:8px;height:8px;border-radius:50%;background:#3f9a6b"></span>Sincronizat · 12:06</div>
+              <span style="font-size:12px;color:#6b7780">Profil {{ s.profile }} · acces limitat</span>
+            </div>
+          </aside>
+        </div>
+      </sc-for>
+    </div>
+    <span style="font-size:13px;color:#6b7780;max-width:900px">Grupele de meniu fără niciun modul permis dispar cu tot cu titlu. Bara de sus nu are căutarea globală pe achitări, iar selectorul de filială rămâne (profilul se aplică pe ambele filiale). Educatorul vede toate grupele la Prezența.</span>
+  </div>
+
+  <div style="display:flex;gap:56px;flex-wrap:wrap;align-items:flex-start">
+    <div id="36e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36e</span><span style="font-size:16px;font-weight:700">Fișa copilului doar pentru citire (Educator, Recepție, Bazin)</span></div>
+      <div style="width:620px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);padding:24px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="width:52px;height:52px;border-radius:50%;background:#fcead3;color:#a34f00;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">AC</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;line-height:1.1">Cerba Alexander</span><span style="font-size:13px;color:#6b7780">Grupa Mars · 4 ani 5 luni · contract #3</span></div>
+          <span style="font-size:12px;font-weight:800;padding:4px 11px;border-radius:999px;background:#f4f1ea;color:#5b666e">Doar citire</span>
+        </div>
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:18px;padding:16px 18px;display:grid;grid-template-columns:140px minmax(0,1fr);gap:10px 16px;font-size:14px">
+          <span style="color:#6b7780;font-weight:700">Părinte</span><span style="font-weight:700">Cerba Pavel · 068 833 888</span>
+          <span style="color:#6b7780;font-weight:700">Al doilea părinte</span><span style="font-weight:700">Cerba Ana · 079 114 220</span>
+          <span style="color:#6b7780;font-weight:700">Alergii</span><span style="font-weight:800;color:#a3361f">Arahide</span>
+          <span style="color:#6b7780;font-weight:700">Prezența lunii</span><span style="font-weight:700">17 din 20 zile · 2 motivate</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:#f4f1ea">
+          <span style="flex:1;font-size:13px;color:#5b666e;line-height:1.45">Plățile, planul tarifar și notele medicale nu sunt pe acest calculator.</span>
+        </div>
+      </div>
+      <span style="font-size:13px;color:#6b7780;max-width:620px">Fără butoane de editare, fără meniul ⋯ pe rând. Alergiile rămân vizibile, pentru că educatorul și instructorul de la bazin au nevoie de ele.</span>
+    </div>
+
+    <div id="36f" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36f</span><span style="font-size:16px;font-weight:700">Modul neinclus în profil (link vechi, scurtătură)</span></div>
+      <div style="width:620px;min-height:330px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;box-sizing:border-box">
+        <span style="width:64px;height:64px;border-radius:20px;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:800;font-size:26px;color:#6b7780">—</span>
+        <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Achitările nu sunt pe acest calculator</span>
+        <span style="font-size:14px;color:#6b7780;line-height:1.5;max-width:400px;text-wrap:pretty">Calculatorul are profilul Educator. Accesul se schimbă din Sincronizare, de pe un calculator cu profil Complet.</span>
+        <span style="margin-top:6px;padding:10px 18px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:14px">Mergi la Prezența</span>
+      </div>
+      <span style="font-size:13px;color:#6b7780;max-width:620px">Butonul duce la primul modul din profil. Stare goală nouă în catalog: <code>profil.blocked</code>. Încercarea se scrie în istoric ca „Acces blocat” (<a href="#36g">36g</a>).</span>
+    </div>
+  </div>
+
+  <div id="36g" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36g</span><span style="font-size:16px;font-weight:700">Administrare → Istoric, pe calculatoare (doar profil Complet)</span></div>
+    <div style="width:1192px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);display:flex;flex-direction:column;overflow:hidden">
+      <header style="display:flex;align-items:center;gap:12px;padding:12px 40px;border-bottom:1px solid #ede7dc;background:#fffaf0">
+        <div style="flex:1;display:flex;align-items:baseline;gap:12px;min-width:0"><h2 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.1">Istoric</h2><span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9aa3a9">Administrare</span></div>
+        <div style="width:240px;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:#fff;border:1px solid #ede7dc;font-size:14px;color:#9aa3a9">Caută copil, achitare…</div>
+        <div style="display:flex;gap:2px;padding:3px;border-radius:12px;background:#f4f1ea;font-size:13px;font-weight:700"><span style="padding:7px 12px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(58,71,80,.1)">Tot</span><span style="padding:7px 12px;color:#6b7780">Copii</span><span style="padding:7px 12px;color:#6b7780">Achitări</span><span style="padding:7px 12px;color:#6b7780">Prezența</span><span style="padding:7px 12px;color:#6b7780">Acces</span></div>
+      </header>
+      <div style="padding:16px 40px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:#6b7780;margin-right:4px">Calculator</span>
+        <sc-for list="{{ logDevs }}" as="c" hint-placeholder-count="5"><span onClick="{{ c.pick }}" style="padding:6px 13px;border-radius:999px;font-size:13px;font-weight:800;background:{{ c.bg }};color:{{ c.fg }};cursor:pointer">{{ c.l }}</span></sc-for>
+      </div>
+      <div style="padding:16px 40px 36px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:17px;padding-left:6px">Azi, joi 1 octombrie</span>
+          <div style="background:#fff;border-radius:20px;border:1px solid #ede7dc;overflow:hidden">
+            <sc-for list="{{ logRows }}" as="e" hint-placeholder-count="6">
+              <div style="display:flex;align-items:flex-start;gap:14px;padding:13px 18px;border-bottom:1px solid #f3eee5;background:{{ e.rowBg }}">
+                <span style="width:42px;font-size:13px;color:#6b7780;padding-top:2px">{{ e.t }}</span>
+                <span style="width:96px;text-align:center;font-size:11px;font-weight:800;padding:4px 0;border-radius:999px;background:{{ e.bg }};color:{{ e.fg }}">{{ e.kind }}</span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-weight:800;font-size:14px">{{ e.what }}</span><sc-if value="{{ e.diff }}"><span style="font-size:13px;color:#5b666e">{{ e.diff }}</span></sc-if></div>
+                <span style="font-size:12px;font-weight:700;color:#5b666e;white-space:nowrap;padding-top:2px">{{ e.dev }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">{{ logSum.title }}</span>
+          <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1">{{ logSum.n }}</span>
+          <span style="font-size:13px;color:#6b7780;margin-top:-4px">acțiuni azi</span>
+          <div style="height:1px;background:#ede7dc"></div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px"><span style="color:#6b7780">Ultima acțiune</span><b>{{ logSum.last }}</b><span style="color:#6b7780">Profil</span><b>{{ logSum.profile }}</b><span style="color:#6b7780">Acces blocat</span><b style="color:{{ logSum.blkFg }}">{{ logSum.blk }}</b></div>
+          <span style="font-size:13px;color:#6b7780;line-height:1.45">Istoricul vine de pe toate calculatoarele prin server și se păstrează 365 de zile. Nu se poate șterge sau edita de pe niciun calculator.</span>
+        </div>
+      </div>
+    </div>
+    <span style="font-size:13px;color:#6b7780;max-width:1192px">Fiecare rând are calculatorul de pe care s-a făcut acțiunea. Fila „Acces” arată deschiderile de module cu PIN, PIN-urile greșite și încercările blocate (<a href="#36f">36f</a>). Pe calculatoarele fără profil Complet, Istoricul nu există. Din <a href="#36c">36c</a>, „Vezi istoricul” deschide ecranul filtrat pe acel calculator.</span>
+  </div>
+
+  <div id="36h" style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#b85a00;color:#fff;border-radius:10px;padding:2px 12px">36h</span><span style="font-size:16px;font-weight:700">Verificarea la intrarea într-un modul cu PIN</span></div>
+    <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+      <div style="width:620px;min-height:380px;background:#fffaf0;border-radius:24px;box-shadow:0 30px 80px rgba(58,71,80,.14);padding:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;box-sizing:border-box">
+        <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Achitări</span>
+        <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:24px">Introdu PIN-ul ca să deschizi modulul</span>
+        <div style="display:flex;gap:10px;margin:6px 0">
+          <sc-for list="{{ pinDots }}" as="d"><span style="width:48px;height:56px;border-radius:14px;border:{{ d.bd }};background:#fff;display:flex;align-items:center;justify-content:center"><sc-if value="{{ d.on }}"><span style="width:12px;height:12px;border-radius:50%;background:#3a4750"></span></sc-if></span></sc-for>
+        </div>
+        <span style="font-size:13px;color:#6b7780">Modulul se blochează din nou după 10 minute fără activitate.</span>
+        <div style="display:flex;gap:10px;margin-top:6px"><span style="padding:10px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px">Înapoi</span><span style="padding:10px 18px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:14px">Deschide</span></div>
+      </div>
+      <div style="width:420px;display:flex;flex-direction:column;gap:12px">
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Verificările la intrare</span>
+          <sc-for list="{{ guards }}" as="g" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;font-size:14px;line-height:1.45"><span style="width:24px;height:24px;border-radius:8px;background:#f4f1ea;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#5b666e">{{ g.n }}</span><span><b>{{ g.t }}</b> {{ g.d }}</span></div></sc-for>
+        </div>
+        <div style="background:#fce9ef;border:1px solid #f3a6be;border-radius:20px;padding:16px 20px;display:flex;flex-direction:column;gap:6px">
+          <span style="font-weight:800;font-size:14px;color:#b0284f">După 5 PIN-uri greșite</span>
+          <span style="font-size:13px;color:#5b666e;line-height:1.45">Modulul se blochează 15 minute pe acel calculator, iar pe calculatorul administratorului apare o notificare.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { p: 1, dev: 1, ld: 0, pin: { achitari: 1, cheltuieli: 1, raport: 1, derezolvat: 1 }, acc: { dashboard: 0, copii: 1, grupe: 1, prezenta: 2, vizite: 2, personal: 0, bazin: 1, achitari: 0, cheltuieli: 0, situatia: 0, denotificat: 0, raport: 0, derezolvat: 0, sms: 0 } };
+  LV = ['Nu vede', 'Vede', 'Modifică'];
+  lvl(i) { return [{ bg: '#f4f1ea', fg: '#6b7780' }, { bg: '#e4eef6', fg: '#2c5a80' }, { bg: '#e7f4ec', fg: '#2e6b4c' }][i]; }
+  P = [
+    { name: 'Complet', desc: 'Toate modulele, inclusiv Achitări, Salarii și Administrare. Pentru director și contabil.', rows: [['Toate modulele', 2]], note: 'Poate schimba profilul celorlalte calculatoare.' },
+    { name: 'Educator', desc: 'Marchează prezența la toate grupele. Vede fișele copiilor fără plăți.', rows: [['Prezența', 2], ['Copii', 1], ['Grupe', 1]], note: 'Achitările, cheltuielile, salariile și notele medicale nu ajung pe acest calculator.' },
+    { name: 'Recepție', desc: 'Programează vizite și marchează prezența la intrare.', rows: [['Vizite', 2], ['Prezența', 2], ['Copii', 1], ['Grupe', 1]], note: 'Achitările, cheltuielile, salariile și notele medicale nu ajung pe acest calculator.' },
+    { name: 'Bazin', desc: 'Programările și prezența la bazin. Vede fișele copiilor fără plăți.', rows: [['Bazin', 2], ['Copii', 1]], note: 'Achitările, cheltuielile, salariile și notele medicale nu ajung pe acest calculator.' },
+    { name: 'Personalizat', desc: 'Alegi tu accesul pe fiecare modul.', rows: [['Vezi pasul următor', 1]], note: 'Continuă pentru a alege modulele.' }
+  ];
+  M = [
+    ['Evidență', 'dashboard', 'Dashboard', 'Cifrele financiare apar doar dacă Achitări e permis'], [null, 'copii', 'Copii', 'Fără plăți și note medicale, dacă Achitări nu e permis'], [null, 'grupe', 'Grupe'], [null, 'prezenta', 'Prezența'], [null, 'vizite', 'Vizite'], [null, 'personal', 'Personal', 'Echipa, pontaj, concedii. Fără Salarii'], [null, 'bazin', 'Bazin'],
+    ['Contabilitate', 'achitari', 'Achitări'], [null, 'cheltuieli', 'Cheltuieli'], [null, 'situatia', 'Situația plăților'], [null, 'denotificat', 'De notificat'], [null, 'raport', 'Raport contabil'],
+    ['De rezolvat', 'derezolvat', 'Taxe, De verificat, Asociere'], [null, 'sms', 'Mesaje SMS'],
+    ['Doar profil Complet', 'admin', 'Administrare, Salarii, Sincronizare', null, true]
+  ];
+  rows(list) { return list.map(([m, i]) => ({ m, lvl: this.LV[i], dot: '#a8d8be', ...this.lvl(i) })); }
+  renderVals() {
+    const s = this.state, P = this.P;
+    const profiles = P.map((p, i) => ({ ...p, on: s.p === i, bd: s.p === i ? '2px solid #ef8a1d' : '1.5px solid #ede7dc', bg: s.p === i ? '#fffaf0' : '#fff', radioBd: s.p === i ? '2px solid #b85a00' : '1.5px solid #c9c4ba', pick: () => this.setState({ p: i }) }));
+    const matrix = this.M.map(([head, k, name, hint, locked]) => {
+      const v = locked ? 0 : s.acc[k];
+      const pin = !locked && !!s.pin[k] && v > 0;
+      return { head, name, hint, fg: locked ? '#6b7780' : '#3a4750', op: locked ? .55 : 1,
+        pinBg: pin ? '#3f9a6b' : '#d9cfbf', pinJ: pin ? 'flex-end' : 'flex-start', pinOp: locked || v === 0 ? .4 : 1,
+        pinToggle: () => { if (!locked && v > 0) this.setState({ pin: { ...s.pin, [k]: !s.pin[k] } }); },
+        opts: this.LV.map((l, i) => ({ l, bg: v === i ? '#fff' : 'transparent', fg: v === i ? '#3a4750' : '#6b7780', sh: v === i ? '0 1px 3px rgba(58,71,80,.12)' : 'none', cur: locked ? 'default' : 'pointer', pick: () => { if (!locked) this.setState({ acc: { ...s.acc, [k]: i } }); } })) };
+    });
+    const vals = Object.values(s.acc), fin = ['achitari', 'cheltuieli', 'situatia', 'raport'].some(k => s.acc[k] > 0);
+    const matrixSummary = `${vals.filter(v => v === 2).length} module cu modificare · ${vals.filter(v => v === 1).length} doar citire${fin ? ' · include date financiare' : ''}`;
+    const D = [
+      ['Buiucani · director', 'Windows · ambele filiale', 0, 'Sincronizat · 12:06', 1],
+      ['Buiucani · grupa Mars', 'Windows · Filiala Buiucani', 1, 'Sincronizat · 12:05', 0],
+      ['Recepție Botanica', 'Windows · Filiala Botanica', 2, 'Sincronizat · 12:04', 0],
+      ['Tabletă bazin', 'Windows · Filiala Buiucani', 3, 'Offline de 3 ore', 0],
+      ['Laptop contabil', 'macOS · ambele filiale', 0, 'Sincronizat · 11:40', 0]
+    ];
+    const pc = [{ bg: '#fcead3', fg: '#a34f00' }, { bg: '#e7f4ec', fg: '#2e6b4c' }, { bg: '#fdf3d2', fg: '#7a5d00' }, { bg: '#e4eef6', fg: '#2c5a80' }];
+    const devices = D.map(([name, meta, pi, status, me], i) => ({ name, meta, me: !!me, profile: P[pi].name, pBg: pc[pi].bg, pFg: pc[pi].fg, status, dot: status.startsWith('Offline') ? '#e0b400' : '#3f9a6b', fg: status.startsWith('Offline') ? '#7a5d00' : '#2e6b4c', bg: s.dev === i ? '#fffaf0' : '#fff', sh: s.dev === i ? 'inset 4px 0 0 #ef8a1d' : 'none', pick: () => this.setState({ dev: i }) }));
+    const d = D[s.dev], dp = P[d[2]];
+    const sel = P[s.p];
+    const nav = (on, list, ro = []) => list.map((l, i) => ({ l, ro: ro.includes(l), bg: i === on ? '#fcead3' : 'transparent', fg: i === on ? '#a34f00' : '#3a4750', w: i === on ? 800 : 600, dot: '#f9d257' }));
+    const sidebars = [
+      { title: 'Educator', profile: 'Educator', items: nav(0, ['Prezența', 'Copii', 'Grupe'], ['Copii', 'Grupe']) },
+      { title: 'Recepție', profile: 'Recepție', items: nav(0, ['Vizite', 'Prezența', 'Copii', 'Grupe'], ['Copii', 'Grupe']) },
+      { title: 'Bazin', profile: 'Bazin', items: nav(0, ['Bazin', 'Copii'], ['Copii']) }
+    ];
+    const LD = ['Toate', 'Buiucani · director', 'Buiucani · grupa Mars', 'Recepție Botanica', 'Tabletă bazin'];
+    const K = { copil: ['Copil', '#fcead3', '#a34f00'], prez: ['Prezența', '#e7f4ec', '#2e6b4c'], ach: ['Achitare', '#fdf3d2', '#7a5d00'], viz: ['Vizită', '#e4eef6', '#2c5a80'], bazin: ['Bazin', '#e4eef6', '#2c5a80'], acc: ['Acces blocat', '#fce9ef', '#b0284f'], pin: ['Acces cu PIN', '#f4f1ea', '#5b666e'] };
+    const L = [
+      ['12:05', 'prez', 'Prezența grupei Mars salvată', '8 prezenți, 1 absent, 1 motivat', 2],
+      ['11:58', 'acc', 'Încercare de a deschide Achitări', 'Modulul nu e în profilul Educator', 2],
+      ['11:52', 'copil', 'Cerba Alexander · telefon părinte', '069 555 120 → 078 214 330', 3],
+      ['11:40', 'viz', 'Vizită programată · Rusu Ana', 'vineri 3 oct, 10:00', 3],
+      ['11:31', 'ach', 'Achitare 2.400,00 lei · Hudic Amedeia', 'Cash · Oct 2026', 1],
+      ['11:30', 'pin', 'Achitări deschise cu PIN', '', 1],
+      ['10:15', 'bazin', 'Prezența la bazin · grupa Soare', '6 copii', 4],
+      ['09:02', 'prez', 'Prezența grupei Mars salvată', '7 prezenți, 3 nemarcați', 2]
+    ];
+    const logRows = L.filter(r => s.ld === 0 || r[4] === s.ld).map(([t, k, what, diff, di]) => ({ t, what, diff, kind: K[k][0], bg: K[k][1], fg: K[k][2], dev: LD[di], rowBg: k === 'acc' ? '#fffaf0' : '#fff' }));
+    const prof = ['Mai multe', 'Complet', 'Educator', 'Recepție', 'Bazin'];
+    const blk = logRows.filter(r => r.kind === 'Acces blocat').length;
+    const logSum = { title: LD[s.ld], n: logRows.length, last: logRows[0] ? logRows[0].t : '—', profile: prof[s.ld], blk: String(blk), blkFg: blk ? '#b0284f' : '#3a4750' };
+    const logDevs = LD.map((l, i) => ({ l, bg: s.ld === i ? '#3a4750' : '#fff', fg: s.ld === i ? '#fff' : '#3a4750', pick: () => this.setState({ ld: i }) }));
+    const pinDots = [1, 1, 0, 0].map((on, i) => ({ on: !!on, bd: i === 2 ? '2px solid #ef8a1d' : '1.5px solid #ede7dc' }));
+    const guards = [
+      ['Ruta.', 'Fiecare adresă de modul verifică profilul înainte să se încarce. Fără acces → 36f, chiar dacă linkul a venit din istoric, dintr-o scurtătură sau din bara de adrese.'],
+      ['Căutarea și scurtăturile.', 'Ctrl K și tastele rapide nu arată rezultate din modulele lipsă.'],
+      ['Serverul local.', 'Fiecare cerere /api verifică profilul și răspunde 403, deci un modul nu se poate deschide nici ocolind interfața.'],
+      ['PIN-ul.', 'Modulele cu PIN cer codul la fiecare deschidere și după 10 minute de inactivitate.'],
+      ['Istoricul.', 'Intrările cu PIN, PIN-urile greșite și încercările blocate se trimit pe calculatorul administratorului.']
+    ].map(([t, d], i) => ({ n: i + 1, t, d }));
+    return { logRows, logSum, logDevs, pinDots, guards, profiles, sel: { rows: this.rows(sel.rows), note: sel.note }, matrix, matrixSummary, devices,
+      dev: { name: d[0], profile: dp.name, rows: this.rows(dp.rows), note: dp.note, canRevoke: !d[4] }, sidebars };
+  }
+}
+</script>
+</body>
+</html>
