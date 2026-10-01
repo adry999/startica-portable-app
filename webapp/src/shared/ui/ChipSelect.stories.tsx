@@ -25,14 +25,16 @@ type Story = StoryObj<typeof ChipSelect>;
 
 export const Default: Story = {};
 
-export const WithToneAndHint: Story = {
+/** F2 (FEEDBACK-01-10.md, 38b) — ocupare/capacitate; grupa plină e `pink`, rămâne selectabilă. */
+export const OcupareGrupe: Story = {
   args: {
     ariaLabel: 'Grupă',
     value: '1',
     options: [
       { value: '', label: 'Fără grupă' },
-      { value: '1', label: 'Fluturași · 2 locuri', tone: 'orange', hint: '2 din 10 locuri libere' },
-      { value: '2', label: 'Albinuțe · 0 locuri', tone: 'mint', hint: 'Fără limită de capacitate' },
+      { value: '1', label: 'Neptun · 8/12', tone: 'orange', hint: '8 din 12 locuri ocupate' },
+      { value: '2', label: 'Venus · 12/12', tone: 'pink', hint: '12 din 12 locuri ocupate' },
+      { value: '3', label: 'Sirius · 6', tone: 'yellow', hint: 'Fără limită de capacitate' },
     ],
   },
 };
