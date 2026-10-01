@@ -1,7 +1,8 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { today } from '@domain/calendar-month.mjs';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
@@ -152,12 +153,12 @@ describe('ExchangeRateSettings', () => {
 
     expect(screen.getByText('≈ 6.867,00 lei')).toBeInTheDocument();
 
-    await user.click(screen.getByText('Salvează planurile'));
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
 
     await waitFor(() => expect(screen.getByText('Planurile au fost salvate.')).toBeInTheDocument());
   }, 10000);
 
-  it('Renunță revine la ultima listă salvată de planuri', async () => {
+  it('Anulează revine la ultima listă salvată de planuri, în modul de citire', async () => {
     const initialPresets = [{ id: 'PLAN-1', name: 'Program mediu', priceEur: 350 }];
     vi.stubGlobal(
       'fetch',
@@ -172,12 +173,70 @@ describe('ExchangeRateSettings', () => {
     renderComponent();
     const user = userEvent.setup();
 
-    await screen.findByDisplayValue('Program mediu');
+    await screen.findByText('Program mediu');
+    expect(screen.queryByLabelText('Nume plan')).not.toBeInTheDocument();
+
     await user.click(screen.getByText('+ Adaugă plan'));
     expect(screen.getAllByLabelText('Nume plan')).toHaveLength(2);
 
-    await user.click(screen.getByText('Renunță'));
-    expect(screen.getAllByLabelText('Nume plan')).toHaveLength(1);
+    await user.click(screen.getByText('Anulează'));
+    expect(screen.queryByLabelText('Nume plan')).not.toBeInTheDocument();
+    expect(screen.getByText('Program mediu')).toBeInTheDocument();
+  });
+
+  it('F13: un plan folosit de un copil activ nu se poate șterge', async () => {
+    const initialPresets = [{ id: 'PLAN-1', name: 'Program mediu', priceEur: 350 }];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/exchange-rates' && !isPost) return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/plan-presets' && !isPost) return jsonResponse(initialPresets);
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: {
+              children: [{ id: 'c1', name: 'Andrei', feeHistory: [{ from: '2026-01', amount: 350, currency: 'EUR' }] }],
+            },
+            revision: 1,
+            updatedAt: '2026-10-02T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    await screen.findByText('Program mediu');
+    expect(screen.getByText('1 copil')).toBeInTheDocument();
+
+    await user.click(screen.getByText('Editează planuri'));
+    expect(screen.getByRole('button', { name: 'Șterge planuri' })).toBeDisabled();
+  });
+
+  it('Editează planuri trece în modul de editare, cu planurile existente deja completate', async () => {
+    const initialPresets = [{ id: 'PLAN-1', name: 'Program mediu', priceEur: 350 }];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/exchange-rates' && !isPost) return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/plan-presets' && !isPost) return jsonResponse(initialPresets);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    await screen.findByText('Program mediu');
+    await user.click(screen.getByText('Editează planuri'));
+    expect(screen.getByDisplayValue('Program mediu')).toBeInTheDocument();
   });
 
   // 13b (m10): adăugarea/editarea unui plan trebuie înregistrată ca formular nesalvat, altfel

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
   Card,
+  EditableList,
   EMPTY_STATES,
   Field,
   NumberInput,
@@ -13,8 +14,10 @@ import {
   type BadgeTone,
 } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useAppSession } from '@shared/api/session';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { today } from '@domain/calendar-month.mjs';
+import { feeEntryFor } from '@domain/tuition-obligation.mjs';
 import { useExchangeRates, type PlanPreset } from './useExchangeRates';
 import backupStyles from './BackupPage.module.css';
 import styles from './ExchangeRateSettings.module.css';
@@ -32,11 +35,26 @@ function eurToLeiToday(priceEur: number, rate: number) {
 export function ExchangeRateSettings() {
   const exchangeRates = useExchangeRates();
   const toast = useToast();
+  const session = useAppSession();
 
   const [correctionInput, setCorrectionInput] = useState('');
   const [editingRate, setEditingRate] = useState(false);
   const [localPresets, setLocalPresets] = useState<PlanPreset[]>([]);
   const [presetsSeeded, setPresetsSeeded] = useState(false);
+  const [plansMode, setPlansMode] = useState<'view' | 'edit'>('view');
+  const [savingPresets, setSavingPresets] = useState(false);
+
+  // F13 (FEEDBACK-01-10.md): „folosit de” e o potrivire pe taxa curentă (EUR, aceeași sumă) —
+  // planurile nu au legătură persistentă cu fișa copilului (doar presetează fee-ul la alegere).
+  const children = session.state.ready ? session.state.state.children : [];
+  function usageCount(preset: PlanPreset): number {
+    const month = today();
+    return children.filter(child => {
+      if (child.archived) return false;
+      const fee = feeEntryFor(child, month);
+      return fee?.currency === 'EUR' && fee.amount === preset.priceEur;
+    }).length;
+  }
 
   // Lista se editează liber în memorie; se sincronizează cu serverul o singură
   // dată, la încărcare, nu la fiecare schimbare a datelor din hook.
@@ -76,6 +94,7 @@ export function ExchangeRateSettings() {
 
   function addPreset() {
     setLocalPresets(current => [...current, { id: `PLAN-${crypto.randomUUID()}`, name: '', priceEur: 0 }]);
+    setPlansMode('edit');
   }
 
   function removePreset(id: string) {
@@ -88,16 +107,21 @@ export function ExchangeRateSettings() {
 
   function discardPresetChanges() {
     setLocalPresets(exchangeRates.presets);
+    setPlansMode('view');
   }
 
   async function savePresets(): Promise<boolean> {
+    setSavingPresets(true);
     try {
       await exchangeRates.savePresets(localPresets);
       toast.show({ message: 'Planurile au fost salvate.' });
+      setPlansMode('view');
       return true;
     } catch (error) {
       toast.show({ message: (error as Error).message });
       return false;
+    } finally {
+      setSavingPresets(false);
     }
   }
 
@@ -130,76 +154,87 @@ export function ExchangeRateSettings() {
   return (
     <div className={styles.grid}>
       <section className={styles.plansColumn}>
-        <h3 className={backupStyles.panelTitle}>Planuri</h3>
-
-        {localPresets.length === 0 ? (
-          <p className={backupStyles.notice}>{resolveEmptyStateTitle(EMPTY_STATES['planuri.first'])}</p>
-        ) : (
-          <div className={styles.planList}>
-            {localPresets.map((preset, index) => (
-              <div key={preset.id} className={styles.planCard}>
-                <span className={`${styles.planStripe} ${styles[planTone(index)]}`} aria-hidden="true" />
-                <div className={styles.planInfo}>
-                  <div className={styles.planNameRow}>
-                    <TextInput
-                      className={styles.planNameInput}
-                      value={preset.name}
-                      onChange={value => updatePreset(preset.id, { name: value })}
-                      placeholder="Nume plan"
-                      ariaLabel="Nume plan"
-                    />
-                    <TextInput
-                      className={styles.planHoursInput}
-                      value={preset.hours ?? ''}
-                      onChange={value => updatePreset(preset.id, { hours: value })}
-                      placeholder="Orar, ex. 8:00–17:00"
-                      ariaLabel="Orarul planului"
-                    />
-                  </div>
-                  <TextInput
-                    value={preset.description ?? ''}
-                    onChange={value => updatePreset(preset.id, { description: value })}
-                    placeholder="Descriere scurtă"
-                    ariaLabel="Descrierea planului"
-                  />
-                </div>
-                <Field label="Preț lunar" htmlFor={`plan-price-${preset.id}`}>
-                  <NumberInput
-                    id={`plan-price-${preset.id}`}
-                    step="0.01"
-                    min={0}
-                    value={String(preset.priceEur)}
-                    onChange={value => updatePreset(preset.id, { priceEur: Number(value) })}
-                    suffix="€"
-                  />
-                </Field>
-                <div className={styles.planTodayRate}>
-                  <span className={styles.planTodayRateLabel}>la cursul de azi</span>
-                  <span className={styles.planTodayRateValue}>
-                    {todayRate === undefined
-                      ? '—'
-                      : `≈ ${formatMoney(eurToLeiToday(preset.priceEur, todayRate), 'MDL')}`}
-                  </span>
-                </div>
-                <Button type="button" variant="ghost" onClick={() => removePreset(preset.id)}>
-                  Șterge
-                </Button>
+        <EditableList
+          title="Planuri"
+          items={localPresets}
+          getId={preset => preset.id}
+          mode={plansMode}
+          renderView={(preset, index) => (
+            <div className={styles.planView}>
+              <span className={`${styles.planStripe} ${styles[planTone(index)]}`} aria-hidden="true" />
+              <div className={styles.planInfo}>
+                <b className={styles.planViewName}>{preset.name || 'Plan fără nume'}</b>
+                <span className={styles.planViewMeta}>
+                  {usageCount(preset)} {usageCount(preset) === 1 ? 'copil' : 'copii'}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
-
-        <div className={backupStyles.toolbar}>
-          <Button type="button" variant="ghost" onClick={addPreset}>
-            + Adaugă plan
-          </Button>
-          <Button type="button" variant="outline" onClick={discardPresetChanges}>
-            Renunță
-          </Button>
-          <Button type="button" variant="primary" onClick={() => void savePresets()}>
-            Salvează planurile
-          </Button>
-        </div>
+              <b className={styles.planViewPrice}>{preset.priceEur} €</b>
+              <span className={styles.planViewApprox}>
+                {todayRate === undefined ? '—' : `≈ ${formatMoney(eurToLeiToday(preset.priceEur, todayRate), 'MDL')}`}
+              </span>
+            </div>
+          )}
+          renderEdit={(preset, index) => (
+            <div className={styles.planCard}>
+              <span className={`${styles.planStripe} ${styles[planTone(index)]}`} aria-hidden="true" />
+              <div className={styles.planInfo}>
+                <div className={styles.planNameRow}>
+                  <TextInput
+                    className={styles.planNameInput}
+                    value={preset.name}
+                    onChange={value => updatePreset(preset.id, { name: value })}
+                    placeholder="Nume plan"
+                    ariaLabel="Nume plan"
+                  />
+                  <TextInput
+                    className={styles.planHoursInput}
+                    value={preset.hours ?? ''}
+                    onChange={value => updatePreset(preset.id, { hours: value })}
+                    placeholder="Orar, ex. 8:00–17:00"
+                    ariaLabel="Orarul planului"
+                  />
+                </div>
+                <TextInput
+                  value={preset.description ?? ''}
+                  onChange={value => updatePreset(preset.id, { description: value })}
+                  placeholder="Descriere scurtă"
+                  ariaLabel="Descrierea planului"
+                />
+              </div>
+              <Field label="Preț lunar" htmlFor={`plan-price-${preset.id}`}>
+                <NumberInput
+                  id={`plan-price-${preset.id}`}
+                  step="0.01"
+                  min={0}
+                  value={String(preset.priceEur)}
+                  onChange={value => updatePreset(preset.id, { priceEur: Number(value) })}
+                  suffix="€"
+                />
+              </Field>
+              <div className={styles.planTodayRate}>
+                <span className={styles.planTodayRateLabel}>la cursul de azi</span>
+                <span className={styles.planTodayRateValue}>
+                  {todayRate === undefined ? '—' : `≈ ${formatMoney(eurToLeiToday(preset.priceEur, todayRate), 'MDL')}`}
+                </span>
+              </div>
+            </div>
+          )}
+          deleteHint={preset => {
+            const count = usageCount(preset);
+            return count > 0 ? `Folosit de ${count} ${count === 1 ? 'copil' : 'copii'}` : undefined;
+          }}
+          onDelete={removePreset}
+          onAdd={addPreset}
+          addLabel="+ Adaugă plan"
+          editLabel="Editează planuri"
+          onEnterEdit={() => setPlansMode('edit')}
+          dirty={presetsDirty}
+          saving={savingPresets}
+          onSave={() => void savePresets()}
+          onCancel={discardPresetChanges}
+          footerNote="Planul folosit de copii nu se poate șterge. Salvează e inactiv până la prima modificare."
+          emptyState={<p className={backupStyles.notice}>{resolveEmptyStateTitle(EMPTY_STATES['planuri.first'])}</p>}
+        />
       </section>
 
       <section className={styles.rateColumn}>

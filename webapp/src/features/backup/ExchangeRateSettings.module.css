@@ -20,13 +20,39 @@
 
 .planCard {
   display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) 170px 150px auto;
+  grid-template-columns: 8px minmax(0, 1fr) 170px 150px;
   gap: var(--space-18);
   align-items: center;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-18) var(--space-20) var(--space-18) var(--space-16);
+}
+
+.planView {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) 90px 130px;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+.planViewName {
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.planViewMeta {
+  font-size: 12px;
+  color: var(--subtle);
+  font-weight: 700;
+}
+
+.planViewPrice {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  text-align: right;
+}
+
+.planViewApprox {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: right;
 }
 
 .planStripe {
