@@ -147,10 +147,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // printare (antet repetat la 14 rânduri/pagină); același caz ca `report/ReportPrintSummary.tsx`
     // mai jos, `DataTable` nefiind gândit pentru `window.print()`.
     'personal/TimesheetPrint.tsx',
-    // Placa dintr-o celulă a grilei săptămânii (22a) — avatar + nume + etichetă de stare + punct de
-    // culoare, hit-area pe toată placa, ca ChildTile/GroupTile; un `Button` ar impune propriul
-    // fundal/padding și ar sparge grila oră×zi (`display: contents` pe rânduri).
-    'pool/WeekView.tsx',
     // Rezumatul tipărit (19b, `@media print`) — `<table>` semantic real, pentru paginare corectă la
     // printare; `DataTable` e un component interactiv (sortare, rânduri, densitate) nepotrivit pentru
     // `window.print()`, nu există altă variantă din `@shared/ui` pentru un tabel doar-print.

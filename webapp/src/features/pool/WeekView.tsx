@@ -1,4 +1,4 @@
-import { Card, groupTone } from '@shared/ui';
+import { Card, SelectableTile, groupTone } from '@shared/ui';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
 import type { PoolSessionStatus } from '#features/pool/pool.types.d.mts';
@@ -131,9 +131,8 @@ export function WeekView({ days, stats, groups = [], coaches = [], onCycle }: We
                     const dotTone = DOT_TONE[entry.state] ?? 'dotUnmarked';
                     const tone = groupTone(entry.child?.groupId ?? null, groups);
                     return (
-                      <button
+                      <SelectableTile
                         key={entry.booking.id}
-                        type="button"
                         disabled={!clickable}
                         className={`${styles.tile} ${styles[entry.state] ?? ''}`}
                         onClick={() => clickable && onCycle(entry.booking.id, day.date, next)}
@@ -152,7 +151,7 @@ export function WeekView({ days, stats, groups = [], coaches = [], onCycle }: We
                           <span className={styles.tileState}>{STATE_LABEL[entry.state]}</span>
                         )}
                         <span className={`${styles.dot} ${styles[dotTone]}`} />
-                      </button>
+                      </SelectableTile>
                     );
                   })}
                 </div>
