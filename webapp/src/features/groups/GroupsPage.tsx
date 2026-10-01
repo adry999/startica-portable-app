@@ -13,11 +13,12 @@ import {
   SearchSelect,
   SegmentedControl,
   TextInput,
+  UnsavedChangesDialog,
   useToast,
   useTopbarActions,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { readDirtyForms, useDirtyForm, type DirtyForm } from '@shared/state/dirty-forms';
 import { usePersonal } from '@shared/personal/usePersonal';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
@@ -80,6 +81,8 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const [deleteTarget, setDeleteTarget] = useState<GroupCardView | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragOverCardId, setDragOverCardId] = useState<string | null>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<{ groupId: string; form: DirtyForm } | null>(null);
+  const [savingBeforeSwitch, setSavingBeforeSwitch] = useState(false);
 
   // Statistica din antet numără pe toate grupele, indiferent de modul ales (03-grupe.md §2).
   const childrenInGroups = groupsData.groups.reduce((sum, group) => sum + group.memberCount, 0);
@@ -144,6 +147,42 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
     }
   }
 
+  // 13b: editorul grupei selectate are modificări nesalvate — schimbarea grupei (card sau
+  // „Extinde” din Tablă) cere confirmare, altfel operatorul pierde tăcut numele/capacitatea/
+  // echipa editate pe grupa anterioară (F5).
+  function selectGroup(groupId: string) {
+    if (groupId === selectedId) return;
+    const [form] = readDirtyForms().filter(candidate => candidate.label === 'o grupă');
+    if (form) {
+      setPendingSwitch({ groupId, form });
+      return;
+    }
+    setSelectedId(groupId);
+  }
+
+  function stayOnCurrentGroup() {
+    setPendingSwitch(null);
+  }
+
+  function discardAndSwitchGroup() {
+    if (!pendingSwitch) return;
+    setSelectedId(pendingSwitch.groupId);
+    setPendingSwitch(null);
+  }
+
+  async function saveAndSwitchGroup() {
+    if (!pendingSwitch) return;
+    setSavingBeforeSwitch(true);
+    try {
+      const saved = await pendingSwitch.form.save();
+      if (!saved) return;
+      setSelectedId(pendingSwitch.groupId);
+      setPendingSwitch(null);
+    } finally {
+      setSavingBeforeSwitch(false);
+    }
+  }
+
   return (
     <>
       <GroupFormDrawer
@@ -162,7 +201,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
           data={{ ...groupsData, groups: displayGroups }}
           onOpenGroupStickers={onOpenGroupStickers}
           onExpandGroupInCards={groupId => {
-            setSelectedId(groupId);
+            selectGroup(groupId);
             setViewMode('cards');
           }}
         />
@@ -176,7 +215,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                 selected={group.id === selectedGroup?.id}
                 busy={groupsData.busy}
                 dragOver={dragOverCardId === group.id}
-                onSelect={() => setSelectedId(group.id)}
+                onSelect={() => selectGroup(group.id)}
                 onDragOverCard={() => setDragOverCardId(group.id)}
                 onDragLeaveCard={() => setDragOverCardId(null)}
                 onDropGroup={draggedId => {
@@ -190,6 +229,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
 
           {selectedGroup && (
             <GroupEditor
+              key={selectedGroup.id}
               group={selectedGroup}
               unassignedChildren={groupsData.unassignedChildren}
               staff={personal.staff}
@@ -236,6 +276,15 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
           if (deleteTarget) void deleteGroupConfirmed(deleteTarget);
           setDeleteTarget(null);
         }}
+      />
+
+      <UnsavedChangesDialog
+        open={pendingSwitch !== null}
+        formName={`grupa ${selectedGroup?.name ?? ''}`}
+        onDiscard={discardAndSwitchGroup}
+        onStay={stayOnCurrentGroup}
+        onSaveAndContinue={() => void saveAndSwitchGroup()}
+        saving={savingBeforeSwitch}
       />
     </>
   );

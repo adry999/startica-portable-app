@@ -259,6 +259,46 @@ describe('GroupsPage', () => {
     expect(dirtyForm).toBeDefined();
   });
 
+  // F5 (FEEDBACK-01-10.md): editorul inițializa starea o singură dată (useState(group.name))
+  // — la schimbarea grupei selectate, numele/capacitatea/echipa rămâneau ale grupei anterioare.
+  it('editorul arată numele și capacitatea grupei nou selectate, nu ale celei dinainte (F5)', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    expect(screen.getByLabelText('Nume grupă')).toHaveValue('Fluturași');
+    expect(screen.getByLabelText('Capacitate')).toHaveValue(2);
+
+    await userEvent.click(screen.getByText('Ursuleți'));
+
+    expect(screen.getByLabelText('Nume grupă')).toHaveValue('Ursuleți');
+    expect(screen.getByLabelText('Capacitate')).toHaveValue(5);
+  });
+
+  // F5: o modificare nesalvată pe grupa curentă nu trebuie pierdută tăcut la click pe altă grupă.
+  it('cere confirmare înainte să schimbe grupa selectată, dacă editorul e nesalvat (F5)', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    await userEvent.type(screen.getByLabelText('Nume grupă'), ' Popescu');
+    await userEvent.click(screen.getByText('Ursuleți'));
+
+    expect(screen.getByRole('dialog', { name: /Renunți la modificările din grupa Fluturași/ })).toBeInTheDocument();
+    // Editorul rămâne pe grupa veche până se alege o opțiune din dialog.
+    expect(screen.getByLabelText('Nume grupă')).toHaveValue('Fluturași Popescu');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Rămân' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Nume grupă')).toHaveValue('Fluturași Popescu');
+
+    await userEvent.click(screen.getByText('Ursuleți'));
+    await userEvent.click(screen.getByRole('button', { name: 'Renunță' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Nume grupă')).toHaveValue('Ursuleți');
+  });
+
   it('cere navigarea la stickerele grupei din meniul ⋯ al tile-ului din Tablă, fără să deschidă editorul', async () => {
     await loadedSession();
     const onOpenGroupStickers = vi.fn();
