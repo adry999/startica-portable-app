@@ -38,6 +38,16 @@ const fixtureState = {
       archived: true,
       archivedAt: '2026-09-16T00:00:00.000Z',
     },
+    // Altă lună — doar pentru testul PeriodFilter (§5.1): rămâne ascunsă de presetarea
+    // implicită „Luna aceasta”, dar nu afectează totalul/categoriile lunii din KPI (filtrate separat).
+    {
+      id: 'e4',
+      date: '2026-08-20',
+      category: 'Materiale',
+      description: 'Rechizite august',
+      amount: 200,
+      archived: false,
+    },
   ],
   groups: [],
   categories: [{ id: 'cat1', name: 'Chirie' }],
@@ -160,6 +170,21 @@ describe('ExpensesPage', () => {
 
     expect(screen.getByText('Curent')).toBeInTheDocument();
     expect(screen.queryByText('Salariu septembrie')).not.toBeInTheDocument();
+  });
+
+  it('§5.1: PeriodFilter implicit arată doar luna curentă; „Tot” arată și alte luni', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
+    expect(screen.queryByText('Rechizite august')).not.toBeInTheDocument(); // altă lună, ascunsă de presetarea implicită
+
+    await userEvent.click(screen.getByRole('button', { name: /Perioadă: Luna aceasta/ }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Tot' }));
+
+    expect(screen.getByText('Rechizite august')).toBeInTheDocument();
+    expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
   });
 
   it('arhivează o cheltuială din meniul rândului', async () => {

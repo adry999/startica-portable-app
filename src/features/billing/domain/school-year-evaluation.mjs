@@ -1,6 +1,12 @@
 import { today } from '#shared/domain/calendar-month.mjs';
 import { paymentIndex } from '#shared/domain/payment-allocations.mjs';
 import { obligation } from '#shared/domain/tuition-obligation.mjs';
+import {
+  SCHOOL_YEAR_START_MONTH,
+  schoolYearStartOf,
+  schoolYearMonths,
+  schoolYearLabel,
+} from '#shared/domain/school-year.mjs';
 
 /** @typedef {import('#shared/contracts/record-types.mjs').RecordsSnapshot} RecordsSnapshot */
 /** @typedef {import('#shared/contracts/record-types.mjs').Child} Child */
@@ -8,25 +14,9 @@ import { obligation } from '#shared/domain/tuition-obligation.mjs';
 /** @typedef {import('./month-evaluation.mjs').ChildObligation} ChildObligation */
 /** @typedef {{ child: Child, months: { month: string, obligation: ChildObligation }[] }} ChildSchoolYearEvaluation */
 
-// Anul școlar începe în septembrie (Backup și setări → Grădinița, „An școlar: începe în septembrie").
-export const SCHOOL_YEAR_START_MONTH = 9;
-
-/** @param {string} monthKey YYYY-MM */
-export function schoolYearStartOf(monthKey) {
-  const [year, month] = monthKey.split('-').map(Number);
-  return month >= SCHOOL_YEAR_START_MONTH ? year : year - 1;
-}
-
-/** @param {number} startYear */
-export function schoolYearMonths(startYear) {
-  return Array.from({ length: 12 }, (_, index) => {
-    const offset = SCHOOL_YEAR_START_MONTH - 1 + index;
-    return `${startYear + Math.floor(offset / 12)}-${String((offset % 12) + 1).padStart(2, '0')}`;
-  });
-}
-
-/** @param {number} startYear */
-export const schoolYearLabel = startYear => `Anul școlar ${startYear}–${startYear + 1}`;
+// Sursă unică mutată în `#shared/domain/school-year.mjs` (PROMPT-CLAUDE-CODE-7.md §2) — reexportate
+// aici ca `index.web.mjs` și apelanții existenți (StatusPage, usePaymentReceipt) să rămână neschimbați.
+export { SCHOOL_YEAR_START_MONTH, schoolYearStartOf, schoolYearMonths, schoolYearLabel };
 
 // Harta anului școlar are nevoie de fiecare copil pe fiecare din cele 12 luni.
 // Indexul de încasări se construiește o singură dată aici — 12 apeluri de
