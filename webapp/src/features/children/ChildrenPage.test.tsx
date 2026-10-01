@@ -95,9 +95,9 @@ function ChildrenHarness() {
   );
 }
 
-function renderPage() {
+function renderPage(initialPath = '/') {
   return render(
-    <MemoryRouter initialEntries={['/']}>
+    <MemoryRouter initialEntries={[initialPath]}>
       <ToastProvider>
         <TopbarActionsProvider>
           <TopbarActionsSlot />
@@ -346,6 +346,15 @@ describe('ChildrenPage', () => {
 
     expect(await screen.findByText('Copil adăugat.')).toBeInTheDocument();
     expect(screen.getByText('Radu Ionescu')).toBeInTheDocument();
+  });
+
+  it('?nou=1 în URL deschide direct formularul „Copil nou” (dashboard.attention.first)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage('/copii?nou=1');
+
+    expect(await screen.findByRole('dialog', { name: 'Copil nou' })).toBeInTheDocument();
   });
 
   it('editează fișa unui copil existent din meniul rândului', async () => {

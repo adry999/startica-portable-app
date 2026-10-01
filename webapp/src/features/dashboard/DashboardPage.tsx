@@ -172,7 +172,17 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
             <p className={styles.panelEyebrow}>Necesită atenție</p>
             <p className={styles.panelTitle}>Rezolvă pentru date corecte</p>
           </div>
-          {dashboardData.allClear ? (
+          {!dashboardData.hasAnyRecords ? (
+            <EmptyState
+              variant={EMPTY_STATES['dashboard.attention.first'].variant}
+              size="compact"
+              title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.attention.first'])}
+              action={{
+                label: EMPTY_STATES['dashboard.attention.first'].actionLabel ?? '',
+                onClick: () => onNavigate('children', { nou: '1' }),
+              }}
+            />
+          ) : dashboardData.allClear ? (
             <EmptyState
               variant={EMPTY_STATES['dashboard.attention.done'].variant}
               size="compact"

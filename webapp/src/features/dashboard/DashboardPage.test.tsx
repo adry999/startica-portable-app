@@ -97,6 +97,31 @@ describe('DashboardPage', () => {
     expect(onNavigate).toHaveBeenCalledWith('expenses', { nou: '1' });
   });
 
+  it('dashboard.attention.first: fără niciun copil, cardul „Necesită atenție” arată „Adaugă primii copii”', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: { ...fixtureState, children: [], payments: [] },
+            revision: 1,
+            updatedAt: '2026-09-23T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    const onNavigate = vi.fn();
+
+    renderDashboard({ month: '2026-09', onNavigate });
+    expect(screen.getByText('Adaugă primii copii')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Copil nou' }));
+    expect(onNavigate).toHaveBeenCalledWith('children', { nou: '1' });
+  });
+
   it('A8: graficul Evoluția încasărilor arată legenda cu pătrate, nu comutatorul Încasări/Cheltuieli', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

@@ -51,7 +51,6 @@ export interface NotifyData {
   /** Aceleași evaluări ca `rows`, în aceeași ordine — sursa pentru dialogul SMS (planSmsBatch are nevoie de {child, obligation}). */
   recipients: SmsRecipientRow[];
   stats: NotifyStats;
-  emptyMessage: string;
   copyAllMessages: () => Promise<{ ok: boolean; notice: string }>;
   copyMessage: (message: string) => Promise<{ ok: boolean; notice: string }>;
 }
@@ -105,7 +104,6 @@ export function useNotify(month: string): NotifyData {
       rows: [],
       recipients: [],
       stats: EMPTY_STATS,
-      emptyMessage: '',
       copyAllMessages: async () => ({ ok: false, notice: '' }),
       copyMessage: async () => ({ ok: false, notice: '' }),
     };
@@ -152,11 +150,6 @@ export function useNotify(month: string): NotifyData {
     rows,
     recipients: notified,
     stats: { late, soon, owed, unknown },
-    emptyMessage: rows.length
-      ? ''
-      : unknown
-        ? `Nimeni de notificat, dar ${unknown} fișe nu pot fi evaluate. Completează taxa și perioada.`
-        : 'Nimeni de notificat pentru luna aceasta.',
     copyAllMessages: () =>
       copyOne(
         rows.map(row => row.message).join('\n\n'),

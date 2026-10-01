@@ -294,10 +294,9 @@ describe('R9 — stările goale vin din @shared/ui/empty-states.ts, nu din text 
     'fee-setup/FeeSetupPage.tsx',
     'groups/GroupsBoard.tsx',
     'groups/GroupsPage.tsx',
-    // Genuin nou (10-de-notificat.md) — coada golită trece pe `EmptyState variant="done"` pentru
-    // decorul consecvent cu restul modulelor; textul rămâne calculat în useNotify.ts (depinde de
-    // fișele „De verificat”, nu doar de rows.length), deci nu vine dintr-o cheie de catalog — vezi
-    // INTREBARI.md.
+    // Coada golită nu e un `DataTable` — `EmptyState` cu cheia din catalog (`denotificat.done`,
+    // PROMPT-CLAUDE-CODE-6.md §2): titlu static din catalog, nota dinamică „N fișe nu pot fi
+    // evaluate” (fișele „De verificat”, din useNotify.ts) e un `params.nefise` în `text`.
     'notify/NotifyPage.tsx',
     'payments/PaymentsTable.tsx',
     // 24-personal.md §23l — starea „Niciun candidat încă" vine din `DataTable.empty="candidati.first"`

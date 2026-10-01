@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Button,
   ConfirmDeleteDialog,
@@ -54,6 +54,7 @@ function ChildrenListView({
   const session = useAppSession();
   const toast = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [query, setQuery] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
@@ -63,6 +64,22 @@ function ChildrenListView({
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChildRow | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  // „Copil nou" de pe Dashboard („Adaugă primii copii", dashboard.attention.first) trece direct
+  // la formular, ca la Cheltuieli (08-dashboard.md #3) — fără să rămână în URL.
+  useEffect(() => {
+    if (searchParams.get('nou') !== '1') return;
+    setFormTarget('new');
+    setSearchParams(
+      params => {
+        const next = new URLSearchParams(params);
+        next.delete('nou');
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useTopbarActions(
     <div className={styles.headerActions}>

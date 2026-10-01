@@ -39,6 +39,7 @@ export type EmptyStateKey =
   | 'raport.period'
   | 'bonzi.period'
   // 35d — compact, în interiorul unui card
+  | 'dashboard.attention.first'
   | 'dashboard.attention.done'
   | 'dashboard.birthdays'
   | 'dashboard.visits'
@@ -117,7 +118,12 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
   'denotificat.done': {
     variant: 'done',
     title: 'Nimeni de notificat',
-    text: 'Toți părinții cu restanțe au primit SMS. Lista se completează după scadență.',
+    // `nefise` (PROMPT-CLAUDE-CODE-6.md §2) — numărul de fișe „De verificat” care nu pot fi
+    // evaluate încă (fără taxă/perioadă confirmată); informație de business reală, nu doar decor.
+    text: params =>
+      Number(params.nefise ?? '0') > 0
+        ? `${params.nefise} fișe nu pot fi evaluate. Completează taxa și perioada.`
+        : 'Toți părinții cu restanțe au primit SMS. Lista se completează după scadență.',
   },
   'sms.first': {
     variant: 'first',
@@ -222,6 +228,14 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
   },
 
   // ── 35d — compact, în interiorul unui card ──────────────────────────────
+  // Niciun copil în filială încă — nu o coadă de atenție goală din lipsă de probleme, ci din
+  // lipsă de date (PROMPT-CLAUDE-CODE-6.md §2).
+  'dashboard.attention.first': {
+    variant: 'first',
+    size: 'compact',
+    title: 'Adaugă primii copii',
+    actionLabel: 'Copil nou',
+  },
   'dashboard.attention.done': {
     variant: 'done',
     size: 'compact',
