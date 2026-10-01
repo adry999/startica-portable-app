@@ -29,7 +29,7 @@ import styles from './ChildFormDrawer.module.css';
 export interface ChildFormDrawerProps {
   target: Child | 'new' | null;
   groups: Group[];
-  /** Pentru „locuri libere” pe chip-urile de grupă (15a) — rândurile nearhivate curente. */
+  /** Pentru ocuparea pe chip-urile de grupă (15a, F2) — rândurile nearhivate curente. */
   allChildren?: ChildRow[];
   onSubmit: (values: ChildFormValues) => Promise<void>;
   onClose: () => void;
@@ -64,6 +64,16 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
     }
     return counts;
   }, [allChildren, editing]);
+
+  // F2 (FEEDBACK-01-10.md): nota „Grupa e plină” sub pastile, cât timp grupa aleasă e la capacitate.
+  const selectedGroupFull = useMemo(() => {
+    if (!values.groupId) return null;
+    const group = orderedGroups.find(g => g.id === values.groupId);
+    if (!group || group.capacity == null) return null;
+    const occupied = occupiedByGroup.get(group.id) ?? 0;
+    if (occupied < group.capacity) return null;
+    return { name: group.name, occupied, capacity: group.capacity };
+  }, [values.groupId, orderedGroups, occupiedByGroup]);
 
   const childAgeYears = values.birthDate ? ageInYears(values.birthDate) : null;
   const compatibleGroups = useMemo(() => {
@@ -329,147 +339,153 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               { value: '', label: 'Fără grupă' },
               ...orderedGroups.map(group => {
                 const occupied = occupiedByGroup.get(group.id) ?? 0;
-                const free = group.capacity != null ? group.capacity - occupied : null;
+                const full = group.capacity != null && occupied >= group.capacity;
                 return {
                   value: group.id,
-                  label: free != null ? `${group.name} · ${free} locuri` : group.name,
-                  tone: groupTone(group.id, orderedGroups),
-                  hint: free != null ? `${free} din ${group.capacity} locuri libere` : 'Fără limită de capacitate',
+                  label:
+                    group.capacity != null
+                      ? `${group.name} · ${occupied}/${group.capacity}`
+                      : `${group.name} · ${occupied}`,
+                  tone: full ? 'pink' : groupTone(group.id, orderedGroups),
+                  hint:
+                    group.capacity != null
+                      ? `${occupied} din ${group.capacity} locuri ocupate`
+                      : 'Fără limită de capacitate',
                 };
               }),
             ]}
           />
+          {selectedGroupFull && (
+            <p className={styles.fullGroupNote}>
+              {selectedGroupFull.name} e plină ({selectedGroupFull.occupied}/{selectedGroupFull.capacity}). Poți salva
+              oricum.
+            </p>
+          )}
         </fieldset>
 
-        {editing && (
-          <details className={styles.details}>
-            <summary className={styles.detailsSummary}>5 · Alte date</summary>
-            <div className={styles.detailsBody}>
-              <div className={styles.grid2}>
-                <Field label="IDNP" htmlFor="child-idnp">
-                  <TextInput
-                    id="child-idnp"
-                    inputMode="numeric"
-                    value={values.idnp}
-                    onChange={value => setField('idnp', value.replace(/\D/g, '').slice(0, 13))}
-                  />
-                </Field>
-                <Field label="Adresă" htmlFor="child-address">
-                  <TextInput id="child-address" value={values.address} onChange={value => setField('address', value)} />
-                </Field>
-              </div>
-              <Field label="Statut" htmlFor="child-status">
-                <Select
-                  id="child-status"
-                  value={values.status}
-                  onChange={value => setField('status', value)}
-                  options={CHILD_STATUS_OPTIONS}
+        <details className={styles.details}>
+          <summary className={styles.detailsSummary}>5 · Alte date</summary>
+          <div className={styles.detailsBody}>
+            <div className={styles.grid2}>
+              <Field label="IDNP" htmlFor="child-idnp">
+                <TextInput
+                  id="child-idnp"
+                  inputMode="numeric"
+                  value={values.idnp}
+                  onChange={value => setField('idnp', value.replace(/\D/g, '').slice(0, 13))}
                 />
               </Field>
-              <div className={styles.grid2}>
-                <Field label="Data contractului" htmlFor="child-contract-date">
-                  <DateInput
-                    id="child-contract-date"
-                    value={values.contractDate}
-                    onChange={value => setField('contractDate', value)}
-                  />
-                </Field>
-                <Field label="Retragere" htmlFor="child-withdrawal-date">
-                  <DateInput
-                    id="child-withdrawal-date"
-                    value={values.withdrawalDate}
-                    onChange={value => setField('withdrawalDate', value)}
-                  />
-                </Field>
-              </div>
-              <div className={styles.grid3}>
-                <Field label="Monedă" htmlFor="child-currency">
-                  <Select
-                    id="child-currency"
-                    value={values.currency}
-                    onChange={value => setField('currency', value as ChildFeeCurrency)}
-                    options={CURRENCY_OPTIONS}
-                  />
-                </Field>
-                <Field label="Taxa lunară (gol = necunoscută)" htmlFor="child-fee">
-                  <NumberInput
-                    id="child-fee"
-                    min={0}
-                    step="0.01"
-                    value={values.fee}
-                    onChange={value => setField('fee', value)}
-                  />
-                </Field>
-                <Field label="Taxa aplicabilă din luna" htmlFor="child-fee-from">
-                  <MonthInput
-                    id="child-fee-from"
-                    value={values.feeFrom}
-                    onChange={value => setField('feeFrom', value)}
-                  />
-                </Field>
-              </div>
-              <Field label="Statut aplicabil din luna" htmlFor="child-status-from">
-                <MonthInput
-                  id="child-status-from"
-                  required
-                  value={values.statusFrom}
-                  onChange={value => setField('statusFrom', value)}
-                />
+              <Field label="Adresă" htmlFor="child-address">
+                <TextInput id="child-address" value={values.address} onChange={value => setField('address', value)} />
               </Field>
-              <Field label="Date medicale / alergii" htmlFor="child-health-notes">
-                <TextArea
-                  id="child-health-notes"
-                  rows={3}
-                  value={values.healthNotes}
-                  onChange={value => setField('healthNotes', value)}
-                />
-              </Field>
-              <p className={styles.notice}>Date sensibile: nu apar în export și în istoric.</p>
-              <div className={styles.field}>
-                Persoane autorizate să ridice copilul
-                <div className={styles.pickupList}>
-                  {values.pickupPersons.map((person, index) => (
-                    <div key={person.id} className={styles.pickupRow}>
-                      <TextInput
-                        placeholder="Nume"
-                        ariaLabel="Nume persoană autorizată"
-                        value={person.name}
-                        onChange={value => setPickupField(index, 'name', value)}
-                      />
-                      <TextInput
-                        placeholder="Relație"
-                        ariaLabel="Relație persoană autorizată"
-                        value={person.relation}
-                        onChange={value => setPickupField(index, 'relation', value)}
-                      />
-                      <PhoneInput
-                        placeholder="Telefon"
-                        ariaLabel="Telefon persoană autorizată"
-                        value={person.phone}
-                        onChange={value => setPickupField(index, 'phone', value)}
-                      />
-                      <TextInput
-                        placeholder="Notă"
-                        ariaLabel="Notă persoană autorizată"
-                        value={person.note}
-                        onChange={value => setPickupField(index, 'note', value)}
-                      />
-                      <IconButton
-                        className={styles.removeRow}
-                        icon="close"
-                        ariaLabel="Șterge persoana autorizată"
-                        onClick={() => removePickupPerson(index)}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Button variant="link" className={styles.addParentLink} onClick={addPickupPerson}>
-                  + Adaugă
-                </Button>
-              </div>
             </div>
-          </details>
-        )}
+            <Field label="Statut" htmlFor="child-status">
+              <Select
+                id="child-status"
+                value={values.status}
+                onChange={value => setField('status', value)}
+                options={CHILD_STATUS_OPTIONS}
+              />
+            </Field>
+            <div className={styles.grid2}>
+              <Field label="Data contractului" htmlFor="child-contract-date">
+                <DateInput
+                  id="child-contract-date"
+                  value={values.contractDate}
+                  onChange={value => setField('contractDate', value)}
+                />
+              </Field>
+              <Field label="Retragere" htmlFor="child-withdrawal-date">
+                <DateInput
+                  id="child-withdrawal-date"
+                  value={values.withdrawalDate}
+                  onChange={value => setField('withdrawalDate', value)}
+                />
+              </Field>
+            </div>
+            <div className={styles.grid3}>
+              <Field label="Monedă" htmlFor="child-currency">
+                <Select
+                  id="child-currency"
+                  value={values.currency}
+                  onChange={value => setField('currency', value as ChildFeeCurrency)}
+                  options={CURRENCY_OPTIONS}
+                />
+              </Field>
+              <Field label="Taxa lunară (gol = necunoscută)" htmlFor="child-fee">
+                <NumberInput
+                  id="child-fee"
+                  min={0}
+                  step="0.01"
+                  value={values.fee}
+                  onChange={value => setField('fee', value)}
+                />
+              </Field>
+              <Field label="Taxa aplicabilă din luna" htmlFor="child-fee-from">
+                <MonthInput id="child-fee-from" value={values.feeFrom} onChange={value => setField('feeFrom', value)} />
+              </Field>
+            </div>
+            <Field label="Statut aplicabil din luna" htmlFor="child-status-from">
+              <MonthInput
+                id="child-status-from"
+                required
+                value={values.statusFrom}
+                onChange={value => setField('statusFrom', value)}
+              />
+            </Field>
+            <Field label="Date medicale / alergii" htmlFor="child-health-notes">
+              <TextArea
+                id="child-health-notes"
+                rows={3}
+                value={values.healthNotes}
+                onChange={value => setField('healthNotes', value)}
+              />
+            </Field>
+            <p className={styles.notice}>Date sensibile: nu apar în export și în istoric.</p>
+            <div className={styles.field}>
+              Persoane autorizate să ridice copilul
+              <div className={styles.pickupList}>
+                {values.pickupPersons.map((person, index) => (
+                  <div key={person.id} className={styles.pickupRow}>
+                    <TextInput
+                      placeholder="Nume"
+                      ariaLabel="Nume persoană autorizată"
+                      value={person.name}
+                      onChange={value => setPickupField(index, 'name', value)}
+                    />
+                    <TextInput
+                      placeholder="Relație"
+                      ariaLabel="Relație persoană autorizată"
+                      value={person.relation}
+                      onChange={value => setPickupField(index, 'relation', value)}
+                    />
+                    <PhoneInput
+                      placeholder="Telefon"
+                      ariaLabel="Telefon persoană autorizată"
+                      value={person.phone}
+                      onChange={value => setPickupField(index, 'phone', value)}
+                    />
+                    <TextInput
+                      placeholder="Notă"
+                      ariaLabel="Notă persoană autorizată"
+                      value={person.note}
+                      onChange={value => setPickupField(index, 'note', value)}
+                    />
+                    <IconButton
+                      className={styles.removeRow}
+                      icon="close"
+                      ariaLabel="Șterge persoana autorizată"
+                      onClick={() => removePickupPerson(index)}
+                    />
+                  </div>
+                ))}
+              </div>
+              <Button variant="link" className={styles.addParentLink} onClick={addPickupPerson}>
+                + Adaugă
+              </Button>
+            </div>
+          </div>
+        </details>
 
         {editing && (
           <details className={styles.details}>

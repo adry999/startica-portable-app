@@ -60,6 +60,14 @@
   color: var(--muted);
 }
 
+/* F2 (FEEDBACK-01-10.md): grupa aleasă e la capacitate — rămâne selectabilă, doar avertizăm. */
+.fullGroupNote {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--pink-ink);
+}
+
 .parentRow {
   display: grid;
   grid-template-columns: 1.4fr 1fr 110px;

@@ -37,12 +37,13 @@ describe('ChildFormDrawer', () => {
     expect(screen.getByRole('button', { name: 'Salvează copilul' })).toBeInTheDocument();
   });
 
-  it('15a: „Copil nou” nu arată IDNP/Adresă/secțiunile 5-6 — apar doar la editare, în „Alte date”', () => {
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
-    expect(screen.queryByLabelText('IDNP')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Adresă')).not.toBeInTheDocument();
-    expect(screen.queryByText('5 · Alte date')).not.toBeInTheDocument();
+  it('F3 (FEEDBACK-01-10.md): „Copil nou” arată „5 · Alte date” pliat, dar nu secțiunea 6 (doar la editare)', () => {
+    const { unmount } = render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(screen.getByText('5 · Alte date')).toBeInTheDocument();
+    expect(screen.getByLabelText('IDNP').closest('details')).not.toHaveAttribute('open');
+    expect(screen.queryByLabelText('Adresă')).toBeInTheDocument();
     expect(screen.queryByText('6 · Istoric (avansat)')).not.toBeInTheDocument();
+    unmount();
 
     const child = { id: 'C-1', name: 'Ana', parent: 'Maria' } as unknown as import('@contracts/record-types.mjs').Child;
     render(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
@@ -153,7 +154,7 @@ describe('ChildFormDrawer', () => {
     );
 
     const chip = screen.getByRole('radio', { name: /Fluturași/ });
-    expect(chip).toHaveTextContent('Fluturași · 2 locuri');
+    expect(chip).toHaveTextContent('Fluturași · 1/3');
 
     await userEvent.click(chip);
     await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
@@ -176,7 +177,28 @@ describe('ChildFormDrawer', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByRole('radio', { name: /Fluturași/ })).toHaveTextContent('Fluturași · 2 locuri');
+    expect(screen.getByRole('radio', { name: /Fluturași/ })).toHaveTextContent('Fluturași · 0/2');
+  });
+
+  it('F2 (FEEDBACK-01-10.md): grupa plină rămâne selectabilă și arată nota de avertizare', async () => {
+    const groups: Group[] = [{ id: 'G-1', name: 'Fluturași', capacity: 1, order: 1 }];
+    render(
+      <ChildFormDrawer
+        target="new"
+        groups={groups}
+        allChildren={[row({ id: 'C-2', groupId: 'G-1' })]}
+        onSubmit={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const chip = screen.getByRole('radio', { name: /Fluturași/ });
+    expect(chip).toHaveTextContent('Fluturași · 1/1');
+    expect(screen.queryByText(/e plină/)).not.toBeInTheDocument();
+
+    await userEvent.click(chip);
+    expect(chip).not.toBeDisabled();
+    expect(chip).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText('Fluturași e plină (1/1). Poți salva oricum.')).toBeInTheDocument();
   });
 
   it('15a: arată grupele compatibile cu vârsta calculată din data nașterii', async () => {
