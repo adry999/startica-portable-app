@@ -322,5 +322,4 @@ describe('granițele dintre module (webapp/src/features)', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-app');
     expect(violations).toEqual([]);
   });
-
 });
