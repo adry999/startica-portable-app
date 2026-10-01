@@ -29,6 +29,8 @@ import {
   SearchSelect,
   SegmentedControl,
   Select,
+  SelectableRow,
+  SelectableTile,
   StatusIconButton,
   TagInput,
   TextArea,
@@ -131,6 +133,38 @@ export function ButoaneInputSection() {
           <Button variant="outline" disabled>
             Outline dezactivat
           </Button>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SelectableTile"
+        importLine="import { SelectableTile } from '@shared/ui';"
+        reference="COMPONENTE.md §0i — hit-area pe toată o placă custom (ChildTile, GroupTile, pool/WeekView…)"
+      >
+        <DemoRow label="control">
+          <SelectableTile aria-label="Maria Ionescu: prezentă" className={styles.selectableTileDemo} onClick={() => {}}>
+            Maria Ionescu
+          </SelectableTile>
+          <SelectableTile
+            aria-label="Grupa Mars: selectată"
+            selected
+            className={styles.selectableTileDemo}
+            onClick={() => {}}
+          >
+            Grupa Mars (selectată)
+          </SelectableTile>
+        </DemoRow>
+      </ComponentShowcase>
+
+      <ComponentShowcase
+        name="SelectableRow"
+        importLine="import { SelectableRow } from '@shared/ui';"
+        reference="COMPONENTE.md §0i — hit-area pe tot rândul dintr-o listă custom (AssignPage, NotifyPage, ReviewPage…)"
+      >
+        <DemoRow label="control">
+          <SelectableRow aria-label="Rând listă" className={styles.selectableRowDemo} onClick={() => {}}>
+            Rândul din listă — hit-area pe tot rândul
+          </SelectableRow>
         </DemoRow>
       </ComponentShowcase>
 

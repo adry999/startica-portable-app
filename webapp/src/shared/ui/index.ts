@@ -28,6 +28,8 @@ export { Select, type SelectOption, type SelectProps } from './Select';
 export { PhoneInput, type PhoneInputProps } from './PhoneInput';
 export { FileInput, type FileInputProps } from './FileInput';
 export { ChipSelect, type ChipOption, type ChipSelectProps } from './ChipSelect';
+export { SelectableTile, type SelectableTileProps } from './SelectableTile';
+export { SelectableRow, type SelectableRowProps } from './SelectableRow';
 export { ChoiceCards, type ChoiceCardOption, type ChoiceCardsProps } from './ChoiceCards';
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Tabs, type TabsOption, type TabsProps } from './Tabs';

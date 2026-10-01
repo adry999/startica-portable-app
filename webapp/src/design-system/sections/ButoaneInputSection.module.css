@@ -45,3 +45,20 @@
   background: var(--pink-soft);
   color: var(--pink-ink);
 }
+
+.selectableTileDemo {
+  width: 220px;
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-md-lg);
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  text-align: left;
+  font-weight: 700;
+}
+
+.selectableRowDemo {
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-md-lg);
+  border: 1.5px solid var(--border);
+  background: var(--white);
+}

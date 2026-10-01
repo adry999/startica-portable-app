@@ -1,0 +1,23 @@
+.root {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.root:disabled {
+  cursor: default;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: -2px;
+}
+
+.selected {
+  outline: 1.5px solid var(--orange-ink);
+  outline-offset: -1.5px;
+}
