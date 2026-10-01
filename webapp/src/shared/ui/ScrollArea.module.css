@@ -21,6 +21,11 @@
 .viewport {
   height: 100%;
   overflow-y: auto;
+  /* Fără asta, un copil mai lat (ex. un grid de formular cu coloane fixe) declanșează o bară
+     orizontală nativă — ScrollArea n-a avut niciodată logică pentru scroll pe X (doar bara
+     verticală de mai jos), deci overflow-x trebuie să rămână mereu ascuns, nu doar implicit
+     (PROMPT-CLAUDE-CODE-7.md §1 — Drawer „Copil nou” avea scroll pe X). */
+  overflow-x: hidden;
   scrollbar-width: none;
 }
 

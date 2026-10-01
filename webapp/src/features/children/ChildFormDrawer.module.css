@@ -43,6 +43,17 @@
   gap: 10px;
 }
 
+/* Fără asta, o celulă de grid (`Field`/`TextInput`/`PhoneInput` din `@shared/ui`) nu poate
+   coborî sub lățimea minimă intrinsecă a input-ului ei — implicit `min-width: auto` pe un
+   item de grid/flex ia cea mai mare lățime a conținutului, coloanele `1fr` nu se mai pot
+   micșora, iar rândul iese din drawer la 620px (PROMPT-CLAUDE-CODE-7.md §1, scroll pe X). */
+.grid3 > *,
+.grid2 > *,
+.parentRow > *,
+.pickupRow > * {
+  min-width: 0;
+}
+
 .hint {
   font-size: 12px;
   font-weight: 400;
@@ -104,10 +115,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--slate);
-  /* Fără asta, un `.field` din `.grid3`/`.grid2`/`.parentRow` nu poate coborî sub lățimea
-     minimă intrinsecă a input-ului lui — coloanele `1fr` nu se mai puteau micșora, iar
-     rândurile ieșeau din drawer (620px nu ajungea pentru 3 coloane). */
-  min-width: 0;
 }
 
 .field input,

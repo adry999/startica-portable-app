@@ -236,6 +236,30 @@ try {
     () => evaluate("document.querySelector('main')?.textContent").then(t => t?.includes(marker)),
     'Copilul creat prin API nu apare pe ecranul Copii',
   );
+
+  // „Copil nou" nu trebuie să deruleze pe orizontală la 620px (lățimea fixă a drawer-ului):
+  // celulele de grid cu Field/TextInput/PhoneInput din @shared/ui n-au cum să coboare sub
+  // lățimea lor intrinsecă fără min-width:0 explicit (PROMPT-CLAUDE-CODE-7.md §1).
+  await evaluate("[...document.querySelectorAll('button')].find(b => b.textContent === '+ Adaugă copil')?.click()");
+  await until(
+    () => evaluate("document.querySelector('[role=dialog]') != null"),
+    'Drawer-ul „Copil nou" nu s-a deschis',
+  );
+  // Secțiunea pliabilă (Persoane autorizate) aduce rândurile `.pickupRow` în DOM.
+  await evaluate("document.querySelector('[role=dialog] summary')?.click()");
+  await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const drawerOverflow = await evaluate(`(() => {
+    const viewport = [...document.querySelectorAll('[role=dialog] [class*="_viewport_"]')][0];
+    return viewport ? { scrollWidth: viewport.scrollWidth, clientWidth: viewport.clientWidth } : null;
+  })()`);
+  assert.ok(drawerOverflow, 'Drawer-ul „Copil nou" n-are un ScrollArea de verificat');
+  assert.ok(
+    drawerOverflow.scrollWidth <= drawerOverflow.clientWidth,
+    `„Copil nou" are scroll pe orizontală: scrollWidth ${drawerOverflow.scrollWidth} > clientWidth ${drawerOverflow.clientWidth}`,
+  );
+  await evaluate("document.querySelector('[role=dialog] button[aria-label=Închide]')?.click()");
+  await until(() => evaluate("document.querySelector('[role=dialog]') == null"), 'Drawer-ul „Copil nou" nu s-a închis');
+
   await evaluate(
     `[...document.querySelectorAll('aside nav button')].find(b=>b.children[1]?.textContent==='Achitări')?.click()`,
   );
