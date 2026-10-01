@@ -5,7 +5,6 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 const SRC_ROOT: string = import.meta.dirname;
 const FEATURES_ROOT = join(SRC_ROOT, 'features');
 const APP_ROOT = join(SRC_ROOT, 'app');
-const DESIGN_SYSTEM_ROOT = join(SRC_ROOT, 'design-system');
 
 const IMPORT_PATTERN = /(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g;
 
@@ -31,7 +30,7 @@ function resolveSpecifier(fileDir: string, specifier: string): string | null {
 interface Violation {
   file: string;
   specifier: string;
-  rule: 'feature-imports-feature' | 'feature-imports-app' | 'feature-imports-design-system';
+  rule: 'feature-imports-feature' | 'feature-imports-app';
 }
 
 function findViolations(): Violation[] {
@@ -54,11 +53,6 @@ function findViolations(): Violation[] {
 
         if (resolved === APP_ROOT || resolved.startsWith(APP_ROOT + sep)) {
           violations.push({ file: relativeFile, specifier, rule: 'feature-imports-app' });
-          continue;
-        }
-
-        if (resolved === DESIGN_SYSTEM_ROOT || resolved.startsWith(DESIGN_SYSTEM_ROOT + sep)) {
-          violations.push({ file: relativeFile, specifier, rule: 'feature-imports-design-system' });
           continue;
         }
 
@@ -329,8 +323,4 @@ describe('granițele dintre module (webapp/src/features)', () => {
     expect(violations).toEqual([]);
   });
 
-  it('niciun fișier dintr-un feature nu importă din design-system/ (e unealtă de dezvoltare, nu un shared kernel)', () => {
-    const violations = findViolations().filter(v => v.rule === 'feature-imports-design-system');
-    expect(violations).toEqual([]);
-  });
 });

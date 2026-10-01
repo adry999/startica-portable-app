@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build",
-    "build:design-system": "tsc --noEmit -p . && vite build --config vite.design-system.config.ts",
     "typecheck": "tsc --noEmit -p .",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",

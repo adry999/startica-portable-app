@@ -1,4 +1,4 @@
-import type { SmsRecipientView } from '@shared/ui';
+import type { SmsRecipientView } from './sms/SmsConfirmDialog';
 import type { SmsSendResultView, SmsStatusView } from '@shared/sms';
 
 /** Date fixe de exemplu — pagina rulează fără backend, deci nu vin din `/api/*`. */
