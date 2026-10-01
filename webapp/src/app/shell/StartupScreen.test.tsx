@@ -82,13 +82,83 @@ describe('StartupScreen', () => {
     expect(screen.getByText('v2.0.0')).toBeInTheDocument();
   });
 
-  it('arată mesajul de așteptare lungă după 15 secunde, cu buton de reîncercare', () => {
+  it('arată mesajul de așteptare lungă după 15 secunde, cu butoanele de reîncercare și offline', () => {
     render(<StartupScreen />);
     act(() => {
       vi.advanceTimersByTime(15000);
     });
     expect(screen.getByText('Pornirea durează mai mult ca de obicei')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Încearcă din nou' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Lucrez fără legătură' })).toBeInTheDocument();
+    // Fără sync configurat (acest describe), nu există nimic de arătat ca „ultima sincronizare”.
+    expect(screen.queryByText(/Ultima sincronizare/)).not.toBeInTheDocument();
+  });
+});
+
+describe('StartupScreen — 21c „Lucrez fără legătură” (DECIZII.md punctul 55)', () => {
+  it('butonul „Lucrez fără legătură” marchează sesiunea forceReady', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'TOK', version: '2.0.0' });
+        if (path === '/api/state') return new Promise(() => {}); // rămâne în așteptare
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    void session.result.current.load();
+    await act(flushMicrotasks);
+
+    render(<StartupScreen />);
+    act(() => {
+      vi.advanceTimersByTime(15000);
+    });
+    expect(session.result.current.state.forceReady).toBe(false);
+
+    screen.getByRole('button', { name: 'Lucrez fără legătură' }).click();
+
+    expect(session.result.current.state.forceReady).toBe(true);
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('arată ora ultimei sincronizări reușite când sync.json o are', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session')
+          return jsonResponse({
+            token: 'TOK',
+            version: '2.0.0',
+            sync: {
+              configured: true,
+              deviceName: 'Calculator A',
+              serverUrl: 'https://sync.exemplu.md',
+              lastSyncedAt: '2026-10-01T12:00:00.000Z',
+            },
+          });
+        if (path === '/api/state') return new Promise(() => {}); // rămâne în așteptare
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    void session.result.current.load();
+    await act(flushMicrotasks);
+
+    render(<StartupScreen />);
+    act(() => {
+      vi.advanceTimersByTime(15000);
+    });
+
+    expect(screen.getByText(/Ultima sincronizare/)).toBeInTheDocument();
+
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 });
 

@@ -127,7 +127,8 @@
   gap: var(--space-10);
 }
 
-.backupNote {
+.backupNote,
+.syncNote {
   margin: 0;
   font-size: 13px;
   color: var(--subtle);

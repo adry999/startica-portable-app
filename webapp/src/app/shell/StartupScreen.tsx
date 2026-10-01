@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { Button, LoadingBar, StepList, useDelayedLoading } from '@shared/ui';
+import { formatDateTime } from '#shared/format/date-format.mjs';
 import styles from './StartupScreen.module.css';
 
 const REVEAL_DELAY_MS = 1000;
@@ -124,7 +125,14 @@ export function StartupScreen() {
     );
   }
   if (!showScreen) return <div className={styles.blank} />;
-  if (showTooSlow) return <StartupTooSlow onRetry={() => void session.load()} />;
+  if (showTooSlow)
+    return (
+      <StartupTooSlow
+        onRetry={() => void session.load()}
+        onWorkOffline={() => session.forceReady()}
+        lastSyncedAt={session.state.sync?.configured ? session.state.sync.lastSyncedAt : undefined}
+      />
+    );
 
   const pct = allDone ? 100 : Math.round(smoothPct);
   const currentStepLabel = allDone ? 'Gata' : `${currentStep?.label ?? ''}…`;
@@ -149,7 +157,16 @@ export function StartupScreen() {
   );
 }
 
-function StartupTooSlow({ onRetry }: { onRetry: () => void }) {
+function StartupTooSlow({
+  onRetry,
+  onWorkOffline,
+  lastSyncedAt,
+}: {
+  onRetry: () => void;
+  onWorkOffline: () => void;
+  /** Doar pe o instalare conectată; nevid doar după cel puțin o sincronizare reușită. */
+  lastSyncedAt: string | undefined;
+}) {
   return (
     <div className={styles.screen}>
       <span className={styles.circleTopLeftSmall} aria-hidden="true" />
@@ -159,7 +176,13 @@ function StartupTooSlow({ onRetry }: { onRetry: () => void }) {
         <p className={styles.explanation}>
           Citirea bazei de date locale durează neobișnuit de mult. Poți încerca din nou sau poți aștepta.
         </p>
-        <Button onClick={onRetry}>Încearcă din nou</Button>
+        <div className={styles.actions}>
+          <Button variant="outline" onClick={onWorkOffline}>
+            Lucrez fără legătură
+          </Button>
+          <Button onClick={onRetry}>Încearcă din nou</Button>
+        </div>
+        {lastSyncedAt && <p className={styles.syncNote}>Ultima sincronizare: {formatDateTime(lastSyncedAt)}</p>}
       </div>
     </div>
   );

@@ -34,7 +34,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   const syncStatusData = useSyncStatus();
   // Cât timp sesiunea nu are încă snapshot-ul (ready), nu are rost meniul sau antetul —
   // ecranul de pornire (21a) ia locul întregului shell, nu doar al conținutului.
-  if (!session.state.ready) return <StartupScreen />;
+  // `forceReady` (21c, „Lucrez fără legătură”) lasă utilizatorul să treacă mai departe cât
+  // timp load() continuă în fundal — ecranele își au deja propriul gol pentru „fără date încă”.
+  if (!session.state.ready && !session.state.forceReady) return <StartupScreen />;
   const saveStatus = deriveSaveStatus(session.state);
   // Cardul de sincronizare (14a) înlocuiește „Salvat · ora” doar când e configurat și
   // fără eroare locală (deriveSyncStatus întoarce null în acel caz — Sidebar arată saveStatus).

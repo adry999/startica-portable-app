@@ -76,11 +76,15 @@ export function createAppSessionStore({
     // cardul din sidebar rămâne „Salvat · ora” exact ca astăzi, fără nicio cerere
     // suplimentară; `suggestedName` prefilă formularul de conectare (14b/22). `connection`
     // se completează abia după pasul de pornire de mai jos (21a).
-    /** @type {{ configured: true, deviceName: string, serverUrl: string, connection?: 'online' | 'offline' | 'revoked' } | { configured: false, suggestedName: string } | null} */
+    /** @type {{ configured: true, deviceName: string, serverUrl: string, lastSyncedAt?: string, connection?: 'online' | 'offline' | 'revoked' } | { configured: false, suggestedName: string } | null} */
     sync: null,
     // Bazin (23, decizia 10): Sidebar ascunde rândul cât timp filiala activă nu l-a configurat.
     /** @type {{ enabled: boolean }} */
     pool: { enabled: false },
+    // 21c (DECIZII.md punctul 55) — „Lucrez fără legătură”: ieșire optimistă din ecranul de
+    // pornire când încărcarea durează mult; AppShell arată interfața reală cât timp load()
+    // continuă în fundal. Nu înlocuiește `ready` (datele pot încă să nu fi sosit).
+    forceReady: false,
   };
 
   /** @param {any} result */
@@ -205,5 +209,11 @@ export function createAppSessionStore({
     }
   }
 
-  return { state, setRenderers, accept, load, mutate, checkConnection };
+  /** 21c, butonul „Lucrez fără legătură” — vezi comentariul de pe `state.forceReady`. */
+  function forceReady() {
+    state.forceReady = true;
+    renderSaveStatus();
+  }
+
+  return { state, setRenderers, accept, load, mutate, checkConnection, forceReady };
 }

@@ -21,4 +21,4 @@
 ## Criterii de acceptare
 - [ ] O pornire sub 1 s nu arată ecranul 21a
 - [ ] O navigare sub 300 ms nu clipește
-- [ ] 21c apare doar după 15 s și permite lucrul offline
+- [x] 21c apare doar după 15 s și permite lucrul offline — `StartupScreen.test.tsx` (butonul „Lucrez fără legătură” marchează `forceReady`, `AppShell` arată interfața reală); `lastSyncedAt` persistat în `sync.json`, expus prin `/api/session` (DECIZII.md punctul 55)

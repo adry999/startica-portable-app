@@ -217,3 +217,12 @@ test('checkConnection nu face nimic cât timp operațiunea e busy sau pending, a
   assert.deepEqual(store.state.health, { localOk: true });
   assert.equal(renderCalls.health, 2); // load() + checkConnection()
 });
+
+test('forceReady marchează starea și randează (21c, „Lucrez fără legătură")', () => {
+  const { store } = createHarness(async () => ({}));
+  assert.equal(store.state.forceReady, false);
+
+  store.forceReady();
+
+  assert.equal(store.state.forceReady, true);
+});

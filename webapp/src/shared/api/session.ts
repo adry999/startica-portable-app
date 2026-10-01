@@ -71,6 +71,7 @@ export interface AppSession {
   load: typeof store.load;
   mutate: typeof store.mutate;
   checkConnection: typeof store.checkConnection;
+  forceReady: typeof store.forceReady;
 }
 
 /** Un singur store, la nivel de modul (nu per componentă) — oglinda sessionState din app-session.mjs. */
@@ -81,6 +82,7 @@ export function useAppSession(): AppSession {
     load: store.load,
     mutate: store.mutate,
     checkConnection: store.checkConnection,
+    forceReady: store.forceReady,
   };
 }
 
