@@ -30,6 +30,22 @@ describe('PrintTable', () => {
     expect(screen.getByText('Ion')).toBeInTheDocument();
   });
 
+  it('showHeader={false} ascunde thead-ul (tabel cheie/valoare, fără antet)', () => {
+    render(
+      <PrintTable
+        showHeader={false}
+        columns={[
+          { key: 'name', header: 'Nume', render: row => row.name },
+          { key: 'amount', header: 'Sumă', render: row => String(row.amount), align: 'end' },
+        ]}
+        rows={ROWS}
+        rowKey={row => row.id}
+      />,
+    );
+    expect(screen.queryByText('Nume')).not.toBeInTheDocument();
+    expect(screen.getByText('Ana')).toBeInTheDocument();
+  });
+
   it('randează subsolul dat de apelant', () => {
     render(
       <PrintTable

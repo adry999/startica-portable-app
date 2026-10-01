@@ -136,14 +136,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // acțiunea „→” din cardul „De văzut” cu culoare de ton moștenită (`color: inherit`) — `Button
     // variant="link"` ar forța orange peste tonul roz/galben/mint al cardului.
     'dashboard/DashboardPage.tsx',
-    // Pontajul tipărit (23k, `@media print`) — `<table>` semantic real, pentru paginare corectă la
-    // printare (antet repetat la 14 rânduri/pagină); același caz ca `report/ReportPrintSummary.tsx`
-    // mai jos, `DataTable` nefiind gândit pentru `window.print()`.
-    'personal/TimesheetPrint.tsx',
-    // Rezumatul tipărit (19b, `@media print`) — `<table>` semantic real, pentru paginare corectă la
-    // printare; `DataTable` e un component interactiv (sortare, rânduri, densitate) nepotrivit pentru
-    // `window.print()`, nu există altă variantă din `@shared/ui` pentru un tabel doar-print.
-    'report/ReportPrintSummary.tsx',
   ];
 
   it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {

@@ -6,6 +6,8 @@ export interface PrintTableColumn<Row> {
   header: ReactNode;
   render: (row: Row) => ReactNode;
   align?: 'start' | 'end';
+  /** Clasă adăugată pe `<th>`/`<td>` (lângă `align`) — ex. o coloană de zi îngustă (TimesheetPrint). */
+  className?: string;
 }
 
 export interface PrintTableProps<Row> {
@@ -15,28 +17,47 @@ export interface PrintTableProps<Row> {
   rowClassName?: (row: Row) => string | undefined;
   /** Rândul (rândurile) de subsol — `<tr>` complet, `colSpan`-ul rămâne la latitudinea apelantului. */
   footer?: ReactNode;
+  /** Ascunde `<thead>` — pentru tabele fără antet (ex. ReportPrintSummary, listă cheie/valoare). Implicit true. */
+  showHeader?: boolean;
   className?: string;
 }
 
 /** Tabel de tipărit A4 (32f, COMPONENTE.md §0g) — cap de tabel repetat pe fiecare pagină la print. */
-export function PrintTable<Row>({ columns, rows, rowKey, rowClassName, footer, className }: PrintTableProps<Row>) {
+export function PrintTable<Row>({
+  columns,
+  rows,
+  rowKey,
+  rowClassName,
+  footer,
+  showHeader = true,
+  className,
+}: PrintTableProps<Row>) {
   const classes = className ? `${styles.table} ${className}` : styles.table;
+
+  function cellClassName(column: PrintTableColumn<Row>): string | undefined {
+    return (
+      [column.align === 'end' ? styles.amountCol : '', column.className ?? ''].filter(Boolean).join(' ') || undefined
+    );
+  }
+
   return (
     <table className={classes}>
-      <thead>
-        <tr>
-          {columns.map(column => (
-            <th key={column.key} className={column.align === 'end' ? styles.amountCol : undefined}>
-              {column.header}
-            </th>
-          ))}
-        </tr>
-      </thead>
+      {showHeader && (
+        <thead>
+          <tr>
+            {columns.map(column => (
+              <th key={column.key} className={cellClassName(column)}>
+                {column.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      )}
       <tbody>
         {rows.map(row => (
           <tr key={rowKey(row)} className={rowClassName?.(row)}>
             {columns.map(column => (
-              <td key={column.key} className={column.align === 'end' ? styles.amountCol : undefined}>
+              <td key={column.key} className={cellClassName(column)}>
                 {column.render(row)}
               </td>
             ))}

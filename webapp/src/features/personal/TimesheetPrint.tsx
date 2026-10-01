@@ -1,4 +1,5 @@
 import type { KindergartenSettings } from '@shared/api/useKindergarten';
+import { PrintTable, type PrintTableColumn } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
@@ -45,79 +46,66 @@ export function TimesheetPrint({ month, staff, rows, roleName, kindergarten, dis
   const pages = chunk(staffRows, ROWS_PER_PAGE);
   const workingDaysCount = staffRows[0]?.summary.workingDays ?? 0;
 
+  type StaffRow = (typeof staffRows)[number];
+
+  function dayCellText(cell: { kind: string }): string {
+    return cell.kind === '' ? workedLabel : cell.kind === 'off' || cell.kind === 'none' ? '' : cell.kind;
+  }
+
   return (
     <div className={styles.printSheet}>
       <style>{'@page { size: A4 landscape; margin: 10mm; }'}</style>
 
-      {pages.map((pageRows, pageIndex) => (
-        <div key={pageIndex} className={styles.printPage}>
-          <div className={styles.printHeader}>
-            <div>
-              <p className={styles.printTitle}>Tabel de pontaj · {formatMonthLabel(month)}</p>
-              <p className={styles.printSubtitle}>
-                {workingDaysCount} zile lucrătoare · {workingDaysCount * 8} ore
-              </p>
-            </div>
-            <div className={styles.printKindergarten}>
-              <span>{kindergarten?.displayName || kindergarten?.name || 'Startica'}</span>
-              {session.state.branch && <span>Subdiviziunea: Filiala {session.state.branch.name}</span>}
-            </div>
-          </div>
+      {pages.map((pageRows, pageIndex) => {
+        const columns: PrintTableColumn<StaffRow>[] = [
+          { key: 'nr', header: 'Nr.', render: row => pageIndex * ROWS_PER_PAGE + pageRows.indexOf(row) + 1 },
+          { key: 'nume', header: 'Numele, funcția', render: row => `${row.staff.name}, ${roleName(row.staff.roleId)}` },
+          ...dayNumbers.map((day, dayIndex) => ({
+            key: `day-${dayIndex}`,
+            header: day,
+            className: styles.printDayCol,
+            render: (row: StaffRow) => dayCellText(row.summary.cells[dayIndex]),
+          })),
+          { key: 'zile', header: 'Zile', render: row => row.summary.worked },
+          { key: 'ore', header: 'Ore', render: row => row.summary.hours },
+          { key: 'co', header: 'CO', render: row => row.summary.co },
+          { key: 'cm', header: 'CM', render: row => row.summary.cm },
+          { key: 'a', header: 'A', render: row => row.summary.a },
+        ];
 
-          <table className={styles.printTable}>
-            <thead>
-              <tr>
-                <th>Nr.</th>
-                <th>Numele, funcția</th>
-                {dayNumbers.map(day => (
-                  <th key={day} className={styles.printDayCol}>
-                    {day}
-                  </th>
-                ))}
-                <th>Zile</th>
-                <th>Ore</th>
-                <th>CO</th>
-                <th>CM</th>
-                <th>A</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map(({ staff: person, summary }, index) => (
-                <tr key={person.id}>
-                  <td>{pageIndex * ROWS_PER_PAGE + index + 1}</td>
-                  <td>
-                    {person.name}, {roleName(person.roleId)}
-                  </td>
-                  {summary.cells.map(cell => (
-                    <td key={cell.date} className={styles.printDayCol}>
-                      {cell.kind === '' ? workedLabel : cell.kind === 'off' || cell.kind === 'none' ? '' : cell.kind}
-                    </td>
-                  ))}
-                  <td>{summary.worked}</td>
-                  <td>{summary.hours}</td>
-                  <td>{summary.co}</td>
-                  <td>{summary.cm}</td>
-                  <td>{summary.a}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {pageIndex === pages.length - 1 && (
-            <>
-              <p className={styles.printLegend}>
-                Legendă: {workedLabel} = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î =
-                învoire, FP = fără plată.
-              </p>
-              <div className={styles.printSignatures}>
-                <span>Director: __________________</span>
-                <span>Administrator: __________________</span>
-                <span>Contabil: __________________</span>
+        return (
+          <div key={pageIndex} className={styles.printPage}>
+            <div className={styles.printHeader}>
+              <div>
+                <p className={styles.printTitle}>Tabel de pontaj · {formatMonthLabel(month)}</p>
+                <p className={styles.printSubtitle}>
+                  {workingDaysCount} zile lucrătoare · {workingDaysCount * 8} ore
+                </p>
               </div>
-            </>
-          )}
-        </div>
-      ))}
+              <div className={styles.printKindergarten}>
+                <span>{kindergarten?.displayName || kindergarten?.name || 'Startica'}</span>
+                {session.state.branch && <span>Subdiviziunea: Filiala {session.state.branch.name}</span>}
+              </div>
+            </div>
+
+            <PrintTable className={styles.printTable} columns={columns} rows={pageRows} rowKey={row => row.staff.id} />
+
+            {pageIndex === pages.length - 1 && (
+              <>
+                <p className={styles.printLegend}>
+                  Legendă: {workedLabel} = lucrat, CO = concediu de odihnă, CM = concediu medical, A = absență, Î =
+                  învoire, FP = fără plată.
+                </p>
+                <div className={styles.printSignatures}>
+                  <span>Director: __________________</span>
+                  <span>Administrator: __________________</span>
+                  <span>Contabil: __________________</span>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

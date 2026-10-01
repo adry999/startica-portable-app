@@ -1,10 +1,26 @@
+import { PrintTable } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import type { AccountingReport } from './useAccountingReport';
+import type { AccountingReport, ReportCategoryRow, ReportMethodRow } from './useAccountingReport';
 import styles from './ReportPrintSummary.module.css';
 
 export interface ReportPrintSummaryProps {
   report: AccountingReport;
 }
+
+const METHOD_COLUMNS = [
+  { key: 'method', header: '', render: (entry: ReportMethodRow) => entry.method },
+  { key: 'amount', header: '', align: 'end' as const, render: (entry: ReportMethodRow) => formatMoney(entry.amount) },
+];
+
+const CATEGORY_COLUMNS = [
+  { key: 'category', header: '', render: (entry: ReportCategoryRow) => entry.category },
+  {
+    key: 'amount',
+    header: '',
+    align: 'end' as const,
+    render: (entry: ReportCategoryRow) => formatMoney(entry.amount),
+  },
+];
 
 /**
  * Rezumatul pe o pagină A4, ascuns pe ecran și arătat doar la `window.print()`
@@ -33,28 +49,22 @@ export function ReportPrintSummary({ report }: ReportPrintSummaryProps) {
       </div>
 
       <h2 className={styles.sectionTitle}>Încasări pe metode</h2>
-      <table className={styles.table}>
-        <tbody>
-          {report.byMethod.map(entry => (
-            <tr key={entry.method}>
-              <td>{entry.method}</td>
-              <td className={styles.alignEnd}>{formatMoney(entry.amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <PrintTable
+        showHeader={false}
+        className={styles.table}
+        columns={METHOD_COLUMNS}
+        rows={report.byMethod}
+        rowKey={entry => entry.method}
+      />
 
       <h2 className={styles.sectionTitle}>Cheltuieli pe categorii</h2>
-      <table className={styles.table}>
-        <tbody>
-          {report.byCategory.map(entry => (
-            <tr key={entry.category}>
-              <td>{entry.category}</td>
-              <td className={styles.alignEnd}>{formatMoney(entry.amount)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <PrintTable
+        showHeader={false}
+        className={styles.table}
+        columns={CATEGORY_COLUMNS}
+        rows={report.byCategory}
+        rowKey={entry => entry.category}
+      />
     </div>
   );
 }
