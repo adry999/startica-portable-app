@@ -129,3 +129,44 @@ test('normalizePersonalRecord validează un candidat (23l) — nume obligatoriu,
   assert.equal(candidate.phone, '');
   assert.equal(candidate.notes, '');
 });
+
+test('§10: normalizePersonalRecord normalizează telefonul angajatului la E.164', () => {
+  const base = { id: 'STF-1', name: 'Ana', roleId: 'ROL-1', branchIds: ['bu'], since: '2026-01-01' };
+  const staff = normalizePersonalRecord('staff', { ...base, phone: '069123456' });
+  assert.equal(staff.phone, '+37369123456');
+  assert.ok(!('phoneInvalid' in staff));
+});
+
+test('§10: un „alt număr” cu „+” se acceptă cum a fost scris, pentru angajat și candidat', () => {
+  const base = { id: 'STF-1', name: 'Ana', roleId: 'ROL-1', branchIds: ['bu'], since: '2026-01-01' };
+  const staff = normalizePersonalRecord('staff', { ...base, phone: '+40 721 000 000' });
+  assert.equal(staff.phone, '+40 721 000 000');
+  assert.ok(!('phoneInvalid' in staff));
+
+  const candidate = normalizePersonalRecord('candidates', {
+    id: 'CAN-1',
+    name: 'Ana',
+    phone: '+40 721 000 000',
+    createdAt: '2026-09-28T10:00:00.000Z',
+    updatedAt: '2026-09-28T10:00:00.000Z',
+  });
+  assert.equal(candidate.phone, '+40 721 000 000');
+  assert.ok(!('phoneInvalid' in candidate));
+});
+
+test('§10: un telefon invalid rămâne cum a fost scris, cu phoneInvalid: true, pentru angajat și candidat', () => {
+  const base = { id: 'STF-1', name: 'Ana', roleId: 'ROL-1', branchIds: ['bu'], since: '2026-01-01' };
+  const staff = normalizePersonalRecord('staff', { ...base, phone: '123' });
+  assert.equal(staff.phone, '123');
+  assert.equal(staff.phoneInvalid, true);
+
+  const candidate = normalizePersonalRecord('candidates', {
+    id: 'CAN-1',
+    name: 'Ana',
+    phone: '123',
+    createdAt: '2026-09-28T10:00:00.000Z',
+    updatedAt: '2026-09-28T10:00:00.000Z',
+  });
+  assert.equal(candidate.phone, '123');
+  assert.equal(candidate.phoneInvalid, true);
+});

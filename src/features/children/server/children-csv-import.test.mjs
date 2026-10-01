@@ -26,7 +26,9 @@ test('CSV real: 105 copii, avertizări și reimport fără dubluri', t => {
 
 test('CSV: date sursă păstrate și conflicte la reimport', () => {
   const c = previewChildrenCsvImport(csv).additions[0];
-  assert.equal(c.phone, '060123456');
+  // §10 (02.10): normalizeRecord() normalizează telefonul la E.164 încă din preview, ca
+  // fișa afișată operatorului să arate exact ce se va salva.
+  assert.equal(c.phone, '+37360123456');
   assert.equal(c.phone2, '+37360123457');
   assert.equal(c.parent2, 'Parinte doi');
   const snapshot = structuredClone(c),

@@ -218,6 +218,58 @@ test('Vizita refuză un statut în afara VISIT_STATUSES', () => {
     assert.doesNotThrow(() => normalizeRecord('visits', { ...visit(), status }));
 });
 
+test('§10: un copil normalizează phone/phone2 la E.164, fără phoneInvalid', () => {
+  const record = normalizeRecord('children', { ...child(), phone: '069123456', phone2: '0 80 123 456' });
+  assert.equal(record.phone, '+37369123456');
+  assert.equal(record.phone2, '+37380123456');
+  assert.ok(!('phoneInvalid' in record));
+  assert.ok(!('phone2Invalid' in record));
+});
+
+test('§10: „alt număr" (prefix +, nu moldovenesc) se salvează cum a fost scris, fără marcaj', () => {
+  const record = normalizeRecord('children', { ...child(), phone: '+40 721 000 000' });
+  assert.equal(record.phone, '+40 721 000 000');
+  assert.ok(!('phoneInvalid' in record));
+});
+
+test('§10: un telefon invalid, fără „+", rămâne cum a fost scris, cu phoneInvalid: true', () => {
+  const record = normalizeRecord('children', { ...child(), phone: '123', phone2: 'nu e telefon' });
+  assert.equal(record.phone, '123');
+  assert.equal(record.phoneInvalid, true);
+  assert.equal(record.phone2, 'nu e telefon');
+  assert.equal(record.phone2Invalid, true);
+});
+
+test('§10: re-salvarea unui telefon corectat șterge phoneInvalid', () => {
+  const withInvalid = normalizeRecord('children', { ...child(), phone: '123' });
+  assert.equal(withInvalid.phoneInvalid, true);
+  const fixed = normalizeRecord('children', { ...withInvalid, phone: '069123456' });
+  assert.equal(fixed.phone, '+37369123456');
+  assert.ok(!('phoneInvalid' in fixed));
+});
+
+test('§10: o fișă fără phone2 nu primește phone2/phone2Invalid din senin', () => {
+  const record = normalizeRecord('children', { ...child() });
+  assert.equal(record.phone2, undefined);
+  assert.ok(!('phone2Invalid' in record));
+});
+
+test('§10: persoanele autorizate să ridice copilul au telefonul normalizat la E.164', () => {
+  const record = normalizeRecord('children', {
+    ...child(),
+    pickupPersons: [{ name: 'Bunica', phone: '069123456' }],
+  });
+  assert.equal(record.pickupPersons[0].phone, '+37369123456');
+});
+
+test('§10: o vizită normalizează phone/phone2 la fel ca un copil', () => {
+  const record = normalizeRecord('visits', { ...visit(), phone: '069123456', phone2: '123' });
+  assert.equal(record.phone, '+37369123456');
+  assert.ok(!('phoneInvalid' in record));
+  assert.equal(record.phone2, '123');
+  assert.equal(record.phone2Invalid, true);
+});
+
 test('Vizita refuză o dată de schimbare a statutului invalidă', () => {
   assert.throws(() => normalizeRecord('visits', { ...visit(), statusChangedAt: 'ieri' }), /schimbării de statut/);
 });
