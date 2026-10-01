@@ -50,7 +50,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `SegmentedControl` cu contoare | 27e | Pentru stări exclusive. Contorul ignoră celelalte filtre. |
 | `SearchInput` | 27e | 260–360px, pill, fără diacritice, fără spații în telefon, debounce 150 ms, × golește, Esc golește. |
 | `FilterMenu` **nou** | 27e | Buton sm (`8px 12px` radius 10). Activ = `--orange-soft` + border 1.5px `--orange` + valoarea sau numărul. Popover 260px: căutare, opțiuni cu bifă și contor, „Golește” / „Doar X”. Înlocuiește `<select>`-urile din bare (Achitări, Mesaje SMS, Cheltuieli). |
-| `PeriodFilter` **nou** | 27e | Presetări (luna curentă, luna trecută, 30 zile, an școlar, tot) + „Interval…” cu 2 DateInput. Înlocuiește `<input type=month>` din Achitări. |
+| `PeriodFilter` | 27e | Implementat §5.1: presetări (luna curentă, luna trecută, 30 zile, an școlar, tot) + „Interval personalizat” cu 2 DateInput, peste `Button`+`Popover`. Model pe zi (`YYYY-MM-DD`). În Achitări și Cheltuieli. |
 | `ActiveFilters` **nou** | 27a | Rând de chip-uri „Cheie: valoare ×” + „Șterge filtrele”. Apare doar dacă e activ cel puțin un filtru. |
 | Contor rezultate | 27a | „**24** din 146” în dreapta barei. |
 | `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, FilterPills, Icon, Popover, SearchInput } from '@shared/ui';
+import { Button, FilterPills, Icon, PeriodFilter, Popover, SearchInput, type PeriodPreset } from '@shared/ui';
 import { categoryStyleFor } from './useExpenses';
 import { METHOD_TONE } from './expenseColumns';
 import styles from './ExpensesPage.module.css';
@@ -23,6 +23,14 @@ export interface ExpensesFiltersProps {
   categoryNames: string[];
   method: string;
   onMethodChange: (value: string) => void;
+  /** Perioadă cu presetări (§5.1) — independentă de `MonthStepper`-ul din antet (E-1: acela
+   * controlează doar cardurile KPI), filtrează doar tabelul/„Pe zile”. */
+  periodPreset: PeriodPreset;
+  onPeriodPresetChange: (value: PeriodPreset) => void;
+  periodFrom: string;
+  onPeriodFromChange: (value: string) => void;
+  periodTo: string;
+  onPeriodToChange: (value: string) => void;
 }
 
 /** Dropdown „Nearhivate ▾" — 06-cheltuieli.md #3, E-5 (etichetele corecte, la feminin, pentru „cheltuieli"). */
@@ -81,6 +89,12 @@ export function ExpensesFilters({
   categoryNames,
   method,
   onMethodChange,
+  periodPreset,
+  onPeriodPresetChange,
+  periodFrom,
+  onPeriodFromChange,
+  periodTo,
+  onPeriodToChange,
 }: ExpensesFiltersProps) {
   return (
     <>
@@ -90,6 +104,14 @@ export function ExpensesFilters({
           value={search}
           onChange={onSearchChange}
           ariaLabel="Caută cheltuială"
+        />
+        <PeriodFilter
+          preset={periodPreset}
+          onPresetChange={onPeriodPresetChange}
+          from={periodFrom}
+          onFromChange={onPeriodFromChange}
+          to={periodTo}
+          onToChange={onPeriodToChange}
         />
         <ArchiveFilterDropdown value={archiveFilter} onChange={onArchiveFilterChange} />
       </div>

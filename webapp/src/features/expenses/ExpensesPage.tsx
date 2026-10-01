@@ -7,12 +7,14 @@ import {
   DataTable,
   Drawer,
   LoadingState,
+  monthDayBounds,
   MonthStepper,
   RowMenu,
   SegmentedControl,
   SelectionBar,
   useToast,
   useTopbarActions,
+  type PeriodPreset,
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
@@ -52,6 +54,13 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [category, setCategory] = useState('');
   const [method, setMethod] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
+  // §5.1: perioadă independentă de MonthStepper-ul din antet (E-1 — acela controlează doar
+  // cardurile KPI); implicit 'luna', cu limitele lunii din MonthStepper la montare (nu ale lunii
+  // calendaristice reale — altfel tabelul ar porni gol dacă `month` diferă de „azi”), ca tabelul
+  // să arate la montare exact ce arăta înainte de §5.1.
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('luna');
+  const [periodFrom, setPeriodFrom] = useState(() => monthDayBounds(monthKey).from);
+  const [periodTo, setPeriodTo] = useState(() => monthDayBounds(monthKey).to);
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
@@ -77,21 +86,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   >(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-  const monthExpenses = useMemo(
-    () => expensesData.expenses.filter(expense => expense.date.startsWith(monthKey)),
-    [expensesData.expenses, monthKey],
-  );
-
   const filteredExpenses = useMemo(() => {
     const normalizedSearch = normalizeSearchText(search);
-    return monthExpenses.filter(
+    return expensesData.expenses.filter(
       expense =>
         (archiveFilter === 'all' || (archiveFilter === 'archived' ? expense.archived : !expense.archived)) &&
+        (!periodFrom || expense.date >= periodFrom) &&
+        (!periodTo || expense.date <= periodTo) &&
         (!category || expense.category === category) &&
         (!method || expense.method === method) &&
         matchesRecordListSearch('expenses', expense, expensesData.records, normalizedSearch),
     );
-  }, [monthExpenses, expensesData.records, search, category, method, archiveFilter]);
+  }, [expensesData.expenses, expensesData.records, search, category, method, archiveFilter, periodFrom, periodTo]);
 
   function exportFiltered() {
     downloadCsv(
@@ -279,6 +285,12 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
           categoryNames={expensesData.categoryNames}
           method={method}
           onMethodChange={setMethod}
+          periodPreset={periodPreset}
+          onPeriodPresetChange={setPeriodPreset}
+          periodFrom={periodFrom}
+          onPeriodFromChange={setPeriodFrom}
+          periodTo={periodTo}
+          onPeriodToChange={setPeriodTo}
         />
 
         {selectedRowKeys.size > 0 && (
