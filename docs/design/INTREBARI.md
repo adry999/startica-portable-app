@@ -295,3 +295,11 @@ Am păstrat `<button>` propriu pentru celula calendarului, cu excepția document
 **Istoric (decizie anterioară, depășită):** `Dialog` din `@shared/ui` avea un singur prop `title`, folosit simultan ca text de antet vizibil și ca `aria-label` — `SalariesView.tsx` păstra `title="Confirmă plata"` (static) ca să nu rupă `SalariesView.test.tsx` (`getByRole('dialog', { name: 'Confirmă plata' })`), pierzând titlul dinamic din implementarea manuală de dinainte.
 
 **01.10:** `Dialog` capătă prop nou `ariaLabel?: string` (implicit `title`), exact pentru acest caz. `SalariesView.tsx` acum: `title` dinamic („Plătește N salarii”/„Plătește 1 salariu”), `ariaLabel="Confirmă plata"` (static, testul rămâne neschimbat).
+
+## ⏳ Curs valutar — stocat per filială, nu în baza comună — întrebare arhitecturală (F12)
+
+`PROMPT-CLAUDE-CODE-8.md` §3.3 spune „ratele stau în baza comună”. În cod, `exchangeRates`/`exchangeRateSources` sunt chei de settings citite/scrise prin `createSettingsRepository(db)` pe **baza filialei active** (`create-branch-context.mjs`), nu prin `create-common-context.mjs` — la fel și planurile (`plan-presets`). Fiecare filială își ține propriul istoric de curs și propriile planuri, complet separat.
+
+Dacă ar trebui să fie comun (un singur curs/planuri pentru toate filialele unei instalații), e o relocare de date live, nu doar o mutare de cod: fiecare filială existentă are deja propriul `exchangeRates`/`exchangeRateSources`/`plan-presets` salvate, iar o migrare ar trebui să aleagă o sursă de adevăr (ex. filiala cea mai recent folosită) și să șteargă/ignore divergențele celorlalte. N-am făcut nicio mutare fără să întreb — cursul și planurile rămân per filială ca până acum, F12 (polling orar + calendar + backfill) construit pe structura existentă.
+
+**De decis:** rămân per filială (fiecare filială poate avea curs/planuri diferite — util dacă filialele sunt în țări/valute diferite) sau se mută în baza comună (un singur curs valabil peste tot)? Dacă al doilea, urmează o migrare separată, nu inclusă aici.

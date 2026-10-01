@@ -13,10 +13,10 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
 | F7 Luni de la luna curentă | ✅ 38c | ✅ `7d8c64f` |
 | F8 Funcții custom | ✅ 38f | ⏳ §4 |
-| F9 MDL/EUR | — | ⏳ §3.2 (verificare) |
+| F9 MDL/EUR | — | ⏳ `5ec6429` (verificat — un conflict găsit, în `INTREBARI.md`) |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
 | F11 Plată din fișă | ✅ 38c | ⏳ §3.4 |
-| F12 Curs BNM istoric | ✅ 38e | ⏳ §3.3 |
+| F12 Curs BNM istoric | ✅ 38e | ✅ `81f979c` |
 | F13 Planuri view/edit | ✅ 38d | ⏳ §3.5 |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
 
