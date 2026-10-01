@@ -6,7 +6,6 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { applySchema } from '#core/server/database/schema.mjs';
 import { TYPES } from '#shared/domain/record-schema.mjs';
-import { PERSONAL_KINDS } from '#features/personal/domain/personal-schema.mjs';
 import { summarizeDatabaseContents } from './database-contents.mjs';
 
 /** @param {import('node:test').TestContext} t */
@@ -20,15 +19,18 @@ function createTestDatabase(t) {
   return { db, file };
 }
 
-test('grupează tabela records pe kind — acoperă toate TYPES și PERSONAL_KINDS, fără listă scrisă de mână', t => {
+// Acoperirea PERSONAL_KINDS (baza comună) e verificată separat, în
+// tests/architecture/ — backup/ nu are voie să importe din personal/ (regula
+// feature-imports-feature); testul de-aici se oprește la TYPES (același strat,
+// #shared/domain), suficient cât să dovedească gruparea pe kind.
+test('grupează tabela records pe kind — acoperă toate TYPES, fără listă scrisă de mână', t => {
   const { db, file } = createTestDatabase(t);
   const insert = db.prepare('INSERT INTO records (kind, id, payload) VALUES (?, ?, ?)');
-  for (const kind of [...TYPES, ...PERSONAL_KINDS]) insert.run(kind, `${kind}-1`, '{}');
+  for (const kind of TYPES) insert.run(kind, `${kind}-1`, '{}');
 
   const counts = summarizeDatabaseContents(file);
 
   for (const kind of TYPES) assert.equal(counts[kind], 1, `kind lipsă din counts: ${kind}`);
-  for (const kind of PERSONAL_KINDS) assert.equal(counts[kind], 1, `kind lipsă din counts: ${kind}`);
 });
 
 test('numără și tabelele dedicate (nu doar records)', t => {
