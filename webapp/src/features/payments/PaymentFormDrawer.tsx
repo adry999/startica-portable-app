@@ -21,7 +21,7 @@ import {
 } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
 import { useSmsSend, useSmsStatus } from '@shared/sms';
-import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatMoney, formatMoneyInput } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
@@ -174,9 +174,7 @@ export function PaymentFormDrawer({
       // Copilul cu taxă EUR își scade obligația în €, deci rândul de repartizare urmărește
       // echivalentul în € al sumei primite în lei, nu suma în lei ca la un copil MDL.
       const target = isEurChild ? eurEquivalent : totalAmount;
-      // R7: valoare internă a câmpului editabil (string numeric brut, nu text afișat) — formatMoney
-      // ar adăuga „ lei”/separator de mii, care ar sparge inputul controlat de repartizare.
-      const next = target ? target.toFixed(2) : '';
+      const next = target ? formatMoneyInput(target) : '';
       syncedAmountRef.current = next;
       if (row.amount === next) return previous;
       return { ...previous, allocations: [{ ...row, amount: next }] };

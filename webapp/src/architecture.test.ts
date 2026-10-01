@@ -246,12 +246,10 @@ describe('R4 — lucide-react se importă doar în shared/ui/Icon.tsx', () => {
 describe('R7 — formatele de dată/monedă/număr vin doar din @shared/format în features/**', () => {
   const RAW_FORMAT_PATTERN = /\.(toLocaleDateString|toLocaleString|toFixed)\(/;
 
-  const ALLOWED: readonly string[] = ['payments/PaymentFormDrawer.tsx'];
-
-  it('nicio încălcare nouă în afara listei de excepții (datorie cunoscută, vezi DS-IMPLEMENTARE.md §3)', () => {
+  it('niciun format brut în afara @shared/format', () => {
     const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
     const actual = featureFilesMatching(files, text => RAW_FORMAT_PATTERN.test(text));
-    expect(unexpectedViolations(actual, ALLOWED)).toEqual([]);
+    expect(actual).toEqual([]);
   });
 });
 

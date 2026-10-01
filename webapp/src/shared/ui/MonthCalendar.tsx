@@ -89,10 +89,7 @@ export function MonthCalendar({
                     <span className={styles.dayNumber}>{day.dayNumber}</span>
                     <div className={styles.pills}>
                       {visible.map(event => (
-                        <span
-                          key={event.key}
-                          className={`${styles.pill} ${styles[`tone-${event.tone ?? 'neutral'}`]}`}
-                        >
+                        <span key={event.key} className={`${styles.pill} ${styles[`tone-${event.tone ?? 'neutral'}`]}`}>
                           {event.label}
                         </span>
                       ))}

@@ -63,9 +63,7 @@ describe('MonthCalendar', () => {
   });
 
   it('ziua selectată primește marcajul `selected`', () => {
-    render(
-      <MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} selected="2026-09-02" onSelect={() => {}} />,
-    );
+    render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} selected="2026-09-02" onSelect={() => {}} />);
     expect(screen.getByRole('button', { name: /^2$/ }).className).toMatch(/selected/);
   });
 
@@ -87,9 +85,7 @@ describe('MonthCalendar', () => {
   });
 
   it('fără încălcări axe (R6)', async () => {
-    const { container } = render(
-      <MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onSelect={() => {}} />,
-    );
+    const { container } = render(<MonthCalendar weekdayLabels={weekdayLabels} days={makeDays()} onSelect={() => {}} />);
     expect(await axe(container)).toHaveNoViolations();
   });
 });

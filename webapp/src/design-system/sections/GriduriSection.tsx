@@ -175,11 +175,7 @@ export function GriduriSection() {
         reference="30h — calendar lunar cu pastile de evenimente, zile din altă lună la .45"
       >
         <DemoRow label="control">
-          <MonthCalendar
-            weekdayLabels={MONTH_CALENDAR_WEEKDAYS}
-            days={buildMonthCalendarDays()}
-            onSelect={() => {}}
-          />
+          <MonthCalendar weekdayLabels={MONTH_CALENDAR_WEEKDAYS} days={buildMonthCalendarDays()} onSelect={() => {}} />
         </DemoRow>
       </ComponentShowcase>
 
