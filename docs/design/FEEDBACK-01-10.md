@@ -6,8 +6,8 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | # | Design | Cod |
 |---|---|---|
 | F1 Paginare | ✅ 38a | ✅ `9544360` |
-| F2 Ocupare grupă | ✅ 38b | ⏳ §2.3 |
-| F3 Alte date la Copil nou | ✅ 38b | ⏳ §2.3 |
+| F2 Ocupare grupă | ✅ 38b | ✅ `f1deb4e` |
+| F3 Alte date la Copil nou | ✅ 38b | ✅ `f1deb4e` |
 | F4 Fără autocompletare | — | ✅ `38ef0c7` |
 | F5 Editor grupă | — | ✅ `2cbd5f6` |
 | F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
