@@ -20,6 +20,18 @@ describe('MasterDetail', () => {
     expect(screen.getByText('Lista').parentElement).toHaveStyle({ width: '420px' });
   });
 
+  it('detailWidth dă lățime fixă detaliului și lasă master flexibil (listă lată + detaliu îngust)', () => {
+    render(<MasterDetail master={<p>Lista</p>} detail={<p>Detaliu</p>} detailWidth={400} />);
+    expect(screen.getByText('Detaliu').parentElement).toHaveStyle({ width: '400px', flex: 'none' });
+    expect(screen.getByText('Lista').parentElement).toHaveStyle({ flex: '1' });
+  });
+
+  it('detailSide="start" randează detaliul înaintea listei', () => {
+    render(<MasterDetail master={<p>Lista</p>} detail={<p>Detaliu</p>} detailSide="start" />);
+    const root = screen.getByText('Lista').parentElement?.parentElement;
+    expect(root?.firstElementChild).toBe(screen.getByText('Detaliu').parentElement);
+  });
+
   it('fără încălcări axe (R6)', async () => {
     const { container } = render(<MasterDetail master={<p>Lista</p>} detail={<p>Detaliu</p>} />);
     expect(await axe(container)).toHaveNoViolations();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, FilterPills, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
+import { Button, FilterPills, MasterDetail, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthAbbrev, formatMonthName } from '#shared/format/date-format.mjs';
 import { PaymentDetailPanel } from './PaymentDetailPanel';
@@ -63,127 +63,131 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
   }
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.main}>
-        <div className={styles.filterRow}>
-          <FilterPills
-            className={styles.pills}
-            groups={[
-              {
-                label: '',
-                value: monthFilter,
-                onChange: value => selectMonthFilter(value as MonthFilter),
-                options: [
-                  { value: 'all', label: `Toate · ${data.rows.length}`, tone: 'neutral' },
-                  { value: 'unassigned', label: `Neasociate · ${unassignedCount}`, tone: 'pink' },
-                  { value: 'archived', label: 'Arhivate', tone: 'neutral' },
-                ],
-              },
-            ]}
-          />
-          <SearchInput
-            className={styles.search}
-            value={data.search}
-            onChange={data.setSearch}
-            placeholder="Caută"
-            ariaLabel="Căutare achitări"
-          />
-          <Button variant="outline" onClick={() => setFiltersOpen(open => !open)}>
-            Filtre · {activeFiltersCount}
-          </Button>
-        </div>
+    <MasterDetail
+      detailWidth={400}
+      master={
+        <div className={styles.main}>
+          <div className={styles.filterRow}>
+            <FilterPills
+              className={styles.pills}
+              groups={[
+                {
+                  label: '',
+                  value: monthFilter,
+                  onChange: value => selectMonthFilter(value as MonthFilter),
+                  options: [
+                    { value: 'all', label: `Toate · ${data.rows.length}`, tone: 'neutral' },
+                    { value: 'unassigned', label: `Neasociate · ${unassignedCount}`, tone: 'pink' },
+                    { value: 'archived', label: 'Arhivate', tone: 'neutral' },
+                  ],
+                },
+              ]}
+            />
+            <SearchInput
+              className={styles.search}
+              value={data.search}
+              onChange={data.setSearch}
+              placeholder="Caută"
+              ariaLabel="Căutare achitări"
+            />
+            <Button variant="outline" onClick={() => setFiltersOpen(open => !open)}>
+              Filtre · {activeFiltersCount}
+            </Button>
+          </div>
 
-        {filtersOpen && (
-          <FilterPills
-            groups={[
-              {
-                label: 'Metodă',
-                value: data.method,
-                onChange: data.setMethod,
-                options: [
-                  { value: '', label: 'Toate', tone: 'neutral' },
-                  { value: 'Cash', label: 'Cash', tone: 'orange' as PillTone },
-                  { value: 'Card', label: 'Card', tone: 'yellow' as PillTone },
-                  { value: 'Transfer', label: 'Transfer', tone: 'mint' as PillTone },
-                ],
-              },
-              {
-                label: 'Grupa',
-                value: data.groupFilter,
-                onChange: data.setGroupFilter,
-                options: [
-                  { value: 'all', label: 'Toate', tone: 'neutral' },
-                  ...data.groups.map(group => ({
-                    value: group.id,
-                    label: group.name,
-                    tone: groupTone(group.id, data.groups),
-                  })),
-                  { value: 'none', label: 'Fără grupă', tone: 'neutral' },
-                ],
-              },
-            ]}
-          />
-        )}
+          {filtersOpen && (
+            <FilterPills
+              groups={[
+                {
+                  label: 'Metodă',
+                  value: data.method,
+                  onChange: data.setMethod,
+                  options: [
+                    { value: '', label: 'Toate', tone: 'neutral' },
+                    { value: 'Cash', label: 'Cash', tone: 'orange' as PillTone },
+                    { value: 'Card', label: 'Card', tone: 'yellow' as PillTone },
+                    { value: 'Transfer', label: 'Transfer', tone: 'mint' as PillTone },
+                  ],
+                },
+                {
+                  label: 'Grupa',
+                  value: data.groupFilter,
+                  onChange: data.setGroupFilter,
+                  options: [
+                    { value: 'all', label: 'Toate', tone: 'neutral' },
+                    ...data.groups.map(group => ({
+                      value: group.id,
+                      label: group.name,
+                      tone: groupTone(group.id, data.groups),
+                    })),
+                    { value: 'none', label: 'Fără grupă', tone: 'neutral' },
+                  ],
+                },
+              ]}
+            />
+          )}
 
-        <div className={styles.groups}>
-          {monthKeys.length === 0 && <p className={styles.notice}>Nu există achitări pentru filtrele alese.</p>}
-          {monthKeys.map(monthKey => {
-            const rows = groups.get(monthKey) as PaymentRowView[];
-            const subtotal = rows.reduce((sum, row) => sum + row.total, 0);
-            return (
-              <div key={monthKey} className={styles.group}>
-                <div className={styles.groupHead}>
-                  <span className={styles.groupTitle}>{formatMonthName(monthKey)}</span>
-                  <span className={styles.groupCount}>
-                    {rows.length} {rows.length === 1 ? 'achitare' : 'achitări'}
-                  </span>
-                  <strong className={styles.groupTotal}>{formatMoney(subtotal)}</strong>
+          <div className={styles.groups}>
+            {monthKeys.length === 0 && <p className={styles.notice}>Nu există achitări pentru filtrele alese.</p>}
+            {monthKeys.map(monthKey => {
+              const rows = groups.get(monthKey) as PaymentRowView[];
+              const subtotal = rows.reduce((sum, row) => sum + row.total, 0);
+              return (
+                <div key={monthKey} className={styles.group}>
+                  <div className={styles.groupHead}>
+                    <span className={styles.groupTitle}>{formatMonthName(monthKey)}</span>
+                    <span className={styles.groupCount}>
+                      {rows.length} {rows.length === 1 ? 'achitare' : 'achitări'}
+                    </span>
+                    <strong className={styles.groupTotal}>{formatMoney(subtotal)}</strong>
+                  </div>
+                  <div className={styles.card}>
+                    {rows.map(row => (
+                      <div
+                        key={row.id}
+                        role="button"
+                        tabIndex={0}
+                        className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
+                        onClick={() => setSelectedId(row.id)}
+                        onKeyDown={event => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            setSelectedId(row.id);
+                          }
+                        }}
+                      >
+                        <span className={styles.rowDay}>
+                          <strong>{dayOfMonth(row.date)}</strong>
+                          <small>{formatMonthAbbrev(row.date)}</small>
+                        </span>
+                        <span className={styles.rowChild}>
+                          <strong>{row.unassigned ? '—' : row.childLabel}</strong>
+                          {row.unassigned && <span className={styles.unassignedBadge}>Neasociată</span>}
+                        </span>
+                        <span className={styles.rowMeta}>
+                          {row.sourceName || '—'} · {row.tenders.map(tender => tender.method).join(' + ')} ·{' '}
+                          {row.allocations.map(allocation => allocation.label).join(', ') || '—'}
+                        </span>
+                        <span className={styles.rowSum}>{formatMoney(row.total)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className={styles.card}>
-                  {rows.map(row => (
-                    <div
-                      key={row.id}
-                      role="button"
-                      tabIndex={0}
-                      className={row.id === activeId ? `${styles.row} ${styles.rowActive}` : styles.row}
-                      onClick={() => setSelectedId(row.id)}
-                      onKeyDown={event => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          setSelectedId(row.id);
-                        }
-                      }}
-                    >
-                      <span className={styles.rowDay}>
-                        <strong>{dayOfMonth(row.date)}</strong>
-                        <small>{formatMonthAbbrev(row.date)}</small>
-                      </span>
-                      <span className={styles.rowChild}>
-                        <strong>{row.unassigned ? '—' : row.childLabel}</strong>
-                        {row.unassigned && <span className={styles.unassignedBadge}>Neasociată</span>}
-                      </span>
-                      <span className={styles.rowMeta}>
-                        {row.sourceName || '—'} · {row.tenders.map(tender => tender.method).join(' + ')} ·{' '}
-                        {row.allocations.map(allocation => allocation.label).join(', ') || '—'}
-                      </span>
-                      <span className={styles.rowSum}>{formatMoney(row.total)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
-
-      {activePayment && (
-        <PaymentDetailPanel
-          payment={activePayment}
-          onClose={() => setSelectedId(null)}
-          onEdit={onEdit}
-          onToggleArchived={row => void toggleArchived(row)}
-        />
-      )}
-    </div>
+      }
+      detail={
+        activePayment && (
+          <PaymentDetailPanel
+            payment={activePayment}
+            onClose={() => setSelectedId(null)}
+            onEdit={onEdit}
+            onToggleArchived={row => void toggleArchived(row)}
+          />
+        )
+      }
+    />
   );
 }

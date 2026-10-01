@@ -60,6 +60,15 @@ export function ShellSection() {
             />
           </div>
         </DemoRow>
+        <DemoRow label="detailWidth (Achitări „Pe luni” — listă lată + detaliu 400px)">
+          <div style={{ height: 180 }}>
+            <MasterDetail
+              detailWidth={400}
+              master={<p>Listă lată, grupată pe lună</p>}
+              detail={<p>Detaliu plată selectată, lățime fixă 400px</p>}
+            />
+          </div>
+        </DemoRow>
       </ComponentShowcase>
 
       <ComponentShowcase
