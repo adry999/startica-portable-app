@@ -25,13 +25,13 @@
 
 ## Pașii
 
-- [ ] **1. `src/shared/domain/school-year.mjs`** (nou) + `school-year.test.mjs` — mută `SCHOOL_YEAR_START_MONTH`/`schoolYearStartOf`/`schoolYearMonths`/`schoolYearLabel`, adaugă `schoolYearDayBounds`. `school-year-evaluation.mjs` reexportă; testele pure mutate din `school-year-evaluation.test.mjs`.
-- [ ] **2. `PeriodFilter.tsx`/`.module.css`** — presetări + interval, conform deciziilor 1 și 3. Export `type PeriodPreset`, `PERIOD_PRESET_OPTIONS` (etichetele din spec), `periodPresetBounds`.
-- [ ] **3. `PeriodFilter.test.tsx`** — câte un caz per presetare (bounds corecte cu o dată fixă), comutare la `interval` arată/ascunde `DateInput`-urile, `onPresetChange`/`onFromChange`/`onToChange` apelate corect. **`PeriodFilter.stories.tsx`** — poveste per presetare + interval.
-- [ ] **4. Achitări:** `usePayments.ts` (model `period`), `PaymentsTable.tsx` (branșează noul `PeriodFilter`, actualizează `ActiveFilters`/`resetFilters`), `usePayments.test.ts`/`PaymentsTable` teste actualizate.
-- [ ] **5. Cheltuieli:** `ExpensesFilters.tsx` (adaugă `PeriodFilter`), `ExpensesPage.tsx` (stare `period`, filtrare independentă de `monthKey` pentru tabel), teste actualizate.
-- [ ] **6. `docs/design/COMPONENTE.md`** — rândul `PeriodFilter` **nou** → fără „**nou**”, scurtă notă „implementat §5.1”.
-- [ ] **7. Verificare:** `npm run check` (rădăcină) + `cd webapp && npm run typecheck && npm test -- --run`.
+- [x] **1. `src/shared/domain/school-year.mjs`** (nou) + `school-year.test.mjs` — mută `SCHOOL_YEAR_START_MONTH`/`schoolYearStartOf`/`schoolYearMonths`/`schoolYearLabel`, adaugă `schoolYearDayBounds`. `school-year-evaluation.mjs` reexportă; testele pure mutate din `school-year-evaluation.test.mjs`.
+- [x] **2. `PeriodFilter.tsx`/`.module.css`** — presetări + interval, conform deciziilor 1 și 3. Export `type PeriodPreset`, `PERIOD_PRESET_OPTIONS` (etichetele din spec), `periodPresetBounds`, `monthDayBounds` (pentru ecrane cu propria lună, ex. Cheltuieli).
+- [x] **3. `PeriodFilter.test.tsx`** — câte un caz per presetare (bounds corecte cu o dată fixă), comutare la `interval` arată/ascunde `DateInput`-urile, `onPresetChange`/`onFromChange`/`onToChange` apelate corect. **`PeriodFilter.stories.tsx`** — poveste per presetare + interval.
+- [x] **4. Achitări:** `usePayments.ts` (model `period`), `PaymentsTable.tsx` (branșează noul `PeriodFilter`, actualizează `ActiveFilters`/`resetFilters`), `usePayments.test.ts`/`PaymentsTable` teste actualizate.
+- [x] **5. Cheltuieli:** `ExpensesFilters.tsx` (adaugă `PeriodFilter`), `ExpensesPage.tsx` (stare `period`, filtrare independentă de `monthKey` pentru tabel), teste actualizate.
+- [x] **6. `docs/design/COMPONENTE.md`** — rândul `PeriodFilter` **nou** → fără „**nou**”, scurtă notă „implementat §5.1”.
+- [x] **7. Verificare:** `npm run check` (rădăcină, 1242 teste) + `cd webapp && npx tsc --noEmit -p . && npx vitest run` (2072 teste) — toate verzi.
 
 ## Global Constraints
 
