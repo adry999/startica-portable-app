@@ -11,14 +11,12 @@ Am re-adăugat manual cele 3 bucăți peste conținutul proaspăt copiat (restul
 
 **Pentru viitor:** dacă pachetul de design se regenerează dintr-un export care nu include deciziile/tokenii adăugați direct în `docs/design/*.md` de sesiunile de cod, o copiere „cu suprascriere” va pierde tăcut acest gen de documentație — merită verificat diff-ul complet la fiecare `§0`, nu doar presupus corect.
 
-## ⏳ Teste 2.1.0 — bug-uri raportate de utilizator pe instalerul testat (01.10, de investigat)
+## ✅ Teste 2.1.0 — bug-uri raportate de utilizator pe instalerul testat — rezolvate 01.10 (PROMPT-CLAUDE-CODE-7.md §1)
 
-Doi bug-uri raportate în timpul testării `Startica_Setup_2.1.0.exe`, înainte de a începe §5. Verificat: niciunul nu vine din commit-urile acestei sesiuni (§2/§3/§4 nu ating fișierele implicate) — par preexistente, doar observate acum.
+Doi bug-uri raportate în timpul testării `Startica_Setup_2.1.0.exe`. Ambele erau preexistente (nu veneau din §2/§3/§4 ale sesiunii anterioare), dar reale — reproduse cu Playwright pe o copie izolată, nu doar „date de test sărace”.
 
-1. **Dashboard — „Evoluția încasărilor" nu mai arată bine.** Nereprodus încă local; `BarChart.tsx`/`DashboardPage.tsx` neschimbate de această sesiune (ultimele atingeri: `32b0f42`, `b3653c3`, anterioare).
-2. **„Copil nou" are scroll pe axa X — e rău.** `ChildFormDrawer.tsx`/`.module.css` neschimbate de această sesiune (ultima atingere: `fb23281`, anterioară). `Drawer.module.css` nu are selector pe tag `aside`, deci schimbarea `aside→div` din §4 (axe fix) nu e cauza.
-
-De investigat separat, după §5.
+1. **Dashboard — „Evoluția încasărilor" nu mai arată bine** → cauză reală: `Tooltip.module.css` (`.wrapper`, `display:inline-block`, fără înălțime proprie) se interpune între bara cu `height:X%` din `BarChart.tsx` și ancestorul cu înălțime definită (`.pair`/`.group`) — procentul devine `auto`, bara colapsează la `min-height:2px` indiferent de valoare. Confirmat cu date reale (iulie 2026, 787.385 lei): bara măsura 1,99px în loc de ~138px. Fix: `height:100%` pe `.wrapper` (sigur — e no-op când părintele n-are înălțime definită, cazul tuturor celorlalte folosiri Tooltip). Capturi: `verificare/08-dashboard-bug1-before.png`/`-after.png`. Commit `a2a80e8`.
+2. **„Copil nou" are scroll pe axa X** → două cauze: `ScrollArea.module.css` (`.viewport` fără `overflow-x` propriu → browserul calculează implicit `auto`) + `ChildFormDrawer.module.css` (grid-urile `.grid3`/`.grid2`/`.parentRow`/`.pickupRow` fără `min-width:0` pe celule → `Field`/`TextInput`/`PhoneInput` nu puteau coborî sub lățimea lor intrinsecă la 620px). Fix pe ambele cauze + test real în `tests/browser-smoke.mjs` (deschide drawer-ul, verifică `scrollWidth<=clientWidth` pe `.viewport`; verificat că pică fără fix). Commit `b93224a`.
 
 ## ✅ §3 — incident: capturile arătau codul vechi, nu codul curent — rezolvat 01.10
 
