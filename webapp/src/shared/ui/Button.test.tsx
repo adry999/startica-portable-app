@@ -50,6 +50,15 @@ describe('Button', () => {
     expect(container.querySelector('[role="status"]')).toBeInTheDocument();
   });
 
+  it('tone="inherit" adaugă clasa toneInherit (culoarea vine de la părinte)', () => {
+    render(
+      <Button variant="link" tone="inherit">
+        Vezi lista →
+      </Button>,
+    );
+    expect(screen.getByRole('button', { name: 'Vezi lista →' }).className).toMatch(/toneInherit/);
+  });
+
   it('`loading` ignoră clicurile', async () => {
     const onClick = vi.fn();
     const { container } = render(

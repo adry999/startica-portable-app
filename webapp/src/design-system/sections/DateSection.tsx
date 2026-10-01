@@ -365,6 +365,26 @@ export function DateSection() {
         <DemoRow label="empty">
           <BarChart ariaLabel="Fără date" series={[]} state="empty" />
         </DemoRow>
+        <DemoRow label="grouped (Dashboard „Evoluția încasărilor”, un buton pe lună)">
+          <BarChart
+            ariaLabel="Încasări și cheltuieli pe ultimele 3 luni"
+            grouped
+            series={[
+              { label: 'Iul', value: 41000 },
+              { label: 'Aug', value: 0 },
+              { label: 'Sep', value: 45000, current: true },
+            ]}
+            secondarySeries={[
+              { label: 'Iul', value: 27000 },
+              { label: 'Aug', value: 0 },
+              { label: 'Sep', value: 32000, current: true },
+            ]}
+            groupAriaLabel={(item, secondary) =>
+              `${item.label}: încasări ${item.value}, cheltuieli ${secondary?.value}`
+            }
+            groupTooltip={(item, secondary) => `diferență ${item.value - (secondary?.value ?? 0)} lei`}
+          />
+        </DemoRow>
       </ComponentShowcase>
 
       <ComponentShowcase

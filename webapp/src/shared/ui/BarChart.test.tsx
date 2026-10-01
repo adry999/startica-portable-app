@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { BarChart } from './BarChart';
 
 const SERIES = [
@@ -63,10 +63,78 @@ describe('BarChart', () => {
     expect(screen.getByText('Fără date')).toBeInTheDocument();
   });
 
+  it('o lună cu valoare 0 arată o bară neutră (fără dată), nu una de ton minusculă', () => {
+    const { container } = render(<BarChart series={[{ label: 'Iun', value: 0 }, ...SERIES]} ariaLabel="Încasări" />);
+    const firstBar = container.querySelector('[aria-describedby]');
+    expect(firstBar?.className).toMatch(/barNoData/);
+  });
+
   it('fără încălcări axe (R6)', async () => {
     const { container } = render(
       <BarChart series={SERIES} secondarySeries={SECONDARY} ariaLabel="Încasări vs. cheltuieli" />,
     );
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  describe('grouped', () => {
+    it('randează un singur buton pe lună, cu aria-label combinat', () => {
+      render(
+        <BarChart
+          series={SERIES}
+          secondarySeries={SECONDARY}
+          ariaLabel="Încasări vs. cheltuieli"
+          grouped
+          groupAriaLabel={(item, secondary) => `${item.label}: încasări ${item.value}, cheltuieli ${secondary?.value}`}
+        />,
+      );
+      expect(screen.getByRole('button', { name: 'Sep: încasări 45000, cheltuieli 32000' })).toBeInTheDocument();
+      expect(screen.getAllByRole('button')).toHaveLength(3);
+    });
+
+    it('tooltip-ul de grup folosește groupTooltip', async () => {
+      const user = userEvent.setup();
+      render(
+        <BarChart
+          series={[{ label: 'Sep', value: 45000 }]}
+          secondarySeries={[{ label: 'Sep', value: 32000 }]}
+          ariaLabel="Încasări vs. cheltuieli"
+          grouped
+          groupAriaLabel={() => 'Septembrie'}
+          groupTooltip={(item, secondary) => `diferență ${(item.value - (secondary?.value ?? 0)).toString()}`}
+        />,
+      );
+      await user.hover(screen.getByRole('button', { name: 'Septembrie' }));
+      expect(screen.getByRole('tooltip')).toHaveTextContent('diferență 13000');
+    });
+
+    it('onGroupClick se apelează cu seria lunii la clic', async () => {
+      const user = userEvent.setup();
+      const onGroupClick = vi.fn();
+      render(
+        <BarChart
+          series={SERIES}
+          secondarySeries={SECONDARY}
+          ariaLabel="Încasări vs. cheltuieli"
+          grouped
+          groupAriaLabel={item => item.label}
+          onGroupClick={onGroupClick}
+        />,
+      );
+      await user.click(screen.getByRole('button', { name: 'Sep' }));
+      expect(onGroupClick).toHaveBeenCalledWith(SERIES[2], SECONDARY[2], 2);
+    });
+
+    it('fără încălcări axe în modul grouped (R6)', async () => {
+      const { container } = render(
+        <BarChart
+          series={SERIES}
+          secondarySeries={SECONDARY}
+          ariaLabel="Încasări vs. cheltuieli"
+          grouped
+          groupAriaLabel={item => item.label}
+        />,
+      );
+      expect(await axe(container)).toHaveNoViolations();
+    });
   });
 });

@@ -134,6 +134,13 @@ export function ButoaneInputSection() {
             Outline dezactivat
           </Button>
         </DemoRow>
+        <DemoRow label="tone (card cu ton dinamic, ex. Dashboard „De văzut”)">
+          <span style={{ color: 'var(--pink-ink)' }}>
+            <Button variant="link" tone="inherit">
+              Vezi lista →
+            </Button>
+          </span>
+        </DemoRow>
       </ComponentShowcase>
 
       <ComponentShowcase

@@ -28,6 +28,11 @@
   align-items: flex-end;
   gap: 3px;
   height: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
 }
 
 .bar {
@@ -52,6 +57,10 @@
 
 .barSecondaryCurrent {
   background: var(--mint-bar-current);
+}
+
+.barNoData {
+  background: var(--sand);
 }
 
 .monthLabel {

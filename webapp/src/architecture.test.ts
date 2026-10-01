@@ -132,10 +132,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // Grupul „Grupă” (pastilă cu tooltip nativ de capacitate + nuanță de ton per-grupă) — vezi
     // comentariul din fișier.
     'children/ChildFormDrawer.tsx',
-    // Bara graficului lunar (formă/înălțime dinamică per venit/cheltuială, fără text, cu Tooltip) și
-    // acțiunea „→” din cardul „De văzut” cu culoare de ton moștenită (`color: inherit`) — `Button
-    // variant="link"` ar forța orange peste tonul roz/galben/mint al cardului.
-    'dashboard/DashboardPage.tsx',
   ];
 
   it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
+  BarChart,
   Button,
   Card,
   EMPTY_STATES,
@@ -7,7 +8,6 @@ import {
   Legend,
   LoadingState,
   ProgressBar,
-  Tooltip,
   resolveEmptyStateTitle,
   type LegendTone,
   type ProgressBarTone,
@@ -78,7 +78,6 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
     income: bar.value,
     expense: dashboardData.expenseHistory[index]?.value ?? 0,
   }));
-  const maxRevenue = Math.max(1, ...chartMonths.flatMap(bar => [bar.income, bar.expense]));
 
   return (
     <>
@@ -143,45 +142,29 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               ]}
             />
           </div>
-          <div className={styles.bars}>
-            {chartMonths.map((bar, index) => {
-              const isCurrent = index === currentMonthIndex;
+          <BarChart
+            ariaLabel="Evoluția încasărilor și cheltuielilor, ultimele 12 luni"
+            series={chartMonths.map((bar, index) => ({
+              label: bar.month.slice(5),
+              value: bar.income,
+              current: index === currentMonthIndex,
+            }))}
+            secondarySeries={chartMonths.map((bar, index) => ({
+              label: bar.month.slice(5),
+              value: bar.expense,
+              current: index === currentMonthIndex,
+            }))}
+            grouped
+            groupAriaLabel={(_item, _secondary, index) => {
+              const bar = chartMonths[index];
+              return `${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`;
+            }}
+            groupTooltip={(_item, _secondary, index) => {
+              const bar = chartMonths[index];
               const diff = bar.income - bar.expense;
-              return (
-                <div key={bar.month} className={styles.barColumn}>
-                  <Tooltip
-                    content={`${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`}
-                  >
-                    <button
-                      type="button"
-                      className={styles.barPair}
-                      aria-label={`${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`}
-                    >
-                      <span
-                        className={`${styles.barIncome} ${isCurrent ? styles.barIncomeCurrent : ''} ${
-                          bar.income === 0 ? styles.barNoData : ''
-                        }`}
-                        style={{ height: bar.income === 0 ? 5 : Math.max(6, (bar.income / maxRevenue) * 100) }}
-                      />
-                      <span
-                        className={`${styles.barExpense} ${isCurrent ? styles.barExpenseCurrent : ''} ${
-                          bar.expense === 0 ? styles.barNoData : ''
-                        }`}
-                        style={{ height: bar.expense === 0 ? 5 : Math.max(6, (bar.expense / maxRevenue) * 100) }}
-                      />
-                    </button>
-                  </Tooltip>
-                </div>
-              );
-            })}
-          </div>
-          <div className={styles.barLabels}>
-            {chartMonths.map((bar, index) => (
-              <small key={bar.month} className={index === currentMonthIndex ? styles.barLabelCurrent : undefined}>
-                {bar.month.slice(5)}
-              </small>
-            ))}
-          </div>
+              return `${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`;
+            }}
+          />
         </Card>
 
         <Card className={styles.attentionPanel}>
@@ -289,13 +272,14 @@ function AttentionRow({
         <small>{item.detail}</small>
       </div>
       {!clear && (
-        <button
-          type="button"
+        <Button
+          variant="link"
+          tone="inherit"
           className={styles.attentionAction}
           onClick={() => onNavigate(item.view as ViewKey, item.params)}
         >
           {item.action} →
-        </button>
+        </Button>
       )}
     </article>
   );

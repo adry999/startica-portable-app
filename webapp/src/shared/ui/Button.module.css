@@ -100,3 +100,9 @@
 .primary.header {
   box-shadow: var(--shadow-button-header);
 }
+
+/* tone="inherit" — culoarea vine de la părinte (card cu ton dinamic), nu de la --orange-ink/--pink-ink.
+   Declarată ultima, ca să câștige mereu cascada față de .link/.danger de mai sus. */
+.toneInherit {
+  color: inherit;
+}
