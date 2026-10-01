@@ -1,5 +1,23 @@
 # Întrebări / decizii blocate
 
+## ⚠️ §3.2 (PROMPT-8) — F9 MDL/EUR: verificare făcută, o neconcordanță găsită (02.10)
+
+Verificat în cod cele 3 puncte cerute:
+
+1. **Fiecare plată pe taxă EUR are `fxRate`+`amountEur`** — confirmat pentru calea de salvare curentă: `PaymentFormDrawer.handleSubmit` (`webapp/src/features/payments/PaymentFormDrawer.tsx`) calculează `fxRate` (BNM sau manual) + `amountEur = convertAmount(...)` ori de câte ori `isEurChild` e adevărat, înainte de `onSubmit`. **Nu pot verifica din cod dacă plățile VECHI (salvate înainte ca acest calcul să existe) au deja aceste câmpuri** — asta ține de datele reale, nu de cod; rămâne pe seama scriptului de migrare de mai jos, care oricum depinde de §3.3 (istoricul BNM) ca să completeze cursul corect al zilei plății.
+2. **Dashboard, Situația plăților, Cheltuieli afișează doar MDL** — confirmat (niciun `EUR` în `features/dashboard`, `features/billing`, `features/expenses`; `status-summary.mjs` convertește explicit la lei pentru agregate).
+3. **Raport contabil afișează doar MDL** — **NU** confirmat: `features/report/ReportMethodsPanel.tsx` + `ReportExportDrawer.tsx` + `report-excel.ts` au o secțiune dedicată „Pentru taxe în EUR” (sumă în EUR, curs, echivalent lei) — pare intenționată (comentariu „design 19a”, bifată deja ca rezolvată mai sus în acest fișier, la „Raport contabil (punctul 14)”), nu o scăpare. **Intră în conflict literal cu cerința F9 „Raport contabil afișează doar MDL”.**
+
+Restul (EUR doar în plan/fișa copilului/fereastra de plată) confirmat — cu o completare minoră: `PaymentReceipt.tsx` arată și el EUR (bonul plății, derivat direct din `amountEur`-ul plății), ceea ce consider parte din „fereastra de plată”, nu o scăpare.
+
+**Întrebare:** păstrez secțiunea EUR din Raportul contabil (utilă pentru contabilitate, pe taxe EUR) sau o scot ca să respecte F9 literal („doar MDL”)? Nu am scos-o — aștept răspuns, trec mai departe. Scriptul de migrare `scripts/migrate/` pentru plățile vechi fără `fxRate` rămâne de scris după §3.3 (are nevoie de istoricul BNM ca să completeze cursul corect al fiecărei zile).
+
+## ⏳ §2.1 (PROMPT-8) — F4 autoComplete="off": Chrome pe nume/telefon, netestat manual (02.10)
+
+Adăugat `autoComplete="off"` implicit pe `TextInput`/`NumberInput`/`PhoneInput`/`AmountInput`/`DateInput`/`TimeInput`/`TextArea`/`SearchInput` (deci și `GlobalSearch`) + pe fiecare `<form>` din `features/**`. PROMPT-8 cere: dacă testul manual arată că Chrome ignoră `off` pentru nume/telefon/adresă (comportament cunoscut al Chrome pe aceste câmpuri), să se treacă pe `autoComplete="new-password"` ca ocolire — și rezultatul testului să fie notat aici.
+
+**Nu am putut testa manual în Chrome real în această sesiune** (fără interacțiune de browser disponibilă la acest pas) — am lăsat `off` peste tot, uniform, fără ocolirea `new-password`. Dacă la folosirea reală a instalerului Chrome tot oferă să salveze/completeze nume sau telefon (verifică pe „Copil nou” → câmpul Nume/Telefon părinte), spune și trec acele câmpuri specifice pe `autoComplete="new-password"`.
+
 ## ⚠️ §0 (PROMPT-8) — niciun `design_final_startica/` de copiat găsit pe disc (01.10, seara)
 
 PROMPT-CLAUDE-CODE-8.md §0 cere „Copiază `design_final_startica/` peste `docs/design/`”, dar n-am găsit niciun asemenea folder/arhivă pe disc (verificat rădăcina repo, `%TEMP%`, Desktop, Downloads — doar extragerile vechi, deja consumate, din sesiunea PROMPT-7). În schimb, conținutul nou era deja prezent direct în `docs/design/`: `Feedback 01-10.dc.html`, `FEEDBACK-01-10.md`, `PROMPT-CLAUDE-CODE-8.md` (netrasate) și `COMPONENTE.md` deja avea §3b (rândurile 38a–38g) adăugat. Am tratat asta ca „pachetul e deja aplicat” — am mutat doar `PROMPT-CLAUDE-CODE-7.md` în `arhiva/` și am comis ce era deja pe disc, fără pas separat de copiere. Dacă mai există un pachet undeva (alt folder, altă mașină), spune calea și fac diff-ul cerut separat.
