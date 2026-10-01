@@ -415,6 +415,7 @@ export function createBranchContext({
       readSetting,
       writeSetting: settings.setSetting,
       fetch: fetchImpl ?? globalThis.fetch,
+      backfill: days => backfillExchangeRates(days),
     }),
     ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
     ...createKindergartenSettingsRoutes({
@@ -437,27 +438,18 @@ export function createBranchContext({
     routes: /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (routes),
   });
 
-  // Apelat la deschiderea oricărei filiale (pornirea procesului sau o schimbare —
-  // decizia 7 din plan): completează retroactiv orice zi lucrătoare fără curs
-  // salvat, nu doar ziua curentă — dacă aplicația a stat închisă câteva zile, un
-  // calcul ulterior tot trebuie să găsească exact cursul zilei respective, nu doar
-  // pe cel mai recent cunoscut. Fără istoric deloc (filială nouă), completarea se
-  // oprește la ultimele EXCHANGE_RATE_BACKFILL_DAYS zile. Nu aruncă niciodată — o
-  // zi fără curs publicat (weekend, sărbătoare) sau un eșec de rețea rămâne pur și
-  // simplu necompletată, fără să oprească celelalte zile din interval.
-  async function refreshExchangeRateIfMissing() {
-    const todayStr = today();
+  // Preia de la BNM orice zi lipsă din [startDate, endDate] (inclusiv) și scrie
+  // doar completările reale ale acestei bucle — nu un instantaneu al rateler curente,
+  // ca să nu suprascriem la scriere o corectare manuală (POST /api/exchange-rates)
+  // făcută în timp ce bucla încă așteaptă alte zeci de cereri (M8 din audit). Nu
+  // aruncă niciodată — o zi fără curs publicat (weekend, sărbătoare) sau un eșec de
+  // rețea rămâne pur și simplu necompletată, fără să oprească celelalte zile din interval.
+  async function fetchMissingRatesInRange(startDate, endDate) {
+    if (startDate > endDate) return;
     const current = parseExchangeRates(readSetting('exchangeRates'));
-    const lastKnownDate = Object.keys(current).sort().at(-1);
-    const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
-    if (startDate > todayStr) return;
-
-    // Doar completările reale ale acestei bucle — nu un instantaneu al lui `current`,
-    // ca să nu suprascriem la scriere o corectare manuală (POST /api/exchange-rates)
-    // făcută în timp ce bucla încă așteaptă alte zeci de cereri (M8 din audit).
     const fetchedRates = {};
     const fetchedSources = {};
-    for (let date = startDate; date <= todayStr; date = shiftDays(date, 1)) {
+    for (let date = startDate; date <= endDate; date = shiftDays(date, 1)) {
       if (Object.hasOwn(current, date)) continue;
       const result = await fetchBnmEurRate({ fetch: fetchImpl ?? globalThis.fetch, date });
       if ('rate' in result) {
@@ -475,6 +467,40 @@ export function createBranchContext({
       'exchangeRateSources',
       JSON.stringify(clampExchangeRateSources({ ...fetchedSources, ...latestSources })),
     );
+  }
+
+  // Apelat la deschiderea oricărei filiale (pornirea procesului sau o schimbare —
+  // decizia 7 din plan): completează retroactiv orice zi lucrătoare fără curs
+  // salvat, nu doar ziua curentă — dacă aplicația a stat închisă câteva zile, un
+  // calcul ulterior tot trebuie să găsească exact cursul zilei respective, nu doar
+  // pe cel mai recent cunoscut. Fără istoric deloc (filială nouă), completarea se
+  // oprește la ultimele EXCHANGE_RATE_BACKFILL_DAYS zile.
+  async function refreshExchangeRateIfMissing() {
+    const todayStr = today();
+    const current = parseExchangeRates(readSetting('exchangeRates'));
+    const lastKnownDate = Object.keys(current).sort().at(-1);
+    const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
+    await fetchMissingRatesInRange(startDate, todayStr);
+  }
+
+  // F12 (FEEDBACK-01-10.md): BNM publică „mâine” după-amiaza, înaintea zilei lucrătoare
+  // următoare — verificat separat de restul, pentru că e singura zi din VIITOR pe care
+  // o urmărim (restul funcției de mai sus se oprește strict la azi).
+  async function refreshTomorrowRateIfMissing() {
+    const tomorrow = shiftDays(today(), 1);
+    await fetchMissingRatesInRange(tomorrow, tomorrow);
+  }
+
+  // „Vezi încă N zile” (38e): extinde istoricul înapoi de la cea mai veche zi cunoscută —
+  // spre deosebire de refreshExchangeRateIfMissing (care completează goluri până la azi),
+  // asta merge înapoi în timp, pentru calendarul lunar.
+  /** @param {number} days */
+  async function backfillExchangeRates(days) {
+    const current = parseExchangeRates(readSetting('exchangeRates'));
+    const earliestKnown = Object.keys(current).sort().at(0) ?? today();
+    const endDate = shiftDays(earliestKnown, -1);
+    const startDate = shiftDays(earliestKnown, -days);
+    await fetchMissingRatesInRange(startDate, endDate);
   }
 
   // Rulat la fiecare deschidere a acestei filiale (pornirea procesului sau
@@ -496,6 +522,11 @@ export function createBranchContext({
     // altfel o filială închisă chiar când sweep-ul rulează ar lăsa o respingere netratată.
     refreshExchangeRateIfMissing().catch(e => {
       console.error('Curs BNM la pornire: ' + /** @type {Error} */ (e).message);
+    });
+    // F12: BNM publică uneori cursul de mâine încă din prima parte a zilei — verificăm și
+    // la pornire, nu doar în fereastra orară 13–18 (programarea orară trăiește în main.mjs).
+    refreshTomorrowRateIfMissing().catch(e => {
+      console.error('Curs BNM de mâine la pornire: ' + /** @type {Error} */ (e).message);
     });
   }
 
@@ -534,6 +565,8 @@ export function createBranchContext({
     /** @param {string} [todayStr] */
     expireSmsLog: (todayStr = today()) => createSmsLogRepository(db).expireOldEntries(todayStr),
     refreshExchangeRateIfMissing,
+    refreshTomorrowRateIfMissing,
+    backfillExchangeRates,
     // Motorul setului comun (Personal 24, decizia 9) trăiește în create-common-context.mjs,
     // pornit o singură dată și nereconstruit la schimbarea filialei — dar SSE-ul local
     // (/api/sync/events) e reconstruit la fiecare context de filială, deci punctul lui

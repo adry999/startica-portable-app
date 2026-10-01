@@ -154,3 +154,53 @@ test('o zi cu curs salvat înainte de acest câmp rămâne fără provenență �
   assert.deepEqual(rates, { '2026-09-20': 20.1 });
   assert.equal(sources['2026-09-20'], undefined);
 });
+
+test('F12: refreshTomorrowRateIfMissing cere doar ziua de mâine, nu intervalul până azi', async t => {
+  const { fetch, calls } = fakeBnmFetch();
+  const { app } = await startTestApplication(t, { fetch });
+  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [today()]: 20.1 }));
+
+  await app.refreshTomorrowRateIfMissing();
+
+  assert.deepEqual(calls, [shiftDays(today(), 1)]);
+  const rates = JSON.parse(app.db.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
+  assert.equal(Object.hasOwn(rates, shiftDays(today(), 1)), true);
+});
+
+test('F12: refreshTomorrowRateIfMissing nu face nicio cerere dacă mâine e deja cunoscută', async t => {
+  const { fetch, calls } = fakeBnmFetch();
+  const { app } = await startTestApplication(t, { fetch });
+  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [shiftDays(today(), 1)]: 20.1 }));
+
+  await app.refreshTomorrowRateIfMissing();
+
+  assert.deepEqual(calls, []);
+});
+
+test('F12: POST /api/exchange-rates/backfill extinde istoricul înapoi de la cea mai veche zi cunoscută', async t => {
+  const { fetch, calls } = fakeBnmFetch();
+  const { post } = await startTestApplication(t, { fetch });
+  const earliest = shiftDays(today(), -5);
+  await post('/api/exchange-rates', { date: earliest, rate: 19.5 });
+  calls.length = 0; // golim cererile din POST-ul manual de mai sus (nu face nicio cerere BNM, dar fim siguri)
+
+  const { status, body } = await post('/api/exchange-rates/backfill', { days: 3 });
+
+  assert.equal(status, 200);
+  const expectedDates = [shiftDays(earliest, -3), shiftDays(earliest, -2), shiftDays(earliest, -1)];
+  assert.deepEqual(calls, expectedDates);
+  for (const date of expectedDates) assert.equal(Object.hasOwn(body.rates, date), true);
+  assert.equal(body.rates[earliest], 19.5); // ziua deja cunoscută rămâne neschimbată
+});
+
+test('F12: POST /api/exchange-rates/backfill respinge un număr de zile invalid', async t => {
+  const { post } = await startTestApplication(t);
+
+  const zero = await post('/api/exchange-rates/backfill', { days: 0 });
+  const tooMany = await post('/api/exchange-rates/backfill', { days: 91 });
+  const notInteger = await post('/api/exchange-rates/backfill', { days: 2.5 });
+
+  assert.equal(zero.status, 400);
+  assert.equal(tooMany.status, 400);
+  assert.equal(notInteger.status, 400);
+});

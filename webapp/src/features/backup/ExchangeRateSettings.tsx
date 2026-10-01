@@ -1,28 +1,24 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
-  Badge,
-  BnmRateLink,
-  Button,
   Card,
   EMPTY_STATES,
   Field,
   NumberInput,
+  RateCalendar,
+  RateCard,
   TextInput,
   resolveEmptyStateTitle,
   useToast,
+  Button,
   type BadgeTone,
 } from '@shared/ui';
 import { useDirtyForm } from '@shared/state/dirty-forms';
-import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { formatRate } from '#shared/format/rate-format.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import { useExchangeRates, type PlanPreset } from './useExchangeRates';
 import backupStyles from './BackupPage.module.css';
 import styles from './ExchangeRateSettings.module.css';
 
-const SOURCE_LABEL: Record<'bnm' | 'manual', string> = { bnm: 'BNM · automat', manual: 'corectat manual' };
-const SOURCE_HISTORY_LABEL: Record<'bnm' | 'manual', string> = { bnm: 'BNM', manual: 'corectat' };
 // Culoarea benzii unui plan vine din poziția lui în listă, nu dintr-o proprietate salvată
 // (planurile nu au un ID de culoare — vezi group-tone.ts pentru același model la grupe).
 const PLAN_TONES: BadgeTone[] = ['orange', 'mint', 'yellow', 'pink'];
@@ -123,8 +119,13 @@ export function ExchangeRateSettings() {
   if (!exchangeRates.ready) return <p className={backupStyles.notice}>Se încarcă cursul valutar…</p>;
 
   const todayRate = exchangeRates.todayRate;
-  const rateTone = exchangeRates.todayTone === 'yellow' ? 'yellow' : 'mint';
   const rateIsToday = exchangeRates.rateDate === today();
+  const primaryAction =
+    todayRate === undefined
+      ? { label: 'Preia de la BNM', onClick: () => void refresh() }
+      : exchangeRates.todayTone === 'yellow'
+        ? { label: 'Revino la cursul BNM', onClick: () => void refresh() }
+        : { label: 'Corectează cursul de azi', onClick: () => setEditingRate(true) };
 
   return (
     <div className={styles.grid}>
@@ -203,48 +204,14 @@ export function ExchangeRateSettings() {
 
       <section className={styles.rateColumn}>
         <div data-testid="today-rate">
-          <Card tone={exchangeRates.todayRate === undefined ? 'white' : rateTone} decorative>
-            <div className={styles.rateHeader}>
-              <span className={styles.rateEyebrow}>
-                Curs EUR{exchangeRates.rateDate ? ` · ${formatDate(exchangeRates.rateDate)}` : ''}
-              </span>
-              {exchangeRates.todayRate !== undefined && exchangeRates.todayTone && (
-                <Badge tone={rateTone}>{SOURCE_LABEL[exchangeRates.todayTone === 'yellow' ? 'manual' : 'bnm']}</Badge>
-              )}
-            </div>
-
-            {exchangeRates.todayRate === undefined ? (
-              <>
-                <span className={styles.rateValue}>Fără curs cunoscut</span>
-                <Button type="button" variant="ghost" onClick={() => void refresh()}>
-                  Preia de la BNM
-                </Button>
-              </>
-            ) : (
-              <>
-                <span className={styles.rateValue}>1 € = {formatRate(exchangeRates.todayRate)} lei</span>
-                <span className={styles.rateNote}>
-                  {rateIsToday
-                    ? exchangeRates.todayTone === 'yellow'
-                      ? 'Corectat manual pentru azi. Se folosește la toate achitările cu data de azi.'
-                      : 'Cursul BNM de azi. Se folosește la toate achitările cu data de azi.'
-                    : `Cel mai recent curs cunoscut — nu s-a publicat încă un curs pentru azi.`}
-                </span>
-                <div className={styles.rateActions}>
-                  {exchangeRates.rateDate && <BnmRateLink date={exchangeRates.rateDate} />}
-                  {exchangeRates.todayTone === 'yellow' ? (
-                    <Button type="button" variant="ghost" onClick={() => void refresh()}>
-                      Revino la cursul BNM
-                    </Button>
-                  ) : (
-                    <Button type="button" variant="ghost" onClick={() => setEditingRate(true)}>
-                      Corectează cursul de azi
-                    </Button>
-                  )}
-                </div>
-              </>
-            )}
-          </Card>
+          <RateCard
+            rate={exchangeRates.todayRate}
+            rateDate={exchangeRates.rateDate}
+            rateIsToday={rateIsToday}
+            tone={exchangeRates.todayTone}
+            tomorrow={exchangeRates.tomorrow}
+            primaryAction={primaryAction}
+          />
         </div>
 
         {editingRate && (
@@ -283,29 +250,15 @@ export function ExchangeRateSettings() {
         )}
 
         <Card>
-          <h4 className={styles.subtitle}>Ultimele zile</h4>
-          {exchangeRates.lastFiveDays.length === 0 ? (
-            <p className={backupStyles.notice}>{resolveEmptyStateTitle(EMPTY_STATES['curs.period'])}</p>
-          ) : (
-            <ul className={styles.lastFiveList}>
-              {exchangeRates.lastFiveDays.map(entry => (
-                <li key={entry.date} className={styles.lastFiveRow}>
-                  <span className={styles.lastFiveDate}>{formatDate(entry.date)}</span>
-                  <span className={styles.lastFiveRate}>1 € = {formatRate(entry.rate)} lei</span>
-                  <BnmRateLink date={entry.date} />
-                  {entry.source && (
-                    <Badge tone={entry.source === 'bnm' ? 'mint' : 'yellow'}>
-                      {SOURCE_HISTORY_LABEL[entry.source]}
-                    </Badge>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-          <span className={styles.historyNote}>
-            Cursul se ia automat de la BNM în fiecare zi lucrătoare. În weekend și de sărbători se folosește ultimul
-            curs publicat.
-          </span>
+          <h4 className={styles.subtitle}>Calendar curs</h4>
+          <RateCalendar
+            month={exchangeRates.calendarMonth}
+            onMonthChange={exchangeRates.setCalendarMonth}
+            rates={exchangeRates.rates}
+            sources={exchangeRates.sources}
+            onBackfill={() => void exchangeRates.backfill(10)}
+            backfilling={exchangeRates.backfilling}
+          />
         </Card>
       </section>
     </div>

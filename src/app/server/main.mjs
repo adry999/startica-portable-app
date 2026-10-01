@@ -7,6 +7,14 @@ import { createRotatingLogFile } from '#core/server/files/rotating-log-file.mjs'
 import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.mjs';
 import { createApplication } from './create-application.mjs';
 
+// F12 (FEEDBACK-01-10.md): BNM publică „mâine” după-amiaza — reverificăm o dată pe oră în
+// fereastra asta, până apare (sau până se închide ziua lucrătoare). Ora exactă de publicare
+// nu e documentată public de BNM (verificat pe bnm.md — pagina tehnică nu o specifică), deci
+// fereastra rămâne o estimare lată, nu un orar exact.
+const BNM_POLL_WINDOW_START_HOUR = 13;
+const BNM_POLL_WINDOW_END_HOUR = 18;
+const HOUR_MS = 60 * 60 * 1000;
+
 // Lansatorul desktop nu are altă fereastră pentru mesajele serverului, deci consola merge în jurnal.
 /** @param {string} logFile */
 function redirectConsoleToLogFile(logFile) {
@@ -30,6 +38,8 @@ export function startServer() {
   });
   /** @type {ReturnType<typeof createApplication>} */
   let app;
+  /** @type {NodeJS.Timeout | undefined} */
+  let bnmPollTimer;
   // Înregistrat înaintea createApplication: și o bază coruptă la deschidere trebuie să ajungă în jurnal.
   process.on('uncaughtException', e => {
     const failure = /** @type {Error} */ (e);
@@ -97,6 +107,16 @@ export function startServer() {
       // Motorul de sincronizare (Faza 3): no-op pe o instalare fără sync.json.
       app.startSync();
     }, 0);
+    // F12: verificare orară a cursului BNM de mâine, doar în fereastra 13–18 — restul orelor
+    // timer-ul tot bate, dar funcția de mai jos se oprește imediat (vezi comentariul de sus).
+    bnmPollTimer = setInterval(() => {
+      const hour = new Date().getHours();
+      if (hour < BNM_POLL_WINDOW_START_HOUR || hour >= BNM_POLL_WINDOW_END_HOUR) return;
+      app.refreshTomorrowRateIfMissing().catch(e => {
+        console.error('Curs BNM de mâine (verificare orară): ' + /** @type {Error} */ (e).message);
+      });
+    }, HOUR_MS);
+    bnmPollTimer.unref();
   });
   // Lansatorul folosește existența fișierului ca să afle dacă instanța găsită mai este vie.
   app.server.on('close', () => {
@@ -106,6 +126,7 @@ export function startServer() {
   const shutdown = async () => {
     if (closing) return;
     closing = true;
+    clearInterval(bnmPollTimer);
     try {
       app.backup('inchidere');
     } catch (e) {

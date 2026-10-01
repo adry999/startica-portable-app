@@ -10,10 +10,12 @@ import { fetchBnmEurRate } from './bnm-exchange-rate.mjs';
 
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
+const MAX_BACKFILL_DAYS = 90;
+
 /**
- * @param {{ readSetting: (key: string) => string, writeSetting: (key: string, value: string) => void, fetch: typeof fetch }} dependencies
+ * @param {{ readSetting: (key: string) => string, writeSetting: (key: string, value: string) => void, fetch: typeof fetch, backfill: (days: number) => Promise<void> }} dependencies
  */
-export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fetchImpl }) {
+export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fetchImpl, backfill }) {
   const readRates = () => parseExchangeRates(readSetting('exchangeRates'));
   const saveRates = rates => writeSetting('exchangeRates', JSON.stringify(rates));
   const readSources = () => parseExchangeRateSources(readSetting('exchangeRateSources'));
@@ -49,6 +51,21 @@ export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fe
         const afterSources = clampExchangeRateSources({ ...readSources(), [date]: 'bnm' });
         saveSources(afterSources);
         return { ok: true, rates: after, sources: afterSources };
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/exchange-rates/backfill',
+      // F12 (FEEDBACK-01-10.md): „Vezi încă N zile” din calendarul lunar — extinde istoricul
+      // înapoi de la cea mai veche zi cunoscută, nu doar golurile până la azi.
+      /** @param {{ body: any }} request */
+      handle: async ({ body }) => {
+        const days = Number(body?.days);
+        if (!Number.isInteger(days) || days <= 0 || days > MAX_BACKFILL_DAYS) {
+          fail(`Numărul de zile trebuie să fie întreg, între 1 și ${MAX_BACKFILL_DAYS}.`);
+        }
+        await backfill(days);
+        return { rates: readRates(), sources: readSources() };
       },
     },
   ];

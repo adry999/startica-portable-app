@@ -351,6 +351,7 @@ export function createApplication(options = {}) {
     /** @param {string} [todayStr] */
     expireSmsLog: todayStr => active.expireSmsLog(todayStr),
     refreshExchangeRateIfMissing: () => active.refreshExchangeRateIfMissing(),
+    refreshTomorrowRateIfMissing: () => active.refreshTomorrowRateIfMissing(),
     runStartupSweeps: () => active.runStartupSweeps(),
     // Pornirea motorului de sincronizare al filialei active (Faza 3) — separată de
     // runStartupSweeps() pentru că lansatorul (main.mjs) o apelă tot amânat, dar

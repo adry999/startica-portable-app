@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
-import { today } from '@domain/calendar-month.mjs';
+import { today, shiftDays } from '@domain/calendar-month.mjs';
 
 export type ExchangeRateSource = 'bnm' | 'manual';
 export type TodayTone = 'mint' | 'yellow' | null;
@@ -18,6 +18,12 @@ export interface LastFiveDaysEntry {
   date: string;
   rate: number;
   source: ExchangeRateSource | undefined;
+}
+
+export interface TomorrowRate {
+  date: string;
+  rate: number;
+  diff: number;
 }
 
 interface ExchangeRatesResponse {
@@ -43,6 +49,12 @@ export interface ExchangeRatesData {
   rateDate: string | undefined;
   todayTone: TodayTone;
   lastFiveDays: LastFiveDaysEntry[];
+  /** Apare doar după ce BNM a publicat cursul zilei următoare (F12). */
+  tomorrow: TomorrowRate | null;
+  calendarMonth: string;
+  setCalendarMonth: (month: string) => void;
+  backfilling: boolean;
+  backfill: (days: number) => Promise<void>;
   correctToday: (rate: number) => Promise<void>;
   refreshFromBnm: () => Promise<RefreshResult>;
   presets: PlanPreset[];
@@ -55,6 +67,8 @@ export function useExchangeRates(): ExchangeRatesData {
   const [presets, setPresets] = useState<PlanPreset[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [failureMessage, setFailureMessage] = useState('');
+  const [calendarMonth, setCalendarMonth] = useState(() => today().slice(0, 7));
+  const [backfilling, setBackfilling] = useState(false);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -93,6 +107,11 @@ export function useExchangeRates(): ExchangeRatesData {
     .slice(0, 5)
     .map(date => ({ date, rate: rates[date], source: sources[date] }));
 
+  const tomorrowDate = shiftDays(today(), 1);
+  const tomorrow: TomorrowRate | null = Object.hasOwn(rates, tomorrowDate)
+    ? { date: tomorrowDate, rate: rates[tomorrowDate], diff: rates[tomorrowDate] - (todayRate ?? rates[tomorrowDate]) }
+    : null;
+
   async function correctToday(rate: number) {
     // Corectarea vizează întotdeauna ziua calendaristică de azi, nu ultima zi cu curs cunoscut
     // (care poate fi vineri, dacă azi e weekend și BNM nu a publicat încă).
@@ -115,6 +134,17 @@ export function useExchangeRates(): ExchangeRatesData {
     setPresets(saved);
   }
 
+  async function backfill(days: number) {
+    setBackfilling(true);
+    try {
+      const response = (await requestJson('/api/exchange-rates/backfill', { days })) as ExchangeRatesResponse;
+      setRates(response.rates);
+      setSources(response.sources);
+    } finally {
+      setBackfilling(false);
+    }
+  }
+
   return {
     ready: status === 'ready',
     status,
@@ -126,6 +156,11 @@ export function useExchangeRates(): ExchangeRatesData {
     rateDate,
     todayTone,
     lastFiveDays,
+    tomorrow,
+    calendarMonth,
+    setCalendarMonth,
+    backfilling,
+    backfill,
     correctToday,
     refreshFromBnm,
     presets,
