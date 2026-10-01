@@ -1,25 +1,50 @@
-.field {
-  display: flex;
+.root {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-6);
+  white-space: nowrap;
+}
+
+.popover {
+  width: 240px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  justify-content: flex-start;
+  width: 100%;
+  border: none;
   font-size: 13px;
+}
+
+.option[aria-checked='true'] {
+  font-weight: 800;
+  background: var(--neutral-soft);
+}
+
+.interval {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border);
+}
+
+.intervalField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: 12px;
   font-weight: 700;
   color: var(--muted);
-  padding: 9px 14px;
-  border-radius: var(--radius-input);
-  border: 1px solid var(--border);
-}
-
-.inputs {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.inputs input {
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: var(--slate);
-  width: 112px;
 }

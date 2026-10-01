@@ -59,7 +59,14 @@ export { Spinner, type SpinnerProps } from './Spinner';
 export { Tooltip, type TooltipProps } from './Tooltip';
 export { FilterMenu, type FilterMenuOption, type FilterMenuProps } from './FilterMenu';
 export { ActiveFilters, type ActiveFilterChip, type ActiveFiltersProps } from './ActiveFilters';
-export { PeriodFilter, type PeriodFilterProps } from './PeriodFilter';
+export {
+  PeriodFilter,
+  periodPresetBounds,
+  PERIOD_PRESET_OPTIONS,
+  type PeriodFilterProps,
+  type PeriodFilterOption,
+  type PeriodPreset,
+} from './PeriodFilter';
 export { PersonCell, type PersonCellProps } from './PersonCell';
 export { ListToolbar, type ListToolbarProps, type ListToolbarSearch } from './ListToolbar';
 export {
