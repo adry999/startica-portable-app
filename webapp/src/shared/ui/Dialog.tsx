@@ -6,6 +6,10 @@ import styles from './Dialog.module.css';
 export interface DialogProps {
   open: boolean;
   title: string;
+  /** `aria-label` separat de `title`, când antetul vizibil are nevoie de text dinamic
+   * (ex. „Plătește 3 salarii”), dar numele accesibil trebuie să rămână stabil (ex. „Confirmă plata”,
+   * verificat în teste cu `getByRole('dialog', { name: ... })`). Implicit `title`. */
+  ariaLabel?: string;
   /** 480 implicit — confirmări/dialoguri scurte; ecranele cu formular mai mare folosesc `Drawer`, nu `Dialog`. */
   width?: number;
   onClose: () => void;
@@ -16,7 +20,16 @@ export interface DialogProps {
 }
 
 /** Panou modal centrat — `ConfirmDialog` (mai jos) și dialogurile de conținut scurt (28g, 29e). */
-export function Dialog({ open, title, width = 480, onClose, shouldBlockClose, footer, children }: DialogProps) {
+export function Dialog({
+  open,
+  title,
+  ariaLabel,
+  width = 480,
+  onClose,
+  shouldBlockClose,
+  footer,
+  children,
+}: DialogProps) {
   function requestClose() {
     if (shouldBlockClose?.()) return;
     onClose();
@@ -45,7 +58,7 @@ export function Dialog({ open, title, width = 480, onClose, shouldBlockClose, fo
         style={{ width }}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={ariaLabel ?? title}
         onClick={event => event.stopPropagation()}
       >
         <header className={styles.header}>

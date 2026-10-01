@@ -24,6 +24,16 @@ describe('Dialog', () => {
     expect(screen.getByText('Conținut')).toBeInTheDocument();
   });
 
+  it('ariaLabel separă numele accesibil de titlul vizibil', () => {
+    render(
+      <Dialog open title="Plătește 3 salarii" ariaLabel="Confirmă plata" onClose={() => {}}>
+        Conținut
+      </Dialog>,
+    );
+    expect(screen.getByRole('dialog', { name: 'Confirmă plata' })).toBeInTheDocument();
+    expect(screen.getByText('Plătește 3 salarii')).toBeInTheDocument();
+  });
+
   it('se închide la click pe overlay, nu la click în interior', async () => {
     const onClose = vi.fn();
     render(

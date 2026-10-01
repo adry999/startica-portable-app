@@ -254,7 +254,8 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
 
       <Dialog
         open={payDialogOpen}
-        title="Confirmă plata"
+        title={`Plătește ${selected.size} ${selected.size === 1 ? 'salariu' : 'salarii'}`}
+        ariaLabel="Confirmă plata"
         width={420}
         onClose={() => setPayDialogOpen(false)}
         shouldBlockClose={() => paying}

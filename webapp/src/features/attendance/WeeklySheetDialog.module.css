@@ -1,31 +1,7 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-dialog);
-}
-
-.dialog {
-  width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: var(--white);
-  border-radius: var(--radius-lg);
-  padding: var(--space-24);
+.content {
   display: flex;
   flex-direction: column;
   gap: var(--space-12);
-}
-
-.title {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 18px;
-  color: var(--slate);
 }
 
 .subtitle {
@@ -107,6 +83,56 @@
   color: var(--muted);
 }
 
+/* Tonul grupei selectate (groupTone) — fundal/text/fără bordură, ca la ChipSelect. */
+.groupPill.groupPillSelected {
+  border-color: transparent;
+}
+
+.groupPill.orange {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.groupPill.mint {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.groupPill.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.groupPill.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.groupPill.teal {
+  background: var(--teal-soft);
+  color: var(--teal-ink);
+}
+
+.groupPill.blue {
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.groupPill.purple {
+  background: var(--purple-soft);
+  color: var(--purple-ink);
+}
+
+.groupPill.coral {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+}
+
+.groupPill.neutral {
+  background: var(--neutral-soft);
+  color: var(--slate);
+}
+
 .optionsBox {
   display: flex;
   flex-direction: column;
@@ -179,11 +205,4 @@
   font-size: 12px;
   color: var(--muted);
   min-height: 16px;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-10);
-  margin-top: var(--space-8);
 }

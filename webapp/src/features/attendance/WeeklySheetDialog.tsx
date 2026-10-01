@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Checkbox, Icon, IconButton, groupTone, type PillTone } from '@shared/ui';
+import { Button, Checkbox, Dialog, Icon, IconButton, groupTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -23,18 +23,6 @@ import styles from './WeeklySheetDialog.module.css';
 export interface WeeklySheetDialogProps {
   onClose: () => void;
 }
-
-const TONE_VARS: Record<PillTone, { bg: string; ink: string }> = {
-  orange: { bg: 'var(--orange-soft)', ink: 'var(--orange-ink)' },
-  mint: { bg: 'var(--mint-soft)', ink: 'var(--mint-ink)' },
-  yellow: { bg: 'var(--yellow-soft)', ink: 'var(--yellow-ink)' },
-  pink: { bg: 'var(--pink-soft)', ink: 'var(--pink-ink)' },
-  teal: { bg: 'var(--teal-soft)', ink: 'var(--teal-ink)' },
-  blue: { bg: 'var(--blue-soft)', ink: 'var(--blue-ink)' },
-  purple: { bg: 'var(--purple-soft)', ink: 'var(--purple-ink)' },
-  coral: { bg: 'var(--coral-soft)', ink: 'var(--coral-ink)' },
-  neutral: { bg: 'var(--neutral-soft)', ink: 'var(--slate)' },
-};
 
 /**
  * Fereastra „Foi de prezență pe săptămână” (18c) — o foaie A4 orizontală per grupă.
@@ -102,15 +90,22 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
   }
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div
-        className={styles.dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Foi de prezență pe săptămână"
-        onClick={event => event.stopPropagation()}
-      >
-        <h2 className={styles.title}>Foi de prezență pe săptămână</h2>
+    <Dialog
+      open
+      title="Foi de prezență pe săptămână"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="white" onClick={onClose}>
+            Anulează
+          </Button>
+          <Button disabled={selectedGroupIds.length === 0} onClick={handleConfirm}>
+            {selectedGroupIds.length === 0 ? 'Alege o grupă' : `Tipărește ${totalSheets} foi`}
+          </Button>
+        </>
+      }
+    >
+      <div className={styles.content}>
         <p className={styles.subtitle}>O foaie A4 orizontală pentru fiecare grupă.</p>
 
         <div className={styles.weekRow}>
@@ -154,13 +149,14 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
           {groups.map(group => {
             const tone = groupTone(group.id, groups);
             const selected = selectedGroupIds.includes(group.id);
-            const vars = TONE_VARS[tone];
+            const className = selected
+              ? `${styles.groupPill} ${styles.groupPillSelected} ${styles[tone]}`
+              : styles.groupPill;
             return (
               <Button
                 key={group.id}
                 variant="outline"
-                className={styles.groupPill}
-                style={selected ? { background: vars.bg, color: vars.ink, borderColor: 'transparent' } : undefined}
+                className={className}
                 onClick={() => {
                   toggleGroup(group.id);
                   setPreviewGroupId(group.id);
@@ -238,16 +234,7 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
             )}
           </p>
         )}
-
-        <div className={styles.actions}>
-          <Button variant="white" onClick={onClose}>
-            Anulează
-          </Button>
-          <Button disabled={selectedGroupIds.length === 0} onClick={handleConfirm}>
-            {selectedGroupIds.length === 0 ? 'Alege o grupă' : `Tipărește ${totalSheets} foi`}
-          </Button>
-        </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
