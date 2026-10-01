@@ -152,7 +152,7 @@ describe('ChildFormDrawer', () => {
       />,
     );
 
-    const chip = screen.getByRole('button', { name: /Fluturași/ });
+    const chip = screen.getByRole('radio', { name: /Fluturași/ });
     expect(chip).toHaveTextContent('Fluturași · 2 locuri');
 
     await userEvent.click(chip);
@@ -176,7 +176,7 @@ describe('ChildFormDrawer', () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByRole('button', { name: /Fluturași/ })).toHaveTextContent('Fluturași · 2 locuri');
+    expect(screen.getByRole('radio', { name: /Fluturași/ })).toHaveTextContent('Fluturași · 2 locuri');
   });
 
   it('15a: arată grupele compatibile cu vârsta calculată din data nașterii', async () => {

@@ -124,20 +124,15 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     return RAW_TAG_PATTERN.test(withoutFileInputs);
   }
 
-  // Permanent, nu datorie: fiecare intrare de mai jos e un hit-area/tabel-de-tipărit pe care
-  // `Button`/`DataTable` din `@shared/ui` nu-l poate reproduce fără să-și piardă forma sau
-  // comportamentul (vezi comentariul din fișierul sursă, la linia încălcării). Fișierele `.test.tsx`
-  // (mock-uri de componente) sunt excluse structural mai jos, ca la R3/R7/R9.
-  const ALLOWED: readonly string[] = [
-    // Grupul „Grupă” (pastilă cu tooltip nativ de capacitate + nuanță de ton per-grupă) — vezi
-    // comentariul din fișier.
-    'children/ChildFormDrawer.tsx',
-  ];
-
-  it('nicio încălcare nouă în afara listei de excepții (permanente, vezi comentariile din fișierele sursă)', () => {
+  // Alowlist golit (PROMPT-CLAUDE-CODE-6.md §2) — toate hit-area-urile/tabelele-de-tipărit de pe
+  // ecrane foloseau <button>/<table> brut doar din lipsa unui wrapper semantic în @shared/ui;
+  // SelectableTile/SelectableRow/PrintTable (și extensiile MonthCalendar/MasterDetail/BarChart/
+  // Button/ChipSelect) acoperă acum toate cazurile cunoscute. Fișierele `.test.tsx` (mock-uri de
+  // componente) sunt excluse structural, ca la R3/R7/R9.
+  it('niciun tag brut în afara fișierelor .test.tsx', () => {
     const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
     const actual = featureFilesMatching(files, stripNativeFileInputs);
-    expect(unexpectedViolations(actual, ALLOWED)).toEqual([]);
+    expect(actual).toEqual([]);
   });
 });
 

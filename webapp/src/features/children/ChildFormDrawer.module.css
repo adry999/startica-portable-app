@@ -59,65 +59,6 @@
   align-self: flex-start;
 }
 
-.groupChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-8);
-}
-
-.groupChip {
-  border: none;
-  border-radius: var(--radius-pill, 999px);
-  padding: 9px 16px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  white-space: nowrap;
-  background: var(--neutral-soft);
-  color: var(--slate);
-}
-
-/* Tonurile grupelor — aceleași ca FilterPills/Badge (00-comun.md §C, group-tone.ts). */
-.orange {
-  background: var(--orange-soft);
-  color: var(--orange-ink);
-}
-.mint {
-  background: var(--mint-soft);
-  color: var(--mint-ink);
-}
-.yellow {
-  background: var(--yellow-soft);
-  color: var(--yellow-ink);
-}
-.pink {
-  background: var(--pink-soft);
-  color: var(--pink-ink);
-}
-.teal {
-  background: var(--teal-soft);
-  color: var(--teal-ink);
-}
-.blue {
-  background: var(--blue-soft);
-  color: var(--blue-ink);
-}
-.purple {
-  background: var(--purple-soft);
-  color: var(--purple-ink);
-}
-.coral {
-  background: var(--coral-soft);
-  color: var(--coral-ink);
-}
-
-/* Chip-ul selectat (inclusiv „Fără grupă”) e mereu tușat, ca în Formulare.dc.html#15a. */
-.groupChip.selected {
-  background: var(--slate);
-  color: var(--white);
-}
-
 .details {
   border-top: 1px solid var(--border);
   padding-top: var(--space-12);

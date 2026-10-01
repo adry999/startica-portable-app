@@ -1,9 +1,15 @@
+import type { PillTone } from './FilterPills';
 import styles from './ChipSelect.module.css';
 
 export interface ChipOption<T extends string> {
   value: T;
   label: string;
   disabled?: boolean;
+  /** Nuanță proprie opțiunii (fundal/text soft, ca FilterPills/Badge) — ignorată când e selectată
+   * (selecția rămâne mereu `--slate` plin). Ex. tonul fiecărei grupe în ChildFormDrawer. */
+  tone?: PillTone;
+  /** Indiciu afișat ca tooltip nativ (`title`) — ex. locurile libere ale unei grupe. */
+  hint?: string;
 }
 
 export interface ChipSelectProps<T extends string> {
@@ -20,6 +26,8 @@ export function ChipSelect<T extends string>({ options, value, onChange, ariaLab
     <div className={styles.group} role="radiogroup" aria-label={ariaLabel}>
       {options.map(option => {
         const active = option.value === value;
+        const toneClass = !active && option.tone && option.tone !== 'neutral' ? styles[option.tone] : '';
+        const classes = [styles.pill, active ? styles.active : '', toneClass].filter(Boolean).join(' ');
         return (
           <button
             key={option.value}
@@ -27,7 +35,8 @@ export function ChipSelect<T extends string>({ options, value, onChange, ariaLab
             role="radio"
             aria-checked={active}
             disabled={option.disabled}
-            className={active ? `${styles.pill} ${styles.active}` : styles.pill}
+            title={option.hint}
+            className={classes}
             onClick={() => onChange(option.value)}
           >
             {option.label}

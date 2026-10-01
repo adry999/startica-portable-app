@@ -80,6 +80,7 @@ export function ButoaneInputSection() {
   const [checkboxOff, setCheckboxOff] = useState(false);
   const [toneValue, setToneValue] = useState<string>(SERVICE_TONES[0]);
   const [chipValue, setChipValue] = useState('1');
+  const [chipGroupValue, setChipGroupValue] = useState('1');
   const [choiceValue, setChoiceValue] = useState('09:00');
   const [radioValue, setRadioValue] = useState('cash');
   const [tagInputTags, setTagInputTags] = useState(['Lactate', 'Nuci']);
@@ -551,6 +552,18 @@ export function ButoaneInputSection() {
             value=""
             onChange={() => {}}
             options={[{ value: 'x', label: 'Indisponibil', disabled: true }]}
+          />
+        </DemoRow>
+        <DemoRow label="tone + hint (ChildFormDrawer, grupul „Grupă”)">
+          <ChipSelect
+            ariaLabel="Grupă"
+            value={chipGroupValue}
+            onChange={setChipGroupValue}
+            options={[
+              { value: '', label: 'Fără grupă' },
+              { value: '1', label: 'Fluturași · 2 locuri', tone: 'orange', hint: '2 din 10 locuri libere' },
+              { value: '2', label: 'Albinuțe · 0 locuri', tone: 'mint', hint: 'Fără limită de capacitate' },
+            ]}
           />
         </DemoRow>
       </ComponentShowcase>

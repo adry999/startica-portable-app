@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Button,
+  ChipSelect,
   ChoiceCards,
   DateInput,
   Drawer,
@@ -319,38 +320,24 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
           <legend className={styles.sectionTitle}>
             4 · Grupă <span className={styles.optional}>(opțional)</span>
           </legend>
-          {/* R1: pastilă cu tooltip nativ (`title`, locuri libere) + nuanță de ton per-grupă
-              (`groupTone`) — nici FilterPills, nici ChipSelect n-au un prop de tooltip per-opțiune;
-              extinderea lor ar cere un nou prop + teste, în afara sferei acestei curățenii de allowlist. */}
-          <div className={styles.groupChips}>
-            <button
-              type="button"
-              className={values.groupId === '' ? `${styles.groupChip} ${styles.selected}` : styles.groupChip}
-              onClick={() => setField('groupId', '')}
-            >
-              Fără grupă
-            </button>
-            {orderedGroups.map(group => {
-              const occupied = occupiedByGroup.get(group.id) ?? 0;
-              const free = group.capacity != null ? group.capacity - occupied : null;
-              const selected = values.groupId === group.id;
-              const tone = groupTone(group.id, orderedGroups);
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  title={free != null ? `${free} din ${group.capacity} locuri libere` : 'Fără limită de capacitate'}
-                  className={
-                    selected ? `${styles.groupChip} ${styles.selected}` : `${styles.groupChip} ${styles[tone]}`
-                  }
-                  onClick={() => setField('groupId', group.id)}
-                >
-                  {group.name}
-                  {free != null ? ` · ${free} locuri` : ''}
-                </button>
-              );
-            })}
-          </div>
+          <ChipSelect
+            ariaLabel="Grupă"
+            value={values.groupId}
+            onChange={value => setField('groupId', value)}
+            options={[
+              { value: '', label: 'Fără grupă' },
+              ...orderedGroups.map(group => {
+                const occupied = occupiedByGroup.get(group.id) ?? 0;
+                const free = group.capacity != null ? group.capacity - occupied : null;
+                return {
+                  value: group.id,
+                  label: free != null ? `${group.name} · ${free} locuri` : group.name,
+                  tone: groupTone(group.id, orderedGroups),
+                  hint: free != null ? `${free} din ${group.capacity} locuri libere` : 'Fără limită de capacitate',
+                };
+              }),
+            ]}
+          />
         </fieldset>
 
         {editing && (

@@ -30,4 +30,20 @@ describe('ChipSelect', () => {
     render(<ChipSelect options={OPTIONS} value="lu" onChange={() => {}} ariaLabel="Zile" />);
     expect(screen.getByRole('radio', { name: 'Mi' })).toBeDisabled();
   });
+
+  it('aplică tonul unei opțiuni nealese, dar nu și al celei selectate (rămâne plin)', () => {
+    const TONE_OPTIONS = [
+      { value: 'a', label: 'Grupa A', tone: 'orange' as const },
+      { value: 'b', label: 'Grupa B', tone: 'mint' as const },
+    ];
+    render(<ChipSelect options={TONE_OPTIONS} value="a" onChange={() => {}} ariaLabel="Grupe" />);
+    expect(screen.getByRole('radio', { name: 'Grupa A' }).className).not.toMatch(/orange/);
+    expect(screen.getByRole('radio', { name: 'Grupa B' }).className).toMatch(/mint/);
+  });
+
+  it('hint devine title (tooltip nativ)', () => {
+    const HINT_OPTIONS = [{ value: 'a', label: 'Grupa A', hint: '3 din 10 locuri libere' }];
+    render(<ChipSelect options={HINT_OPTIONS} value="a" onChange={() => {}} ariaLabel="Grupe" />);
+    expect(screen.getByRole('radio', { name: 'Grupa A' })).toHaveAttribute('title', '3 din 10 locuri libere');
+  });
 });
