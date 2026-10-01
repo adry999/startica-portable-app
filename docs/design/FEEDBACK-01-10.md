@@ -11,7 +11,7 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F4 Fără autocompletare | — | ✅ `38ef0c7` |
 | F5 Editor grupă | — | ✅ `2cbd5f6` |
 | F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
-| F7 Luni de la luna curentă | ✅ 38c | ⏳ §3.1 |
+| F7 Luni de la luna curentă | ✅ 38c | ✅ `7d8c64f` |
 | F8 Funcții custom | ✅ 38f | ⏳ §4 |
 | F9 MDL/EUR | — | ⏳ §3.2 (verificare) |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
