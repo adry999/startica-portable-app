@@ -303,3 +303,11 @@ Am păstrat `<button>` propriu pentru celula calendarului, cu excepția document
 Dacă ar trebui să fie comun (un singur curs/planuri pentru toate filialele unei instalații), e o relocare de date live, nu doar o mutare de cod: fiecare filială existentă are deja propriul `exchangeRates`/`exchangeRateSources`/`plan-presets` salvate, iar o migrare ar trebui să aleagă o sursă de adevăr (ex. filiala cea mai recent folosită) și să șteargă/ignore divergențele celorlalte. N-am făcut nicio mutare fără să întreb — cursul și planurile rămân per filială ca până acum, F12 (polling orar + calendar + backfill) construit pe structura existentă.
 
 **De decis:** rămân per filială (fiecare filială poate avea curs/planuri diferite — util dacă filialele sunt în țări/valute diferite) sau se mută în baza comună (un singur curs valabil peste tot)? Dacă al doilea, urmează o migrare separată, nu inclusă aici.
+
+## ⏳ „+ Plată” din fișă — suma precompletată include restanța? (F11)
+
+`PROMPT-CLAUDE-CODE-8.md` §3.4 / `FEEDBACK-01-10.md` F11: „De încasat: 9.845,00 lei (500 € × 19,69) **plus restanța, dacă există**”. Am precompletat suma doar cu taxa lunii curente (plan × cursul zilei) — restanțele rămân neconectate automat, exact ca la F7 (bifă opt-in, nimic bifat implicit).
+
+N-am inclus restanța în suma precompletată pentru că F7 a decis explicit opus: „plata acoperă luna ei, restanțele devin opt-in” — o sumă precompletată care include automat restanța ar însemna o bifă pre-bifată, exact ce F7 a eliminat. Dacă „plus restanța” din F11 chiar cere suma totală (lună + restanță) pre-adunată, cu bifa pre-bifată doar în acest flux (venit direct din fișă, nu din achitare liberă), e o excepție de la regula F7, nu o aplicare a ei — am lăsat-o deschisă.
+
+**De decis:** suma precompletată rămâne doar taxa lunii (ca acum, utilizatorul bifează manual restanța dacă vrea s-o acopere) sau trebuie să includă automat restanța + bifa pre-bifată, doar pentru acest flux?
