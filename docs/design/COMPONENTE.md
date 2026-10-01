@@ -21,7 +21,7 @@ Designul final folosește un set mic de piese care se repetă pe toate ecranele.
 | `Select` | 25b | Aceeași cutie + ▾ 12px `--muted`, `appearance:none`. 2–8 opțiuni. Peste 8 → `SearchSelect`. |
 | `NumberInput` | 25b | TextInput + `inputMode="numeric"`, fără săgeți native, `tabular-nums`, `suffix` („copii”, „zile”, „lei”). |
 | `DateInput` / `MonthInput` | 25b | Afișare zz.ll.aaaa. `trailing` opțional (ex. „4 ani”). `MonthInput` deschide popover-ul `MonthPicker`. |
-| `PhoneInput` | 25b | Validează cu `normalizeMoldovanPhone`. Sub câmp: „✓ +373 …” 12/800 `--mint-ink` sau eroarea. |
+| `PhoneInput` | 25b, §10 | Salvează E.164 (`+373XXXXXXXX`), afișează „069 123 456” (`formatMoldovanPhone`). Sub câmp: „✓ 069 123 456” 12/800 `--mint-ink`, „Număr incomplet: 8 cifre după 0.” pentru un număr prea scurt, mesajul generic pentru restul; „alt număr” (prefix „+” nemoldovenesc) e acceptat ca atare, tot cu ✓. Câmp opțional, nu blochează salvarea. |
 | `TextArea` | 25b | Min 96px, auto-grow până la 240, line-height 1.5, contor opțional `N / max`. |
 | `FileInput` | 25b | Zonă punctată 1.5px `--dashed-border-empty`, fundal `--cream`, radius 12, drag & drop. |
 | `PinInput` | 25b | Căsuțe 44×50 radius 12 border 1.5px (activ = `--orange` + inel). |

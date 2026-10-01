@@ -58,3 +58,9 @@ Varianta (a): `--orange-strong` #b85a00 pentru orice fundal cu text alb (4,7:1).
 - **21c „Lucrez fără legătură” + „Ultima sincronizare”:** task separat după migrare; întâi se salvează `lastSyncedAt` în motorul de sincronizare.
 - **Stări goale pentru restul listelor:** textele sunt în design (`Stari goale.dc.html` 35c, 35d, 35e). Se copiază exact în `empty-states.ts`.
 - **Spinner în buton:** se adaugă mărimea 14 în `Spinner` (spec 29b).
+
+## Telefon (02.10)
+- **Un singur format salvat (§10):** baza ține telefonul ca E.164 (`+373XXXXXXXX`), ecranul arată „069 123 456”. `PhoneInput` acceptă orice formă (`69123456`, `069123456`, `+373 69…`, `00373…`) și salvează E.164 odată numărul complet/valid.
+- Opțional, „Alt număr” pentru numere străine (cu prefix „+”): acceptat ca atare, fără normalizare, fără eroare.
+- Un număr incomplet nu blochează salvarea (câmpul rămâne opțional); mesajul e „Număr incomplet: 8 cifre după 0”, nu mesajul generic.
+- Dacă nu e nici un mobil moldovenesc valid, nici „alt număr” cu „+”, se salvează așa cum e, cu `phoneInvalid: true` (pentru bannerul „de verificat”, §9.3/§14, care nu e construit încă).
