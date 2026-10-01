@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextInput, useToast } from '@shared/ui';
+import { Button, DateInput, Drawer, Field, PhoneInput, Select, SelectableTile, TextInput, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -125,17 +125,16 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
           Filiala
           {/* Comutare multiplă independentă (una sau ambele filiale, 24-personal.md §Date) — nici
               ChipSelect (radiogroup, alegere unică), nici MultiSelect (popover cu căutare, pentru
-              liste lungi) nu se potrivesc unei perechi fixe de pastile mereu vizibile (R1). */}
+              liste lungi) nu se potrivesc unei perechi fixe de pastile mereu vizibile. */}
           <div className={styles.branchToggles} role="group" aria-label="Filiale">
             {session.state.branches.map(branch => (
-              <button
+              <SelectableTile
                 key={branch.id}
-                type="button"
                 className={values.branchIds.includes(branch.id) ? styles.branchPillActive : styles.branchPill}
                 onClick={() => toggleBranch(branch.id)}
               >
                 {branch.name}
-              </button>
+              </SelectableTile>
             ))}
           </div>
         </div>

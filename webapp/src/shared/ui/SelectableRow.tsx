@@ -3,7 +3,7 @@ import styles from './SelectableRow.module.css';
 
 export interface SelectableRowProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
   selected?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 /**

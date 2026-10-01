@@ -136,13 +136,6 @@ describe('R1 — fără taguri HTML brute (<input>/<select>/<textarea>/<button>/
     // acțiunea „→” din cardul „De văzut” cu culoare de ton moștenită (`color: inherit`) — `Button
     // variant="link"` ar forța orange peste tonul roz/galben/mint al cardului.
     'dashboard/DashboardPage.tsx',
-    // Bară de concediu poziționată absolut pe zilele lui (stânga/lățime calculate, culoare dinamică
-    // pe tip/planificat) — hit-area pe formă custom, ca ChildTile/GroupTile; vezi comentariul din fișier.
-    'personal/LeavesView.tsx',
-    // Comutare multiplă a filialelor (una sau ambele) — pereche fixă de pastile mereu vizibile;
-    // nici ChipSelect (alegere unică), nici MultiSelect (popover de căutare) nu se potrivesc; vezi
-    // comentariul din fișier.
-    'personal/StaffFormDrawer.tsx',
     // Pontajul tipărit (23k, `@media print`) — `<table>` semantic real, pentru paginare corectă la
     // printare (antet repetat la 14 rânduri/pagină); același caz ca `report/ReportPrintSummary.tsx`
     // mai jos, `DataTable` nefiind gândit pentru `window.print()`.

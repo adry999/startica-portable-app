@@ -3,7 +3,7 @@ import styles from './SelectableTile.module.css';
 
 export interface SelectableTileProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
   selected?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 /**

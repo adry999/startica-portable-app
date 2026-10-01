@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { Badge, Button, Card, LoadingState, groupTone } from '@shared/ui';
+import { Badge, Button, Card, LoadingState, SelectableTile, groupTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
@@ -98,14 +98,9 @@ export function LeavesView() {
                 {staffLeaves.map(leave => {
                   const bar = leaveYearBar(leave, year);
                   const label = `${person.name}: ${formatLeaveRange(leave.from, leave.to)}`;
-                  // Hit-area pe o bară poziționată absolut pe zilele concediului (stânga/lățime din
-                  // `leaveYearBar` + culoare dinamică din `leaveBarStyle`) — un `Button`/`IconButton`
-                  // ar impune propriul fundal/padding/dimensiune fixă, incompatibile cu poziționarea
-                  // pe pistă (R1, ca ChildTile/GroupTile).
                   return (
-                    <button
+                    <SelectableTile
                       key={leave.id}
-                      type="button"
                       aria-label={label}
                       title={label}
                       className={styles.leaveBar}
