@@ -254,6 +254,44 @@ describe('PaymentFormDrawer', () => {
     expect(monthInput.value).toBe(todayFn().slice(0, 7));
   });
 
+  it('F11: defaultChildId precompletează suma cu taxa lunii (copil MDL)', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c1',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+    expect(await screen.findByDisplayValue('1500.00')).toBeInTheDocument();
+  });
+
+  it('F11: defaultChildId precompletează suma la cursul zilei (copil EUR)', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c3',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+    // 100 € × 19,5 (cursul cunoscut) = 1.950,00 lei.
+    expect(await screen.findByDisplayValue('1950.00')).toBeInTheDocument();
+  });
+
+  it('F11: suma precompletată rămâne editabilă', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c1',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+    await screen.findByDisplayValue('1500.00');
+    const user = userEvent.setup();
+    await user.clear(sumInput());
+    await user.type(sumInput(), '2000');
+    expect(sumInput().value).toBe('2000');
+  });
+
   it('eliminarea unui rând de repartizare păstrează valorile celui rămas', async () => {
     renderDrawer();
     const user = userEvent.setup();

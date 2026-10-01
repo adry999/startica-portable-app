@@ -176,6 +176,19 @@ export function PaymentFormDrawer({
     setManualRate('');
   }, [values.date]);
 
+  // F11 (FEEDBACK-01-10.md): „+ Plată” din fișa copilului deschide formularul cu copilul deja
+  // ales (defaultChildId) — suma pornește precompletată cu taxa lunii, la cursul zilei pentru
+  // un copil EUR, ca utilizatorul să n-o calculeze manual. O singură dată, nu la fiecare randare.
+  const prefilledAmountRef = useRef(false);
+  useEffect(() => {
+    if (editing || prefilledAmountRef.current || !defaultChildId || !selectedChild || !feeEntry) return;
+    if (isEurChild && !effectiveRate) return;
+    const amount = isEurChild ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : feeEntry.amount;
+    if (!amount) return;
+    prefilledAmountRef.current = true;
+    setTender(activeMethod, formatMoneyInput(amount));
+  }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
+
   useEffect(() => {
     // F7 (FEEDBACK-01-10.md): odată ales un copil la o plată NOUĂ, repartizarea automată e
     // calculată mai jos (acoperă luna plății + eventualele restanțe bifate, cu rulare pe

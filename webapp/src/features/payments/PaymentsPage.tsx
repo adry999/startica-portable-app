@@ -123,6 +123,7 @@ export function PaymentsPage({
         key={formTarget === null ? 'closed' : formTarget === 'new' ? 'new' : formTarget.id}
         target={formTarget}
         records={paymentsData.records}
+        defaultChildId={initialChildId}
         onSubmit={submitPaymentForm}
         onClose={onCloseForm}
       />
