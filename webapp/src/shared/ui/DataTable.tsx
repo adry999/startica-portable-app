@@ -1,7 +1,7 @@
-import { Fragment, useMemo, useState, type ReactNode } from 'react';
-import { Badge } from './Badge';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { EmptyState } from './EmptyState';
 import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
+import { Pagination } from './Pagination';
 import styles from './DataTable.module.css';
 
 export interface DataTableColumn<Row> {
@@ -55,28 +55,6 @@ export interface DataTableProps<Row> {
 
 type SortDirection = 'asc' | 'desc';
 
-type PageItem = number | 'ellipsis';
-
-/** Pagini de afișat: toate dacă încap, altfel primă/ultimă + curentă ± 1, cu „…” pentru goluri. */
-function buildPageItems(pageCount: number, currentPage: number): PageItem[] {
-  if (pageCount <= 7) {
-    return Array.from({ length: pageCount }, (_, index) => index);
-  }
-  const shown = new Set<number>([0, pageCount - 1]);
-  for (let index = currentPage - 1; index <= currentPage + 1; index += 1) {
-    if (index >= 0 && index < pageCount) shown.add(index);
-  }
-  const sorted = Array.from(shown).sort((a, b) => a - b);
-  const items: PageItem[] = [];
-  let previous: number | null = null;
-  for (const page of sorted) {
-    if (previous !== null && page - previous > 1) items.push('ellipsis');
-    items.push(page);
-    previous = page;
-  }
-  return items;
-}
-
 /**
  * Tabel generic: sortare pe coloană + paginare + selecție, scrise o singură dată.
  * Filtrarea rămâne responsabilitatea ecranului (`rows` e deja filtrat) — DataTable
@@ -86,7 +64,7 @@ export function DataTable<Row>({
   columns,
   rows,
   rowKey,
-  pageSize = 10,
+  pageSize = 25,
   emptyState,
   empty,
   emptyParams,
@@ -104,7 +82,15 @@ export function DataTable<Row>({
   groupBy,
 }: DataTableProps<Row>) {
   const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
+
+  // F1 (FEEDBACK-01-10.md): schimbarea setului de rânduri (filtru/căutare) duce mereu înapoi la pagina 1.
+  // Semnătura (nu `rows` direct) ca să nu sară la pagina 1 doar pentru că apelantul
+  // recalculează un array nou cu aceleași rânduri la fiecare randare.
+  const rowsSignature = useMemo(() => rows.map(rowKey).join('\u0000'), [rows, rowKey]);
+  useEffect(() => {
+    setPage(1);
+  }, [rowsSignature]);
 
   const sortedRows = useMemo(() => {
     if (!sort) return rows;
@@ -140,12 +126,14 @@ export function DataTable<Row>({
   }, [sortedRows, groupBy]);
 
   const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
-  const currentPage = Math.min(page, pageCount - 1);
-  const pageRows = groupBy ? sortedRows : sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = groupBy
+    ? sortedRows
+    : sortedRows.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
 
   function toggleSort(column: DataTableColumn<Row>) {
     if (!column.sortValue) return;
-    setPage(0);
+    setPage(1);
     setSort(current => {
       if (current?.key !== column.key) return { key: column.key, direction: 'asc' };
       return { key: column.key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
@@ -293,32 +281,15 @@ export function DataTable<Row>({
             : pageRows.map(renderDataRow)}
         </tbody>
       </table>
-      {!groupBy && sortedRows.length > pageSize && (
+      {!groupBy && pageCount > 1 && (
         <div className={styles.pager}>
-          <Badge tone="neutral">
-            Afișez {currentPage * pageSize + 1}–{Math.min(sortedRows.length, (currentPage + 1) * pageSize)} din{' '}
-            {sortedRows.length}
-          </Badge>
-          <div className={styles.pageButtons}>
-            {buildPageItems(pageCount, currentPage).map((item, itemIndex) =>
-              item === 'ellipsis' ? (
-                <span key={`ellipsis-${itemIndex}`} className={styles.pageEllipsis} aria-hidden="true">
-                  …
-                </span>
-              ) : (
-                <button
-                  key={item}
-                  type="button"
-                  className={
-                    item === currentPage ? `${styles.pageButton} ${styles.pageButtonActive}` : styles.pageButton
-                  }
-                  onClick={() => setPage(item)}
-                >
-                  {item + 1}
-                </button>
-              ),
-            )}
-          </div>
+          <Pagination
+            page={currentPage}
+            totalPages={pageCount}
+            totalRows={sortedRows.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </div>

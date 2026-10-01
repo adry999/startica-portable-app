@@ -17,7 +17,7 @@ describe('TableFooter', () => {
     rerender(
       <TableFooter
         summary="24 de rezultate"
-        pagination={<Pagination page={1} totalPages={3} onPageChange={() => {}} />}
+        pagination={<Pagination page={1} totalPages={3} totalRows={24} pageSize={10} onPageChange={() => {}} />}
       />,
     );
     expect(screen.getByRole('navigation')).toBeInTheDocument();
@@ -27,7 +27,7 @@ describe('TableFooter', () => {
     const { container } = render(
       <TableFooter
         summary="24 de rezultate"
-        pagination={<Pagination page={1} totalPages={3} onPageChange={() => {}} />}
+        pagination={<Pagination page={1} totalPages={3} totalRows={24} pageSize={10} onPageChange={() => {}} />}
       />,
     );
     expect(await axe(container)).toHaveNoViolations();

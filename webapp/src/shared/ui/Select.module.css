@@ -54,3 +54,15 @@
   color: var(--muted);
   pointer-events: none;
 }
+
+/* Pastilă compactă — „Pe pagină 25 ▾” din Pagination (COMPONENTE.md §Pagination). */
+.sm {
+  padding: 5px 10px;
+  gap: var(--space-6);
+}
+
+.sm .select {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--slate);
+}

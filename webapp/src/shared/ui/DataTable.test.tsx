@@ -58,7 +58,7 @@ describe('DataTable', () => {
 
   it('paginează când sunt mai multe rânduri decât pageSize', async () => {
     render(<DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} />);
-    expect(screen.getByText(/Afișez 1–2 din 3/)).toBeInTheDocument();
+    expect(screen.getByText('1–2 din 3')).toBeInTheDocument();
     expect(screen.queryByText('Ioana')).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '2' }));
@@ -257,6 +257,6 @@ describe('DataTable groupBy', () => {
     );
     expect(screen.getByText('Ana')).toBeInTheDocument();
     expect(screen.getByText('Cristina')).toBeInTheDocument();
-    expect(screen.queryByText(/Afișez/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
 });

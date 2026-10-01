@@ -59,3 +59,17 @@ export const GrupatPeGrupa: Story = {
 export const Gol: Story = {
   args: { rows: [], emptyState: <span>Niciun rezultat pentru filtrele alese.</span> },
 };
+
+const MANY_ROWS: DemoPaymentRow[] = Array.from({ length: 312 }, (_, index) => ({
+  id: `p-many-${index + 1}`,
+  child: `Copil ${index + 1}`,
+  group: DEMO_PAYMENT_ROWS[index % DEMO_PAYMENT_ROWS.length].group,
+  amount: 100 * ((index % 20) + 1),
+  method: DEMO_PAYMENT_ROWS[index % DEMO_PAYMENT_ROWS.length].method,
+  status: DEMO_PAYMENT_ROWS[index % DEMO_PAYMENT_ROWS.length].status,
+}));
+
+/** F1 (FEEDBACK-01-10.md) — 312 rânduri, paginare ferestruită cu elipsă (38a). */
+export const Paginat: Story = {
+  args: { rows: MANY_ROWS },
+};

@@ -1,11 +1,59 @@
 .pagination {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  justify-content: space-between;
+  gap: var(--space-16);
 }
 
-.indicator {
+.info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
   font-size: 13px;
-  font-weight: 700;
   color: var(--muted);
+}
+
+.pageSize {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.arrow {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.pageButton {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--slate);
+}
+
+.pageButtonActive {
+  background: var(--slate);
+  color: var(--white);
+}
+
+.ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 32px;
+  color: var(--subtle);
 }

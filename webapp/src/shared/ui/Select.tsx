@@ -20,6 +20,8 @@ export interface SelectProps {
   required?: boolean;
   autoFocus?: boolean;
   className?: string;
+  /** `'md'` (implicit) = câmp de formular; `'sm'` = pastilă compactă (ex. „Pe pagină 25 ▾” din `Pagination`). */
+  size?: 'md' | 'sm';
 }
 
 /** Listă derulantă scurtă (25b, `COMPONENTE.md` §0) — aceeași cutie ca `TextInput` + ▾.
@@ -37,8 +39,11 @@ export function Select({
   required,
   autoFocus,
   className,
+  size = 'md',
 }: SelectProps) {
-  const classes = [styles.box, invalid ? styles.invalid : '', className ?? ''].filter(Boolean).join(' ');
+  const classes = [styles.box, size === 'sm' ? styles.sm : '', invalid ? styles.invalid : '', className ?? '']
+    .filter(Boolean)
+    .join(' ');
   return (
     <div className={classes}>
       <select

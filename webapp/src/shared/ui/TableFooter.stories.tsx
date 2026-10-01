@@ -9,7 +9,9 @@ const meta: Meta<typeof TableFooter> = {
   parameters: { design: 'Chrome de tabel — subsol cu total și paginare' },
   args: {
     summary: '24 de rezultate',
-    pagination: <Pagination ariaLabel="Pagini" page={1} totalPages={3} onPageChange={fn()} />,
+    pagination: (
+      <Pagination ariaLabel="Pagini" page={1} totalPages={3} totalRows={24} pageSize={10} onPageChange={fn()} />
+    ),
   },
 };
 export default meta;

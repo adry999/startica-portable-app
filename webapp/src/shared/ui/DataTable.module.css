@@ -90,42 +90,5 @@ tr[data-selected] {
 }
 
 .pager {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: var(--space-12) var(--space-16);
-}
-
-.pageButtons {
-  display: flex;
-  gap: var(--space-4);
-}
-
-.pageButton {
-  min-width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.pageButtonActive {
-  background: var(--orange-soft);
-  color: var(--orange-ink);
-}
-
-.pageEllipsis {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--muted);
 }
