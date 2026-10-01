@@ -26,4 +26,4 @@ Listă (`ChildrenPage.tsx` + `ChildrenToolbar.tsx` + `ChildrenSelectionBar.tsx` 
 - `npm run check` (root) — verde.
 - `architecture.test.ts`: `ChildrenPage.module.css` și `BirthdaysPage.module.css` scoase din excepțiile R2; `BirthdaysPage.tsx` și `childrenColumns.tsx` scoase din excepțiile R7.
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu Dashboard — evită pornirea backend-ului peste baza de date de producție doar pentru o comparație vizuală). Recomandare: spot-check manual la următorul push.
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `02-copii.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test (nume/grupe diferite față de artboard); structura, tokenii și componentele corespund.

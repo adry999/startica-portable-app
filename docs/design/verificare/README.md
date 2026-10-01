@@ -2,32 +2,32 @@
 
 Al doilea val de migrare (`PROMPT-CLAUDE-CODE-5.md` §2) acoperă cele 15 module, în ordinea din prompt. Fiecare rând de mai jos are propriul document de verificare, cu starea la intrare, ce s-a schimbat, ce a rămas neschimbat (cu motiv) și dovada de regresie financiară acolo unde modulul atinge bani.
 
-| # | Modul | Document | Financiar |
-|---|---|---|---|
-| 08 | Dashboard | [08-dashboard.md](08-dashboard.md) | — |
-| 02 | Copii | [02-copii.md](02-copii.md) | — |
-| 05 | Achitări | [05-achitari.md](05-achitari.md) | da |
-| 19 | Prezența | [19-prezenta.md](19-prezenta.md) | — |
-| 03 | Grupe | [03-grupe.md](03-grupe.md) | — |
-| 06 | Cheltuieli | [06-cheltuieli.md](06-cheltuieli.md) | da |
-| 07 | Situația plăților | [07-situatia.md](07-situatia.md) | da |
-| 10 | De notificat | [10-de-notificat.md](10-de-notificat.md) | — |
-| 11 | De rezolvat — Taxe | [11-de-rezolvat-taxe.md](11-de-rezolvat-taxe.md) | da |
-| 11 | De rezolvat — Verificat | [11-de-rezolvat-verificat.md](11-de-rezolvat-verificat.md) | — |
-| 11 | De rezolvat — Asociere | [11-de-rezolvat-asociere.md](11-de-rezolvat-asociere.md) | da |
-| 04 | Vizite | [04-vizite.md](04-vizite.md) | — |
-| 24 | Personal — Salarii | [24-personal-salarii.md](24-personal-salarii.md) | da |
-| 24 | Personal — Echipa | [24-personal-echipa.md](24-personal-echipa.md) | — |
-| 23 | Bazin | [23-bazin.md](23-bazin.md) | da |
-| 20 | Raport contabil | [20-raport-contabil.md](20-raport-contabil.md) | da |
-| 14 | Mesaje SMS și Notificări | [14-sms-notificari.md](14-sms-notificari.md) | — |
-| 12 | Administrare | [12-administrare.md](12-administrare.md) | — |
+| # | Modul | Document | Financiar | Captură |
+|---|---|---|---|---|
+| 08 | Dashboard | [08-dashboard.md](08-dashboard.md) | — | [08-dashboard.png](08-dashboard.png) |
+| 02 | Copii | [02-copii.md](02-copii.md) | — | [02-copii.png](02-copii.png) |
+| 05 | Achitări | [05-achitari.md](05-achitari.md) | da | [05-achitari.png](05-achitari.png) |
+| 19 | Prezența | [19-prezenta.md](19-prezenta.md) | — | [19-prezenta.png](19-prezenta.png) |
+| 03 | Grupe | [03-grupe.md](03-grupe.md) | — | [03-grupe.png](03-grupe.png) |
+| 06 | Cheltuieli | [06-cheltuieli.md](06-cheltuieli.md) | da | [06-cheltuieli.png](06-cheltuieli.png) |
+| 07 | Situația plăților | [07-situatia.md](07-situatia.md) | da | [07-situatia.png](07-situatia.png) |
+| 10 | De notificat | [10-de-notificat.md](10-de-notificat.md) | — | [10-de-notificat.png](10-de-notificat.png) |
+| 11 | De rezolvat — Taxe | [11-de-rezolvat-taxe.md](11-de-rezolvat-taxe.md) | da | [11-de-rezolvat-taxe.png](11-de-rezolvat-taxe.png) |
+| 11 | De rezolvat — Verificat | [11-de-rezolvat-verificat.md](11-de-rezolvat-verificat.md) | — | [11-de-rezolvat-verificat.png](11-de-rezolvat-verificat.png) |
+| 11 | De rezolvat — Asociere | [11-de-rezolvat-asociere.md](11-de-rezolvat-asociere.md) | da | [11-de-rezolvat-asociere.png](11-de-rezolvat-asociere.png) |
+| 04 | Vizite | [04-vizite.md](04-vizite.md) | — | [04-vizite.png](04-vizite.png) |
+| 24 | Personal — Salarii | [24-personal-salarii.md](24-personal-salarii.md) | da | [24-personal-salarii.png](24-personal-salarii.png) |
+| 24 | Personal — Echipa | [24-personal-echipa.md](24-personal-echipa.md) | — | [24-personal-echipa.png](24-personal-echipa.png) |
+| 23 | Bazin | [23-bazin.md](23-bazin.md) | da | [23-bazin.png](23-bazin.png) |
+| 20 | Raport contabil | [20-raport-contabil.md](20-raport-contabil.md) | da | [20-raport-contabil.png](20-raport-contabil.png) |
+| 14 | Mesaje SMS și Notificări | [14-sms-notificari.md](14-sms-notificari.md) | — | [14-sms-notificari.png](14-sms-notificari.png) |
+| 12 | Administrare | [12-administrare.md](12-administrare.md) | — | [12-administrare.png](12-administrare.png) |
 
 Toate cele 15 module din §2 sunt migrate și comise (`git log --grep='val 2'`). `npm run check` verde după fiecare, și din nou la finalul lui §3.
 
 ## Captură 1440×900 vs. artboard
 
-Neefectuată pentru niciun modul din tabelul de mai sus — pornirea serverului de dezvoltare ar rula peste baza de date de producție a grădiniței (`startica-portable-app`), risc explicit evitat toată durata migrării. Fiecare document de verificare individual notează exact ce s-a schimbat vizual (decorul stărilor goale, dropdown-uri rescrise, pastile de categorie etc.) ca recomandare de spot-check manual la următorul push.
+Efectuată 01.10 pentru toate cele 18 module (§3, `scripts/design-capture.mjs`) — serverul a rulat exclusiv pe o copie izolată a datelor (`npm run dev:copy` / `scripts/dev-data-copy.mjs`), niciodată pe `Startica_Date/` reală. Fiecare PNG compune artboard-ul (stânga) și aplicația reală (dreapta) la 1440×900; linkurile sunt în coloana „Captură” a tabelului de mai sus. Diferențele găsite sunt aproape toate date-driven (date de test, lună curentă fără date, interacțiune neexecutată într-o captură automată dintr-un context nou, fără localStorage) — documentate individual în fiecare `<NN>-*.md`. Două module au diferențe structurale marcate „de verificat” (nu modificate fără clarificare): `03-grupe.md` (cardul „Fără grupă”) și `12-administrare.md` (panoul „Copii de siguranță”).
 
 ## §3 — închiderea alowlist-urilor din `architecture.test.ts`
 

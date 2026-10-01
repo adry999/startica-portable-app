@@ -31,4 +31,4 @@ Nicio schimbare din această trecere nu a atins `useExpenses.ts` (calculul `mont
 - `npm run check` (root) — verde, 1196/1198 (2 skip preexistente, nelegate de Cheltuieli).
 - `architecture.test.ts`: scoase din excepții — R1 `expenses/DailyExpensesView.tsx`, `expenses/ExpenseFormDrawer.tsx`, `expenses/ExpensesFilters.tsx` (toate trei complet curate acum); R2 `expenses/ExpensesPage.module.css`. R9 `expenses/ExpensesCategoryManager.tsx` mutat din `TEXT_ALLOWED` în `IMPORT_ALLOWED` (import nou, legitim, al `EmptyState`).
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push, cu atenție la dropdown-ul „Nearhivate” (poziția panoului) și la pastilele de categorie colorate din formular (schimbare vizuală reală față de vechiul contur monocrom).
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `06-cheltuieli.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; dropdown-ul „Nearhivate” și pastilele de categorie colorate din formular corespund artboard-ului.

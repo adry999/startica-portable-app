@@ -32,7 +32,13 @@ const MODULES = [
   { doc: '05-achitari', name: 'Achitări', route: '/achitari', artboardFile: 'Achitari.dc.html', artboardId: '5a' },
   { doc: '19-prezenta', name: 'Prezența', route: '/prezenta', artboardFile: 'Prezenta.dc.html', artboardId: '18a' },
   { doc: '03-grupe', name: 'Grupe', route: '/grupe', artboardFile: 'Grupe.dc.html', artboardId: '4b' },
-  { doc: '06-cheltuieli', name: 'Cheltuieli', route: '/cheltuieli', artboardFile: 'Cheltuieli.dc.html', artboardId: '6a' },
+  {
+    doc: '06-cheltuieli',
+    name: 'Cheltuieli',
+    route: '/cheltuieli',
+    artboardFile: 'Cheltuieli.dc.html',
+    artboardId: '6a',
+  },
   {
     doc: '07-situatia',
     name: 'Situația plăților',

@@ -108,8 +108,9 @@ o abatere de la spec.
   (`backup/ExcelImportDialog.tsx`, nu avea unul dedicat); `backup/ExchangeRateSettings.test.tsx` rămas
   în R9 `TEXT_ALLOWED`, cu motivul actualizat (test, nu producție).
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită pornirea
-backend-ului peste baza de date de producție, plus multiple sesiuni concurente pe același working
-directory). Recomandare: spot-check manual la următorul push — singurele schimbări vizuale reale din
-această trecere sunt textele de stare goală (acum din catalog, fără „încă.” final pe planuri/curs) și
-bara de previzualizare din Grădinița (radius identic vizual, doar tokenizat).
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `12-administrare.png` (stânga artboard, dreapta
+aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: textele de stare goală (din catalog) și
+bara de previzualizare din Grădinița corespund artboard-ului; secțiunea „Copii de siguranță” din aplicația
+reală arată un panou tehnic/diagnostic (listă de fișiere de backup cu detalii), față de o listă curată în
+artboard — **de verificat** dacă artboard-ul a simplificat intenționat ecranul de diagnosticare sau dacă
+panoul din cod ar trebui restrâns; nu s-a modificat nimic fără clarificare, vezi `docs/design/INTREBARI.md`.

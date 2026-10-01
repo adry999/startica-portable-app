@@ -23,6 +23,11 @@ const ALLOWED_TARGET_AREAS = {
 
 const SRC_AREAS = ['app', 'config', 'core', 'shared', 'features'];
 
+// scripts/ nu livrează cod în aplicație — design-capture.mjs e tooling de dezvoltare, rulat
+// manual (PROMPT-CLAUDE-CODE-6.md §3), niciodată importat din src/. Playwright e devDependency
+// doar pentru acest script.
+const EXTERNAL_PACKAGE_ALLOWED = new Set(['scripts/design-capture.mjs:playwright']);
+
 const PUBLIC_FEATURE_ENTRIES = new Set(['index.server.mjs', 'index.web.mjs']);
 
 // (?<!['"]) exclude „from” apărut ca text obișnuit lipit de un ghilimel (ex. array de nume de câmpuri
@@ -97,7 +102,7 @@ export function findImportViolations(sourceFiles) {
       // src/ nu are dependențe runtime externe; singura excepție (SheetJS) trăiește doar
       // ca dependență npm a webapp/-ului, în afara acestei verificări.
       if (target === null) {
-        report('external-package');
+        if (!EXTERNAL_PACKAGE_ALLOWED.has(`${path}:${specifier}`)) report('external-package');
         continue;
       }
 

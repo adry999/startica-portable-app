@@ -29,4 +29,4 @@ Niciuna din schimbările de mai sus n-a atins `useFeeSetup.ts` (calculul `missin
 - `npx vitest run` (webapp, complet) — 249/249 fișiere, 1352/1352 teste, verde.
 - `npm run check` (root) — verde (vezi raportul de subagent pentru numărul exact).
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push, cu atenție la radius-ul casetei galbene (16 vs. 18px, diferență vizuală mică dar reală) și la textul „Nimeni nu se potrivește căutării.” când se caută un nume inexistent.
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `11-de-rezolvat-taxe.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; radius-ul casetei galbene și textul „Nimeni nu se potrivește căutării.” corespund artboard-ului (interacțiunea de căutare nu a fost scriptată în captura automată).

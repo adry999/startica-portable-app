@@ -24,4 +24,4 @@ Rândul lună-cu-lună din „Evoluția încasărilor” (`barPair`) și „Vezi
 - `npm run check` (root) — format + typecheck + `node --test` — verde.
 - Fără clase CSS moarte în `DashboardPage.module.css` după curățare (verificat script-uit).
 
-**Captură 1440×900 vs. artboard:** neefectuată în această trecere — pagina reală cere backend-ul pornit peste baza de date de producție (`Startica_Date/startica.db`), iar sesiunea curentă a evitat pornirea lui doar pentru o comparație vizuală. Recomandare: un spot-check manual rapid (`npm start` + `cd webapp && npm run dev`) înainte de următorul push, comparat cu `Dashboard.dc.html#1a`.
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `08-dashboard.png` (stânga `Dashboard.dc.html#1a`, dreapta aplicația reală, server pornit pe o copie izolată a datelor — §3, niciodată pe `Startica_Date/` reală). Diferențe vizuale: doar date — luna curentă (octombrie 2026) e goală în copia de date folosită pentru captură, față de luna septembrie cu date din artboard; structura, tokenii și componentele corespund.

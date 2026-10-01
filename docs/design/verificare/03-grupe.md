@@ -81,7 +81,9 @@ conflict nou spec-vs-componentă.
   `groups/GroupTile.module.css`; R9 (text) `groups/GroupsBoard.tsx`, `groups/GroupTeamPicker.tsx`,
   `groups/GroupTeamPicker.test.tsx`.
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu Dashboard/Copii/Achitări/Prezența — evită
-pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push,
-cu atenție specială la cele 7 tonuri din Tablă/Carduri (`groupTone`) și la pastila de concediu din Echipa
-grupei (`formatShortDayMonth`).
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `03-grupe.png` (stânga artboard, dreapta aplicația reală,
+pe copie izolată de date — §3). Diferențe vizuale: cele 7 tonuri din Tablă/Carduri (`groupTone`) și pastila
+de concediu din Echipa grupei corespund artboard-ului; grupa „Fără grupă” apare ca listă laterală în captura
+reală, față de card în grilă în artboard — **de verificat** dacă e doar efectul datelor de test (nicio grupă
+reală fără copii în artboard) sau o diferență structurală de layout; nu s-a modificat nimic fără clarificare,
+vezi `docs/design/INTREBARI.md`.

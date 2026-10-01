@@ -28,4 +28,4 @@
 - `npx vitest run src/architecture.test.ts` — verde: `attendance/DayView.tsx`/`MonthView.tsx` scoase din R9 `TEXT_ALLOWED`, adăugate în R9 `IMPORT_ALLOWED` (import nou, legitim, al `EmptyState`); `attendance/DayView.module.css`/`MonthView.module.css` scoase din R2 `ALLOWED`. `WeeklySheet.module.css`/`WeeklySheetDialog.tsx` rămân (motive de mai sus).
 - `npm run check` (root) — verde.
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu Dashboard/Copii/Achitări — evită pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push, cu atenție la textul stării goale din Ziua (data interpolată corect) și din Luna (grupă fără copii).
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `19-prezenta.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; textul stării goale din Ziua (data interpolată corect) și din Luna (grupă fără copii) corespund artboard-ului.

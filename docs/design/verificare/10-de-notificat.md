@@ -29,4 +29,4 @@ Nimic altceva de reparat: fișierul nu avea nicio încălcare R3 (caractere-icon
 - `npm run check` (root) — verde (vezi rulare finală în raport).
 - `architecture.test.ts`: nimic scos din excepții (fișierele nu au ieșit complet curate — rămân cele trei excepții R1/R2 deja documentate mai sus); adăugat `notify/NotifyPage.tsx` în R9 `IMPORT_ALLOWED` (import nou, legitim, al `EmptyState`); comentarii adăugate (nu entries noi) pe excepțiile R1/R2 existente.
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push — singura schimbare vizuală reală din această trecere e decorul stării „coadă golită” (acum cu titlu bold, ca în celelalte module), restul e neschimbat.
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `10-de-notificat.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; decorul stării „coadă golită” (titlu bold) corespunde celorlalte module.

@@ -31,4 +31,4 @@ Modulul era deja pe `SegmentedControl` (Toate/Fișe/Achitări), `Card`, `ScrollA
 - `npx vitest run` (webapp, complet) — 249/249 fișiere, 1352/1352 teste, verde.
 - `npm run check` (root) — verde (vezi raportul de subagent pentru numărul exact).
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul push, cu atenție la aspectul `<kbd>S</kbd>` (acum cu fundal/font din componenta `Kbd`, ușor diferit de stilul custom anterior).
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `11-de-rezolvat-verificat.png` (stânga artboard, dreapta aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; aspectul `<kbd>S</kbd>` (componenta `Kbd`) corespunde artboard-ului.

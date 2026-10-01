@@ -112,8 +112,7 @@ de nicio regulă R1–R9. Nu s-a scris nimic în `INTREBARI.md` pentru acest mod
   `personal/StaffProfilePage.module.css`, `personal/TeamView.module.css` scoase din R2 `ALLOWED`;
   niciun entry nou adăugat (doar comentarii pe excepțiile rămase, deja existente).
 
-**Captură 1440×900 vs. artboard:** neefectuată (motiv identic cu modulele anterioare — evită
-pornirea backend-ului peste baza de date de producție). Recomandare: spot-check manual la următorul
-push — singurele schimbări vizuale reale din această trecere sunt paragraful nou de sub „Niciun
-candidat încă" (Candidați, listă complet goală) și rotunjimi cu ≤1px diferență (departamentSquare,
-punctele din pontajul lunii pe fișa angajatului) — restul e neschimbat.
+**Captură 1440×900 vs. artboard:** efectuată 01.10 — `24-personal-echipa.png` (stânga artboard, dreapta
+aplicația reală, pe copie izolată de date — §3). Diferențe vizuale: doar date de test; paragraful de sub
+„Niciun candidat încă” (Candidați, listă goală) și rotunjimile ≤1px (departamentSquare, punctele din
+pontajul lunii) corespund artboard-ului.
