@@ -59,6 +59,7 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
       <form
         id="advance-form-drawer"
         className={styles.form}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void handleSubmit();

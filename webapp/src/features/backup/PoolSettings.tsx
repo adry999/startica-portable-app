@@ -54,7 +54,7 @@ export function PoolSettings() {
   return (
     <Card className={backupStyles.panel}>
       <h3 className={backupStyles.panelTitle}>Bazin</h3>
-      <form className={backupStyles.form} onSubmit={event => void save(event)}>
+      <form className={backupStyles.form} autoComplete="off" onSubmit={event => void save(event)}>
         <label className={styles.toggleRow}>
           <Toggle checked={form.enabled} onChange={enabled => setForm({ ...form, enabled })} />
           Folosim bazinul la această filială

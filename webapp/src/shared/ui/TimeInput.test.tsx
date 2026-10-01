@@ -19,4 +19,10 @@ describe('TimeInput', () => {
     render(<TimeInput value="09:00" onChange={() => {}} ariaLabel="De la" trailing="dimineața" />);
     expect(screen.getByText('dimineața')).toBeInTheDocument();
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<TimeInput value="" onChange={() => {}} ariaLabel="Ora" />);
+    expect(screen.getByLabelText('Ora')).toHaveAttribute('autocomplete', 'off');
+  });
 });

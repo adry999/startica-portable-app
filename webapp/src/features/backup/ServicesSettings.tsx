@@ -153,7 +153,12 @@ export function ServicesSettings() {
           </Button>
         }
       >
-        <form id="service-form-drawer" className={styles.form} onSubmit={event => void submit(event)}>
+        <form
+          id="service-form-drawer"
+          className={styles.form}
+          autoComplete="off"
+          onSubmit={event => void submit(event)}
+        >
           <Field label="Nume" htmlFor="service-name">
             <TextInput
               id="service-name"

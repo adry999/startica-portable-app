@@ -53,6 +53,7 @@ export function SalaryFormDrawer({ staff, onClose, onSubmit }: SalaryFormDrawerP
       <form
         id="salary-form-drawer"
         className={styles.form}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void handleSubmit();

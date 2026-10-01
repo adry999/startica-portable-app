@@ -351,7 +351,7 @@ function GroupEditor({
         <span className={styles.editorAges}>Vârste: {group.ageRangeLabel}</span>
       </div>
 
-      <form className={styles.editorRow} onSubmit={handleSave}>
+      <form className={styles.editorRow} autoComplete="off" onSubmit={handleSave}>
         <Field label="Nume" htmlFor="edit-group-name">
           <TextInput id="edit-group-name" ariaLabel="Nume grupă" value={name} onChange={setName} />
         </Field>

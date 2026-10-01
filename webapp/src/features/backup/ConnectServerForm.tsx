@@ -45,7 +45,7 @@ export function ConnectServerForm({
   const canSubmit = serverUrl.trim() !== '' && (mode === 'code' ? code.trim() !== '' : setupKey.trim() !== '');
 
   return (
-    <form className={backupStyles.form} onSubmit={event => void submit(event)}>
+    <form className={backupStyles.form} autoComplete="off" onSubmit={event => void submit(event)}>
       <SegmentedControl
         ariaLabel="Mod de conectare"
         value={mode}

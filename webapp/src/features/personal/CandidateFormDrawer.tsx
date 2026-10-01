@@ -82,7 +82,7 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
           </div>
         }
       >
-        <form id="candidate-form-drawer" className={styles.form} onSubmit={handleSubmit}>
+        <form id="candidate-form-drawer" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
           <Field label="Nume, prenume" htmlFor="candidate-name">
             <TextInput id="candidate-name" autoFocus required value={name} onChange={setName} />
           </Field>

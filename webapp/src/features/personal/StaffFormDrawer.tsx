@@ -104,6 +104,7 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
       <form
         id="staff-form-drawer"
         className={styles.form}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void handleSubmit();

@@ -51,6 +51,7 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
       maxLength={maxLength}
       disabled={disabled}
       autoFocus={autoFocus}
+      autoComplete="off"
     />
   );
 });

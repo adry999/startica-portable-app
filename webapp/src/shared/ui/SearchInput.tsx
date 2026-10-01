@@ -24,6 +24,7 @@ export function SearchInput({ value, onChange, placeholder, ariaLabel, className
         onChange={event => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={ariaLabel}
+        autoComplete="off"
       />
     </span>
   );

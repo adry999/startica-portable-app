@@ -336,6 +336,7 @@ export function ChildProfileView({
               {addingNote && (
                 <form
                   className={styles.noteForm}
+                  autoComplete="off"
                   onSubmit={event => {
                     event.preventDefault();
                     void addNote();
@@ -379,6 +380,7 @@ export function ChildProfileView({
                       <form
                         key={note.id}
                         className={styles.noteForm}
+                        autoComplete="off"
                         onSubmit={event => {
                           event.preventDefault();
                           void saveNoteEdit(note);

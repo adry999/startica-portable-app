@@ -126,7 +126,7 @@ function TelegramSection({ telegram }: { telegram: TelegramStatusData }) {
       )}
 
       {showForm && (
-        <form className={styles.form} onSubmit={event => void connect(event)}>
+        <form className={styles.form} autoComplete="off" onSubmit={event => void connect(event)}>
           <label className={styles.field}>
             Token-ul botului
             <TextInput

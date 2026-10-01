@@ -105,6 +105,7 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
         <form
           id="leave-form-drawer"
           className={styles.form}
+          autoComplete="off"
           onSubmit={event => {
             event.preventDefault();
             void handleSubmit();

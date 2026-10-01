@@ -35,4 +35,10 @@ describe('AmountInput', () => {
     render(<AmountInput value="" onChange={() => {}} ariaLabel="Sumă" disabled />);
     expect(screen.getByLabelText('Sumă')).toBeDisabled();
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<AmountInput value="" onChange={() => {}} ariaLabel="Sumă" />);
+    expect(screen.getByLabelText('Sumă')).toHaveAttribute('autocomplete', 'off');
+  });
 });

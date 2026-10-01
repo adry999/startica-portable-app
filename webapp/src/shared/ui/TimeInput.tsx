@@ -52,6 +52,7 @@ export function TimeInput({
         aria-invalid={invalid || undefined}
         disabled={disabled}
         autoFocus={autoFocus}
+        autoComplete="off"
       />
       {trailing && <span className={styles.affix}>{trailing}</span>}
     </div>

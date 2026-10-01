@@ -65,6 +65,7 @@ export function AmountInput({
           aria-invalid={invalid || undefined}
           disabled={disabled}
           autoFocus={autoFocus}
+          autoComplete="off"
         />
         {currency && <span className={styles.currency}>{currency}</span>}
       </div>

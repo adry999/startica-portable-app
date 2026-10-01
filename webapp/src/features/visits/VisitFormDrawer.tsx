@@ -77,7 +77,7 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
         </Button>
       }
     >
-      <form id="visit-form" className={styles.form} onSubmit={handleSubmit}>
+      <form id="visit-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
         <fieldset className={styles.section}>
           <legend>Vizita</legend>
           <Field label="Data vizitei" htmlFor="visit-date">

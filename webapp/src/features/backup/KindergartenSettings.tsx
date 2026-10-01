@@ -282,6 +282,7 @@ function AdminPinCard() {
       </p>
       <form
         className={styles.fieldsGrid}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void submit();

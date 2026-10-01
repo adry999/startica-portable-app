@@ -57,6 +57,7 @@ export function NumberInput({
         aria-invalid={invalid || undefined}
         disabled={disabled}
         autoFocus={autoFocus}
+        autoComplete="off"
       />
       {suffix && <span className={styles.affix}>{suffix}</span>}
     </div>

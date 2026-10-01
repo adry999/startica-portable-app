@@ -49,7 +49,7 @@ function QuickAddExpense({
   }
 
   return (
-    <form className={styles.quickAdd} onSubmit={handleSubmit}>
+    <form className={styles.quickAdd} autoComplete="off" onSubmit={handleSubmit}>
       <span className={styles.quickAddTitle}>Adaugă rapid</span>
       <div className={styles.quickAddRow}>
         <NumberInput min={0} step="0.01" placeholder="Sumă" ariaLabel="Sumă" value={amount} onChange={setAmount} />

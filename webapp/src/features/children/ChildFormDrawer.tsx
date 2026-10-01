@@ -176,6 +176,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
       <form
         id="child-form-drawer"
         className={styles.form}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void handleSubmit();

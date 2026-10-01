@@ -29,4 +29,10 @@ describe('DateInput', () => {
     render(<DateInput value="" onChange={() => {}} ariaLabel="Data" disabled />);
     expect(screen.getByLabelText('Data')).toBeDisabled();
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<DateInput value="" onChange={() => {}} ariaLabel="Data" />);
+    expect(screen.getByLabelText('Data')).toHaveAttribute('autocomplete', 'off');
+  });
 });

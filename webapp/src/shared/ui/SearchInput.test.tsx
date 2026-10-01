@@ -15,4 +15,10 @@ describe('SearchInput', () => {
     await userEvent.type(screen.getByRole('searchbox', { name: 'Caută' }), 'I');
     expect(onChange).toHaveBeenCalledWith('I');
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<SearchInput value="" onChange={vi.fn()} ariaLabel="Caută" />);
+    expect(screen.getByRole('searchbox', { name: 'Caută' })).toHaveAttribute('autocomplete', 'off');
+  });
 });

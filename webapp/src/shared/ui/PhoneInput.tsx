@@ -50,6 +50,7 @@ export function PhoneInput({
           aria-invalid={invalid || undefined}
           disabled={disabled}
           autoFocus={autoFocus}
+          autoComplete="off"
         />
       </div>
       {trimmed !== '' && (

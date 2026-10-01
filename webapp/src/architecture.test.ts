@@ -312,6 +312,22 @@ describe('R10 — --orange rămâne doar bordură/punct/bară/fundal soft, făr�
   });
 });
 
+// R11 (FEEDBACK-01-10.md F4) — fără autoComplete="off" Chrome oferă să salveze datele de formular, nedorit în această aplicație desktop.
+describe('R11 — <form> brut în features/** are autoComplete="off"', () => {
+  const FORM_TAG_PATTERN = /<form\b[\s\S]*?>/g;
+
+  function hasFormWithoutAutoComplete(text: string): boolean {
+    const tags = text.match(FORM_TAG_PATTERN) ?? [];
+    return tags.some(tag => !/autoComplete\s*=/.test(tag));
+  }
+
+  it('niciun <form> fără autoComplete="off"', () => {
+    const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
+    const actual = featureFilesMatching(files, hasFormWithoutAutoComplete);
+    expect(actual).toEqual([]);
+  });
+});
+
 describe('granițele dintre module (webapp/src/features)', () => {
   it('niciun fișier dintr-un feature nu importă direct dintr-un alt feature', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-feature');

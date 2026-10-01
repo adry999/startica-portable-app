@@ -41,7 +41,7 @@ export function TextInput({
   autoFocus,
   maxLength,
   inputMode,
-  autoComplete,
+  autoComplete = 'off',
   prefix,
   suffix,
   className,

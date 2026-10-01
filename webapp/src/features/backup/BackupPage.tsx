@@ -306,7 +306,7 @@ export function BackupPage() {
                 ))}
               </div>
 
-              <form className={styles.form} onSubmit={event => void saveSettings(event)}>
+              <form className={styles.form} autoComplete="off" onSubmit={event => void saveSettings(event)}>
                 <Field label="Folder Google Drive sau altă destinație externă" htmlFor="backup-external-dir">
                   <TextInput
                     id="backup-external-dir"

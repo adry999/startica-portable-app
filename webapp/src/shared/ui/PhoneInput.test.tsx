@@ -36,4 +36,10 @@ describe('PhoneInput', () => {
     render(<PhoneInput value="" onChange={() => {}} ariaLabel="Telefon" disabled />);
     expect(screen.getByLabelText('Telefon')).toBeDisabled();
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<PhoneInput value="" onChange={() => {}} ariaLabel="Telefon" />);
+    expect(screen.getByLabelText('Telefon')).toHaveAttribute('autocomplete', 'off');
+  });
 });

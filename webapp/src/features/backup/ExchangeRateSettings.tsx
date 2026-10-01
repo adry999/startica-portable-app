@@ -249,7 +249,7 @@ export function ExchangeRateSettings() {
 
         {editingRate && (
           <Card className={styles.correctionCard}>
-            <form className={styles.correctionForm} onSubmit={event => void submitCorrection(event)}>
+            <form className={styles.correctionForm} autoComplete="off" onSubmit={event => void submitCorrection(event)}>
               <span className={styles.correctionTitle}>Curs corectat pentru azi</span>
               <Field label="Curs" htmlFor="rate-correction-input">
                 <NumberInput

@@ -106,7 +106,7 @@ export function ExpensesCategoryManager({
           )
         )}
       </div>
-      <form className={styles.chipForm} onSubmit={handleCreateCategory}>
+      <form className={styles.chipForm} autoComplete="off" onSubmit={handleCreateCategory}>
         <TextInput
           value={newCategoryName}
           onChange={setNewCategoryName}

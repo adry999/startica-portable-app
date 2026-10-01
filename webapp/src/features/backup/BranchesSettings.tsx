@@ -92,7 +92,7 @@ export function BranchesSettings() {
       </div>
 
       {addOpen && (
-        <form className={styles.addForm} onSubmit={event => void submitAdd(event)}>
+        <form className={styles.addForm} autoComplete="off" onSubmit={event => void submitAdd(event)}>
           <Field label="Nume" htmlFor="branch-add-name">
             <TextInput id="branch-add-name" value={addName} onChange={setAddName} placeholder="ex. Botanica" />
           </Field>

@@ -23,4 +23,10 @@ describe('TextArea', () => {
     render(<TextArea value="" onChange={() => {}} ariaLabel="Text liber" disabled />);
     expect(screen.getByRole('textbox', { name: 'Text liber' })).toBeDisabled();
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
+  it('are autoComplete="off"', () => {
+    render(<TextArea value="" onChange={() => {}} ariaLabel="Text liber" />);
+    expect(screen.getByRole('textbox', { name: 'Text liber' })).toHaveAttribute('autocomplete', 'off');
+  });
 });

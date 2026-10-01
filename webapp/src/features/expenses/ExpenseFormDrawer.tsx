@@ -104,7 +104,7 @@ export function ExpenseFormDrawer({
         </div>
       }
     >
-      <form id="expense-form-drawer" className={styles.editorForm} onSubmit={handleSubmit}>
+      <form id="expense-form-drawer" className={styles.editorForm} autoComplete="off" onSubmit={handleSubmit}>
         <Field label="Data cheltuielii" htmlFor="expense-date">
           <DateInput id="expense-date" required value={date} onChange={setDate} />
         </Field>

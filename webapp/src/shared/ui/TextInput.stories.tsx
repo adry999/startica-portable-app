@@ -28,3 +28,13 @@ export const Focus: Story = {
     await expect(input).toHaveFocus();
   },
 };
+
+// F4 (FEEDBACK-01-10.md): fără autocompletare de browser implicit — Chrome nu trebuie să
+// ofere să salveze/completeze automat datele din formularele acestei aplicații desktop.
+export const WithoutBrowserAutocomplete: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('textbox');
+    await expect(input).toHaveAttribute('autocomplete', 'off');
+  },
+};

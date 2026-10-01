@@ -351,6 +351,7 @@ export function PaymentFormDrawer({
       <form
         id="payment-form-drawer"
         className={styles.form}
+        autoComplete="off"
         onSubmit={event => {
           event.preventDefault();
           void handleSubmit();

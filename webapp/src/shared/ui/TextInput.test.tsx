@@ -30,4 +30,13 @@ describe('TextInput', () => {
     render(<TextInput value="" onChange={() => {}} ariaLabel="Nume" inputRef={ref} />);
     expect(ref.current).toBe(screen.getByLabelText('Nume'));
   });
+
+  // F4 (FEEDBACK-01-10.md): fără autocompletare de browser implicit.
+  it('are autoComplete="off" implicit, suprascriibil explicit', () => {
+    render(<TextInput value="" onChange={() => {}} ariaLabel="Nume" />);
+    expect(screen.getByLabelText('Nume')).toHaveAttribute('autocomplete', 'off');
+
+    render(<TextInput value="" onChange={() => {}} ariaLabel="Telefon" autoComplete="tel" />);
+    expect(screen.getByLabelText('Telefon')).toHaveAttribute('autocomplete', 'tel');
+  });
 });
