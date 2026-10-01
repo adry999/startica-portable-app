@@ -242,31 +242,40 @@ describe('usePayments', () => {
     });
   });
 
-  it('monthFrom păstrează doar achitările active din luna respectivă sau mai târziu', async () => {
+  it('periodFrom păstrează doar achitările active din ziua respectivă sau mai târziu', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
 
-    act(() => result.current.setMonthFrom('2026-08'));
+    act(() => result.current.setPeriodFrom('2026-08-01'));
     expect(result.current.rows.map(row => row.id).sort()).toEqual(['p1', 'p2', 'p4']);
   });
 
-  it('monthTo păstrează doar achitările active din luna respectivă sau mai devreme', async () => {
+  it('periodTo păstrează doar achitările active din ziua respectivă sau mai devreme', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
 
-    act(() => result.current.setMonthTo('2026-08'));
+    act(() => result.current.setPeriodTo('2026-08-31'));
     expect(result.current.rows.map(row => row.id).sort()).toEqual(['p2', 'p3']);
   });
 
-  it('monthFrom și monthTo combinate îngustează la o singură lună', async () => {
+  it('periodFrom și periodTo combinate îngustează la un singur interval', async () => {
     await loadedSession();
     const { result } = renderHook(() => usePayments());
 
     act(() => {
-      result.current.setMonthFrom('2026-08');
-      result.current.setMonthTo('2026-08');
+      result.current.setPeriodFrom('2026-08-01');
+      result.current.setPeriodTo('2026-08-31');
     });
     expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
+  });
+
+  it('periodPreset implicit e "tot" (fără limite), ca azi', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments());
+
+    expect(result.current.periodPreset).toBe('tot');
+    expect(result.current.periodFrom).toBe('');
+    expect(result.current.periodTo).toBe('');
   });
 
   it('search găsește achitarea neasociată după sourceName', async () => {

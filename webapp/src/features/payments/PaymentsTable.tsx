@@ -11,6 +11,7 @@ import {
   Kpi,
   ListToolbar,
   PeriodFilter,
+  PERIOD_PRESET_OPTIONS,
   RowMenu,
   SegmentedControl,
   SelectionBar,
@@ -21,6 +22,7 @@ import {
   type CardTone,
   type PillTone,
 } from '@shared/ui';
+import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatNameList } from '@shared/format/name-list';
 import { exportPaymentsCsv } from './payments-export';
@@ -154,13 +156,18 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
       onClear: () => data.setArchiveFilter('active'),
     });
   }
-  if (data.monthFrom || data.monthTo) {
+  if (data.periodPreset !== 'tot') {
+    const presetLabel = PERIOD_PRESET_OPTIONS.find(option => option.value === data.periodPreset)?.label ?? '';
     activeFilterChips.push({
       key: 'period',
-      label: `Perioadă: ${data.monthFrom || '…'} – ${data.monthTo || '…'}`,
+      label:
+        data.periodPreset === 'interval'
+          ? `Perioadă: ${data.periodFrom ? formatDate(data.periodFrom) : '…'} – ${data.periodTo ? formatDate(data.periodTo) : '…'}`
+          : `Perioadă: ${presetLabel}`,
       onClear: () => {
-        data.setMonthFrom('');
-        data.setMonthTo('');
+        data.setPeriodPreset('tot');
+        data.setPeriodFrom('');
+        data.setPeriodTo('');
       },
     });
   }
@@ -170,8 +177,9 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
     data.setService('');
     data.setGroupFilter('all');
     data.setArchiveFilter('active');
-    data.setMonthFrom('');
-    data.setMonthTo('');
+    data.setPeriodPreset('tot');
+    data.setPeriodFrom('');
+    data.setPeriodTo('');
     data.setSearch('');
   }
 
@@ -192,10 +200,12 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
           }}
         >
           <PeriodFilter
-            from={data.monthFrom}
-            to={data.monthTo}
-            onFromChange={data.setMonthFrom}
-            onToChange={data.setMonthTo}
+            preset={data.periodPreset}
+            onPresetChange={data.setPeriodPreset}
+            from={data.periodFrom}
+            onFromChange={data.setPeriodFrom}
+            to={data.periodTo}
+            onToChange={data.setPeriodTo}
           />
           <SegmentedControl<ArchiveFilter>
             options={ARCHIVE_FILTER_OPTIONS}

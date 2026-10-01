@@ -10,6 +10,7 @@ import { summarizePaymentsByMethod } from '#shared/ui/record-list-summary.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
+import type { PeriodPreset } from '@shared/ui';
 import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
 import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot, Service } from '@contracts/record-types.mjs';
 
@@ -84,10 +85,14 @@ export interface PaymentsData {
   services: Service[];
   groupFilter: string;
   setGroupFilter: (value: string) => void;
-  monthFrom: string;
-  setMonthFrom: (value: string) => void;
-  monthTo: string;
-  setMonthTo: (value: string) => void;
+  /** Presetarea + interval pe zi (`YYYY-MM-DD`) ale `PeriodFilter` (§5.1) — `PeriodFilter` calculează
+   * singur `periodFrom`/`periodTo` la schimbarea presetării; hook-ul doar ține cele 3 valori. */
+  periodPreset: PeriodPreset;
+  setPeriodPreset: (value: PeriodPreset) => void;
+  periodFrom: string;
+  setPeriodFrom: (value: string) => void;
+  periodTo: string;
+  setPeriodTo: (value: string) => void;
   archiveFilter: ArchiveFilter;
   setArchiveFilter: (value: ArchiveFilter) => void;
   archivePayment: (id: string) => Promise<void>;
@@ -148,7 +153,7 @@ function visibleServices(services: Service[] | undefined): Service[] {
 }
 
 /**
- * Filtrare (căutare, copil, metodă, interval de luni, arhivare) + sumar pe
+ * Filtrare (căutare, copil, metodă, perioadă pe zi, arhivare) + sumar pe
  * metodă, aici ca stare de hook. Filtrele trăiesc aici, nu în pagină, ca
  * PaymentsPage să rămână randare pură — la fel ca openGroupId în useGroups.
  */
@@ -163,8 +168,11 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const [method, setMethod] = useState('');
   const [service, setService] = useState('');
   const [groupFilter, setGroupFilter] = useState('all');
-  const [monthFrom, setMonthFrom] = useState('');
-  const [monthTo, setMonthTo] = useState('');
+  // Implicit 'tot' (fără limite) — comportamentul de azi, și eticheta din mockup (05-achitari.md
+  // „Perioadă: oricând”).
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('tot');
+  const [periodFrom, setPeriodFrom] = useState('');
+  const [periodTo, setPeriodTo] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
 
   // m8: citesc `session.state.state` la momentul apelului, nu `records` din closure-ul randării în
@@ -235,10 +243,12 @@ export function usePayments(initialChildId = ''): PaymentsData {
     setService,
     groupFilter,
     setGroupFilter,
-    monthFrom,
-    setMonthFrom,
-    monthTo,
-    setMonthTo,
+    periodPreset,
+    setPeriodPreset,
+    periodFrom,
+    setPeriodFrom,
+    periodTo,
+    setPeriodTo,
     archiveFilter,
     setArchiveFilter,
     archivePayment,
@@ -280,8 +290,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
   function matchesFilters(payment: Payment, includeMethod: boolean): boolean {
     return (
       (archiveFilter === 'all' || (archiveFilter === 'archived' ? payment.archived : !payment.archived)) &&
-      (!monthFrom || payment.date.slice(0, 7) >= monthFrom) &&
-      (!monthTo || payment.date.slice(0, 7) <= monthTo) &&
+      (!periodFrom || payment.date >= periodFrom) &&
+      (!periodTo || payment.date <= periodTo) &&
       (!childId || payment.childId === childId) &&
       (!includeMethod ||
         !method ||
