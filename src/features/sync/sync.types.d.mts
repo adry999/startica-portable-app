@@ -59,6 +59,8 @@ export interface SyncDeviceFile {
   deviceName: string;
   token: string;
   connectedAt: string;
+  /** Ultima sincronizare reușită (oricare motor — filiala sau comunul), pentru 21c/14a. */
+  lastSyncedAt?: string;
 }
 
 export interface SyncDeviceRepository {

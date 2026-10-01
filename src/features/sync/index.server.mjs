@@ -16,6 +16,7 @@ export {
   COMMON_KINDS,
 } from './server/change-applier.mjs';
 export { createSyncEngine } from './server/sync-engine.service.mjs';
+export { createLastSyncedAtTracker } from './server/sync-last-synced-tracker.mjs';
 export { createSyncRoutes } from './server/sync.routes.mjs';
 export { createSyncConflictsRoutes } from './server/sync-conflicts.routes.mjs';
 export {

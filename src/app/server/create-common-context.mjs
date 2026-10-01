@@ -15,6 +15,7 @@ import {
   createSyncPoolWriter,
   createSyncHttpClient,
   createSyncEngine,
+  createLastSyncedAtTracker,
 } from '#features/sync/index.server.mjs';
 
 /**
@@ -30,7 +31,7 @@ import {
  * @param {{
  *   home: string,
  *   autoBackupIntervalMs: number,
- *   syncDevice?: { read: () => import('#features/sync/index.server.mjs').SyncDeviceFile | null },
+ *   syncDevice?: import('#features/sync/index.server.mjs').SyncDeviceRepository,
  *   fetch?: typeof fetch,
  *   onChange?: (change: { kind: string, id: string, payload: unknown | null }) => void,
  *   onSyncStatus?: (status: unknown) => void,
@@ -40,7 +41,7 @@ import {
 export function createCommonContext({
   home,
   autoBackupIntervalMs,
-  syncDevice = { read: () => null },
+  syncDevice = { read: () => null, write: () => {}, clear: () => {} },
   fetch: fetchImpl = globalThis.fetch,
   onChange,
   onSyncStatus,
@@ -110,6 +111,9 @@ export function createCommonContext({
 
   /** @type {ReturnType<typeof createSyncEngine> | null} */
   let syncEngine = null;
+  // DECIZII.md punctul 55: același tracker ca în create-branch-context.mjs, pe același
+  // sync.json — „ultima sincronizare” trebuie să reflecte oricare din cele două motoare.
+  const lastSyncedAtTracker = createLastSyncedAtTracker({ syncDevice });
 
   function buildSyncEngine() {
     const deviceFile = syncDevice.read();
@@ -132,7 +136,10 @@ export function createCommonContext({
       client: createSyncHttpClient({ serverUrl: deviceFile.serverUrl, token: deviceFile.token, fetch: fetchImpl }),
       deviceId: deviceFile.deviceId,
       deviceName: deviceFile.deviceName,
-      onStatus: status => onSyncStatus?.(status),
+      onStatus: status => {
+        lastSyncedAtTracker.handleStatus(status);
+        onSyncStatus?.(status);
+      },
       onRecordsChanged: revision => onSyncRecordsChanged?.(revision),
     });
   }

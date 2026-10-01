@@ -48,6 +48,7 @@ import {
   createSyncEngine,
   createSyncRoutes,
   createSyncConflictsRoutes,
+  createLastSyncedAtTracker,
 } from '#features/sync/index.server.mjs';
 import { createSessionRoutes } from './session.routes.mjs';
 import { createDiagnosticRoutes } from './diagnostic.routes.mjs';
@@ -188,6 +189,10 @@ export function createBranchContext({
     getCommonEngine: () => common?.sync.getEngine() ?? null,
   });
   const syncDeviceFile = syncDevice.read();
+  // DECIZII.md punctul 55: persistă lastSyncedAt în sync.json (motorul îl ține doar în
+  // memorie) — un singur tracker, ascultat de ambele motoare ale instalării (vezi și
+  // create-common-context.mjs), ca „ultima sincronizare” să reflecte oricare dintre ele.
+  const lastSyncedAtTracker = createLastSyncedAtTracker({ syncDevice });
   if (syncDeviceFile) {
     syncEngine = createSyncEngine({
       database: db,
@@ -209,7 +214,10 @@ export function createBranchContext({
       }),
       deviceId: syncDeviceFile.deviceId,
       deviceName: syncDeviceFile.deviceName,
-      onStatus: syncRoutes.onStatus,
+      onStatus: status => {
+        lastSyncedAtTracker.handleStatus(status);
+        syncRoutes.onStatus();
+      },
       onRecordsChanged: syncRoutes.onRecordsChanged,
     });
   }

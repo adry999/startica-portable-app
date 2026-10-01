@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -147,4 +147,55 @@ test('al doilea POST /api/shutdown nu face un al doilea backup', async () => {
     )
       rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// DECIZII.md punctul 55 — lastSyncedAt e persistat în sync.json (sync-last-synced-tracker.mjs)
+// și expus prin syncSummary(); aici verificăm doar expunerea, cu un sync.json scris de mână
+// (fără server de sincronizare real — syncSummary() doar citește fișierul).
+test('/api/session: sync.json fără lastSyncedAt încă — sync.lastSyncedAt gol', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-session-sync-'));
+  t.after(() => removeDirWithRetry(home));
+  writeFileSync(
+    join(home, 'sync.json'),
+    JSON.stringify({
+      version: 1,
+      serverUrl: 'https://sync.exemplu.md',
+      deviceId: 'dev-1',
+      deviceName: 'Calculator A',
+      token: 'tok',
+      connectedAt: new Date().toISOString(),
+    }),
+  );
+  const app = await startTestApplication(t, { prefix: 'startica-session-sync-run-', home });
+
+  const session = await app.get('/api/session');
+
+  assert.deepEqual(session.sync, {
+    configured: true,
+    deviceName: 'Calculator A',
+    serverUrl: 'https://sync.exemplu.md',
+    lastSyncedAt: '',
+  });
+});
+
+test('/api/session: sync.json cu lastSyncedAt persistat — apare în syncSummary', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-session-sync-'));
+  t.after(() => removeDirWithRetry(home));
+  writeFileSync(
+    join(home, 'sync.json'),
+    JSON.stringify({
+      version: 1,
+      serverUrl: 'https://sync.exemplu.md',
+      deviceId: 'dev-1',
+      deviceName: 'Calculator A',
+      token: 'tok',
+      connectedAt: new Date().toISOString(),
+      lastSyncedAt: '2026-10-01T12:00:00.000Z',
+    }),
+  );
+  const app = await startTestApplication(t, { prefix: 'startica-session-sync-run-', home });
+
+  const session = await app.get('/api/session');
+
+  assert.equal(session.sync.lastSyncedAt, '2026-10-01T12:00:00.000Z');
 });

@@ -43,7 +43,13 @@ export function createSessionRoutes({
   // ca sesiunea să știe imediat dacă are rost să mai ceară acel status.
   function syncSummary() {
     const device = syncDevice.read();
-    if (device) return { configured: true, deviceName: device.deviceName, serverUrl: device.serverUrl };
+    if (device)
+      return {
+        configured: true,
+        deviceName: device.deviceName,
+        serverUrl: device.serverUrl,
+        lastSyncedAt: device.lastSyncedAt ?? '',
+      };
     // Task 12 (fila Sincronizare): numele dispozitivului la conectare vine prefil de aici,
     // ca utilizatorul să nu tasteze numele calculatorului de la zero.
     return { configured: false, suggestedName: os.hostname() };
