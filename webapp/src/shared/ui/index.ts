@@ -62,6 +62,7 @@ export { ActiveFilters, type ActiveFilterChip, type ActiveFiltersProps } from '.
 export {
   PeriodFilter,
   periodPresetBounds,
+  monthDayBounds,
   PERIOD_PRESET_OPTIONS,
   type PeriodFilterProps,
   type PeriodFilterOption,

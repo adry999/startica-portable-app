@@ -30,7 +30,10 @@ const PRESET_LABEL = Object.fromEntries(PERIOD_PRESET_OPTIONS.map(option => [opt
   string
 >;
 
-function monthDayBounds(monthKey: string): { from: string; to: string } {
+/** Prima și ultima zi a unei luni (`YYYY-MM`) — exportată separat de `periodPresetBounds`, pentru
+ * ecranele cu propria lună (ex. Cheltuieli/`MonthStepper`, E-1), care au nevoie de limitele acelei
+ * luni exact, nu ale lunii calendaristice reale („azi”). */
+export function monthDayBounds(monthKey: string): { from: string; to: string } {
   const days = monthDates(monthKey);
   return { from: days[0], to: days[days.length - 1] };
 }
