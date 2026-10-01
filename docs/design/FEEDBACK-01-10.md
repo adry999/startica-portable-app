@@ -10,7 +10,7 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F3 Alte date la Copil nou | ✅ 38b | ⏳ §2.3 |
 | F4 Fără autocompletare | — | ⏳ §2.1 |
 | F5 Editor grupă | — | ✅ `2cbd5f6` |
-| F6 Backup complet | ✅ 38g | ⏳ §1.2 (cauză: VACUUM INTO doar pe filiala activă) |
+| F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
 | F7 Luni de la luna curentă | ✅ 38c | ⏳ §3.1 |
 | F8 Funcții custom | ✅ 38f | ⏳ §4 |
 | F9 MDL/EUR | — | ⏳ §3.2 (verificare) |
