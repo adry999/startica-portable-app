@@ -9,7 +9,7 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F2 Ocupare grupă | ✅ 38b | ⏳ §2.3 |
 | F3 Alte date la Copil nou | ✅ 38b | ⏳ §2.3 |
 | F4 Fără autocompletare | — | ⏳ §2.1 |
-| F5 Editor grupă | — | ⏳ §1.1 (cauză: `GroupsPage.tsx:270` useState inițial) |
+| F5 Editor grupă | — | ✅ `2cbd5f6` |
 | F6 Backup complet | ✅ 38g | ⏳ §1.2 (cauză: VACUUM INTO doar pe filiala activă) |
 | F7 Luni de la luna curentă | ✅ 38c | ⏳ §3.1 |
 | F8 Funcții custom | ✅ 38f | ⏳ §4 |
