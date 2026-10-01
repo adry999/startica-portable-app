@@ -32,7 +32,7 @@ describe('defaultPaymentFormValues', () => {
     expect(values.allocations).toMatchObject([{ month: '2026-08', amount: '500' }]);
   });
 
-  it('cu defaultChildId și records, propune luna cea mai veche neachitată a copilului', () => {
+  it('F7 (FEEDBACK-01-10.md): cu defaultChildId, luna rămâne cea a datei plății, nu restanța copilului', () => {
     const records = {
       children: [
         {
@@ -46,7 +46,7 @@ describe('defaultPaymentFormValues', () => {
     } as unknown as RecordsSnapshot;
 
     const values = defaultPaymentFormValues(null, '2026-09-24', 'c1', records);
-    expect(values.allocations[0].month).toBe('2026-01');
+    expect(values.allocations[0].month).toBe('2026-09');
   });
 
   it('15b: sendSmsConfirmation implicit bifat doar dacă părintele are telefon valid', () => {

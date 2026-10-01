@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeRecord } from './record-schema.mjs';
-import { obligation, dueDayFor, firstUnpaidMonth } from './tuition-obligation.mjs';
+import { obligation, dueDayFor, firstUnpaidMonth, arrears } from './tuition-obligation.mjs';
 import { paymentIndex } from './payment-allocations.mjs';
 
 const child = () =>
@@ -596,4 +596,39 @@ test('B3: o plată de Bazin nu scade taxa Grădiniței, și invers, cu sau făr�
   const viaIndex = obligation(mdlChild, '2026-09', [], charges, '2026-09-30', index);
   assert.equal(viaIndex.paid, 1400);
   assert.equal(viaIndex.rest, 1500);
+});
+
+test('F7: arrears() listează lunile trecute neachitate, strict înainte de `beforeMonth`', () => {
+  const c = normalizeRecord('children', {
+    id: 'ID-arrears',
+    name: 'Copil arrears',
+    status: 'Activ',
+    attendanceDate: '2026-01-01',
+    dueDay: 10,
+    feeHistory: [{ from: '2026-01', amount: 1000 }],
+  });
+  // Ianuarie achitat integral, Februarie neachitat — Martie (beforeMonth) nu intră în listă,
+  // chiar dacă ar fi și ea neachitată (F7: doar lunile STRICT trecute sunt „restanță”).
+  const jan = normalizeRecord('payments', {
+    id: 'PAY-jan',
+    childId: 'ID-arrears',
+    date: '2026-01-10',
+    amount: 1000,
+    method: 'Cash',
+    allocations: [{ month: '2026-01', amount: 1000 }],
+  });
+  const list = arrears(c, [jan], [], '2026-03', '2026-03-15');
+  assert.deepEqual(list, [{ month: '2026-02', rest: 1000, currency: 'MDL' }]);
+});
+
+test('F7: arrears() fără restanțe reale — listă goală', () => {
+  const c = normalizeRecord('children', {
+    id: 'ID-no-arrears',
+    name: 'Copil fără restanțe',
+    status: 'Activ',
+    attendanceDate: '2026-03-01',
+    dueDay: 10,
+    feeHistory: [{ from: '2026-03', amount: 1000 }],
+  });
+  assert.deepEqual(arrears(c, [], [], '2026-03', '2026-03-15'), []);
 });

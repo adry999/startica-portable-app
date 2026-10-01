@@ -115,6 +115,12 @@ export function obligation(child, month, payments, charges, asOf = today(), inde
       : [{ kind: /** @type {'fee'} */ ('fee'), amount: fee, currency: feeCurrency }, ...childCharges];
   return { expected, paid, rest, credit, due, label, notify, daysToDue, currency: feeCurrency, feeAmount: fee, lines };
 }
+/** Luna calendaristică următoare lui `month` ("AAAA-LL"). */
+export function nextMonth(month) {
+  const [y, m] = month.split('-').map(Number);
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+}
+
 // Prima lună cu obligație reală neachitată (nu „De verificat” sau „Fără
 // obligație”) — încasarea sosește adesea într-o lună pt. taxa lunii
 // anterioare, deci implicit propunem luna care chiar mai trebuie plătită,
@@ -127,8 +133,23 @@ export function firstUnpaidMonth(child, payments, charges = [], asOf = today()) 
   // 120 de luni (10 ani): peste durata obișnuită de frecventare a unei grădinițe.
   for (let i = 0; i < 120 && month <= limit; i++) {
     if ((obligation(child, month, payments, charges, asOf).rest ?? 0) > 0) return month;
-    const [y, m] = month.split('-').map(Number);
-    month = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+    month = nextMonth(month);
   }
   return null;
+}
+
+// F7 (FEEDBACK-01-10.md): lunile trecute (strict înainte de `beforeMonth`, de regulă luna
+// plății) cu obligație neachitată — afișate separat în formular ca „Are restanță”, cu bifă
+// opțională, nu bifate automat ca înainte (firstUnpaidMonth rămâne, dar nu mai e implicit).
+export function arrears(child, payments, charges = [], beforeMonth, asOf = today()) {
+  const start = child.attendanceDate?.slice(0, 7);
+  if (!start || !beforeMonth) return [];
+  const result = [];
+  let month = start;
+  for (let i = 0; i < 120 && month < beforeMonth; i++) {
+    const info = obligation(child, month, payments, charges, asOf);
+    if ((info.rest ?? 0) > 0) result.push({ month, rest: info.rest, currency: info.currency });
+    month = nextMonth(month);
+  }
+  return result;
 }

@@ -44,6 +44,12 @@
   font-weight: 700;
 }
 
+/* F7 (FEEDBACK-01-10.md): „Are restanță: ...” — rămâne bifabilă, nu e un avertisment blocant. */
+.arrearText {
+  font-weight: 800;
+  color: var(--pink-ink);
+}
+
 .allocationRows {
   display: flex;
   flex-direction: column;

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ToastProvider } from '@shared/ui';
 import { PAYMENT_CONFIRMATION_TEMPLATE_ID } from '@domain/sms-template.mjs';
+import { today as todayFn } from '@domain/calendar-month.mjs';
 import { PaymentFormDrawer, type PaymentFormDrawerProps } from './PaymentFormDrawer';
 import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -164,7 +165,7 @@ describe('PaymentFormDrawer', () => {
     expect(monthInput.value).toBe('2026-11');
   });
 
-  it('alegerea copilului propune luna cea mai veche neachitată a lui', async () => {
+  it('F7 (FEEDBACK-01-10.md): alegerea copilului NU propune restanța — luna rămâne cea a plății', async () => {
     renderDrawer();
     const user = userEvent.setup();
 
@@ -172,7 +173,7 @@ describe('PaymentFormDrawer', () => {
     await goManual(user);
     const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
 
-    expect(monthInput.value).toBe('2026-01');
+    expect(monthInput.value).toBe(todayFn().slice(0, 7));
   });
 
   it('"+ Lună" adaugă un rând nou și oprește sincronizarea automată', async () => {
@@ -238,7 +239,7 @@ describe('PaymentFormDrawer', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  it('defaultChildId la o plată nouă propune luna cea mai veche neachitată a copilului', async () => {
+  it('F7: defaultChildId la o plată nouă pornește tot pe luna plății, nu pe restanță', async () => {
     renderDrawerWithProps({
       target: 'new',
       records,
@@ -250,7 +251,7 @@ describe('PaymentFormDrawer', () => {
     await goManual(user);
 
     const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
-    expect(monthInput.value).toBe('2026-01');
+    expect(monthInput.value).toBe(todayFn().slice(0, 7));
   });
 
   it('eliminarea unui rând de repartizare păstrează valorile celui rămas', async () => {
@@ -406,6 +407,51 @@ describe('PaymentFormDrawer', () => {
     await user.click(saveButton());
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.tenders.Cash).toBe('3000');
+  });
+
+  it('F7: o plată dublă se repartizează automat pe luna plății + luna următoare (avans)', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await pickChild(user, 'Andrei Popescu');
+    await user.type(sumInput(), '3000');
+    await user.click(saveButton());
+
+    const submitted = onSubmit.mock.calls[0][0];
+    const paymentMonth = todayFn().slice(0, 7);
+    expect(submitted.allocations).toHaveLength(2);
+    expect(submitted.allocations[0]).toMatchObject({ month: paymentMonth, amount: '1500.00' });
+    expect(submitted.allocations[1].amount).toBe('1500.00');
+    expect(submitted.allocations[1].month > paymentMonth).toBe(true);
+  });
+
+  it('F7: restanța apare ca rând separat, nebifată — nu intră în repartizare dacă nu e bifată', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await pickChild(user, 'Andrei Popescu');
+    expect(screen.getByText(/Are restanță: Ian 2026/)).toBeInTheDocument();
+
+    await user.type(sumInput(), '1500');
+    await user.click(saveButton());
+
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.allocations).toHaveLength(1);
+    expect(submitted.allocations[0].month).toBe(todayFn().slice(0, 7));
+  });
+
+  it('F7: bifarea restanței o include în repartizare, înaintea lunii plății', async () => {
+    const { onSubmit } = renderDrawer();
+    const user = userEvent.setup();
+
+    await pickChild(user, 'Andrei Popescu');
+    await user.click(screen.getByRole('checkbox', { name: 'Acoperă restanța din Ian 2026' }));
+    await user.type(sumInput(), '1500');
+    await user.click(saveButton());
+
+    const submitted = onSubmit.mock.calls[0][0];
+    expect(submitted.allocations).toHaveLength(1);
+    expect(submitted.allocations[0]).toMatchObject({ month: '2026-01', amount: '1500.00' });
   });
 
   it('B3: câmpul Serviciu apare sub Copil, implicit pe Grădiniță', async () => {

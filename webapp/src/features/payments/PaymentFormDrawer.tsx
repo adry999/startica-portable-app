@@ -24,7 +24,8 @@ import { useSmsSend, useSmsStatus } from '@shared/sms';
 import { formatMoney, formatMoneyInput } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
-import { firstUnpaidMonth, feeEntryFor } from '@domain/tuition-obligation.mjs';
+import { firstUnpaidMonth, feeEntryFor, arrears } from '@domain/tuition-obligation.mjs';
+import { autoAllocatePayment } from '@domain/payment-auto-allocation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from '@domain/record-schema.mjs';
@@ -86,6 +87,9 @@ export function PaymentFormDrawer({
   );
   // Observațiile pornesc ascunse în spatele unui link (15b) — deschise direct dacă există deja text.
   const [notesOpen, setNotesOpen] = useState(() => Boolean(values.notes));
+  // F7 (FEEDBACK-01-10.md): restanțele bifate explicit de utilizator pentru plata asta — nicio
+  // restanță nu e bifată automat; se resetează la schimbarea copilului.
+  const [checkedArrears, setCheckedArrears] = useState<Set<string>>(new Set());
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual.
@@ -108,10 +112,17 @@ export function PaymentFormDrawer({
   const totalAmount = totalOfTenders(values.tenders);
 
   const selectedChild = records.children.find((c: Child) => c.id === values.childId);
-  const feeEntry = selectedChild ? feeEntryFor(selectedChild, values.date.slice(0, 7)) : null;
+  const paymentMonth = values.date.slice(0, 7);
+  const feeEntry = selectedChild ? feeEntryFor(selectedChild, paymentMonth) : null;
   const isEurChild = feeEntry?.currency === 'EUR';
   const unpaidMonth = selectedChild ? firstUnpaidMonth(selectedChild, records.payments) : null;
   const groupLabel = records.groups.find(group => group.id === selectedChild?.groupId)?.name ?? 'Fără grupă';
+  // F7: restanțele (strict înaintea lunii plății) ale copilului ales, pentru o plată NOUĂ —
+  // la editare, o plată deja salvată nu se recalculează (spec F7), deci lista rămâne goală.
+  const arrearsList =
+    !editing && selectedChild
+      ? arrears(selectedChild, records.payments, records.charges, paymentMonth, values.date)
+      : [];
 
   // Serviciile active (nu ascunse), în ordinea din 10d — ca la Group.order (15b).
   const serviceOptions = sortByGroupOrder(records.services ?? [])
@@ -166,6 +177,10 @@ export function PaymentFormDrawer({
   }, [values.date]);
 
   useEffect(() => {
+    // F7 (FEEDBACK-01-10.md): odată ales un copil la o plată NOUĂ, repartizarea automată e
+    // calculată mai jos (acoperă luna plății + eventualele restanțe bifate, cu rulare pe
+    // lunile următoare) — acest efect simplu rămâne doar pentru „fără copil ales încă” și edit.
+    if (!editing && selectedChild) return;
     if (isEurChild && !effectiveRate) return;
     setValues(previous => {
       if (previous.allocations.length !== 1) return previous;
@@ -180,7 +195,49 @@ export function PaymentFormDrawer({
       return { ...previous, allocations: [{ ...row, amount: next }] };
     });
     // Doar aceste valori declanșează resincronizarea — restul stării trăiește în closure-ul updater-ului.
-  }, [totalAmount, isEurChild, effectiveRate, eurEquivalent]);
+  }, [editing, selectedChild, totalAmount, isEurChild, effectiveRate, eurEquivalent]);
+
+  // F7: plată NOUĂ, cu copil ales — repartizarea automată se recalculează integral (poate
+  // produce mai multe rânduri: restanțele bifate, apoi luna plății, apoi avans pe lunile
+  // următoare). Nu modifică nimic cât timp modul e „manual” (utilizatorul a preluat controlul).
+  useEffect(() => {
+    if (editing || !selectedChild || allocationMode !== 'auto') return;
+    const amount = isEurChild ? eurEquivalent : totalAmount;
+    if (!amount) return;
+    const rows = autoAllocatePayment({
+      child: selectedChild,
+      payments: records.payments,
+      charges: records.charges,
+      rates,
+      asOf: values.date,
+      paymentMonth,
+      amount,
+      arrearMonths: arrearsList.filter(a => checkedArrears.has(a.month)).map(a => a.month),
+    });
+    setValues(previous => {
+      const formatted = rows.map(r => ({ month: r.month, amount: formatMoneyInput(r.amount) }));
+      const nextKey = formatted.map(r => `${r.month}:${r.amount}`).join('|');
+      const previousKey = previous.allocations.map(r => `${r.month}:${r.amount}`).join('|');
+      if (nextKey === previousKey) return previous;
+      return {
+        ...previous,
+        allocations: formatted.map((r, i) => ({ id: previous.allocations[i]?.id ?? crypto.randomUUID(), ...r })),
+      };
+    });
+    // arrearsList/records.payments/records.charges nu intră în listă — sunt derivate la fiecare
+    // randare din props stabile ale drawer-ului; checkedArrears + restul valorilor de mai jos sunt suficiente.
+  }, [
+    editing,
+    selectedChild,
+    allocationMode,
+    isEurChild,
+    eurEquivalent,
+    totalAmount,
+    rates,
+    values.date,
+    paymentMonth,
+    checkedArrears,
+  ]);
 
   function setTender(method: string, amount: string) {
     setValues(previous => ({ ...previous, tenders: { ...previous.tenders, [method]: amount } }));
@@ -206,14 +263,11 @@ export function PaymentFormDrawer({
   }
 
   function setChildId(childId: string) {
+    // F7: nicio restanță a copilului nou ales nu rămâne bifată de la copilul anterior.
+    setCheckedArrears(new Set());
     setValues(previous => {
       const child = records.children.find((c: Child) => c.id === childId);
-      const next = { ...previous, childId, sendSmsConfirmation: defaultSendSmsConfirmation(child) };
-      if (previous.allocations.length !== 1 || previous.allocations[0].month !== syncedMonthRef.current) return next;
-      const suggested = child && firstUnpaidMonth(child, records.payments, records.charges);
-      if (!suggested || suggested === syncedMonthRef.current) return next;
-      syncedMonthRef.current = suggested;
-      return { ...next, allocations: [{ ...previous.allocations[0], month: suggested }] };
+      return { ...previous, childId, sendSmsConfirmation: defaultSendSmsConfirmation(child) };
     });
   }
 
@@ -492,6 +546,30 @@ export function PaymentFormDrawer({
         <div className={styles.field}>
           {allocationMode === 'auto' ? (
             <>
+              {arrearsList.length > 0 && (
+                <div className={styles.allocationRows}>
+                  {arrearsList.map(arrear => (
+                    <label key={arrear.month} className={styles.checkboxField}>
+                      <Checkbox
+                        checked={checkedArrears.has(arrear.month)}
+                        onChange={checked =>
+                          setCheckedArrears(previous => {
+                            const next = new Set(previous);
+                            if (checked) next.add(arrear.month);
+                            else next.delete(arrear.month);
+                            return next;
+                          })
+                        }
+                        ariaLabel={`Acoperă restanța din ${formatMonthLabel(arrear.month)}`}
+                      />
+                      <span className={styles.arrearText}>
+                        Are restanță: {formatMonthLabel(arrear.month)} · {formatMoney(arrear.rest, arrear.currency)}
+                      </span>
+                      <span className={styles.notice}>Bifează ca s-o acoperi</span>
+                    </label>
+                  ))}
+                </div>
+              )}
               Se repartizează automat
               <div className={styles.autoList}>
                 {values.allocations.map(row => {

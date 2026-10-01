@@ -1,7 +1,6 @@
 import { normalizeRecord, DEFAULT_SERVICE_ID } from '@domain/record-schema.mjs';
 import { cents } from '@domain/money.mjs';
 import { paymentTenders } from '@domain/payment-allocations.mjs';
-import { firstUnpaidMonth } from '@domain/tuition-obligation.mjs';
 import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
 import type { Child, Payment, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
 
@@ -60,11 +59,11 @@ export function defaultPaymentFormValues(
   if (payment) for (const tender of paymentTenders(payment)) tenders[tender.method] = String(tender.amount);
 
   const date = payment?.date || today;
-  const child = !payment && defaultChildId && records ? records.children.find(c => c.id === defaultChildId) : null;
-  const suggestedMonth = child && firstUnpaidMonth(child, records!.payments, records!.charges);
   const resolvedChildId = payment?.childId || defaultChildId;
   const smsChild = records?.children.find(c => c.id === resolvedChildId);
-  const defaultMonth = suggestedMonth || date.slice(0, 7);
+  // F7 (FEEDBACK-01-10.md): o plată nouă acoperă implicit luna plății, nu cea mai veche restanță
+  // — restanțele apar separat în `PaymentFormDrawer`, bifabile explicit.
+  const defaultMonth = date.slice(0, 7);
   const allocations: AllocationRowValues[] =
     payment && payment.allocations?.length
       ? payment.allocations.map(allocation => ({
