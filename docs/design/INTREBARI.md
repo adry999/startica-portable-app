@@ -1,5 +1,14 @@
 # Întrebări / decizii blocate
 
+## ⏳ Teste 2.1.0 — bug-uri raportate de utilizator pe instalerul testat (01.10, de investigat)
+
+Doi bug-uri raportate în timpul testării `Startica_Setup_2.1.0.exe`, înainte de a începe §5. Verificat: niciunul nu vine din commit-urile acestei sesiuni (§2/§3/§4 nu ating fișierele implicate) — par preexistente, doar observate acum.
+
+1. **Dashboard — „Evoluția încasărilor" nu mai arată bine.** Nereprodus încă local; `BarChart.tsx`/`DashboardPage.tsx` neschimbate de această sesiune (ultimele atingeri: `32b0f42`, `b3653c3`, anterioare).
+2. **„Copil nou" are scroll pe axa X — e rău.** `ChildFormDrawer.tsx`/`.module.css` neschimbate de această sesiune (ultima atingere: `fb23281`, anterioară). `Drawer.module.css` nu are selector pe tag `aside`, deci schimbarea `aside→div` din §4 (axe fix) nu e cauza.
+
+De investigat separat, după §5.
+
 ## ✅ §3 — incident: capturile arătau codul vechi, nu codul curent — rezolvat 01.10
 
 În timpul corecției de mai jos (R2/R9 + bug-uri vizuale), repararea paginării din `DataTable` nu se vedea deloc în captura regenerată — codul era corect, testele treceau, dar imaginea arăta tot comportamentul vechi. Motiv: `src/core/server/http/static-assets.mjs` servește `webapp/dist` (bundle precompilat prin `npm run build`), nu sursa live — iar `scripts/design-capture.mjs` pornea serverul pe copia izolată fără să reconstruiască `dist` întâi. Toate cele 18 capturi din prima trecere a §3 (inclusiv cele „verificate" vizual de mine) arătau de fapt un build mai vechi decât multe din schimbările acestei sesiuni.
