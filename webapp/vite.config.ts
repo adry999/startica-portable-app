@@ -38,12 +38,15 @@ export default defineConfig({
       // Origin as the page's own (http://localhost:5173) — mismatched against
       // the backend's port, so every write (POST /api/record, etc.) gets a 403
       // "Origine nepermisă." unless we rewrite it here too.
+      // STARTICA_API_PORT (set by scripts/dev-data-copy.mjs, §3): backend-ul pe
+      // o copie izolată de date pornește pe un port liber (STARTICA_PORT=0), nu
+      // 8765, ca să nu intre în conflict cu un server deja pornit pe baza reală.
       '/api': {
-        target: 'http://127.0.0.1:8765',
+        target: `http://127.0.0.1:${process.env.STARTICA_API_PORT ?? '8765'}`,
         changeOrigin: true,
         configure: proxy => {
           proxy.on('proxyReq', proxyReq => {
-            proxyReq.setHeader('origin', 'http://127.0.0.1:8765');
+            proxyReq.setHeader('origin', `http://127.0.0.1:${process.env.STARTICA_API_PORT ?? '8765'}`);
           });
         },
       },

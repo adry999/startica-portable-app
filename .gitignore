@@ -30,6 +30,10 @@ launcher/obj/
 # ─── Worktree-uri de lucru ────────────────────────────────────────────────────
 .worktrees/
 
+# ─── Copie izolată de date pentru capturi de design (npm run dev:copy, §3) ────
+# Niciodată baza reală — doar o copie temporară, ștearsă/recreată la fiecare rulare.
+.tmp/
+
 # ─── webapp/ (React+Vite, redesign/react-vite) ───────────────────────────────
 webapp/dist/
 # Build static al paginii design-system (npm run build:design-system), separat de dist/.

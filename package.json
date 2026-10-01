@@ -17,6 +17,8 @@
   },
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning startica_server.mjs",
+    "dev:copy": "node scripts/dev-data-copy.mjs",
+    "design:capture": "node scripts/design-capture.mjs",
     "test": "node --test \"tests/*.test.mjs\" \"tests/architecture/*.test.mjs\" \"src/**/*.test.mjs\" \"sync-server/src/**/*.test.mjs\"",
     "test:browser": "node tests/browser-smoke.mjs",
     "test:e2e": "node tests/browser-smoke.mjs && powershell -NoProfile -ExecutionPolicy Bypass -File tests/desktop-lifecycle.ps1",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.2",
+    "playwright": "^1.63.0",
     "prettier": "^3.9.6",
     "typescript": "^5.9.3"
   }
