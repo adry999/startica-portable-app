@@ -8,7 +8,9 @@
     "build": "tsc --noEmit -p . && vite build",
     "build:design-system": "tsc --noEmit -p . && vite build --config vite.design-system.config.ts",
     "typecheck": "tsc --noEmit -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "lucide-react": "1.49.0",
@@ -30,6 +32,9 @@
     "jsdom": "^30.1.1",
     "typescript": "^5.9.3",
     "vite": "^8.3.0",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "storybook": "^10.6.1",
+    "@storybook/react-vite": "^10.6.1",
+    "@storybook/addon-a11y": "^10.6.1"
   }
 }
