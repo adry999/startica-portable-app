@@ -14,9 +14,20 @@ type Story = StoryObj<typeof PhoneInput>;
 
 export const Default: Story = {};
 
+/** Mobil moldovenesc valid — sub câmp apare „069 123 456”, aceeași formă ca în câmp. */
 export const Valid: Story = { args: { value: '069123456', ariaLabel: 'Telefon' } };
 
-export const Invalid: Story = { args: { value: '123', ariaLabel: 'Telefon' } };
+/** Scris de-a gata ca E.164 (venit dintr-o fișă salvată) — arată identic cu `Valid`. */
+export const SavedAsE164: Story = { args: { value: '+37369123456', ariaLabel: 'Telefon' } };
+
+/** Prea puține cifre — mesajul specific „Număr incomplet”, nu cel generic. */
+export const Incomplete: Story = { args: { value: '123', ariaLabel: 'Telefon' } };
+
+/** Prefix cu cifre complete, dar care nu e din lista de mobile moldovenești. */
+export const Invalid: Story = { args: { value: '022123456', ariaLabel: 'Telefon' } };
+
+/** „Alt număr” (§10) — prefix „+” nemoldovenesc, acceptat ca atare, fără eroare. */
+export const Foreign: Story = { args: { value: '+40 721 000 000', ariaLabel: 'Telefon' } };
 
 export const Disabled: Story = { args: { value: '', ariaLabel: 'Câmp dezactivat', disabled: true } };
 
