@@ -2,7 +2,7 @@
 
 Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md`.
 
-## Stare (sync 01.10, 20:30)
+## Stare (sync 02.10, pachet i)
 | # | Design | Cod |
 |---|---|---|
 | F1 Paginare | ✅ 38a | ✅ `9544360` |
@@ -12,13 +12,28 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F5 Editor grupă | — | ✅ `2cbd5f6` |
 | F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
 | F7 Luni de la luna curentă | ✅ 38c | ✅ `7d8c64f` |
-| F8 Funcții custom | ✅ 38f | ✅ `c045b40` |
+| F8 Funcții custom | ✅ 38f (exista deja în Personal 23e) | ✅ `c045b40` |
 | F9 MDL/EUR | — | ⏳ `5ec6429` (verificat — un conflict găsit, în `INTREBARI.md`) |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
 | F11 Plată din fișă | ✅ 38c | ✅ `53653b7` |
 | F12 Curs BNM istoric | ✅ 38e | ✅ `81f979c` |
 | F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
+| C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
+| Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
+| Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ⏳ PROMPT-8 §8 |
+| Fișă incompletă, pontaj săptămână, căutare, erori | ✅ 41a–41d | ⏳ §9 |
+| PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` (§5.1/§9.2) |
+| Rotunjire la achitare | ✅ 41f | ⏳ §9.1 |
+| Telefon +373 / 069 | ✅ 25b | ⏳ §10 |
+| Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ⏳ §11 |
+| Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
+| Pagina de start Bazin (43b) | ✅ 43b | ⏳ §12 |
+| Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ⏳ §13 |
+| Liste: cele mai noi primele; filtre păstrate | — | ⏳ §13.1–2 |
+| Storybook: 3 componente fără poveste + regulă R12 | — | ⏳ §6c |
+| Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | ⏳ §14 |
+| Personal complet (salarii, avansuri, stat) | ⏸ de decis ce intră | — |
 
 ## F1. Paginare în toate tabelele
 - **Design:** `DS Tabel si filtre.dc.html` — `Pagination`: „‹ 1 2 3 … 13 ›”, max. 7 poziții, pagina curentă plină portocaliu, săgețile dezactivate la capete, stânga „1–25 din 312”. Aplicată în Copii 2a, Achitări 5a, Cheltuieli, Vizite, Personal.
