@@ -1,6 +1,13 @@
 .wrapper {
   position: relative;
   display: inline-block;
+  /* O procentuală de înălțime pe declanșator (ex. bara din BarChart, cu `height: X%`) nu are
+     cum să ajungă la pixeli reali dacă acest wrapper (interpus de Tooltip) rămâne la înălțimea
+     implicită `auto` — procentul devine `auto` la rândul lui, iar bara „dispare" (PROMPT-CLAUDE-
+     CODE-7.md §1, Dashboard „Evoluția încasărilor"). 100% nu schimbă nimic când părintele n-are
+     o înălțime definită (rămâne tot `auto`), deci e sigur pentru restul folosirilor Tooltip.
+     */
+  height: 100%;
 }
 
 .bubble {
