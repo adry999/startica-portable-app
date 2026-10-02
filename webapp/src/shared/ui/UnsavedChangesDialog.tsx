@@ -2,6 +2,12 @@ import { Button } from './Button';
 import { Dialog } from './Dialog';
 import styles from './UnsavedChangesDialog.module.css';
 
+/** Primele 3 câmpuri, apoi „și încă N” (40c) — dialogul nu listează câmpurile la nesfârșit. */
+function formatChangedFields(fields: string[]): string {
+  if (fields.length <= 3) return fields.join(', ');
+  return `${fields.slice(0, 3).join(', ')} și încă ${fields.length - 3}`;
+}
+
 export interface UnsavedChangesDialogProps {
   open: boolean;
   /** Numele formularului, ex. "copilul nou" — folosit în titlu. */
@@ -51,7 +57,7 @@ export function UnsavedChangesDialog({
       }
     >
       {changedFields && changedFields.length > 0 && (
-        <p className={styles.fields}>Câmpuri modificate: {changedFields.join(', ')}.</p>
+        <p className={styles.fields}>Câmpuri modificate: {formatChangedFields(changedFields)}.</p>
       )}
     </Dialog>
   );

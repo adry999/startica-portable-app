@@ -32,6 +32,20 @@ describe('UnsavedChangesDialog', () => {
     expect(screen.getByText('Câmpuri modificate: nume, telefon.')).toBeInTheDocument();
   });
 
+  it('peste 3 câmpuri, arată primele 3 și „și încă N” (40c)', () => {
+    render(
+      <UnsavedChangesDialog
+        open
+        formName="copilul nou"
+        changedFields={['nume', 'telefon', 'grupă', 'plan', 'data nașterii']}
+        onDiscard={() => {}}
+        onStay={() => {}}
+        onSaveAndContinue={() => {}}
+      />,
+    );
+    expect(screen.getByText('Câmpuri modificate: nume, telefon, grupă și încă 2.')).toBeInTheDocument();
+  });
+
   it('nu arată lista de câmpuri când lipsesc', () => {
     render(
       <UnsavedChangesDialog

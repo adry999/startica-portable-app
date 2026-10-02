@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
-import { useToast } from '@shared/ui';
+import { UnsavedChangesDialog, useToast } from '@shared/ui';
 import { AppShell } from './shell/AppShell';
 import { performBranchSwitch, readBranchSwitchNote } from './shell/useBranchSwitch';
+import { useNavigationGuard } from './shell/useNavigationGuard';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { VIEW_PATHS, viewForPathname } from './shell/routes';
@@ -93,6 +94,10 @@ export function App() {
     const path = VIEW_PATHS[nextView];
     navigate(params ? `${path}?${new URLSearchParams(params).toString()}` : path);
   };
+  // 40c (PROMPT-8 §8.1): un formular nesalvat cere confirmare înainte de a schimba modulul din
+  // Sidebar — `onNavigate` brut rămâne disponibil mai sus pentru rutele interne (ex. „+ Plată”
+  // din fișa copilului), care nu schimbă de modul.
+  const navGuard = useNavigationGuard(view, onNavigate);
 
   // Contoarele din sidebar reutilizează exact numerele deja afișate pe Dashboard
   // (attentionItems) și pe Taxe și grupe (missingCount) — nicio logică nouă.
@@ -109,7 +114,7 @@ export function App() {
   };
 
   return (
-    <AppShell view={view} onNavigate={onNavigate} month={month} onMonthChange={setMonth} counts={counts}>
+    <AppShell view={view} onNavigate={navGuard.guardedNavigate} month={month} onMonthChange={setMonth} counts={counts}>
       <Routes>
         <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
@@ -165,6 +170,17 @@ export function App() {
         <Route path="/tiparire/stickere" element={<StickerPrintPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {navGuard.pending && (
+        <UnsavedChangesDialog
+          open
+          formName={navGuard.formName}
+          changedFields={navGuard.pending.form.changedFields}
+          onDiscard={navGuard.discardAndNavigate}
+          onStay={navGuard.stay}
+          onSaveAndContinue={navGuard.saveAndNavigate}
+          saving={navGuard.saving}
+        />
+      )}
     </AppShell>
   );
 }

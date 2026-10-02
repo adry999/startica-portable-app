@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { AmountInput, Button, DateInput, Drawer, Field, FilterPills, Select, TextArea, TextInput } from '@shared/ui';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { diffChangedFields, useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { today } from '@domain/calendar-month.mjs';
 import { GENERAL_CATEGORY_NAME } from '#shared/domain/expense-categories.mjs';
 import { categoryStyleFor, type ExpenseFormInput } from './useExpenses';
@@ -80,76 +80,98 @@ export function ExpenseFormDrawer({
 
   const currentValues = { date, amount, category, method, description, notes };
   const dirty = target !== null && JSON.stringify(currentValues) !== JSON.stringify(initialValuesRef.current);
-  useDirtyForm(dirty ? { label: 'o cheltuială', save: submitForm } : null);
+  const changedFields = dirty
+    ? diffChangedFields(currentValues, initialValuesRef.current, {
+        date: 'data',
+        amount: 'suma',
+        category: 'categoria',
+        method: 'metoda',
+        description: 'descrierea',
+        notes: 'observațiile',
+      })
+    : undefined;
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose` —
+  // formular nesalvat arată UnsavedChangesDialog în loc să închidă tăcut (PROMPT-8 §8.1).
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'o cheltuială',
+    formName: editing ? 'cheltuiala' : 'cheltuiala nouă',
+    changedFields,
+    save: submitForm,
+    onClose,
+  });
 
   return (
-    <Drawer
-      open={target !== null}
-      title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
-      width={520}
-      onClose={onClose}
-      footer={
-        <div className={styles.footer}>
-          <div />
-          <div className={styles.footerRight}>
-            {!editing && (
-              <Button variant="outline" onClick={() => void handleSaveAndAddAnother()} disabled={submitting}>
-                Salvează și adaugă alta
+    <>
+      <Drawer
+        open={target !== null}
+        title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
+        width={520}
+        onClose={unsavedGuard.requestClose}
+        footer={
+          <div className={styles.footer}>
+            <div />
+            <div className={styles.footerRight}>
+              {!editing && (
+                <Button variant="outline" onClick={() => void handleSaveAndAddAnother()} disabled={submitting}>
+                  Salvează și adaugă alta
+                </Button>
+              )}
+              <Button type="submit" form="expense-form-drawer" disabled={submitting}>
+                Salvează
               </Button>
-            )}
-            <Button type="submit" form="expense-form-drawer" disabled={submitting}>
-              Salvează
-            </Button>
+            </div>
           </div>
-        </div>
-      }
-    >
-      <form id="expense-form-drawer" className={styles.editorForm} autoComplete="off" onSubmit={handleSubmit}>
-        <Field label="Data cheltuielii" htmlFor="expense-date">
-          <DateInput id="expense-date" required value={date} onChange={setDate} />
-        </Field>
-        <Field label="Suma" htmlFor="expense-amount">
-          <AmountInput
-            id="expense-amount"
-            inputRef={amountInputRef}
-            required
-            min={0.01}
-            step="0.01"
-            value={amount}
-            onChange={setAmount}
-            currency="lei"
-          />
-        </Field>
-        <div className={styles.editorField}>
-          Categorie
-          <FilterPills
-            className={styles.categoryChips}
-            groups={[
-              {
-                label: '',
-                value: category,
-                onChange: setCategory,
-                options: categoryNames.map(name => ({ value: name, label: name, tone: categoryStyleFor(name).tone })),
-              },
-            ]}
-          />
-        </div>
-        <Field label="Metodă" htmlFor="expense-method">
-          <Select
-            id="expense-method"
-            value={method}
-            onChange={setMethod}
-            options={METHOD_OPTIONS}
-            placeholder={editing && !method ? 'Nespecificată' : undefined}
-          />
-        </Field>
-        <Field label="Descriere" htmlFor="expense-description">
-          <TextInput id="expense-description" value={description} onChange={setDescription} />
-        </Field>
-        <Field label="Observații" htmlFor="expense-notes">
-          <TextArea id="expense-notes" rows={3} value={notes} onChange={setNotes} />
-        </Field>
-      </form>
-    </Drawer>
+        }
+      >
+        <form id="expense-form-drawer" className={styles.editorForm} autoComplete="off" onSubmit={handleSubmit}>
+          <Field label="Data cheltuielii" htmlFor="expense-date">
+            <DateInput id="expense-date" required value={date} onChange={setDate} />
+          </Field>
+          <Field label="Suma" htmlFor="expense-amount">
+            <AmountInput
+              id="expense-amount"
+              inputRef={amountInputRef}
+              required
+              min={0.01}
+              step="0.01"
+              value={amount}
+              onChange={setAmount}
+              currency="lei"
+            />
+          </Field>
+          <div className={styles.editorField}>
+            Categorie
+            <FilterPills
+              className={styles.categoryChips}
+              groups={[
+                {
+                  label: '',
+                  value: category,
+                  onChange: setCategory,
+                  options: categoryNames.map(name => ({ value: name, label: name, tone: categoryStyleFor(name).tone })),
+                },
+              ]}
+            />
+          </div>
+          <Field label="Metodă" htmlFor="expense-method">
+            <Select
+              id="expense-method"
+              value={method}
+              onChange={setMethod}
+              options={METHOD_OPTIONS}
+              placeholder={editing && !method ? 'Nespecificată' : undefined}
+            />
+          </Field>
+          <Field label="Descriere" htmlFor="expense-description">
+            <TextInput id="expense-description" value={description} onChange={setDescription} />
+          </Field>
+          <Field label="Observații" htmlFor="expense-notes">
+            <TextArea id="expense-notes" rows={3} value={notes} onChange={setNotes} />
+          </Field>
+        </form>
+      </Drawer>
+      {unsavedGuard.confirmDialog}
+    </>
   );
 }

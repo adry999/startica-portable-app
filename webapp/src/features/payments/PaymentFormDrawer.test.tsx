@@ -626,4 +626,72 @@ describe('PaymentFormDrawer', () => {
       expect(calls.some(call => call[0] === '/api/sms-send')).toBe(false);
     });
   });
+
+  describe('40c: confirmare la închidere cu modificări nesalvate', () => {
+    it('fără modificări, × / Esc / fundalul închid direct, fără dialog', async () => {
+      const { onClose } = renderDrawer();
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole('button', { name: 'Închide' }));
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(screen.queryByText(/^Renunți la modificările/)).not.toBeInTheDocument();
+    });
+
+    it('×, cu modificări nesalvate, nu închide direct — arată UnsavedChangesDialog', async () => {
+      const { onClose } = renderDrawer();
+      const user = userEvent.setup();
+      await user.type(sumInput(), '500');
+
+      await user.click(screen.getByRole('button', { name: 'Închide' }));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByRole('dialog', { name: 'Renunți la modificările din achitarea nouă?' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Renunță' }));
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+
+    it('Esc, cu modificări nesalvate, arată dialogul — „Rămân” nu închide drawer-ul', async () => {
+      const { onClose } = renderDrawer();
+      const user = userEvent.setup();
+      await user.type(sumInput(), '500');
+
+      await user.keyboard('{Escape}');
+      expect(screen.getByRole('dialog', { name: 'Renunți la modificările din achitarea nouă?' })).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Rămân' }));
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.queryByText(/^Renunți la modificările/)).not.toBeInTheDocument();
+    });
+
+    it('clicul pe fundal, cu modificări nesalvate, arată dialogul în loc să închidă', async () => {
+      const { onClose } = renderDrawer();
+      const user = userEvent.setup();
+      await user.type(sumInput(), '500');
+
+      await user.click(screen.getByRole('dialog', { name: 'Achitare nouă' }).parentElement!);
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByRole('dialog', { name: 'Renunți la modificările din achitarea nouă?' })).toBeInTheDocument();
+    });
+
+    it('„Salvez și continui” salvează formularul, apoi închide drawer-ul', async () => {
+      const { onSubmit, onClose } = renderDrawer();
+      const user = userEvent.setup();
+      await user.type(sumInput(), '500');
+
+      await user.click(screen.getByRole('button', { name: 'Închide' }));
+      await user.click(screen.getByRole('button', { name: 'Salvez și continui' }));
+
+      await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+    });
+
+    it('câmpurile schimbate apar numite în dialog (suma modifică și repartizarea automată)', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await user.type(sumInput(), '500');
+
+      await user.click(screen.getByRole('button', { name: 'Închide' }));
+      expect(screen.getByText('Câmpuri modificate: suma, repartizarea.')).toBeInTheDocument();
+    });
+  });
 });
