@@ -8,7 +8,7 @@ deja rezolvate din `docs/design/AUDIT-COD-02-10.md`.
 
 ## Mediu
 
-### 1. Sync: `recordId` din plic vs `payload.id` — fără verificare de consistență
+### 1. ✅ Rezolvat (`d6812e8`) — Sync: `recordId` din plic vs `payload.id` — fără verificare de consistență
 `src/features/sync/server/change-applier.mjs:54-70` (`applyRecordEntry`) scrie local cu cheia din
 `normalized.id`/`payload.id`, NU din `recordId`-ul primit în plic. `sync-server/src/changes.service.mjs:233-260`
 ține revizia/conflictul per `recordId`, dar tratează `payload` ca opac — nu verifică niciodată
@@ -20,7 +20,9 @@ utilizare normală. Dar un dispozitiv cu token valid ar putea trimite `recordId:
 pull alte calculatoare scriu peste Y, în timp ce audit/sync state raportează X. Jurnalul de audit
 nu mai reflectă adevărul.
 
-**Fix:** în `applyRecordEntry`, după `normalizeRecord`, `requireThat(normalized.id === recordId, ...)`.
+**Rezolvat**: `applyRecordEntry` respinge acum (`SyncApplyError`) orice intrare unde `payload.id !== recordId`,
+înainte de orice scriere — verificat atât pe calea `normalizeRecord` (TYPES), cât și pe calea brută
+(`COMMON_KINDS`, `normalize: false`), ambele folosind aceeași funcție.
 
 ### 2. ✅ Rezolvat (`2541666`) — Garda de alocare pentru plăți EUR compară lei cu euro — efectiv moartă
 `src/shared/domain/record-schema.mjs:622` — `allocated <= cents(record.amount)` compară suma
