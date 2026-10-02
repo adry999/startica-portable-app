@@ -174,6 +174,7 @@ const FIELDS = {
     'fxRateSource',
     'amountEur',
     'receiptNumber',
+    'roundingDiff',
     'allocations',
     'type',
     'notes',
@@ -596,6 +597,8 @@ export function normalizeRecord(type, input) {
           Number.isInteger(record.receiptNumber) && record.receiptNumber >= 1,
           'Numărul confirmării de plată este invalid.',
         );
+      if (record.roundingDiff !== undefined)
+        requireThat(Number.isFinite(record.roundingDiff), 'Diferența de rotunjire este invalidă.');
       record.method ||= 'Cash';
       record.service ||= DEFAULT_SERVICE_ID;
       text(record.service, 'Serviciu', true);

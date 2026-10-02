@@ -2,10 +2,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, SignatureLine, ThermalBlock, ThermalRule } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatDate, formatDateLong } from '#shared/format/date-format.mjs';
+import { formatRate } from '#shared/format/rate-format.mjs';
 import { usePaymentReceipt } from './usePaymentReceipt';
 import styles from './PaymentReceiptThermal.module.css';
 
 const MONTH_INITIALS = ['I', 'F', 'M', 'A', 'M', 'I', 'I', 'A', 'S', 'O', 'N', 'D'];
+const FX_SOURCE_LABEL: Record<'bnm' | 'manual', string> = { bnm: 'BNM', manual: 'manual' };
+
+/** „+0,17 lei” / „−1,83 lei” (§9.1) — fără rotunjire nu există rând, deci fără zero aici. */
+function formatRoundingDiff(diff: number): string {
+  return `${diff > 0 ? '+' : '−'}${formatMoney(Math.abs(diff))}`;
+}
 
 /**
  * Bonul 58 mm (24a) — aceeași achitare, același număr de confirmare ca A5/A4 (usePaymentReceipt
@@ -85,10 +92,29 @@ export function PaymentReceiptThermal() {
         </div>
       ))}
 
+      {receipt.eurBlock && (
+        <div className={styles.eurRow}>
+          <span>
+            {formatMoney(receipt.eurBlock.amountEur, 'EUR')} × {formatRate(receipt.eurBlock.fxRate)} ={' '}
+            {formatMoney(receipt.eurBlock.amountLei)}
+          </span>
+          <span>
+            curs {FX_SOURCE_LABEL[receipt.eurBlock.fxRateSource]} din {formatDate(payment.date)}
+          </span>
+        </div>
+      )}
+
+      {typeof payment.roundingDiff === 'number' && payment.roundingDiff !== 0 && (
+        <div className={styles.roundingRow}>
+          <span>Rotunjire</span>
+          <strong>{formatRoundingDiff(payment.roundingDiff)}</strong>
+        </div>
+      )}
+
       <ThermalRule />
 
       <div className={styles.totalRow}>
-        <span>TOTAL</span>
+        <span>TOTAL ACHITAT</span>
         <span className={styles.totalAmount}>{formatMoney(receipt.total)}</span>
       </div>
 

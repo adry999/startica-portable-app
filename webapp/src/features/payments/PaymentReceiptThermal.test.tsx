@@ -139,4 +139,110 @@ describe('PaymentReceiptThermal', () => {
     // Data scadentă vine formatată (06.09.2026), nu bruta ISO 2026-09-06 (m6).
     expect(screen.getByText(/scadent 06\.09\.2026/)).toBeInTheDocument();
   });
+
+  it('nu arată rândul de rotunjire când achitarea e exactă (41f/42c)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '2.0.0' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: stateWith([paymentNumbered]), revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderThermal();
+
+    expect(await screen.findByText('Nr. 0147')).toBeInTheDocument();
+    expect(screen.queryByText('Rotunjire')).not.toBeInTheDocument();
+  });
+
+  it('arată rândul de rotunjire cu semnul + când s-a încasat în plus (42c)', async () => {
+    const roundedUp = { ...paymentNumbered, amount: 9993.17, roundingDiff: 0.17 };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '2.0.0' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: stateWith([roundedUp]), revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderThermal();
+
+    expect(await screen.findByText('Nr. 0147')).toBeInTheDocument();
+    expect(screen.getByText('Rotunjire')).toBeInTheDocument();
+    expect(screen.getByText('+0,17 lei')).toBeInTheDocument();
+  });
+
+  it('arată rândul de rotunjire cu semnul − când s-a încasat în minus, odată cu restul de plată (42c)', async () => {
+    const roundedDown = {
+      ...paymentNumbered,
+      amount: 8171.34,
+      allocations: [{ month: '2026-09', amount: 8171.34 }],
+      roundingDiff: -1.83,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '2.0.0' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: stateWith([roundedDown]), revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderThermal();
+
+    expect(await screen.findByText('Nr. 0147')).toBeInTheDocument();
+    expect(screen.getByText('Rotunjire')).toBeInTheDocument();
+    expect(screen.getByText('−1,83 lei')).toBeInTheDocument();
+  });
+
+  it('arată rândul € × curs = lei cu sursa cursului BNM și data, când achitarea are curs valutar (42c)', async () => {
+    const eurPayment = {
+      ...paymentNumbered,
+      amount: 3000,
+      allocations: [{ month: '2026-09', amount: 3000 }],
+      fxRate: 19.62,
+      fxRateSource: 'bnm' as const,
+      amountEur: 152.91,
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        const isPost = init?.method === 'POST';
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '2.0.0' });
+        if (path === '/api/state' && !isPost)
+          return jsonResponse({ state: stateWith([eurPayment]), revision: 1, updatedAt: '2026-09-24T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/kindergarten' && !isPost) return jsonResponse(kindergartenSettings);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderThermal();
+
+    expect(await screen.findByText('Nr. 0147')).toBeInTheDocument();
+    expect(screen.getByText(/152,91 €.*19,6200.*3\.000,00 lei/)).toBeInTheDocument();
+    expect(screen.getByText(/curs BNM din 24\.09\.2026/)).toBeInTheDocument();
+  });
 });

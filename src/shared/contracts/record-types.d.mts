@@ -111,6 +111,9 @@ export interface Payment {
   amountEur?: number;
   /** Numărul confirmării de plată (16b) — asignat o singură dată, la prima tipărire, din kindergarten.nextReceiptNumber. */
   receiptNumber?: number;
+  /** Diferența de rotunjire (§9.1, F9): sumă încasată minus suma datorată, când diferența e sub
+   * toleranța filialei — nu e restanță, nu e avans. Apare doar pe confirmarea de plată. */
+  roundingDiff?: number;
   allocations: PaymentAllocation[];
   type?: string;
   notes?: string;

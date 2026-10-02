@@ -561,6 +561,50 @@ test('normalizeRecord(payments) fără fxRate/amountEur rămâne fără ele, nu 
   assert.equal('amountEur' in record, false);
 });
 
+test('normalizeRecord(payments) acceptă roundingDiff pozitiv sau negativ', () => {
+  const surplus = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 1000.17,
+    method: 'Cash',
+    roundingDiff: 0.17,
+  });
+  assert.equal(surplus.roundingDiff, 0.17);
+
+  const lipsa = normalizeRecord('payments', {
+    id: 'P-2',
+    date: '2026-09-15',
+    amount: 998.17,
+    method: 'Cash',
+    roundingDiff: -1.83,
+  });
+  assert.equal(lipsa.roundingDiff, -1.83);
+});
+
+test('normalizeRecord(payments) respinge un roundingDiff nevalid', () => {
+  assert.throws(
+    () =>
+      normalizeRecord('payments', {
+        id: 'P-1',
+        date: '2026-09-15',
+        amount: 1000,
+        method: 'Cash',
+        roundingDiff: Number.NaN,
+      }),
+    /Diferența de rotunjire este invalidă/,
+  );
+});
+
+test('normalizeRecord(payments) fără roundingDiff rămâne fără el, nu se defaultează', () => {
+  const record = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 500,
+    method: 'Cash',
+  });
+  assert.equal('roundingDiff' in record, false);
+});
+
 test('normalizeRecord(payments) acceptă fxRateSource bnm sau manual', () => {
   const bnm = normalizeRecord('payments', {
     id: 'P-1',
