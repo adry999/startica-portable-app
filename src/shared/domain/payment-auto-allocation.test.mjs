@@ -62,3 +62,23 @@ test('F7: sumă zero sau negativă — niciun rând', () => {
   assert.deepEqual(autoAllocatePayment({ child: child(), ...base, amount: 0 }), []);
   assert.deepEqual(autoAllocatePayment({ child: child(), ...base, amount: -50 }), []);
 });
+
+// DECIZII.md (02.10, „Rotunjire la achitare”): surplusul mic (≤ 5 lei, ex. conversie EUR cu bani)
+// rămâne pe luna plății, nu pornește o lună nouă de avans — vezi roundingDiff pe plată (payment-form.ts).
+test('DECIZII 02.10: surplus în toleranță (≤5 lei) rămâne pe luna plății, nu pornește avans', () => {
+  const rows = autoAllocatePayment({ child: child(), ...base, amount: 1003 });
+  assert.deepEqual(rows, [{ month: '2026-03', amount: 1003 }]);
+});
+
+test('DECIZII 02.10: surplus exact la limita toleranței (5 lei) rămâne tot pe luna plății', () => {
+  const rows = autoAllocatePayment({ child: child(), ...base, amount: 1005 });
+  assert.deepEqual(rows, [{ month: '2026-03', amount: 1005 }]);
+});
+
+test('DECIZII 02.10: surplus peste toleranță (5,01 lei) pornește avans ca înainte', () => {
+  const rows = autoAllocatePayment({ child: child(), ...base, amount: 1005.01 });
+  assert.deepEqual(rows, [
+    { month: '2026-03', amount: 1000 },
+    { month: '2026-04', amount: 5.01 },
+  ]);
+});

@@ -39,6 +39,10 @@ export const VISIT_STATUSES = ['Programată', 'Efectuată', 'Neprezentată', 'Î
 // Echipa grupei (Personal 24, decizia 3 din docs/superpowers/plans/2026-09-27-personal-bazin.md):
 // staff-ul e comun (baza „comun”), grupa e a filialei — de-aia trăiește pe `records`, nu ca kind separat.
 export const GROUP_TEAM_ROLES = ['principal', 'asistent', 'inlocuitor'];
+// DECIZII.md (02.10, „Rotunjire la achitare”): diferență ≤ 5 lei între încasat și datorat = luna
+// achitată, cu diferența salvată ca rotunjire — peste, parțial/avans. „Pasul și toleranța se
+// setează pe filială” rămâne neimplementat (INTREBARI.md); până atunci, 5 e toleranța fixă.
+export const PAYMENT_ROUNDING_TOLERANCE = 5;
 const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
 /** @type {() => { children: any[], payments: any[], expenses: any[], groups: any[], categories: any[], visits: any[], charges: any[], payerAliases: any[], services: any[] }} */
 export const emptyState = () => ({
@@ -602,7 +606,10 @@ export function normalizeRecord(type, input) {
           'Numărul confirmării de plată este invalid.',
         );
       if (record.roundingDiff !== undefined)
-        requireThat(Number.isFinite(record.roundingDiff), 'Diferența de rotunjire este invalidă.');
+        requireThat(
+          Number.isFinite(record.roundingDiff) && Math.abs(record.roundingDiff) <= PAYMENT_ROUNDING_TOLERANCE,
+          `Diferența de rotunjire trebuie să fie între -${PAYMENT_ROUNDING_TOLERANCE} și ${PAYMENT_ROUNDING_TOLERANCE} lei.`,
+        );
       record.method ||= 'Cash';
       record.service ||= DEFAULT_SERVICE_ID;
       text(record.service, 'Serviciu', true);
