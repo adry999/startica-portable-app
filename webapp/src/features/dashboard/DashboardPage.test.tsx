@@ -152,7 +152,7 @@ describe('DashboardPage', () => {
 
     renderDashboard({ month: '2026-09', onNavigate });
 
-    const row = screen.getByText('Date incomplete').closest('article') as HTMLElement;
+    const row = screen.getByText('Copii cu date obligatorii lipsă').closest('article') as HTMLElement;
     expect(within(row).getByText('1')).toBeInTheDocument();
     await userEvent.click(within(row).getByRole('button', { name: 'Completează →' }));
     expect(onNavigate).toHaveBeenCalledWith('children', { filtru: 'incomplete' });
@@ -239,12 +239,12 @@ describe('DashboardPage', () => {
 
     renderDashboard({ month: '2026-09', onNavigate });
 
-    const row = (await screen.findByText('Restanțe')).closest('article') as HTMLElement;
-    await userEvent.click(within(row).getByRole('button', { name: 'Vezi lista →' }));
+    const row = (await screen.findByText('Restanțe peste scadență')).closest('article') as HTMLElement;
+    await userEvent.click(within(row).getByRole('button', { name: 'Vezi situația →' }));
     expect(onNavigate).toHaveBeenCalledWith('status', { segment: 'overdue' });
   });
 
-  it('45c: backup extern vechi duce spre Setări (backup-si-setari)', async () => {
+  it('F24: backup extern vechi duce spre Setări (backup-si-setari)', async () => {
     stubFetch({ ...fixtureState }, { lastExternal: new Date(Date.now() - 10 * 86400000).toISOString() });
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
@@ -252,10 +252,8 @@ describe('DashboardPage', () => {
 
     renderDashboard({ month: '2026-09', onNavigate });
 
-    const row = await screen.findByText('Backup extern vechi');
-    await userEvent.click(
-      within(row.closest('article') as HTMLElement).getByRole('button', { name: 'Verifică backup →' }),
-    );
+    const row = await screen.findByText('Backup-ul extern are 10 zile');
+    await userEvent.click(within(row.closest('article') as HTMLElement).getByRole('button', { name: 'Fă backup →' }));
     expect(onNavigate).toHaveBeenCalledWith('settings', undefined);
   });
 

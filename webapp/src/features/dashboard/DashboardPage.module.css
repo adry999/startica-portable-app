@@ -177,9 +177,9 @@
   background: var(--mint-soft);
 }
 
-/* 45c (PROMPT-8 §14): „prezență nemarcată" — al 4-lea ton, lângă pink/yellow/mint deja folosite. */
-.toneOrange {
-  background: var(--orange-soft);
+/* F24 (PROMPT-11 §12): „sistem" (backup) — gri, nu roz; 3 tonuri în total (bani/date/sistem). */
+.toneGray {
+  background: var(--neutral-soft);
 }
 
 .tonePink .attentionCount,
@@ -197,9 +197,9 @@
   color: var(--mint-ink);
 }
 
-.toneOrange .attentionCount,
-.toneOrange .attentionAction {
-  color: var(--orange-ink);
+.toneGray .attentionCount,
+.toneGray .attentionAction {
+  color: var(--text-secondary);
 }
 
 .attentionCount {

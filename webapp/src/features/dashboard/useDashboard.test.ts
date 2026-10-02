@@ -167,10 +167,11 @@ describe('useDashboard', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useDashboard('2026-09'));
-    const item = result.current.attentionItems.find(entry => entry.title === 'Restanțe');
+    const item = result.current.attentionItems.find(entry => entry.title === 'Restanțe peste scadență');
     expect(item?.count).toBe(1);
     expect(item?.view).toBe('status');
     expect(item?.params).toEqual({ segment: 'overdue' });
+    expect(item?.detail).toMatch(/lei · cea mai veche din ianuarie/);
   });
 
   it('45c: date — fișe incomplete și telefon invalid intră separat, cu deep-link spre Copii', async () => {
@@ -214,15 +215,16 @@ describe('useDashboard', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useDashboard('2026-09'));
-    const missing = result.current.attentionItems.find(entry => entry.title === 'Date incomplete');
-    const phone = result.current.attentionItems.find(entry => entry.title === 'Telefon invalid');
+    const missing = result.current.attentionItems.find(entry => entry.title === 'Copii cu date obligatorii lipsă');
+    const phone = result.current.attentionItems.find(entry => entry.title === 'Telefoane invalide');
     expect(missing?.count).toBe(1);
     expect(missing?.params).toEqual({ filtru: 'incomplete' });
     expect(phone?.count).toBe(1);
+    expect(phone?.detail).toBe('Nu primesc SMS');
     expect(phone?.params).toEqual({ filtru: 'telefon-invalid' });
   });
 
-  it('45c: sistem — fără nicio copie externă de backup, apare „Backup extern vechi"', async () => {
+  it('45c/F24: sistem — fără nicio copie externă de backup, apare „Niciun backup extern încă"', async () => {
     stubFetch(
       {
         children: [],
@@ -238,12 +240,28 @@ describe('useDashboard', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useDashboard('2026-09'));
-    const item = result.current.attentionItems.find(entry => entry.title === 'Backup extern vechi');
+    const item = result.current.attentionItems.find(entry => entry.title === 'Niciun backup extern încă');
     expect(item).toBeDefined();
     expect(item?.view).toBe('settings');
+    expect(item?.count).toBe('!');
   });
 
-  it('45c: sistem — o copie externă recentă (sub 7 zile) nu arată „Backup extern vechi"', async () => {
+  it('F24: sistem — backup vechi de 10 zile arată „Backup-ul extern are 10 zile" + data ultimei copii', async () => {
+    const old = new Date(Date.now() - 10 * 86400000).toISOString();
+    stubFetch(
+      { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+      { lastExternal: old },
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { result } = renderHook(() => useDashboard('2026-09'));
+    const item = result.current.attentionItems.find(entry => entry.title === 'Backup-ul extern are 10 zile');
+    expect(item).toBeDefined();
+    expect(item?.detail).toMatch(/^Ultima copie pe stick: \d{2}\.\d{2}$/);
+  });
+
+  it('45c: sistem — o copie externă recentă (sub 7 zile) nu arată niciun item de backup', async () => {
     const recent = new Date(Date.now() - 2 * 86400000).toISOString();
     stubFetch(
       { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
@@ -253,7 +271,121 @@ describe('useDashboard', () => {
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useDashboard('2026-09'));
-    expect(result.current.attentionItems.find(entry => entry.title === 'Backup extern vechi')).toBeUndefined();
+    expect(result.current.attentionItems.find(entry => entry.view === 'settings')).toBeUndefined();
+  });
+
+  // F24 (PROMPT-11 §12.2): marți 2026-09-15, luni 2026-09-14 — ambele zile lucrătoare.
+  const PRESENCE_TODAY = '2026-09-15';
+  const PRESENCE_YESTERDAY = '2026-09-14';
+  const presenceState = {
+    children: [
+      {
+        id: 'c1',
+        name: 'Copil Prezent',
+        status: 'Activ',
+        groupId: 'g1',
+        parent: '',
+        phone: '',
+        fee: 1500,
+        feeHistory: [],
+        dueDay: 10,
+        attendanceDate: '2020-01-01',
+        birthDate: '2020-01-01',
+        archived: false,
+      },
+    ],
+    payments: [],
+    expenses: [],
+    groups: [{ id: 'g1', name: 'Venus', capacity: 10 }],
+    categories: [],
+    visits: [],
+  };
+
+  function stubPresenceFetch(entriesByDate: Record<string, unknown[]>) {
+    const fetchMock = vi.fn(async (path: string) => {
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/state')
+        return jsonResponse({ state: presenceState, revision: 1, updatedAt: '2026-09-15T08:00:00Z' });
+      if (path === '/api/health') return jsonResponse({});
+      const match = path.match(/^\/api\/attendance\?date=(.+)$/);
+      if (match) return jsonResponse({ entries: entriesByDate[match[1]] ?? [] });
+      throw new Error(`neașteptat: ${path}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  // waitFor nu merge sub fake timers (polling intern pe setTimeout real, rămâne blocat) — avansăm
+  // manual ceasul fals, de câteva ori, ca să lase efectul lui useAttendance să pornească și să se rezolve.
+  async function waitForAttendanceFetch(fetchMock: ReturnType<typeof vi.fn>) {
+    for (let i = 0; i < 10; i++) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      if (fetchMock.mock.calls.some(([path]) => String(path).startsWith('/api/attendance'))) break;
+    }
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  }
+
+  it('F24: dimineața (înainte de ora de închidere), ziua de azi nemarcată nu apare', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${PRESENCE_TODAY}T08:00:00`));
+    try {
+      // Azi (necontrolat, nu trebuie privit) e gol; ieri e deja marcat complet.
+      const fetchMock = stubPresenceFetch({
+        [PRESENCE_TODAY]: [],
+        [PRESENCE_YESTERDAY]: [{ childId: 'c1', date: PRESENCE_YESTERDAY, status: 'present' }],
+      });
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      const { result } = renderHook(() => useDashboard('2026-09'));
+      await waitForAttendanceFetch(fetchMock);
+      expect(result.current.attentionItems.find(entry => entry.view === 'attendance')).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('F24: ieri nemarcat la o grupă → „Prezența de ieri nemarcată · Grupa Venus · 1 copil"', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${PRESENCE_TODAY}T08:00:00`));
+    try {
+      const fetchMock = stubPresenceFetch({ [PRESENCE_TODAY]: [], [PRESENCE_YESTERDAY]: [] });
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      const { result } = renderHook(() => useDashboard('2026-09'));
+      await waitForAttendanceFetch(fetchMock);
+      const item = result.current.attentionItems.find(entry => entry.view === 'attendance');
+      expect(item?.title).toBe('Prezența de ieri nemarcată');
+      expect(item?.detail).toBe('Grupa Venus · 1 copil');
+      expect(item?.count).toBe(1);
+      expect(item?.tone).toBe('date');
+      expect(item?.params).toEqual({ data: PRESENCE_YESTERDAY, grupa: 'g1' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('F24: după ora de închidere, ziua de azi (dacă lucrătoare) intră în calcul', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(`${PRESENCE_TODAY}T19:00:00`));
+    try {
+      const fetchMock = stubPresenceFetch({ [PRESENCE_TODAY]: [], [PRESENCE_YESTERDAY]: [] });
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      const { result } = renderHook(() => useDashboard('2026-09'));
+      await waitForAttendanceFetch(fetchMock);
+      const item = result.current.attentionItems.find(entry => entry.view === 'attendance');
+      expect(item?.title).not.toBe('Prezența de ieri nemarcată');
+      expect(item?.params).toEqual({ data: PRESENCE_TODAY, grupa: 'g1' });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('arată copilul cu ziua de naștere mâine în lista din următoarele 5 zile', async () => {

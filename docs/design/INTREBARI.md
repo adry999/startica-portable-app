@@ -1247,3 +1247,38 @@ existente, cu același tipar (`useUrlParams`) — dispare din URL când e valoar
 
 **Neatins din scop:**
 - Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).
+
+## §12 (F24, PROMPT-11)
+
+`useDashboard.ts`: titlul cardului „Necesită atenție" e acum `{N} lucruri de rezolvat`
+(`DashboardPage.tsx`, din `attentionItems.length`). Prezența ia în calcul azi doar după ora de
+închidere (`CLOSING_HOUR = 18`, constantă locală — vezi deviere mai jos); înainte de ea se caută
+ultima zi lucrătoare strict înainte de azi. Rândul de prezență e acum pe grupă: titlu „Prezența de
+ieri nemarcată” sau „Prezența nemarcată din {zz.ll}”, detaliu „Grupa X · N copii” / „K grupe · N
+copii”, pătrățelul arată numărul de grupe, ton `date` (nu mai există tonul `prezenta`/portocaliu —
+`toneOrange` scos din `DashboardPage.module.css`). „Date incomplete” → „Copii cu date obligatorii
+lipsă”, detaliu = cele mai frecvente 2-3 câmpuri lipsă în cuvinte (`missingChildFields`, doar cele
+`required`). „Telefon invalid” → „Telefoane invalide” / „Nu primesc SMS” / „Corectează”. „Restanțe” →
+„Restanțe peste scadență”, cu sumă multi-lună reală (`arrears()` din `tuition-obligation.mjs`,
+convertită cu `toMdlToday`, nu doar luna afișată pe Dashboard) + „cea mai veche din {lună}”; acțiunea
+devine „Vezi situația”. Backup: titlu dinamic „Backup-ul extern are N zile” / „Niciun backup extern
+încă”, detaliu „Ultima copie pe stick: {zz.ll}”, acțiune „Fă backup”, pătrățelul arată „!” (nu
+numărul de zile — `AttentionItem.count` a devenit `number | string`), ton `sistem` = gri
+(`--neutral-soft`/`--text-secondary`, clasă nouă `.toneGray`, nu mai `tonePink`).
+
+**Deviere de la spec (motivată):**
+- Ora de închidere (18:00) e o constantă în `useDashboard.ts` (`CLOSING_HOUR`), NU o setare pe
+  ecranul Grădiniței cum spune promptul („setare existentă... implicit 18:00”) — am căutat în
+  `KindergartenSettings.tsx` și în restul ecranelor de setări și o asemenea setare nu există azi
+  nicăieri în cod; promptul descrie ceva ce nu există încă. Adăugarea unui câmp nou de setare ar fi
+  depășit fișierele din scopul punctului (`useDashboard.ts`, `DashboardPage.tsx`) — dacă se dorește
+  o oră configurabilă pe filială, e un punct separat.
+- Ordinea „Restanțe peste scadență” din detaliu rulează `arrears()` pe FIECARE copil activ, lună cu
+  lună de la `attendanceDate` până la luna afișată pe Dashboard (max 120 luni/copil, bucla existentă
+  din `tuition-obligation.mjs`) — cost acceptabil pentru câteva zeci-sute de copii, dar e muncă nouă,
+  nefolosită de niciun alt ecran azi (nici Situația nu calculează „cea mai veche lună restantă”);
+  dacă devine lentă pe o bază mare de date, ar trebui mutată/cache-uită la nivel de `records`, nu
+  recalculată la fiecare randare a Dashboard-ului.
+
+**Neatins din scop:**
+- Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț).

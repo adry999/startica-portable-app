@@ -1,20 +1,35 @@
 import { useAppSession } from '@shared/api/session';
 import { useAttendance } from '@shared/attendance';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { today as todayFn, shiftDays } from '@domain/calendar-month.mjs';
 import { isWorkingDay } from '@domain/holidays-md.mjs';
 // summarizeCashForMonth/sumUnallocatedAdvance nu sunt în #features/dashboard/index.web.mjs
 // (doar view-creatoarele sunt publice azi) — import direct de domain, backendul nu se atinge
 // pentru o simplă lipsă din API-ul public. Restul vine deja prin index.web.mjs, ca-n convenție.
 import { summarizeCashForMonth, sumUnallocatedAdvance } from '#features/dashboard/domain/cash-summary.mjs';
-import { evaluateChildrenForMonth, summarizeMonthStatus } from '#features/billing/index.web.mjs';
+import { toMdlToday } from '#features/billing/index.web.mjs';
 import { buildBirthdayCalendar, listUpcomingBirthdays } from '#features/children/index.web.mjs';
 import { isChildEnrolledOn, summarizeDay } from '#features/attendance/index.web.mjs';
 import { missingChildFields } from '#shared/domain/missing-child-fields.mjs';
+import { arrears, nextMonth } from '#shared/domain/tuition-obligation.mjs';
+import { groupNameOf } from '#shared/domain/record-labels.mjs';
+import { formatMoney } from '#shared/format/money-format.mjs';
+import { formatDayMonthNumeric, formatMonthOnly } from '#shared/format/date-format.mjs';
 
-export type AttentionTone = 'bani' | 'date' | 'prezenta' | 'sistem';
+/** „Telefon părinte, plan sau grupă" — listă în cuvinte, nu „A, B, C". */
+function joinAsText(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  return `${items.slice(0, -1).join(', ')} sau ${items[items.length - 1]}`;
+}
+
+function lowerFirst(text: string): string {
+  return text ? text.charAt(0).toLocaleLowerCase('ro-RO') + text.slice(1) : text;
+}
+
+export type AttentionTone = 'bani' | 'date' | 'sistem';
 
 export interface AttentionItem {
-  count: number;
+  count: number | string;
   title: string;
   detail: string;
   action: string;
@@ -27,6 +42,12 @@ export interface AttentionItem {
 // O zi în ms, ca la useBackup.ts — dar pragul de aici e 7 zile (45c, PROMPT-8 §14),
 // nu 24h (pragul din Setări · Backup, un alt ecran, altă întrebare: „e la zi azi?").
 const BACKUP_STALE_AFTER_DAYS = 7;
+
+// F24 (PROMPT-11 §12): azi intră în „prezență nemarcată” doar după ora de închidere a grădiniței —
+// altfel dimineața arată mereu zgomot („N copii nemarcați pe azi”, ziua nu s-a terminat încă). Nu
+// există încă o setare „ora de închidere” pe ecranul Grădiniței (vezi INTREBARI.md §12) — implicit
+// fix, ca în prompt.
+const CLOSING_HOUR = 18;
 
 export interface RevenueBar {
   month: string;
@@ -74,10 +95,14 @@ function lastWorkingDayOnOrBefore(date: string): string {
 export function useDashboard(month: string): DashboardData {
   const session = useAppSession();
   const { state, ready, loading, saveError, health } = session.state;
+  const { rates } = useExchangeRates();
   const todayStr = todayFn();
+  // F24 (PROMPT-11 §12): azi intră în calcul doar după ora de închidere — înainte de ea, ultima
+  // zi lucrătoare se caută strict înainte de azi.
+  const isPastClosing = new Date().getHours() >= CLOSING_HOUR;
   // 45c: trebuie apelat necondiționat (regula hook-urilor) — `null` cât timp sesiunea nu e gata
   // încă rezolvă singur în 'ready' fără nicio cerere (vezi useAttendance.ts).
-  const attendanceDate = lastWorkingDayOnOrBefore(todayStr);
+  const attendanceDate = lastWorkingDayOnOrBefore(isPastClosing ? todayStr : shiftDays(todayStr, -1));
   const attendance = useAttendance(ready ? { date: attendanceDate } : null);
 
   if (!ready) {
@@ -102,8 +127,6 @@ export function useDashboard(month: string): DashboardData {
   const records = state;
   const cash = summarizeCashForMonth(records, month);
   const advance = sumUnallocatedAdvance(records.payments, todayStr);
-  const evaluations = evaluateChildrenForMonth(records, month, todayStr);
-  const activeEvaluations = evaluations.filter(e => !e.child.archived);
   const activeChildren = records.children.filter(child => !child.archived);
 
   const revenueHistory: RevenueBar[] = [];
@@ -121,32 +144,57 @@ export function useDashboard(month: string): DashboardData {
   // „apar doar elementele care au o acțiune” (deci fiecare intră în listă doar dacă count > 0 /
   // backup-ul chiar e vechi), max. 5 (exact câte surse există azi, dar `.slice` rămâne o gardă).
 
-  // Bani — restanțe (Situația).
-  const overdueChildren = summarizeMonthStatus(activeEvaluations).overdueChildren;
+  // Bani — restanțe peste scadență (arrears multi-lună, nu doar luna afișată pe Dashboard — un
+  // copil restant de 3 luni trebuie să arate cea mai veche lună, nu doar ultima).
+  let overdueSumMdl = 0;
+  let oldestOverdueMonth: string | null = null;
+  const overdueChildIds = new Set<string>();
+  for (const child of activeChildren) {
+    for (const entry of arrears(child, records.payments, records.charges, nextMonth(month), todayStr)) {
+      // arrears() împinge rândul doar când rest > 0 — null e teoretic exclus, dar tipul rămâne opțional.
+      if (entry.rest === null) continue;
+      const restMdl = toMdlToday(entry.rest, entry.currency, rates);
+      if (restMdl !== null) overdueSumMdl += restMdl;
+      overdueChildIds.add(child.id);
+      if (!oldestOverdueMonth || entry.month < oldestOverdueMonth) oldestOverdueMonth = entry.month;
+    }
+  }
   const overdueItem: AttentionItem | null =
-    overdueChildren > 0
+    overdueChildIds.size > 0
       ? {
-          count: overdueChildren,
-          title: 'Restanțe',
-          detail: overdueChildren === 1 ? '1 copil are plata restantă.' : `${overdueChildren} copii au plata restantă.`,
-          action: 'Vezi lista',
+          count: overdueChildIds.size,
+          title: 'Restanțe peste scadență',
+          detail: `${formatMoney(overdueSumMdl, 'MDL')} · cea mai veche din ${formatMonthOnly(oldestOverdueMonth)}`,
+          action: 'Vezi situația',
           view: 'status',
           params: { segment: 'overdue' },
           tone: 'bani',
         }
       : null;
 
-  // Date — fișe cu câmpuri obligatorii lipsă (§9.3) și telefon invalid (§10).
-  const missingFieldsCount = activeChildren.filter(child => missingChildFields(child).length > 0).length;
+  // Date — fișe cu câmpuri obligatorii lipsă (§9.3): detaliul arată cele mai frecvente 2-3 câmpuri
+  // lipsă, în cuvinte, nu doar un număr de fișe.
+  const missingFieldCounts = new Map<string, number>();
+  const missingFieldLabels = new Map<string, string>();
+  let missingFieldsCount = 0;
+  for (const child of activeChildren) {
+    const fields = missingChildFields(child).filter(field => field.required);
+    if (fields.length > 0) missingFieldsCount += 1;
+    for (const field of fields) {
+      missingFieldCounts.set(field.key, (missingFieldCounts.get(field.key) ?? 0) + 1);
+      missingFieldLabels.set(field.key, field.label.replace(/ \d+$/, ''));
+    }
+  }
+  const topMissingFields = [...missingFieldCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([key], index) => (index === 0 ? missingFieldLabels.get(key)! : lowerFirst(missingFieldLabels.get(key)!)));
   const missingFieldsItem: AttentionItem | null =
     missingFieldsCount > 0
       ? {
           count: missingFieldsCount,
-          title: 'Date incomplete',
-          detail:
-            missingFieldsCount === 1
-              ? '1 fișă are câmpuri obligatorii lipsă.'
-              : `${missingFieldsCount} fișe au câmpuri obligatorii lipsă.`,
+          title: 'Copii cu date obligatorii lipsă',
+          detail: joinAsText(topMissingFields),
           action: 'Completează',
           view: 'children',
           params: { filtru: 'incomplete' },
@@ -159,16 +207,16 @@ export function useDashboard(month: string): DashboardData {
     phoneInvalidCount > 0
       ? {
           count: phoneInvalidCount,
-          title: 'Telefon invalid',
-          detail: phoneInvalidCount === 1 ? '1 telefon nu e valid.' : `${phoneInvalidCount} telefoane nu sunt valide.`,
-          action: 'Verifică',
+          title: 'Telefoane invalide',
+          detail: 'Nu primesc SMS',
+          action: 'Corectează',
           view: 'children',
           params: { filtru: 'telefon-invalid' },
           tone: 'date',
         }
       : null;
 
-  // Prezență — zile lucrătoare trecute nemarcate (cea mai recentă, inclusiv azi dacă e lucrătoare).
+  // Prezență — ultima zi lucrătoare ÎNCHEIATĂ nemarcată, pe grupă, nu pe copii.
   const enrolledTodayIds = activeChildren
     .filter(child => isChildEnrolledOn(child, attendanceDate))
     .map(child => child.id);
@@ -179,29 +227,33 @@ export function useDashboard(month: string): DashboardData {
   );
   const unmarkedCount =
     attendance.status === 'ready' ? summarizeDay(enrolledTodayIds, attendanceByChildId).unmarked : 0;
-  const unmarkedGroupIds = new Set(
-    activeChildren
-      .filter(child => enrolledTodayIds.includes(child.id) && !attendanceByChildId.has(child.id))
-      .map(child => child.groupId)
-      .filter((groupId): groupId is string => Boolean(groupId)),
-  );
+  const unmarkedByGroup = new Map<string, number>();
+  for (const child of activeChildren) {
+    if (!enrolledTodayIds.includes(child.id) || attendanceByChildId.has(child.id)) continue;
+    const key = child.groupId ?? '';
+    unmarkedByGroup.set(key, (unmarkedByGroup.get(key) ?? 0) + 1);
+  }
+  const unmarkedGroupKeys = [...unmarkedByGroup.keys()];
+  const isYesterday = attendanceDate === shiftDays(todayStr, -1);
   const attendanceItem: AttentionItem | null =
     unmarkedCount > 0
       ? {
-          count: unmarkedCount,
-          title: 'Prezență nemarcată',
+          count: unmarkedGroupKeys.length,
+          title: isYesterday
+            ? 'Prezența de ieri nemarcată'
+            : `Prezența nemarcată din ${formatDayMonthNumeric(attendanceDate)}`,
           detail:
-            unmarkedCount === 1
-              ? `1 copil nemarcat pe ${attendanceDate === todayStr ? 'azi' : attendanceDate}.`
-              : `${unmarkedCount} copii nemarcați pe ${attendanceDate === todayStr ? 'azi' : attendanceDate}.`,
+            unmarkedGroupKeys.length === 1
+              ? `Grupa ${groupNameOf(unmarkedGroupKeys[0], records.groups) || 'Fără grupă'} · ${unmarkedCount} ${unmarkedCount === 1 ? 'copil' : 'copii'}`
+              : `${unmarkedGroupKeys.length} grupe · ${unmarkedCount} copii`,
           action: 'Marchează',
           view: 'attendance',
           // Grupa intră în link doar când o singură grupă are goluri — altfel ziua deschisă arată toate grupele.
           params:
-            unmarkedGroupIds.size === 1
-              ? { data: attendanceDate, grupa: [...unmarkedGroupIds][0] }
+            unmarkedGroupKeys.length === 1 && unmarkedGroupKeys[0]
+              ? { data: attendanceDate, grupa: unmarkedGroupKeys[0] }
               : { data: attendanceDate },
-          tone: 'prezenta',
+          tone: 'date',
         }
       : null;
 
@@ -212,13 +264,10 @@ export function useDashboard(month: string): DashboardData {
   const backupStale = backupAgeDays === null || backupAgeDays > BACKUP_STALE_AFTER_DAYS;
   const backupItem: AttentionItem | null = backupStale
     ? {
-        count: backupAgeDays ?? 0,
-        title: 'Backup extern vechi',
-        detail:
-          backupAgeDays === null
-            ? 'Nicio copie externă de backup încă.'
-            : `Ultima copie externă e veche de ${backupAgeDays} zile.`,
-        action: 'Verifică backup',
+        count: '!',
+        title: backupAgeDays === null ? 'Niciun backup extern încă' : `Backup-ul extern are ${backupAgeDays} zile`,
+        detail: lastExternal ? `Ultima copie pe stick: ${formatDayMonthNumeric(lastExternal)}` : '',
+        action: 'Fă backup',
         view: 'settings',
         tone: 'sistem',
       }

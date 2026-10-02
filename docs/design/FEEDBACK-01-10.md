@@ -33,7 +33,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F21 Copii: sortare pe toate coloanele, antet corect | ✅ 2a | ✅ PROMPT-11 §9 |
 | F22 Button link cu fundal („Vezi calendarul →”) | — | ⏳ PROMPT-11 §10 |
 | F23 Grafic Evoluția încasărilor | ✅ 1a refăcut | ⏳ PROMPT-11 §11 |
-| F24 Necesită atenție ≠ design (texte, prezența de azi) | ✅ 1a/45c | ⏳ PROMPT-11 §12 |
+| F24 Necesită atenție ≠ design (texte, prezența de azi) | ✅ 1a/45c | ✅ PROMPT-11 §12 |
 | F25 Zile de naștere: gol fără „Următoarea” | ✅ 1b | ⏳ PROMPT-11 §13 |
 | F26 Meniul stâng (inițiale filială, bordură, card jos) | ✅ Sidebar a | ⏳ PROMPT-11 §14 |
 | F27 Antet module mai înalt (64px) | ✅ | ⏳ PROMPT-11 §15 |

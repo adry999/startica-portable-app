@@ -117,10 +117,10 @@ export function App() {
   const syncStatus = useSyncStatus();
   const counts: Partial<Record<ViewKey, number>> = {
     fees: feeSetup.missingCount,
-    review: dashboard.attentionItems.find(item => item.view === 'review')?.count ?? 0,
-    assign: dashboard.attentionItems.find(item => item.view === 'assign')?.count ?? 0,
-    notify: dashboard.attentionItems.find(item => item.view === 'notify')?.count ?? 0,
-    visits: dashboard.attentionItems.find(item => item.view === 'visits')?.count ?? 0,
+    review: Number(dashboard.attentionItems.find(item => item.view === 'review')?.count ?? 0),
+    assign: Number(dashboard.attentionItems.find(item => item.view === 'assign')?.count ?? 0),
+    notify: Number(dashboard.attentionItems.find(item => item.view === 'notify')?.count ?? 0),
+    visits: Number(dashboard.attentionItems.find(item => item.view === 'visits')?.count ?? 0),
     conflicts: syncStatus.conflicts,
   };
 

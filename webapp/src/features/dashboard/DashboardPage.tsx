@@ -38,11 +38,11 @@ const MONTH_NAMES = [
 
 const METHOD_LABELS: Record<string, string> = { Cash: 'Cash', Card: 'Card', Transfer: 'Transfer' };
 const METHOD_TONE: Record<string, ProgressBarTone & LegendTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
+// F24 (PROMPT-11 §12): 3 tonuri — roz (bani), galben (date și prezență), gri (sistem).
 const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
   bani: styles.tonePink,
   date: styles.toneYellow,
-  prezenta: styles.toneOrange,
-  sistem: styles.tonePink,
+  sistem: styles.toneGray,
 };
 
 const formatCompactMoney = (value: number) =>
@@ -179,7 +179,11 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
         <Card className={styles.attentionPanel}>
           <div>
             <p className={styles.panelEyebrow}>Necesită atenție</p>
-            <p className={styles.panelTitle}>Rezolvă pentru date corecte</p>
+            <p className={styles.panelTitle}>
+              {dashboardData.attentionItems.length === 1
+                ? '1 lucru de rezolvat'
+                : `${dashboardData.attentionItems.length} lucruri de rezolvat`}
+            </p>
           </div>
           {!dashboardData.hasAnyRecords ? (
             <EmptyState
