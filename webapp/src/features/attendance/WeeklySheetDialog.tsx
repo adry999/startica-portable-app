@@ -13,6 +13,7 @@ import {
   buildWeeklySheetPages,
   formatWeekRangeShort,
   isChildActiveInWeek,
+  isHistoricalWeek,
   mondayOf,
   sheetsForGroupCount,
   weeklySheetMessage,
@@ -126,6 +127,8 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
             />
           </div>
         </div>
+
+        {isHistoricalWeek(week) && <p className={styles.hint}>Copiii din grupa de azi</p>}
 
         <div className={styles.groupsHead}>
           <span className={styles.label}>

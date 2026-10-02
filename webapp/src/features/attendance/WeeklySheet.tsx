@@ -5,7 +5,7 @@ import { useKindergarten, type KindergartenSettings } from '@shared/api/useKinde
 import { usePersonal } from '@shared/personal/usePersonal';
 import type { Staff } from '@shared/personal/personal.types';
 import { sortByGroupOrder } from '@shared/format/group-order';
-import { shiftDays } from '@domain/calendar-month.mjs';
+import { shiftDays, today } from '@domain/calendar-month.mjs';
 import { formatDateTime, ageInYears } from '#shared/format/date-format.mjs';
 import { isChildEnrolledOn } from '#features/attendance/index.web.mjs';
 import type { Child, Group, RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -39,6 +39,13 @@ export function mondayOf(dateIso: string): string {
 /** Cele 5 zile lucrătoare (luni-vineri) ale săptămânii care începe la `weekStart`. */
 export function weekDates(weekStart: string): string[] {
   return Array.from({ length: 5 }, (_, index) => shiftDays(weekStart, index));
+}
+
+/** Săptămâna vizualizată nu e săptămâna curentă (Audit-B #4) — roster-ul arată grupa de azi, nu
+ * una istorică. Comparată pe `weekStart` (nu pe lună), altfel o săptămână care doar traversează
+ * granița dintre luni (ex. 28 sep – 2 oct) ar fi marcată greșit ca „istorică" chiar și azi. */
+export function isHistoricalWeek(weekStart: string): boolean {
+  return weekStart !== mondayOf(today());
 }
 
 /** Câte foi A4 sunt necesare pentru `count` copii — 16 rânduri pe foaie, minim 1 foaie. */
@@ -220,6 +227,7 @@ export function WeeklySheet({ page, weekStart, branchName, kindergarten, options
             Prezența · Grupa {page.groupName} · {formatWeekRangeLong(weekStart)}
           </p>
           <p className={styles.headMeta}>{metaParts.join(' · ')}</p>
+          {isHistoricalWeek(weekStart) && <p className={styles.hint}>Copiii din grupa de azi</p>}
         </div>
         <div className={styles.headRight}>
           <strong className={styles.branchName}>{branchName}</strong>

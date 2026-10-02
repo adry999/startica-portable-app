@@ -23,6 +23,13 @@
   gap: var(--space-12);
 }
 
+/* Audit-B #4: roster-ul arată grupa de azi, nu una istorică — avertisment doar când nu e săptămâna curentă. */
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
 .stepper {
   display: flex;
   align-items: center;

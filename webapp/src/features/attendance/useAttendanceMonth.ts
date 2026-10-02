@@ -44,6 +44,8 @@ export interface AttendanceMonthData {
   dayNumbers: number[];
   offDays: boolean[];
   todayIndex: number;
+  /** Luna vizualizată nu e luna curentă (Audit-B #4) — roster-ul arată grupa de azi, nu una istorică. */
+  isHistoricalMonth: boolean;
   rows: MonthRowView[];
   presentPerDay: (number | null)[];
   groups: Group[];
@@ -156,6 +158,7 @@ export function useAttendanceMonth(month: string): AttendanceMonthData {
     dayNumbers: dates.map(date => Number(date.slice(8, 10))),
     offDays: dates.map(date => !isWorkingDay(date)),
     todayIndex: dates.indexOf(todayStr),
+    isHistoricalMonth: month !== todayStr.slice(0, 7),
     rows,
     presentPerDay: summary.presentPerDay,
     groups: sortedGroups,

@@ -1,7 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { Child, Group } from '@contracts/record-types.mjs';
-import { buildWeeklySheetPages, sheetsForGroupCount, WeeklySheet, type WeeklySheetOptions } from './WeeklySheet';
+import { today } from '@domain/calendar-month.mjs';
+import {
+  buildWeeklySheetPages,
+  isHistoricalWeek,
+  mondayOf,
+  sheetsForGroupCount,
+  WeeklySheet,
+  type WeeklySheetOptions,
+} from './WeeklySheet';
 
 const GROUP: Group = { id: 'g1', name: 'Mars', capacity: 20, educator: 'Ala Ursu' };
 
@@ -123,5 +131,37 @@ describe('WeeklySheet — randare', () => {
     expect(screen.getByText('ALERGIE')).toBeInTheDocument();
     expect(screen.getByText('MEDICAL')).toBeInTheDocument();
     expect(screen.queryByText(/Maria Ana|Ion Bogdan|Vasile Cristi/)).not.toBeInTheDocument();
+  });
+
+  it('arată „Copiii din grupa de azi” doar pentru altă săptămână decât cea curentă (Audit-B #4)', () => {
+    const page = buildWeeklySheetPages(GROUP, childList(1), STAFF_BY_ID)[0];
+    const { rerender } = render(
+      <WeeklySheet
+        page={page}
+        weekStart={mondayOf(today())}
+        branchName="Buiucani"
+        kindergarten={null}
+        options={DEFAULT_OPTIONS}
+      />,
+    );
+    expect(screen.queryByText('Copiii din grupa de azi')).not.toBeInTheDocument();
+
+    rerender(
+      <WeeklySheet
+        page={page}
+        weekStart="2020-01-06"
+        branchName="Buiucani"
+        kindergarten={null}
+        options={DEFAULT_OPTIONS}
+      />,
+    );
+    expect(screen.getByText('Copiii din grupa de azi')).toBeInTheDocument();
+  });
+});
+
+describe('isHistoricalWeek', () => {
+  it('fals pentru săptămâna curentă, adevărat pentru orice altă săptămână', () => {
+    expect(isHistoricalWeek(mondayOf(today()))).toBe(false);
+    expect(isHistoricalWeek('2020-01-06')).toBe(true);
   });
 });

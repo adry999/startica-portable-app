@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
+import { today } from '@domain/calendar-month.mjs';
 import { useAttendanceMonth } from './useAttendanceMonth';
 
 function jsonResponse(body: unknown) {
@@ -67,5 +68,16 @@ describe('useAttendanceMonth', () => {
     const futureRow = future.result.current.rows.find(row => row.id === 'c1');
     const workingCell = futureRow?.cells.find(cell => !future.result.current.offDays[futureRow.cells.indexOf(cell)]);
     expect(workingCell?.kind).toBe('future');
+  });
+
+  it('isHistoricalMonth (Audit-B #4) e fals pentru luna curentă și adevărat pentru oricare alta', async () => {
+    await loadedSession();
+
+    const currentMonth = today().slice(0, 7);
+    const current = renderHook(() => useAttendanceMonth(currentMonth));
+    expect(current.result.current.isHistoricalMonth).toBe(false);
+
+    const past = renderHook(() => useAttendanceMonth('2020-01'));
+    expect(past.result.current.isHistoricalMonth).toBe(true);
   });
 });
