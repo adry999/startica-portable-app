@@ -28,10 +28,8 @@ export function createVersionGate({ minClientVersion }) {
     const clientVersion = clientVersionHeader(request);
     if (!clientVersion) return;
     if (compareVersions(clientVersion, minClientVersion) === -1)
-      fail(
-        `Versiunea ${clientVersion} este prea veche. Actualizează la ${minClientVersion} sau mai nouă.`,
-        426,
-        { minVersion: minClientVersion },
-      );
+      fail(`Versiunea ${clientVersion} este prea veche. Actualizează la ${minClientVersion} sau mai nouă.`, 426, {
+        minVersion: minClientVersion,
+      });
   };
 }

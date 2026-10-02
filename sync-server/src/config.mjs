@@ -58,8 +58,7 @@ function parsePositiveInt(raw, name, fallback) {
 /** @param {string | undefined} raw */
 function parseMinClientVersion(raw) {
   if (raw === undefined) return undefined;
-  if (!SEMVER_PATTERN.test(raw))
-    throw new Error(`SYNC_MIN_CLIENT_VERSION invalid: „${raw}”. Folosește forma X.Y.Z.`);
+  if (!SEMVER_PATTERN.test(raw)) throw new Error(`SYNC_MIN_CLIENT_VERSION invalid: „${raw}”. Folosește forma X.Y.Z.`);
   return raw;
 }
 

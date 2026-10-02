@@ -73,6 +73,7 @@ export function createSyncHttpClient({
 }) {
   assertServerUrl(serverUrl);
   const base = serverUrl.replace(/\/+$/, '');
+  /** @type {Record<string, string>} */
   const versionHeader = clientVersion ? { [CLIENT_VERSION_HEADER]: clientVersion } : {};
 
   /**

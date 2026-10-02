@@ -41,6 +41,8 @@ test('/api/session: fără checkForUpdate(), update arată „nicio verificare �
     notes: null,
     checkedAt: null,
     error: null,
+    installReady: false,
+    pendingVersion: null,
   });
   assert.equal(fetchCalls, 0);
 });

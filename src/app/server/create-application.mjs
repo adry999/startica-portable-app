@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { readFileSync, unlinkSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -29,6 +30,8 @@ import { createCommonContext } from './create-common-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
 import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
 import { createUpdateChecker } from './update-check.service.mjs';
+import { createUpdateDownloadService } from './update-download.service.mjs';
+import { createUpdateDownloadRoutes } from './update-download.routes.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 
@@ -50,10 +53,12 @@ const RESTORE_AUDIT_ACTION = 'restaurare';
  *   allowShutdown?: boolean,
  *   fetch?: typeof fetch,
  *   releaseRepo?: string,
+ *   spawnFn?: typeof import('node:child_process').spawn,
  * }} [options]
  */
 export function createApplication(options = {}) {
   const root = options.root || ROOT;
+  const spawnFn = options.spawnFn ?? spawn;
   // Rădăcina filialelor (registru + folderul Filiale\): implicit rădăcina de date de până acum,
   // ca instalările existente, fără STARTICA_HOME sau root explicit, să nu schimbe nimic (Faza 6, decizia 3).
   const home = options.home ?? options.root ?? ROOT;
@@ -77,10 +82,31 @@ export function createApplication(options = {}) {
     currentVersion: version,
   });
 
+  // §5.2 Partea 2 (PROMPT-10 §8): per instalare, ca updateChecker — readSetting/writeSetting
+  // sunt închideri peste `common` (construit mai jos), nu valori capturate acum, la fel ca
+  // restul funcțiilor din acest fișier care au nevoie de `common` înainte ca el să existe.
+  const updateDownloadService = createUpdateDownloadService({
+    home,
+    fetch: options.fetch ?? globalThis.fetch,
+    readSetting: key => common.readSetting(key),
+    writeSetting: (key, value) => common.writeSetting(key, value),
+  });
+
   // Citit o singură dată la pornirea procesului, ca filiale.json: un sync.json corupt
   // oprește pornirea aici, înainte de a deschide vreo filială (decizia 2 din planul de
   // sincronizare) — nu per filială, pentru că identitatea de dispozitiv e per instalare.
   const syncDevice = createSyncDeviceRepository(join(home, SYNC_DEVICE_FILE_NAME));
+
+  // §5.2 Partea 2: /api/session (session.routes.mjs) nu știe nimic despre update-download —
+  // primește tot prin acest „update” compus, fără nicio schimbare de semnătură acolo.
+  function updateStatusWithPending() {
+    const pending = updateDownloadService.pendingUpdate();
+    return {
+      ...updateChecker.status(),
+      installReady: !!pending,
+      pendingVersion: pending?.version ?? null,
+    };
+  }
 
   let switching = false;
   /** @type {import('./create-branch-context.mjs').createBranchContext extends (...args: any) => infer R ? R : never} */
@@ -104,14 +130,46 @@ export function createApplication(options = {}) {
     return [...branchFolders, commonFolders.dataDir, commonFolders.backupDir];
   }
 
+  // §5.2 Partea 2 (PROMPT-10 §8): singurul loc din acest fișier care pornește un proces
+  // extern — injectabil (`spawnFn`), ca niciun test să nu execute vreodată un instaler real
+  // (regula de siguranță din CLAUDE.md). Detașat + neurmărit (`unref`), ca lansatorul (C#)
+  // să nu aștepte după el — același tipar ca `openBrowser` din main.mjs.
+  //
+  // `pendingUpdate()` se CITEȘTE înainte de închiderea lui `common` (citește din settings-ul
+  // bazei comune) — spawn-ul însuși rulează ABIA DUPĂ, cât mai târziu posibil, ca instalerul
+  // să nu pornească peste un proces încă viu care-i ține fișierele deschise.
+  // Un al doilea close() (SIGINT urmat de /api/shutdown, sau harness-ul de test care închide
+  // oricum la final) ar citi settings pe o bază comună deja închisă de primul — eșecul aici
+  // înseamnă „nimic de lansat”, nu o eroare de raportat (aceeași convenție „nu aruncă
+  // niciodată” ca restul mecanismului de actualizare, vezi update-check.service.mjs).
+  function safePendingUpdate() {
+    try {
+      return updateDownloadService.pendingUpdate();
+    } catch {
+      return null;
+    }
+  }
+
+  /** @param {{ version: string, file: string } | null} pending */
+  function spawnPendingInstaller(pending) {
+    if (!pending) return;
+    try {
+      spawnFn(pending.file, [], { detached: true, stdio: 'ignore' }).unref();
+    } catch (error) {
+      console.error('Lansarea instalerului descărcat a eșuat: ' + /** @type {Error} */ (error).message);
+    }
+  }
+
   function shutdownServer() {
     // A-2: un flux SSE deschis (/api/sync/events) ține o conexiune vie la infinit —
     // server.close(callback) nu ajunge niciodată la callback dacă nu terminăm fluxurile
     // (response.end() — închidere cooperantă, nu o rupere forțată de soclu) înainte.
     active.closeStreams();
+    const pendingUpdate = safePendingUpdate();
     server.close(() => {
       active.close();
       common.close();
+      spawnPendingInstaller(pendingUpdate);
     });
     server.closeIdleConnections();
   }
@@ -162,9 +220,11 @@ export function createApplication(options = {}) {
     }),
     ...createSyncConnectRoutes({
       syncDevice,
-      createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch, clientVersion: version }),
+      createHttpClient: options =>
+        createSyncHttpClient({ ...options, fetch: globalThis.fetch, clientVersion: version }),
       connectService,
     }),
+    ...createUpdateDownloadRoutes({ downloadService: updateDownloadService, updateStatus: updateChecker.status }),
   ]);
 
   /** @param {BranchEntry} branch */
@@ -193,7 +253,7 @@ export function createApplication(options = {}) {
       common,
       fullBackupService,
       restoreFullBackup,
-      updateStatus: updateChecker.status,
+      updateStatus: updateStatusWithPending,
     });
   }
 
@@ -524,9 +584,14 @@ export function createApplication(options = {}) {
           // Aceeași cursă ca în shutdownServer: fără closeStreams() înainte, un flux SSE
           // deschis ar bloca la infinit callback-ul lui server.close() de mai jos.
           active.closeStreams();
+          // Citit înainte de common.close() — vezi comentariul lui spawnPendingInstaller mai sus.
+          const pendingUpdate = safePendingUpdate();
           server.close(() => {
             active.close();
             common.close();
+            // La fel ca shutdownServer() (/api/shutdown, calea reală a lansatorului) — close()
+            // e folosit și la SIGINT/SIGTERM (main.mjs) și în teste; no-op fără nimic „gata”.
+            spawnPendingInstaller(pendingUpdate);
             resolveClose();
           });
         })

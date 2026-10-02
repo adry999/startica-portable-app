@@ -153,7 +153,9 @@ export function createRouter({
         status = failure.status;
         // Orice câmp suplimentar pus de fail(message, status, details) — „status” însuși,
         // enumerabil pe instanța de Error (Object.assign), e scos ca să nu dubleze codul HTTP.
-        const { status: _status, ...details } = /** @type {Record<string, unknown>} */ (failure);
+        const { status: _status, ...details } = /** @type {Record<string, unknown>} */ (
+          /** @type {unknown} */ (failure)
+        );
         sendJson(response, { error: failure.message, ...details }, failure.status);
         return;
       }
