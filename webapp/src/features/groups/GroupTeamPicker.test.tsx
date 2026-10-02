@@ -52,8 +52,7 @@ describe('GroupTeamPicker', () => {
   it('arată cele trei blocuri de rol cu textele de gol corecte', () => {
     renderPicker();
     expect(screen.getByText('Fără educator principal')).toBeInTheDocument();
-    expect(screen.getByText('Fără asistent')).toBeInTheDocument();
-    expect(screen.getByText('Fără înlocuitor')).toBeInTheDocument();
+    expect(screen.getAllByText('Nimeni')).toHaveLength(2);
   });
 
   it('adaugă un principal din panoul de căutare', async () => {

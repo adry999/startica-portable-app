@@ -4,11 +4,23 @@
   gap: var(--space-12);
 }
 
+/* F20 (PROMPT-11 §8.9): titlu 18px (azi 15) + subtitlu. */
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-8);
+}
+
 .title {
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 15px;
+  font-size: 18px;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .blocksRow {
@@ -23,32 +35,45 @@
   gap: var(--space-12);
 }
 
+/* F20 (PROMPT-11 §8.10): fundal --cream, bordură --row-divider-warm, radius 14, padding 10/12, gap 6. */
 .block {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--white);
+  gap: var(--space-6);
+  padding: 10px 12px;
+  border: 1px solid var(--row-divider-warm);
+  border-radius: var(--radius-md);
+  background: var(--cream);
 }
 
 .blockHead {
   display: flex;
   align-items: center;
+  gap: var(--space-8);
+}
+
+.blockHint {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.addLink {
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .emptyPrincipal {
   margin: 0;
   color: var(--pink-ink);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .emptyOther {
   margin: 0;
   color: var(--subtle);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .list {
@@ -57,13 +82,25 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-6);
 }
 
+/* F20 (PROMPT-11 §8.11): card alb, bordură --border, radius 12, padding 8/10. */
 .row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  padding: 8px 10px;
+}
+
+.rowHead {
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  min-width: 0;
 }
 
 .avatar {
@@ -74,7 +111,7 @@
   height: 26px;
   border-radius: var(--radius-pill);
   background: var(--cream);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   flex-shrink: 0;
 }
@@ -84,7 +121,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 13px;
 }
 
@@ -94,16 +131,23 @@
   color: var(--subtle);
 }
 
+.leaveBadge {
+  align-self: flex-start;
+}
+
+/* F20 (PROMPT-11 §8.11): zilele L–V pe toată lățimea, nu pătrățele fixe de 22px. */
 .days {
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 
 .day,
 .dayActive {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-5);
+  flex: 1;
+  text-align: center;
+  padding: 3px 0;
+  /* Rază 7px, rotunjită la cea mai apropiată din scară (TOKENS.md „Corespondență"). */
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border);
   background: var(--white);
   font-size: 11px;
@@ -116,17 +160,16 @@
   border-color: var(--slate);
 }
 
-.addButton {
-  align-self: flex-start;
-  white-space: nowrap;
-}
-
+/* F20 (PROMPT-11 §8.12): panou flotant pe chenar portocaliu, nu sub o linie despărțitoare. */
 .searchPanel {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--border);
+  padding: var(--space-8);
+  border: 1.5px solid var(--orange);
+  border-radius: var(--radius-input);
+  background: var(--white);
+  box-shadow: var(--shadow-popover);
 }
 
 .candidateList {

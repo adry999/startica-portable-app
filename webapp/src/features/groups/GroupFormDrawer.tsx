@@ -114,6 +114,7 @@ export function GroupFormDrawer({
     extraMemberCount: 0,
     members: [],
     blocksDelete: false,
+    blockingChildCount: 0,
     team: [],
   };
 

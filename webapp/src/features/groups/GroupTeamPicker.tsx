@@ -39,6 +39,23 @@ const ROLE_ADD_LABEL: Record<Role, string> = {
   asistent: '+ Asistent',
   inlocuitor: '+ Înlocuitor',
 };
+// F20 (PROMPT-11 §8.10, din 03-grupe.md §5c: „unul singur”/„când lipsește cineva”).
+const ROLE_HINT: Record<Role, string> = {
+  principal: 'unul singur',
+  asistent: '',
+  inlocuitor: 'când lipsește cineva',
+};
+// F20 (PROMPT-11 §8.11): avatarul membrului pe tonul rolului (azi --cream, fără distincție pe rol).
+const ROLE_AVATAR_BG: Record<Role, string> = {
+  principal: 'var(--orange-soft)',
+  asistent: 'var(--mint-soft)',
+  inlocuitor: 'var(--neutral-soft)',
+};
+const ROLE_AVATAR_FG: Record<Role, string> = {
+  principal: 'var(--orange-ink)',
+  asistent: 'var(--mint-ink)',
+  inlocuitor: 'var(--subtle)',
+};
 const DAY_LABELS = ['L', 'Ma', 'Mi', 'J', 'V'];
 
 function todayIso(): string {
@@ -126,7 +143,10 @@ export function GroupTeamPicker({
 
   return (
     <div className={styles.root}>
-      <p className={styles.title}>Echipa grupei</p>
+      <div className={styles.titleRow}>
+        <p className={styles.title}>Echipa grupei · {team.length}</p>
+        <span className={styles.subtitle}>din Personal · zilele marcate = când lucrează în grupă</span>
+      </div>
       <div className={showDays ? styles.blocksRow : styles.blocksColumn}>
         {ROLE_ORDER.map(role => {
           const members = team.filter(member => member.role === role);
@@ -135,15 +155,15 @@ export function GroupTeamPicker({
             <div key={role} className={styles.block}>
               <div className={styles.blockHead}>
                 <Badge tone={ROLE_TONE[role]}>{ROLE_TITLE[role]}</Badge>
+                {ROLE_HINT[role] && <span className={styles.blockHint}>{ROLE_HINT[role]}</span>}
+                <Button variant="link" className={styles.addLink} onClick={() => setOpenRole(isOpen ? null : role)}>
+                  {role === 'principal' && members.length > 0 ? 'Schimbă' : ROLE_ADD_LABEL[role]}
+                </Button>
               </div>
 
               {members.length === 0 && (
                 <p className={role === 'principal' ? styles.emptyPrincipal : styles.emptyOther}>
-                  {role === 'principal'
-                    ? 'Fără educator principal'
-                    : role === 'asistent'
-                      ? 'Fără asistent'
-                      : 'Fără înlocuitor'}
+                  {role === 'principal' ? 'Fără educator principal' : 'Nimeni'}
                 </p>
               )}
 
@@ -153,14 +173,30 @@ export function GroupTeamPicker({
                   const leave = activeLeaveByStaffId.get(member.staffId);
                   return (
                     <li key={member.staffId} className={styles.row}>
-                      <span className={styles.avatar}>{initials(person?.name ?? '?')}</span>
-                      <span className={styles.name}>
-                        {person?.name ?? member.staffId}
-                        {person && <span className={styles.function}>{roleName(person.roleId)}</span>}
-                      </span>
-                      {leave && <Badge tone="yellow">Concediu până pe {formatShortDayMonth(leave.to)}</Badge>}
+                      <div className={styles.rowHead}>
+                        <span
+                          className={styles.avatar}
+                          style={{ background: ROLE_AVATAR_BG[role], color: ROLE_AVATAR_FG[role] }}
+                        >
+                          {initials(person?.name ?? '?')}
+                        </span>
+                        <span className={styles.name}>
+                          {person?.name ?? member.staffId}
+                          {person && <span className={styles.function}>{roleName(person.roleId)}</span>}
+                        </span>
+                        <IconButton
+                          icon="close"
+                          ariaLabel={`Scoate ${person?.name ?? ''} din echipă`}
+                          onClick={() => removeMember(member.staffId, role)}
+                        />
+                      </div>
+                      {leave && (
+                        <div className={styles.leaveBadge}>
+                          <Badge tone="yellow">Concediu până pe {formatShortDayMonth(leave.to)}</Badge>
+                        </div>
+                      )}
                       {showDays && (
-                        <span className={styles.days}>
+                        <div className={styles.days}>
                           {DAY_LABELS.map((label, index) => (
                             <SelectableTile
                               key={label}
@@ -170,21 +206,12 @@ export function GroupTeamPicker({
                               {label}
                             </SelectableTile>
                           ))}
-                        </span>
+                        </div>
                       )}
-                      <IconButton
-                        icon="close"
-                        ariaLabel={`Scoate ${person?.name ?? ''} din echipă`}
-                        onClick={() => removeMember(member.staffId, role)}
-                      />
                     </li>
                   );
                 })}
               </ul>
-
-              <Button variant="outline" className={styles.addButton} onClick={() => setOpenRole(isOpen ? null : role)}>
-                {role === 'principal' && members.length > 0 ? 'Schimbă' : ROLE_ADD_LABEL[role]}
-              </Button>
 
               {isOpen && (
                 <div className={styles.searchPanel}>

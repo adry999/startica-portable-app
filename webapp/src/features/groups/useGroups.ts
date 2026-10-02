@@ -38,6 +38,8 @@ export interface GroupCardView {
   extraMemberCount: number;
   members: GroupMemberView[];
   blocksDelete: boolean;
+  /** Câți copii (inclusiv arhivați) blochează ștergerea — pentru „Mută întâi cei N copii” (F20, PROMPT-11 §8.7). */
+  blockingChildCount: number;
   team: GroupTeamMember[];
 }
 
@@ -121,7 +123,8 @@ function buildGroupCard(
       : birthDates[0] === birthDates.at(-1)
         ? formatAge(birthDates[0])
         : `${formatAge(birthDates.at(-1) as string)} – ${formatAge(birthDates[0])}`;
-  const blocksDelete = allChildren.some(child => child.groupId === group.id);
+  const blockingChildCount = allChildren.filter(child => child.groupId === group.id).length;
+  const blocksDelete = blockingChildCount > 0;
 
   return {
     id: group.id,
@@ -144,6 +147,7 @@ function buildGroupCard(
     extraMemberCount: Math.max(0, memberCount - 5),
     members: members.map(child => ({ id: child.id, name: child.name, ageLabel: formatAge(child.birthDate) })),
     blocksDelete,
+    blockingChildCount,
     team: group.team ?? [],
   };
 }

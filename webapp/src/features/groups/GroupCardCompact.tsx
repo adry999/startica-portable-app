@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon, RowMenu } from '@shared/ui';
+import { Icon } from '@shared/ui';
 import { attachRotatedDragImage, GROUP_DRAG_TYPE } from './dragTypes';
 import { BOARD_TONE_COLORS } from './groupBoardTone';
 import { capacityPillLabel } from './groupStatePill';
@@ -15,7 +15,6 @@ export interface GroupCardCompactProps {
   onDragOverCard: () => void;
   onDragLeaveCard: () => void;
   onDropGroup: (draggedGroupId: string) => void;
-  onOpenStickers?: () => void;
 }
 
 /** Cardul compact din Carduri (03-grupe.md §5) — selectabil, tras de tot cardul pentru reordonare. */
@@ -28,7 +27,6 @@ export function GroupCardCompact({
   onDragOverCard,
   onDragLeaveCard,
   onDropGroup,
-  onOpenStickers,
 }: GroupCardCompactProps) {
   const colors = BOARD_TONE_COLORS[group.tone];
   const pillLabel = capacityPillLabel(group);
@@ -83,14 +81,6 @@ export function GroupCardCompact({
         </span>
         <p className={styles.name}>{group.name}</p>
         <strong className={styles.occupancy}>{group.occupancyLabel}</strong>
-        {onOpenStickers && (
-          <div className={styles.menu}>
-            <RowMenu
-              items={[{ label: 'Stickere pentru grupă', onClick: onOpenStickers }]}
-              ariaLabel={`Acțiuni grupa ${group.name}`}
-            />
-          </div>
-        )}
       </div>
       <div className={styles.bar}>
         {group.capacity != null && (
@@ -110,7 +100,7 @@ export function GroupCardCompact({
           ) : (
             <span className={styles.noEducator}>Fără educator</span>
           )}{' '}
-          · {group.ageRangeLabel}
+          <span className={styles.metaAges}>· {group.ageRangeLabel}</span>
         </span>
         {pillLabel && (
           <span

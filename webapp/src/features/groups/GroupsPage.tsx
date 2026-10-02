@@ -3,13 +3,11 @@ import {
   Button,
   Card,
   ConfirmDeleteDialog,
-  EMPTY_STATES,
-  EmptyState,
   Field,
   IconButton,
   LoadingState,
   NumberInput,
-  resolveEmptyStateTitle,
+  RowMenu,
   SearchSelect,
   SegmentedControl,
   TextInput,
@@ -17,6 +15,7 @@ import {
   useToast,
   useTopbarActions,
 } from '@shared/ui';
+import { BOARD_TONE_COLORS } from './groupBoardTone';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { readDirtyForms, useDirtyForm, type DirtyForm } from '@shared/state/dirty-forms';
 import { useAppSession } from '@shared/api/session';
@@ -25,6 +24,7 @@ import { isStaffInBranch } from '@shared/personal/timesheet-rules';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import { useLeaves } from '@shared/personal/useLeaves';
+import { initials } from '@shared/format/initials';
 import { useGroups, type GroupCardView, type UnassignedChild } from './useGroups';
 import { GroupsBoard } from './GroupsBoard';
 import { GroupCardCompact } from './GroupCardCompact';
@@ -116,6 +116,15 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   async function undoCreateGroup(id: string) {
     try {
       await groupsData.deleteGroup(id);
+    } catch (error) {
+      toast.show({ message: toUserError(error) });
+    }
+  }
+
+  // F20 (PROMPT-11 §8.4): „Anulează” pe toast-ul de atribuire directă din căutare (40b).
+  async function undoAssignChild(childId: string) {
+    try {
+      await groupsData.removeChild(childId);
     } catch (error) {
       toast.show({ message: toUserError(error) });
     }
@@ -229,7 +238,6 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                   setDragOverCardId(null);
                   void groupsData.reorderGroups(draggedId, group.id);
                 }}
-                onOpenStickers={onOpenGroupStickers ? () => onOpenGroupStickers(group.id) : undefined}
               />
             ))}
           </div>
@@ -243,6 +251,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               roleName={personal.roleName}
               allGroups={groupsData.groups}
               leaves={leavesData.leaves}
+              onOpenStickers={onOpenGroupStickers ? () => onOpenGroupStickers(selectedGroup.id) : undefined}
               onSave={async (name, capacityRaw, team) => {
                 try {
                   await groupsData.updateGroup(selectedGroup.id, name, capacityRaw, selectedGroup.educator, team);
@@ -255,7 +264,11 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               onAssign={async childId => {
                 try {
                   await groupsData.assignChild(selectedGroup.id, childId);
-                  toast.show({ message: 'Copil atribuit grupei.' });
+                  toast.show({
+                    message: 'Copil atribuit grupei.',
+                    actionLabel: 'Anulează',
+                    onAction: () => void undoAssignChild(childId),
+                  });
                 } catch (error) {
                   toast.show({ message: toUserError(error) });
                 }
@@ -307,9 +320,11 @@ interface GroupEditorProps {
   onDelete: () => void;
   onAssign: (childId: string) => Promise<void>;
   onRemove: (childId: string) => Promise<void>;
+  onOpenStickers?: () => void;
 }
 
-/** Editorul de sub grilă (03-grupe.md §5) — mereu deschis pentru grupa selectată. */
+/** Editorul de sub grilă (03-grupe.md §5), ordinea din 4a (F20, PROMPT-11 §8) — mereu deschis
+ * pentru grupa selectată. */
 function GroupEditor({
   group,
   unassignedChildren,
@@ -321,6 +336,7 @@ function GroupEditor({
   onDelete,
   onAssign,
   onRemove,
+  onOpenStickers,
 }: GroupEditorProps) {
   const [name, setName] = useState(group.name);
   const [capacityRaw, setCapacityRaw] = useState(group.capacity != null ? String(group.capacity) : '');
@@ -344,21 +360,34 @@ function GroupEditor({
     JSON.stringify(team) !== JSON.stringify(group.team);
   useDirtyForm(dirty ? { label: 'o grupă', save } : null);
 
-  async function handleAssign() {
-    if (!selectedChildId) return;
-    await onAssign(selectedChildId);
+  // F20 (PROMPT-11 §8.4): alegerea din căutare adaugă direct, fără al doilea clic pe un buton.
+  async function handleSelectChild(childId: string) {
+    setSelectedChildId(childId);
+    if (!childId) return;
+    await onAssign(childId);
     setSelectedChildId('');
   }
+
+  const toneColors = BOARD_TONE_COLORS[group.tone];
 
   return (
     <Card className={styles.editor}>
       <div className={styles.editorHead}>
+        <span className={styles.editorToneSquare} style={{ background: toneColors.bar }} aria-hidden="true" />
         <h3 className={styles.editorTitle}>Editează grupa {group.name}</h3>
-        <span className={styles.editorAges}>Vârste: {group.ageRangeLabel}</span>
+        <span className={styles.editorAges}>
+          Vârste: <b>{group.ageRangeLabel}</b>
+        </span>
+        {onOpenStickers && (
+          <RowMenu
+            items={[{ label: 'Stickere pentru grupă', onClick: onOpenStickers }]}
+            ariaLabel={`Acțiuni grupa ${group.name}`}
+          />
+        )}
       </div>
 
       <form className={styles.editorRow} autoComplete="off" onSubmit={handleSave}>
-        <Field label="Nume" htmlFor="edit-group-name">
+        <Field label="Nume grupă" htmlFor="edit-group-name">
           <TextInput id="edit-group-name" ariaLabel="Nume grupă" value={name} onChange={setName} />
         </Field>
         <Field label="Capacitate" htmlFor="edit-group-capacity">
@@ -371,8 +400,21 @@ function GroupEditor({
             step={1}
           />
         </Field>
-        <Button type="submit">Salvează</Button>
+        <Button type="submit" disabled={!dirty} title={dirty ? undefined : 'Fără modificări'}>
+          Salvează
+        </Button>
       </form>
+
+      <GroupTeamPicker
+        currentGroupId={group.id}
+        team={team}
+        onChange={setTeam}
+        staff={staff}
+        roleName={roleName}
+        allGroups={allGroups}
+        leaves={leaves}
+        showDays
+      />
 
       <div className={styles.editorSubtitleRow}>
         <p className={styles.editorSubtitle}>Copii în grupă · {group.memberCount}</p>
@@ -380,28 +422,25 @@ function GroupEditor({
           className={styles.addSearch}
           options={unassignedChildren.map(child => ({ value: child.id, label: child.name }))}
           value={selectedChildId}
-          onChange={setSelectedChildId}
+          onChange={childId => void handleSelectChild(childId)}
           placeholder="Adaugă copil fără grupă…"
           emptyLabel="Niciun copil găsit"
           ariaLabel="Copil fără grupă"
           disabled={unassignedChildren.length === 0}
         />
-        <Button disabled={!selectedChildId} onClick={handleAssign}>
-          + Adaugă
-        </Button>
       </div>
 
       {group.members.length === 0 ? (
-        <EmptyState
-          variant={EMPTY_STATES['grupe.members'].variant}
-          size="compact"
-          title={resolveEmptyStateTitle(EMPTY_STATES['grupe.members'])}
-        />
+        <div className={styles.emptyMembers}>
+          <strong>Fără copii în grupă.</strong> Caută mai sus sau trage-i din Tablă.
+        </div>
       ) : (
         <div className={styles.memberGrid}>
           {group.members.map(member => (
             <div key={member.id} className={styles.memberRow}>
-              <span className={styles.avatar}>{member.name[0]?.toUpperCase()}</span>
+              <span className={styles.avatar} style={{ background: toneColors.soft, color: toneColors.ink }}>
+                {initials(member.name)}
+              </span>
               <span className={styles.memberName}>{member.name}</span>
               <span className={styles.memberAge}>{member.ageLabel}</span>
               <IconButton
@@ -415,30 +454,15 @@ function GroupEditor({
         </div>
       )}
 
-      <GroupTeamPicker
-        currentGroupId={group.id}
-        team={team}
-        onChange={setTeam}
-        staff={staff}
-        roleName={roleName}
-        allGroups={allGroups}
-        leaves={leaves}
-        showDays
-      />
-
       <div className={styles.deleteRow}>
-        <Button
-          variant="danger"
-          onClick={onDelete}
-          disabled={group.blocksDelete}
-          title={
-            group.blocksDelete
-              ? 'Mută mai întâi copiii din grupă (inclusiv cei arhivați) pentru a o putea șterge.'
-              : undefined
-          }
-        >
+        <Button variant="danger" onClick={onDelete} disabled={group.blocksDelete}>
           Șterge grupa {group.name}
         </Button>
+        {group.blocksDelete && (
+          <small className={styles.deleteBlockedReason}>
+            Mută întâi cei {group.blockingChildCount} {group.blockingChildCount === 1 ? 'copil' : 'copii'}
+          </small>
+        )}
       </div>
     </Card>
   );

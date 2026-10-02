@@ -29,7 +29,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ✅ PROMPT-11 §5 (carduri Plan/Curs BNM, bandă de stare; „Luni acoperite” pastile amânat, vezi INTREBARI.md) |
 | F19 Subsoluri de formular diferite | ✅ 15k | ⏳ PROMPT-11 §6 |
 | Secțiuni ascunse fără date (tipar F15) | — | ✅ PROMPT-11 §7 (audit + Serviciu/backup/antrenor/SMS corectate, restul contextual) |
-| F20 Grupe → Carduri ≠ 4a (editor) | ✅ 4a | ⏳ PROMPT-11 §8 |
+| F20 Grupe → Carduri ≠ 4a (editor) | ✅ 4a | ✅ PROMPT-11 §8 |
 | F21 Copii: sortare pe toate coloanele, antet corect | ✅ 2a | ✅ PROMPT-11 §9 |
 | F22 Button link cu fundal („Vezi calendarul →”) | — | ✅ PROMPT-11 §10 |
 | F23 Grafic Evoluția încasărilor | ✅ 1a refăcut | ✅ PROMPT-11 §11 |

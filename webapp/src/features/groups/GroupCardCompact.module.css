@@ -39,16 +39,6 @@
   opacity: 0.55;
 }
 
-/* A3d: 24×24, lângă ocupare, ca să nu se suprapună cu mânerul. */
-.menu {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .headRow {
   display: flex;
   align-items: center;
@@ -87,16 +77,25 @@
   border-radius: var(--radius-pill);
 }
 
+/* F20 (PROMPT-11 §8.3): înălțime egală cu/fără pastilă de stare. */
 .metaRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
+  min-height: 24px;
 }
 
+/* F20 (PROMPT-11 §8.1): educatorul pe --text-secondary, nu pe tonul grupei. */
 .meta {
   font-size: 13px;
   font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.metaAges {
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .noEducator {
@@ -108,9 +107,10 @@
   font-style: italic;
 }
 
+/* F20 (PROMPT-11 §8.2): fundal alb, text pe tonul grupei (culoarea vine din style inline). */
 .pill {
   flex: none;
-  background: var(--white-a60);
+  background: var(--white);
   border-radius: var(--radius-pill);
   padding: 2px var(--space-8);
   font-size: 11px;

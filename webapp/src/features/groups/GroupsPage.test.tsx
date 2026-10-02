@@ -176,6 +176,19 @@ describe('GroupsPage', () => {
     expect(dirtyForm.label).toBe('o grupă');
   });
 
+  // F20 (PROMPT-11 §8.2): „Salvează” inactiv până la prima modificare.
+  it('„Salvează” e inactiv fără nicio modificare și devine activ după ce editezi numele', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    expect(screen.getByRole('button', { name: 'Salvează' })).toBeDisabled();
+
+    await userEvent.type(screen.getByLabelText('Nume grupă'), ' Popescu');
+
+    expect(screen.getByRole('button', { name: 'Salvează' })).toBeEnabled();
+  });
+
   it('creează o grupă nouă din antet și o selectează automat', async () => {
     await loadedSession();
     renderPage();
@@ -219,7 +232,6 @@ describe('GroupsPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Copil fără grupă' }));
     await userEvent.click(screen.getByText('Vlad Marin'));
-    await userEvent.click(screen.getByRole('button', { name: '+ Adaugă' }));
 
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();
   });
@@ -261,7 +273,7 @@ describe('GroupsPage', () => {
     renderPage();
     await switchToCards();
 
-    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
+    const teamCard = screen.getByText(/Echipa grupei/).closest('div')!.parentElement as HTMLElement;
 
     const calls: unknown[] = [];
     (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options?: RequestInit) => {
@@ -288,13 +300,24 @@ describe('GroupsPage', () => {
     expect(lastCall.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
   });
 
+  // F20 (PROMPT-11 §8.3): „Echipa grupei” înaintea „Copii în grupă”, nu după cum era înainte.
+  it('„Echipa grupei” apare înaintea „Copii în grupă” în editor', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    const teamIndex = screen.getByText(/Echipa grupei/).compareDocumentPosition(screen.getByText(/Copii în grupă/));
+    // Node.DOCUMENT_POSITION_FOLLOWING (4) — „Copii în grupă” vine după „Echipa grupei” în DOM.
+    expect(teamIndex & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   // F29 (DECIZII 02.10): echipa grupei se alege doar din angajații filialei deschise.
   it('F29: GroupTeamPicker nu arată angajații din alte filiale', async () => {
     await loadedSession();
     renderPage();
     await switchToCards();
 
-    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
+    const teamCard = screen.getByText(/Echipa grupei/).closest('div')!.parentElement as HTMLElement;
     await userEvent.click(within(teamCard).getByRole('button', { name: '+ Asistent' }));
 
     expect(within(teamCard).getByRole('button', { name: /Ana Popescu/ })).toBeInTheDocument();
@@ -308,7 +331,7 @@ describe('GroupsPage', () => {
     renderPage();
     await switchToCards();
 
-    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
+    const teamCard = screen.getByText(/Echipa grupei/).closest('div')!.parentElement as HTMLElement;
     expect(readDirtyForms()).toEqual([]);
 
     await userEvent.click(within(teamCard).getByRole('button', { name: '+ Asistent' }));

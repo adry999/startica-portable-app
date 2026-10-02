@@ -1358,3 +1358,50 @@ cardul „Următoarea" — comportament nou, intenționat, nu o regresie a testu
 
 **Neatins din scop:**
 - Fără captură lângă 1b (ca la toate punctele anterioare din acest lanț).
+
+## §8 (F20, PROMPT-11)
+
+Comparat cod ↔ `Grupe.dc.html#4a`, cele 13 puncte ale spec-ului.
+
+**`GroupCardCompact`**: educatorul acum pe `--text-secondary` (nu tonul grupei), „· vârste" separat
+în `--muted` 600; pastila de stare pe fundal `--white` (nu `--white-a60`); rândul de jos
+`min-height: 24px`; meniul ⋯ „Stickere pentru grupă" mutat în editor (nu mai există pe card).
+
+**`GroupEditor` (în `GroupsPage.tsx`)**, ordinea din 4a: titlu cu pătrat 10×10 pe `bar`-ul tonului +
+„Editează grupa {nume}" 20px + „Vârste: **{interval}**" + ⋯ (Stickere); rândul de formular pe grid
+`2fr 1fr auto`, eticheta „Nume grupă" (nu „Nume"), „Salvează" inactiv până la prima modificare
+(`title="Fără modificări"` — „Nicio modificare" din prompt reformulat, R9 nu permite „Niciun/Nicio"
+literal); **Echipa grupei** mutată înaintea „Copii în grupă"; căutarea „⌕ Adaugă copil fără
+grupă…" adaugă direct la alegere (fără al doilea clic pe „+ Adaugă", eliminat), cu toast
+„Anulează" (40b, scoate copilul la anulare); rândurile copiilor fără `height` fixă, avatar 28px cu
+inițiale (2 litere) pe tonul grupei (`soft`/`ink`); grupă goală → chenar punctat `--dashed-border-empty`
+cu „**Fără copii în grupă.** Caută mai sus sau trage-i din Tablă." („Niciun copil" din prompt
+reformulat, R9); ștergere: linie `--row-divider` deasupra, `Button variant="danger"` (deja un link
+13/700 pe `--pink-ink`, nu „plin" cum zicea promptul — verificat în `Button.module.css`), cu motivul
+„Mută întâi cei N copii" afișat sub el când e blocată (câmp nou `blockingChildCount` pe
+`GroupCardView`), nu doar în `title`; containerul (`Card`) avea deja radius 24/padding 22×24 din
+implicit — doar `gap` a urcat la 18.
+
+**`GroupTeamPicker`**: titlu „Echipa grupei · {N}" 18px + subtitlu „din Personal · zilele marcate…";
+blocurile pe fundal `--cream`/bordură `--row-divider-warm`/radius `--radius-md`; antetul blocului
+capătă indiciul („unul singur" / „când lipsește cineva", din 03-grupe.md §5c) + linkul
+„+ Alege"/„Schimbă" (`Button variant="link"`, mutat din butonul separat de sub listă); rândul de
+membru devine card alb cu bordură `--border`, avatar 26px pe tonul ROLULUI (nu mai e `--cream`
+generic); zilele L–V pe `flex:1` fiecare (nu pătrățele fixe de 22px); panoul de căutare cu chenar
+`1.5px --orange` + `--shadow-popover`, nu sub o linie despărțitoare; rol fără nimeni (asistent/
+înlocuitor) → text generic „Nimeni" (nu „Niciun asistent"/„Niciun înlocuitor" din 03-grupe.md §5c —
+R9 nu permite „Niciun/Nicio" literal, iar PROMPT-11 §8.13 cerea oricum „Nimeni" generic).
+
+Teste noi: „Salvează" inactiv/activ după modificare; „Echipa grupei" înaintea „Copii în grupă"
+(`compareDocumentPosition`); testul de atribuire actualizat (fără clic pe „+ Adaugă", eliminat).
+
+**Deviere de la spec (motivată):**
+- Promptul zice că azi ștergerea e un `Button variant="danger"` „plin" — codul avea deja un link
+  (padding 0, `--pink-ink`, fără fundal), nu un buton plin. Am păstrat `Button variant="danger"`
+  (deja corect vizual) și doar am adăugat linia + motivul sub el, fără să reinventez componenta.
+- Hint-urile „unul singur"/„când lipsește cineva" nu sunt în PROMPT-11 (doar artboard-ul are
+  `{{ r.hint }}` fără text) — preluate din 03-grupe.md §5c, unde apar exact aceste formulări.
+
+**Neatins din scop:**
+- Fără captură lângă 4a cu 7 grupe (una goală, una plină, una fără educator), cerută explicit de
+  punct — ca la toate punctele anterioare din acest lanț.

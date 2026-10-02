@@ -32,24 +32,35 @@
   gap: var(--space-12);
 }
 
+/* F20 (PROMPT-11 §8.8): gap 18, container rămâne pe Card implicit (radius 24, padding 22/24). */
 .editor {
   display: flex;
   flex-direction: column;
-  gap: var(--space-16);
+  gap: var(--space-18);
 }
 
 .editorHead {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-12);
+  align-items: center;
+  gap: var(--space-10);
+}
+
+/* F20 (PROMPT-11 §8.1): pătrat pe bar-ul tonului, lângă titlu. */
+.editorToneSquare {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  /* Rază 3px, rotunjită la cea mai apropiată din scară (TOKENS.md „Corespondență”). */
+  border-radius: var(--radius-5);
 }
 
 .editorTitle {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .editorAges {
@@ -58,11 +69,12 @@
   white-space: nowrap;
 }
 
+/* F20 (PROMPT-11 §8.2): grid 2fr 1fr auto, aliniat jos. */
 .editorRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
   align-items: flex-end;
   gap: var(--space-12);
-  flex-wrap: wrap;
 }
 
 .editorSubtitleRow {
@@ -84,6 +96,7 @@
   width: 320px;
 }
 
+/* F20 (PROMPT-11 §8.5): rând fără înălțime fixă — crește cu conținutul. */
 .memberGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -93,20 +106,19 @@
 .memberRow {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: 10px;
   background: var(--cream);
   border: 1px solid var(--row-divider-warm);
   border-radius: var(--radius-input);
-  padding: var(--space-6) var(--space-8);
-  height: 40px;
+  padding: 6px 8px 6px 6px;
 }
 
+/* F20 (PROMPT-11 §8.5): inițiale (2 litere) pe tonul grupei, nu prima literă pe alb. */
 .avatar {
   flex: none;
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,7 +141,31 @@
   white-space: nowrap;
 }
 
+/* F20 (PROMPT-11 §8.6): grupă goală — chenar punctat, text „Fără copii” (R9: fără „Niciun/Nicio”). */
+.emptyMembers {
+  border: 2px dashed var(--dashed-border-empty);
+  border-radius: var(--radius-md-lg);
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.emptyMembers strong {
+  color: var(--slate);
+}
+
+/* F20 (PROMPT-11 §8.7): linie deasupra + link de ștergere aliniat dreapta, cu motivul sub el dacă e blocat. */
 .deleteRow {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-4);
+  border-top: 1px solid var(--row-divider);
+  padding-top: var(--space-12);
+}
+
+.deleteBlockedReason {
+  color: var(--subtle);
+  font-size: 12px;
 }
