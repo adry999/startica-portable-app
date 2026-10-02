@@ -8,6 +8,7 @@ import {
   PeriodFilter,
   SearchInput,
   SearchSelect,
+  Tabs,
   useTopbarActions,
   type PeriodPreset,
 } from '@shared/ui';
@@ -21,7 +22,17 @@ import { childNameOf } from '#shared/domain/record-labels.mjs';
 import type { RecordType } from '@contracts/record-types.mjs';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { useAuditLog, type AuditRowView, type AuditScopeEntry } from '@shared/audit-log';
+import { AccessLogPanel } from './AccessLogPanel';
 import styles from './AuditLogPage.module.css';
+
+// §7 (36g): a doua filă, „Acces” — evenimentele access.* (PIN, gărzi de profil), doar pe
+// profil Complet (serverul respinge restul cu 403, AccessLogPanel arată mesajul). Istoricul
+// obișnuit rămâne implicit, ca ecranul să nu se schimbe pentru nimeni altcineva.
+type AuditPageTab = 'istoric' | 'acces';
+const TAB_OPTIONS: { value: AuditPageTab; label: string }[] = [
+  { value: 'istoric', label: 'Istoric' },
+  { value: 'acces', label: 'Acces' },
+];
 
 interface AuditDayGroup {
   dayKey: string;
@@ -180,6 +191,7 @@ export function AuditLogPage() {
 
   const auditLogData = useAuditLog(scope);
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<AuditPageTab>('istoric');
 
   // PROMPT-9 §6: modul/calculator rămân în URL, ca în Cheltuieli (`ExpensesPage` — §13.2
   // PROMPT-8) — starea supraviețuiește întoarcerii din fișa unui copil. Implicit „tot” (gol) pe
@@ -210,16 +222,36 @@ export function AuditLogPage() {
     [sync.deviceName],
   );
 
+  // §7 (36g): căutarea privește doar fila „Istoric” — pe „Acces” n-ar avea ce filtra.
   useTopbarActions(
-    <span className={styles.topbarSearch}>
-      <SearchInput
-        value={search}
-        onChange={setSearch}
-        placeholder="Caută copil, achitare…"
-        ariaLabel="Caută în istoric"
-      />
-    </span>,
+    activeTab === 'istoric' ? (
+      <span className={styles.topbarSearch}>
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Caută copil, achitare…"
+          ariaLabel="Caută în istoric"
+        />
+      </span>
+    ) : null,
   );
+
+  const tabs = (
+    <Tabs
+      options={TAB_OPTIONS}
+      value={activeTab}
+      onChange={value => setActiveTab(value as AuditPageTab)}
+      ariaLabel="Secțiunile Istoricului"
+    />
+  );
+
+  if (activeTab === 'acces')
+    return (
+      <div className={styles.page}>
+        {tabs}
+        <AccessLogPanel />
+      </div>
+    );
 
   const filteredRows = useMemo(() => {
     const needle = normalizeSearchText(search.trim());
@@ -279,6 +311,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'loading')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <LoadingState />
       </div>
@@ -286,6 +319,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'failed')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <p className={styles.notice}>{auditLogData.failureMessage || 'Istoricul nu a putut fi încărcat.'}</p>
       </div>
@@ -293,6 +327,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'empty')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <p className={styles.notice}>
           {selection ? `Fără modificări înregistrate pentru ${selectedLabel}.` : 'Nu există modificări înregistrate.'}
@@ -302,6 +337,7 @@ export function AuditLogPage() {
 
   return (
     <div className={styles.page}>
+      {tabs}
       {recordFilterBar}
       {groups.length === 0 && <p className={styles.notice}>Niciun rezultat pentru filtrele alese.</p>}
       {groups.map(group => (

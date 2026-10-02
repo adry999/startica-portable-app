@@ -7,7 +7,7 @@ import { createRevisionTransaction } from '#core/server/persistence/revision-tra
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { accessLevelFor, resolveRouteModule } from '#core/server/http/route-modules.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { completProfile, isModuleAllowed, normalizeProfile } from '#shared/domain/computer-profile.mjs';
+import { completProfile, isModuleAllowed, normalizeProfile, requiresPin } from '#shared/domain/computer-profile.mjs';
 import { createAuditLogRepository, createAuditLogRoutes, createUndoRoutes } from '#features/audit-log/index.server.mjs';
 import { createBackupService, createBackupRoutes } from '#features/backup/index.server.mjs';
 import {
@@ -30,6 +30,7 @@ import {
   createPersonalRoutes,
   createPersonalRepository,
   createCoachPaymentWriter,
+  createPinService,
   POOL_COACH_ROLE_ID,
 } from '#features/personal/index.server.mjs';
 import {
@@ -169,9 +170,6 @@ export function createBranchContext({
   });
 
   const rawRecordRepository = createRecordRepository(db);
-  // 40b: ștampila sesiunii active (nu per proces — vezi comentariul lui sessionToken mai sus),
-  // citită de POST /api/undo ca gardă „doar de pe același calculator".
-  const auditLogRepository = createAuditLogRepository(db, { sessionToken });
 
   // Semințele Grădiniță/Bazin (B3) trebuie să existe înainte ca vreo achitare să se poată
   // salva (validarea cere un `service` existent) — sincron, aici, nu în rutele Servicii
@@ -212,10 +210,39 @@ export function createBranchContext({
     getCommonEngine: () => common?.sync.getEngine() ?? null,
   });
   const syncDeviceFile = syncDevice.read();
+  // 40b: ștampila sesiunii active (nu per proces — vezi comentariul lui sessionToken mai sus),
+  // citită de POST /api/undo ca gardă „doar de pe același calculator". §7 (36g): identitatea
+  // acestui calculator — aceeași din sync.json folosită de motorul de sincronizare mai jos, nu
+  // un al doilea concept — și coada de trimis, ca fiecare scriere locală să ajungă și acolo
+  // („toate dispozitivele trimit istoricul”, screens/31-profiluri-calculator.md). Construit abia
+  // acum (nu la deschiderea bazei, mai sus): are nevoie de `syncOutboxRepository`/`syncDeviceFile`.
+  const auditLogRepository = createAuditLogRepository(db, {
+    sessionToken,
+    deviceId: syncDeviceFile?.deviceId ?? null,
+    deviceName: syncDeviceFile?.deviceName ?? null,
+    branchId: branch.id,
+    outbox: syncOutboxRepository,
+    isSyncEnabled,
+  });
   // DECIZII.md punctul 55: persistă lastSyncedAt în sync.json (motorul îl ține doar în
   // memorie) — un singur tracker, ascultat de ambele motoare ale instalării (vezi și
   // create-common-context.mjs), ca „ultima sincronizare” să reflecte oricare dintre ele.
   const lastSyncedAtTracker = createLastSyncedAtTracker({ syncDevice });
+  // §7 (36h): O SINGURĂ instanță de pinService pentru toată filiala — folosită de Salarii
+  // (personal.routes.mjs, neschimbată ca flux) ȘI de `assertPinUnlocked` de mai jos, pentru
+  // orice alt modul din `profile.pinModules`. `common` lipsește doar într-un context de test
+  // izolat de filială — fără el, nu există nicăieri un PIN de verificat (Salarii nici nu s-ar
+  // monta, vezi mai jos la `createPersonalRoutes`). `onEvent` scrie evenimentele `access.*`
+  // (fila „Acces”, 36g) o singură dată, indiferent ce ecran a cerut deblocarea.
+  const pinService = common
+    ? createPinService({
+        readSetting: common.readSetting,
+        writeSetting: common.writeSetting,
+        pinSession: common.pinSession,
+        onEvent: event =>
+          auditLogRepository.recordChange({ action: `access.${event}`, recordType: null, recordId: null }),
+      })
+    : null;
   if (syncDeviceFile) {
     syncEngine = createSyncEngine({
       database: db,
@@ -434,6 +461,7 @@ export function createBranchContext({
           recordRepository,
           runRevisionTransaction,
           readCoachPayForMonth,
+          pinService: /** @type {NonNullable<typeof pinService>} */ (pinService),
         })
       : []),
     // Bazin (23): rute separate de Personal, ca niciun feature să nu importe altul — vezi
@@ -493,8 +521,29 @@ export function createBranchContext({
     const profile = currentDeviceProfile();
     const level = accessLevelFor(write);
     const moduleIds = Array.isArray(moduleId) ? moduleId : [moduleId];
-    if (!moduleIds.some(id => isModuleAllowed(profile, id, level)))
+    if (!moduleIds.some(id => isModuleAllowed(profile, id, level))) {
+      // §7 (36g): „access.blocked — rută din afara profilului” — scris ÎNAINTE de a arunca,
+      // ca intrarea să existe chiar dacă fail() oprește restul cererii.
+      auditLogRepository.recordChange({
+        action: 'access.blocked',
+        recordType: null,
+        recordId: moduleIds.join(','),
+      });
       fail('Acest calculator nu are acces la acest modul.', 403);
+    }
+  }
+
+  // §7 (36h): a doua gardă, generică pentru orice modul din `profile.pinModules` — Salarii
+  // își păstrează gărzile proprii (`pinService.assertUnlocked()` inline, salaries.routes.mjs),
+  // neatinse; asta acoperă modulele ADĂUGATE (Achitări, Cheltuieli, Raport, De rezolvat, sau
+  // oricare altul ales la 36b). Fără `common` (context de test izolat de filială), nimic de
+  // verificat — exact ca înainte de 36h.
+  /** @param {string | string[]} moduleId */
+  function assertPinUnlocked(moduleId) {
+    if (!pinService) return;
+    const profile = currentDeviceProfile();
+    const moduleIds = Array.isArray(moduleId) ? moduleId : [moduleId];
+    if (moduleIds.some(id => requiresPin(profile, id))) pinService.assertUnlocked();
   }
 
   const { dispatchRequest } = createRouteDispatcher({
@@ -505,6 +554,7 @@ export function createBranchContext({
     routes: /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (routes),
     resolveRouteModule,
     assertModuleAccess,
+    assertPinUnlocked,
   });
 
   // Preia de la BNM orice zi lipsă din [startDate, endDate] (inclusiv) și scrie
@@ -615,6 +665,9 @@ export function createBranchContext({
     backups,
     recordRepository,
     auditLogRepository,
+    // §7 (36h): expus pentru oricine mai are nevoie de el în afara acestui fișier (teste,
+    // eventual alte rute montate din create-application.mjs) — `null` fără `common`.
+    pinService,
     readSetting,
     // 42d: fullBackupService (create-application.mjs) citește/scrie lastLocal/externalDir
     // ale arhivei complete pe setările FILIALEI ACTIVE, la fel ca backups de mai sus —

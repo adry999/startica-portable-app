@@ -31,6 +31,11 @@ export interface AuditRowView {
   actionTone: AuditActionTone;
   recordLabel: string;
   changes: AuditChangeView[];
+  /** §7 (36g): calculatorul care a scris intrarea — `null` pentru cele dinainte de migrare sau
+   * scrise fără sincronizare configurată. „Acest calculator” pentru restul, consumat de filtrul
+   * „Calculator” din §6 (deocamdată doar expus aici, nu filtrat — vezi AuditLogPage.tsx). */
+  deviceId: string | null;
+  deviceName: string;
 }
 
 export interface AuditLogData {
@@ -91,6 +96,8 @@ function toRow(entry: AuditEntry): AuditRowView {
       beforeLabel: JSON.stringify(change.before),
       afterLabel: JSON.stringify(change.after),
     })),
+    deviceId: entry.deviceId,
+    deviceName: entry.deviceName ?? 'Acest calculator',
   };
 }
 

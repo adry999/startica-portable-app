@@ -28,6 +28,7 @@ const YEAR_OK = /^\d{4}$/;
  *   recordRepository: import('#shared/contracts/persistence.mjs').RecordRepository,
  *   runRevisionTransaction: import('#shared/contracts/persistence.mjs').RunRevisionTransaction,
  *   readCoachPayForMonth?: (staffId: string, month: string) => unknown,
+ *   pinService?: ReturnType<typeof import('./pin.service.mjs').createPinService>,
  * }} dependencies
  */
 export function createPersonalRoutes({
@@ -38,6 +39,7 @@ export function createPersonalRoutes({
   recordRepository,
   runRevisionTransaction,
   readCoachPayForMonth,
+  pinService,
 }) {
   const repository = createPersonalRepository(common);
   const listGroups = () => /** @type {any} */ (recordRepository.readSnapshot()).groups;
@@ -50,6 +52,7 @@ export function createPersonalRoutes({
     runRevisionTransaction,
     auditTrail,
     readCoachPayForMonth,
+    ...(pinService ? { pinService } : {}),
   });
 
   const branchStaffIds = () => repository.staffForBranch(branchId).map(staff => staff.id);

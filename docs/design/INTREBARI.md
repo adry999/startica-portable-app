@@ -559,6 +559,90 @@ unui alt calculator (`changeDeviceProfile`) nu atinge nimic local pe acest calcu
 calculatoare) și 36h (PIN per modul) rămân neconstruite — în afara intervalului acestui prompt (`§2`
 acoperă explicit doar 36a–36f), urmează la §7.
 
+## ✅ PROMPT-9 §7 36g — istoricul pe calculatoare: pipeline-ul complet, construit și testat
+
+**Rezolvat** (PROMPT-9 §7): schema (`device_id`/`device_name`/`entry_uid` pe `audit_changes`,
+`ensureColumn`, index unic parțial pe `entry_uid`), producătorul (`recordChange()` din
+`audit-log.repository.mjs` pune în `sync_outbox` — kind `audit_log`, `recordId` = `entry_uid`
+(UUID), NU `id`-ul local autoincrement, ca două calculatoare să nu genereze aceeași „cheie” —
+payload redactat, cu `deviceId`/`deviceName`/`branchId`/`module`/`action`/`recordType`/`recordId`/
+`before`/`after`/`occurredAt`) și consumatorul (`change-applier.mjs`, `apply()`: kind `audit_log`
+scrie direct prin `auditTrail.mergeSyncedEntry(...)`, NICIODATĂ prin `recordChange` — altfel
+intrarea primită de pe alt calculator s-ar retrimite la nesfârșit în propria coadă). Evenimentele
+`access.pin_ok`/`access.pin_fail`/`access.blocked`/`access.locked` au acum producător real (vezi
+mai jos, 36h, pentru PIN; `assertModuleAccess` din `create-branch-context.mjs` pentru `blocked`).
+Filă nouă „Acces” în client (`AccessLogPanel.tsx` + `useAccessLog.ts`, ruta `GET /api/audit/access`,
+modul `admin` — doar Complet). Test de integrare cu DOUĂ baze SQLite reale și un `sync-server`
+pornit pe un port local (nu dubluri) — `tests/audit-log-sync.integration.test.mjs`
+— confirmă: o intrare scrisă pe calculatorul A, cu push+pull reale, apare în `audit_changes` al
+lui B cu `device_id`/`device_name` **ale lui A, verificate de server** (nu auto-raportate de A —
+vezi mai jos), plus un test separat pentru idempotența `entry_uid` la o reluare de pull. Testul
+trăiește în `tests/audit-log-sync.integration.test.mjs` (nu în `src/features/sync/server/`) —
+mutat acolo ca să nu încalce granița `feature-imports-feature` (importă direct bariera publică a
+feature-ului `audit-log` din interiorul feature-ului `sync`, interzis de
+`tests/architecture/import-boundary-rules.mjs` chiar și pentru `.integration.test.mjs`, spre
+deosebire de excepția îngustă care există doar pentru `#sync-server/*`); folosește barierele
+publice `#features/sync/index.server.mjs` și `#features/audit-log/index.server.mjs`.
+
+**Interpretări/decizii, documentate aici fiindcă n-aveau un răspuns literal în spec:**
+1. **Identitatea calculatorului la aplicare vine din `change.device` (verificat de server la
+   autentificare), nu din `payload.deviceId`/`deviceName` (auto-raportate de calculatorul care a
+   scris intrarea).** Spec-ul nu spune explicit care din cele două surse e „adevărul” — am ales
+   pe cea pe care un calculator rău-intenționat n-o poate falsifica (default-deny pe risc): nu
+   poate pretinde identitatea altui calculator în istoricul sincronizat local.
+2. **Fila „Acces” exclude evenimentele `access.*` din ecranul Istoric obișnuit** (`readPage`/
+   `readForScope` au acum `action NOT LIKE 'access.%'`) — spec-ul le descrie ca „filă nouă",
+   separată, nu ca rânduri în plus pe lista existentă; am interpretat asta ca excludere, nu
+   duplicare (altfel „Istoric” s-ar umple de încercări de PIN).
+3. **„Toate dispozitivele trimit istoricul”, aplicat literal**: ORICE `recordChange()` (inclusiv
+   intrările meta ca „sincronizare de pe X”/„descărcare de pe server”) ajunge în `sync_outbox`
+   când sincronizarea e activă, nu doar scrierile „de business”. Nu există o buclă (vezi mai sus,
+   consumatorul scrie prin `mergeSyncedEntry`, niciodată prin `recordChange`), dar înseamnă mai
+   mult trafic de sincronizare decât un cititor literal al frazei ar bănui — acceptabil la scara
+   datelor unei grădinițe.
+4. **Ce NU e acoperit, deliberat, ca să nu las o bucată pe jumătate într-o zonă deja mare:**
+   - **Instantaneul (410/resincronizare) nu aplică intrări `audit_log`** — `applySnapshotEntry`
+     nu are o ramură pentru acest kind, deci un calculator care trece prin 410 nu recuperează
+     istoricul altor calculatoare din acel instantaneu, doar din `pull`-urile ulterioare. Fix
+     mic, dar netestat încă — las-o pentru următoarea trecere pe sincronizare, ca să nu adaug
+     cod neverificat într-o zonă deja critică.
+   - **Prima conectare (pairing) a unui calculator nou nu descarcă istoricul existent al altor
+     calculatoare** — `sync-connect.service.mjs` nu include `audit_log` în instantaneul inițial
+     (din același motiv ca mai sus — TYPES nu include `audit_log`, deci nici riscul de regresie
+     nu există, dar nici beneficiul). Un calculator Complet nou văd doar istoricul de după
+     conectare, nu din trecut.
+   - **`syncAuditLog` din `create-common-context.mjs` (baza Comun — Personal/Bazin) rămâne
+     NESCHIMBAT, fără `deviceId`/`outbox`** — nu e văzut de nicio interfață (auditul de business
+     al Personalului intră deja în `audit_changes` al FILIALEI active, nu al bazei Comune, vezi
+     comentariul din `personal.routes.mjs`), deci generalizarea lui n-ar adăuga nimic vizibil.
+   - **`access.locked` nu trimite o notificare live „pe dispozitivele Complet”**, cum cere
+     `screens/31-profiluri-calculator.md` (secțiunea „Istoric pe calculatoare”) — evenimentul
+     se scrie (vezi 36h mai jos) și devine vizibil pe celelalte calculatoare DUPĂ o sincronizare,
+     prin fila „Acces”, dar nu există o livrare în timp real (push/toast) către ecranele deschise
+     ale calculatoarelor Complet. Asta ar cere un canal de notificare separat (gen cel folosit la
+     conflicte de sincronizare, `/api/sync/conflicts`) — o bucată distinctă, nemenționată explicit
+     în cele 6 puncte din PROMPT-CLAUDE-CODE-9 §7, care cereau doar „recorded via the same audit
+     mechanism”. Semnalez aici ca gol real față de spec, nu ca omisiune ascunsă.
+5. **Fiecare scriere de business reală lasă ACUM două rânduri în `sync_outbox`, nu unul** —
+   rândul cu datele (ca înainte) ȘI un rând nou `kind='audit_log'` (consemnarea ei în istoric).
+   Asta a stricat o presupunere dintr-un test deja existent, dinainte de §7
+   (`src/app/server/create-application.integration.test.mjs`, testul „importul unui instantaneu
+   identic... nu pune nimic în outbox, doar diferențele reale”), care număra TOATE rândurile
+   pending ca să verifice că un import fără diferențe reale nu umple coada. Am corectat testul
+   să excludă `kind='audit_log'` din numărătoare (`pendingCount()`), păstrându-i intenția
+   originală (igiena cozii pentru DATE) — istoricul sincronizat are propriul test dedicat
+   (`tests/audit-log-sync.integration.test.mjs`). Am verificat separat celelalte teste care și
+   ele numără `sync_outbox` (`expense-categories.routes.integration.test.mjs`,
+   `sync-unconfigured.integration.test.mjs`, și restul suitei `sync/server/*.test.mjs`) — nu
+   erau afectate (fie `isSyncEnabled()` e fals acolo, fie nu există o scriere reală de consemnat).
+6. **`AuditLogPage.tsx` / `useAuditLog.ts`** sunt și în lucru la altă pasă din aceeași sesiune
+   (PROMPT-9 §6 — filtre client pe Istoric). Am adăugat `deviceId`/`deviceName` pe `AuditRowView`
+   (aditiv, pentru ca filtrul „Calculator” din §6 să le poată consuma) și fila „Acces” ca tab nou
+   (`Tabs` din `@shared/ui`), cu diff minim pe `AuditLogPage.tsx` — dacă §6 a atins fișierul în
+   paralel, un conflict de merge acolo ar trebui să fie mic și ușor de rezolvat manual.
+
+(Istoric — analiza inițială care a amânat punctul, păstrată pentru context:)
+
 ## ⏳ §5.3 36g — istoricul pe calculatoare (`audit_log` sincronizat) are doar fundația din protocol, nu pipeline-ul complet
 
 Ce există deja: `audit_log` e un tip recunoscut de protocolul de sincronizare (`change-policy.mjs`,
@@ -583,6 +667,53 @@ integrare pe sincronizare reală (două baze, push-pull), decât s-o tai la jum�
 locale, fără ca ele să însemne ceva până vine sincronizarea reală).
 
 **Nimic de decis din partea ta** — e following-up, nu o întrebare de business.
+
+## ✅ PROMPT-9 §7 36h — PIN per modul: generalizat, Salarii neschimbat (verificat cu testele existente)
+
+**Rezolvat** (PROMPT-9 §7): `pinService` (un singur `createPinService(...)`, construit în
+`create-branch-context.mjs` din `common.pinSession`/`readSetting`/`writeSetting`, exact aceleași
+ca în `salaries.routes.mjs`) expus pe contextul filialei și injectat în `createSalariesRoutes`
+(care altfel și-ar fi construit propriul, separat) — O SINGURĂ instanță de PIN pentru toată
+aplicația. Hook nou `assertPinUnlocked(moduleId)` în `route-dispatcher.mjs`, apelat DUPĂ
+`assertModuleAccess`, pentru orice cale al cărei modul e în `profile.pinModules`
+(`requiresPin(profile, moduleId)`, deja pur și testat). `PinGate` generalizat
+(`webapp/src/shared/app/PinGate.tsx`, cu `label`/`title?`/`subtitle?`) — `features/personal/
+PinGate.tsx` (Salarii) a devenit o înfășurare subțire peste acesta, cu textul original neschimbat.
+
+**Interpretări/decizii:**
+1. **PIN-ul rămâne UNUL SINGUR (`adminPin`, în baza comună), nu „un PIN per modul”** — titlul
+   36h („PIN per modul”) descrie CARE module cer PIN (configurabil per profil, `pinModules`), nu
+   un secret separat per modul. Am citit asta din `pin.service.mjs` deja existent (un singur
+   `adminPin`) și din faptul că `/api/personal/pin*` sunt rute unice, nenamespace-uite per modul —
+   schimbarea asta ar fi fost o regresie de arhitectură, nu o generalizare.
+2. **Rutele PIN-ului însuși (`/api/personal/pin`, `/pin/unlock`, `/pin/lock`) sunt EXCEPTATE de la
+   `assertPinUnlocked`** (`PIN_GATE_EXEMPT_PATHS`, `route-modules.mjs`) — fără asta, un profil
+   Personalizat care adaugă `personal` la `pinModules` (posibil, deși niciun implicit n-o face)
+   s-ar bloca singur: ar cere PIN ca să poată verifica/seta PIN-ul. Gărzile de MODUL
+   (`assertModuleAccess`) rămân neschimbate pe aceste căi.
+3. **Evenimentele `access.pin_ok`/`access.pin_fail`/`access.locked` se scriu din `onEvent` al
+   `pinService`-ului** (parametru nou, implicit no-op — `pin.service.test.mjs` neschimbat),
+   apelat o singură dată, indiferent care ecran a cerut deblocarea (Salarii sau alt modul din
+   `pinModules`) — PIN-ul fiind unul singur, istoricul „Acces” nu distinge de unde a venit
+   cererea, doar rezultatul.
+4. **Nu am atins `LOCKOUT_DURATION_MS` (60 s în cod) ca să se potrivească cu „15 min” din
+   `screens/31-profiluri-calculator.md` §4** — discrepanța exista deja ÎNAINTE de 36h (comportament
+   testat al Salariilor, `pin.service.test.mjs`); schimbarea numărului acum ar fi o modificare de
+   business neautorizată de PROMPT-9, nu o generalizare. Semnalez aici ca discrepanță reală între
+   spec și cod, de decis separat.
+5. **Nu am integrat `PinGate` în ecranele Achitări/Cheltuieli/Raport/De rezolvat** — componenta e
+   gata, testată, cu stories, dar montarea ei pe fiecare ecran real ar atinge fișiere pe care alte
+   treceri din aceeași sesiune (profilul client, §2) le au în lucru chiar acum. Am livrat piesa
+   generică + hook-ul server (singura graniță de securitate reală — `assertPinUnlocked`, 403
+   testat, independent de UI), nu integrarea vizuală pe fiecare ecran.
+6. **Testul de integrare** (`src/app/server/pin-gate.integration.test.mjs`) confirmă, pe aplicația
+   reală (`startTestApplication`, cu `sync.json` + profil): un modul din `pinModules` cere PIN
+   chiar cu acces de Modifică, un modul din afara `pinModules` nu cere nimic, rutele PIN-ului nu
+   se blochează singure, și `access.blocked` chiar ajunge în `audit_changes` (citit direct din
+   `app.db`, nu prin `/api/audit` — un profil restrâns nu-și poate citi propriul istoric local,
+   exact ca în producție, vezi 36g mai sus).
+
+(Istoric — analiza inițială care a amânat punctul, păstrată pentru context:)
 
 ## ⏳ §5.3 36h — PIN-ul per modul nu e generalizat; `pin.service.mjs` rămâne neschimbat (doar Salarii)
 

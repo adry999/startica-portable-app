@@ -18,7 +18,12 @@ const AUDIT_SALARY = 'personal: salariu';
  *   runRevisionTransaction: import('#shared/contracts/persistence.mjs').RunRevisionTransaction,
  *   auditTrail: import('#shared/contracts/audit-trail.mjs').AuditTrail,
  *   readCoachPayForMonth?: (staffId: string, month: string) => unknown,
- * }} dependencies
+ *   pinService?: ReturnType<typeof createPinService>,
+ * }} dependencies `pinService` (§7, 36h): injectat de create-branch-context.mjs — O SINGURĂ
+ *   instanță, partajată cu `assertPinUnlocked` (route-dispatcher.mjs) și cu orice alt modul din
+ *   `profile.pinModules`, ca evenimentele `access.*` să fie scrise o singură dată, indiferent
+ *   care ecran a declanșat deblocarea. Opțional — o construcție izolată (test direct al acestui
+ *   fișier, dacă vreuna ar apărea) primește una proprie, fără `onEvent`.
  */
 export function createSalariesRoutes({
   common,
@@ -28,12 +33,12 @@ export function createSalariesRoutes({
   runRevisionTransaction,
   auditTrail,
   readCoachPayForMonth,
-}) {
-  const pinService = createPinService({
+  pinService = createPinService({
     readSetting: common.readSetting,
     writeSetting: common.writeSetting,
     pinSession: common.pinSession,
-  });
+  }),
+}) {
   const salariesService = createSalariesService({
     personalRepository,
     branchId,

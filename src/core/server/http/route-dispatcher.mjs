@@ -17,8 +17,9 @@ export const RESPONSE_SENT = Symbol('response-sent');
 /**
  * @param {{
  *   root: string, sessionToken: string, routes: RouteDefinition[], log?: (message: unknown) => void,
- *   resolveRouteModule?: (request: { method: 'GET' | 'POST', path: string, body?: unknown }) => { moduleId: string | string[], write: boolean } | null,
+ *   resolveRouteModule?: (request: { method: 'GET' | 'POST', path: string, body?: unknown }) => { moduleId: string | string[], write: boolean, pinExempt?: boolean } | null,
  *   assertModuleAccess?: (moduleId: string | string[], options: { write: boolean }) => void,
+ *   assertPinUnlocked?: (moduleId: string | string[]) => void,
  * }} options
  */
 export function createRouteDispatcher({
@@ -26,11 +27,14 @@ export function createRouteDispatcher({
   sessionToken,
   routes,
   log = console.error,
-  // §5.3 (36h): gardă de profil, opțională — implicitul (teste, sync-server, orice context
-  // fără profiluri) nu restrânge nimic. Compusă din două bucăți (ce modul guvernează calea,
-  // dacă accesul e permis) ca `route-modules.mjs` să rămână testabil fără un server HTTP real.
+  // §5.3 (36h): gărzi de profil, opționale — implicitul (teste, sync-server, orice context
+  // fără profiluri) nu restrânge nimic. Compuse din bucăți (ce modul guvernează calea, dacă
+  // accesul e permis, dacă modulul cere PIN) ca `route-modules.mjs` să rămână testabil fără un
+  // server HTTP real. `assertPinUnlocked` (§7, 36h): a doua gardă, după cea de modul — o cale
+  // marcată `pinExempt` (PIN-ul însuși) nu trece prin ea, altfel nu s-ar mai putea debloca.
   resolveRouteModule = () => null,
   assertModuleAccess = () => {},
+  assertPinUnlocked = () => {},
 }) {
   const getRoutes = new Map(routes.filter(route => route.method === 'GET').map(route => [route.path, route.handle]));
   const postRoutes = new Map(routes.filter(route => route.method === 'POST').map(route => [route.path, route.handle]));
@@ -47,7 +51,10 @@ export function createRouteDispatcher({
         // și răspunsul, exact ca ruta POST /api/shutdown — nu mai are ce trimite aici.
         if (getHandler) {
           const getModule = resolveRouteModule({ method: 'GET', path });
-          if (getModule) assertModuleAccess(getModule.moduleId, { write: getModule.write });
+          if (getModule) {
+            assertModuleAccess(getModule.moduleId, { write: getModule.write });
+            if (!getModule.pinExempt) assertPinUnlocked(getModule.moduleId);
+          }
           const result = await getHandler({ url, response });
           if (result !== RESPONSE_SENT) sendResponse(response, result);
           return;
@@ -64,7 +71,10 @@ export function createRouteDispatcher({
       const body = await readJsonBody(request);
       // Gărzile dinamice (/api/record, de ex.) au nevoie de corp ca să afle tipul înregistrării.
       const postModule = resolveRouteModule({ method: 'POST', path, body });
-      if (postModule) assertModuleAccess(postModule.moduleId, { write: postModule.write });
+      if (postModule) {
+        assertModuleAccess(postModule.moduleId, { write: postModule.write });
+        if (!postModule.pinExempt) assertPinUnlocked(postModule.moduleId);
+      }
       const result = await postHandler({ body, url, response });
       if (result !== RESPONSE_SENT) sendResponse(response, result);
     } catch (error) {

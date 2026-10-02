@@ -35,6 +35,18 @@ export function applySchema(database) {
   // momentul scrierii (regenerată la fiecare deschidere/schimbare de filială, vezi
   // create-branch-context.mjs), comparată la POST /api/undo.
   ensureColumn(database, 'audit_changes', 'session_token', 'TEXT');
+  // §5.3 (36g, „Istoric sincronizat”): calculatorul și numele lui la momentul scrierii —
+  // NULL pentru intrările vechi (dinainte de această migrare) și pentru cele scrise pe un
+  // calculator fără sincronizare configurată; `entry_uid` e identificatorul global (UUID),
+  // distinct de `id` (autoincrement local, nu unic între calculatoare) — e recordId-ul
+  // folosit pe firul de sincronizare (kind `audit_log`, vezi audit-log.repository.mjs) și
+  // cheia de idempotență la aplicarea unei intrări venite de pe alt calculator (mergeSyncedEntry).
+  ensureColumn(database, 'audit_changes', 'device_id', 'TEXT');
+  ensureColumn(database, 'audit_changes', 'device_name', 'TEXT');
+  ensureColumn(database, 'audit_changes', 'entry_uid', 'TEXT');
+  database.exec(
+    'CREATE UNIQUE INDEX IF NOT EXISTS audit_changes_entry_uid ON audit_changes(entry_uid) WHERE entry_uid IS NOT NULL;',
+  );
 }
 
 /**
