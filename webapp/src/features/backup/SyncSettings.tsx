@@ -128,7 +128,11 @@ export function SyncSettings() {
             // lista lipsește, în loc de un spinner la nesfârșit sau o listă goală înșelătoare.
             <EmptyState variant="no-results" title="Lista nu e disponibilă offline" description={sync.devicesError} />
           ) : (
-            <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />
+            <DevicesList
+              devices={sync.devices}
+              onRevoke={sync.revokeDevice}
+              onChangeProfile={sync.changeDeviceProfile}
+            />
           )}
         </Card>
 
