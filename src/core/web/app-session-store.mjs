@@ -1,5 +1,6 @@
 import { emptyState } from '#shared/domain/record-schema.mjs';
 import { DomainEvent } from '#shared/contracts/domain-events.mjs';
+import { completProfile, normalizeProfile } from '#shared/domain/computer-profile.mjs';
 
 /** @typedef {{ path: string, body: Record<string, unknown> }} PendingMutation */
 
@@ -109,6 +110,12 @@ export function createAppSessionStore({
     // pornire când încărcarea durează mult; AppShell arată interfața reală cât timp load()
     // continuă în fundal. Nu înlocuiește `ready` (datele pot încă să nu fi sosit).
     forceReady: false,
+    // §5.3 (31-profiluri-calculator.md): profilul acestui calculator, din /api/session —
+    // `ModuleGuard`, meniul filtrat și cardul de sincronizare se construiesc din el. Implicit
+    // Complet (compatibilitate — un calculator fără profil asignat, sau un răspuns vechi de
+    // `/api/session` fără câmpul `profile`, nu are nicio restricție, vezi completProfile()).
+    /** @type {import('#shared/domain/computer-profile.mjs').ComputerProfile} */
+    profile: completProfile(),
   };
 
   /** @param {any} result */
@@ -181,6 +188,9 @@ export function createAppSessionStore({
       state.sync = session.sync ?? null;
       state.pool = session.pool ?? { enabled: false };
       if (session.update) state.update = session.update;
+      // §5.3: normalizat la fiecare load() — un profil lipsă (instalare veche, context de test
+      // izolat) rămâne Complet, nu o restrângere surpriză (vezi completProfile()).
+      state.profile = session.profile ? normalizeProfile(session.profile) : completProfile();
       state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
       state.startupTimings.databaseAt = Date.now();

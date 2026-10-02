@@ -13,6 +13,10 @@ import {
   requiresPin,
   firstAllowedModule,
   KIND_MODULE,
+  PRESET_IDS,
+  MODULE_LABELS,
+  PRESET_LABELS,
+  PRESET_DESCRIPTIONS,
 } from './computer-profile.mjs';
 
 test('completProfile are toate modulele la Modifică și nu e blocat', () => {
@@ -128,4 +132,17 @@ test('firstAllowedModule întoarce null când niciun modul nu e permis', () => {
 test('KIND_MODULE acoperă toate tipurile de înregistrare sincronizate, fără audit_log', () => {
   for (const moduleId of Object.values(KIND_MODULE)) assert.ok(MODULE_IDS.includes(moduleId));
   assert.equal(KIND_MODULE.audit_log, undefined);
+});
+
+test('MODULE_LABELS are o etichetă nevidă pentru fiecare modul canonic', () => {
+  for (const moduleId of MODULE_IDS) {
+    assert.ok(MODULE_LABELS[moduleId], `lipsește eticheta pentru ${moduleId}`);
+  }
+});
+
+test('PRESET_LABELS și PRESET_DESCRIPTIONS acoperă toate preset-urile (36a)', () => {
+  for (const preset of PRESET_IDS) {
+    assert.ok(PRESET_LABELS[preset], `lipsește eticheta pentru ${preset}`);
+    assert.ok(PRESET_DESCRIPTIONS[preset], `lipsește descrierea pentru ${preset}`);
+  }
 });

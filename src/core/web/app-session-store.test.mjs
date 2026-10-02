@@ -107,6 +107,35 @@ test('load reușit fără „update” în răspuns păstrează starea implicit�
   assert.equal(store.state.update.updateAvailable, false);
 });
 
+test('load reușit fără „profile” în răspuns păstrează profilul implicit Complet (§5.3)', async () => {
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1' };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  assert.equal(store.state.profile.preset, 'complet');
+  assert.equal(store.state.profile.blocked, false);
+});
+
+test('load reușit normalizează profilul din sesiune (§5.3)', async () => {
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1', profile: { preset: 'educator' } };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  assert.equal(store.state.profile.preset, 'educator');
+  assert.equal(store.state.profile.modules.attendance, 2);
+  assert.equal(store.state.profile.modules.payments, 0);
+});
+
 test('load reușit înregistrează cronologia pornirii, pentru pașii din ecranul de încărcare', async () => {
   const { store } = createHarness(async path => {
     if (path === '/api/session') return { token: 'TOKEN-1' };
