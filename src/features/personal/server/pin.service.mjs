@@ -4,7 +4,7 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 const PIN_SETTING_KEY = 'adminPin';
 const PIN_OK = /^\d{4,6}$/;
 const UNLOCK_DURATION_MS = 10 * 60 * 1000;
-const LOCKOUT_DURATION_MS = 60 * 1000;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 const MAX_FAILURES = 5;
 const PROTECTED_MESSAGE = 'Salariile sunt protejate. Introdu PIN-ul.';
 
@@ -17,8 +17,9 @@ const hashPin = (pin, salt) =>
 /**
  * O cortină, nu securitate (decizia 8): PIN-ul stă în `comun` (`adminPin = { salt, hash }`),
  * deblocarea trăiește doar în procesul curent (`pinSession`, un obiect mutabil ținut de
- * `createCommonContext`, nu persistat). 5 greșeli → blocaj de 60 s; deblocarea se prelungește
- * 10 minute la fiecare cerere protejată reușită.
+ * `createCommonContext`, nu persistat). 5 greșeli → blocaj de 15 minute (36h,
+ * screens/31-profiluri-calculator.md); deblocarea se prelungește 10 minute la fiecare cerere
+ * protejată reușită.
  * @param {{
  *   readSetting: (key: string) => string,
  *   writeSetting: (key: string, value: string) => void,
@@ -71,7 +72,7 @@ export function createPinService({
     if (!stored) fail('PIN-ul nu este configurat — setează unul în Backup și setări.');
     const nowMs = now().getTime();
     if (pinSession.lockedUntil && nowMs < pinSession.lockedUntil)
-      fail('Prea multe încercări greșite. Așteaptă un minut.', 429);
+      fail('Prea multe încercări greșite. Așteaptă 15 minute.', 429);
     if (hashPin(String(pin), stored.salt) !== stored.hash) {
       pinSession.failedAttempts = (pinSession.failedAttempts || 0) + 1;
       onEvent('pin_fail');

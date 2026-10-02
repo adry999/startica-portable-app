@@ -958,3 +958,18 @@ Două opțiuni, ambele cu cost real:
 
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
+
+## PROMPT-CLAUDE-CODE-10.md §4 — numărătoarea locală de blocaj PIN (`usePinLock`) rămâne la 60s
+
+**Observație, nu o decizie blocantă — am mers mai departe fără să schimb nimic aici.**
+
+`pin.service.mjs` (server) a trecut blocajul după 5 greșeli de la 60 de secunde la 15 minute (§4).
+`webapp/src/shared/state/usePinLock.ts:44` are propriul `lockoutMs = 60_000` implicit, independent,
+pentru numărătoarea afișată în `LockedContent` — nimeni din `PinGate`/`LockedContent` nu-i dă
+`lockoutMs` explicit, deci rămâne 60s peste tot. Înainte de §4, cele două coincideau din
+întâmplare (ambele „un minut”); acum numărătoarea locală ajunge la 0 și reactivează câmpul de PIN
+la 60s, deși serverul tot respinge cu 429 („Așteaptă 15 minute.”) încă 14 minute — nu e un bug de
+securitate (greșeala repetată în fereastra asta nu mai incrementează `failedAttempts`, server-ul
+respinge înainte de verificarea PIN-ului), doar o numărătoare care arată gata prea devreme.
+Fix simplu dacă se dorește: `PinGate`/`LockedContent` să primească `lockoutMs={15 * 60 * 1000}`
+pentru ecranele legate de `pin.service.mjs`. Nu l-am aplicat neasumat — nu era în scopul §4 cerut.
