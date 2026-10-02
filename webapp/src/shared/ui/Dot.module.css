@@ -1,0 +1,43 @@
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.yellow {
+  background: var(--yellow-bar);
+}
+
+.pink {
+  background: var(--pink-bar);
+}
+
+.teal {
+  background: var(--teal-bar);
+}
+
+.mint {
+  background: var(--mint-bar);
+}
+
+.blue {
+  background: var(--blue-bar);
+}
+
+.orange {
+  background: var(--orange);
+}
+
+.purple {
+  background: var(--purple-bar);
+}
+
+.coral {
+  background: var(--coral-bar);
+}
+
+.neutral {
+  background: var(--muted);
+}

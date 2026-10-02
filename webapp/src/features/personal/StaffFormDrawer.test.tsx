@@ -11,15 +11,23 @@ function jsonResponse(body: unknown) {
 }
 
 const fixturePersonalState = {
-  departments: [{ id: 'DEP-1', name: 'Educatori', order: 1 }],
-  roles: [{ id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 }],
+  departments: [
+    { id: 'DEP-1', name: 'Educatori', order: 1 },
+    { id: 'DEP-2', name: 'Logopezi', order: 2 },
+  ],
+  roles: [
+    { id: 'ROL-1', name: 'Educator', departmentId: 'DEP-1', order: 1 },
+    { id: 'ROL-2', name: 'Logoped', departmentId: 'DEP-2', order: 2 },
+  ],
   staff: [],
   settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
 };
 
+const fixturePersonalStateFaraFunctii = { ...fixturePersonalState, departments: [], roles: [] };
+
 let savedStaffCalls: unknown[] = [];
 
-function stubFetch() {
+function stubFetch(personalState: unknown = fixturePersonalState) {
   savedStaffCalls = [];
   vi.stubGlobal(
     'fetch',
@@ -38,7 +46,7 @@ function stubFetch() {
           updatedAt: '2026-09-23T10:00:00Z',
         });
       if (path === '/api/health') return jsonResponse({});
-      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      if (path === '/api/personal/state') return jsonResponse(personalState);
       if (path === '/api/personal/staff') {
         savedStaffCalls.push(JSON.parse(String(options?.body)));
         return jsonResponse({ staff: JSON.parse(String(options?.body)).staff });
@@ -97,5 +105,76 @@ describe('StaffFormDrawer', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Angajat existent' }));
     expect(screen.getByRole('button', { name: 'Angajat existent' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Adaugă la Buiucani/ })).toBeDisabled();
+  });
+
+  it('§16 (F28, PROMPT-11): Funcția e grupată pe departament și căutabilă', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <StaffFormDrawer target="new" onClose={vi.fn()} />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Funcția' }));
+    expect(screen.getByText('Educatori')).toBeInTheDocument();
+    expect(screen.getByText('Logopezi')).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Caută în Funcția'), 'log');
+    expect(screen.getByRole('option', { name: 'Logoped' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Educator' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('option', { name: 'Logoped' }));
+    expect(screen.getByRole('button', { name: 'Funcția' })).toHaveTextContent('Logoped');
+  });
+
+  it('§16 (F28, PROMPT-11): „+ Adaugă funcția” din listă deschide Funcții fără drawer-în-drawer', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <StaffFormDrawer target="new" onClose={vi.fn()} />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Funcția' }));
+    await userEvent.click(screen.getByRole('button', { name: '+ Funcție nouă' }));
+    expect(screen.getByRole('dialog', { name: 'Departamente și funcții' })).toBeInTheDocument();
+  });
+
+  it('§16 (F28, PROMPT-11): fără nicio funcție, lista arată motivul și „+ Funcție nouă”', async () => {
+    stubFetch(fixturePersonalStateFaraFunctii);
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <StaffFormDrawer target="new" onClose={vi.fn()} />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Funcția' }));
+    expect(screen.getByText('Nicio funcție încă · Adaugă în Personal → Funcții')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: '+ Funcție nouă' }));
+    expect(screen.getByRole('dialog', { name: 'Departamente și funcții' })).toBeInTheDocument();
+  });
+
+  it('§16 (F28, PROMPT-11): fără funcție aleasă, trimiterea arată eroarea pe câmp', async () => {
+    stubFetch(fixturePersonalStateFaraFunctii);
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <StaffFormDrawer target="new" onClose={vi.fn()} />
+      </ToastProvider>,
+    );
+
+    await userEvent.type(screen.getByLabelText('Nume angajat'), 'Ana Rusu');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează angajatul' }));
+    expect(await screen.findByText('Alege funcția')).toBeInTheDocument();
+    expect(savedStaffCalls).toHaveLength(0);
   });
 });

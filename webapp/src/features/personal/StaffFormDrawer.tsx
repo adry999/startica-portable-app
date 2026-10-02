@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   DateInput,
+  Dot,
   Drawer,
   Field,
   PhoneInput,
   SearchSelect,
-  Select,
   SegmentedControl,
   TextInput,
   useToast,
@@ -14,7 +14,9 @@ import {
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
+import { departmentTone } from '@shared/personal/department-tone';
 import type { Staff } from '@shared/personal/personal.types';
+import { RolesDrawer } from './RolesDrawer';
 import styles from './StaffFormDrawer.module.css';
 import { toUserError } from '@shared/api/to-user-error';
 
@@ -57,10 +59,26 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
   const toast = useToast();
   const editing = target !== null && target !== 'new' ? target : null;
   const rolesSorted = [...personal.roles].sort((a, b) => a.order - b.order);
+  const departmentsSorted = [...personal.departments].sort((a, b) => a.order - b.order);
   const [values, setValues] = useState<FormValues>(() => defaultValues(editing, today(), rolesSorted[0]?.id ?? ''));
   const [submitting, setSubmitting] = useState(false);
   const [entryMode, setEntryMode] = useState<'new' | 'existing'>('new');
   const [existingStaffId, setExistingStaffId] = useState('');
+  const [rolesDrawerOpen, setRolesDrawerOpen] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+
+  // 38f: funcția grupată pe departament (ordinea departamentelor), cu punctul de ton al
+  // departamentului — același tipar vizual ca în RolesDrawer (department-tone.ts).
+  const roleOptions = departmentsSorted.flatMap(department =>
+    rolesSorted
+      .filter(role => role.departmentId === department.id)
+      .map(role => ({
+        value: role.id,
+        label: role.name,
+        group: department.name,
+        leading: <Dot tone={departmentTone(role.departmentId, personal.departments)} />,
+      })),
+  );
 
   const openBranchId = session.state.branch?.id ?? '';
   const openBranchName = session.state.branch?.name ?? '';
@@ -68,6 +86,13 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
   function setField<K extends keyof FormValues>(key: K, value: FormValues[K]) {
     setValues(previous => ({ ...previous, [key]: value }));
   }
+
+  // Dacă formularul a pornit fără nicio funcție și una e adăugată din RolesDrawer (deschis de
+  // aici), o alegem automat în loc să lăsăm câmpul gol.
+  useEffect(() => {
+    if (!values.roleId && rolesSorted[0]) setField('roleId', rolesSorted[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolesSorted.length]);
 
   const existingCandidates = personal.staff.filter(
     staff => !staff.archivedAt && !staff.branchIds.includes(openBranchId),
@@ -90,6 +115,10 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
 
   async function handleSubmit() {
     if (submitting) return;
+    if (!values.roleId) {
+      setSubmitAttempted(true);
+      return;
+    }
     setSubmitting(true);
     try {
       const record: Staff = {
@@ -176,18 +205,26 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
           <Field label="Nume angajat" htmlFor="staff-name">
             <TextInput id="staff-name" required value={values.name} onChange={value => setField('name', value)} />
           </Field>
-          <Field label="Funcția" htmlFor="staff-role">
-            <Select
-              id="staff-role"
-              required
+          <Field
+            label="Funcția"
+            htmlFor="staff-role"
+            error={submitAttempted && !values.roleId ? 'Alege funcția' : undefined}
+          >
+            <SearchSelect
+              ariaLabel="Funcția"
               value={values.roleId}
               onChange={value => setField('roleId', value)}
-              options={rolesSorted.map(role => ({ value: role.id, label: role.name }))}
+              options={roleOptions}
+              placeholder="Alege funcția…"
+              emptyLabel="Nicio funcție încă · Adaugă în Personal → Funcții"
+              footer={
+                <Button variant="link" onClick={() => setRolesDrawerOpen(true)}>
+                  + Funcție nouă
+                </Button>
+              }
             />
           </Field>
-          {!editing && (
-            <p className={styles.notice}>Se adaugă în Filiala {openBranchName} (filiala deschisă).</p>
-          )}
+          {!editing && <p className={styles.notice}>Se adaugă în Filiala {openBranchName} (filiala deschisă).</p>}
           <Field label="Telefon" htmlFor="staff-phone">
             <PhoneInput id="staff-phone" value={values.phone} onChange={value => setField('phone', value)} />
           </Field>
@@ -210,6 +247,7 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
           </Field>
         </form>
       )}
+      <RolesDrawer open={rolesDrawerOpen} onClose={() => setRolesDrawerOpen(false)} />
     </Drawer>
   );
 }

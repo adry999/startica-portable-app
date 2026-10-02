@@ -6,6 +6,7 @@ import {
   DateInput,
   Drawer,
   Field,
+  SearchSelect,
   Select,
   TextArea,
   useToast,
@@ -113,12 +114,12 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
           }}
         >
           <Field label="Angajat" htmlFor="leave-staff">
-            <Select
-              id="leave-staff"
-              required
+            <SearchSelect
+              ariaLabel="Angajat"
               value={staffId}
               onChange={setStaffId}
               options={staffSorted.map(person => ({ value: person.id, label: person.name }))}
+              placeholder="Alege angajatul…"
             />
           </Field>
           <Field label="Tip" htmlFor="leave-type">

@@ -1196,3 +1196,28 @@ scutit de validare) ține browserul blocând trimiterea formularului la o lună 
   ce există azi în bucla de randare a rândurilor — nefăcut, risc de a ghici formatul corect fără un
   mockup exact.
 - Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).
+
+## §16 (F28, PROMPT-11)
+
+Funcția din `StaffFormDrawer` nu mai e `<Select>` nativ: `SearchSelect` extins cu `group`/
+`leading`/`footer` (prop-uri noi, nu CSS local — regula din CLAUDE.md), grupat pe departament
+(ordinea `personal.departments`/`order`), punctul de ton al departamentului lângă fiecare funcție
+(aceeași paletă/funcție `departmentTone` ca în `RolesDrawer`, extrasă acum în
+`@shared/personal/department-tone.ts` ca să nu mai fie duplicată). Opțiunea aleasă are fundal
+`--orange-soft` + ✓. Jos, „+ Funcție nouă” deschide `RolesDrawer` peste formular (al doilea
+`Drawer`, nu drawer-în-drawer nested în DOM — ambele au propriul overlay; formularul rămâne deschis
+cu valorile intacte, nicio pierdere de date). Fără nicio funcție definită, lista arată „Nicio
+funcție încă · Adaugă în Personal → Funcții” (textul cerut, folosit ca `emptyLabel` — prop scutit de
+regula R9). `roleId` gol la trimitere → eroare „Alege funcția” pe câmp (verificare manuală în
+`handleSubmit`, `SearchSelect` nefiind un control nativ care să blocheze submit-ul singur).
+Extins și în `LeaveFormDrawer` (câmpul Angajat), cum cerea punctul; `AdvanceFormDrawer` nu are
+picker de angajat (primește `staff` direct ca prop), deci nimic de schimbat acolo.
+
+**Deviere de la spec (motivată):**
+- Punctul de departament rămâne cerc 10px, nu pătrat 8×8 radius 3 cum scrie punctul — am păstrat
+  convenția deja existentă și vizibilă în `RolesDrawer` (singurul loc unde acest punct exista deja
+  pe ecran), ca cele două liste să arate la fel; schimbarea formei ar fi însemnat două stiluri
+  diferite pentru același sens (ton de departament) pe ecrane învecinate.
+
+**Neatins din scop:**
+- Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).

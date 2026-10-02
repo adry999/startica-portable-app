@@ -34,6 +34,7 @@ export { ChoiceCards, type ChoiceCardOption, type ChoiceCardsProps } from './Cho
 export { SegmentedControl, type SegmentedControlOption, type SegmentedControlProps } from './SegmentedControl';
 export { Tabs, type TabsOption, type TabsProps } from './Tabs';
 export { Toggle, type ToggleProps } from './Toggle';
+export { Dot, type DotProps } from './Dot';
 export { Drawer, type DrawerProps } from './Drawer';
 export { Dialog, type DialogProps } from './Dialog';
 export { ToastProvider, useToast } from './Toast';

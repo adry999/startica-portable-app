@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
 import { ScrollArea } from './ScrollArea';
@@ -7,6 +7,10 @@ import styles from './SearchSelect.module.css';
 export interface SearchSelectOption {
   value: string;
   label: string;
+  /** Antet de secțiune afișat înaintea opțiunii când diferă de opțiunea precedentă (lista trebuie pre-sortată de apelant). */
+  group?: string;
+  /** Element afișat înaintea textului (ex. punct colorat de departament) — în listă și, pentru opțiunea aleasă, în trigger. */
+  leading?: ReactNode;
 }
 
 export interface SearchSelectProps {
@@ -18,6 +22,8 @@ export interface SearchSelectProps {
   ariaLabel: string;
   disabled?: boolean;
   className?: string;
+  /** Rând fix sub listă, ex. acțiune „+ Funcție nouă”. */
+  footer?: ReactNode;
 }
 
 interface MenuRect {
@@ -40,6 +46,7 @@ export function SearchSelect({
   ariaLabel,
   disabled,
   className,
+  footer,
 }: SearchSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -136,7 +143,14 @@ export function SearchSelect({
           requestAnimationFrame(() => inputRef.current?.focus());
         }}
       >
-        {selected ? selected.label : <span className={styles.placeholder}>{placeholder}</span>}
+        {selected ? (
+          <span className={styles.triggerLabel}>
+            {selected.leading}
+            {selected.label}
+          </span>
+        ) : (
+          <span className={styles.placeholder}>{placeholder}</span>
+        )}
         <span className={styles.caret}>
           <Icon name="chevron-down" size={14} />
         </span>
@@ -167,20 +181,33 @@ export function SearchSelect({
               <div className={styles.optionsList} role="listbox" aria-label={ariaLabel}>
                 {filtered.length === 0 && <p className={styles.empty}>{emptyLabel}</p>}
                 {filtered.map((option, index) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={option.value === value}
-                    className={index === activeIndex ? `${styles.option} ${styles.optionActive}` : styles.option}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => pick(option.value)}
-                  >
-                    {option.label}
-                  </button>
+                  <div key={option.value}>
+                    {option.group && option.group !== filtered[index - 1]?.group && (
+                      <p className={styles.optionGroup}>{option.group}</p>
+                    )}
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={option.value === value}
+                      className={
+                        index === activeIndex
+                          ? `${styles.option} ${styles.optionActive}`
+                          : option.value === value
+                            ? `${styles.option} ${styles.optionSelected}`
+                            : styles.option
+                      }
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => pick(option.value)}
+                    >
+                      {option.leading}
+                      <span className={styles.optionLabel}>{option.label}</span>
+                      {option.value === value && <Icon name="check" size={14} />}
+                    </button>
+                  </div>
                 ))}
               </div>
             </ScrollArea>
+            {footer && <div className={styles.footer}>{footer}</div>}
           </div>,
           document.body,
         )}

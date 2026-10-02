@@ -26,6 +26,13 @@
   color: var(--muted);
 }
 
+.triggerLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
 .caret {
   flex: none;
   display: flex;
@@ -65,6 +72,11 @@
 }
 
 .option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  box-sizing: border-box;
   border: none;
   background: none;
   text-align: left;
@@ -79,9 +91,38 @@
   background: var(--neutral-soft);
 }
 
+.optionSelected {
+  background: var(--orange-soft);
+}
+
+.optionLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.optionGroup {
+  margin: var(--space-8) 0 2px;
+  padding: 0 var(--space-10);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.optionGroup:first-child {
+  margin-top: 0;
+}
+
 .empty {
   margin: 0;
   padding: var(--space-8) var(--space-10);
   color: var(--muted);
   font-size: 13px;
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-8);
+  padding-top: var(--space-8);
 }

@@ -37,7 +37,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F25 Zile de naștere: gol fără „Următoarea” | ✅ 1b | ⏳ PROMPT-11 §13 |
 | F26 Meniul stâng (inițiale filială, bordură, card jos) | ✅ Sidebar a | ⏳ PROMPT-11 §14 |
 | F27 Antet module mai înalt (64px) | ✅ | ⏳ PROMPT-11 §15 |
-| F28 + Angajat: Funcția ca listă nativă | ✅ 23n | ⏳ PROMPT-11 §16 |
+| F28 + Angajat: Funcția ca listă nativă | ✅ 23n | ✅ PROMPT-11 §16 |
 | F29 Scrii doar în filiala deschisă (angajat cu alegere de filiale) | ✅ 23n, 23o | ⏳ PROMPT-11 §17 + audit |
 | F30 Salarii: nu se poate plăti, fără motiv | — | ⏳ PROMPT-11 §18 |
 | F31 Salariul nu se poate edita (formular gol, Bazin blocat) | — | ⏳ PROMPT-11 §19 |

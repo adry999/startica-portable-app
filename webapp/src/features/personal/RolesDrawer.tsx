@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Button,
   Checkbox,
+  Dot,
   Drawer,
   EditableList,
   Field,
@@ -9,10 +10,10 @@ import {
   Select,
   TextInput,
   useToast,
-  type BadgeTone,
 } from '@shared/ui';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
+import { departmentTone } from '@shared/personal/department-tone';
 import type { Department, PersonalSettings, Role } from '@shared/personal/personal.types';
 import styles from './RolesDrawer.module.css';
 import { toUserError } from '@shared/api/to-user-error';
@@ -20,16 +21,6 @@ import { toUserError } from '@shared/api/to-user-error';
 export interface RolesDrawerProps {
   open: boolean;
   onClose: () => void;
-}
-
-// 38f: punctul colorat arată departamentul funcției (nu funcția însăși) — aceleași 8 tonuri
-// ciclice ca grupele (group-tone.ts), după poziția departamentului în listă.
-const ROLE_TONES: BadgeTone[] = ['yellow', 'pink', 'teal', 'mint', 'blue', 'orange', 'purple', 'coral'];
-
-function departmentTone(departmentId: string, departmentList: Department[]): BadgeTone {
-  const sorted = departmentList.slice().sort((a, b) => a.order - b.order);
-  const index = sorted.findIndex(department => department.id === departmentId);
-  return ROLE_TONES[index === -1 ? 0 : index % ROLE_TONES.length];
 }
 
 /** Funcții (23e) — departamente și funcții editabile; o funcție cu angajați nu se poate șterge.
@@ -261,10 +252,7 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
             mode={rolesMode}
             renderView={role => (
               <div className={styles.roleView}>
-                <span
-                  className={`${styles.roleDot} ${styles[departmentTone(role.departmentId, departments)]}`}
-                  aria-hidden="true"
-                />
+                <Dot tone={departmentTone(role.departmentId, departments)} />
                 <div className={styles.roleInfo}>
                   <b className={styles.roleViewName}>{role.name}</b>
                   <span className={styles.roleViewDept}>{departmentNameFor(role.departmentId)}</span>

@@ -66,45 +66,6 @@
   align-items: center;
 }
 
-.roleDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.roleDot.yellow {
-  background: var(--yellow-bar);
-}
-
-.roleDot.pink {
-  background: var(--pink-bar);
-}
-
-.roleDot.teal {
-  background: var(--teal-bar);
-}
-
-.roleDot.mint {
-  background: var(--mint-bar);
-}
-
-.roleDot.blue {
-  background: var(--blue-bar);
-}
-
-.roleDot.orange {
-  background: var(--orange);
-}
-
-.roleDot.purple {
-  background: var(--purple-bar);
-}
-
-.roleDot.coral {
-  background: var(--coral-bar);
-}
-
 .roleInfo {
   display: flex;
   flex-direction: column;
