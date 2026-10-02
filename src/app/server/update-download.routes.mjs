@@ -2,10 +2,11 @@ import { fail } from '#core/server/errors/domain-error.mjs';
 
 /**
  * Rutele §5.2 Partea 2 (PROMPT-CLAUDE-CODE-10.md §8): declanșarea descărcării instalerului
- * verificat (`update-download.service.mjs`) și interogarea „e gata de instalat?”. Nu pornesc
- * singure (32-actualizari.md descrie o descărcare „în fundal”, dar pornirea ei automată din
- * main.mjs ar repeta cererea de rețea reală a lui checkForUpdate() la fiecare pornire/6 ore —
- * vezi docs/design/INTREBARI.md, §8 PROMPT-10) — clientul cere explicit descărcarea.
+ * verificat (`update-download.service.mjs`) și interogarea „e gata de instalat?”. Descărcarea
+ * pornește deja automat din `checkForUpdate()` (`create-application.mjs`, PROMPT-11 §4.3) —
+ * `/api/update/download` rămâne ca rezervă manuală (ex. descărcarea automată a fost oprită prin
+ * `STARTICA_UPDATE_AUTO_DOWNLOAD=0`, sau o încercare anterioară a eșuat și operatorul vrea să
+ * reîncerce din Backup și setări, fără să aștepte următoarea verificare la 6 ore).
  * @param {{
  *   downloadService: ReturnType<typeof import('./update-download.service.mjs').createUpdateDownloadService>,
  *   updateStatus: () => import('./update-check.service.mjs').UpdateStatus,

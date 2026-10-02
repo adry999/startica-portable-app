@@ -21,6 +21,11 @@ export interface PinGateProps {
  * e UNUL SINGUR (adminPin, din Backup și setări), partajat de toate modulele, de-aceea
  * `usePinStatus` rămâne neschimbat (aceleași `/api/personal/pin*`), doar textul variază pe ecran.
  */
+// PROMPT-11 §4.1: numărătoarea locală trebuie să reflecte blocajul real al serverului
+// (pin.service.mjs LOCKOUT_DURATION_MS), nu implicitul de 60s din usePinLock (păstrat acolo
+// doar pentru alte folosiri ale hook-ului).
+const SERVER_LOCKOUT_MS = 15 * 60 * 1000;
+
 export function PinGate({ label, title, subtitle, children }: PinGateProps) {
   const pin = usePinStatus();
   return (
@@ -33,6 +38,7 @@ export function PinGate({ label, title, subtitle, children }: PinGateProps) {
       subtitle={subtitle ?? `${label}: introdu PIN-ul administrator (4–6 cifre).`}
       inputAriaLabel="PIN administrator"
       hint="Se blochează singur după 10 minute de inactivitate."
+      lockoutMs={SERVER_LOCKOUT_MS}
     >
       {children}
     </LockedContent>

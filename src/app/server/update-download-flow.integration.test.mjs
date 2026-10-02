@@ -83,6 +83,53 @@ test('§8 PROMPT-10 Partea 2: check → download → verificare → pending → 
   assert.deepEqual(spawnCalls[0].options, { detached: true, stdio: 'ignore' });
 });
 
+// PROMPT-11 §4.3: implicit automată — checkForUpdate() descarcă singur, fără apel manual la
+// /api/update/download.
+test('§4.3 (PROMPT-11): cu autoDownloadUpdate, checkForUpdate() descarcă și verifică singur', async t => {
+  let downloadRequests = 0;
+  const { app, get } = await startTestApplication(t, {
+    fetch: /** @type {any} */ (url => {
+      if (String(url) === DOWNLOAD_URL) downloadRequests++;
+      return fakeAppFetch(String(url));
+    }),
+    releaseRepo: REPO,
+    autoDownloadUpdate: true,
+    // Rămâne o actualizare „gata de instalat” la close() — un spawn fals ca în testele de
+    // mai sus, ca să nu încerce să lanseze fișierul de test ca executabil real.
+    spawnFn: /** @type {any} */ (() => ({ unref: () => {} })),
+  });
+
+  await app.checkForUpdate();
+
+  const session = await get('/api/session');
+  assert.equal(session.update.updateAvailable, true);
+  assert.equal(session.update.installReady, true);
+  assert.equal(session.update.pendingVersion, '2.2.0');
+  assert.equal(downloadRequests, 1);
+
+  // A doua verificare, aceeași versiune — nu descarcă din nou (deja verificată SHA-256).
+  await app.checkForUpdate();
+  assert.equal(downloadRequests, 1);
+});
+
+test('fără autoDownloadUpdate (implicit), checkForUpdate() nu descarcă singur', async t => {
+  let downloadRequests = 0;
+  const { app, get } = await startTestApplication(t, {
+    fetch: /** @type {any} */ (url => {
+      if (String(url) === DOWNLOAD_URL) downloadRequests++;
+      return fakeAppFetch(String(url));
+    }),
+    releaseRepo: REPO,
+  });
+
+  await app.checkForUpdate();
+
+  const session = await get('/api/session');
+  assert.equal(session.update.updateAvailable, true);
+  assert.equal(session.update.installReady, false);
+  assert.equal(downloadRequests, 0);
+});
+
 test('§8 PROMPT-10 Partea 2: fără nicio actualizare descărcată, close() nu lansează nimic', async t => {
   /** @type {unknown[]} */
   const spawnCalls = [];

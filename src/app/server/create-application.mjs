@@ -55,6 +55,7 @@ const RESTORE_AUDIT_ACTION = 'restaurare';
  *   fetch?: typeof fetch,
  *   releaseRepo?: string,
  *   spawnFn?: typeof import('node:child_process').spawn,
+ *   autoDownloadUpdate?: boolean,
  * }} [options]
  */
 export function createApplication(options = {}) {
@@ -73,6 +74,12 @@ export function createApplication(options = {}) {
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
   const registryFile = join(home, BRANCH_REGISTRY_FILE_NAME);
   const registry = createBranchRegistryStore({ file: registryFile, createId: randomUUID });
+
+  // PROMPT-11 §4.3: implicit automată, dar niciodată în teste care nu o cer explicit —
+  // `environment.mjs` dă `false` pe profilul `test`, iar un `createApplication()` direct
+  // (majoritatea testelor unitare/integrare) nu trece prin `environment.mjs` deloc, deci
+  // implicitul de-aici trebuie să rămână tot „oprit", nu „pornit".
+  const autoDownloadUpdate = options.autoDownloadUpdate ?? false;
 
   // §5.2: un singur checker per proces (nu per filială/schimbare de filială) — verificarea
   // de rețea e aceeași indiferent de filiala activă, deci starea rămâne valabilă peste o
@@ -561,7 +568,24 @@ export function createApplication(options = {}) {
     refreshTomorrowRateIfMissing: () => active.refreshTomorrowRateIfMissing(),
     // §5.2: verificare de rețea explicită (pornire + o dată la 6 ore, vezi main.mjs) — nu
     // aruncă niciodată (createUpdateChecker/checkForUpdate), doar actualizează updateStatus().
-    checkForUpdate: () => updateChecker.refresh(),
+    // PROMPT-11 §4.3: implicit, descarcă automat instalerul anunțat — o singură dată pe
+    // versiune (sare dacă `pendingUpdate()` are deja aceeași versiune, deja verificată
+    // SHA-256 de `downloadAndVerify`). `downloadAndVerify` nu aruncă niciodată, la fel ca
+    // restul mecanismului — un eșec înseamnă doar „tot neconfirmat", nu o eroare de raportat.
+    checkForUpdate: async () => {
+      const status = await updateChecker.refresh();
+      if (autoDownloadUpdate && status.updateAvailable) {
+        const pending = updateDownloadService.pendingUpdate();
+        if (pending?.version !== status.latestVersion) {
+          await updateDownloadService.downloadAndVerify({
+            downloadUrl: status.downloadUrl,
+            sha256: status.sha256,
+            version: status.latestVersion,
+          });
+        }
+      }
+      return status;
+    },
     updateStatus: () => updateChecker.status(),
     runStartupSweeps: () => active.runStartupSweeps(),
     // Pornirea motorului de sincronizare al filialei active (Faza 3) — separată de

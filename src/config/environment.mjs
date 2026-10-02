@@ -45,12 +45,25 @@ export const UPDATE_DIR_NAME = 'Actualizari';
  * @property {number} autoBackupIntervalMs 0 = backup la fiecare scriere
  * @property {string | undefined} home rădăcina de date a lansatorului desktop; absentă = folderul aplicației
  * @property {string} releaseRepo "owner/repo" GitHub Releases pentru verificarea de versiune (§5.2)
+ * @property {boolean} autoDownloadUpdate PROMPT-11 §4.3: descărcarea automată după checkForUpdate() — oprită
+ *   implicit în profilul `test` (test:e2e și teste unitare), pornită altfel; `STARTICA_UPDATE_AUTO_DOWNLOAD=0`
+ *   o oprește explicit indiferent de profil.
  */
 
 const PROFILE_DEFAULTS = {
-  development: { port: 8765, openBrowser: true, autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS },
-  test: { port: 0, openBrowser: false, autoBackupIntervalMs: 0 },
-  production: { port: 8765, openBrowser: false, autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS },
+  development: {
+    port: 8765,
+    openBrowser: true,
+    autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+    autoDownloadUpdate: true,
+  },
+  test: { port: 0, openBrowser: false, autoBackupIntervalMs: 0, autoDownloadUpdate: false },
+  production: {
+    port: 8765,
+    openBrowser: false,
+    autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+    autoDownloadUpdate: true,
+  },
 };
 
 /**
@@ -105,5 +118,6 @@ export function loadEnvironment(variables = process.env) {
     autoBackupIntervalMs: defaults.autoBackupIntervalMs,
     home: parseHome(variables.STARTICA_HOME),
     releaseRepo: variables.STARTICA_RELEASE_REPO || DEFAULT_RELEASE_REPO,
+    autoDownloadUpdate: variables.STARTICA_UPDATE_AUTO_DOWNLOAD === '0' ? false : defaults.autoDownloadUpdate,
   });
 }

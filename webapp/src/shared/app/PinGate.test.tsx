@@ -65,6 +65,29 @@ describe('PinGate (§7, 36h — generalizat pentru orice modul din pinModules)',
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  // PROMPT-11 §4.1: numărătoarea locală = blocajul serverului (15 minute), nu implicitul de 60s.
+  it('blocajul local după 5 greșeli arată 900s (15 minute, ca blocajul serverului)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/personal/pin') return jsonResponse({ configured: true, unlocked: false });
+        if (path === '/api/personal/pin/unlock') return jsonResponse({ error: 'PIN greșit.' }, false, 403);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    render(
+      <PinGate label="Achitările">
+        <p>Conținut</p>
+      </PinGate>,
+    );
+    const input = await screen.findByLabelText('PIN administrator');
+    for (let i = 0; i < 5; i++) {
+      await userEvent.type(input, '0000{enter}');
+    }
+    expect(await screen.findByText('Blocat 900s — prea multe încercări greșite.')).toBeInTheDocument();
+  });
+
   it('acceptă titlu/subtitlu proprii (folosit de Salarii, ca să-și păstreze formularea)', async () => {
     vi.stubGlobal(
       'fetch',

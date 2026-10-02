@@ -49,6 +49,23 @@ describe('DevicesList (§5.3, 36c)', () => {
     expect(within(row2).queryByText(/^v\d/)).not.toBeInTheDocument();
   });
 
+  // F26/37d (PROMPT-11 §4.4): „oprite primele”/banner declinate — doar pastila pe rând, și doar
+  // când pragul chiar e cunoscut (minVersion nenul).
+  it('§4.4: calculator sub minVersion arată pastila roz „Versiune veche”', () => {
+    render(<DevicesList devices={[DEVICE_COMPLET]} onRevoke={vi.fn()} minVersion="2.0.0" />);
+    expect(screen.getByText('Versiune veche · sincronizare oprită')).toBeInTheDocument();
+  });
+
+  it('§4.4: fără minVersion cunoscut (niciun 426 primit încă), nicio pastilă', () => {
+    render(<DevicesList devices={[DEVICE_COMPLET]} onRevoke={vi.fn()} />);
+    expect(screen.queryByText(/Versiune veche/)).not.toBeInTheDocument();
+  });
+
+  it('§4.4: calculator fără versiune raportată încă (version: null) nu e marcat „veche”', () => {
+    render(<DevicesList devices={[DEVICE_EDUCATOR]} onRevoke={vi.fn()} minVersion="2.0.0" />);
+    expect(screen.queryByText(/Versiune veche/)).not.toBeInTheDocument();
+  });
+
   it('fără onChangeProfile nu arată „Schimbă” (apelant care nu-l expune)', () => {
     render(<DevicesList devices={[DEVICE_EDUCATOR]} onRevoke={vi.fn()} />);
     expect(screen.queryByRole('button', { name: 'Schimbă' })).not.toBeInTheDocument();

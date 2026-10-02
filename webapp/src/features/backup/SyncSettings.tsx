@@ -133,6 +133,7 @@ export function SyncSettings() {
               devices={sync.devices}
               onRevoke={sync.revokeDevice}
               onChangeProfile={sync.changeDeviceProfile}
+              minVersion={status.minVersion}
             />
           )}
         </Card>

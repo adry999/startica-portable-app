@@ -72,6 +72,7 @@ export function startServer() {
       : {}),
     allowShutdown: true,
     autoBackupIntervalMs: environment.autoBackupIntervalMs,
+    autoDownloadUpdate: environment.autoDownloadUpdate,
   });
   app.server.on('error', e => {
     const failure = /** @type {NodeJS.ErrnoException} */ (e);

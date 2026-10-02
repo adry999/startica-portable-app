@@ -1447,3 +1447,41 @@ listat în prompt.
 **Neatins din scop:**
 - Fără captură Dashboard/Copii/Grupe/Backup cu linia de sub antet aliniată, cerută explicit de
   punct — ca la toate punctele anterioare din acest lanț.
+
+## §4 (resturi din PROMPT-10, PROMPT-11)
+
+**1. Numărătoarea PIN:** `@shared/app/PinGate.tsx` trimite acum `lockoutMs={15 * 60 * 1000}` către
+`LockedContent`/`usePinLock` — numărătoarea locală (`Blocat Ns…`) reflectă cele 15 minute reale ale
+blocajului server (`pin.service.mjs LOCKOUT_DURATION_MS`), nu implicitul de 60s al hook-ului
+(rămas neschimbat pentru alte eventuale folosiri). `features/personal/PinGate.tsx` (Salarii)
+moștenește automat, fiind doar o înfășurare subțire peste cel comun.
+
+**2. Toleranța de rotunjire:** deja închis — `DECIZII.md` are deja rândul actualizat („5 lei, fix;
+rotunjirea se alege la plată — fără setare de toleranță pe filială”), din momentul §2. Nimic de
+schimbat aici.
+
+**3. Descărcarea actualizării, implicit automată:** `create-application.mjs`'s `checkForUpdate()`
+descarcă acum singur instalerul (`updateDownloadService.downloadAndVerify`) după un `refresh()`
+reușit cu `updateAvailable: true` — o singură dată pe versiune (sare dacă `pendingUpdate()` are deja
+exact acea versiune, deja verificată SHA-256 la descărcarea anterioară). Pornit/oprit prin
+`options.autoDownloadUpdate`, implicit `false` la un `createApplication()` direct (ca testele
+existente să nu înceapă brusc să descarce), dar `environment.mjs` îl dă `true` pe profilurile
+`development`/`production` și `false` pe `test` — `STARTICA_UPDATE_AUTO_DOWNLOAD=0` îl oprește
+explicit indiferent de profil. `/api/update/download` rămâne ca rezervă manuală (descărcare automată
+oprită, sau o încercare eșuată anterior). Banda 42b (`installReady`) tot nu apare decât după
+verificarea SHA-256 — nicio schimbare acolo, mecanismul exista deja.
+
+**4. 37d, scop redus (fără „oprite primele”, fără banner):** `DevicesList.tsx` arată acum o pastilă
+roz „Versiune veche · sincronizare oprită” pe rândul unui calculator a cărui `version` raportată e
+sub `minVersion` — comparația folosește `minVersion` deja expus de `useSyncStatus()` (populat doar
+după ce ACEST calculator a primit un 426 real de la server, altfel „”, caz în care nicio pastilă nu
+apare — nu există altă cale să aflăm pragul fără o cerere de rețea nouă). Fără sortare „oprite
+primele”, fără banner separat — exact scopul redus cerut.
+
+Teste noi: `PinGate.test.tsx` (900s după 5 greșeli), `environment.test.mjs`
+(`autoDownloadUpdate` pe fiecare profil + `STARTICA_UPDATE_AUTO_DOWNLOAD=0`),
+`update-download-flow.integration.test.mjs` (2 teste noi: descarcă automat + nu descarcă fără flag),
+`DevicesList.test.tsx` (pastila apare/nu apare după `minVersion`/`version`).
+
+**Neatins din scop:**
+- Fără captură — ca la toate punctele anterioare din acest lanț.

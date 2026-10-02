@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge, Button, ConfirmDeleteDialog, Dialog, type BadgeTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { completProfile, normalizeProfile, PRESET_LABELS } from '#shared/domain/computer-profile.mjs';
+import { compareVersions } from '#shared/domain/version-compare.mjs';
 import { ProfileEditor } from './ProfileEditor';
 import type { SyncDevice } from './useSyncSettings';
 import styles from './DevicesList.module.css';
@@ -27,6 +28,9 @@ export interface DevicesListProps {
   /** §5.3 (36c): „Schimbă” din rândul calculatorului — lipsă într-un apelant care nu-l expune
    * încă (teste izolate); în acel caz, coloana Profil rămâne doar informativă, fără acțiune. */
   onChangeProfile?: (deviceId: string, profile: Profile) => Promise<void>;
+  /** F26/37d (PROMPT-11 §4.4): versiunea minimă cerută de server, din `useSyncStatus().minVersion`
+   * — „” cât timp acest calculator nu a primit încă niciun 426 (nu știm cu adevărat pragul). */
+  minVersion?: string;
 }
 
 function daysOffline(lastSeenAt: string): number {
@@ -35,7 +39,7 @@ function daysOffline(lastSeenAt: string): number {
 }
 
 /** Lista „Calculatoare conectate” (14b) — rândul propriu nu are „Deconectează”, celelalte cer confirmare. */
-export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListProps) {
+export function DevicesList({ devices, onRevoke, onChangeProfile, minVersion }: DevicesListProps) {
   const session = useAppSession();
   const [pendingRevoke, setPendingRevoke] = useState<SyncDevice | null>(null);
   // §5.3 (36c): dispozitivul al cărui profil e în curs de schimbare — non-null deschide dialogul.
@@ -79,6 +83,9 @@ export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListP
         // §5.3 (36c): lipsă = un calculator conectat înainte de profiluri, tratat ca Complet
         // (completProfile(), aceeași convenție ca pe server).
         const preset = (device.profile ?? completProfile()).preset;
+        // F26/37d (PROMPT-11 §4.4): „oprite primele” declinat (fără sortare/banner) — doar
+        // pastila pe rând, și doar când pragul chiar e cunoscut (minVersion nenul).
+        const outdated = !!minVersion && !!device.version && compareVersions(device.version, minVersion) === -1;
         return (
           <div key={device.id} className={styles.row}>
             <span className={offlineDays > 0 ? `${styles.dot} ${styles.dotOffline}` : styles.dot} aria-hidden="true" />
@@ -93,6 +100,7 @@ export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListP
                 {offlineDays > 0 ? `Offline de ${offlineDays} zile` : 'Sincronizat'}
               </span>
             </div>
+            {outdated && <Badge tone="pink">Versiune veche · sincronizare oprită</Badge>}
             <Badge tone={PRESET_BADGE_TONES[preset] ?? 'yellow'}>{presetLabels[preset] ?? preset}</Badge>
             {onChangeProfile && (
               <Button variant="ghost" onClick={() => openProfileEditor(device)}>

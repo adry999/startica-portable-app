@@ -11,6 +11,7 @@ test('fără variabile, profilul este development și deschide browserul', () =>
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
     home: undefined,
     releaseRepo: DEFAULT_RELEASE_REPO,
+    autoDownloadUpdate: true,
   });
 });
 
@@ -28,11 +29,12 @@ test('lansatorul desktop primește production, portul ales și fără browser se
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
     home: undefined,
     releaseRepo: DEFAULT_RELEASE_REPO,
+    autoDownloadUpdate: true,
   });
   assert.equal(Object.isFrozen(environment), true);
 });
 
-test('profilul test alege un port liber și face backup la fiecare scriere', () => {
+test('profilul test alege un port liber, face backup la fiecare scriere și nu descarcă actualizări singur', () => {
   assert.deepEqual(loadEnvironment({ STARTICA_PROFILE: 'test' }), {
     profile: 'test',
     port: 0,
@@ -40,7 +42,20 @@ test('profilul test alege un port liber și face backup la fiecare scriere', () 
     autoBackupIntervalMs: 0,
     home: undefined,
     releaseRepo: DEFAULT_RELEASE_REPO,
+    autoDownloadUpdate: false,
   });
+});
+
+// PROMPT-11 §4.3: implicit automată, dar STARTICA_UPDATE_AUTO_DOWNLOAD=0 o oprește explicit
+// (test:e2e), indiferent de profil.
+test('STARTICA_UPDATE_AUTO_DOWNLOAD=0 oprește descărcarea automată, chiar și în development', () => {
+  assert.equal(loadEnvironment({}).autoDownloadUpdate, true);
+  assert.equal(loadEnvironment({ STARTICA_UPDATE_AUTO_DOWNLOAD: '0' }).autoDownloadUpdate, false);
+  assert.equal(loadEnvironment({ STARTICA_PROFILE: 'test' }).autoDownloadUpdate, false);
+  assert.equal(
+    loadEnvironment({ STARTICA_PROFILE: 'production', STARTICA_UPDATE_AUTO_DOWNLOAD: '0' }).autoDownloadUpdate,
+    false,
+  );
 });
 
 test('STARTICA_RELEASE_REPO suprascrie repo-ul implicit de release-uri (§5.2)', () => {
