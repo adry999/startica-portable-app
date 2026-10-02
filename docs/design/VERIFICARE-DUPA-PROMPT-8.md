@@ -71,3 +71,8 @@ Instalează pe un calculator de test sau pe o copie a datelor, niciodată direct
 ## La final
 - [ ] Compară numerele de la §0 cu cele de acum: copii, achitări luna asta, angajați.
 - [ ] Trimite-mi lista cu ce nu a mers (F15…), iar eu fac sync și pun corecturile în promptul următor.
+
+
+## Rămase din PROMPT-8 (02.10)
+- [ ] F4: Chrome pe „Copil nou” → Nume / Telefon părinte nu oferă autocompletare. Dacă oferă, spune: trecem pe `new-password`.
+- [ ] După PROMPT-9: rulează checklist-ul din `PROMPT-CLAUDE-CODE-9.md` secțiune cu secțiune.

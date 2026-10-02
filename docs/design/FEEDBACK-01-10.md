@@ -1,39 +1,44 @@
 # Feedback 01.10 (seara) — plan de design + cod
 
-Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md`.
+Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md` (arhivat) → `PROMPT-CLAUDE-CODE-9.md`.
 
-## Stare (sync 02.10, pachet i)
+## Stare (sync 02.10) — după INTREBARI PROMPT-8 + RASPUNSURI-02-10.md
+
+Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de testat manual (VERIFICARE-DUPA-PROMPT-8.md) · ⏸ pauză
 | # | Design | Cod |
 |---|---|---|
 | F1 Paginare | ✅ 38a | ✅ `9544360` |
 | F2 Ocupare grupă | ✅ 38b | ✅ `f1deb4e` |
 | F3 Alte date la Copil nou | ✅ 38b | ✅ `f1deb4e` |
-| F4 Fără autocompletare | — | ✅ `38ef0c7` |
+| F4 Fără autocompletare | — | 🧪 `off` peste tot (`38ef0c7`); test Chrome „Copil nou” nume/telefon nefăcut |
 | F5 Editor grupă | — | ✅ `2cbd5f6` |
-| F6 Backup complet | ✅ 38g | ⏳ parțial — creare arhivă gata (`971d906`,`b161008`,`fa78d4a`), restaurare+UI rămase (plan §6-10) |
+| F6 Backup complet | ✅ 38g | 🔁 arhivă completă + restaurare server ✅ (F6, `971d906`,`b161008`,`fa78d4a`; restaurare `7610e5f`…`4635ecc`); UI prima pornire + reîncărcare → PROMPT-9 §4 |
 | F7 Luni de la luna curentă | ✅ 38c | ✅ `7d8c64f` |
 | F8 Funcții custom | ✅ 38f (exista deja în Personal 23e) | ✅ `c045b40` |
-| F9 MDL/EUR | — | ⏳ `5ec6429` (verificat — un conflict găsit, în `INTREBARI.md`) |
+| F9 MDL/EUR | — | ✅ verificat; secțiunea EUR din Raport contabil se păstrează (02.10). Plăți vechi fără `fxRate` → PROMPT-9 §9 |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
-| F11 Plată din fișă | ✅ 38c | ⏳ §3.4 |
-| F12 Curs BNM istoric | ✅ 38e | ⏳ §3.3 |
-| F13 Planuri view/edit | ✅ 38d | ⏳ §3.5 |
+| F11 Plată din fișă | ✅ 38c | ✅ `53653b7`; doar taxa lunii, restanța bifă manuală (02.10) |
+| F12 Curs BNM istoric | ✅ 38e | 🔁 polling + calendar + backfill per filială ✅ (`81f979c`); mutare în baza comună → PROMPT-9 §8 |
+| F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
 | C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
-| Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ✅ `217250b` (40c) · `01f6881` (40a) · `74f9317`+`fcbbc39` (40b — 2/6 acțiuni legate la UndoToast, restul în `INTREBARI.md`) |
+| Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | 🔁 40a/40c ✅ (`217250b`,`01f6881`); 40b: server gata, UndoToast doar cheltuială + arhivare 1 copil (`74f9317`+`fcbbc39`); restul → PROMPT-9 §5 |
 | Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
-| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting peste aproape toate feature-urile, pasă separată ulterioară |
-| PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` (§5.1/§9.2) |
-| Rotunjire la achitare | ✅ 41f | ⏳ §9.1 |
+| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting, pasă separată |
+| PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` |
+| Pontaj „Toți prezenți” (41b) | ✅ 41b | 🔁 cod nou „P” ✅ (`ed33495`); să apară distinct în grilă/tipar → PROMPT-9 §1.2 |
+| Rotunjire la achitare | ✅ 41f | ⏳ §9.1 — rândul de pe bon (42c) e gata (`5017824`), nimic nu scrie încă `roundingDiff` |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
-| Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ✅ 42a/42b `86c744d` (§5.2 deblocat; „Cere actualizarea” pe profil Educator rămâne amânat, blocat pe 43a, vezi INTREBARI.md) · ✅ 42c `5017824` · ✅ 42d server `7610e5f`,`dc4bf5d`,`497cbf3`,`39c895a`,`5a0fdff`,`a2192ab`,`b427a71`,`4635ecc` (UI rămasă, vezi INTREBARI.md) |
+| Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d, 46a–46d | 🔁 42a/42b/42c ✅ (`86c744d`,`5017824`); 42d server ✅ (`7610e5f`…`4635ecc`), UI prima pornire + reîncărcare → PROMPT-9 §4 (`Prima pornire.dc.html#46a–46d`) |
+| Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo → `adry999/startica-releases` (PROMPT-9 §1.1); 426 + instalare automată rămân |
+| Profiluri calculator (§5.3) | ✅ 36a–36h | 🔁 server + sync ✅ (`be573f4`…`0969da7`); strat client → PROMPT-9 §2; 36g/36h → §7; fără ștergere locală (02.10); `sync-server` de redesfășurat |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
-| Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` (tab „Azi” pe ecranul Bazin; ignoră profilurile de calculator §5.3, cum cere §12) |
-| Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ✅ `54b5ee3` (44a) · `0f6e0a6` (44b — frați+receiptGroupId; anularea grupului amânată, vezi `INTREBARI.md`) · `7c9028b` (44c) · ⏳ 44d amânat deliberat — cross-cutting ca 41d, `INTREBARI.md` |
-| Liste: cele mai noi primele; filtre păstrate | — | ✅ `ba8a80d`+`1e09940` (§13.1 — sortare descrescătoare, Achitări/Cheltuieli/Vizite/Avansuri) · `b1dfb88`+`fba3164` (§13.2 — filtre/căutare în URL, Copii/Achitări/Cheltuieli) |
+| Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` |
+| Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | 🔁 44a–44c ✅ (`54b5ee3`,`0f6e0a6`,`7c9028b`); 44d → PROMPT-9 §3; anularea grupului de frați → §5 |
+| Liste: cele mai noi primele; filtre păstrate | — | ✅ `ba8a80d`+`1e09940` (sortare) · `b1dfb88`+`fba3164` (filtre URL) |
 | Storybook: 3 componente fără poveste + regulă R12 | — | ⏳ §6c |
-| Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | ✅ `1629df0`+`6f0e8ad` (45a/45b) · `be02f74`+`8281546` (45c — înlocuiește sursele vechi ale cardului; gating „profil Complet", filtre calculator/perioadă și „cine" pe rând rămân neconstruite din lipsă de infrastructură, vezi `INTREBARI.md`) |
+| Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | 🔁 ✅ cu devieri (`1629df0`,`6f0e8ad`,`be02f74`,`8281546`, INTREBARI §14); filtre modul/calculator/perioadă → PROMPT-9 §6 |
 | Personal complet (salarii, avansuri, stat) | ⏸ de decis ce intră | — |
 
 ## F1. Paginare în toate tabelele

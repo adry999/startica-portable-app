@@ -69,4 +69,13 @@ Varianta (a): `--orange-strong` #b85a00 pentru orice fundal cu text alb (4,7:1).
 - **Un singur format salvat (§10):** baza ține telefonul ca E.164 (`+373XXXXXXXX`), ecranul arată „069 123 456”. `PhoneInput` acceptă orice formă (`69123456`, `069123456`, `+373 69…`, `00373…`) și salvează E.164 odată numărul complet/valid.
 - Opțional, „Alt număr” pentru numere străine (cu prefix „+”): acceptat ca atare, fără normalizare, fără eroare.
 - Un număr incomplet nu blochează salvarea (câmpul rămâne opțional); mesajul e „Număr incomplet: 8 cifre după 0”, nu mesajul generic.
-- Dacă nu e nici un mobil moldovenesc valid, nici „alt număr” cu „+”, se salvează așa cum e, cu `phoneInvalid: true` (pentru bannerul „de verificat”, §9.3/§14, care nu e construit încă).
+- Dacă nu e nici un mobil moldovenesc valid, nici „alt număr” cu „+”, se salvează așa cum e, cu `phoneInvalid: true` (pentru bannerul „de verificat”, §9.3/§14 — construit între timp, vezi `MissingFieldsBanner`).
+
+## 02.10 — răspunsuri la INTREBARI PROMPT-8 (detaliu: RASPUNSURI-02-10.md)
+- Release-uri pe repo public separat `adry999/startica-releases`; codul rămâne privat.
+- Raport contabil păstrează secțiunea „Pentru taxe în EUR”; agregatele rămân doar MDL.
+- Curs valutar + planuri se mută în baza comună (migrare separată, dry-run întâi).
+- „+ Plată” din fișă precompletează doar taxa lunii; restanța rămâne bifă manuală (F7).
+- Pontaj: codul „P” (prezent confirmat) apare distinct, literă pe mint, în grilă și la tipărire.
+- La restrângerea profilului nu se șterg date locale; doar se ascund (ModuleGuard).
+- Prima pornire începe cu alegerea Backup / Alt calculator / De la zero (46a–46d).
