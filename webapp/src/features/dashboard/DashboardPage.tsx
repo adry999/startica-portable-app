@@ -78,6 +78,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
     income: bar.value,
     expense: dashboardData.expenseHistory[index]?.value ?? 0,
   }));
+  const hasRevenueData = chartMonths.some(bar => bar.income > 0 || bar.expense > 0);
 
   return (
     <>
@@ -142,29 +143,37 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               ]}
             />
           </div>
-          <BarChart
-            ariaLabel="Evoluția încasărilor și cheltuielilor, ultimele 12 luni"
-            series={chartMonths.map((bar, index) => ({
-              label: bar.month.slice(5),
-              value: bar.income,
-              current: index === currentMonthIndex,
-            }))}
-            secondarySeries={chartMonths.map((bar, index) => ({
-              label: bar.month.slice(5),
-              value: bar.expense,
-              current: index === currentMonthIndex,
-            }))}
-            grouped
-            groupAriaLabel={(_item, _secondary, index) => {
-              const bar = chartMonths[index];
-              return `${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`;
-            }}
-            groupTooltip={(_item, _secondary, index) => {
-              const bar = chartMonths[index];
-              const diff = bar.income - bar.expense;
-              return `${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`;
-            }}
-          />
+          {hasRevenueData ? (
+            <BarChart
+              ariaLabel="Evoluția încasărilor și cheltuielilor, ultimele 12 luni"
+              series={chartMonths.map((bar, index) => ({
+                label: bar.month.slice(5),
+                value: bar.income,
+                current: index === currentMonthIndex,
+              }))}
+              secondarySeries={chartMonths.map((bar, index) => ({
+                label: bar.month.slice(5),
+                value: bar.expense,
+                current: index === currentMonthIndex,
+              }))}
+              grouped
+              groupAriaLabel={(_item, _secondary, index) => {
+                const bar = chartMonths[index];
+                return `${fullMonthLabel(bar.month)}: încasări ${formatMoney(bar.income)}, cheltuieli ${formatMoney(bar.expense)}`;
+              }}
+              groupTooltip={(_item, _secondary, index) => {
+                const bar = chartMonths[index];
+                const diff = bar.income - bar.expense;
+                return `${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`;
+              }}
+            />
+          ) : (
+            <EmptyState
+              variant={EMPTY_STATES['dashboard.revenue.first'].variant}
+              size="compact"
+              title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.revenue.first'])}
+            />
+          )}
         </Card>
 
         <Card className={styles.attentionPanel}>

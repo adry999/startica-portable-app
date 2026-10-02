@@ -77,6 +77,7 @@ export const RaportPeriod: Story = fromCatalog('raport.period');
 export const BonziPeriod: Story = fromCatalog('bonzi.period');
 
 // ── 35d — compact, în interiorul unui card ──────────────────────────────────
+export const DashboardRevenueFirst: Story = fromCatalog('dashboard.revenue.first');
 export const DashboardAttentionFirst: Story = fromCatalog('dashboard.attention.first');
 export const DashboardAttentionDone: Story = fromCatalog('dashboard.attention.done');
 export const DashboardBirthdays: Story = fromCatalog('dashboard.birthdays');

@@ -39,6 +39,7 @@ const KEYS_35C: EmptyStateKey[] = [
 ];
 
 const KEYS_35D: EmptyStateKey[] = [
+  'dashboard.revenue.first',
   'dashboard.attention.first',
   'dashboard.attention.done',
   'dashboard.birthdays',

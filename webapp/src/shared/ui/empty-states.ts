@@ -41,6 +41,7 @@ export type EmptyStateKey =
   | 'raport.period'
   | 'bonzi.period'
   // 35d — compact, în interiorul unui card
+  | 'dashboard.revenue.first'
   | 'dashboard.attention.first'
   | 'dashboard.attention.done'
   | 'dashboard.birthdays'
@@ -242,6 +243,13 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
   // ── 35d — compact, în interiorul unui card ──────────────────────────────
   // Niciun copil în filială încă — nu o coadă de atenție goală din lipsă de probleme, ci din
   // lipsă de date (PROMPT-CLAUDE-CODE-6.md §2).
+  // Graficul rămâne complet gol (fără bare, fără mesaj) pe o filială nouă, fără nicio plată
+  // sau cheltuială în ultimele 12 luni — arăta ca un bug, nu ca „încă nu există date”.
+  'dashboard.revenue.first': {
+    variant: 'first',
+    size: 'compact',
+    title: 'Niciun venit sau cheltuială înregistrată încă',
+  },
   'dashboard.attention.first': {
     variant: 'first',
     size: 'compact',

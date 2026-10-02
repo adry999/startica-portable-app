@@ -114,6 +114,16 @@ describe('DashboardPage', () => {
     expect(onNavigate).toHaveBeenCalledWith('children', { nou: '1' });
   });
 
+  it('dashboard.revenue.first: fără nicio plată/cheltuială în ultimele 12 luni, graficul arată un mesaj în loc să rămână gol', async () => {
+    stubFetch({ ...fixtureState, payments: [], expenses: [] });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderDashboard({ month: '2026-09', onNavigate: () => {} });
+    expect(screen.getByText('Niciun venit sau cheltuială înregistrată încă')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /încasări.*cheltuieli/ })).not.toBeInTheDocument();
+  });
+
   it('A8: graficul Evoluția încasărilor arată legenda cu pătrate, nu comutatorul Încasări/Cheltuieli', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
