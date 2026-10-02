@@ -105,6 +105,7 @@ export const STATIC_PATH_MODULE = {
   '/api/branches/records': 'report',
 
   '/api/audit': 'admin',
+  '/api/audit/access': 'admin',
   '/api/audit/scope': 'admin',
 
   '/api/import-preview': 'admin',
@@ -149,8 +150,22 @@ export const OPEN_GET_PATHS = new Set(['/api/branches']);
 export const DYNAMIC_RECORD_PATHS = new Set(['/api/record', '/api/record-delete']);
 
 /**
+ * §7 (36h): rutele PIN-ului însuși (stare, setare, deblocare, blocare) nu trec prin
+ * `assertPinUnlocked` — altfel un profil care adaugă `personal` la `pinModules` (toate căile
+ * `/api/personal/*`, inclusiv acestea trei, au modulul `personal`) nu s-ar mai putea debloca
+ * niciodată: cere PIN-ul ca să poți citi dacă PIN-ul e configurat. Gărzile `assertModuleAccess`
+ * (modul) și cele interne din `salaries.routes.mjs` (`pinService.assertUnlocked()` pe
+ * salarii/avansuri) rămân neschimbate — doar hook-ul generic de mai jos le ocolește pe acestea trei.
+ */
+export const PIN_GATE_EXEMPT_PATHS = new Set([
+  '/api/personal/pin',
+  '/api/personal/pin/unlock',
+  '/api/personal/pin/lock',
+]);
+
+/**
  * @param {{ method: 'GET' | 'POST', path: string, body?: unknown }} request
- * @returns {{ moduleId: string | string[], write: boolean } | null}
+ * @returns {{ moduleId: string | string[], write: boolean, pinExempt: boolean } | null}
  */
 export function resolveRouteModule({ method, path, body }) {
   if (DYNAMIC_RECORD_PATHS.has(path)) {
@@ -158,13 +173,13 @@ export function resolveRouteModule({ method, path, body }) {
     const moduleId = type ? KIND_MODULE[type] : undefined;
     // Un tip necunoscut/lipsă nu e o gaură de securitate: ruta însăși respinge cererea
     // (record-editing.routes.mjs validează `type`) înainte să ajungă la vreo scriere reală.
-    return moduleId ? { moduleId, write: true } : null;
+    return moduleId ? { moduleId, write: true, pinExempt: false } : null;
   }
   if (method === 'GET' && OPEN_GET_PATHS.has(path)) return null;
   if (OPEN_PATHS.has(path)) return null;
   const moduleId = STATIC_PATH_MODULE[path];
   if (!moduleId) return null;
-  return { moduleId, write: method === 'POST' };
+  return { moduleId, write: method === 'POST', pinExempt: PIN_GATE_EXEMPT_PATHS.has(path) };
 }
 
 /** Pentru `assertModuleAccess` din create-branch-context.mjs: nivelul minim cerut. */

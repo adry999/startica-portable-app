@@ -24,9 +24,18 @@ const hashPin = (pin, salt) =>
  *   writeSetting: (key: string, value: string) => void,
  *   pinSession: { unlockedUntil: number, failedAttempts: number, lockedUntil: number },
  *   now?: () => Date,
- * }} dependencies
+ *   onEvent?: (event: 'pin_ok' | 'pin_fail' | 'locked') => void,
+ * }} dependencies `onEvent` (§7, 36h): istoricul „Acces” — implicit un no-op, ca testele
+ *   existente (pin.service.test.mjs) și orice apelant care nu are de unde să scrie în audit
+ *   (teste izolate) să rămână neschimbate.
  */
-export function createPinService({ readSetting, writeSetting, pinSession, now = () => new Date() }) {
+export function createPinService({
+  readSetting,
+  writeSetting,
+  pinSession,
+  now = () => new Date(),
+  onEvent = () => {},
+}) {
   function readStored() {
     const raw = readSetting(PIN_SETTING_KEY);
     if (!raw) return null;
@@ -65,15 +74,18 @@ export function createPinService({ readSetting, writeSetting, pinSession, now = 
       fail('Prea multe încercări greșite. Așteaptă un minut.', 429);
     if (hashPin(String(pin), stored.salt) !== stored.hash) {
       pinSession.failedAttempts = (pinSession.failedAttempts || 0) + 1;
+      onEvent('pin_fail');
       if (pinSession.failedAttempts >= MAX_FAILURES) {
         pinSession.lockedUntil = nowMs + LOCKOUT_DURATION_MS;
         pinSession.failedAttempts = 0;
+        onEvent('locked');
       }
       fail('PIN incorect.', 403);
     }
     pinSession.failedAttempts = 0;
     pinSession.lockedUntil = 0;
     pinSession.unlockedUntil = nowMs + UNLOCK_DURATION_MS;
+    onEvent('pin_ok');
     return { ok: true };
   }
 

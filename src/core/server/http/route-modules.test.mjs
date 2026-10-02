@@ -25,27 +25,45 @@ test('resolveRouteModule: o cale necunoscută nu are gardă (nu există în rute
 
 test('resolveRouteModule: GET pe o cale statică cere Vede', () => {
   const result = resolveRouteModule({ method: 'GET', path: '/api/personal/state' });
-  assert.deepEqual(result, { moduleId: 'personal', write: false });
+  assert.deepEqual(result, { moduleId: 'personal', write: false, pinExempt: false });
 });
 
 test('resolveRouteModule: POST pe o cale statică cere Modifică', () => {
   const result = resolveRouteModule({ method: 'POST', path: '/api/group-delete' });
-  assert.deepEqual(result, { moduleId: 'groups', write: true });
+  assert.deepEqual(result, { moduleId: 'groups', write: true, pinExempt: false });
 });
 
 test('resolveRouteModule: o cale cu module alternative (exchange-rates) întoarce lista', () => {
   const result = resolveRouteModule({ method: 'GET', path: '/api/exchange-rates' });
-  assert.deepEqual(result, { moduleId: ['admin', 'payments'], write: false });
+  assert.deepEqual(result, { moduleId: ['admin', 'payments'], write: false, pinExempt: false });
 });
 
 test('resolveRouteModule: /api/record rezolvă modulul după body.type', () => {
   const result = resolveRouteModule({ method: 'POST', path: '/api/record', body: { type: 'payments' } });
-  assert.deepEqual(result, { moduleId: 'payments', write: true });
+  assert.deepEqual(result, { moduleId: 'payments', write: true, pinExempt: false });
 });
 
 test('resolveRouteModule: /api/record-delete rezolvă modulul după body.type', () => {
   const result = resolveRouteModule({ method: 'POST', path: '/api/record-delete', body: { type: 'children' } });
-  assert.deepEqual(result, { moduleId: 'children', write: true });
+  assert.deepEqual(result, { moduleId: 'children', write: true, pinExempt: false });
+});
+
+test('resolveRouteModule: §7 (36h) rutele PIN-ului însuși sunt pinExempt, ca să nu se blocheze singure', () => {
+  assert.deepEqual(resolveRouteModule({ method: 'GET', path: '/api/personal/pin' }), {
+    moduleId: 'personal',
+    write: false,
+    pinExempt: true,
+  });
+  assert.deepEqual(resolveRouteModule({ method: 'POST', path: '/api/personal/pin/unlock' }), {
+    moduleId: 'personal',
+    write: true,
+    pinExempt: true,
+  });
+  assert.deepEqual(resolveRouteModule({ method: 'POST', path: '/api/personal/pin/lock' }), {
+    moduleId: 'personal',
+    write: true,
+    pinExempt: true,
+  });
 });
 
 test('resolveRouteModule: /api/record fără type cunoscut nu are gardă (ruta însăși respinge cererea)', () => {
@@ -63,7 +81,11 @@ test('STATIC_PATH_MODULE nu suprapune nicio cale complet deschisă din OPEN_PATH
 
 test('resolveRouteModule: /api/branches — GET e deschis, POST cere Administrare', () => {
   assert.equal(resolveRouteModule({ method: 'GET', path: '/api/branches' }), null);
-  assert.deepEqual(resolveRouteModule({ method: 'POST', path: '/api/branches' }), { moduleId: 'admin', write: true });
+  assert.deepEqual(resolveRouteModule({ method: 'POST', path: '/api/branches' }), {
+    moduleId: 'admin',
+    write: true,
+    pinExempt: false,
+  });
 });
 
 test('OPEN_GET_PATHS există și în STATIC_PATH_MODULE (altfel POST-ul nu are nicio gardă)', () => {

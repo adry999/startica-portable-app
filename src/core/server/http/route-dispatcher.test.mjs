@@ -242,3 +242,53 @@ test('§5.3 (36h): o cale fără gardă (resolveRouteModule întoarce null) nu c
   assert.equal(response.status, 200);
   assert.equal(guardCalled, false);
 });
+
+test('§7 (36h): assertPinUnlocked rulează DUPĂ assertModuleAccess, pentru module obișnuite', async t => {
+  let handlerCalled = false;
+  const calls = [];
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'GET', path: '/api/payments-receipt-number', handle: () => ((handlerCalled = true), { ok: true }) }],
+    {
+      resolveRouteModule: () => ({ moduleId: 'payments', write: false, pinExempt: false }),
+      assertModuleAccess: () => calls.push('modul'),
+      assertPinUnlocked: () => calls.push('pin'),
+    },
+  );
+  const response = await fetch(origin + '/api/payments-receipt-number');
+  assert.equal(response.status, 200);
+  assert.equal(handlerCalled, true);
+  assert.deepEqual(calls, ['modul', 'pin']);
+});
+
+test('§7 (36h): assertPinUnlocked care refuză cu fail() respinge cererea înainte de handler', async t => {
+  let handlerCalled = false;
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'GET', path: '/api/payments-receipt-number', handle: () => ((handlerCalled = true), { ok: true }) }],
+    {
+      resolveRouteModule: () => ({ moduleId: 'payments', write: false, pinExempt: false }),
+      assertPinUnlocked: () => fail('Acest modul este protejat. Introdu PIN-ul.', 403),
+    },
+  );
+  const response = await fetch(origin + '/api/payments-receipt-number');
+  assert.equal(response.status, 403);
+  assert.equal(handlerCalled, false);
+});
+
+test('§7 (36h): o cale pinExempt (PIN-ul însuși) nu cheamă assertPinUnlocked', async t => {
+  let pinGuardCalled = false;
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'POST', path: '/api/personal/pin/unlock', handle: () => ({ ok: true }) }],
+    {
+      resolveRouteModule: () => ({ moduleId: 'personal', write: true, pinExempt: true }),
+      assertPinUnlocked: () => {
+        pinGuardCalled = true;
+      },
+    },
+  );
+  const response = await postJson(origin, '/api/personal/pin/unlock');
+  assert.equal(response.status, 200);
+  assert.equal(pinGuardCalled, false);
+});
