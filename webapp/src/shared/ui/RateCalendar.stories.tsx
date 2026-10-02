@@ -34,3 +34,22 @@ type Story = StoryObj<typeof RateCalendar>;
 export const Default: Story = {};
 
 export const SeIncarca: Story = { args: { backfilling: true } };
+
+function buildRatesCuSarbatoare() {
+  // Decembrie 2026: 25 (Crăciunul) e vineri, zi lucrătoare calendaristic — fără curs propriu,
+  // arată cursul de pe 24 (COMPONENTE.md §213: „weekend/sărbătoare”, nu doar weekend).
+  const rates: Record<string, number> = {};
+  const sources: Record<string, 'bnm' | 'manual'> = {};
+  for (let day = 1; day <= 24; day++) {
+    const date = `2026-12-${String(day).padStart(2, '0')}`;
+    const weekday = new Date(Date.UTC(2026, 11, day)).getUTCDay();
+    if (weekday === 0 || weekday === 6) continue;
+    rates[date] = 20.1 + day / 100;
+    sources[date] = 'bnm';
+  }
+  return { rates, sources };
+}
+
+export const SarbatoareLegala: Story = {
+  args: { month: '2026-12', ...buildRatesCuSarbatoare() },
+};

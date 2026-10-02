@@ -239,8 +239,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               leaves={leavesData.leaves}
               onSave={async (name, capacityRaw, team) => {
                 try {
-                  await groupsData.updateGroup(selectedGroup.id, name, capacityRaw, selectedGroup.educator);
-                  await groupsData.saveTeam(selectedGroup.id, team);
+                  await groupsData.updateGroup(selectedGroup.id, name, capacityRaw, selectedGroup.educator, team);
                   toast.show({ message: 'Grupă actualizată.' });
                 } catch (error) {
                   toast.show({ message: toUserError(error) });

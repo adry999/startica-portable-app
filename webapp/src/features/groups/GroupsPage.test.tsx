@@ -212,6 +212,37 @@ describe('GroupsPage', () => {
     expect(await screen.findByText('Copil atribuit grupei.')).toBeInTheDocument();
   });
 
+  it('redenumirea grupei din Carduri trimite noul nume la salvare, fără să fie suprascris de saveTeam', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    const calls: unknown[] = [];
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path === '/api/record') {
+        const body = JSON.parse((options!.body as string) ?? '{}');
+        calls.push(body);
+        return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+      }
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      throw new Error(`neașteptat: ${path}`);
+    });
+
+    const nameInput = screen.getByLabelText('Nume grupă') as HTMLInputElement;
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'Fluturași Mari');
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Grupă actualizată.')).toBeInTheDocument();
+    // O singură mutație (name + team împreună) — nu updateGroup urmat de saveTeam, care ar
+    // retrimite numele vechi din `records.groups` neactualizat încă (vezi comentariul din useGroups.ts).
+    expect(calls).toHaveLength(1);
+    const lastCall = calls.at(-1) as { type: string; record: { id: string; name: string } };
+    expect(lastCall.record.name).toBe('Fluturași Mari');
+  });
+
   it('echipa grupei (§5c) apare în editorul grupei și se salvează cu Group.team la „Salvează” (4a)', async () => {
     await loadedSession();
     renderPage();
@@ -237,7 +268,8 @@ describe('GroupsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
 
     expect(await screen.findByText('Grupă actualizată.')).toBeInTheDocument();
-    // onSave face updateGroup, apoi saveTeam — ultimul apel e cel cu echipa nouă.
+    // onSave trimite name + team într-o singură mutație (vezi testul de redenumire de mai sus).
+    expect(calls).toHaveLength(1);
     const lastCall = calls.at(-1) as { type: string; record: { id: string; team: unknown } };
     expect(lastCall.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
   });

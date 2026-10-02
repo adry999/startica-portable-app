@@ -190,6 +190,25 @@ export function PaymentFormDrawer({
   const bnmRate = eurToMdlRate(rates, values.date);
   const effectiveRate = manualRate ? Number(manualRate) : bnmRate;
   const eurEquivalent = effectiveRate ? convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate) : null;
+  // 650*20,1068 lasă bani (13.069,42) — exactFeeLei e suma exactă, fără rotunjire; câmpul Sumă
+  // pornește cu ea (vezi mai jos), iar „rotund” din scurtături dă alternativa la leu întreg.
+  const exactFeeLei =
+    isEurChild && feeEntry && effectiveRate ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : null;
+  if (exactFeeLei !== null && feeEntry && effectiveRate) {
+    amountShortcuts.push({
+      key: 'exact',
+      label: `exact · ${new Intl.NumberFormat('ro-RO').format(exactFeeLei)}`,
+      amount: exactFeeLei,
+    });
+    const rounded = Math.round(exactFeeLei);
+    if (rounded !== exactFeeLei) {
+      amountShortcuts.push({
+        key: 'rotund',
+        label: `rotund · ${new Intl.NumberFormat('ro-RO').format(rounded)}`,
+        amount: rounded,
+      });
+    }
+  }
 
   const toast = useToast();
   const sms = useSmsStatus();
@@ -210,9 +229,9 @@ export function PaymentFormDrawer({
     if (isEurChild && !effectiveRate) return;
     const converted = isEurChild ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : feeEntry.amount;
     if (!converted) return;
-    // §2 (VERIFICARE §4): conversia EUR→lei lasă bani (ex. 4.921,83) — câmpul propune rotunjit la
-    // leu (4.922), nu suma exactă; diferența se scrie ca roundingDiff la salvare, dacă rămâne așa.
-    const amount = isEurChild ? Math.round(converted) : converted;
+    // §2 (VERIFICARE §4): conversia EUR→lei lasă bani (ex. 4.921,83) — câmpul propune suma exactă
+    // (R: 02.10), nu rotunjită; „rotund” apare ca scurtătură separată, dacă utilizatorul o preferă.
+    const amount = converted;
     prefilledAmountRef.current = true;
     setTender(activeMethod, formatMoneyInput(amount));
   }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
@@ -682,6 +701,12 @@ export function PaymentFormDrawer({
             )}
             {isEurChild && (
               <>
+                {exactFeeLei !== null && feeEntry && effectiveRate && (
+                  <p className={styles.notice}>
+                    De încasat: {formatMoney(feeEntry.amount, 'EUR')} × {formatRate(effectiveRate)} ={' '}
+                    {formatMoney(exactFeeLei, 'MDL')}
+                  </p>
+                )}
                 <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
                 <Field label="Curs EUR" htmlFor="payment-eur-rate">
                   <NumberInput

@@ -1,5 +1,5 @@
 import { buildMonthGrid } from '#shared/domain/month-grid.mjs';
-import { isWeekend } from '#shared/domain/holidays-md.mjs';
+import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
 import { eurToMdlRate } from '#shared/domain/exchange-rates.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import { shiftMonth } from '@shared/format/month-shift';
@@ -23,8 +23,9 @@ export interface RateCalendarProps {
 }
 
 /**
- * Calendarul lunii cu cursul fiecărei zile (F12, 38e) — peste `MonthCalendar`: weekendul arată
- * cursul de vineri (gri), o zi corectată manual e galbenă, o zi lipsă rămâne goală.
+ * Calendarul lunii cu cursul fiecărei zile (F12, 38e) — peste `MonthCalendar`: weekendul și o
+ * sărbătoare legală arată cursul ultimei zile lucrătoare (gri, COMPONENTE.md §213), o zi
+ * corectată manual e galbenă, o zi lipsă rămâne goală.
  */
 export function RateCalendar({ month, onMonthChange, rates, sources, onBackfill, backfilling }: RateCalendarProps) {
   const weeks = buildMonthGrid(month, today());
@@ -39,7 +40,7 @@ export function RateCalendar({ month, onMonthChange, rates, sources, onBackfill,
   function renderCell(day: MonthCalendarDay) {
     const hasOwnRate = Object.hasOwn(rates, day.date);
     const rate = eurToMdlRate(rates, day.date);
-    const weekendFallback = !hasOwnRate && isWeekend(day.date) && rate !== undefined;
+    const weekendFallback = !hasOwnRate && !isWorkingDay(day.date) && rate !== undefined;
     const cellClass = weekendFallback ? styles.weekendCell : sources[day.date] === 'manual' ? styles.manualCell : '';
     return (
       <div className={`${styles.cell} ${cellClass}`}>
@@ -60,7 +61,7 @@ export function RateCalendar({ month, onMonthChange, rates, sources, onBackfill,
       <MonthCalendar weekdayLabels={WEEKDAY_LABELS} days={days} renderCell={renderCell} cellHeight={46} />
       <div className={styles.legend}>
         <span>
-          <span className={`${styles.swatch} ${styles.weekendCell}`} /> weekend: cursul de vineri
+          <span className={`${styles.swatch} ${styles.weekendCell}`} /> weekend/sărbătoare: cursul zilei dinainte
         </span>
         <span>
           <span className={`${styles.swatch} ${styles.manualCell}`} /> corectat manual

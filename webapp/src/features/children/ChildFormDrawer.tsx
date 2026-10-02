@@ -52,7 +52,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
   // 15a: al doilea părinte pornește ascuns („+ Adaugă încă un părinte”), în afară de fișele
   // care au deja completat parent2 — altfel editarea unei fișe vechi i-ar ascunde datele.
   const [showParent2, setShowParent2] = useState(() => Boolean(editing?.parent2));
-  const { presets } = usePlanPresets();
+  const { presets, ready: presetsReady } = usePlanPresets();
 
   const orderedGroups = useMemo(() => sortByGroupOrder(groups), [groups]);
 
@@ -318,7 +318,7 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                 />
               </Field>
             </div>
-            {presets.length > 0 && (
+            {presets.length > 0 ? (
               <ChoiceCards
                 ariaLabel="Tarif preset"
                 columns={presets.length}
@@ -333,6 +333,15 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
                   sub: `${preset.priceEur} €`,
                 }))}
               />
+            ) : (
+              presetsReady && (
+                <small className={styles.hint}>
+                  <b>Fără planuri definite</b> —{' '}
+                  {/* '/backup-si-setari' e VIEW_PATHS.settings din app/shell/routes.ts — un feature
+                    nu are voie să importe din app/ (tests/architecture/import-boundaries). */}
+                  <Link to="/backup-si-setari">adaugă unul în Planuri și curs</Link>
+                </small>
+              )
             )}
           </fieldset>
 

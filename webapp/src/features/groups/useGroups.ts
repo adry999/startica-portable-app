@@ -63,7 +63,13 @@ export interface GroupsData {
   busy: boolean;
   toggleGroup: (id: string) => void;
   createGroup: (name: string, capacityRaw: string, options?: NewGroupInput) => Promise<string>;
-  updateGroup: (id: string, name: string, capacityRaw: string, educator: string) => Promise<void>;
+  updateGroup: (
+    id: string,
+    name: string,
+    capacityRaw: string,
+    educator: string,
+    team?: GroupTeamMember[],
+  ) => Promise<void>;
   deleteGroup: (id: string) => Promise<void>;
   assignChild: (groupId: string, childId: string) => Promise<void>;
   removeChild: (childId: string) => Promise<void>;
@@ -222,7 +228,16 @@ export function useGroups(): GroupsData {
     return id;
   }
 
-  async function updateGroup(id: string, name: string, capacityRaw: string, educator: string) {
+  // `team` e opțional și scris în ACEEAȘI mutație (nu una separată, apoi saveTeam) — altfel a doua
+  // scriere pleacă de la `records.groups` dinainte de redenumire (closure-ul randării curente nu
+  // vede răspunsul primei mutații) și suprascrie numele nou cu cel vechi.
+  async function updateGroup(
+    id: string,
+    name: string,
+    capacityRaw: string,
+    educator: string,
+    team?: GroupTeamMember[],
+  ) {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Numele grupei nu poate fi gol.');
     const group = records.groups.find(candidate => candidate.id === id);
@@ -230,7 +245,13 @@ export function useGroups(): GroupsData {
     await session.mutate('/api/record', {
       type: 'groups',
       mode: 'update',
-      record: { ...group, name: trimmed, capacity: parseCapacity(capacityRaw), educator: educator.trim() },
+      record: {
+        ...group,
+        name: trimmed,
+        capacity: parseCapacity(capacityRaw),
+        educator: educator.trim(),
+        ...(team !== undefined ? { team } : {}),
+      },
     });
   }
 

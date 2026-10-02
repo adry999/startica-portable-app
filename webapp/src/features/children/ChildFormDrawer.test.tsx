@@ -1,10 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import type { ChildRow } from './useChildren';
 import type { Group } from '@contracts/record-types.mjs';
+
+// Indiciul „Niciun plan definit” (3 · Contract) randează un <Link> — are nevoie de context de router.
+function renderDrawer(ui: ReactElement) {
+  return render(ui, { wrapper: MemoryRouter });
+}
 
 function row(overrides: Partial<ChildRow>): ChildRow {
   return {
@@ -26,19 +33,19 @@ function row(overrides: Partial<ChildRow>): ChildRow {
 
 describe('ChildFormDrawer', () => {
   it('nu randează nimic când target este null', () => {
-    render(<ChildFormDrawer target={null} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target={null} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('arată câmpurile și butonul de salvare pentru un copil nou', () => {
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getAllByLabelText('Nume')[0]).toBeInTheDocument();
     expect(screen.getByLabelText('Prenume')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salvează copilul' })).toBeInTheDocument();
   });
 
   it('F3 (FEEDBACK-01-10.md): „Copil nou” arată „5 · Alte date” pliat, dar nu secțiunea 6 (doar la editare)', () => {
-    const { unmount } = render(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    const { unmount } = renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByText('5 · Alte date')).toBeInTheDocument();
     expect(screen.getByLabelText('IDNP').closest('details')).not.toHaveAttribute('open');
     expect(screen.queryByLabelText('Adresă')).toBeInTheDocument();
@@ -46,14 +53,23 @@ describe('ChildFormDrawer', () => {
     unmount();
 
     const child = { id: 'C-1', name: 'Ana', parent: 'Maria' } as unknown as import('@contracts/record-types.mjs').Child;
-    render(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     expect(screen.getByText('5 · Alte date')).toBeInTheDocument();
     expect(screen.getByText('6 · Istoric (avansat)')).toBeInTheDocument();
   });
 
+  it('fără niciun plan definit, arată un indiciu cu link spre Planuri și curs', async () => {
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    expect(await screen.findByText('Fără planuri definite')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'adaugă unul în Planuri și curs' })).toHaveAttribute(
+      'href',
+      '/backup-si-setari',
+    );
+  });
+
   it('trimite valorile completate la click pe Salvează', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
     await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
     await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
@@ -67,7 +83,9 @@ describe('ChildFormDrawer', () => {
 
   it('trimite formularul la submit (echivalent cu Enter într-un câmp)', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const { container } = render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    const { container } = renderDrawer(
+      <ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />,
+    );
 
     await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
     await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
@@ -85,7 +103,7 @@ describe('ChildFormDrawer', () => {
           resolveSubmit = resolve;
         }),
     );
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
     await userEvent.type(screen.getAllByLabelText('Nume')[0], 'Popescu');
     await userEvent.type(screen.getByLabelText('Prenume'), 'Ana');
@@ -101,7 +119,7 @@ describe('ChildFormDrawer', () => {
 
   it('formularul devine „nesalvat” după prima modificare și save() întoarce true la salvare reușită', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
     expect(readDirtyForms()).toEqual([]);
 
@@ -122,7 +140,7 @@ describe('ChildFormDrawer', () => {
       name: 'Nume Vechi',
       parent: 'Maria',
     } as unknown as import('@contracts/record-types.mjs').Child;
-    render(<ChildFormDrawer target={child} groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target={child} groups={[]} onSubmit={onSubmit} onClose={vi.fn()} />);
 
     expect(screen.getAllByLabelText('Nume')[0]).toHaveValue('');
     expect(screen.getByLabelText('Prenume')).toHaveValue('');
@@ -133,7 +151,7 @@ describe('ChildFormDrawer', () => {
 
   it('IDNP acceptă doar cifre, limitat la 13 (secțiunea „Alte date”, la editare)', async () => {
     const child = { id: 'C-1', name: 'Ana', parent: 'Maria' } as unknown as import('@contracts/record-types.mjs').Child;
-    render(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target={child} groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
     await userEvent.click(screen.getByText('5 · Alte date'));
     const idnpInput = screen.getByLabelText('IDNP');
     await userEvent.type(idnpInput, 'ab123456789012345cd');
@@ -143,7 +161,7 @@ describe('ChildFormDrawer', () => {
   it('15a: chip-ul de grupă arată locurile libere și selectează grupa la click', async () => {
     const groups: Group[] = [{ id: 'G-1', name: 'Fluturași', capacity: 3, order: 1 }];
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(
+    renderDrawer(
       <ChildFormDrawer
         target="new"
         groups={groups}
@@ -168,7 +186,7 @@ describe('ChildFormDrawer', () => {
   it('15a: nu numără copilul editat la locurile ocupate din grupa lui curentă', () => {
     const groups: Group[] = [{ id: 'G-1', name: 'Fluturași', capacity: 2, order: 1 }];
     const child = { id: 'C-1', name: 'Ana', groupId: 'G-1' } as unknown as import('@contracts/record-types.mjs').Child;
-    render(
+    renderDrawer(
       <ChildFormDrawer
         target={child}
         groups={groups}
@@ -182,7 +200,7 @@ describe('ChildFormDrawer', () => {
 
   it('F2 (FEEDBACK-01-10.md): grupa plină rămâne selectabilă și arată nota de avertizare', async () => {
     const groups: Group[] = [{ id: 'G-1', name: 'Fluturași', capacity: 1, order: 1 }];
-    render(
+    renderDrawer(
       <ChildFormDrawer
         target="new"
         groups={groups}
@@ -205,7 +223,7 @@ describe('ChildFormDrawer', () => {
     const groups: Group[] = [
       { id: 'G-1', name: 'Fluturași', capacity: null, ageMinYears: 3, ageMaxYears: 4, order: 1 },
     ];
-    render(<ChildFormDrawer target="new" groups={groups} onSubmit={vi.fn()} onClose={vi.fn()} />);
+    renderDrawer(<ChildFormDrawer target="new" groups={groups} onSubmit={vi.fn()} onClose={vi.fn()} />);
 
     expect(screen.queryByText(/se potrivește în grupele/)).not.toBeInTheDocument();
 

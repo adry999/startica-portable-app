@@ -304,7 +304,7 @@ describe('PaymentFormDrawer', () => {
     expect(await screen.findByDisplayValue('1950.00')).toBeInTheDocument();
   });
 
-  it('F11 + §2 (VERIFICARE §4): conversia EUR cu bani se precompletează rotunjită la leu', async () => {
+  it('F11 + §2 (VERIFICARE §4): conversia EUR cu bani se precompletează cu suma exactă, nerotunjită', async () => {
     renderDrawerWithProps({
       target: 'new',
       records,
@@ -312,8 +312,10 @@ describe('PaymentFormDrawer', () => {
       onSubmit: vi.fn().mockResolvedValue(true),
       onClose: vi.fn(),
     });
-    // 100,03 € × 19,5 = 1.950,585 lei → exact 1.950,59; precompletat rotunjit la 1.951.
-    expect(await screen.findByDisplayValue('1951.00')).toBeInTheDocument();
+    // 100,03 € × 19,5 = 1.950,585 lei → exact 1.950,59 (R: 02.10, nu mai rotunjește la leu).
+    expect(await screen.findByDisplayValue('1950.59')).toBeInTheDocument();
+    expect(screen.getByText(/De încasat: 100,03 €/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /rotund · 1.951/ })).toBeInTheDocument();
   });
 
   it('F11: suma precompletată rămâne editabilă', async () => {

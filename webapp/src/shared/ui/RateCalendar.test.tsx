@@ -60,6 +60,19 @@ describe('RateCalendar', () => {
     expect(missingDay?.textContent).toBe('7');
   });
 
+  it('o sărbătoare legală în zi lucrătoare arată cursul zilei dinainte, pe celula marcată distinct', () => {
+    // 25 decembrie 2026 e vineri, Crăciunul (sărbătoare legală MD) — fără curs propriu, deși
+    // nu e weekend. COMPONENTE.md §213 cere același stil ca weekendul: „weekend/sărbătoare”.
+    const rates = { '2026-12-23': 20.1, '2026-12-24': 20.2 };
+    const sources = { '2026-12-23': 'bnm' as const, '2026-12-24': 'bnm' as const };
+    render(
+      <RateCalendar month="2026-12" onMonthChange={() => {}} rates={rates} sources={sources} onBackfill={() => {}} />,
+    );
+    const holiday = screen.getByText('25').parentElement;
+    expect(holiday?.className).toMatch(/weekendCell/);
+    expect(holiday?.textContent).toContain('20,2000');
+  });
+
   it('butoanele de navigare schimbă luna', async () => {
     const onMonthChange = vi.fn();
     const { rates, sources } = buildRates();
