@@ -51,6 +51,33 @@ describe('ModuleGuard (§5.3, 36f)', () => {
     expect(screen.getByText('Conținut real')).toBeInTheDocument();
   });
 
+  it('modul permis dar cu PIN în profil (§4, 36h) arată PinGate, nu conținutul direct', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session')
+          return jsonResponse({
+            token: 'tok',
+            version: '1.6.3',
+            profile: { preset: 'educator', pinModules: ['attendance'] },
+          });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/personal/pin') return jsonResponse({ configured: true, unlocked: false });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderGuard('attendance');
+    expect(await screen.findByText('Acces protejat cu PIN')).toBeInTheDocument();
+    expect(screen.queryByText('Conținut real')).not.toBeInTheDocument();
+
+    vi.unstubAllGlobals();
+  });
+
   it('profil fără acces la modul arată profil.blocked, cu numele modulului și al profilului', async () => {
     await loadSession({ preset: 'educator' });
     renderGuard('payments');
