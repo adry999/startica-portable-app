@@ -24,7 +24,7 @@ export function SaveStatusCard({ status, label, detail, onRetry, warning }: Save
         <span className={styles.dot} aria-hidden="true" />
         <strong className={styles.label}>{label}</strong>
       </div>
-      {status !== 'saved' && detail && (
+      {detail && (
         <div className={styles.detailRow}>
           <small>{detail}</small>
           {retryLabel && (

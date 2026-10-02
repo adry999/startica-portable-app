@@ -1405,3 +1405,32 @@ Teste noi: „Salvează" inactiv/activ după modificare; „Echipa grupei" înai
 **Neatins din scop:**
 - Fără captură lângă 4a cu 7 grupe (una goală, una plină, una fără educator), cerută explicit de
   punct — ca la toate punctele anterioare din acest lanț.
+
+## §14 (F26, PROMPT-11)
+
+**Inițialele filialei** (`branchInitials`, `src/shared/domain/branch.mjs`): rescrisă ca să sară
+peste cifre, spații, puncte și prefixul „Filiala ” — ia primul cuvânt cu litere din nume, nu
+primele două caractere brute. „1 Buiucani” → „Bu” (nu „1 ”), „Filiala Centru” → „Ce”, „2. Botanica”
+→ „Bo”. Numele filialei afișat rămâne neschimbat (doar inițialele se calculează altfel).
+
+**Butonul filialei** (`BranchSelector.module.css`): bordură `1.5px solid --{ton}-frame` (galben
+refolosește `--yellow-border`, deja identic — comentariul din `tokens.css` o spunea explicit) +
+fundal `--cream`, în loc de bordură plină `--{ton}` + fundal `--{ton}-soft`. Bordura plină pe
+culoarea de bază apare doar la `:hover`/`[aria-expanded="true"]`.
+
+**Versiunea** din sidebar: `AppShell.tsx` trimite acum `` `v${session.state.version}` `` către
+`Sidebar`, nu valoarea brută — același tipar deja folosit în `StartupScreen.tsx`/`BackupPage.tsx`
+(`v{session.state.version}`), doar că Sidebar primea încă string-ul neprefixat.
+
+**Cardul de jos** (`SaveStatusCard`): structura CSS (padding 12, radius 14, `--cream`/`--border`)
+era deja corectă — lipsea doar al doilea rând în starea „saved”. `save-status.ts` acum dă
+`detail: 'Doar pe acest calculator'` (nu `''`) când există `lastSavedAt`, iar `SaveStatusCard.tsx`
+nu mai ascunde rândul de detaliu pentru `status === 'saved'`. `SyncStatusCard` arăta deja
+„Toate calculatoarele au aceleași date” pentru starea sincronizată (`sync-status.ts`) — nicio
+schimbare acolo.
+
+Teste noi: `branch.test.mjs` (cele 3 cazuri din prompt), `save-status.test.ts` (textul implicit),
+`SaveStatusCard.test.tsx` (rândul al doilea apare și pe „saved”, fără buton).
+
+**Neatins din scop:**
+- Fără captură lângă captura 02.10 menționată în prompt, ca la toate punctele anterioare.

@@ -21,6 +21,13 @@ test('inițialele sunt primele două litere, prima mare', () => {
   assert.equal(branchInitials(''), '');
 });
 
+// F26 (PROMPT-11 §14.1): sare peste cifre, spații, puncte și prefixul „Filiala ”.
+test('branchInitials sare peste cifre/prefix, nu ia prima cifră ca inițială', () => {
+  assert.equal(branchInitials('1 Buiucani'), 'Bu');
+  assert.equal(branchInitials('Filiala Centru'), 'Ce');
+  assert.equal(branchInitials('2. Botanica'), 'Bo');
+});
+
 test('branchSlug scoate diacriticele și spațiile, cu maximum 30 de caractere', () => {
   assert.equal(branchSlug('Botanica'), 'botanica');
   assert.equal(branchSlug('Chișinău, sect. Botanica!'), 'chisinau-sect-botanica');

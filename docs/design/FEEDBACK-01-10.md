@@ -35,7 +35,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F23 Grafic Evoluția încasărilor | ✅ 1a refăcut | ✅ PROMPT-11 §11 |
 | F24 Necesită atenție ≠ design (texte, prezența de azi) | ✅ 1a/45c | ✅ PROMPT-11 §12 |
 | F25 Zile de naștere: gol fără „Următoarea” | ✅ 1b | ✅ PROMPT-11 §13 |
-| F26 Meniul stâng (inițiale filială, bordură, card jos) | ✅ Sidebar a | ⏳ PROMPT-11 §14 |
+| F26 Meniul stâng (inițiale filială, bordură, card jos) | ✅ Sidebar a | ✅ PROMPT-11 §14 |
 | F27 Antet module mai înalt (64px) | ✅ | ⏳ PROMPT-11 §15 |
 | F28 + Angajat: Funcția ca listă nativă | ✅ 23n | ✅ PROMPT-11 §16 |
 | F29 Scrii doar în filiala deschisă (angajat cu alegere de filiale) | ✅ 23n, 23o | ⏳ PROMPT-11 §17 + audit |

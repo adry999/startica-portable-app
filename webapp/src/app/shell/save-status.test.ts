@@ -21,6 +21,12 @@ describe('deriveSaveStatus', () => {
     expect(deriveSaveStatus(state()).label).toMatch(/^Salvat · /);
   });
 
+  // F26 (PROMPT-11 §14.4): al doilea rând al cardului, mereu — SaveStatusCard apare doar
+  // fără sincronizare configurată.
+  it('saved: al doilea rând arată „Doar pe acest calculator”', () => {
+    expect(deriveSaveStatus(state()).detail).toBe('Doar pe acest calculator');
+  });
+
   it('unsaved: date neîncărcate încă', () => {
     expect(deriveSaveStatus(state({ ready: false })).status).toBe('unsaved');
   });

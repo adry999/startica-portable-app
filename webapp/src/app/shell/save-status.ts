@@ -28,7 +28,9 @@ function formatSavedAt(iso: string): string {
 export function deriveSaveStatus(state: SessionStateForSaveStatus): SaveStatusResult {
   let status: SaveStatus = 'saved';
   let label = formatSavedAt(state.lastSavedAt);
-  let detail = state.lastSavedAt ? '' : 'Date încărcate de pe disc';
+  // F26 (PROMPT-11 §14.4): al doilea rând al cardului — SaveStatusCard apare doar fără
+  // sincronizare configurată (vezi Sidebar.tsx), deci mereu „Doar pe acest calculator”.
+  let detail = state.lastSavedAt ? 'Doar pe acest calculator' : 'Date încărcate de pe disc';
 
   if (!state.ready || state.loading) {
     status = 'unsaved';

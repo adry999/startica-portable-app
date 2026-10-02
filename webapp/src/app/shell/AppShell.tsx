@@ -250,7 +250,7 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
             activeView={view}
             onNavigate={onNavigate}
             counts={counts}
-            version={session.state.version}
+            version={`v${session.state.version}`}
             saveStatus={{ ...saveStatus, onRetry: () => void session.load() }}
             syncStatus={syncStatus}
             branch={session.state.branch}

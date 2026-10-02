@@ -31,14 +31,18 @@ export function normalizeBranchInput({ name, color, address } = /** @type {Branc
 }
 
 /**
- * Primele două litere ale numelui, cu prima literă mare — „Buiucani” → „Bu”.
+ * Primele două litere ale primului cuvânt cu litere, cu prima literă mare — sare peste cifre,
+ * spații, puncte și prefixul „Filiala ” (F26, PROMPT-11 §14.1): „1 Buiucani” → „Bu”,
+ * „Filiala Centru” → „Ce”, „2. Botanica” → „Bo”.
  * @param {string} name
  * @returns {string}
  */
 export function branchInitials(name) {
   const trimmed = typeof name === 'string' ? name.trim() : '';
   if (!trimmed) return '';
-  const letters = trimmed.slice(0, 2);
+  const withoutPrefix = trimmed.replace(/^filiala\s+/i, '');
+  const match = withoutPrefix.match(/[a-zA-ZăâîșțĂÂÎȘȚ]+/);
+  const letters = (match ? match[0] : '').slice(0, 2);
   return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
 }
 

@@ -10,6 +10,15 @@ describe('SaveStatusCard', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
+  // F26 (PROMPT-11 §14.4): al doilea rând apare și în starea „saved”, nu doar în unsaved/error.
+  it('saved: arată al doilea rând „Doar pe acest calculator”, fără buton', () => {
+    render(
+      <SaveStatusCard status="saved" label="Salvat · 12:06" detail="Doar pe acest calculator" onRetry={() => {}} />,
+    );
+    expect(screen.getByText('Doar pe acest calculator')).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
   it('unsaved: buton „Salvează acum" apelează onRetry', async () => {
     const onRetry = vi.fn();
     render(<SaveStatusCard status="unsaved" label="Nesalvat" detail="Cădere de rețea" onRetry={onRetry} />);
