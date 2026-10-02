@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Badge,
@@ -17,15 +17,18 @@ import {
   SearchSelect,
   StatCard,
   TextArea,
+  Timeline,
   groupTone,
   resolveEmptyStateTitle,
   useToast,
   type DataTableColumn,
   type PillTone,
+  type TimelineEntry,
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
+import { useAuditLog, type AuditScopeEntry } from '@shared/audit-log';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
@@ -84,6 +87,18 @@ export function ChildProfileView({
   const [noteText, setNoteText] = useState('');
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteText, setEditingNoteText] = useState('');
+
+  // 45b (PROMPT-8 §14): „Ultimele modificări" — fișa + achitările ei („înregistrările legate",
+  // ca la 45a). `[]` ține `useAuditLog` în așteptare cât timp fișa încă se încarcă (nu cere
+  // istoricul global doar ca să-l arunce imediat ce `childId` e cunoscut).
+  const historyScope: AuditScopeEntry[] = useMemo(() => {
+    if (!profileData.child) return [];
+    return [
+      { recordType: 'children', recordId: profileData.child.id },
+      ...profileData.payments.map(payment => ({ recordType: 'payments', recordId: payment.id })),
+    ];
+  }, [profileData.child, profileData.payments]);
+  const historyData = useAuditLog(historyScope);
 
   if (profileData.status === 'loading') return <LoadingState />;
   if (profileData.status === 'failed')
@@ -330,6 +345,16 @@ export function ChildProfileView({
             </ProfileSection>
 
             <ChildAttendanceSection childId={child.id} month={month} />
+
+            <ProfileSection
+              title="Ultimele modificări"
+              action={{
+                label: 'Tot istoricul →',
+                onClick: () => onNavigate('audit', { recordType: 'children', recordId: child.id }),
+              }}
+            >
+              <ChildHistorySection historyData={historyData} />
+            </ProfileSection>
 
             <ProfileSection
               title="Note"
@@ -579,6 +604,31 @@ function ParentRow({
       )}
     </div>
   );
+}
+
+/** 45b: ultimele 3 intrări din istoric pentru copil (fișă + achitările lui), ca mini-Timeline. */
+function ChildHistorySection({ historyData }: { historyData: ReturnType<typeof useAuditLog> }) {
+  if (historyData.status === 'loading') return <LoadingState />;
+  if (historyData.status === 'failed')
+    return <p className={styles.notice}>{historyData.failureMessage || 'Istoricul nu a putut fi încărcat.'}</p>;
+  if (historyData.status === 'empty' || historyData.rows.length === 0)
+    return <p className={styles.notice}>Fără modificări înregistrate încă.</p>;
+
+  const entries: TimelineEntry[] = historyData.rows.slice(0, 3).map(row => ({
+    key: String(row.id),
+    timestamp: `${row.dayLabel} · ${row.timeLabel}`,
+    title: `${row.actionLabel} · ${row.recordLabel}`,
+    // 45a: nota medicală nu apare niciodată cu conținut — doar faptul că s-a schimbat.
+    description: row.changes
+      .map(change =>
+        change.field === 'healthNotes'
+          ? 'Notă medicală modificată'
+          : `${change.field}: ${change.beforeLabel} → ${change.afterLabel}`,
+      )
+      .join(' · '),
+  }));
+
+  return <Timeline entries={entries} />;
 }
 
 function PaymentHistoryTable({

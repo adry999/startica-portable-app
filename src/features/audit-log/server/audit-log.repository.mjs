@@ -1,7 +1,34 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { redactSensitiveFields } from '#shared/domain/record-schema.mjs';
+import { redactSensitiveFields, SENSITIVE_FIELDS } from '#shared/domain/record-schema.mjs';
 
 export const AUDIT_PAGE_SIZE = 100;
+
+// 45a (PROMPT-8 §14): „Notele medicale: doar «notă medicală modificată», fără conținut.”
+// `redactSensitiveFields` înlocuiește orice valoare ne-goală cu același șablon — dacă nota s-a
+// schimbat dintr-un text ne-gol în altul, ambele părți redactează identic și `listChangedFields`
+// (webapp) le vede „neschimbate”, pierzând exact semnalul cerut aici. Marcajul de mai jos
+// păstrează acel semnal, fără conținut: doar partea `after` devine distinctă de `before` când
+// valorile brute (dinainte de redactare) chiar diferă — ecranul Istoric arată apoi un singur text,
+// nu un „înainte → după” (vezi toRow/AuditRow în webapp).
+const SENSITIVE_CHANGED_MARK = '[date medicale: modificat]';
+
+/**
+ * Mutează `redactedAfter` în loc — apelat după `redactSensitiveFields`, cât timp valorile brute
+ * (`before`/`after`, neredactate) mai sunt la îndemână.
+ * @param {string | null} recordType
+ * @param {Record<string, unknown> | null} before
+ * @param {Record<string, unknown> | null} after
+ * @param {Record<string, unknown> | null} redactedAfter
+ */
+function markSensitiveFieldChanges(recordType, before, after, redactedAfter) {
+  const fields = recordType ? SENSITIVE_FIELDS[recordType] : null;
+  if (!before || !after || !redactedAfter || !fields?.length) return;
+  for (const field of fields) {
+    const previous = before[field];
+    const next = after[field];
+    if (previous && next && previous !== next) redactedAfter[field] = SENSITIVE_CHANGED_MARK;
+  }
+}
 
 /** @typedef {import('../audit-log.types.mjs').AuditChange} AuditChange */
 /** @typedef {import('../audit-log.types.mjs').AuditEntry} AuditEntry */
@@ -48,13 +75,15 @@ export function createAuditLogRepository(database, { sessionToken = null } = {})
     if (typeof action !== 'string' || !action.trim()) fail('Acțiunea din istoric lipsește.');
     // Un singur punct de redactare, ca să acopere orice cale de scriere (editare,
     // înscriere, restaurare, import); recordType null (intrări de configurare) nu are câmpuri sensibile.
+    const redactedAfter = redactSensitiveFields(recordType, after);
+    markSensitiveFieldChanges(recordType, before, after, redactedAfter);
     const result = insertChange.run(
       occurredAt.toISOString(),
       action,
       recordType,
       recordId,
       serialize(redactSensitiveFields(recordType, before)),
-      serialize(redactSensitiveFields(recordType, after)),
+      serialize(redactedAfter),
       sessionToken,
     );
     return Number(result.lastInsertRowid);
@@ -92,20 +121,22 @@ export function createAuditLogRepository(database, { sessionToken = null } = {})
   /**
    * Istoricul unei singure înregistrări (45a, PROMPT-8 §14) — fișa unui copil arată și mutările
    * ei de grupă (tot pe `kind:'children', recordId:childId`) cât și achitările lui, de-aceea
-   * `scope` acceptă mai multe perechi (tip, id), nu doar una singură. Același cursor pe `id`
-   * ca `readPage`, ca o modificare nouă să nu dubleze rânduri deja afișate.
-   * @param {{ scope: { recordType: string, recordId: string }[], beforeEntryId: number | null }} params
+   * `scope` acceptă mai multe perechi (tip, id), nu doar una singură. `recordType` poate fi
+   * `null` (personalul se salvează fără `kind`, vezi `personal.routes.mjs`) — `IS`, nu `=`, ca
+   * SQLite să compare NULL corect. Același cursor pe `id` ca `readPage`, ca o modificare nouă
+   * să nu dubleze rânduri deja afișate.
+   * @param {{ scope: { recordType: string | null, recordId: string }[], beforeEntryId: number | null }} params
    * @returns {AuditPage}
    */
   function readForScope({ scope, beforeEntryId }) {
     if (!Array.isArray(scope) || scope.length === 0) fail('Scope-ul istoricului lipsește.');
     for (const entry of scope)
-      if (!entry || typeof entry.recordType !== 'string' || typeof entry.recordId !== 'string' || !entry.recordId)
+      if (!entry || (entry.recordType !== null && typeof entry.recordType !== 'string') || !entry.recordId)
         fail('Scope-ul istoricului este invalid.');
     if (beforeEntryId !== null && !(Number.isSafeInteger(beforeEntryId) && beforeEntryId > 0))
       fail('Poziția din istoric este invalidă.');
 
-    const scopeClause = scope.map(() => '(kind = ? AND record_id = ?)').join(' OR ');
+    const scopeClause = scope.map(() => '(kind IS ? AND record_id = ?)').join(' OR ');
     const scopeParams = scope.flatMap(({ recordType, recordId }) => [recordType, recordId]);
     const cursorClause = beforeEntryId === null ? '' : ' AND id < ?';
     const statement = database.prepare(

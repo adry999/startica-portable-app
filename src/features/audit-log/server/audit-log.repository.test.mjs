@@ -103,7 +103,10 @@ test('o modificare cu date medicale pe o vizită e păstrată redactată în ist
   assert.equal(entry.before.name, 'Ana');
 });
 
-test('o modificare cu date medicale pe un copil e păstrată redactată în istoric', t => {
+test('45a: o notă medicală schimbată dintr-un text ne-gol în altul rămâne distinsă după redactare', t => {
+  // Fără marcajul din markSensitiveFieldChanges, ambele părți ar redacta identic la „[date
+  // medicale]” și listChangedFields (webapp) ar vedea câmpul „neschimbat” — exact bug-ul pe care
+  // 45a cere să-l evite („notă medicală modificată”, fără conținut).
   const repository = createRepository(t);
   repository.recordChange({
     action: 'modificare',
@@ -117,6 +120,23 @@ test('o modificare cu date medicale pe un copil e păstrată redactată în isto
 
   assert.ok(entry.before);
   assert.ok(entry.after);
+  assert.equal(entry.before.healthNotes, '[date medicale]');
+  assert.notEqual(entry.after.healthNotes, entry.before.healthNotes);
+  assert.ok(String(entry.after.healthNotes).includes('date medicale'));
+});
+
+test('45a: o notă medicală nemodificată redactează identic pe ambele părți (fără fals-pozitiv)', t => {
+  const repository = createRepository(t);
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: { healthNotes: 'Astm', name: 'Veche' },
+    after: { healthNotes: 'Astm', name: 'Nouă' },
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
   assert.equal(entry.before.healthNotes, '[date medicale]');
   assert.equal(entry.after.healthNotes, '[date medicale]');
 });
@@ -218,6 +238,22 @@ test('readForScope: cursorul pe id nu dublează intrări între pagini', t => {
 
   assert.equal(entries.length, 2);
   assert.ok(entries.every(entry => entry.id < firstId));
+});
+
+test('readForScope: recordType null (personalul, salvat fără kind) se potrivește cu IS, nu =', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'salariu', recordType: null, recordId: 'STAFF-1' });
+  repository.recordChange({ action: 'configurare backup', recordType: null, recordId: null });
+
+  const { entries } = repository.readForScope({
+    scope: [{ recordType: null, recordId: 'STAFF-1' }],
+    beforeEntryId: null,
+  });
+
+  assert.deepEqual(
+    entries.map(entry => entry.recordId),
+    ['STAFF-1'],
+  );
 });
 
 test('readForScope: refuză un scope gol sau invalid', t => {
