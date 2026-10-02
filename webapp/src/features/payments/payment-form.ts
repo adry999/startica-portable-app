@@ -2,6 +2,7 @@ import { normalizeRecord, DEFAULT_SERVICE_ID } from '@domain/record-schema.mjs';
 import { cents } from '@domain/money.mjs';
 import { paymentTenders } from '@domain/payment-allocations.mjs';
 import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
+import { formatMoney } from '#shared/format/money-format.mjs';
 import type { Child, Payment, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 export const DEFAULT_TENDER_METHODS = ['Cash', 'Card', 'Transfer'];
@@ -170,6 +171,49 @@ function tenderSignature(payment: Payment): string {
     .map((tender: PaymentTender) => `${tender.method}:${cents(tender.amount)}`)
     .sort()
     .join('|');
+}
+
+/** 40b: textul din UndoToast pentru o achitare nou-creată — suma (principal + frați bifați, 44b)
+ * și copilul; „+ N frați” doar când există unul sau mai mulți bifați cu sumă &gt; 0. */
+export function paymentUndoDetail(values: PaymentFormValues, records: RecordsSnapshot): string {
+  const childName = records.children.find(child => child.id === values.childId)?.name ?? '';
+  const checkedSiblings = values.siblings.filter(sibling => Number(sibling.amount) > 0);
+  const amount =
+    totalOfTenders(values.tenders) + checkedSiblings.reduce((sum, sibling) => sum + Number(sibling.amount), 0);
+  const suffix =
+    checkedSiblings.length > 0
+      ? ` + ${checkedSiblings.length} ${checkedSiblings.length === 1 ? 'frate' : 'frați'}`
+      : '';
+  return `${formatMoney(amount)} · ${childName}${suffix}`;
+}
+
+/**
+ * 40b §5 (Grup frați, 44b): o plată cu frați bifați produce mai multe `auditId`-uri (principal +
+ * câte unul per frate) — un singur UndoToast, dar „Anulează” cere `/api/undo` o dată per id,
+ * independent (nu batch — serverul nu are o rută de anulare în lot). Dacă una eșuează (ex. frate
+ * modificat între timp de altcineva), restul tot se anulează; eroarea aruncată aici ajunge în
+ * `UndoToast` (fază „error”, ca orice alt eșec de-al lui) și spune câte au mers, nu doar „a eșuat”.
+ */
+export function createPaymentUndo(
+  auditIds: number[],
+  mutate: (path: string, body: Record<string, unknown>) => Promise<unknown>,
+): () => Promise<void> {
+  return async () => {
+    // Fără frați: un singur id — eroarea serverului (ex. „S-a modificat între timp.”) ajunge
+    // direct în UndoToast, ca la cheltuială/copil/mutare în grupă, fără „1 din 1”.
+    if (auditIds.length === 1) {
+      await mutate('/api/undo', { auditId: auditIds[0] });
+      return;
+    }
+    const settled = await Promise.allSettled(auditIds.map(auditId => mutate('/api/undo', { auditId })));
+    const failed = settled.filter((outcome): outcome is PromiseRejectedResult => outcome.status === 'rejected');
+    if (failed.length === 0) return;
+    const succeededCount = auditIds.length - failed.length;
+    const reason = failed[0].reason instanceof Error ? failed[0].reason.message : String(failed[0].reason);
+    throw new Error(
+      `Anulat ${succeededCount} din ${auditIds.length} achitări — ${failed.length === 1 ? '1 nu a putut fi anulată' : `${failed.length} nu au putut fi anulate`} (${reason}).`,
+    );
+  };
 }
 
 export function findDuplicatePayment(records: RecordsSnapshot, record: Payment): Payment | null {

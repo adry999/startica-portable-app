@@ -113,7 +113,12 @@ export interface PaymentsData {
   unarchivePayment: (id: string) => Promise<void>;
   archiveMany: (ids: string[]) => Promise<void>;
   unarchiveMany: (ids: string[]) => Promise<void>;
-  createPayment: (values: PaymentFormValues, confirmDuplicate: () => boolean) => Promise<boolean>;
+  // auditId-urile (40b): principal + câte unul per frate bifat (44b) — UndoToast le ține minte
+  // pe toate, ca „Anulează” să poată cere POST /api/undo pentru fiecare, independent (Grup frați).
+  createPayment: (
+    values: PaymentFormValues,
+    confirmDuplicate: () => boolean,
+  ) => Promise<{ saved: boolean; auditIds: number[] }>;
   updatePayment: (previous: Payment, values: PaymentFormValues) => Promise<void>;
   deletePayment: (id: string) => Promise<void>;
   deleteManyForever: (ids: string[]) => Promise<void>;
@@ -243,17 +248,31 @@ export function usePayments(initialChildId = ''): PaymentsData {
   // `confirmDuplicate` e injectat de pagină (window.confirm), ca hook-ul să
   // rămână testabil fără un dialog real de browser — la fel ca `context.confirm`
   // din record-editor-dialog.mjs.
-  async function createPayment(values: PaymentFormValues, confirmDuplicate: () => boolean): Promise<boolean> {
+  async function createPayment(
+    values: PaymentFormValues,
+    confirmDuplicate: () => boolean,
+  ): Promise<{ saved: boolean; auditIds: number[] }> {
     const record = buildPaymentRecord(null, `PAY-${crypto.randomUUID()}`, values);
     const duplicate = findDuplicatePayment(records, record);
-    if (duplicate && !confirmDuplicate()) return false;
-    await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+    if (duplicate && !confirmDuplicate()) return { saved: false, auditIds: [] };
+    const result = await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+    const auditIds: number[] = [];
+    const mainAuditId = (result as { auditId?: number } | undefined)?.auditId;
+    if (mainAuditId) auditIds.push(mainAuditId);
     // 44b: frați bifați în „+ Adaugă fratele” — câte o achitare pe copil, același receiptGroupId,
     // un singur bon (§11.2). Nicio verificare de duplicat pe rândurile astea — fac parte dintr-o
-    // plată voit grupată, nu sunt o eroare de reintroducere.
-    for (const siblingRecord of buildSiblingPaymentRecords(values))
-      await session.mutate('/api/record', { type: 'payments', mode: 'create', record: siblingRecord });
-    return true;
+    // plată voit grupată, nu sunt o eroare de reintroducere. Fiecare își ține propriul auditId
+    // (40b §5, Grup frați) — „Anulează” din UndoToast le trimite pe toate, independent.
+    for (const siblingRecord of buildSiblingPaymentRecords(values)) {
+      const siblingResult = await session.mutate('/api/record', {
+        type: 'payments',
+        mode: 'create',
+        record: siblingRecord,
+      });
+      const siblingAuditId = (siblingResult as { auditId?: number } | undefined)?.auditId;
+      if (siblingAuditId) auditIds.push(siblingAuditId);
+    }
+    return { saved: true, auditIds };
   }
 
   async function updatePayment(previous: Payment, values: PaymentFormValues) {

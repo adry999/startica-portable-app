@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { act, render, renderHook, screen, within } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, UndoToastProvider, useTopbarActionsSlot } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { PaymentsPage } from './PaymentsPage';
 
@@ -68,10 +68,12 @@ function renderPage(onOpenChild?: (id: string) => void, initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <ToastProvider>
-        <TopbarActionsProvider>
-          <TopbarActionsSlot />
-          <PaymentsHarness onOpenChild={onOpenChild} />
-        </TopbarActionsProvider>
+        <UndoToastProvider>
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <PaymentsHarness onOpenChild={onOpenChild} />
+          </TopbarActionsProvider>
+        </UndoToastProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
@@ -87,11 +89,13 @@ function renderPageWithLocation() {
   return render(
     <MemoryRouter>
       <ToastProvider>
-        <TopbarActionsProvider>
-          <TopbarActionsSlot />
-          <LocationDisplay />
-          <PaymentsHarness />
-        </TopbarActionsProvider>
+        <UndoToastProvider>
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <LocationDisplay />
+            <PaymentsHarness />
+          </TopbarActionsProvider>
+        </UndoToastProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
@@ -107,9 +111,17 @@ describe('PaymentsPage', () => {
   // arhivarea secvențială a mai multor rânduri, M1) ar porni mereu de la fixtureState-ul
   // static și ar anula modificarea primei (la fel ca `currentExpenses` din ExpensesPage.test.tsx).
   let currentPayments = fixtureState.payments;
+  // 40b: auditId-ul fiecărei plăți create — testele de undo (principal + frați, 44b) îl trimit la
+  // POST /api/undo. `undoShouldFail` simulează un eșec per-id (44b: raportarea eșecului parțial).
+  let nextAuditId = 9000;
+  let auditIdToPaymentId = new Map<number, string>();
+  let undoShouldFail = new Set<number>();
 
   beforeEach(() => {
     currentPayments = fixtureState.payments;
+    nextAuditId = 9000;
+    auditIdToPaymentId = new Map();
+    undoShouldFail = new Set();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -118,16 +130,32 @@ describe('PaymentsPage', () => {
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        if (path === '/api/undo') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          if (undoShouldFail.has(body.auditId))
+            return { ok: false, status: 409, json: async () => ({ error: 'S-a modificat între timp.' }) };
+          const paymentId = auditIdToPaymentId.get(body.auditId);
+          if (!paymentId) return { ok: false, status: 404, json: async () => ({ error: 'Nu există.' }) };
+          currentPayments = currentPayments.filter(p => p.id !== paymentId);
+          return jsonResponse({
+            state: { ...fixtureState, payments: currentPayments },
+            revision: 3,
+            updatedAt: '2026-09-23T10:06:00Z',
+          });
+        }
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           currentPayments =
             body.mode === 'create'
               ? [...currentPayments, body.record]
               : currentPayments.map(p => (p.id === body.record.id ? body.record : p));
+          const auditId = body.mode === 'create' ? nextAuditId++ : undefined;
+          if (auditId) auditIdToPaymentId.set(auditId, body.record.id);
           return jsonResponse({
             state: { ...fixtureState, payments: currentPayments },
             revision: 2,
             updatedAt: '2026-09-23T10:05:00Z',
+            auditId,
           });
         }
         if (path === '/api/record-delete') {
@@ -261,6 +289,32 @@ describe('PaymentsPage', () => {
     await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
 
     expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
+  });
+
+  it('40b: „Anulează” din UndoToast, după o achitare nou-creată, o elimină din evidență', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: '+ Achitare nouă' }));
+    const dialog = screen.getByRole('dialog', { name: 'Achitare nouă' });
+
+    await user.click(within(dialog).getByRole('button', { name: 'Copil' }));
+    await user.click(screen.getByRole('option', { name: 'Maria Ionescu' }));
+    await user.type(within(dialog).getByLabelText('Sumă'), '600');
+    await user.click(within(dialog).getByRole('button', { name: /^Salvează/ }));
+
+    // Tiparul de la cheltuială: Toast-ul de confirmare ȘI un UndoToast separat apar împreună.
+    expect(await screen.findByText('Achitare adăugată.')).toBeInTheDocument();
+    expect(await screen.findByText('Achitare adăugată')).toBeInTheDocument();
+    expect(screen.getByText(/600,00 lei · Maria Ionescu/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await waitFor(() => {
+      const table = screen.getByRole('table');
+      expect(within(table).queryByText('Maria Ionescu')).not.toBeInTheDocument();
+    });
   });
 
   it('editează o achitare existentă din meniul rândului', async () => {

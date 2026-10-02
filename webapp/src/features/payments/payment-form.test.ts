@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildPaymentRecord,
   buildSiblingPaymentRecords,
+  createPaymentUndo,
   defaultPaymentFormValues,
   findDuplicatePayment,
+  paymentUndoDetail,
   tenderMethodsFor,
   totalOfTenders,
 } from './payment-form';
@@ -172,6 +174,83 @@ describe('buildSiblingPaymentRecords (44b)', () => {
       siblings: [{ childId: 'c2', month: '2026-09', amount: '0' }],
     });
     expect(records).toEqual([]);
+  });
+});
+
+describe('paymentUndoDetail (40b §5)', () => {
+  const records = {
+    children: [
+      { id: 'c1', name: 'Andrei Popescu' },
+      { id: 'c2', name: 'Radu Popescu' },
+    ],
+  } as unknown as RecordsSnapshot;
+  const baseValues = {
+    childId: 'c1',
+    date: '2026-09-10',
+    service: 'gradinita',
+    tenders: { Cash: '1500', Card: '', Transfer: '' },
+    sourceName: '',
+    reviewed: false,
+    allocations: [{ month: '2026-09', amount: '1500' }],
+    notes: '',
+    sendSmsConfirmation: false,
+    siblings: [],
+  };
+
+  it('fără frați: suma plății principale și numele copilului', () => {
+    expect(paymentUndoDetail(baseValues, records)).toBe('1.500,00 lei · Andrei Popescu');
+  });
+
+  it('44b: cu frați bifați, adaugă suma lor la total și „+ N frați”', () => {
+    const detail = paymentUndoDetail(
+      { ...baseValues, siblings: [{ childId: 'c2', month: '2026-09', amount: '500' }] },
+      records,
+    );
+    expect(detail).toBe('2.000,00 lei · Andrei Popescu + 1 frate');
+  });
+
+  it('44b: ignoră frații cu sumă zero/negativă la numărătoare și la total', () => {
+    const detail = paymentUndoDetail(
+      { ...baseValues, siblings: [{ childId: 'c2', month: '2026-09', amount: '0' }] },
+      records,
+    );
+    expect(detail).toBe('1.500,00 lei · Andrei Popescu');
+  });
+});
+
+describe('createPaymentUndo (40b §5, Grup frați 44b)', () => {
+  it('cu un singur auditId, cheamă /api/undo o dată', async () => {
+    const mutate = vi.fn().mockResolvedValue({});
+    await createPaymentUndo([9001], mutate)();
+    expect(mutate).toHaveBeenCalledTimes(1);
+    expect(mutate).toHaveBeenCalledWith('/api/undo', { auditId: 9001 });
+  });
+
+  it('cu mai multe auditId-uri, cheamă /api/undo o dată per id, independent', async () => {
+    const mutate = vi.fn().mockResolvedValue({});
+    await createPaymentUndo([9001, 9002, 9003], mutate)();
+    expect(mutate).toHaveBeenCalledTimes(3);
+    for (const auditId of [9001, 9002, 9003]) expect(mutate).toHaveBeenCalledWith('/api/undo', { auditId });
+  });
+
+  it('dacă unul eșuează, restul tot se anulează, dar aruncă o eroare care spune câte au mers', async () => {
+    const mutate = vi.fn((_path: string, body: Record<string, unknown>) =>
+      body.auditId === 9002 ? Promise.reject(new Error('S-a modificat între timp.')) : Promise.resolve({}),
+    );
+    await expect(createPaymentUndo([9001, 9002, 9003], mutate)()).rejects.toThrow(
+      'Anulat 2 din 3 achitări — 1 nu a putut fi anulată (S-a modificat între timp.).',
+    );
+    // Toate cele 3 au fost încercate (independent), nu doar primele până la eroare.
+    expect(mutate).toHaveBeenCalledTimes(3);
+  });
+
+  it('cu mai multe eșecuri, numără corect câte nu au putut fi anulate', async () => {
+    const mutate = vi.fn((_path: string, body: Record<string, unknown>) =>
+      body.auditId === 9001 ? Promise.resolve({}) : Promise.reject(new Error('Nu există.')),
+    );
+    await expect(createPaymentUndo([9001, 9002, 9003], mutate)()).rejects.toThrow(
+      'Anulat 1 din 3 achitări — 2 nu au putut fi anulate (Nu există.).',
+    );
   });
 });
 

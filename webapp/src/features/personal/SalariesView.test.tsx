@@ -2,7 +2,7 @@ import { act, render, renderHook, screen, waitFor, within } from '@testing-libra
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, UndoToastProvider } from '@shared/ui';
 import { reloadPersonal } from '@shared/personal/usePersonal';
 import { SalariesView } from './SalariesView';
 
@@ -40,6 +40,8 @@ const fixturePersonalState = {
 
 let postedPay: unknown[] = [];
 let postedAdvances: unknown[] = [];
+// 40b §5: id-urile avansurilor eliminate prin „Anulează” din UndoToast (POST remove:true).
+let removedAdvanceIds: string[] = [];
 // M8: al doilea răspuns la /api/personal/salaries?month= trebuie să reflecte avansul dat —
 // altfel testul de reîncărcare automată ar trece și fără fix.
 let salariesLoadCount = 0;
@@ -49,6 +51,7 @@ let salariesRowsOverride: unknown[] | null = null;
 function stubFetch() {
   postedPay = [];
   postedAdvances = [];
+  removedAdvanceIds = [];
   salariesLoadCount = 0;
   salariesRowsOverride = null;
   vi.stubGlobal(
@@ -104,6 +107,10 @@ function stubFetch() {
       }
       if (path === '/api/personal/advances' && options?.method === 'POST') {
         const body = JSON.parse(options.body as string);
+        if (body.remove) {
+          removedAdvanceIds.push(body.id);
+          return jsonResponse({});
+        }
         postedAdvances.push(body);
         return jsonResponse({ advance: { id: 'ADV-1', ...body.advance } });
       }
@@ -127,7 +134,9 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView month="2026-08" />
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
       </ToastProvider>,
     );
 
@@ -143,7 +152,9 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView month="2026-08" />
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
       </ToastProvider>,
     );
 
@@ -167,7 +178,9 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView month="2026-08" />
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
       </ToastProvider>,
     );
 
@@ -192,7 +205,9 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView month="2026-08" />
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
       </ToastProvider>,
     );
 
@@ -208,7 +223,9 @@ describe('SalariesView', () => {
 
     render(
       <ToastProvider>
-        <SalariesView month="2026-08" />
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
       </ToastProvider>,
     );
 
@@ -234,5 +251,41 @@ describe('SalariesView', () => {
       const card = screen.getByText('Avansuri date', { selector: 'span' }).closest('div')!;
       expect(within(card).getByText('500,00 lei')).toBeInTheDocument();
     });
+  });
+
+  it('40b §5: „Anulează” din UndoToast, după un avans dat, cere ștergerea lui (remove:true), nu /api/undo', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    const row = screen.getByText('Ana Popescu').closest('div')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: 'Avans' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Avans: Ana Popescu' });
+    await userEvent.type(within(dialog).getByLabelText('Sumă (lei)'), '500');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Salvează' }));
+
+    // Tiparul de la cheltuială: Toast-ul de confirmare ȘI un UndoToast separat apar împreună.
+    expect(await screen.findByText('Avansul a fost înregistrat.')).toBeInTheDocument();
+    expect(await screen.findByText('Avans adăugat')).toBeInTheDocument();
+    expect(screen.getByText('500,00 lei · Ana Popescu')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await waitFor(() => expect(removedAdvanceIds).toEqual(['ADV-1']));
+    // Niciun POST către /api/undo — vezi INTREBARI.md (avansul ar rămâne orfan, cu expenseId
+    // spre o cheltuială ștearsă, dacă UndoToast ar cere /api/undo generic).
+    expect((fetch as ReturnType<typeof vi.fn>).mock.calls.some(([calledPath]) => calledPath === '/api/undo')).toBe(
+      false,
+    );
   });
 });

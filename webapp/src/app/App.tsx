@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
-import { UnsavedChangesDialog, useToast } from '@shared/ui';
+import { UnsavedChangesDialog, useToast, useUndoToast } from '@shared/ui';
 import { AppShell } from './shell/AppShell';
 import { ModuleGuard } from './shell/ModuleGuard';
 import { performBranchSwitch, readBranchSwitchNote } from './shell/useBranchSwitch';
@@ -23,6 +23,8 @@ import {
   DayClosingReceipt,
   PaymentFormDrawer,
   usePayments,
+  createPaymentUndo,
+  paymentUndoDetail,
   type PaymentFormValues,
 } from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
@@ -422,12 +424,14 @@ function StatusRoute({
   onOpenChild: (id: string) => void;
 }) {
   const toast = useToast();
+  const undoToast = useUndoToast();
+  const session = useAppSession();
   const paymentsForRow = usePayments();
   const [quickPaymentChildId, setQuickPaymentChildId] = useState<string | null>(null);
 
   async function submitQuickPayment(values: PaymentFormValues): Promise<boolean> {
     try {
-      const saved = await paymentsForRow.createPayment(values, () =>
+      const { saved, auditIds } = await paymentsForRow.createPayment(values, () =>
         window.confirm(
           'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
         ),
@@ -435,6 +439,15 @@ function StatusRoute({
       if (saved) {
         setQuickPaymentChildId(null);
         toast.show({ message: 'Achitare adăugată.' });
+        // 40b (tiparul de la cheltuială): un UndoToast separat, cu toate auditId-urile (principal +
+        // frați, 44b) — ca în PaymentsPage.
+        if (auditIds.length > 0) {
+          undoToast.show({
+            title: 'Achitare adăugată',
+            detail: paymentUndoDetail(values, paymentsForRow.records),
+            onUndo: createPaymentUndo(auditIds, session.mutate),
+          });
+        }
       }
       return saved;
     } catch (error) {

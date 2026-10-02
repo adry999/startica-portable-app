@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, UndoToastProvider, useTopbarActionsSlot } from '@shared/ui';
 import { reloadPersonal } from '@shared/personal/usePersonal';
 import { PersonalPage } from './PersonalPage';
 
@@ -172,12 +172,14 @@ describe('PersonalPage', () => {
 
     render(
       <ToastProvider>
-        <TopbarActionsProvider>
-          <TopbarActionsSlot />
-          <MemoryRouter>
-            <PersonalPage month="2026-09" />
-          </MemoryRouter>
-        </TopbarActionsProvider>
+        <UndoToastProvider>
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <MemoryRouter>
+              <PersonalPage month="2026-09" />
+            </MemoryRouter>
+          </TopbarActionsProvider>
+        </UndoToastProvider>
       </ToastProvider>,
     );
 

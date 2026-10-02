@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, LoadingState, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
+import { Button, LoadingState, SegmentedControl, useToast, useTopbarActions, useUndoToast } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { usePayments } from './usePayments';
 import { exportPaymentsCsv } from './payments-export';
@@ -10,7 +11,7 @@ import { PaymentFormDrawer } from './PaymentFormDrawer';
 import { QuickPaySearch } from './QuickPaySearch';
 import { CashSummaryCard } from './CashSummaryCard';
 import type { DayMethodTotals } from './useDayClosingReceipt';
-import type { PaymentFormValues } from './payment-form';
+import { createPaymentUndo, paymentUndoDetail, type PaymentFormValues } from './payment-form';
 import type { Payment } from '@contracts/record-types.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import styles from './PaymentsPage.module.css';
@@ -45,6 +46,8 @@ export function PaymentsPage({
 }: PaymentsPageProps) {
   const paymentsData = usePayments(initialChildId);
   const toast = useToast();
+  const undoToast = useUndoToast();
+  const session = useAppSession();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.payments', 'table');
   // 44a: copilul ales din QuickPaySearch — propriul PaymentFormDrawer, independent de cel legat
@@ -88,6 +91,17 @@ export function PaymentsPage({
         ? (paymentsData.records.payments.find(p => p.id === formTargetId) ?? null)
         : null;
 
+  // 40b: achitare nou-creată — „Anulează · N” cere POST /api/undo, o dată per auditId (44b, Grup
+  // frați include unul per frate bifat) — tiparul de la cheltuieli/copil nou, extins la mai multe id-uri.
+  function showUndoAfterPaymentCreate(values: PaymentFormValues, auditIds: number[]) {
+    if (auditIds.length === 0) return;
+    undoToast.show({
+      title: 'Achitare adăugată',
+      detail: paymentUndoDetail(values, paymentsData.records),
+      onUndo: createPaymentUndo(auditIds, session.mutate),
+    });
+  }
+
   // C1: întoarce succesul real, nu doar dacă cererea a pornit — „Salvează și schimbă” din
   // useBranchSwitch schimbă filiala doar când save() (deci și funcția asta) întoarce true.
   async function submitPaymentForm(values: PaymentFormValues): Promise<boolean> {
@@ -99,7 +113,7 @@ export function PaymentsPage({
         toast.show({ message: 'Achitare actualizată.' });
         return true;
       }
-      const saved = await paymentsData.createPayment(values, () =>
+      const { saved, auditIds } = await paymentsData.createPayment(values, () =>
         window.confirm(
           'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
         ),
@@ -107,6 +121,7 @@ export function PaymentsPage({
       if (saved) {
         onCloseForm();
         toast.show({ message: 'Achitare adăugată.' });
+        showUndoAfterPaymentCreate(values, auditIds);
       }
       return saved;
     } catch (error) {
@@ -119,7 +134,7 @@ export function PaymentsPage({
   // din Situația plăților, 40a) — utilizatorul a căutat tocmai pentru că știe că e de încasat.
   async function submitQuickPayment(values: PaymentFormValues): Promise<boolean> {
     try {
-      const saved = await paymentsData.createPayment(values, () =>
+      const { saved, auditIds } = await paymentsData.createPayment(values, () =>
         window.confirm(
           'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
         ),
@@ -127,6 +142,7 @@ export function PaymentsPage({
       if (saved) {
         setQuickPayChildId(null);
         toast.show({ message: 'Achitare adăugată.' });
+        showUndoAfterPaymentCreate(values, auditIds);
       }
       return saved;
     } catch (error) {

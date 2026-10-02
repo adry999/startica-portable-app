@@ -435,8 +435,9 @@ describe('usePayments', () => {
     });
 
     const confirmDuplicate = vi.fn(() => true);
-    const saved = await act(() => result.current.createPayment(newPaymentValues, confirmDuplicate));
+    const { saved, auditIds } = await act(() => result.current.createPayment(newPaymentValues, confirmDuplicate));
     expect(saved).toBe(true);
+    expect(auditIds).toEqual([]);
     expect(confirmDuplicate).not.toHaveBeenCalled();
   });
 
@@ -458,9 +459,38 @@ describe('usePayments', () => {
     };
 
     const confirmDuplicate = vi.fn(() => false);
-    const saved = await act(() => result.current.createPayment(duplicateValues, confirmDuplicate));
+    const { saved, auditIds } = await act(() => result.current.createPayment(duplicateValues, confirmDuplicate));
     expect(saved).toBe(false);
+    expect(auditIds).toEqual([]);
     expect(confirmDuplicate).toHaveBeenCalled();
+  });
+
+  it('40b/44b: createPayment adună auditId-ul principal și câte unul per frate bifat', async () => {
+    await loadedSession();
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
+
+    let nextAuditId = 7001;
+    (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string) => {
+      if (path === '/api/record') {
+        const auditId = nextAuditId++;
+        return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z', auditId });
+      }
+      throw new Error(`neașteptat: ${path}`);
+    });
+
+    const valuesWithSiblings = {
+      ...newPaymentValues,
+      receiptGroupId: 'GRP-1',
+      siblings: [
+        { childId: 'c1', month: '2026-09', amount: '500' },
+        { childId: 'c3', month: '2026-09', amount: '300' },
+      ],
+    };
+    const confirmDuplicate = vi.fn(() => true);
+    const { saved, auditIds } = await act(() => result.current.createPayment(valuesWithSiblings, confirmDuplicate));
+
+    expect(saved).toBe(true);
+    expect(auditIds).toEqual([7001, 7002, 7003]);
   });
 
   it('updatePayment păstrează id-ul plății existente', async () => {

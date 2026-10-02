@@ -235,12 +235,51 @@ function ChildrenListView({
     }
   }
 
+  // M1: secvențial, nu Promise.all — session.mutate refuză o a doua mutație pornită cât prima e
+  // „pending” (la fel ca undoArchiveSelected mai sus). `targets` e lista capturată ÎNAINTE de
+  // mutare, deci `row.child` conține deja groupId-ul vechi — nimic de recalculat.
+  async function undoMoveSelectedToGroup(targets: ChildRow[]) {
+    try {
+      for (const row of targets) {
+        await session.mutate('/api/record', { type: 'children', mode: 'update', record: row.child });
+      }
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
   async function moveSelectedToGroup(groupId: string) {
     const ids = [...selectedRowKeys];
     const targets = childrenData.rows.filter(row => ids.includes(row.id));
     if (targets.length === 0) return;
     const nextGroupId = groupId === '__none__' ? null : groupId;
+    const destinationGroupName = nextGroupId
+      ? (childrenData.groups.find(group => group.id === nextGroupId)?.name ?? '')
+      : 'Fără grupă';
     try {
+      // 40b (tiparul de la cheltuială, §5 PROMPT-9): pentru un singur copil, Toast-ul confirmă
+      // mutarea și un UndoToast separat oferă fereastra de 10s pentru POST /api/undo (un singur
+      // auditId se poate anula direct). Pentru mai mulți deodată, rămâne mecanismul existent
+      // (Toast cu acțiune, revenire secvențială, M1) — UndoToast n-are cum să arate N copii.
+      if (targets.length === 1) {
+        const [row] = targets;
+        const result = await session.mutate('/api/record', {
+          type: 'children',
+          mode: 'update',
+          record: { ...row.child, groupId: nextGroupId },
+        });
+        setSelectedRowKeys(new Set());
+        toast.show({ message: 'Copil mutat în grupă.' });
+        const auditId = (result as { auditId?: number } | undefined)?.auditId;
+        if (auditId) {
+          undoToast.show({
+            title: 'Copil mutat în grupă',
+            detail: `${row.name} · ${destinationGroupName}`,
+            onUndo: () => session.mutate('/api/undo', { auditId }),
+          });
+        }
+        return;
+      }
       for (const row of targets) {
         await session.mutate('/api/record', {
           type: 'children',
@@ -249,7 +288,11 @@ function ChildrenListView({
         });
       }
       setSelectedRowKeys(new Set());
-      toast.show({ message: `${targets.length} ${targets.length === 1 ? 'copil mutat' : 'copii mutați'} în grupă.` });
+      toast.show({
+        message: `${targets.length} copii mutați în grupă.`,
+        actionLabel: 'Anulează',
+        onAction: () => void undoMoveSelectedToGroup(targets),
+      });
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
@@ -291,8 +334,9 @@ function ChildrenListView({
   async function submitChildForm(values: ChildFormValues) {
     const previous = formTarget && formTarget !== 'new' ? formTarget : null;
     const record = buildChildRecord(previous, `ID-${crypto.randomUUID()}`, values);
+    let result: unknown;
     try {
-      await session.mutate('/api/record', {
+      result = await session.mutate('/api/record', {
         type: 'children',
         mode: previous ? 'update' : 'create',
         record,
@@ -303,6 +347,16 @@ function ChildrenListView({
     }
     setFormTarget(null);
     toast.show({ message: previous ? 'Fișă actualizată.' : 'Copil adăugat.' });
+    // 40b (tiparul de la cheltuială, §5 PROMPT-9): copilul nou primește și un UndoToast — Toast-ul
+    // de mai sus confirmă salvarea, UndoToast oferă fereastra de 10s pentru POST /api/undo.
+    const auditId = !previous ? (result as { auditId?: number } | undefined)?.auditId : undefined;
+    if (auditId) {
+      undoToast.show({
+        title: 'Copil adăugat',
+        detail: record.name,
+        onUndo: () => session.mutate('/api/undo', { auditId }),
+      });
+    }
   }
 
   async function deleteChildForever(row: ChildRow) {

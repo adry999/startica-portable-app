@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
-import { ToastProvider } from '@shared/ui';
+import { ToastProvider, UndoToastProvider } from '@shared/ui';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
@@ -30,7 +30,9 @@ describe('App', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <ToastProvider>
-          <App />
+          <UndoToastProvider>
+            <App />
+          </UndoToastProvider>
         </ToastProvider>
       </MemoryRouter>,
     );
@@ -43,7 +45,9 @@ describe('App', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <ToastProvider>
-          <App />
+          <UndoToastProvider>
+            <App />
+          </UndoToastProvider>
         </ToastProvider>
       </MemoryRouter>,
     );
@@ -56,7 +60,9 @@ describe('App', () => {
     render(
       <MemoryRouter initialEntries={['/copii/zile-de-nastere']}>
         <ToastProvider>
-          <App />
+          <UndoToastProvider>
+            <App />
+          </UndoToastProvider>
         </ToastProvider>
       </MemoryRouter>,
     );
@@ -68,7 +74,9 @@ describe('App', () => {
     render(
       <MemoryRouter initialEntries={['/ceva-inexistent']}>
         <ToastProvider>
-          <App />
+          <UndoToastProvider>
+            <App />
+          </UndoToastProvider>
         </ToastProvider>
       </MemoryRouter>,
     );
@@ -146,7 +154,9 @@ describe('App', () => {
       render(
         <MemoryRouter initialEntries={['/situatia-platilor']}>
           <ToastProvider>
-            <App />
+            <UndoToastProvider>
+              <App />
+            </UndoToastProvider>
           </ToastProvider>
         </MemoryRouter>,
       );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { act, render, renderHook, screen, within } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -111,13 +111,15 @@ function renderPage(initialPath = '/') {
 }
 
 describe('ChildrenPage', () => {
-  // 40b: auditId-ul ultimei scrieri pe un copil — testul de undo îl trimite la POST /api/undo.
+  // 40b: fiecare /api/record ține minte auditId -> { recordId, before } (before=null la creare),
+  // ca /api/undo să poată reface exact ce exista înainte — creare => șterge, update => restaurează
+  // rândul vechi (grupă, arhivare, orice câmp), la fel ca restoreValueForUndo pe server.
   let nextAuditId = 9000;
-  let auditIdToChildId = new Map<number, string>();
+  let auditLog = new Map<number, { recordId: string; before: unknown | null }>();
 
   beforeEach(() => {
     nextAuditId = 9000;
-    auditIdToChildId = new Map();
+    auditLog = new Map();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -127,18 +129,23 @@ describe('ChildrenPage', () => {
         if (path === '/api/health') return jsonResponse({});
         if (path === '/api/undo') {
           const body = JSON.parse(String(init?.body ?? '{}'));
-          const childId = auditIdToChildId.get(body.auditId);
-          if (!childId) return { ok: false, status: 404, json: async () => ({ error: 'Nu există.' }) };
+          const entry = auditLog.get(body.auditId);
+          if (!entry) return { ok: false, status: 404, json: async () => ({ error: 'Nu există.' }) };
           const updated = {
             ...fixtureState,
-            children: fixtureState.children.map(c =>
-              c.id === childId ? { ...c, archived: false, archivedAt: null } : c,
-            ),
+            children:
+              entry.before === null
+                ? fixtureState.children.filter(c => c.id !== entry.recordId)
+                : fixtureState.children.map(c =>
+                    c.id === entry.recordId ? (entry.before as (typeof fixtureState.children)[number]) : c,
+                  ),
           };
           return jsonResponse({ state: updated, revision: 3, updatedAt: '2026-09-23T10:06:00Z' });
         }
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
+          const before =
+            body.mode === 'create' ? null : (fixtureState.children.find(c => c.id === body.record.id) ?? null);
           const updated = {
             ...fixtureState,
             children:
@@ -147,7 +154,7 @@ describe('ChildrenPage', () => {
                 : fixtureState.children.map(c => (c.id === body.record.id ? body.record : c)),
           };
           const auditId = nextAuditId++;
-          auditIdToChildId.set(auditId, body.record.id);
+          auditLog.set(auditId, { recordId: body.record.id, before });
           return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z', auditId });
         }
         if (path === '/api/record-delete') {
@@ -528,7 +535,60 @@ describe('ChildrenPage', () => {
     await screen.findByRole('row', { name: /Maria Ionescu/ }); // POST /api/undo a readus-o în listă
   });
 
-  it('adaugă un copil nou din formular', async () => {
+  it('40b: mută un singur copil în grupă prin bara de selecție — UndoToast cu „Anulează · N” revine la grupa veche', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const row = screen.getByText('Andrei Popescu').closest('tr')!;
+    expect(within(row).getByText('Fluturași')).toBeInTheDocument();
+    await userEvent.click(within(row).getByRole('checkbox'));
+
+    const selectionBar = screen.getByText('1 selectați').closest('div')!;
+    await userEvent.click(within(selectionBar).getByLabelText('Mută în grupă'));
+    await userEvent.click(screen.getByRole('button', { name: 'Fără grupă' }));
+
+    expect(await screen.findByText('Copil mutat în grupă')).toBeInTheDocument();
+    await waitFor(() => {
+      const movedRow = screen.getByText('Andrei Popescu').closest('tr')!;
+      expect(within(movedRow).getByText('Fără grupă')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await waitFor(() => {
+      const revertedRow = screen.getByText('Andrei Popescu').closest('tr')!;
+      expect(within(revertedRow).getByText('Fluturași')).toBeInTheDocument();
+    });
+  });
+
+  it('40b: mută mai mulți copii în grupă — Toast cu acțiune „Anulează”, nu UndoToast (N copii)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const row1 = screen.getByText('Andrei Popescu').closest('tr')!;
+    const row2 = screen.getByText('Maria Ionescu').closest('tr')!;
+    await userEvent.click(within(row1).getByRole('checkbox'));
+    await userEvent.click(within(row2).getByRole('checkbox'));
+
+    const selectionBar = screen.getByText('2 selectați').closest('div')!;
+    await userEvent.click(within(selectionBar).getByLabelText('Mută în grupă'));
+    await userEvent.click(screen.getByRole('button', { name: 'Fluturași' }));
+
+    expect(await screen.findByText('2 copii mutați în grupă.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(screen.getByText('Maria Ionescu').closest('tr')!).getByText('Fluturași')).toBeInTheDocument();
+    });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Anulează' }));
+
+    await waitFor(() => {
+      expect(within(screen.getByText('Maria Ionescu').closest('tr')!).getByText('Fără grupă')).toBeInTheDocument();
+    });
+  });
+
+  it('adaugă un copil nou din formular — UndoToast cu „Anulează · N”', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
@@ -543,8 +603,28 @@ describe('ChildrenPage', () => {
     await user.type(screen.getAllByLabelText('Nume')[1], 'Vasile Ionescu');
     await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
 
-    expect(await screen.findByText('Copil adăugat.')).toBeInTheDocument();
-    expect(screen.getByText('Radu Ionescu')).toBeInTheDocument();
+    // 40b: titlul din UndoToast (fără punct — Toast-ul separat l-ar fi avut), nu un Toast simplu.
+    expect(await screen.findByText('Copil adăugat')).toBeInTheDocument();
+    expect(screen.getAllByText('Radu Ionescu').length).toBeGreaterThan(0);
+  });
+
+  it('40b: „Anulează” din UndoToast, după un copil nou-creat, îl elimină din evidență', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: '+ Adaugă copil' }));
+    await user.type(screen.getAllByLabelText('Nume')[0], 'Radu');
+    await user.type(screen.getByLabelText('Prenume'), 'Ionescu');
+    await user.type(screen.getAllByLabelText('Nume')[1], 'Vasile Ionescu');
+    await user.click(screen.getByRole('button', { name: 'Salvează copilul' }));
+
+    expect(await screen.findByText('Copil adăugat')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await waitFor(() => expect(screen.queryByText('Radu Ionescu')).not.toBeInTheDocument());
   });
 
   it('?nou=1 în URL deschide direct formularul „Copil nou” (dashboard.attention.first)', async () => {

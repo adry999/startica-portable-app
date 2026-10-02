@@ -7,4 +7,4 @@ export { DayClosingReceipt } from './DayClosingReceipt';
 // fără ca features/status să importe direct din features/payments.
 export { PaymentFormDrawer, type PaymentFormDrawerProps } from './PaymentFormDrawer';
 export { usePayments, type PaymentsData } from './usePayments';
-export type { PaymentFormValues } from './payment-form';
+export { createPaymentUndo, paymentUndoDetail, type PaymentFormValues } from './payment-form';

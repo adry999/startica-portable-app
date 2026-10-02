@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { AmountInput, Button, DateInput, Drawer, Field, Select, useToast } from '@shared/ui';
+import { AmountInput, Button, DateInput, Drawer, Field, Select, useToast, useUndoToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
+import { formatMoney } from '#shared/format/money-format.mjs';
 import type { Staff } from '@shared/personal/personal.types';
 import styles from './AdvanceFormDrawer.module.css';
 
@@ -20,6 +21,7 @@ const METHODS = ['Cash', 'Card', 'Transfer'];
 export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFormDrawerProps) {
   const session = useAppSession();
   const toast = useToast();
+  const undoToast = useUndoToast();
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(today());
   const [method, setMethod] = useState(METHODS[0]);
@@ -28,15 +30,32 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
   async function handleSubmit() {
     if (!staff || submitting) return;
     setSubmitting(true);
+    const staffName = staff.name;
+    const amountNumber = Number(amount);
     try {
       // Avansul devine o cheltuială a filialei active (runRevisionTransaction) — trece prin
       // session.mutate, ca orice altă scriere pe branch, ca revizia să rămână corectă.
-      await session.mutate('/api/personal/advances', {
-        advance: { staffId: staff.id, date, amount: Number(amount), method, month },
+      const result = await session.mutate('/api/personal/advances', {
+        advance: { staffId: staff.id, date, amount: amountNumber, method, month },
       });
-      toast.show({ message: 'Avansul a fost înregistrat.' });
       onSaved?.();
       onClose();
+      toast.show({ message: 'Avansul a fost înregistrat.' });
+      // 40b (tiparul de la cheltuială, §5 PROMPT-9), dar fără /api/undo generic — avansul nu
+      // trăiește doar în `recordRepository` (ca o cheltuială obișnuită), ci și ca rând propriu în
+      // `personalRepository` (advances), cu `expenseId` legat de cheltuiala auto-generată.
+      // `/api/undo` ar reface doar cheltuiala, lăsând rândul de avans orfan (expenseId spre o
+      // cheltuială ștearsă) — „Anulează” cere în schimb ștergerea corectă, deja existentă
+      // (`/api/personal/advances` cu `remove:true`, ca în AdvancesTab), care arhivează
+      // cheltuiala ȘI scoate avansul. Vezi INTREBARI.md pentru decizie.
+      const advanceId = (result as { advance?: { id?: string } } | undefined)?.advance?.id;
+      if (advanceId) {
+        undoToast.show({
+          title: 'Avans adăugat',
+          detail: `${formatMoney(amountNumber)} · ${staffName}`,
+          onUndo: () => session.mutate('/api/personal/advances', { id: advanceId, remove: true }),
+        });
+      }
     } catch (error) {
       toast.show({ message: (error as Error).message });
     } finally {
