@@ -15,6 +15,7 @@ const MODE_CLASS: Record<SyncCardMode, string> = {
   syncing: styles.syncing,
   offline: styles.stopped,
   revoked: styles.stopped,
+  incompatible: styles.stopped,
   conflict: styles.stopped,
 };
 

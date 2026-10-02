@@ -19,6 +19,8 @@ const MODE_CLASS: Record<SyncCardMode, string | undefined> = {
   syncing: styles.syncing,
   offline: styles.offline,
   revoked: styles.offline,
+  // §5.2 (426): la fel ca „revoked” — oprit, niciun pending job nu-l schimbă singur.
+  incompatible: styles.offline,
   conflict: styles.conflict,
 };
 

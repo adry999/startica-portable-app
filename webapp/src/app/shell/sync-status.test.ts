@@ -14,6 +14,7 @@ const BASE_SYNC: SyncStatus = {
   lastSyncedAt: '2026-09-27T09:06:00.000Z',
   conflicts: 0,
   lastError: '',
+  minVersion: '',
 };
 
 const BASE_LOCAL: SessionStateForSaveStatus = {
@@ -42,6 +43,19 @@ describe('deriveSyncStatus', () => {
     expect(result?.mode).toBe('revoked');
     expect(result?.label).toBe('Deconectat de pe server');
     expect(result?.actionLabel).toBe('Reconectează din Backup și setări');
+  });
+
+  it('§5.2 (426) „incompatible” arată versiunea curentă și ținta minimă, fără acțiune', () => {
+    const result = deriveSyncStatus(
+      { ...BASE_SYNC, connection: 'incompatible', minVersion: '2.2.0' },
+      BASE_LOCAL,
+      undefined,
+      '2.1.0',
+    );
+    expect(result?.mode).toBe('incompatible');
+    expect(result?.label).toBe('Versiune prea veche');
+    expect(result?.detail).toBe('Versiunea 2.1.0 e prea veche, actualizează la 2.2.0.');
+    expect(result?.actionLabel).toBeUndefined();
   });
 
   it('conflictul arată contorul și acțiunea Rezolvă', () => {

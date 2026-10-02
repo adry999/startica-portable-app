@@ -12,6 +12,7 @@ const BASE_SYNC: SyncStatus = {
   lastSyncedAt: '2026-09-27T09:06:00.000Z',
   conflicts: 0,
   lastError: '',
+  minVersion: '',
 };
 
 describe('deriveSyncBanner', () => {
@@ -44,5 +45,11 @@ describe('deriveSyncBanner', () => {
   it('„offline” cu 0 în așteptare tot arată banda (sincronizarea chiar nu merge)', () => {
     const banner = deriveSyncBanner({ ...BASE_SYNC, connection: 'offline', pending: 0 });
     expect(banner?.message).toContain('0 modificări nesincronizate');
+  });
+
+  it('„incompatible” (426) arată versiunea curentă și ținta minimă, fără acțiune', () => {
+    const banner = deriveSyncBanner({ ...BASE_SYNC, connection: 'incompatible', minVersion: '2.2.0' }, '2.1.0');
+    expect(banner?.message).toBe('Sincronizare oprită — versiunea 2.1.0 e prea veche, actualizează la 2.2.0.');
+    expect(banner?.actionLabel).toBeUndefined();
   });
 });

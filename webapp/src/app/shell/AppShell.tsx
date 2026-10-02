@@ -101,7 +101,7 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // Cardul de sincronizare (14a) înlocuiește „Salvat · ora” doar când e configurat și
   // fără eroare locală (deriveSyncStatus întoarce null în acel caz — Sidebar arată saveStatus).
   const syncCard = session.state.sync?.configured
-    ? deriveSyncStatus(syncStatusData, session.state, session.state.profile)
+    ? deriveSyncStatus(syncStatusData, session.state, session.state.profile, session.state.version)
     : null;
   const syncStatus = syncCard
     ? {
@@ -124,7 +124,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // §11, 42a — bandă roz, deasupra antetului, pe toate rutele, fără ×: apare doar cât
   // sincronizarea e configurată și chiar nu merge (offline/revoked), nu la conflict/syncing
   // (vezi `deriveSyncBanner`). Întâietate asupra benzii mint de mai jos (o singură bandă deodată).
-  const syncBanner = session.state.sync?.configured ? deriveSyncBanner(syncStatusData) : null;
+  const syncBanner = session.state.sync?.configured
+    ? deriveSyncBanner(syncStatusData, session.state.version)
+    : null;
 
   // §11, 42b — bandă mint, se închide cu × și revine a doua zi (sau mai devreme, dacă apare o
   // versiune și mai nouă — vezi `shouldShowUpdateBanner`). Nu se arată deodată cu banda roz.

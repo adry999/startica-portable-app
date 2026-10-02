@@ -1,4 +1,4 @@
-import { SyncNetworkError, SyncRevokedError, SyncHttpError } from './sync-http-client.mjs';
+import { SyncNetworkError, SyncRevokedError, SyncHttpError, SyncIncompatibleError } from './sync-http-client.mjs';
 import { createChangeApplier, applySnapshotEntry, SyncApplyError } from './change-applier.mjs';
 
 const PUSH_BATCH_SIZE = 200;
@@ -44,7 +44,7 @@ function toWireChange(row) {
  *   deviceName?: string,
  *   writeProfile?: (profile: import('#shared/domain/computer-profile.mjs').ComputerProfile | null) => void,
  *   now?: () => Date,
- *   onStatus?: (status: { connection: 'online' | 'offline' | 'revoked', pending: number, pushing: boolean, lastSyncedAt: string, conflicts: number, lastError: string }) => void,
+ *   onStatus?: (status: { connection: 'online' | 'offline' | 'revoked' | 'incompatible', pending: number, pushing: boolean, lastSyncedAt: string, conflicts: number, lastError: string, minVersion: string }) => void,
  *   onRecordsChanged?: (revision: number) => void,
  *   pollIntervalMs?: number,
  *   pushDebounceMs?: number,
@@ -99,11 +99,14 @@ export function createSyncEngine({
     auditTrail,
   });
 
-  /** @type {'online' | 'offline' | 'revoked'} */
+  /** @type {'online' | 'offline' | 'revoked' | 'incompatible'} */
   let connection = 'online';
   let pushing = false;
   let lastSyncedAt = '';
   let lastError = '';
+  // §5.2 (37a/37c, 426): ținta minimă cerută de server — populată doar când connection
+  // devine „incompatible”, altfel rămâne „” (același tipar ca lastError).
+  let minVersion = '';
   let running = false;
   let runAgain = false;
   // Pornit implicit „oprit”: start() e singurul care programează timere/SSE, ca un motor
@@ -136,6 +139,7 @@ export function createSyncEngine({
       lastSyncedAt,
       conflicts: conflicts.count(),
       lastError,
+      minVersion,
       profile: currentProfile,
     };
   }
@@ -409,6 +413,16 @@ export function createSyncEngine({
       connection = 'revoked';
       // Deconectat de pe server: nu are rost să mai reîncercăm — Faza 5 (reconectare)
       // reconstruiește motorul, cu un sync.json nou.
+      stopped = true;
+      stopTimers();
+      return;
+    }
+    if (error instanceof SyncIncompatibleError) {
+      connection = 'incompatible';
+      minVersion = error.minVersion;
+      // Ca la „revoked”: nicio reîncercare nu rezolvă o versiune prea veche — doar o
+      // actualizare a aplicației (37a/37c). Motorul repornește abia la următoarea pornire
+      // a procesului (versiune nouă instalată), nu singur.
       stopped = true;
       stopTimers();
       return;

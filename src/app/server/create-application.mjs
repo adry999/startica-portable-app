@@ -136,7 +136,7 @@ export function createApplication(options = {}) {
         // Lipsa fișierului (deconectare repetată, sau unul care n-a existat) nu e o eroare.
       }
     },
-    createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch }),
+    createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch, clientVersion: version }),
     now: () => new Date(),
     platform: () => process.platform,
     reopenActiveBranch: () => reopenActiveBranch(),
@@ -162,7 +162,7 @@ export function createApplication(options = {}) {
     }),
     ...createSyncConnectRoutes({
       syncDevice,
-      createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch }),
+      createHttpClient: options => createSyncHttpClient({ ...options, fetch: globalThis.fetch, clientVersion: version }),
       connectService,
     }),
   ]);
@@ -213,6 +213,7 @@ export function createApplication(options = {}) {
     return createCommonContext({
       home,
       autoBackupIntervalMs,
+      version,
       syncDevice,
       fetch: options.fetch ?? globalThis.fetch,
       // Motorul setului comun (decizia 9) transmite statusul/reîncărcarea prin contextul de

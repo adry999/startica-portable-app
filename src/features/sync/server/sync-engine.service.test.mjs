@@ -9,7 +9,7 @@ import { createSyncOutboxRepository } from './sync-outbox.repository.mjs';
 import { createSyncStateRepository } from './sync-state.repository.mjs';
 import { createSyncConflictsRepository } from './sync-conflicts.repository.mjs';
 import { createSyncAttendanceWriter } from './change-applier.mjs';
-import { SyncNetworkError, SyncRevokedError, SyncHttpError } from './sync-http-client.mjs';
+import { SyncNetworkError, SyncRevokedError, SyncHttpError, SyncIncompatibleError } from './sync-http-client.mjs';
 import { createSyncEngine } from './sync-engine.service.mjs';
 
 const DEVICE_ID = 'dev-a';
@@ -246,6 +246,35 @@ test('o eroare de rețea trece în offline cu backoff, 401 în revocat și opre�
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(revokedEngine.status().connection, 'revoked');
   assert.ok(timerCalls2.clearInterval >= 1, 'timerul de polling a fost oprit automat la 401');
+  assert.equal(sseClosed, true, 'conexiunea SSE a fost închisă');
+});
+
+test('426 (SyncIncompatibleError) → connection "incompatible", minVersion expus, fără reîncercare', async () => {
+  let sseClosed = false;
+  const timerCalls = { clearInterval: 0 };
+  const { engine } = createHarness({
+    client: fakeClient({
+      pullChanges: async () => {
+        throw new SyncIncompatibleError('2.2.0', 'Versiunea 2.1.0 este prea veche.');
+      },
+      openEvents: () => ({
+        close: () => {
+          sseClosed = true;
+        },
+      }),
+    }),
+    setIntervalFn: () => ({ unref() {} }),
+    clearIntervalFn: () => {
+      timerCalls.clearInterval += 1;
+    },
+  });
+
+  engine.start();
+  await new Promise(resolve => setImmediate(resolve));
+  const status = engine.status();
+  assert.equal(status.connection, 'incompatible');
+  assert.equal(status.minVersion, '2.2.0');
+  assert.ok(timerCalls.clearInterval >= 1, 'timerul de polling a fost oprit automat la 426');
   assert.equal(sseClosed, true, 'conexiunea SSE a fost închisă');
 });
 

@@ -40,6 +40,7 @@ const STATUS_RESPONSE = {
   lastSyncedAt: '',
   conflicts: 0,
   lastError: '',
+  minVersion: '',
 };
 
 describe('useSyncStatus', () => {
