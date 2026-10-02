@@ -1,8 +1,11 @@
+/* F27 (PROMPT-11 §15): înălțime constantă ~64px, cu sau fără butoane în antet. */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-12);
+  min-height: 64px;
+  box-sizing: border-box;
   padding: 12px 40px;
   border-bottom: 1px solid var(--border);
 }

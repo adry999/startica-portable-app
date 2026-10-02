@@ -1434,3 +1434,16 @@ Teste noi: `branch.test.mjs` (cele 3 cazuri din prompt), `save-status.test.ts` (
 
 **Neatins din scop:**
 - Fără captură lângă captura 02.10 menționată în prompt, ca la toate punctele anterioare.
+
+## §15 (F27, PROMPT-11)
+
+`Topbar.module.css`: `.topbar` primește `min-height: 64px; box-sizing: border-box;` — înălțime
+constantă pe toate ecranele, cu sau fără butoane/comutatoare în antet (azi scădea la ~52px pe
+ecranele fără acțiuni mari). Titlul (Baloo 800 24px) și eticheta (11px, baseline) erau deja
+corecte; butoanele `size="header"`/`SegmentedControl` din antet erau deja folosite pe ecranele
+cu acțiuni (Prezența, Notify, Bazin) — nicio schimbare acolo, scopul rămâne doar fișierul CSS
+listat în prompt.
+
+**Neatins din scop:**
+- Fără captură Dashboard/Copii/Grupe/Backup cu linia de sub antet aliniată, cerută explicit de
+  punct — ca la toate punctele anterioare din acest lanț.
