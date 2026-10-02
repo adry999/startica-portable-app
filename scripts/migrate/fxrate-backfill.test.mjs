@@ -283,3 +283,56 @@ test('--execute e idempotent: a doua rulare nu mai scrie nimic și nu schimbă s
     stateAfterFirst.payments.map(p => ({ id: p.id, fxRate: p.fxRate, amountEur: p.amountEur })),
   );
 });
+
+// AUDIT-COD-02-10.md #7: un conflict pe O plată (ex. 409 de la o editare concurentă a EI) nu
+// trebuie să oprească restul lotului — raportat per-plată, idempotent la rerulare, ca la
+// exchange-rates-plan-presets-to-common.mjs. Interceptăm fetch global doar pentru scrierea pe
+// PAY-FAIL, ca să simulăm un 409 real fără să pornim o a doua filă concurentă.
+test('--execute: un conflict pe o plată nu oprește restul lotului, e raportat și reparabil cu o rerulare', async t => {
+  const app = await startApp(t);
+  const setup = await createEurChild(app, { id: 'C1', from: '2026-01', amount: 100 });
+  await importCommonRates(app, { '2026-09-18': 19.8 }, { '2026-09-18': 'bnm' });
+  const afterOk = await createLegacyPayment(app, setup.revision, {
+    id: 'PAY-OK',
+    childId: 'C1',
+    date: '2026-09-18',
+    amount: 500,
+  });
+  await createLegacyPayment(app, afterOk.revision, { id: 'PAY-FAIL', childId: 'C1', date: '2026-09-18', amount: 300 });
+
+  const realFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = realFetch;
+  });
+  globalThis.fetch = async (url, options) => {
+    if (String(url).endsWith('/api/record') && options?.method === 'POST') {
+      const body = JSON.parse(/** @type {string} */ (options.body));
+      if (body.record?.id === 'PAY-FAIL')
+        return { ok: false, status: 409, json: async () => ({ error: 'S-a modificat între timp.' }) };
+    }
+    return realFetch(url, options);
+  };
+
+  const lines = [];
+  const result = await runFxRateBackfillMigration({
+    home: app.dir,
+    baseUrl: app.origin,
+    dryRun: false,
+    log: l => lines.push(l),
+  });
+
+  assert.equal(result.written, 1, 'PAY-OK tot trebuie scris, chiar dacă PAY-FAIL a eșuat');
+  assert.equal(result.failed.length, 1);
+  assert.equal(result.failed[0].paymentId, 'PAY-FAIL');
+  assert.ok(lines.some(line => line.includes('EROARE la PAY-FAIL') && line.includes('continui cu restul')));
+
+  const { state } = await app.get('/api/state');
+  assert.notEqual(state.payments.find(p => p.id === 'PAY-OK').fxRate, undefined);
+  assert.equal(state.payments.find(p => p.id === 'PAY-FAIL').fxRate, undefined, 'nimic nu s-a scris pe cea eșuată');
+
+  // Rerulare, de data asta fără interceptare — PAY-FAIL se repară singur, nimic nu s-a pierdut.
+  globalThis.fetch = realFetch;
+  const retry = await runFxRateBackfillMigration({ home: app.dir, baseUrl: app.origin, dryRun: false, log: () => {} });
+  assert.equal(retry.written, 1);
+  assert.equal(retry.failed.length, 0);
+});

@@ -266,6 +266,7 @@ export async function runFxRateBackfillMigration({
 
   let written = 0;
   let skippedAlreadyDone = 0;
+  const failed = [];
   for (const [branchId, branchFindings] of byBranch) {
     await postJson(baseUrl, '/api/branches/select', { id: branchId }, token);
     token = (await getJson(baseUrl, '/api/session')).token;
@@ -291,19 +292,32 @@ export async function runFxRateBackfillMigration({
         amountEur: f.amountEur,
         allocations: f.convertedAllocations,
       };
-      await postJson(
-        baseUrl,
-        '/api/record',
-        { type: 'payments', mode: 'update', record: updated, revision, requestId: randomUUID() },
-        token,
-      );
-      written += 1;
-      log(`  ${f.payment.id}: scris (curs ${f.resolvedDate} = ${f.rate}, amountEur ${f.amountEur.toFixed(2)} €).`);
+      // AUDIT-COD-02-10.md #7: un conflict (ex. 409 de la o editare concurentă a ACESTEI plăți)
+      // nu trebuie să oprească restul lotului — ca la exchange-rates-plan-presets-to-common.mjs,
+      // se raportează per-plată și se continuă, nu se aruncă mai departe.
+      try {
+        await postJson(
+          baseUrl,
+          '/api/record',
+          { type: 'payments', mode: 'update', record: updated, revision, requestId: randomUUID() },
+          token,
+        );
+        written += 1;
+        log(`  ${f.payment.id}: scris (curs ${f.resolvedDate} = ${f.rate}, amountEur ${f.amountEur.toFixed(2)} €).`);
+      } catch (error) {
+        failed.push({ branchId, paymentId: f.payment.id, message: /** @type {Error} */ (error).message });
+        log(`  EROARE la ${f.payment.id}: ${/** @type {Error} */ (error).message} — sar peste, continui cu restul.`);
+      }
     }
   }
 
   log('\n=== Rezumat ===');
-  log(`Scrise acum: ${written}${skippedAlreadyDone ? `, deja făcute (sărite): ${skippedAlreadyDone}` : ''}`);
+  log(
+    `Scrise acum: ${written}` +
+      `${skippedAlreadyDone ? `, deja făcute (sărite): ${skippedAlreadyDone}` : ''}` +
+      `${failed.length ? `, eșuate: ${failed.length}` : ''}`,
+  );
+  if (failed.length) log('Rulează din nou scriptul (dry-run) pentru plățile eșuate — nimic nu s-a pierdut.');
   if (unresolved.length) log(`Rămân nerezolvate (fără curs în istoric): ${unresolved.length}.`);
   log('\nGata. Rulează din nou scriptul (dry-run) — ar trebui să mai găsească doar eventualele nerezolvate.');
 
@@ -314,6 +328,7 @@ export async function runFxRateBackfillMigration({
     resolved: resolved.length,
     written,
     skippedAlreadyDone,
+    failed,
     unresolved: unresolved.length,
   };
 }
