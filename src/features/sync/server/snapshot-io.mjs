@@ -116,10 +116,16 @@ export function readLocalSnapshot(database, { now }) {
  * la 410 din `sync-engine.service.mjs` — același `attendanceRepository`/`poolRepository`,
  * construite pe aceeași bază. `applied === false` (sms_templates/settings, Faza 6, C-8) nu
  * lasă `sync_state` în urmă, la fel ca la 410.
+ * §5 (PROMPT-CLAUDE-CODE-10, punctul 2): `auditTrail` opțional — un apelant care nu-l dă
+ * (teste vechi, compatibilitate) se comportă ca înainte, intrările `audit_log` din
+ * instantaneu sunt doar ignorate (applySnapshotEntry, fals). Serverul trimite `audit_log`
+ * în acest instantaneu doar unui calculator cu profil Complet (`changes.service.mjs
+ * #canReadKind`) — restricția e deja acolo, nimic de dublat aici.
  * @param {import('node:sqlite').DatabaseSync} database
- * @param {{ records: Record<string, { id: string, revision: number, payload: unknown, updatedAt: string }[]>, headSeq: number }} snapshot
+ * @param {{ records: Record<string, { id: string, revision: number, payload: unknown, updatedAt: string, updatedBy?: { id: string, name: string } }[]>, headSeq: number }} snapshot
+ * @param {{ auditTrail?: import('#shared/contracts/audit-trail.d.mts').AuditTrail }} [dependencies]
  */
-export function writeLocalSnapshot(database, { records, headSeq }) {
+export function writeLocalSnapshot(database, { records, headSeq }, { auditTrail } = {}) {
   const raw = createRecordRepository(database);
   const attendanceRepository = createSyncAttendanceWriter(database);
   const poolRepository = createSyncPoolWriter(database);
@@ -134,9 +140,12 @@ export function writeLocalSnapshot(database, { records, headSeq }) {
           rawRecordRepository: raw,
           attendanceRepository,
           poolRepository,
+          auditTrail,
           kind,
           recordId: row.id,
           payload: row.payload,
+          device: row.updatedBy,
+          changedAt: row.updatedAt,
         });
         if (!applied) continue;
         syncState.set(kind, row.id, {
@@ -164,10 +173,12 @@ export function writeLocalSnapshot(database, { records, headSeq }) {
  * a rescrie, ca rândurile șterse de pe alt calculator cât acesta era deconectat să nu
  * rămână fantomă local. Apelantul face backup înainte (editările offline oricum nu sunt
  * capturate — `isEnabled()` era fals cât filiala era deconectată).
+ * §5 (PROMPT-CLAUDE-CODE-10, punctul 2): `auditTrail` opțional, ca la `writeLocalSnapshot` mai sus.
  * @param {import('node:sqlite').DatabaseSync} database
- * @param {{ records: Record<string, { id: string, revision: number, payload: unknown, updatedAt: string }[]>, headSeq: number }} snapshot
+ * @param {{ records: Record<string, { id: string, revision: number, payload: unknown, updatedAt: string, updatedBy?: { id: string, name: string } }[]>, headSeq: number }} snapshot
+ * @param {{ auditTrail?: import('#shared/contracts/audit-trail.d.mts').AuditTrail }} [dependencies]
  */
-export function overwriteLocalSnapshot(database, { records, headSeq }) {
+export function overwriteLocalSnapshot(database, { records, headSeq }, { auditTrail } = {}) {
   const raw = createRecordRepository(database);
   const attendanceRepository = createSyncAttendanceWriter(database);
   const poolRepository = createSyncPoolWriter(database);
@@ -184,9 +195,12 @@ export function overwriteLocalSnapshot(database, { records, headSeq }) {
           rawRecordRepository: raw,
           attendanceRepository,
           poolRepository,
+          auditTrail,
           kind,
           recordId: row.id,
           payload: row.payload,
+          device: row.updatedBy,
+          changedAt: row.updatedAt,
         });
         if (!applied) continue;
         syncState.set(kind, row.id, {

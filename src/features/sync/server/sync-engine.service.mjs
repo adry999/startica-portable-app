@@ -290,9 +290,12 @@ export function createSyncEngine({
             rawRecordRepository,
             attendanceRepository,
             poolRepository,
+            auditTrail,
             kind,
             recordId: entry.id,
             payload: entry.payload,
+            device: entry.updatedBy,
+            changedAt: entry.updatedAt,
           });
           if (!applied) continue; // sms_templates/settings: Faza 6 (C-8)
           syncState.set(kind, entry.id, {

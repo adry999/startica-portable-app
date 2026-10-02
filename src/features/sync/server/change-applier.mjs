@@ -134,28 +134,62 @@ function applyPoolEntry(poolRepository, kind, recordId, payload) {
 }
 
 /**
- * Scrie o intrare din snapshot-ul serverului (410/resincronizare — C-5) prin depozitul
- * brut potrivit tipului, **fără** audit și **fără** `sync_state` — o resincronizare ține
- * o singură intrare de audit pentru tot lotul (nu una per înregistrare, ca la un pull
- * normal) și scrie `sync_state` separat, doar pentru intrările efectiv aplicate.
- * Evită exact crash-ul C-5: `normalizeRecord` nu mai e apelat pentru tipuri care nu sunt
- * fișe (`attendance`, sau `sms_templates`/`settings` până la Faza 6).
+ * Scrie o intrare din snapshot-ul serverului (pairing inițial sau 410/resincronizare — C-5)
+ * prin depozitul brut potrivit tipului, **fără** audit și **fără** `sync_state` pentru
+ * înregistrările obișnuite — o resincronizare ține o singură intrare de audit pentru tot
+ * lotul (nu una per înregistrare, ca la un pull normal) și scrie `sync_state` separat, doar
+ * pentru intrările efectiv aplicate. Evită exact crash-ul C-5: `normalizeRecord` nu mai e
+ * apelat pentru tipuri care nu sunt fișe (`attendance`, sau `sms_templates`/`settings` până
+ * la Faza 6).
+ * §5 (PROMPT-CLAUDE-CODE-10, puncte 1/2): un `audit_log` dintr-un instantaneu e tratat ca
+ * în `apply()` mai jos — scris direct prin `auditTrail.mergeSyncedEntry`, niciodată prin
+ * `recordChange` — identitatea vine din `device` (câmpul `updatedBy` al rândului de
+ * instantaneu, verificat de server, vezi `changes.service.mjs#readSnapshot`), NU din
+ * `payload.deviceId`/`deviceName` (auto-raportate), din același motiv ca la pull.
  * @param {{
  *   rawRecordRepository: RawKindWriter,
  *   attendanceRepository: ReturnType<typeof createSyncAttendanceWriter>,
  *   poolRepository?: ReturnType<typeof createSyncPoolWriter>,
+ *   auditTrail?: import('#shared/contracts/audit-trail.d.mts').AuditTrail,
  *   kind: string, recordId: string, payload: unknown,
+ *   device?: { id: string, name: string }, changedAt?: string,
  * }} input
- * @returns {boolean} fals pentru un tip neîntreținut încă (sms_templates/settings)
+ * @returns {boolean} fals pentru un tip neîntreținut încă (sms_templates/settings) sau pentru `audit_log`
+ *   (nimic de scris prin depozitul brut — doar istoricul local, prin `auditTrail`)
  */
 export function applySnapshotEntry({
   rawRecordRepository,
   attendanceRepository,
   poolRepository,
+  auditTrail,
   kind,
   recordId,
   payload,
+  device,
+  changedAt,
 }) {
+  if (kind === AUDIT_LOG_KIND) {
+    const entry =
+      /** @type {{ action: string, recordType: string | null, recordId: string | null, before: unknown, after: unknown, occurredAt: string } | null} */ (
+        payload
+      );
+    if (entry) {
+      auditTrail?.mergeSyncedEntry?.({
+        entryUid: recordId,
+        deviceId: device?.id ?? '',
+        deviceName: device?.name ?? '',
+        action: entry.action,
+        recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType | null} */ (
+          entry.recordType ?? null
+        ),
+        recordId: entry.recordId ?? null,
+        before: entry.before,
+        after: entry.after,
+        occurredAt: entry.occurredAt ?? changedAt,
+      });
+    }
+    return false;
+  }
   if (TYPES.includes(kind)) {
     applyRecordEntry(rawRecordRepository, kind, recordId, payload);
     return true;

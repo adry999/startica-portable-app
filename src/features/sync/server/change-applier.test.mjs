@@ -400,3 +400,110 @@ test('applySnapshotEntry fără poolRepository injectat întoarce fals pentru un
     false,
   );
 });
+
+/** Fals minimal cu `mergeSyncedEntry` — `createRecordingAuditTrail` (tests/support) n-are
+ * nevoie de el pentru restul testelor (doar `recordChange`), ca în `change-applier.mjs`.
+ * `recordChange` rămâne neapelat aici (applySnapshotEntry pentru audit_log nu-l folosește
+ * niciodată), dar tipul `AuditTrail` îl cere. */
+function createMergingAuditTrail() {
+  /** @type {any[]} */
+  const merged = [];
+  return {
+    recordChange: () => {
+      throw new Error('recordChange n-ar trebui apelat pentru un audit_log din instantaneu.');
+    },
+    mergeSyncedEntry: entry => void merged.push(structuredClone(entry)),
+    merged,
+  };
+}
+
+const SNAPSHOT_AUDIT_PAYLOAD = {
+  action: 'modificare',
+  recordType: 'children',
+  recordId: 'CHILD-1',
+  before: { name: 'Vechi' },
+  after: { name: 'Ana' },
+  occurredAt: '2026-09-27T09:00:00.000Z',
+};
+
+test('applySnapshotEntry (§5/punctul 1): un audit_log din instantaneu scrie prin mergeSyncedEntry, cu identitatea din `device`, nu din payload, și întoarce fals', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+  const auditTrail = createMergingAuditTrail();
+
+  const applied = applySnapshotEntry({
+    rawRecordRepository,
+    attendanceRepository,
+    auditTrail,
+    kind: 'audit_log',
+    recordId: 'ENTRY-UID-1',
+    // deviceId/deviceName auto-raportate în payload — NU trebuie folosite (vezi `device` mai jos).
+    payload: { ...SNAPSHOT_AUDIT_PAYLOAD, deviceId: 'pretins-alt-calculator', deviceName: 'Pretins' },
+    device: { id: 'dev-a', name: 'Calculator A' },
+    changedAt: '2026-09-27T10:00:00.000Z',
+  });
+
+  assert.equal(applied, false, 'nimic de scris prin depozitul brut pentru audit_log');
+  assert.equal(auditTrail.merged.length, 1);
+  assert.deepEqual(auditTrail.merged[0], {
+    entryUid: 'ENTRY-UID-1',
+    deviceId: 'dev-a',
+    deviceName: 'Calculator A',
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: { name: 'Vechi' },
+    after: { name: 'Ana' },
+    occurredAt: '2026-09-27T09:00:00.000Z',
+  });
+});
+
+test('applySnapshotEntry pentru audit_log fără `occurredAt` în payload cade pe `changedAt`', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+  const auditTrail = createMergingAuditTrail();
+
+  applySnapshotEntry({
+    rawRecordRepository,
+    attendanceRepository,
+    auditTrail,
+    kind: 'audit_log',
+    recordId: 'ENTRY-UID-2',
+    payload: { ...SNAPSHOT_AUDIT_PAYLOAD, occurredAt: undefined },
+    device: { id: 'dev-a', name: 'Calculator A' },
+    changedAt: '2026-09-27T10:00:00.000Z',
+  });
+
+  assert.equal(auditTrail.merged[0].occurredAt, '2026-09-27T10:00:00.000Z');
+});
+
+test('applySnapshotEntry pentru audit_log fără auditTrail injectat (compatibilitate) nu aruncă', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+
+  assert.doesNotThrow(() =>
+    applySnapshotEntry({
+      rawRecordRepository,
+      attendanceRepository,
+      kind: 'audit_log',
+      recordId: 'ENTRY-UID-3',
+      payload: SNAPSHOT_AUDIT_PAYLOAD,
+      device: { id: 'dev-a', name: 'Calculator A' },
+      changedAt: '2026-09-27T10:00:00.000Z',
+    }),
+  );
+});
+
+test('applySnapshotEntry pentru audit_log fără `device` (fals de test simplu) scrie identitate goală, nu aruncă', () => {
+  const { rawRecordRepository, attendanceRepository } = createHarness();
+  const auditTrail = createMergingAuditTrail();
+
+  applySnapshotEntry({
+    rawRecordRepository,
+    attendanceRepository,
+    auditTrail,
+    kind: 'audit_log',
+    recordId: 'ENTRY-UID-4',
+    payload: SNAPSHOT_AUDIT_PAYLOAD,
+  });
+
+  assert.equal(auditTrail.merged[0].deviceId, '');
+  assert.equal(auditTrail.merged[0].deviceName, '');
+});
