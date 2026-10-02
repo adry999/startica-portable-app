@@ -471,3 +471,167 @@ Nota „✅ Anulează după salvare (40b)” de mai sus spune explicit că achit
 6. **Rutele/parametrii literali din prompt** (`/situatia?filtru=restanta`, `/administrare/backup`) nu corespund rutelor reale din `routes.ts` (`/situatia-platilor`, `/backup-si-setari`) nici convenției de parametri existente (`useStatus` folosește `segment`, nu `filtru=restanta`). Am legat deep-link-urile la mecanismul real: `?segment=overdue` (Situația), `?filtru=incomplete`/`?filtru=telefon-invalid` (Copii, filtru nou „Telefon invalid" adăugat în `ChildrenToolbar`), `?data=&grupa=` (Prezența), navigare directă spre `settings` (Backup, pagină unică, fără parametru). Tratez asta ca o clarificare a formei literale din prompt, nu ca o gaură — fiecare link a fost testat să deschidă efectiv ecranul filtrat corect.
 
 **Nimic de decis din partea ta** — consemnat ca să nu pară scăpat din vedere; punctele 1-3 sunt candidați pentru o trecere viitoare dacă apare un sistem de roluri/conturi sau dacă se cer explicit filtrele calculator/perioadă.
+
+## ✅ §5.3 — Profiluri de calculator: interpretări aplicate (module canonice, redactare, escaladare de privilegii)
+
+`docs/design/screens/31-profiluri-calculator.md` (36a-36h) descrie profilul pe o matrice de module și
+trei reguli de securitate; câteva puncte nu erau literale în cod și au cerut o interpretare, aplicată
+și documentată aici, nu lăsată doar în comentarii:
+
+1. **Cele 14 module canonice** (`src/shared/domain/computer-profile.mjs`, `MODULE_IDS`) sunt derivate din
+   matricea 36b + rutele reale din `route-modules.mjs`, nu transcrise literal: rândul „Mesaje SMS” din
+   artboard n-are rută proprie în cod (SMS-ul e parte din fluxul De notificat/`notify` și din
+   Administrare pentru conectare/șabloane) — eliminat ca rând propriu. `resolve` („De rezolvat”) grupează
+   patru lucruri diferite din text: Taxe și grupe, De verificat, Asocierea achitărilor și Conflictele de
+   sincronizare (`/api/sync/conflicts*`) — toate ajung la același cititor/scriitor din meniu, n-am făcut
+   patru module pentru patru ecrane dintr-un singur punct de meniu.
+2. **Module mereu-Complet**: spec-ul zice „Administrare, Salarii și Sincronizare” — în cod există un
+   singur modul `admin` (nu trei), pentru că Salariile (`personal/salaries*`) și Sincronizarea
+   (`sync/*`) sunt deja sub-rute ale aceluiași ecran de Administrare, nu module separate în meniu. Clamp-ul
+   (`clampModules`) forțează `admin` la 0 pe orice alt preset decât Complet, inclusiv Personalizat — nu
+   există cale, din UI sau din server, să ridici acest modul fără să fii deja Complet.
+3. **Redactarea câmpurilor din `children` (36e)** — spec-ul zice „plățile, planul tarifar și notele
+   medicale” tăiate când `payments = 0`. Schema reală (`record-schema.mjs`) n-are un câmp `allergies`
+   separat de `healthNotes`, și „planul tarifar” pe fișa copilului e de fapt istoricul taxelor
+   (`feeHistory`). Am redactat exact `['healthNotes', 'feeHistory']` (`CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS`)
+   — alergiile, cerute explicit „rămân vizibile pe fișă în toate profilurile” (secțiunea Profiluri a
+   spec-ului), nu sunt atinse pentru că nu există ca și câmp distinct de redactat.
+4. **`/api/undo` rămas fără gardă de modul proprie** (`route-modules.mjs`, în `OPEN_PATHS`) — o decizie
+   conștientă, nu o gaură: anularea (40b) acționează doar pe o intrare din audit log creată cu cel mult
+   15s în urmă, de pe ACEEAȘI sesiune locală (`checkUndoEligibility`); cine a putut crea acea intrare a
+   trecut deja prin garda de modul la scrierea inițială — anularea ei nu deschide un modul nou, doar
+   revine la starea dinainte. N-am găsit o cale de escaladare prin această rută.
+5. **Escaladare de privilegii descoperită și blocată, neexplicit cerută de spec**: fără nicio gardă
+   suplimentară, un calculator restrâns (ex. Educator) ar fi putut apela
+   `POST /v1/pairing-codes` fără `profile` și ar fi mintat un calculator nou cu profil Complet implicit —
+   o cale de a ocoli complet restricția lui proprie. `sync-server/src/devices.routes.mjs` cere acum ca
+   apelantul (`createPairingCode`, `POST /v1/devices/:id/profile`) să aibă el însuși acces Complet
+   (`admin` = Modifică) — `assertCallerIsComplet`. Tratez asta ca pe un risc de securitate real, pe care
+   l-am închis implicit, default-deny, fără să aștept confirmare.
+
+**Nimic de decis din partea ta** — consemnat ca interpretările să fie vizibile, nu doar deductibile din cod.
+
+## ⏳ §5.3 — stratul client (`webapp/`) pentru profiluri rămâne neconstruit (36a-36f, 36g UI, 36h UI)
+
+Tot ce ține de server și de protocolul de sincronizare pentru §5.3 e gata, testat (1442 teste, `npm run
+check` verde) și comis pe `master-v2`: modelul pur al profilului (`computer-profile.mjs`), CRUD +
+pairing cu profil pe `sync-server/` (36a/36c server), filtrarea pull/snapshot și respingerea push după
+profil (inclusiv `children` redactat și `audit_log` append-only), clientul care învață și păstrează
+profilul în `sync.json`, și garda pe fiecare cerere `/api` locală (`route-modules.mjs` +
+`route-dispatcher.mjs`, cu test de arhitectură care scanează toate `*.routes.mjs` — a prins deja 4 căi
+neacoperite și un bug real, POST `/api/branches` fără nicio gardă).
+
+Asta e, cu bună știință, granița de securitate reală: un calculator restrâns sau blocat nu poate citi
+sau scrie dincolo de profilul lui, nici direct pe `sync-server`, nici pe serverul local, indiferent de
+ce arată interfața. Ce rămâne — tot stratul `webapp/` din spec — e vizibilitate/UX peste acea graniță
+deja impusă, nu o gaură de securitate dacă nu se face acum:
+
+- **36a/36b** — pasul de alegere a profilului la conectarea unui calculator nou + matricea Personalizat
+  (ecran nou în fluxul de pairing existent din Backup și setări → Sincronizare).
+- **36c** — lista de calculatoare cu coloana Profil + panou lateral „Schimbă” (consumă
+  `GET/POST /v1/devices*` deja gata pe server).
+- **36d** — meniul filtrat după profil (grupele goale dispar), cardul de sincronizare cu „Profil X ·
+  acces limitat”.
+- **36e** — fișa copilului doar-citire pe profiluri restrânse (fără plăți/plan/note medicale, fără
+  butoane de editare) — serverul deja redactează `healthNotes`/`feeHistory` când `payments=0`; clientul
+  trebuie doar să nu încerce să le arate/editeze.
+- **36f** — starea goală `profil.blocked` pentru o rută din afara profilului (componentă nouă, cu
+  test + axe + stories per `COMPONENTE.md` §3b).
+- **`ModuleGuard`** — un singur punct în router (`App.tsx`) care citește profilul din `/api/session` și
+  redirecționează/arată 36f; fără el, azi, o interfață neatinsă ar lăsa utilizatorul să vadă/încerce
+  acțiuni pe care serverul le respinge oricum cu 403 — corect ca securitate, confuz ca experiență.
+- **Test de arhitectură client**: fiecare rută din `routes.ts`/`nav-items.ts` are un `moduleId` și trece
+  prin `ModuleGuard` (echivalentul client al testului de acoperire scris deja pe server).
+
+**De ce am oprit aici, nu „pe jumătate”:** fiecare componentă nouă din `webapp/` cere test + axe +
+`*.stories.tsx` cu toate stările (`COMPONENTE.md` §0-§0i) — un `ModuleGuard` construit fără meniul
+filtrat în aceeași trecere ar lăsa o interfață care arată module pe care ModuleGuard tocmai le-ar bloca
+la click, o experiență mai proastă decât starea actuală (fără gardă vizibilă, dar cu serverul deja
+sigur). Prefer o singură trecere coerentă pe tot stratul client, într-un punct dedicat, decât piese
+izolate. Recomand ca următorul pas să reia exact lista de mai sus, în ordinea din
+`docs/design/screens/31-profiluri-calculator.md`.
+
+## ⏳ §5.3 36g — istoricul pe calculatoare (`audit_log` sincronizat) are doar fundația din protocol, nu pipeline-ul complet
+
+Ce există deja: `audit_log` e un tip recunoscut de protocolul de sincronizare (`change-policy.mjs`,
+`SyncKind`), serverul (`changes.service.mjs`) îl tratează append-only (orice reluare cu
+`baseRevision > 0` respinsă) și îl filtrează la pull/snapshot — doar un dispozitiv cu profil Complet îl
+primește înapoi.
+
+Ce lipsește, și de ce n-am continuat doar pe jumătate: spec-ul cere ca „toate dispozitivele să-l
+trimită” — asta înseamnă un **producător** local (fiecare `recordChange()` din
+`audit-log.repository.mjs` ar trebui să ajungă și în coada de sincronizare — `sync-outbox` — cu
+`deviceId`/`deviceName`/`branchId`/`module`), un **consumator** la pull (intrările venite de la alte
+calculatoare trebuie îmbinate undeva ca ecranul Istoric să le arate, nu doar aplicate tăcut), coloanele
+noi `device_id`/`device_name` pe tabela locală `audit_changes` (migrare `ensureColumn`, ca
+`session_token`), plus evenimentele de acces (`access.pin_ok`, `access.pin_fail`, `access.blocked`,
+`access.locked`) care n-au niciun producător azi. Pe partea de UI: filtrul „Calculator” (pastile),
+coloana calculator pe fiecare rând, fila nouă „Acces”, panoul sumar și linkul din 36c — toate depind de
+pipeline-ul de mai sus, nu doar de un câmp nou.
+
+Asta e o bucată separată, de sine stătătoare (schemă + producător + consumator + UI), nu o extensie de
+5 minute a ce există — am preferat s-o las întreagă pentru o trecere dedicată, cu teste proprii de
+integrare pe sincronizare reală (două baze, push-pull), decât s-o tai la jumătate (ex. doar coloanele
+locale, fără ca ele să însemne ceva până vine sincronizarea reală).
+
+**Nimic de decis din partea ta** — e following-up, nu o întrebare de business.
+
+## ⏳ §5.3 36h — PIN-ul per modul nu e generalizat; `pin.service.mjs` rămâne neschimbat (doar Salarii)
+
+Modelul de profil are deja `pinModules`/`DEFAULT_PIN_MODULES` (`payments`, `expenses`, `report`,
+`resolve` implicit la un Personalizat nou) și `requiresPin(profile, moduleId)` — partea pură e gata și
+testată. Ce lipsește: `pin.service.mjs` e legat azi direct de un singur PIN (`adminPin`, în baza comună)
+și apelat manual, inline, din fiecare handler din `salaries.routes.mjs` — nu există încă un hook la
+nivel de dispatcher (ca `assertModuleAccess`) care să verifice `requiresPin` pentru oricare modul din
+`profile.pinModules` și să ceară `pinService.assertUnlocked()` înainte de handler.
+
+Generalizarea reală cere: expunerea `pinService`-ului (azi creat doar în interiorul
+`salaries.routes.mjs`, din `common`) la nivelul `create-branch-context.mjs` unde trăiește deja
+`assertModuleAccess`; un al doilea hook `assertPinUnlocked(moduleId)` adăugat pe lângă el în
+`route-dispatcher.mjs`; și ecranul PIN din webapp (`PinGate.tsx` există deja pentru Salarii) extins să
+se declanșeze pe orice modul din `pinModules`, nu doar pe Salarii.
+
+**Decizie luată, default-deny pe risc, nu pe comoditate:** n-am atins `pin.service.mjs`/
+`salaries.routes.mjs` — PIN-ul existent (Salarii) e neschimbat, fără regresie. Comentariul din cod
+(„o cortină, nu securitate”) e literal: adevărata graniță de securitate pentru modulele din
+`pinModules` e deja `assertModuleAccess` (403 real, testat) — PIN-ul e o fricțiune suplimentară de UX
+peste o poartă deja închisă corect, nu o lipsă de securitate cât timp rămâne negeneralizat.
+
+**Nimic de decis din partea ta** — follow-up, nu blocaj.
+
+## ⏳ §5.3 — ștergerea datelor locale la restrângerea profilului NU e implementată (risc de pierdere ireversibilă)
+
+Spec-ul (`screens/31-profiluri-calculator.md`, secțiunea Server): „La restrângerea profilului: clientul
+șterge local tipurile nepermise și refuză backup local cu ele.” N-am implementat ștergerea — exact genul
+de operație ireversibilă pe care regulile de proces ale acestui proiect cer precauție explicită
+(confirmare, backup înainte). Azi, dacă un calculator Complet e retrogradat la, de exemplu, Bazin, datele
+`children`/`payments` deja prezente în baza lui SQLite locală **rămân pe disc**, needitabile mai departe
+(push-ul lor viitor e deja respins de server) dar încă citibile local până vine `ModuleGuard` (vezi mai
+sus) să ascundă acele ecrane din interfață.
+
+**De ce am ales să nu șterg automat:** o ștergere locală greșit sincronizată cu profilul la momentul
+nepotrivit (ex. profilul se schimbă de două ori rapid, sau sincronizarea nu apucă să confirme noul
+profil înainte de următorul pull) ar putea rade date care n-au ajuns încă pe server — pierdere reală,
+fără recuperare, fără ca utilizatorul să fi cerut explicit asta. Prefer starea actuală (date vechi,
+needitabile, încă vizibile local până la `ModuleGuard`) unei ștergeri automate greșite.
+
+**Recomandare pentru implementarea reală:** doar după ce clientul confirmă sincronizarea completă cu
+noul profil (cel puțin un ciclu de pull reușit după schimbare) și după un backup automat — nu la
+simpla primire a profilului nou.
+
+## ⏳ 43a/43b — TodayPage pe profilurile Bazin/Educator rămân amânate, neatinse în această sesiune
+
+`PROMPT-CLAUDE-CODE-8.md` marchează deja 43a „în pauză” înainte de §5.3. N-am construit nimic pe
+TodayPage/profil Bazin-Educator în această trecere — `firstAllowedModule()` din
+`computer-profile.mjs` există ca funcție pură pregătită pentru o eventuală redirecționare de pe `/`,
+dar nimic din webapp n-o consumă încă. Rămâne cuplat cu restul stratului client amânat mai sus.
+
+## ⏳ §5.3 — `sync-server` trebuie redesfășurat în producție ca profilurile să aibă efect real
+
+Toate schimbările de pe `sync-server/` (coloana `profile_json` pe `devices`/`pairing_codes`,
+`GET /v1/devices/me`, `POST /v1/devices/:id/profile`, filtrarea pull/snapshot, respingerea push pe
+profil, `audit_log` append-only) sunt doar cod în acest checkout — un server deja pornit în producție
+rulează în continuare versiunea veche, fără niciuna din aceste reguli, până la o redesfășurare explicită.
+Migrarea coloanei (`ensureColumn`) e scrisă să fie sigură pe o bază deja existentă (ALTER idempotent),
+dar nu se aplică singură. Pas operațional, în afara acestei sesiuni — semnalat aici ca să nu fie uitat
+înainte de a considera §5.3 „live”.
