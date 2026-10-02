@@ -64,9 +64,9 @@ function PaymentsHarness({ onOpenChild = () => {} }: { onOpenChild?: (id: string
   );
 }
 
-function renderPage(onOpenChild?: (id: string) => void) {
+function renderPage(onOpenChild?: (id: string) => void, initialPath = '/') {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialPath]}>
       <ToastProvider>
         <TopbarActionsProvider>
           <TopbarActionsSlot />
@@ -678,5 +678,15 @@ describe('PaymentsPage', () => {
 
       expect(screen.getByTestId('location').textContent).toMatch(/^\/asociere-achitari\?id=/);
     });
+  });
+
+  it('§13.2: căutarea rămâne la întoarcerea din fișa copilului — stare în URL (?q=)', async () => {
+    await loadedSession();
+    // Simulează URL-ul la întoarcerea dintr-o fișă: căutarea a fost setată înainte de a naviga.
+    renderPage(undefined, '/achitari?q=Import');
+
+    expect(screen.getByLabelText('Căutare achitări')).toHaveValue('Import');
+    expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
   });
 });
