@@ -7,7 +7,13 @@ import { createRevisionTransaction } from '#core/server/persistence/revision-tra
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
 import { accessLevelFor, resolveRouteModule } from '#core/server/http/route-modules.mjs';
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { completProfile, isModuleAllowed, normalizeProfile, requiresPin } from '#shared/domain/computer-profile.mjs';
+import {
+  completProfile,
+  filterSnapshotForProfile,
+  isModuleAllowed,
+  normalizeProfile,
+  requiresPin,
+} from '#shared/domain/computer-profile.mjs';
 import { createAuditLogRepository, createAuditLogRoutes, createUndoRoutes } from '#features/audit-log/index.server.mjs';
 import { createBackupService, createBackupRoutes } from '#features/backup/index.server.mjs';
 import {
@@ -371,7 +377,14 @@ export function createBranchContext({
     ...createSessionRoutes({
       sessionToken,
       version,
-      readEnvelope: recordRepository.readEnvelope,
+      // AUDIT-COD-02-10.md #2: filtrat după profilul curent — altfel /api/state trimitea tot
+      // instantaneul necondiționat, indiferent de restricțiile §2, doar ascunse în UI.
+      // AUDIT-COD-02-10.md #2: filtrat după profilul curent — altfel /api/state trimitea tot
+      // instantaneul necondiționat, indiferent de restricțiile §2, doar ascunse în UI.
+      readEnvelope: () => {
+        const envelope = recordRepository.readEnvelope();
+        return { ...envelope, state: filterSnapshotForProfile(envelope.state, currentDeviceProfile()) };
+      },
       backupService: backups,
       commonBackupService: common?.backups,
       allowShutdown: !!allowShutdown,

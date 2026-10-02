@@ -220,3 +220,37 @@ export const AUDIT_LOG_KIND = 'audit_log';
  * și notele medicale nu sunt pe acest calculator”). Nu există azi un câmp `allergies` separat în
  * schema reală — doar `healthNotes` (vezi SENSITIVE_FIELDS din record-schema.mjs) — vezi INTREBARI.md. */
 export const CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS = ['healthNotes', 'feeHistory'];
+
+/**
+ * AUDIT-COD-02-10.md #2: `/api/state` trimitea tot instantaneul necondiționat — §2 ascunde
+ * secțiunile în UI (ChildProfileView), dar datele ajungeau deja complete în browser la
+ * încărcare, indiferent de profil (devtools/Network arăta tot). Funcție pură — un tip de
+ * înregistrare al cărui modul (`KIND_MODULE`) e sub „Vede” ajunge gol la client, nu doar
+ * ascuns în interfață; `children` rămâne vizibil (educatorii au nevoie de el), dar cu
+ * câmpurile din `CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS` tăiate când modulul `payments`
+ * nu e permis — exact regula pe care `ChildProfileView` o aplica deja doar vizual.
+ * @param {Record<string, any[]>} snapshot `RecordsSnapshot`-ul brut (din `readEnvelope().state`).
+ * @param {ComputerProfile | null | undefined} profile
+ * @returns {Record<string, any[]>}
+ */
+export function filterSnapshotForProfile(snapshot, profile) {
+  const resolved = profile ?? completProfile();
+  const hidePayments = !isModuleAllowed(resolved, 'payments');
+  /** @type {Record<string, any[]>} */
+  const filtered = {};
+  for (const [kind, rows] of Object.entries(snapshot)) {
+    const moduleId = KIND_MODULE[kind];
+    if (moduleId && !isModuleAllowed(resolved, moduleId)) {
+      filtered[kind] = [];
+    } else if (kind === 'children' && hidePayments) {
+      filtered[kind] = rows.map(child => {
+        const copy = { ...child };
+        for (const field of CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS) delete copy[field];
+        return copy;
+      });
+    } else {
+      filtered[kind] = rows;
+    }
+  }
+  return filtered;
+}

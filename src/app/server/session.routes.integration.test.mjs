@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { createApplication, startTestApplication, removeDirWithRetry } from '#test-support/start-test-application.mjs';
 
@@ -303,6 +304,89 @@ test('/api/session: sync.json cu profil persistat îl expune ca atare', async t 
   assert.equal(session.profile.preset, 'educator');
   assert.equal(session.profile.modules.attendance, 2);
   assert.equal(session.profile.modules.payments, 0);
+});
+
+// AUDIT-COD-02-10.md #2: /api/state trimitea tot instantaneul necondiționat — §2 ascundea doar
+// în UI (ChildProfileView), dar datele ajungeau deja complete în browser, indiferent de profil.
+// syncDevice.read() e cache în memorie, citit o dată la pornirea procesului (sync-device.repository.mjs)
+// — nu se poate „restrânge din mers" cu un writeFileSync pe aplicația deja pornită; de-aia testul
+// pornește ÎNTÂI aplicația fără profil (Complet, ca importul — rută admin — să treacă), o închide,
+// scrie profilul restrâns, apoi pornește o A DOUA instanță pe ACELAȘI folder de date.
+test('/api/state: pe profil Educator (payments:0), plățile nu mai ajung deloc, iar fișa copilului vine fără sumă/notă medicală', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'startica-session-profil-'));
+  t.after(() => removeDirWithRetry(dir));
+
+  const seedApp = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
+  await new Promise(done => seedApp.server.listen(0, '127.0.0.1', done));
+  const seedOrigin = `http://127.0.0.1:${seedApp.server.address().port}`;
+  const seedToken = (await (await fetch(seedOrigin + '/api/session')).json()).token;
+  const imported = await fetch(seedOrigin + '/api/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Token': seedToken },
+    body: JSON.stringify({
+      state: {
+        children: [
+          {
+            id: 'C1',
+            contractNumber: 'C1',
+            name: 'Ana Popescu',
+            status: 'Activ',
+            contractDate: '2026-01-10',
+            attendanceDate: '2026-01-10',
+            healthNotes: 'Alergie la polen',
+          },
+        ],
+        payments: [
+          {
+            id: 'PAY-1',
+            childId: 'C1',
+            date: '2026-09-01',
+            amount: 500,
+            allocations: [{ month: '2026-09', amount: 500 }],
+          },
+        ],
+        expenses: [],
+        groups: [],
+        categories: [],
+        visits: [],
+      },
+      confirm: 'IMPORT',
+      revision: 0,
+      requestId: randomUUID(),
+    }),
+  });
+  assert.equal(imported.status, 200, JSON.stringify(await imported.json()));
+  await seedApp.close();
+
+  writeFileSync(
+    join(dir, 'sync.json'),
+    JSON.stringify({
+      version: 1,
+      serverUrl: 'https://sync.exemplu.md',
+      deviceId: 'dev-1',
+      deviceName: 'Calculator Educator',
+      token: 'tok',
+      connectedAt: new Date().toISOString(),
+      profile: {
+        preset: 'educator',
+        modules: { attendance: 2, children: 1, groups: 1 },
+        pinModules: [],
+        blocked: false,
+      },
+    }),
+  );
+
+  const restrictedApp = createApplication({ dataDir: join(dir, 'data'), backupDir: join(dir, 'backups'), home: dir });
+  await new Promise(done => restrictedApp.server.listen(0, '127.0.0.1', done));
+  t.after(() => restrictedApp.close());
+  const restrictedOrigin = `http://127.0.0.1:${restrictedApp.server.address().port}`;
+  const { state } = await (await fetch(restrictedOrigin + '/api/state')).json();
+
+  assert.deepEqual(state.payments, [], 'modulul payments e 0 — plățile nu trebuie să ajungă deloc la client');
+  assert.equal(state.children.length, 1);
+  assert.equal(state.children[0].name, 'Ana Popescu');
+  assert.equal(state.children[0].healthNotes, undefined, 'nota medicală nu trebuie trimisă fără acces la payments');
+  assert.equal(state.children[0].feeHistory, undefined, 'planul tarifar nu trebuie trimis fără acces la payments');
 });
 
 // 46a (PROMPT-9 §4): StartSourceScreen se bazează pe acest semnal ca să știe dacă

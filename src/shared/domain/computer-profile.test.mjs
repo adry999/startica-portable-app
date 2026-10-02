@@ -17,6 +17,8 @@ import {
   MODULE_LABELS,
   PRESET_LABELS,
   PRESET_DESCRIPTIONS,
+  filterSnapshotForProfile,
+  CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS,
 } from './computer-profile.mjs';
 
 test('completProfile are toate modulele la Modifică și nu e blocat', () => {
@@ -145,4 +147,43 @@ test('PRESET_LABELS și PRESET_DESCRIPTIONS acoperă toate preset-urile (36a)', 
     assert.ok(PRESET_LABELS[preset], `lipsește eticheta pentru ${preset}`);
     assert.ok(PRESET_DESCRIPTIONS[preset], `lipsește descrierea pentru ${preset}`);
   }
+});
+
+// AUDIT-COD-02-10.md #2: /api/state trimitea tot instantaneul necondiționat — filterSnapshotForProfile
+// e funcția pură care închide golul (aplicată pe server, nu doar ascuns în UI ca până acum).
+test('filterSnapshotForProfile: un tip al cărui modul e sub Vede ajunge gol, restul neatins', () => {
+  const profile = normalizeProfile({ preset: 'educator', modules: {} }); // payments: 0, children: 1
+  const snapshot = {
+    children: [{ id: 'C1' }],
+    payments: [{ id: 'PAY-1' }],
+    groups: [{ id: 'G1' }],
+  };
+  const filtered = filterSnapshotForProfile(snapshot, profile);
+  assert.deepEqual(filtered.payments, []);
+  assert.equal(filtered.children.length, 1);
+  assert.equal(filtered.groups.length, 1);
+});
+
+test('filterSnapshotForProfile: fără acces la payments, copiii rămân dar fără câmpurile sensibile', () => {
+  const profile = normalizeProfile({ preset: 'educator', modules: {} });
+  const snapshot = {
+    children: [{ id: 'C1', name: 'Ana', healthNotes: 'Alergie', feeHistory: [{ from: '2026-01', amount: 100 }] }],
+  };
+  const [child] = filterSnapshotForProfile(snapshot, profile).children;
+  for (const field of CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS) assert.equal(child[field], undefined);
+  assert.equal(child.name, 'Ana', 'câmpurile nesensibile rămân');
+});
+
+test('filterSnapshotForProfile: profil Complet (sau absent) nu filtrează nimic', () => {
+  const snapshot = { children: [{ id: 'C1', healthNotes: 'x' }], payments: [{ id: 'PAY-1' }] };
+  assert.deepEqual(filterSnapshotForProfile(snapshot, completProfile()), snapshot);
+  assert.deepEqual(filterSnapshotForProfile(snapshot, null), snapshot);
+});
+
+test('filterSnapshotForProfile: profil blocat golește tot (fiecare modul e sub Vede când blocked)', () => {
+  const profile = { ...completProfile(), blocked: true };
+  const snapshot = { children: [{ id: 'C1' }], payments: [{ id: 'PAY-1' }] };
+  const filtered = filterSnapshotForProfile(snapshot, profile);
+  assert.deepEqual(filtered.children, []);
+  assert.deepEqual(filtered.payments, []);
 });
