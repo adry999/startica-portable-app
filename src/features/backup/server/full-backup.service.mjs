@@ -3,6 +3,8 @@ import {
   readFileSync,
   readdirSync,
   renameSync,
+  rmSync,
+  mkdtempSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -24,11 +26,40 @@ import { summarizeDatabaseContents } from './database-contents.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 /** @typedef {{ id: string, name: string, kind: 'branch' | 'common', file: string, sha256: string, counts: Record<string, number> }} ManifestDatabaseEntry */
-/** @typedef {{ version: 1, createdAt: string, databases: ManifestDatabaseEntry[] }} BackupManifest */
+/** @typedef {{ version: 1, appVersion: string, activeBranchId: string, createdAt: string, databases: ManifestDatabaseEntry[] }} BackupManifest */
 
 export const ARCHIVE_EXTENSION = '.startica-backup';
 const COMMON_ENTRY_ID = 'common';
 const MANIFEST_FILE = 'manifest.json';
+
+// „1.10.0” > „1.9.0” — compară numeric segment cu segment, nu ca text (altfel
+// „1.10.0” < „1.9.0” lexicografic). O versiune lipsă sau nerecognoscută (arhivă
+// foarte veche, dinainte de acest câmp) nu blochează niciodată restaurarea.
+/**
+ * @param {string} a
+ * @param {string} b
+ * @returns {number} negativ dacă a < b, 0 dacă egale, pozitiv dacă a > b
+ */
+function compareVersions(a, b) {
+  const partsA = String(a).split('.').map(Number);
+  const partsB = String(b).split('.').map(Number);
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const diff = (partsA[i] || 0) - (partsB[i] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+/**
+ * @param {Record<string, number>} actual
+ * @param {Record<string, number>} expected
+ * @returns {boolean}
+ */
+function countsMatch(actual, expected) {
+  const keys = new Set([...Object.keys(actual), ...Object.keys(expected)]);
+  for (const key of keys) if ((actual[key] || 0) !== (expected[key] || 0)) return false;
+  return true;
+}
 
 // Nume reale produse de acest serviciu + cele vechi (o singură bază, vezi backup.service.mjs) —
 // retenția și lista afișată în UI trebuie să le vadă pe amândouă (decizia 9 din plan).
@@ -121,6 +152,7 @@ function pruneTemporary(dir) {
  *   backupDirectory: () => string,
  *   readSetting: (key: string) => string,
  *   writeSetting: (key: string, value: string) => void,
+ *   appVersion: string,
  * }} FullBackupServiceDependencies
  */
 
@@ -134,6 +166,7 @@ export function createFullBackupService({
   backupDirectory,
   readSetting,
   writeSetting,
+  appVersion,
 }) {
   // Copiază arhiva în folderul extern, cu aceeași verificare prin hash ca la o bază
   // singulară (backup.service.mjs copyExternally) — dar „deschiderea de verificare” aici
@@ -237,7 +270,13 @@ export function createFullBackupService({
     }
 
     /** @type {BackupManifest} */
-    const manifest = { version: 1, createdAt: new Date().toISOString(), databases };
+    const manifest = {
+      version: 1,
+      appVersion,
+      activeBranchId: active.branch.id,
+      createdAt: new Date().toISOString(),
+      databases,
+    };
     entries.unshift({ name: MANIFEST_FILE, data: Buffer.from(JSON.stringify(manifest, null, 2)) });
     return { entries, manifest };
   }
@@ -310,12 +349,81 @@ export function createFullBackupService({
     return JSON.parse(manifestEntry.data.toString('utf8'));
   }
 
+  /**
+   * Validează o arhivă complet, fără să schimbe nimic pe disc (42d: previzualizare și
+   * restaurare trec amândouă prin aceeași verificare, nu doar prin readArchiveManifest).
+   * Aruncă clar pe: nume/manifest lipsă (readArchiveManifest), versiune de aplicație mai
+   * nouă decât cea instalată, bază lipsă din arhivă, bază coruptă (integrity_check) sau a
+   * cărei numărătoare nu corespunde manifestului (arhivă trunchiată/alterată). Arhiva de pe
+   * disc nu se atinge niciodată aici — un eșec păstrează fișierul exact cum era.
+   * @param {string} file
+   * @returns {{ manifest: BackupManifest, databaseFiles: Map<string, Buffer> }}
+   */
+  function validateArchive(file) {
+    const entries = readZipArchive(readFileSync(file));
+    const manifestEntry = entries.find(entry => entry.name === MANIFEST_FILE);
+    if (!manifestEntry) fail('Arhiva nu are manifest.json — backup incomplet sau corupt.');
+    /** @type {BackupManifest} */
+    const manifest = JSON.parse(manifestEntry.data.toString('utf8'));
+    if (manifest.appVersion && compareVersions(manifest.appVersion, appVersion) > 0)
+      fail(
+        `Arhiva a fost creată cu Startica ${manifest.appVersion}, mai nouă decât versiunea instalată (${appVersion}). Actualizează aplicația înainte de a restaura.`,
+      );
+
+    const stagingDir = mkdtempSync(join(backupDirectory(), '.restaurare-'));
+    /** @type {Map<string, Buffer>} */
+    const databaseFiles = new Map();
+    try {
+      for (const entry of manifest.databases) {
+        const zipEntry = entries.find(candidate => candidate.name === entry.file);
+        if (!zipEntry) fail(`Arhiva nu conține ${entry.file} (${entry.name}) — backup incomplet sau corupt.`);
+        const staged = join(stagingDir, entry.file);
+        writeFileSync(staged, zipEntry.data);
+        const check = new DatabaseSync(staged, { readOnly: true });
+        let integrityOk;
+        try {
+          integrityOk =
+            /** @type {{ integrity_check: string }} */ (check.prepare('PRAGMA integrity_check').get())
+              .integrity_check === 'ok';
+        } finally {
+          check.close();
+        }
+        if (!integrityOk) fail(`Baza „${entry.name}” din arhivă e coruptă.`);
+        if (!countsMatch(summarizeDatabaseContents(staged), entry.counts))
+          fail(
+            `Numărătoarea bazei „${entry.name}” nu corespunde manifestului arhivei — arhiva ar putea fi coruptă sau incompletă.`,
+          );
+        databaseFiles.set(entry.id, zipEntry.data);
+      }
+    } finally {
+      rmSync(stagingDir, { recursive: true, force: true });
+    }
+    return { manifest, databaseFiles };
+  }
+
+  /**
+   * Restaurare dintr-o arhivă validă: `apply` primește manifestul + conținutul fiecărei
+   * baze (indexat după id-ul din manifest) și face singur înlocuirea de fișiere și
+   * redeschiderea conexiunilor — `full-backup.service.mjs` nu ține nicio conexiune
+   * `common`/filială vie, deci nu are cum să le închidă/redeschidă el însuși (decizia 8
+   * din plan: asta rămâne treaba `create-application.mjs`). Validarea completă rulează
+   * ÎNAINTE de orice apel la `apply`, deci `apply` nu mai poate eșua din cauza arhivei.
+   * @param {string} file
+   * @param {{ apply: (args: { manifest: BackupManifest, databaseFiles: Map<string, Buffer> }) => void }} options
+   */
+  function restore(file, { apply }) {
+    const { manifest, databaseFiles } = validateArchive(file);
+    apply({ manifest, databaseFiles });
+  }
+
   return {
     backup,
     safeBackup,
     listBackups: () => fileList(backupDirectory()),
     resolveArchiveFile,
     readArchiveManifest,
+    validateArchive,
+    restore,
     isArchive: file => {
       try {
         readZipArchive(readFileSync(file));

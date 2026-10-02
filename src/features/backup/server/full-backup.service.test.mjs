@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
+import { readZipArchive, createZipArchive } from '#core/server/files/zip-archive.mjs';
 import { createFullBackupService, ARCHIVE_EXTENSION } from './full-backup.service.mjs';
 
 /** @param {import('node:test').TestContext} t */
@@ -80,6 +81,7 @@ function createHarness(t) {
     backupDirectory: () => backupDirectory,
     readSetting: key => settings.get(key) ?? '',
     writeSetting: (key, value) => void settings.set(key, value),
+    appVersion: '2.1.0',
   });
 
   return { home, service, backupDirectory, activeDbFile, settings };
@@ -167,4 +169,98 @@ test('ambele apeluri backup() produc arhive distincte, fără coliziune de nume'
 
   assert.notEqual(first.name, second.name);
   assert.equal(service.listBackups().length, 2);
+});
+
+test('manifestul include appVersion și activeBranchId (42d)', t => {
+  const { service } = createHarness(t);
+  const { manifest } = service.backup('manual');
+
+  assert.equal(manifest.appVersion, '2.1.0');
+  assert.equal(manifest.activeBranchId, 'br-active');
+});
+
+test('validateArchive() acceptă o arhivă validă și întoarce conținutul fiecărei baze', t => {
+  const { service } = createHarness(t);
+  const { file, manifest } = service.backup('manual');
+
+  const { manifest: validated, databaseFiles } = service.validateArchive(file);
+
+  assert.deepEqual(validated, manifest);
+  assert.equal(databaseFiles.size, 3);
+  for (const entry of manifest.databases) assert.ok(databaseFiles.get(entry.id) instanceof Buffer);
+});
+
+test('validateArchive() nu lasă niciun folder de lucru în urmă, nici la succes nici la eșec', t => {
+  const { service, backupDirectory } = createHarness(t);
+  const { file } = service.backup('manual');
+
+  service.validateArchive(file);
+  assert.deepEqual(
+    readdirSync(backupDirectory).filter(name => name.startsWith('.restaurare-')),
+    [],
+  );
+});
+
+test('restore() respinge o arhivă creată cu o versiune de Startica mai nouă (42d: blocat)', t => {
+  const { service } = createHarness(t);
+  const { file } = service.backup('manual');
+
+  const newer = createFullBackupService({
+    registry: { list: () => [] },
+    home: '',
+    legacy: { dataDir: '', backupDir: '' },
+    activeBranch: () => ({ branch: { id: 'x' }, db: null }),
+    common: () => ({ db: null }),
+    backupDirectory: () => dirname(file),
+    readSetting: () => '',
+    writeSetting: () => {},
+    appVersion: '2.0.0',
+  });
+
+  assert.throws(
+    () => newer.restore(file, { apply: () => assert.fail('apply nu trebuia chemat') }),
+    /mai nouă decât versiunea instalată/,
+  );
+});
+
+test('restore() respinge o arhivă căreia îi lipsește o bază declarată în manifest', t => {
+  const { service } = createHarness(t);
+  const { file, manifest } = service.backup('manual');
+
+  const entries = readZipArchive(readFileSync(file)).filter(entry => entry.name !== 'branch-br-other.db');
+  const truncated = file + '.truncat';
+  writeFileSync(truncated, createZipArchive(entries));
+
+  assert.throws(() => service.restore(truncated, { apply: () => {} }), /nu conține branch-br-other\.db/);
+  assert.equal(manifest.databases.some(entry => entry.file === 'branch-br-other.db'), true);
+});
+
+test('restore() respinge o arhivă a cărei numărătoare nu corespunde manifestului (coruptă/alterată)', t => {
+  const { service } = createHarness(t);
+  const { file } = service.backup('manual');
+
+  const entries = readZipArchive(readFileSync(file));
+  const manifestEntry = entries.find(entry => entry.name === 'manifest.json');
+  const manifest = JSON.parse(manifestEntry.data.toString('utf8'));
+  manifest.databases.find(entry => entry.id === 'br-active').counts.children = 99;
+  manifestEntry.data = Buffer.from(JSON.stringify(manifest));
+  const altered = file + '.alterat';
+  writeFileSync(altered, createZipArchive(entries));
+
+  assert.throws(() => service.restore(altered, { apply: () => {} }), /numărătoarea bazei.*nu corespunde/i);
+});
+
+test('restore() cheamă apply() cu manifestul și conținutul fiecărei baze, după validare completă', t => {
+  const { service } = createHarness(t);
+  const { file, manifest } = service.backup('manual');
+
+  let received = null;
+  service.restore(file, {
+    apply: args => {
+      received = args;
+    },
+  });
+
+  assert.deepEqual(received.manifest, manifest);
+  assert.equal(received.databaseFiles.size, 3);
 });
