@@ -1,8 +1,20 @@
 import { Badge, PersonCell, RowMenu, groupTone, type DataTableColumn } from '@shared/ui';
 import { formatMonthOnly } from '#shared/format/date-format.mjs';
+import { groupOrderIndex } from '@shared/format/group-order';
 import type { Group } from '@contracts/record-types.mjs';
-import type { ChildRow } from './useChildren';
+import type { ChildRow, PaymentStatusTone } from './useChildren';
 import styles from './ChildrenPage.module.css';
+
+// F21 (PROMPT-11 §9): ordinea de urgență a stărilor de plată — „Neachitat” (fundalul roz) e azi
+// singura pastilă pentru restanță (domeniul nu mai distinge separat „Restanță” de „Neachitat”
+// curent), deci intră prima; copiii fără pastilă (nescadenți) între ea și „Achitat”; „Fără
+// obligație” rămâne ultima (nimic de urmărit).
+const PAYMENT_SORT_RANK: Record<PaymentStatusTone, number> = {
+  pink: 0,
+  yellow: 1,
+  mint: 2,
+  neutral: 3,
+};
 
 export interface ChildrenColumnsOptions {
   groups: Group[];
@@ -52,7 +64,10 @@ export function buildChildrenColumns({
     {
       key: 'group',
       header: 'Grupă',
-      sortValue: row => row.groupName,
+      sortValue: row => {
+        const group = groups.find(g => g.id === row.groupId);
+        return group ? groupOrderIndex(group, groups) : null;
+      },
       render: row =>
         row.groupName ? (
           <Badge tone={groupTone(row.groupId, groups)}>{row.groupName}</Badge>
@@ -63,11 +78,13 @@ export function buildChildrenColumns({
     {
       key: 'due',
       header: 'Scadență',
+      sortValue: row => (Number.isFinite(row.dueDay) ? row.dueDay : null),
       render: row => row.dueDateLabel,
     },
     {
       key: 'payment',
       header: `Plată ${currentMonthName}`,
+      sortValue: row => (row.payment ? PAYMENT_SORT_RANK[row.payment.tone] : 1.5),
       render: row =>
         row.payment && (
           <Badge tone={row.payment.tone}>

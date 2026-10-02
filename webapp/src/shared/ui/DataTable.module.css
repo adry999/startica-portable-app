@@ -49,10 +49,30 @@
   border: none;
   background: none;
   font: inherit;
-  color: inherit;
+  color: var(--subtle);
   padding: 0;
   text-transform: inherit;
   letter-spacing: inherit;
+}
+
+.sortButton:hover {
+  color: var(--slate);
+}
+
+.sortButtonActive,
+.sortButtonActive:hover {
+  color: var(--slate);
+}
+
+/* Hex direct (nu un token nou pentru o singură folosire) — la fel ca Card.module.css:61. */
+.sortArrow {
+  font-size: 12px;
+  color: #d6d0c4;
+}
+
+.sortArrowActive {
+  font-size: 12px;
+  color: var(--orange-ink);
 }
 
 .checkboxCell {

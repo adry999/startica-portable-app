@@ -26,6 +26,7 @@ export interface ChildRow {
   groupName: string;
   archived: boolean;
   status: string;
+  dueDay: number;
   dueDateLabel: string;
   /** null = fără pastilă (A8, 2a): copilul nu e nici scadent-în-curând, nici nescadent — nimic de arătat. */
   payment: PaymentStatus | null;
@@ -124,6 +125,7 @@ export function useChildren(month: string): ChildrenData {
       groupName: groupNameOf(child.groupId, records.groups),
       archived: !!child.archived,
       status: child.status,
+      dueDay: Number(obligation.due.slice(-2)),
       dueDateLabel: `ziua ${Number(obligation.due.slice(-2))}`,
       payment: paymentStatusFor(obligation.label),
       child,

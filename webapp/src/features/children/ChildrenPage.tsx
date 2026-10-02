@@ -15,6 +15,7 @@ import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
 import { missingChildFields } from '#shared/domain/missing-child-fields.mjs';
 import { urlParamNumber, useUrlParams } from '@shared/state/useUrlParams';
+import type { DataTableSort } from '@shared/ui';
 import { useChildren, type ChildRow } from './useChildren';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
@@ -65,10 +66,13 @@ function ChildrenListView({
   // useState (altfel se pierd la remontarea ChildrenListView, cât timp fișa e deschisă). Un singur
   // `setSearchParams` per interacție (vezi useUrlParams) — altfel „schimbă grupa ȘI resetează
   // pagina” ar fi două navigări separate care se suprascriu reciproc.
-  const [urlFilters, setUrlFilters] = useUrlParams({ q: '', grupa: 'all', pagina: '1' });
+  const [urlFilters, setUrlFilters] = useUrlParams({ q: '', grupa: 'all', pagina: '1', sort: 'name', dir: 'asc' });
   const query = urlFilters.q;
   const groupFilter = urlFilters.grupa;
   const page = urlParamNumber(urlFilters.pagina, 1);
+  // F21 (PROMPT-11 §9): sortarea rămâne în URL (?sort=&dir=), ca filtrele/pagina de mai sus.
+  const sort: DataTableSort = { key: urlFilters.sort, direction: urlFilters.dir === 'desc' ? 'desc' : 'asc' };
+  const defaultSort: DataTableSort = { key: 'name', direction: 'asc' };
   function setQuery(value: string) {
     setUrlFilters({ q: value, pagina: '1' });
   }
@@ -77,6 +81,9 @@ function ChildrenListView({
   }
   function setPage(value: number) {
     setUrlFilters({ pagina: String(value) });
+  }
+  function setSort(next: DataTableSort | null) {
+    setUrlFilters({ sort: next?.key ?? defaultSort.key, dir: next?.direction ?? defaultSort.direction, pagina: '1' });
   }
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [paymentFilter, setPaymentFilter] = useState('all');
@@ -485,6 +492,9 @@ function ChildrenListView({
           onRowClick={row => onOpenChild(row.id)}
           page={page}
           onPageChange={setPage}
+          sort={sort}
+          onSortChange={setSort}
+          defaultSort={defaultSort}
           emptyState={
             <EmptyState
               title="Niciun copil nu corespunde filtrelor curente"

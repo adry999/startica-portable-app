@@ -24,6 +24,7 @@ function row(overrides: Partial<ChildRow>): ChildRow {
     groupName: '',
     archived: false,
     status: 'Activ',
+    dueDay: 10,
     dueDateLabel: '',
     payment: { tone: 'neutral', label: '' },
     child: {} as ChildRow['child'],
@@ -225,8 +226,7 @@ describe('ChildFormDrawer', () => {
       'fetch',
       vi.fn(async (path: string) => ({
         ok: true,
-        json: async () =>
-          path === '/api/plan-presets' ? [{ id: 'P-1', name: 'Standard', priceEur: 150 }] : {},
+        json: async () => (path === '/api/plan-presets' ? [{ id: 'P-1', name: 'Standard', priceEur: 150 }] : {}),
       })),
     );
     renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);

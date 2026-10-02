@@ -222,6 +222,78 @@ describe('ChildrenPage', () => {
     expect(screen.getByRole('columnheader', { name: 'Plată septembrie' })).toBeInTheDocument();
   });
 
+  it('F21 (PROMPT-11 §9): Copil sortează crescător/descrescător, cu aria-sort corect', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const header = screen.getByRole('button', { name: 'Copil' });
+    expect(screen.getByRole('columnheader', { name: 'Copil' })).toHaveAttribute('aria-sort', 'ascending');
+
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+
+    await userEvent.click(header);
+    expect(screen.getByRole('columnheader', { name: 'Copil' })).toHaveAttribute('aria-sort', 'descending');
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Maria Ionescu')).toBeInTheDocument();
+
+    // a treia oară revine la implicit (Copil crescător).
+    await userEvent.click(header);
+    expect(screen.getByRole('columnheader', { name: 'Copil' })).toHaveAttribute('aria-sort', 'ascending');
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+  });
+
+  it('F21 (PROMPT-11 §9): Grupă urmează ordinea grupelor, „Fără grupă” rămâne mereu ultima', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const header = screen.getByRole('button', { name: 'Grupă' });
+
+    await userEvent.click(header); // crescător
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(within(rows[1]).getByText('Maria Ionescu')).toBeInTheDocument();
+
+    await userEvent.click(header); // descrescător — „Fără grupă” rămâne ultima, nu sare prima.
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+    expect(within(rows[1]).getByText('Maria Ionescu')).toBeInTheDocument();
+  });
+
+  it('F21 (PROMPT-11 §9): Scadența sortează pe ziua din lună, în ambele direcții', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const header = screen.getByRole('button', { name: 'Scadență' });
+
+    await userEvent.click(header); // crescător: ziua 10 (Andrei) înaintea zilei 28 (Maria)
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+
+    await userEvent.click(header); // descrescător
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Maria Ionescu')).toBeInTheDocument();
+  });
+
+  it('F21 (PROMPT-11 §9): sortarea rămâne în URL (?sort=&dir=) la întoarcerea din fișă', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage('/copii?sort=group&dir=desc');
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('Andrei Popescu'));
+    await userEvent.click(screen.getByRole('button', { name: 'Copii' }));
+
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei Popescu')).toBeInTheDocument();
+  });
+
   it('C-2: căutarea filtrează și după numele părintelui sau telefon, nu doar nume/contract', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

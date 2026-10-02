@@ -1221,3 +1221,29 @@ picker de angajat (primește `staff` direct ca prop), deci nimic de schimbat aco
 
 **Neatins din scop:**
 - Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).
+
+## §9 (F21, PROMPT-11)
+
+`DataTable` (`@shared/ui`): `sortValue` poate întoarce și `null` — rândul rămâne mereu la coadă,
+indiferent de direcția sortării (nu doar la ascendent), pentru „Fără grupă”/„fără scadență”.
+Antetul coloanelor sortabile: eticheta `--subtle` inactivă / `--slate` la hover sau coloană activă;
+săgeata „↕” `#d6d0c4` mereu vizibilă (hex direct, ca în `Card.module.css:61` — o singură folosire,
+fără token nou), „↑”/„↓” `--orange-ink` pe coloana activă. Clic: crescător → descrescător → revine
+la implicit (`defaultSort`, nu neapărat coloana curentă) — o singură implementare, deci regula se
+aplică automat la toate tabelele sortabile din `DataTable` (Achitări, Cheltuieli etc.), nu doar la
+Copii.
+`childrenColumns.tsx`: Grupă sortează după `groupOrderIndex` (ordinea reală a grupelor, nu
+alfabetic); Scadență după `dueDay` (zi numerică, adăugată acum pe `ChildRow`); Plată după tonul
+pastilei. `ChildrenPage.tsx` ține sortarea în URL (`?sort=&dir=`), alături de `q`/`grupa`/`pagina`
+existente, cu același tipar (`useUrlParams`) — dispare din URL când e valoarea implicită (`name`/`asc`).
+
+**Deviere de la spec (motivată):**
+- Ordinea cerută pentru Plată e „Restanță → Parțial → Neachitat → Achitat → Fără taxă” (5 stări),
+  dar `ChildRow.payment` are azi doar 4 tonuri (`pink`/`yellow`/`mint`/`neutral`) + `null` — domeniul
+  nu mai distinge „Restanță” de „Neachitat” ca stări separate (`paymentStatusFor` în `useChildren.ts`
+  mapează ambele sub pastila roz „Neachitat”). Am folosit ordinea de urgență realizabilă cu datele
+  existente: roz (restanță/neachitat) → galben (parțial) → fără pastilă (nescadent) → mint (achitat)
+  → neutru (fără taxă/obligație), ultima.
+
+**Neatins din scop:**
+- Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).

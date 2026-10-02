@@ -51,6 +51,43 @@ describe('DataTable', () => {
     expect(within(rows[2]).getByText('Andrei')).toBeInTheDocument();
   });
 
+  it('F21 (PROMPT-11 §9): a treia oară pe altă coloană revine la implicit, nu mai alternează asc/desc', async () => {
+    render(
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        defaultSort={{ key: 'name', direction: 'asc' }}
+      />,
+    );
+    const header = screen.getByRole('button', { name: /Taxă/ });
+
+    await userEvent.click(header); // asc
+    await userEvent.click(header); // desc
+    await userEvent.click(header); // a treia oară: revine la implicit (Copil asc), nu Taxă asc
+    expect(screen.getByRole('columnheader', { name: /Taxă/ })).toHaveAttribute('aria-sort', 'none');
+    expect(screen.getByRole('columnheader', { name: /Copil/ })).toHaveAttribute('aria-sort', 'ascending');
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Andrei')).toBeInTheDocument();
+  });
+
+  it('F21 (PROMPT-11 §9): sortValue null rămâne la coadă indiferent de direcție', async () => {
+    const columnsWithGap: DataTableColumn<Child>[] = [
+      { key: 'name', header: 'Copil', render: c => c.name, sortValue: c => c.name },
+      { key: 'fee', header: 'Taxă', render: c => c.fee, sortValue: c => (c.fee === 2000 ? null : c.fee) },
+    ];
+    render(<DataTable columns={columnsWithGap} rows={children} rowKey={c => c.id} />);
+    const header = screen.getByRole('button', { name: 'Taxă' });
+
+    await userEvent.click(header); // asc
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[2]).getByText('Maria')).toBeInTheDocument();
+
+    await userEvent.click(header); // desc — rândul fără valoare rămâne tot ultimul
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[2]).getByText('Maria')).toBeInTheDocument();
+  });
+
   it('nu sortează pe o coloană fără sortValue', async () => {
     render(<DataTable columns={columns} rows={children} rowKey={c => c.id} />);
     expect(screen.queryByRole('button', { name: /^$/ })).not.toBeInTheDocument();

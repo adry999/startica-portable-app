@@ -8,8 +8,9 @@ export interface DataTableColumn<Row> {
   key: string;
   header: string;
   render: (row: Row) => ReactNode;
-  /** Lipsă = coloana nu e sortabilă (click pe antet nu face nimic). */
-  sortValue?: (row: Row) => string | number;
+  /** Lipsă = coloana nu e sortabilă (click pe antet nu face nimic). `null` = rândul rămâne
+   * mereu la coadă (ex. „Fără grupă”, fără scadență), indiferent de direcția sortării. */
+  sortValue?: (row: Row) => string | number | null;
   align?: 'start' | 'end';
 }
 
@@ -134,6 +135,9 @@ export function DataTable<Row>({
     return [...rows].sort((a, b) => {
       const va = column.sortValue!(a);
       const vb = column.sortValue!(b);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
       if (va < vb) return -1 * factor;
       if (va > vb) return 1 * factor;
       return 0;
@@ -165,14 +169,17 @@ export function DataTable<Row>({
     ? sortedRows
     : sortedRows.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
 
+  // F21 (PROMPT-11 §9): crescător -> descrescător -> revine la implicit (nu un toggle etern).
   function toggleSort(column: DataTableColumn<Row>) {
     if (!column.sortValue) return;
     setPage(1);
-    const next: DataTableSort =
-      sort?.key !== column.key
-        ? { key: column.key, direction: 'asc' }
-        : { key: column.key, direction: sort.direction === 'asc' ? 'desc' : 'asc' };
-    setSort(next);
+    if (sort?.key !== column.key) {
+      setSort({ key: column.key, direction: 'asc' });
+    } else if (sort.direction === 'asc') {
+      setSort({ key: column.key, direction: 'desc' });
+    } else {
+      setSort(defaultSort ?? null);
+    }
   }
 
   function toggleRow(key: string) {
@@ -290,9 +297,18 @@ export function DataTable<Row>({
                 aria-sort={sort?.key === column.key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
                 {column.sortValue ? (
-                  <button type="button" className={styles.sortButton} onClick={() => toggleSort(column)}>
+                  <button
+                    type="button"
+                    className={
+                      sort?.key === column.key ? `${styles.sortButton} ${styles.sortButtonActive}` : styles.sortButton
+                    }
+                    onClick={() => toggleSort(column)}
+                  >
                     {column.header}
-                    <span aria-hidden="true">
+                    <span
+                      aria-hidden="true"
+                      className={sort?.key === column.key ? styles.sortArrowActive : styles.sortArrow}
+                    >
                       {sort?.key === column.key ? (sort.direction === 'asc' ? '↑' : '↓') : '↕'}
                     </span>
                   </button>
