@@ -1,4 +1,5 @@
 import { Card, SelectableTile, groupTone } from '@shared/ui';
+import { EMPTY_STATES, resolveEmptyStateTitle } from '@shared/ui/empty-states';
 import { initials } from '@shared/format/initials';
 import { today } from '@domain/calendar-month.mjs';
 import type { PoolSessionStatus } from '#features/pool/pool.types.d.mts';
@@ -76,11 +77,19 @@ export function WeekView({ days, stats, groups = [], coaches = [], onCycle }: We
       </div>
 
       <div className={styles.infoRow}>
-        {coaches.length > 0 && (
-          <span className={styles.coachLabel}>
-            Antrenor: <strong>{coaches.map(coach => coach.name).join(', ')}</strong>
-          </span>
-        )}
+        {/* §7 (PROMPT-11, audit „secțiuni ascunse”): rândul de antrenori nu mai dispare fără
+            niciunul setat — `EMPTY_STATES['bazin.coach']` există deja (folosit și în PoolSettings). */}
+        <span className={styles.coachLabel}>
+          Antrenor:{' '}
+          {coaches.length > 0 ? (
+            <strong>{coaches.map(coach => coach.name).join(', ')}</strong>
+          ) : (
+            <>
+              nesetat · {resolveEmptyStateTitle(EMPTY_STATES['bazin.coach'])} {EMPTY_STATES['bazin.coach'].actionLabel}
+              .
+            </>
+          )}
+        </span>
         <div className={styles.legend}>
           <span className={styles.legendItem}>
             <span className={`${styles.legendDot} ${styles.dotPresent}`} />

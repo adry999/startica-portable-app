@@ -61,6 +61,7 @@ export type EmptyStateKey =
   | 'raport.expenses'
   | 'asociere.suggestions'
   | 'planuri.childForm'
+  | 'backup.first'
   // 36f — modul neinclus în profilul calculatorului (31-profiluri-calculator.md, §5.3)
   | 'profil.blocked';
 
@@ -359,6 +360,13 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
     title: params =>
       `Nu sunt planuri setate pentru ${params.filiala ?? 'filiala deschisă'}. Adaugă planurile o dată și apoi alegi planul aici. Până atunci, scrie taxa manual.`,
     actionLabel: 'Setează planurile',
+  },
+  // §7 (PROMPT-11, audit „secțiuni ascunse”): lista de backup-uri nu mai e un gol tăcut — acțiunea
+  // de pornit un backup e deja butonul „Backup acum” de deasupra listei, de-aia fără `actionLabel`.
+  'backup.first': {
+    variant: 'first',
+    size: 'compact',
+    title: 'Fără backup-uri încă — apasă „Backup acum” mai sus ca să faci primul.',
   },
 
   // ── 36f — modul neinclus în profilul calculatorului ─────────────────────

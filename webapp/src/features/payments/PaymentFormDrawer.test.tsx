@@ -776,10 +776,11 @@ describe('PaymentFormDrawer', () => {
       );
     });
 
-    it('cu sms.md neconectat, bifa e dezactivată și arată „SMS neconectat”', () => {
+    it('cu sms.md neconectat, bifa e dezactivată și arată „SMS neconectat” cu link „Conectează”', () => {
       renderDrawer();
       expect(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' })).toBeDisabled();
-      expect(screen.getByText('SMS neconectat')).toBeInTheDocument();
+      expect(screen.getByText(/SMS neconectat/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Conectează' })).toHaveAttribute('href', '/de-notificat');
     });
 
     it('salvarea cu bifa activă trimite SMS de confirmare cu șablonul „Confirmare plată”', async () => {
@@ -994,6 +995,18 @@ describe('PaymentFormDrawer', () => {
       expect(sumInput()).toHaveValue(600);
       expect(screen.getByLabelText('Suma pentru Radu Popescu')).toHaveValue(1200);
     });
+  });
+
+  it('§7 (PROMPT-11): fără servicii active, rândul Serviciu rămâne vizibil cu link spre setări', () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records: { ...records, services: [] },
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+    expect(screen.getByText('Serviciu')).toBeInTheDocument();
+    expect(screen.getByText(/Fără servicii active/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Setează serviciile' })).toBeInTheDocument();
   });
 
   describe('§5 (PROMPT-11 F18): cardul copilului și cardurile Plan/Curs BNM (15b)', () => {

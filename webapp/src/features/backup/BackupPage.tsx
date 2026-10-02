@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Drawer,
+  EmptyState,
   Field,
   LoadingState,
   SegmentedControl,
@@ -13,6 +14,7 @@ import {
   type BadgeTone,
   type CardTone,
 } from '@shared/ui';
+import { EMPTY_STATES, resolveEmptyStateTitle } from '@shared/ui/empty-states';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { formatDateTime } from '#shared/format/date-format.mjs';
@@ -378,6 +380,15 @@ export function BackupPage() {
                     </div>
                   ))}
                 </div>
+              )}
+              {/* §7 (PROMPT-11, audit „secțiuni ascunse”): o listă fără backup-uri nu mai e un
+                  gol tăcut sub antet — un rând explică starea. */}
+              {!backupsList.loading && backupsList.entries.length === 0 && (
+                <EmptyState
+                  variant={EMPTY_STATES['backup.first'].variant}
+                  size="compact"
+                  title={resolveEmptyStateTitle(EMPTY_STATES['backup.first'])}
+                />
               )}
 
               <Badge tone={STATUS_TONE[backupData.statusTone]}>{backupData.statusLabel}</Badge>

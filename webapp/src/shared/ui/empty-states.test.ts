@@ -67,6 +67,7 @@ const KEYS_35D: EmptyStateKey[] = [
   'raport.expenses',
   'asociere.suggestions',
   'planuri.childForm',
+  'backup.first',
 ];
 
 // 36f — modul neinclus în profilul calculatorului (31-profiluri-calculator.md).

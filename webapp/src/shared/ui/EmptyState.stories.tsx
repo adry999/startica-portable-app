@@ -99,6 +99,7 @@ export const RaportIncome: Story = fromCatalog('raport.income');
 export const RaportExpenses: Story = fromCatalog('raport.expenses');
 export const AsociereSuggestions: Story = fromCatalog('asociere.suggestions');
 export const PlanuriChildForm: Story = fromCatalog('planuri.childForm');
+export const BackupFirst: Story = fromCatalog('backup.first');
 
 // ── 36f — modul neinclus în profilul calculatorului ─────────────────────────
 export const ProfilBlocked: Story = fromCatalog('profil.blocked');

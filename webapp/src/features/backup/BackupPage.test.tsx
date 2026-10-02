@@ -102,6 +102,23 @@ describe('BackupPage', () => {
     expect(screen.getByText('Startica v1.6.3')).toBeInTheDocument();
   });
 
+  it('§7 (PROMPT-11): fără niciun backup, lista arată EmptyState în loc de gol tăcut', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse(health);
+        if (path === '/api/backups') return jsonResponse([]);
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    await loadedSession();
+    renderPage();
+    expect(await screen.findByText(/Fără backup-uri încă/)).toBeInTheDocument();
+  });
+
   it('backupNow arată un toast de confirmare', async () => {
     await loadedSession();
     renderPage();

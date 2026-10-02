@@ -713,17 +713,34 @@ export function PaymentFormDrawer({
               </div>
             ))}
 
-          {serviceOptions.length > 0 && (
-            <div className={styles.field}>
-              Serviciu
+          {/* §7 (PROMPT-11, audit „secțiuni ascunse”): Serviciu nu mai dispare dacă lista e
+              goală (ex. toate serviciile ascunse din setări) — rândul rămâne, cu un link spre
+              setări în loc de control. */}
+          <div className={styles.field}>
+            Serviciu
+            {serviceOptions.length > 0 ? (
               <SegmentedControl
                 ariaLabel="Serviciu"
                 value={values.service}
                 onChange={service => setValues(previous => ({ ...previous, service }))}
                 options={serviceOptions}
               />
-            </div>
-          )}
+            ) : (
+              <p className={styles.notice}>
+                Fără servicii active ·{' '}
+                <Button
+                  variant="link"
+                  className={styles.linkButton}
+                  onClick={() => {
+                    localStorage.setItem('view.backup', 'services');
+                    window.open('/backup-si-setari', '_blank');
+                  }}
+                >
+                  Setează serviciile
+                </Button>
+              </p>
+            )}
+          </div>
 
           <div className={styles.field}>
             Sumă
@@ -1060,7 +1077,11 @@ export function PaymentFormDrawer({
             />
             <span>Trimite confirmare părintelui prin SMS</span>
           </label>
-          {!smsConfigured && <p className={styles.notice}>SMS neconectat</p>}
+          {!smsConfigured && (
+            <p className={styles.notice}>
+              SMS neconectat · <Link to="/de-notificat">Conectează</Link>
+            </p>
+          )}
         </form>
       </Drawer>
       {unsavedGuard.confirmDialog}

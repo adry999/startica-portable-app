@@ -1112,3 +1112,40 @@ plată nouă fără `defaultChildId` (nu doar din fișă) — fără să suprasc
    teste (inclusiv 4 teste noi pentru cele două carduri + cardul de avertizare), nu prin captură
    vizuală comparată la `npx serve docs/design` (nicio sesiune din acest lanț n-a produs încă o
    captură reală; ar cere pornirea serverului + browser headless, nefăcut până acum).
+
+## §7 (PROMPT-11) — Audit „secțiuni ascunse când lipsesc datele”: ce s-a închis, ce rămâne
+
+**Închis (tabelul din prompt):**
+- `children/ChildFormDrawer.tsx` — §1.
+- `payments/PaymentFormDrawer.tsx` (feeEntry null) — §5 (cardul galben „fără plan/taxă”).
+- `payments/PaymentFormDrawer.tsx` prefill — §5.
+- `payments/PaymentFormDrawer.tsx` Serviciu — rândul rămâne mereu vizibil; fără servicii active,
+  arată „Fără servicii active” + link „Setează serviciile” (deschide Backup și setări → Servicii).
+- `backup/BackupPage.tsx` — listă goală de backup-uri arată acum `EmptyState` (cheie nouă
+  `backup.first` în `empty-states.ts`, fără `actionLabel` — acțiunea „Backup acum” e deja butonul
+  de deasupra listei).
+- `pool/WeekView.tsx` — rândul de antrenori rămâne, arată „Antrenor: nesetat · {EMPTY_STATES
+  ['bazin.coach']}” (cheie deja existentă, refolosită ca în `PoolSettings.tsx`).
+- `payments/PaymentFormDrawer.tsx` SMS — „SMS neconectat” are acum link „Conectează” spre
+  `/de-notificat` (unde se conectează botul Telegram folosit de trimiterea de SMS/notificări).
+
+**Audit suplimentar** (modulele `status`, `visits`, `review`, `report`, `notify`, `dashboard` —
+`grep -rnE "\.length > 0 &&|\.length \?|return null"` + o căutare țintită pe cuvinte-cheie
+„configured/conectat/neconectat/hidden”):
+- `report/ReportMethodsPanel.tsx:39` (`report.eurRows.length > 0 &&`) — secțiunea „Pentru taxe în
+  EUR” dispare când nu sunt achitări EUR în perioada aleasă. **Rămâne** (conținut contextual, nu o
+  setare lipsă): absența ține de perioada selectată (nicio achitare EUR luna asta), nu de o taxă
+  EUR/curs neconfigurat — simetric cu `raport.income`/`raport.expenses` de deasupra, care arată
+  deja `EmptyState` corect pentru lipsă de date pe perioadă, nu pentru lipsă de setare.
+- `report/ReportPage.tsx:43` (`if (!data.report) return null`) — gardă de încărcare (așteaptă
+  datele), nu o secțiune ascunsă pentru o setare lipsă. **Rămâne.**
+- `status/PrintOptionsDialog.tsx:36` (`if (!open) return null`) — dialog închis, tipar standard.
+  **Rămâne.**
+- `notify/useNotify.ts:84,156` — funcții de transformare a datelor (nu JSX), au deja un fallback
+  rezonabil pentru lista goală („Necompletat” / „Nimic de copiat”). **Rămâne.**
+- `status/StatusPage.tsx` și `notify/NotifyPage.tsx` (SMS neconfigurat) — deja conforme: butoanele
+  rămân vizibile, doar dezactivate, cu `title={SMS_DISABLED_TITLE}`; `NotifyPage.tsx` arată chiar
+  o pastilă „sms.md neconectat” vizibilă. **Nimic de schimbat.**
+
+Nu s-a găsit niciun alt tipar „secțiune ascunsă pentru o setare lipsă” în cele 6 module, în afara
+celor de mai sus (toate contextuale sau deja conforme).

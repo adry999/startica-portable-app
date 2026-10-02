@@ -65,12 +65,13 @@ describe('WeekView', () => {
     expect(onCycle).toHaveBeenCalledWith('PB-1', '2026-09-08', null);
   });
 
-  it('arată „Antrenor: <nume>” în rândul de sub carduri (22a) doar dacă există antrenori', () => {
+  it('§7 (PROMPT-11): rândul de antrenori nu dispare fără niciunul setat — arată motivul', () => {
     const onCycle = vi.fn();
     const { rerender } = render(
       <WeekView days={[]} stats={{ scheduled: 0, present: 0, absent: 0, excused: 0 }} onCycle={onCycle} />,
     );
-    expect(screen.queryByText(/Antrenor:/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Antrenor:/)).toBeInTheDocument();
+    expect(screen.getByText(/nesetat/)).toBeInTheDocument();
 
     rerender(
       <WeekView
