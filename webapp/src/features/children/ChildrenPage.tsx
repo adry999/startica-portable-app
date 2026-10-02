@@ -12,6 +12,7 @@ import {
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
+import { missingChildFields } from '#shared/domain/missing-child-fields.mjs';
 import { useChildren, type ChildRow } from './useChildren';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
@@ -60,6 +61,7 @@ function ChildrenListView({
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [groupFilter, setGroupFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
+  const [completenessFilter, setCompletenessFilter] = useState('all');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Child | 'new' | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChildRow | null>(null);
@@ -98,6 +100,7 @@ function ChildrenListView({
       if (groupFilter === 'none' && row.groupId) return false;
       if (groupFilter !== 'all' && groupFilter !== 'none' && row.groupId !== groupFilter) return false;
       if (paymentFilter !== 'all' && row.payment?.label !== paymentFilter) return false;
+      if (completenessFilter === 'incomplete' && missingChildFields(row.child).length === 0) return false;
       if (normalizedQuery) {
         // A8: căutarea găsește și după al doilea părinte (nume + telefon), nu doar contactul principal.
         const haystack = `${row.name} ${row.parent} ${row.phone} ${row.child.parent2 ?? ''} ${
@@ -107,7 +110,7 @@ function ChildrenListView({
       }
       return true;
     });
-  }, [childrenData.rows, archiveFilter, groupFilter, paymentFilter, query]);
+  }, [childrenData.rows, archiveFilter, groupFilter, paymentFilter, completenessFilter, query]);
 
   async function archiveSelected() {
     const ids = [...selectedRowKeys];
@@ -286,6 +289,7 @@ function ChildrenListView({
     );
   }
   if (paymentFilter !== 'all') activeFilterLabels.push(paymentFilter);
+  if (completenessFilter === 'incomplete') activeFilterLabels.push('Date incomplete');
 
   const selectedRows = childrenData.rows.filter(row => selectedRowKeys.has(row.id));
   const allSelectedArchived = selectedRows.length > 0 && selectedRows.every(row => row.archived);
@@ -295,6 +299,7 @@ function ChildrenListView({
     setArchiveFilter('active');
     setGroupFilter('all');
     setPaymentFilter('all');
+    setCompletenessFilter('all');
   }
 
   return (
@@ -323,6 +328,8 @@ function ChildrenListView({
           groups={childrenData.groups}
           paymentFilter={paymentFilter}
           onPaymentFilterChange={setPaymentFilter}
+          completenessFilter={completenessFilter}
+          onCompletenessFilterChange={setCompletenessFilter}
         />
 
         {selectedRowKeys.size > 0 && (
@@ -341,7 +348,7 @@ function ChildrenListView({
         )}
 
         <DataTable
-          key={`${archiveFilter}-${groupFilter}-${paymentFilter}-${query}`}
+          key={`${archiveFilter}-${groupFilter}-${paymentFilter}-${completenessFilter}-${query}`}
           bare
           columns={columns}
           rows={filteredRows}

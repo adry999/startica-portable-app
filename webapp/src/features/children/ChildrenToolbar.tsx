@@ -16,6 +16,8 @@ export interface ChildrenToolbarProps {
   groups: Group[];
   paymentFilter: string;
   onPaymentFilterChange: (value: string) => void;
+  completenessFilter: string;
+  onCompletenessFilterChange: (value: string) => void;
 }
 
 export function ChildrenToolbar({
@@ -30,6 +32,8 @@ export function ChildrenToolbar({
   groups,
   paymentFilter,
   onPaymentFilterChange,
+  completenessFilter,
+  onCompletenessFilterChange,
 }: ChildrenToolbarProps) {
   return (
     <>
@@ -79,6 +83,15 @@ export function ChildrenToolbar({
               { value: 'Achitat', label: 'Achitat', tone: 'mint' },
               { value: 'Parțial', label: 'Parțial', tone: 'yellow' },
               { value: 'Neachitat', label: 'Neachitat', tone: 'pink' },
+            ],
+          },
+          {
+            label: 'Date',
+            value: completenessFilter,
+            onChange: onCompletenessFilterChange,
+            options: [
+              { value: 'all', label: 'Toate', tone: 'neutral' },
+              { value: 'incomplete', label: 'Date incomplete', tone: 'yellow' },
             ],
           },
         ]}

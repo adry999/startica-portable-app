@@ -90,6 +90,10 @@
   color: var(--subtle);
 }
 
+.banner {
+  margin-bottom: var(--space-16);
+}
+
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);

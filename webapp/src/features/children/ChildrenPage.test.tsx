@@ -257,6 +257,69 @@ describe('ChildrenPage', () => {
     expect(screen.queryByText('Copil 26')).not.toBeInTheDocument();
   });
 
+  it('41a: filtrul „Date incomplete” arată doar copiii cu fișă incompletă', async () => {
+    const mixedFixture = {
+      ...fixtureState,
+      children: [
+        {
+          id: 'complete-1',
+          name: 'Complet Ionescu',
+          status: 'Activ',
+          groupId: 'g1',
+          parent: 'Un părinte',
+          phone: '0722000009',
+          parent2: 'Alt părinte',
+          phone2: '0722000008',
+          idnp: '2001234567890',
+          pickupPersons: [{ id: 'P1', name: 'Bunica' }],
+          fee: 1000,
+          feeHistory: [{ from: '2020-01', amount: 1000 }],
+          statusHistory: [],
+          dueDay: 10,
+          attendanceDate: '2022-09-01',
+          birthDate: '2020-01-01',
+          archived: false,
+        },
+        {
+          id: 'incomplete-1',
+          name: 'Incomplet Marin',
+          status: 'Activ',
+          groupId: null,
+          parent: 'Un părinte',
+          phone: '0722000007',
+          fee: 1000,
+          feeHistory: [{ from: '2020-01', amount: 1000 }],
+          statusHistory: [],
+          dueDay: 10,
+          attendanceDate: '2022-09-01',
+          birthDate: '2020-01-01',
+          archived: false,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: mixedFixture, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    expect(screen.getByText('Complet Ionescu')).toBeInTheDocument();
+    expect(screen.getByText('Incomplet Marin')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Date incomplete' }));
+    expect(screen.queryByText('Complet Ionescu')).not.toBeInTheDocument();
+    expect(screen.getByText('Incomplet Marin')).toBeInTheDocument();
+  });
+
   it('deschide fișa copilului la click pe rând și revine la listă din breadcrumb', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

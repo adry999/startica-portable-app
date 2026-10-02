@@ -9,6 +9,7 @@ import {
   EmptyState,
   IconButton,
   LoadingState,
+  MissingFieldsBanner,
   ProfileLayout,
   ProfileNotFound,
   ProfileSection,
@@ -29,6 +30,7 @@ import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
 import { allocations } from '#shared/domain/payment-allocations.mjs';
+import { missingChildFields } from '#shared/domain/missing-child-fields.mjs';
 import { latestKnownRate, convertAmount } from '#shared/domain/exchange-rates.mjs';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { normalizePayerAlias } from '#shared/format/text-search.mjs';
@@ -91,6 +93,7 @@ export function ChildProfileView({
   }
 
   const { child, obligation: childObligation } = profileData;
+  const missingFields = missingChildFields(child);
   const isEurChild = childObligation?.currency === 'EUR';
   const todaysRate = latestKnownRate(rates);
   const heroTone = groupTone(child.groupId, profileData.groups);
@@ -225,6 +228,11 @@ export function ChildProfileView({
             </>
           ),
         }}
+        banner={
+          missingFields.length > 0 ? (
+            <MissingFieldsBanner fields={missingFields} onFieldClick={() => setEditDrawerOpen(true)} />
+          ) : undefined
+        }
         left={
           <>
             {/* CF-2 (09-copii-fisa.md), A3 (Copii.dc.html#2b): Date personale și Părinți sunt

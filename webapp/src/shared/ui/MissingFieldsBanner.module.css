@@ -1,0 +1,56 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-12) var(--space-16);
+  border-radius: 16px;
+}
+
+.yellow {
+  background: var(--yellow-soft);
+  color: var(--yellow-ink);
+}
+
+.pink {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.text {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-heading), Arial, sans-serif;
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.pill {
+  border: none;
+  border-radius: 999px;
+  background: var(--white);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.pill:hover,
+.pill:focus-visible {
+  background: var(--cream);
+}

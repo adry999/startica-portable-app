@@ -129,6 +129,11 @@ export { Slider, type SliderProps } from './Slider';
 export { CopyField, type CopyFieldProps } from './CopyField';
 export { Kbd, type KbdProps } from './Kbd';
 export { AppBanner, type AppBannerProps, type AppBannerTone } from './AppBanner';
+export {
+  MissingFieldsBanner,
+  type MissingFieldsBannerProps,
+  type MissingFieldsBannerField,
+} from './MissingFieldsBanner';
 export { UnsavedChangesDialog, type UnsavedChangesDialogProps } from './UnsavedChangesDialog';
 export { HoverCard, type HoverCardProps } from './HoverCard';
 export { Heatmap, type HeatmapCell, type HeatmapCellState, type HeatmapProps } from './Heatmap';

@@ -32,6 +32,9 @@ export interface ProfileLayoutHeader {
 export interface ProfileLayoutProps {
   back: { label: string; onClick: () => void };
   header: ProfileLayoutHeader;
+  /** Bandă opțională sub antet (41a: `MissingFieldsBanner` pe fișa copilului) — generică,
+   * orice fișă o poate folosi, nu doar Copii. */
+  banner?: ReactNode;
   left: ReactNode;
   /** Maximum 3, pe un rând. */
   stats?: ReactNode[];
@@ -39,7 +42,7 @@ export interface ProfileLayoutProps {
 }
 
 /** Fișa unei persoane (copil sau angajat) — bandă + grilă stânga/dreapta, comună Copii și Personal. */
-export function ProfileLayout({ back, header, left, stats, right }: ProfileLayoutProps) {
+export function ProfileLayout({ back, header, banner, left, stats, right }: ProfileLayoutProps) {
   return (
     <>
       <p className={styles.breadcrumb}>
@@ -67,6 +70,8 @@ export function ProfileLayout({ back, header, left, stats, right }: ProfileLayou
         />
         {header.actions && <div className={styles.actions}>{header.actions}</div>}
       </Card>
+
+      {banner && <div className={styles.banner}>{banner}</div>}
 
       <div className={styles.grid}>
         <div className={styles.left}>{left}</div>

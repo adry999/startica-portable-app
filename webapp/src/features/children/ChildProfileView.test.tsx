@@ -162,6 +162,44 @@ describe('ChildProfileView', () => {
     expect(screen.getAllByRole('button', { name: 'Asociere achitări' }).length).toBeGreaterThanOrEqual(1);
   });
 
+  it('banda „Lipsesc N date” arată câmpurile obligatorii și recomandate lipsă (41a)', async () => {
+    await loadedSession();
+    renderProfile();
+
+    // Fixtura de bază nu are data nașterii (obligatoriu), parent2/idnp/persoană autorizată (recomandate).
+    await screen.findByText('notă veche');
+    expect(screen.getByText('Lipsesc 4 date')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Data nașterii' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Părinte 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'IDNP' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Persoană autorizată' })).toBeInTheDocument();
+  });
+
+  it('banda de date incomplete nu apare pe o fișă completă (41a)', async () => {
+    currentState = fixtureState({
+      birthDate: '2020-01-01',
+      idnp: '2001234567890',
+      address: 'Str. Ștefan cel Mare 1',
+      parent2: 'Ion Popescu',
+      phone2: '069111111',
+      pickupPersons: [{ id: 'P1', name: 'Bunica' }],
+    } as Partial<typeof child>);
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(screen.queryByText(/^Lipsesc?te? /)).not.toBeInTheDocument();
+  });
+
+  it('clic pe o pastilă din bandă deschide formularul de editare (41a)', async () => {
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    fireEvent.click(screen.getByRole('button', { name: 'Data nașterii' }));
+    expect(await screen.findByText('Editează copilul')).toBeInTheDocument();
+  });
+
   it('cardul Plătitori reținuți arată aliasurile copilului, iar × le șterge din fișă (CF-2)', async () => {
     currentState = fixtureState({}, [
       { id: 'PAY-ALIAS-1', alias: 'Ion Popescu IBAN MD00XYZ', childId: 'C1', createdAt: '2026-09-01T00:00:00.000Z' },
