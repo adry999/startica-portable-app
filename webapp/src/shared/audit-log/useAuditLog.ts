@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import { isoDateOf } from '#shared/domain/calendar-month.mjs';
 import type { RecordType } from '@contracts/record-types.mjs';
 import { listChangedFields } from '#features/audit-log/domain/audit-change-diff.mjs';
 import type { AuditEntry, AuditPage } from '#features/audit-log/audit-log.types.d.mts';
@@ -19,6 +20,9 @@ export interface AuditRowView {
   id: number;
   /** Cheie de grupare pe zi calendaristică locală (nu ISO), stabilă indiferent de fus. */
   dayKey: string;
+  /** Ziua locală `YYYY-MM-DD` (PROMPT-9 §6) — comparabilă direct cu limitele `PeriodFilter`,
+   * spre deosebire de `dayKey` (nepadded, nu sortează lexicografic). */
+  dateKey: string;
   /** „Azi · 26 septembrie” / „Ieri · …” / „26 septembrie” (12-administrare.md §10a). */
   dayLabel: string;
   timeLabel: string;
@@ -75,6 +79,7 @@ function toRow(entry: AuditEntry): AuditRowView {
   return {
     id: entry.id,
     dayKey: dayKeyOf(occurredAt),
+    dateKey: isoDateOf(occurredAt),
     dayLabel: dayLabelOf(occurredAt),
     timeLabel: occurredAt.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
     recordType: entry.recordType,

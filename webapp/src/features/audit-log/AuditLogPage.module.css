@@ -21,9 +21,11 @@
   max-width: 980px;
 }
 
-/* 45a: SearchSelect „copil, angajat, grupă sau achitare" + „Tot istoricul" când e o selecție activă. */
+/* 45a: SearchSelect „copil, angajat, grupă sau achitare" + „Tot istoricul" când e o selecție
+   activă. PROMPT-9 §6: filtrele Modul / Calculator / Perioadă, pe același rând. */
 .recordFilterBar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-12);
 }

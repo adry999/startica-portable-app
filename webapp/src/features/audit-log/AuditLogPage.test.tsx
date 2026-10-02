@@ -139,7 +139,7 @@ describe('AuditLogPage', () => {
     await waitFor(() => expect(screen.getByText('Creat')).toBeInTheDocument());
   });
 
-  it('comutatorul „Copii" ascunde rândurile altui tip de înregistrare', async () => {
+  it('PROMPT-9 §6: filtrul „Modul" (Copii) ascunde rândurile altui tip de înregistrare', async () => {
     await loadedSession();
     await act(() => reloadPersonal());
 
@@ -147,10 +147,54 @@ describe('AuditLogPage', () => {
     const user = userEvent.setup();
 
     await screen.findByText('Modificat');
-    await user.click(screen.getByRole('radio', { name: 'Copii' }));
+    await user.click(screen.getByRole('button', { name: 'Modul' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Copii' }));
 
     expect(screen.getByText('Modificat')).toBeInTheDocument();
     expect(screen.queryByText('Asociat')).not.toBeInTheDocument();
+  });
+
+  it('PROMPT-9 §6: filtrul „Perioadă" (interval) ascunde rândurile din afara intervalului', async () => {
+    stubFetch(path =>
+      path === '/api/audit'
+        ? {
+            entries: [page1.entries[0], { ...page1.entries[1], id: 9, occurredAt: '2020-01-05T10:00:00.000Z' }],
+            nextBeforeEntryId: null,
+          }
+        : undefined,
+    );
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Modificat');
+    expect(screen.getByText('Asociat')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Perioadă/ }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Ultimele 30 de zile' }));
+
+    expect(screen.getByText('Modificat')).toBeInTheDocument();
+    expect(screen.queryByText('Asociat')).not.toBeInTheDocument();
+  });
+
+  it('PROMPT-9 §6: filtrul „Calculator" arată o singură opțiune locală și nu elimină rânduri', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText('Modificat');
+    await user.click(screen.getByRole('button', { name: 'Calculator' }));
+    expect(screen.getByRole('checkbox', { name: 'Acest calculator' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /·/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('checkbox', { name: 'Acest calculator' }));
+
+    expect(screen.getByText('Modificat')).toBeInTheDocument();
+    expect(screen.getByText('Asociat')).toBeInTheDocument();
   });
 
   it('căutarea filtrează după identificatorul înregistrării', async () => {
