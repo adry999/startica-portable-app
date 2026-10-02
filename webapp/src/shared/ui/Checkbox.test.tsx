@@ -28,4 +28,10 @@ describe('Checkbox', () => {
 
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  // F30 (PROMPT-11 §18): „bifează tot ce se poate plăti” cu unii angajați deja bifați.
+  it('indeterminate arată aria-checked="mixed", indiferent de checked', () => {
+    render(<Checkbox checked={false} onChange={() => {}} ariaLabel="Bifează tot" indeterminate />);
+    expect(screen.getByRole('checkbox', { name: 'Bifează tot' })).toHaveAttribute('aria-checked', 'mixed');
+  });
 });

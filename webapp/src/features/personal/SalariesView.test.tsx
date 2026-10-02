@@ -357,4 +357,88 @@ describe('SalariesView', () => {
     expect(await screen.findByText('Salariul a fost salvat.')).toBeInTheDocument();
     expect(postedSalaries[0]).toMatchObject({ staffId: 'STF-2', mode: 'fix', amount: 6000 });
   });
+
+  // F30 (PROMPT-11 §18): bifa dezactivată a unui antrenor de Bazin arată motivul sub nume.
+  it('F30: rândul unui antrenor de Bazin arată „Se plătește din Bazin” sub nume', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ion Antrenor');
+    const row = screen.getByText('Ion Antrenor').closest('div')!;
+    expect(within(row).getByText('Se plătește din Bazin')).toBeInTheDocument();
+  });
+
+  // F30: bara de plată arată motivul când butonul e inactiv, fără nimic bifat.
+  it('F30: bara de plată arată „Bifează angajații de plătit” cât timp nimic nu e bifat', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    expect(screen.getByText('Bifează angajații de plătit')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Selectează Ana Popescu'));
+    expect(screen.queryByText('Bifează angajații de plătit')).not.toBeInTheDocument();
+  });
+
+  // F30: „Bifează tot ce se poate plăti” selectează toți angajații plătibili dintr-o dată.
+  it('F30: „Bifează tot ce se poate plăti” bifează doar rândurile plătibile (nu Bazin)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    await userEvent.click(screen.getByLabelText('Bifează tot ce se poate plăti'));
+
+    expect(screen.getByLabelText('Selectează Ana Popescu')).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByText('Plătește 1 selectați')).toBeInTheDocument();
+  });
+
+  // F30: „Plătește {sumă}” dintr-un singur rând deschide dialogul cu doar acel angajat selectat.
+  it('F30: „Plătește {sumă}” din meniul unui rând plătește doar angajatul acela', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    const row = screen.getByText('Ana Popescu').closest('div')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: /Plătește 10.000,00 lei/ }));
+
+    expect(screen.getByRole('dialog', { name: 'Confirmă plata' })).toBeInTheDocument();
+    expect(screen.getByText('Plătește 1 salariu')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Plătește · 10.000,00 lei/ }));
+
+    expect(postedPay).toHaveLength(1);
+    expect(postedPay[0]).toMatchObject({ staffIds: ['STF-1'] });
+  });
 });

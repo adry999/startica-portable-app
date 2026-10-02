@@ -13,7 +13,7 @@ import {
   useToast,
 } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
-import { formatDayMonthNumeric } from '#shared/format/date-format.mjs';
+import { formatDayMonthNumeric, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useSalaries } from './useSalaries';
@@ -130,6 +130,22 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
   const selectedTotal = salaries.rows
     .filter(row => selected.has(row.staff.id))
     .reduce((sum, row) => sum + (row.net ?? 0), 0);
+  const allPayableSelected = payableRows.length > 0 && payableRows.every(row => selected.has(row.staff.id));
+  const somePayableSelected = payableRows.some(row => selected.has(row.staff.id));
+  // F30 (PROMPT-11 §18): motivul barei de plată când butonul e inactiv (regula 15k).
+  const payBarReason =
+    selected.size > 0
+      ? ''
+      : payableRows.length === 0
+        ? salaries.rows.every(row => row.mode === null)
+          ? 'Fără salarii setate · Setează salariile'
+          : `Toți sunt plătiți pentru ${formatMonthLabel(month)}`
+        : 'Bifează angajații de plătit';
+
+  function payOne(staffId: string) {
+    setSelected(new Set([staffId]));
+    setPayDialogOpen(true);
+  }
 
   return (
     <div className={styles.root}>
@@ -166,11 +182,23 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
         <Button disabled={selected.size === 0} onClick={() => setPayDialogOpen(true)}>
           Plătește {selected.size > 0 ? `${selected.size} selectați` : ''}
         </Button>
+        {payBarReason && <span className={styles.payBarReason}>{payBarReason}</span>}
       </div>
 
       <Card className={styles.tableCard}>
         <div className={styles.headRow}>
-          <span />
+          <span onClick={event => event.stopPropagation()}>
+            {payableRows.length > 0 && (
+              <Checkbox
+                ariaLabel="Bifează tot ce se poate plăti"
+                checked={allPayableSelected}
+                indeterminate={!allPayableSelected && somePayableSelected}
+                onChange={() =>
+                  setSelected(allPayableSelected ? new Set() : new Set(payableRows.map(row => row.staff.id)))
+                }
+              />
+            )}
+          </span>
           <span>Angajat</span>
           <span>Cum se calculează</span>
           <span>Baza lunii</span>
@@ -181,6 +209,16 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
         </div>
         {salaries.rows.map(row => {
           const selectable = payableRows.some(payable => payable.staff.id === row.staff.id);
+          // F30 (PROMPT-11 §18): motivul pentru care bifa e dezactivată — „Luna nu s-a încheiat”
+          // nu apare aici fiindcă stepper-ul din antet nu lasă deloc deschisă luna curentă.
+          const rowReason =
+            row.mode === null
+              ? 'reason-no-salary'
+              : row.mode === 'bazin'
+                ? 'Se plătește din Bazin'
+                : row.paid
+                  ? `Plătit ${formatDayMonthNumeric(row.paid.paidAt)}`
+                  : '';
           return (
             <div
               key={row.staff.id}
@@ -198,6 +236,22 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
               <span className={styles.employeeCell}>
                 <strong>{row.staff.name}</strong>
                 <small>{personal.roleName(row.staff.roleId)}</small>
+                {rowReason === 'reason-no-salary' ? (
+                  <small className={styles.rowReason}>
+                    <Button
+                      variant="link"
+                      className={styles.setSalaryLink}
+                      onClick={event => {
+                        event.stopPropagation();
+                        setSalaryFormStaffId(row.staff.id);
+                      }}
+                    >
+                      Setează salariul întâi
+                    </Button>
+                  </small>
+                ) : (
+                  rowReason && <small className={styles.rowReason}>{rowReason}</small>
+                )}
               </span>
               <span>{row.mode ? <Badge tone="neutral">{MODE_LABEL[row.mode]}</Badge> : '—'}</span>
               {row.mode === null ? (
@@ -229,6 +283,9 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
                 )}
                 <RowMenu
                   items={[
+                    ...(selectable
+                      ? [{ label: `Plătește ${formatMoney(row.net)}`, onClick: () => payOne(row.staff.id) }]
+                      : []),
                     { label: 'Avans', onClick: () => setAdvanceStaffId(row.staff.id) },
                     { label: 'Istoric', onClick: () => setHistoryStaffId(row.staff.id) },
                     { label: 'Schimbă salariul', onClick: () => setSalaryFormStaffId(row.staff.id) },

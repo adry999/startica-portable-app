@@ -1027,3 +1027,23 @@ inclusiv Bazin, se pot salva (`disabled={mode==='bazin'}` eliminat din buton și
    la fila Salarii (`navigate('/personal?tab=salarii')`), nu deschide direct `SalaryFormDrawer`
    pentru acel angajat. Ar cere un parametru de query citit de `PersonalPage`/`SalariesView` la
    montare — nefăcut, risc de a introduce o cuplare nouă între pagini fără un mockup exact.
+
+## §18 (F30, PROMPT-11) — Salarii „nu pot face plata”: ce s-a închis, ce rămâne
+
+**Închis:** motivul pe rând sub nume (bifă dezactivată) — „Setează salariul întâi” (link),
+„Se plătește din Bazin”, „Plătit {zz.ll}”; bara de plată arată „Bifează angajații de plătit” /
+„Fără salarii setate · Setează salariile” / „Toți sunt plătiți pentru {lună}” lângă butonul
+inactiv; „Plătește {sumă}” pe un rând (`RowMenu`, același dialog, un singur angajat); „Bifează
+tot ce se poate plăti” în antetul coloanei de bife (`Checkbox` a primit `indeterminate`, nou).
+
+**Neatins din scop (nu era reproductibil/aplicabil cu codul de azi):**
+- „Luna nu s-a încheiat” ca motiv PE RÂND nu apare — stepper-ul din `PersonalPage.tsx`
+  (`previousMonth(month)`) nu lasă deloc deschisă luna curentă în Salarii, deci acest motiv e deja
+  imposibil de atins din UI (echivalentul cerinței „implicit rămâne blocată” din §18 punctul 5,
+  deja adevărat înainte de acest punct).
+- **Punctul 7** (verifică pe datele reale ale utilizatorului câți angajați au `mode === null`/
+  `bazin`, prin `dev-data-copy.mjs`) — nefăcut, cere acces la o copie a datelor reale, nu doar cod;
+  las-o pentru operatorul care rulează `dev-data-copy.mjs` separat.
+- Eroarea de la `/api/personal/salaries/pay` trece deja prin `toUserError` (verificat în
+  `SalariesView.tsx`, `catch (error) { toast.show({ message: toUserError(error) }) }`) — nimic de
+  schimbat acolo.

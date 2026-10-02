@@ -47,6 +47,17 @@
   gap: var(--space-10);
 }
 
+.payBarReason {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.rowReason {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .tableCard {
   padding: 0;
   overflow: hidden;
