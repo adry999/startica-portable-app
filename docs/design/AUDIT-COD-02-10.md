@@ -26,17 +26,17 @@ Scriptul nu a fost rulat niciodată cu `--execute` pe date reale (confirmat de t
 
 ## Mediu
 
-### 5. `/api/undo` ocolește gărzile de modul/PIN
-`route-modules.mjs:131-143` pune `/api/undo` în `OPEN_PATHS`. Fereastra de anulare e 15s; dacă profilul calculatorului e restrâns (sau i se cere PIN) chiar în acel interval dintr-un alt calculator conectat, anularea tot reușește — scrie pe un modul la care calculatorul nu mai are acces. **Fix:** rutează `/api/undo` prin rezoluția dinamică de modul (`KIND_MODULE` pe `entry.recordType`), ca `/api/record`.
+### 5. ✅ Rezolvat (`0e88205`) — `/api/undo` ocolește gărzile de modul/PIN
+`route-modules.mjs:131-143` pune `/api/undo` în `OPEN_PATHS`. Fereastra de anulare e 15s; dacă profilul calculatorului e restrâns (sau i se cere PIN) chiar în acel interval dintr-un alt calculator conectat, anularea tot reușește — scrie pe un modul la care calculatorul nu mai are acces. **Rezolvat**: `undo()` rezolvă dinamic `KIND_MODULE[entry.recordType] ?? 'admin'` și cheamă `assertModuleAccess`/`assertPinUnlocked` înainte de orice scriere; `/api/undo` rămâne tehnic în `OPEN_PATHS` (modulul nu se știe înainte de dispatch), dar nu mai e nepăzit — garda e în interiorul handler-ului.
 
 ### 6. Avans/cheltuială se pot dezsincroniza
 Un avans e simultan un rând `expense` și un rând propriu `advances` (cu `expenseId`). Dacă cheltuiala e arhivată/editată direct din ecranul Cheltuieli (nu din Avans), rândul de avans rămâne neschimbat, referind o cheltuială acum neconformă — fără nicio gardă UI care să prevină asta. Deja semnalat ca risc acceptat de agentul §5; confirmat plauzibil la citirea codului curent.
 
-### 7. `fxrate-backfill.mjs` se oprește complet la primul conflict, în loc să raporteze per-plată
-Spre deosebire de migrarea §8 (`exchange-rates-plan-presets-to-common.mjs`, care raportează divergențele fără să cadă), bucla `--execute` din `fxrate-backfill.mjs:256-261` nu prinde eroarea unui `POST /api/record` eșuat (ex. 409 de la o editare concurentă) — un singur conflict oprește tot restul rulării. Idempotent la rerulare, dar experiență proastă față de restul migrărilor din această sesiune.
+### 7. ✅ Rezolvat (`a02bf25`) — `fxrate-backfill.mjs` se oprește complet la primul conflict, în loc să raporteze per-plată
+Spre deosebire de migrarea §8 (`exchange-rates-plan-presets-to-common.mjs`, care raportează divergențele fără să cadă), bucla `--execute` din `fxrate-backfill.mjs:256-261` nu prinde eroarea unui `POST /api/record` eșuat (ex. 409 de la o editare concurentă) — un singur conflict oprește tot restul rulării. **Rezolvat**: scrierea per-plată e într-un try/catch, eșecurile se colectează în `failed` (raportate în log și în rezultat), migrarea continuă cu restul lotului; reparabil cu o simplă rerulare (idempotent).
 
-### 8. Ștergere în lot de copii arhivați — scanare dublă a tabelului per id
-`record-editing.routes.mjs:102-108` — `readSnapshot()` chemat de 2 ori per id, în interiorul buclei `for (const id of ids)` (verificare vizite + verificare taxe). Fix trivial: scoate ambele citiri în afara buclei.
+### 8. ✅ Rezolvat (`b59a8ef`) — Ștergere în lot de copii arhivați — scanare dublă a tabelului per id
+`record-editing.routes.mjs:102-108` — `readSnapshot()` chemat de 2 ori per id, în interiorul buclei `for (const id of ids)` (verificare vizite + verificare taxe). **Rezolvat**: ambele citiri scoase în afara buclei, un singur scan pentru tot lotul.
 
 ### 9. Testul `axe` (accesibilitate) nu e impus arhitectural — 49/118 componente din `shared/ui` nu-l au deloc
 Inclusiv primitive de bază: `TextInput`, `Select`, `Checkbox`, `NumberInput`, `DateInput`, `Field`, `Button`, `DataTable`, `Drawer`, `Popover`, `Badge`. Nimic din `architecture.test.ts` (R1-R13) nu verifică asta — e doar o convenție per-fișier, nerespectată sistematic. **Fix:** regulă nouă de arhitectură care scanează `shared/ui/*.test.tsx` după `axe(`/`toHaveNoViolations`.
