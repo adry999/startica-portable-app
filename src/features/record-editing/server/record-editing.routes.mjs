@@ -43,6 +43,18 @@ export function createRecordEditingRoutes({
         if (visit.status === 'Înscris' && previousVisit?.status !== 'Înscris')
           fail('Statutul „Înscris” se setează doar prin înscrierea copilului, nu prin editare directă.');
       }
+      // AUDIT-COD-02-10.md #6: cheltuiala sintetică a unui avans/salariu (EXP-avans-*/EXP-salariu-*,
+      // personal/server/salaries.service.mjs) are un rând propriu „oglindă" în `advances` — dacă ar
+      // fi arhivată direct din ecranul Cheltuieli (nu din Avans/Salarii), rândul din `advances` ar
+      // rămâne cu `expenseId` spre o cheltuială arhivată, fără ca operatorul să știe. Calculele de
+      // sold deja tratează asta corect (`isAdvanceDeducted` verifică `!expense.archived` live — nu
+      // e corupere de sold), dar e o stare confuză, fără niciun indiciu în ecranul Cheltuieli.
+      if (request.type === 'expenses' && /^EXP-(avans|salariu)-/.test(record.id)) {
+        const expense = /** @type {{ archived?: boolean }} */ (record);
+        const previousExpense = /** @type {{ archived?: boolean } | undefined} */ (existing);
+        if (expense.archived && !previousExpense?.archived)
+          fail('Această cheltuială e legată de un avans/salariu — se arhivează doar din ecranul Avans/Salarii.');
+      }
       // „Ține minte plătitorul” (11-de-rezolvat.md §9c) se poate bifa la fiecare achitare a
       // aceluiași plătitor — a doua bifare nu trebuie să creeze un al doilea alias identic.
       // Verificat server-side (nu în client) pentru că două calculatoare pot scrie aproape

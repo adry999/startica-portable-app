@@ -165,6 +165,48 @@ test('permite corectarea manuală a statutului unei vizite (Efectuată → Progr
   assert.equal(result.body.state.visits[0].status, 'Programată');
 });
 
+test('refuză arhivarea directă, prin /api/record, a cheltuielii sintetice a unui avans (doar din Avans/Salarii)', async t => {
+  const app = await startApplication(t);
+  const expense = { id: 'EXP-avans-ADV-1', date: '2026-09-05', amount: 200, category: 'Salarii' };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [expense], groups: [], categories: [], visits: [] }, 0),
+  );
+  assert.equal(imported.status, 200, imported.body.error);
+
+  const result = await app.post('/api/record', {
+    type: 'expenses',
+    mode: 'update',
+    record: { ...expense, archived: true, archivedAt: '2026-09-06T00:00:00.000Z' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 400);
+  assert.match(result.body.error, /ecranul Avans\/Salarii/);
+  assert.ok(!imported.body.state.expenses[0].archived);
+});
+
+test('permite editarea unui câmp obișnuit (nu arhivarea) pe cheltuiala sintetică a unui avans', async t => {
+  const app = await startApplication(t);
+  const expense = { id: 'EXP-avans-ADV-1', date: '2026-09-05', amount: 200, category: 'Salarii' };
+  const imported = await app.post(
+    '/api/import',
+    request({ children: [], payments: [], expenses: [expense], groups: [], categories: [], visits: [] }, 0),
+  );
+
+  const result = await app.post('/api/record', {
+    type: 'expenses',
+    mode: 'update',
+    record: { ...expense, notes: 'corectare manuală' },
+    revision: imported.body.revision,
+    requestId: randomUUID(),
+  });
+
+  assert.equal(result.status, 200, result.body.error);
+  assert.equal(result.body.state.expenses[0].notes, 'corectare manuală');
+});
+
 test('refuză o plată asociată unui copil inexistent', async t => {
   const app = await startApplication(t);
   const state0 = await app.get('/api/state');
