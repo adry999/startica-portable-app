@@ -1,0 +1,86 @@
+.root {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: var(--z-popover);
+  top: calc(100% + var(--space-8));
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popover);
+  overflow: hidden;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-16) var(--space-18);
+  color: var(--subtle);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 150px 72px;
+  gap: var(--space-12);
+  align-items: center;
+  padding: var(--space-12) var(--space-18);
+  border: none;
+  border-top: 1px solid var(--border);
+  background: var(--white);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.row:hover {
+  background: var(--cream);
+}
+
+.siblingRow .nameCell strong {
+  font-weight: 700;
+}
+
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nameCell strong {
+  font-size: 14px;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.statusOverdue {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--pink-ink);
+}
+
+.statusOk {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mint-ink);
+}
+
+.currentMonth {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.enterSlot {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -680,6 +680,17 @@ describe('PaymentsPage', () => {
     });
   });
 
+  it('44a: QuickPaySearch deschide plata precompletată cu copilul ales', async () => {
+    await loadedSession();
+    renderPage();
+
+    await userEvent.type(screen.getByLabelText('Încasare rapidă'), 'Andrei');
+    await userEvent.keyboard('{Enter}');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Achitare nouă' });
+    expect(within(dialog).getByText('Andrei Popescu')).toBeInTheDocument();
+  });
+
   it('§13.2: căutarea rămâne la întoarcerea din fișa copilului — stare în URL (?q=)', async () => {
     await loadedSession();
     // Simulează URL-ul la întoarcerea dintr-o fișă: căutarea a fost setată înainte de a naviga.
