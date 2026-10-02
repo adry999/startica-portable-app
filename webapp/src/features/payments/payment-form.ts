@@ -1,4 +1,4 @@
-import { normalizeRecord, DEFAULT_SERVICE_ID } from '@domain/record-schema.mjs';
+import { normalizeRecord, DEFAULT_SERVICE_ID, PAYMENT_ROUNDING_TOLERANCE } from '@domain/record-schema.mjs';
 import { cents } from '@domain/money.mjs';
 import { paymentTenders } from '@domain/payment-allocations.mjs';
 import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
@@ -45,6 +45,22 @@ export interface PaymentFormValues {
   siblings: SiblingPaymentRowValues[];
   /** 44b: generat o singură dată, la trimitere, doar când `siblings` nu e gol — vezi `PaymentFormDrawer.handleSubmit`. */
   receiptGroupId?: string;
+  /** §2 (PROMPT-10, DECIZII 02.10): diferența (lei) dintre încasat și taxa exactă a lunii, când e
+   * în toleranță — calculată de `PaymentFormDrawer` la o plată nouă, cu un singur rând de alocare
+   * (vezi `paymentRoundingDiff`); la editare rămâne cea deja salvată, nerecalculată. */
+  roundingDiff?: number;
+}
+
+/**
+ * §2 (PROMPT-10, DECIZII 02.10): suma încasată poate diferi cu puțin de taxa exactă (ex. conversia
+ * EUR→lei lasă bani) — în toleranța filialei (implicit `PAYMENT_ROUNDING_TOLERANCE`), diferența se
+ * scrie ca `roundingDiff` pe plată (vizibilă doar pe bon), nu ca restanță/avans. Fără diferență sau
+ * peste toleranță, `undefined` — fluxul de restanță/avans existent (autoAllocatePayment) rămâne cel care decide.
+ */
+export function paymentRoundingDiff(collected: number, owed: number): number | undefined {
+  const diff = Math.round((collected - owed) * 100) / 100;
+  if (diff === 0 || Math.abs(diff) > PAYMENT_ROUNDING_TOLERANCE) return undefined;
+  return diff;
 }
 
 /** 15b: implicit bifată doar dacă părintele copilului are un telefon valid (sms.md). */
@@ -99,6 +115,9 @@ export function defaultPaymentFormValues(
     sendSmsConfirmation: defaultSendSmsConfirmation(smsChild),
     // 44b: frații nu se reconstruiesc la editare — „+ Adaugă fratele” există doar la o plată nouă.
     siblings: [],
+    // §2: la editare, păstrează rotunjirea deja salvată — PaymentFormDrawer o recalculează doar
+    // la o plată NOUĂ (allocationMode auto, un singur rând), nu la editarea uneia existente.
+    roundingDiff: payment?.roundingDiff,
   };
 }
 
@@ -131,6 +150,7 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
     fxRateSource: values.fxRateSource,
     amountEur: values.amountEur,
     receiptGroupId: values.receiptGroupId,
+    roundingDiff: values.roundingDiff,
   }) as Payment;
 }
 

@@ -21,6 +21,7 @@ import { useBackup, type BackupHealthView, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
 import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
+import { BackupPreviewTable, type BackupPreviewDatabaseRow } from './BackupPreviewTable';
 import { RestoreDoneDialog } from './RestoreDoneDialog';
 import { writeRestoreDoneNote } from './restore-reload-note';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
@@ -71,6 +72,70 @@ function useBackupsList(active: boolean) {
   }, [active]);
 
   return { entries, loading };
+}
+
+interface BackupPreviewResponse {
+  archive: boolean;
+  createdAt?: string;
+  appVersion?: string;
+  children?: number;
+  payments?: number;
+  expenses?: number;
+  databases?: { id: string; name: string; kind: 'branch' | 'common'; counts: Record<string, number> }[];
+}
+
+/** §6 (PROMPT-10, 10c): „Vezi conținutul” pe un rând din „Copii de siguranță” — același
+ * `/api/backup-preview` ca la Restaurare/prima pornire, dar aici pentru simplă inspecție, nu
+ * pentru restaurare. Un backup vechi (per-filială, fără manifest) nu are `databases` — arătăm
+ * un singur rând, cu numărătoarea plată a acelei filiale (ca pe ecranul de Restaurare). */
+function useBackupPreviewDrawer() {
+  const [target, setTarget] = useState<BackupListEntry | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [preview, setPreview] = useState<{
+    createdAt?: string;
+    appVersion?: string;
+    databases: BackupPreviewDatabaseRow[];
+  } | null>(null);
+
+  function close() {
+    setTarget(null);
+  }
+
+  function open(entry: BackupListEntry) {
+    setTarget(entry);
+    setPreview(null);
+    setError('');
+    setLoading(true);
+    requestJson(`/api/backup-preview?name=${encodeURIComponent(entry.name)}`)
+      .then(response => {
+        const data = response as BackupPreviewResponse;
+        const databases: BackupPreviewDatabaseRow[] = data.archive
+          ? (data.databases ?? []).map(row => ({
+              id: row.id,
+              name: row.name,
+              kind: row.kind,
+              children: row.counts.children ?? 0,
+              payments: row.counts.payments ?? 0,
+              expenses: row.counts.expenses ?? 0,
+            }))
+          : [
+              {
+                id: entry.name,
+                name: entry.name,
+                kind: 'branch',
+                children: data.children ?? 0,
+                payments: data.payments ?? 0,
+                expenses: data.expenses ?? 0,
+              },
+            ];
+        setPreview({ createdAt: data.createdAt, appVersion: data.appVersion, databases });
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }
+
+  return { target, loading, error, preview, open, close };
 }
 
 function isStale(timestamp: string): boolean {
@@ -152,6 +217,7 @@ export function BackupPage() {
   const viewMode: ViewMode = storedViewMode === 'rates' ? 'curs' : storedViewMode;
   const setViewMode = (next: ViewMode) => setStoredViewMode(next);
   const backupsList = useBackupsList(backupData.ready && viewMode === 'backup');
+  const backupPreview = useBackupPreviewDrawer();
   const externalDirInputRef = useRef<HTMLInputElement>(null);
 
   function focusExternalDirInput() {
@@ -306,6 +372,9 @@ export function BackupPage() {
                       <span className={styles.backupSize}>
                         {typeof entry.bytes === 'number' ? formatFileSize(entry.bytes) : '—'}
                       </span>
+                      <Button variant="link" onClick={() => backupPreview.open(entry)}>
+                        Vezi conținutul
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -449,6 +518,20 @@ export function BackupPage() {
         <Field label="Scrie RESTAUREAZA" htmlFor="restore-confirm-text">
           <TextInput id="restore-confirm-text" value={restore.confirmText} onChange={restore.setConfirmText} />
         </Field>
+      </Drawer>
+
+      <Drawer open={!!backupPreview.target} title="Conținutul backupului" size="detail" onClose={backupPreview.close}>
+        {backupPreview.target && (
+          <BackupPreviewTable
+            loading={backupPreview.loading}
+            error={backupPreview.error}
+            onRetry={() => backupPreview.target && backupPreview.open(backupPreview.target)}
+            fileName={backupPreview.target.name}
+            createdAt={backupPreview.preview?.createdAt}
+            appVersion={backupPreview.preview?.appVersion}
+            databases={backupPreview.preview?.databases ?? []}
+          />
+        )}
       </Drawer>
 
       <RestoreDoneDialog

@@ -5,6 +5,7 @@ import {
   createPaymentUndo,
   defaultPaymentFormValues,
   findDuplicatePayment,
+  paymentRoundingDiff,
   paymentUndoDetail,
   tenderMethodsFor,
   totalOfTenders,
@@ -80,6 +81,35 @@ describe('totalOfTenders', () => {
   });
 });
 
+// VERIFICARE-DUPA-PROMPT-8.md §4: taxă 4.921,83 lei (ex. conversie EUR), precompletat rotunjit la
+// 4.922 — cele 4 cazuri exacte din verificare, ca praguri reale ale toleranței (DECIZII 02.10).
+describe('paymentRoundingDiff (§2, DECIZII 02.10)', () => {
+  it('încasat 4.920 (sub cel datorat, 4.921,83) — rotunjire negativă, în toleranță', () => {
+    expect(paymentRoundingDiff(4920, 4921.83)).toBeCloseTo(-1.83);
+  });
+
+  it('încasat 4.922 (rotunjitul precompletat) — rotunjire pozitivă, în toleranță', () => {
+    expect(paymentRoundingDiff(4922, 4921.83)).toBeCloseTo(0.17);
+  });
+
+  it('încasat 4.900 (sub toleranță, diferență 21,83) — fără rotunjire, rămâne restanță', () => {
+    expect(paymentRoundingDiff(4900, 4921.83)).toBeUndefined();
+  });
+
+  it('încasat 5.000 (peste, diferență 78,17) — fără rotunjire, avans pe luna următoare', () => {
+    expect(paymentRoundingDiff(5000, 4921.83)).toBeUndefined();
+  });
+
+  it('încasat exact cât se datorează — fără rotunjire (nu scrie 0)', () => {
+    expect(paymentRoundingDiff(1000, 1000)).toBeUndefined();
+  });
+
+  it('la limita toleranței (±5 lei) rămâne rotunjire, peste limită nu mai e', () => {
+    expect(paymentRoundingDiff(1005, 1000)).toBe(5);
+    expect(paymentRoundingDiff(1005.01, 1000)).toBeUndefined();
+  });
+});
+
 describe('buildPaymentRecord', () => {
   const baseValues = {
     childId: 'c1',
@@ -120,6 +150,18 @@ describe('buildPaymentRecord', () => {
     expect(() =>
       buildPaymentRecord(null, 'PAY-1', { ...baseValues, tenders: { Cash: '', Card: '', Transfer: '' } }),
     ).toThrow();
+  });
+
+  it('§2 (DECIZII 02.10): roundingDiff din values ajunge pe plata salvată', () => {
+    const record = buildPaymentRecord(null, 'PAY-1', { ...baseValues, roundingDiff: -1.83 });
+    expect(record.roundingDiff).toBe(-1.83);
+  });
+
+  it('§2: fără roundingDiff în values, plata rămâne fără el', () => {
+    const record = buildPaymentRecord(null, 'PAY-1', baseValues);
+    // La fel ca fxRate/amountEur (același tipar în buildPaymentRecord): cheia rămâne în obiectul
+    // JS cu valoare undefined, dar dispare la serializare JSON — convenția de citire e typeof.
+    expect(record.roundingDiff).toBeUndefined();
   });
 });
 

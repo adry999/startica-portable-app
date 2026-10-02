@@ -83,8 +83,8 @@ explicit în cod — editare celulă-cu-celulă, prea frecventă, același prece
 
 ## Scăzut
 
-- **`PaymentFormDrawer.tsx:760-770`** — rândul de repartizare manuală nu arată €/lei lângă câmp;
-  indiciul e doar textul de sub el. Cosmetic.
+- **✅ Rezolvat (`d7e7a50`) — `PaymentFormDrawer.tsx:760-770`** — rândul de repartizare manuală nu arăta €/lei lângă câmp;
+  indiciul era doar textul de sub el. Cosmetic. Rezolvat: `NumberInput` primește `suffix={isEurChild ? '€' : 'lei'}`.
 - **`b1-fix-mixed-payments.mjs`** — fără test, dar risc minim (7 id-uri hardcodate, one-shot deja
   rulat pe date reale cu gardă proprie).
 - **Worktree-uri/foldere rămase pe disc** (gitignorate, fără risc de commit): `.worktrees/feat-multi-currency-fees`
@@ -92,11 +92,19 @@ explicit în cod — editare celulă-cu-celulă, prea frecventă, același prece
   `locked`), `.claude/worktrees/agent-a14d541c82869a72f`/`agent-a8d6598273f5df260` (orfane,
   `git worktree list` nu le mai arată), `.claude/worktrees/npm-check-out.txt` (362KB, fișier rătăcit).
   Doar igienă — de curățat când userul confirmă că nu mai are treabă cu ele.
-- **`ServicesSettings.tsx`/`VisitFormDrawer.tsx`** — fără `if (submitting) return` explicit, dar
-  scriu prin `session.mutate`, care are gardă globală sincronă (`app-session-store.mjs:233`) — un
-  Ctrl+Enter dublu nu creează înregistrare duplicată, doar o eroare confuză la apăsare accidentală.
-  Aceeași clasificare „cosmetic, nu funcțional" ca cele 5 formulare deja acceptate în auditul
-  precedent. Fix opțional: aceeași gardă, pentru consecvență.
+- **✅ Parțial rezolvat (`1b1a23c`) — `ServicesSettings.tsx`/`VisitFormDrawer.tsx`** — fără
+  `if (submitting) return` explicit, dar scriu prin `session.mutate`, care are gardă globală
+  sincronă (`app-session-store.mjs:233`) — un Ctrl+Enter dublu nu creează înregistrare duplicată,
+  doar o eroare confuză la apăsare accidentală. Aceeași clasificare „cosmetic, nu funcțional" ca
+  cele 5 formulare deja acceptate în auditul precedent.
+  **`ServicesSettings.tsx`**: gardă adăugată, aceeași convenție ca cele 5 formulare (`submit()`
+  are acum `if (submitting) return` chiar după `preventDefault()`), cu test (al doilea submit al
+  formularului, cât timp primul e pending, nu mai arată eroarea lacătului).
+  **`VisitFormDrawer.tsx`**: neschimbat, intenționat — `onSubmit` e documentat explicit ca sincron,
+  fire-and-forget (`VisitsPage.submitVisitForm` nu e `await`-uit din `handleSubmit`), deci nu există
+  o fereastră de „pending” pe care un `submitting` să o gardeze; eroarea lacătului (dacă apare)
+  ajunge ca toast din `VisitsPage`, nu ca bandă de eroare în formular. Adăugarea unui `submitting`
+  fals (fără un `Promise` real de așteptat) ar fi un tipar inventat, nu convenția celorlalte 5.
 - **`ConnectServerForm.tsx`/`BackupPage.tsx`** — fără gardă internă, dar nu sunt în Drawer/Dialog
   (fără vector Ctrl+Enter) — `disabled` pe buton e suficient.
 - **Prezența la grădiniță** — fără audit trail, la fel ca bazinul (#5), dar probabil aceeași

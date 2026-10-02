@@ -1,5 +1,6 @@
 import { obligation, feeEntryFor, nextMonth } from './tuition-obligation.mjs';
 import { cents } from './money.mjs';
+import { PAYMENT_ROUNDING_TOLERANCE } from './record-schema.mjs';
 
 // Peste durata obișnuită de frecventare a unei grădinițe — gardă împotriva unei sume absurd de
 // mari care ar roti la nesfârșit (plafonăm, nu blocăm: restul rămâne pe ultima lună atinsă).
@@ -56,6 +57,11 @@ export function autoAllocatePayment({
     const take = Math.min(remainingCents, owedCents);
     rows.push({ month: currentMonth, amount: take / 100 });
     remainingCents -= take;
+
+    // DECIZII.md (02.10, „Rotunjire la achitare”): un rest mic (ex. conversia EUR lasă bani) nu
+    // pornește o lună nouă de avans — rămâne pe ultima lună acoperită integral, iar apelantul
+    // (PaymentFormDrawer) îl scrie separat ca `roundingDiff` pe plată, nu ca repartizare.
+    if (remainingCents > 0 && remainingCents <= cents(PAYMENT_ROUNDING_TOLERANCE)) break;
   }
 
   if (remainingCents > 0) {

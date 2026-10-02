@@ -610,7 +610,53 @@ test('normalizeRecord(payments) respinge un roundingDiff nevalid', () => {
         method: 'Cash',
         roundingDiff: Number.NaN,
       }),
-    /Diferența de rotunjire este invalidă/,
+    /Diferența de rotunjire trebuie să fie între -5 și 5 lei/,
+  );
+});
+
+// DECIZII.md (02.10): toleranța implicită e 5 lei — peste, diferența nu mai e „rotunjire”, ci
+// o repartizare parțială/avans obișnuită (nescrisă aici ca roundingDiff).
+test('normalizeRecord(payments) acceptă roundingDiff la limita toleranței (±5 lei), respinge peste', () => {
+  const laLimita = normalizeRecord('payments', {
+    id: 'P-1',
+    date: '2026-09-15',
+    amount: 1005,
+    method: 'Cash',
+    roundingDiff: 5,
+  });
+  assert.equal(laLimita.roundingDiff, 5);
+
+  const laLimitaNegativ = normalizeRecord('payments', {
+    id: 'P-2',
+    date: '2026-09-15',
+    amount: 995,
+    method: 'Cash',
+    roundingDiff: -5,
+  });
+  assert.equal(laLimitaNegativ.roundingDiff, -5);
+
+  assert.throws(
+    () =>
+      normalizeRecord('payments', {
+        id: 'P-3',
+        date: '2026-09-15',
+        amount: 1005.01,
+        method: 'Cash',
+        roundingDiff: 5.01,
+      }),
+    /Diferența de rotunjire trebuie să fie între -5 și 5 lei/,
+  );
+
+  assert.throws(
+    () =>
+      normalizeRecord('payments', {
+        id: 'P-4',
+        date: '2026-09-15',
+        amount: 978.17,
+        method: 'Cash',
+        roundingDiff: -21.83,
+      }),
+    /Diferența de rotunjire trebuie să fie între -5 și 5 lei/,
   );
 });
 
