@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { readFileSync, unlinkSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +15,7 @@ import { openDatabase } from '#core/server/database/sqlite-connection.mjs';
 import { createSettingsRepository } from '#core/server/settings/settings-repository.mjs';
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
 import { branchDirectories, commonDirectories } from '#core/server/branches/branch-layout.mjs';
+import { createFullBackupService, COMMON_ENTRY_ID } from '#features/backup/index.server.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
 import {
   createSyncDeviceRepository,
@@ -175,6 +176,8 @@ export function createApplication(options = {}) {
       branchRoutes,
       syncDevice,
       common,
+      fullBackupService,
+      restoreFullBackup,
     });
   }
 
@@ -187,19 +190,42 @@ export function createApplication(options = {}) {
   const existingRegistry = readBranchRegistry(registryFile);
   // Baza comună (Personal 24, decizia 1): deschisă o singură dată aici, înainte de
   // prima filială, și ținută deschisă la orice schimbare de filială — nu ține de
-  // contextul unei filiale anume, ca syncDevice sau registry mai sus.
-  const common = createCommonContext({
+  // contextul unei filiale anume, ca syncDevice sau registry mai sus. `let`, nu `const`
+  // (42d): restaurarea unei arhive complete suprascrie fișierul ei pe disc, deci
+  // conexiunea trebuie închisă și redeschisă — exact ca `active` la o schimbare de filială.
+  function buildCommonContext() {
+    return createCommonContext({
+      home,
+      autoBackupIntervalMs,
+      syncDevice,
+      fetch: options.fetch ?? globalThis.fetch,
+      // Motorul setului comun (decizia 9) transmite statusul/reîncărcarea prin contextul de
+      // filială ACTIV la momentul apelului — `active` se schimbă la fiecare schimbare de
+      // filială/comutare, dar aceste închideri rămân valabile (closures, nu o referință
+      // capturată o singură dată la construcție).
+      onSyncStatus: () => active.notifySyncStatus(),
+      onSyncRecordsChanged: revision => active.notifyCommonRecordsChanged(revision),
+    });
+  }
+  let common = buildCommonContext();
+
+  // 42d: arhiva completă (toate bazele) — construită o singură dată aici, ca `common`
+  // de mai sus, și pasată gata construită oricărui context de filială deschis (decizia
+  // „pasul 6” din docs/superpowers/plans/2026-10-01-backup-complet.md). `backupDirectory`/
+  // `readSetting`/`writeSetting` citesc setările FILIALEI ACTIVE la momentul apelului —
+  // closures, nu valori capturate o singură dată, la fel ca restul funcțiilor de mai sus.
+  const fullBackupService = createFullBackupService({
+    registry,
     home,
-    autoBackupIntervalMs,
-    syncDevice,
-    fetch: options.fetch ?? globalThis.fetch,
-    // Motorul setului comun (decizia 9) transmite statusul/reîncărcarea prin contextul de
-    // filială ACTIV la momentul apelului — `active` se schimbă la fiecare schimbare de
-    // filială/comutare, dar aceste închideri rămân valabile (closures, nu o referință
-    // capturată o singură dată la construcție).
-    onSyncStatus: () => active.notifySyncStatus(),
-    onSyncRecordsChanged: revision => active.notifyCommonRecordsChanged(revision),
+    legacy,
+    activeBranch: () => ({ branch: active.branch, db: active.db }),
+    common: () => ({ db: common.db }),
+    backupDirectory: () => active.backupDir,
+    readSetting: key => active.readSetting(key),
+    writeSetting: (key, value) => active.writeSetting(key, value),
+    appVersion: version,
   });
+
   try {
     if (existingRegistry) {
       const target =
@@ -325,6 +351,85 @@ export function createApplication(options = {}) {
     }, 0);
   }
 
+  // 42d: restaurare dintr-o arhivă .startica-backup — fullBackupService.restore() a validat
+  // deja versiunea/integritatea/numărătorile fiecărei baze (vezi full-backup.service.mjs)
+  // înainte ca acest `apply` să ajungă să scrie vreun fișier; un eșec de validare aruncă
+  // înainte de orice schimbare pe disc, deci arhiva originală rămâne neatinsă.
+  // Ordinea (decizia 8 din plan): backup de siguranță complet ÎNTÂI (nu poate eșua
+  // silențios — un eșec aici oprește tot, propagă eroarea mai sus) → Comun închis/
+  // suprascris/redeschis → filialele neactive suprascrise direct (nicio conexiune) →
+  // filiale.json înlocuit EXACT cu lista din manifest (decizia 7, nu o îmbinare) →
+  // filiala activă închisă/suprascrisă/redeschisă ABIA ACUM (fișierul ei trebuia să
+  // rămână deschis până la acest punct, cât se validează arhiva și se scriu celelalte baze).
+  /** @param {string} file */
+  function restoreFullBackup(file) {
+    fullBackupService.backup('inainte-restaurare');
+
+    fullBackupService.restore(file, {
+      apply: ({ manifest, databaseFiles }) => {
+        const commonBuffer = databaseFiles.get(COMMON_ENTRY_ID);
+        if (commonBuffer) {
+          common.close();
+          const commonDirs = commonDirectories(home);
+          mkdirSync(commonDirs.dataDir, { recursive: true });
+          writeFileSync(join(commonDirs.dataDir, 'startica.db'), commonBuffer);
+          common = buildCommonContext();
+        }
+
+        const existingBranches = registry.list();
+        const previousActiveBranch = active.branch;
+        /** @type {BranchEntry[]} */
+        const nextBranches = [];
+        /** @type {Buffer | null} */
+        let activeBuffer = null;
+
+        for (const entry of manifest.databases) {
+          if (entry.kind !== 'branch') continue;
+          const buffer = /** @type {Buffer} */ (databaseFiles.get(entry.id));
+          if (entry.id === manifest.activeBranchId) {
+            // Scrisă peste fișierul filialei active CURENTE, indiferent ce id/folder avea
+            // în arhivă — pe alt calculator, „filiala activă” n-are niciun corespondent
+            // natural în afară de slotul deja deschis acolo.
+            nextBranches.push(previousActiveBranch);
+            activeBuffer = buffer;
+            continue;
+          }
+          // Un id deja cunoscut local își păstrează folderul; unul nou e adoptat cu exact
+          // id-ul din arhivă (ca sincronizarea ei, dacă există, să rămână legată de el).
+          const branchEntry =
+            existingBranches.find(candidate => candidate.id === entry.id) ??
+            registry.adopt({
+              id: entry.id,
+              name: entry.name,
+              color: 'orange',
+              address: '',
+              createdAt: new Date().toISOString(),
+            });
+          nextBranches.push(branchEntry);
+          const dirs = branchDirectories({ home, legacy, branch: branchEntry });
+          mkdirSync(dirs.dataDir, { recursive: true });
+          writeFileSync(join(dirs.dataDir, 'startica.db'), buffer);
+        }
+
+        // O filială locală absentă din manifest dispare din filiale.json (decizia 7) —
+        // fișierul ei rămâne orfan pe disc, neșters, recuperabil manual.
+        registry.replaceAll(nextBranches, previousActiveBranch.id);
+
+        active.close();
+        if (activeBuffer) {
+          const dirs = branchDirectories({ home, legacy, branch: previousActiveBranch });
+          mkdirSync(dirs.dataDir, { recursive: true });
+          writeFileSync(join(dirs.dataDir, 'startica.db'), activeBuffer);
+        }
+        active = openBranchContext(previousActiveBranch);
+      },
+    });
+
+    active.runStartupSweeps();
+    active.startSync();
+    common.startSync();
+  }
+
   return {
     server,
     get db() {
@@ -346,6 +451,9 @@ export function createApplication(options = {}) {
       return active.safeBackup(reason);
     },
     health: () => active.health(),
+    fullBackupService,
+    /** @param {string} file */
+    restoreFullBackup: file => restoreFullBackup(file),
     /** @param {string} [todayStr] */
     expireHealthNotes: todayStr => active.expireHealthNotes(todayStr),
     /** @param {string} [todayStr] */
