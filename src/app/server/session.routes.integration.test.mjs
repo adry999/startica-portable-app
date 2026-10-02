@@ -266,3 +266,41 @@ test('/api/session: sync.json cu lastSyncedAt persistat — apare în syncSummar
 
   assert.equal(session.sync.lastSyncedAt, '2026-10-01T12:00:00.000Z');
 });
+
+// §5.3 — profilul calculatorului (31-profiluri-calculator.md)
+test('/api/session: fără sync.json, profilul e Complet nerestricționat (compatibilitate)', async t => {
+  const app = await startTestApplication(t, { prefix: 'startica-session-profil-' });
+  const session = await app.get('/api/session');
+  assert.equal(session.profile.preset, 'complet');
+  assert.equal(session.profile.blocked, false);
+  assert.equal(session.profile.modules.admin, 2);
+});
+
+test('/api/session: sync.json cu profil persistat îl expune ca atare', async t => {
+  const home = mkdtempSync(join(tmpdir(), 'startica-session-profil-'));
+  t.after(() => removeDirWithRetry(home));
+  writeFileSync(
+    join(home, 'sync.json'),
+    JSON.stringify({
+      version: 1,
+      serverUrl: 'https://sync.exemplu.md',
+      deviceId: 'dev-1',
+      deviceName: 'Calculator Educator',
+      token: 'tok',
+      connectedAt: new Date().toISOString(),
+      profile: {
+        preset: 'educator',
+        modules: { attendance: 2, children: 1, groups: 1 },
+        pinModules: [],
+        blocked: false,
+      },
+    }),
+  );
+  const app = await startTestApplication(t, { prefix: 'startica-session-profil-run-', home });
+
+  const session = await app.get('/api/session');
+
+  assert.equal(session.profile.preset, 'educator');
+  assert.equal(session.profile.modules.attendance, 2);
+  assert.equal(session.profile.modules.payments, 0);
+});

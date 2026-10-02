@@ -14,8 +14,24 @@ export const RESPONSE_SENT = Symbol('response-sent');
  * }} RouteDefinition
  */
 
-/** @param {{ root: string, sessionToken: string, routes: RouteDefinition[], log?: (message: unknown) => void }} options */
-export function createRouteDispatcher({ root, sessionToken, routes, log = console.error }) {
+/**
+ * @param {{
+ *   root: string, sessionToken: string, routes: RouteDefinition[], log?: (message: unknown) => void,
+ *   resolveRouteModule?: (request: { method: 'GET' | 'POST', path: string, body?: unknown }) => { moduleId: string | string[], write: boolean } | null,
+ *   assertModuleAccess?: (moduleId: string | string[], options: { write: boolean }) => void,
+ * }} options
+ */
+export function createRouteDispatcher({
+  root,
+  sessionToken,
+  routes,
+  log = console.error,
+  // §5.3 (36h): gardă de profil, opțională — implicitul (teste, sync-server, orice context
+  // fără profiluri) nu restrânge nimic. Compusă din două bucăți (ce modul guvernează calea,
+  // dacă accesul e permis) ca `route-modules.mjs` să rămână testabil fără un server HTTP real.
+  resolveRouteModule = () => null,
+  assertModuleAccess = () => {},
+}) {
   const getRoutes = new Map(routes.filter(route => route.method === 'GET').map(route => [route.path, route.handle]));
   const postRoutes = new Map(routes.filter(route => route.method === 'POST').map(route => [route.path, route.handle]));
 
@@ -30,6 +46,8 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
         // RESPONSE_SENT: un flux SSE (sincronizare, Faza 3) își scrie singur antetele
         // și răspunsul, exact ca ruta POST /api/shutdown — nu mai are ce trimite aici.
         if (getHandler) {
+          const getModule = resolveRouteModule({ method: 'GET', path });
+          if (getModule) assertModuleAccess(getModule.moduleId, { write: getModule.write });
           const result = await getHandler({ url, response });
           if (result !== RESPONSE_SENT) sendResponse(response, result);
           return;
@@ -44,6 +62,9 @@ export function createRouteDispatcher({ root, sessionToken, routes, log = consol
       const postHandler = postRoutes.get(path);
       if (!postHandler) fail('Operațiune inexistentă.', 404);
       const body = await readJsonBody(request);
+      // Gărzile dinamice (/api/record, de ex.) au nevoie de corp ca să afle tipul înregistrării.
+      const postModule = resolveRouteModule({ method: 'POST', path, body });
+      if (postModule) assertModuleAccess(postModule.moduleId, { write: postModule.write });
       const result = await postHandler({ body, url, response });
       if (result !== RESPONSE_SENT) sendResponse(response, result);
     } catch (error) {
