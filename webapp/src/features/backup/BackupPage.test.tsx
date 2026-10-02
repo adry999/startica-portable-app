@@ -113,6 +113,21 @@ describe('BackupPage', () => {
     expect(await screen.findByText('Backup local verificat creat.')).toBeInTheDocument();
   });
 
+  // §6 (PROMPT-10, 10c): „Vezi conținutul” pe un rând din „Copii de siguranță” deschide
+  // BackupPreviewTable cu numărătoarea acelui backup (legacy, fără manifest — un singur rând).
+  it('"Vezi conținutul" pe un backup arată BackupPreviewTable cu numărătoarea lui', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Vezi conținutul' }));
+
+    expect(await screen.findByText('Conținutul backupului')).toBeInTheDocument();
+    expect(screen.getAllByText(localBackups[0].name).length).toBeGreaterThan(0);
+    expect(screen.getByText('Copii')).toBeInTheDocument();
+    expect(screen.getAllByText('3').length).toBeGreaterThan(0);
+  });
+
   it('butonul Restaurează rămâne dezactivat până se scrie exact RESTAUREAZA', async () => {
     await loadedSession();
     renderPage();
