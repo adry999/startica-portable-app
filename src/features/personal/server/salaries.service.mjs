@@ -104,6 +104,7 @@ export function createSalariesService({
         paid: null,
         deductible: 0,
         estimated: false,
+        currentSalary: null,
       };
     const monthHasEnded = month < todayStr.slice(0, 7);
     const rows = new Map(
@@ -142,6 +143,7 @@ export function createSalariesService({
         paid: { branchId: payment.branchId, paidAt: payment.paidAt },
         deductible,
         estimated: false,
+        currentSalary: { id: salary.id, mode: salary.mode, amount: salary.amount, validFrom: salary.validFrom },
       };
     }
     const advancesTotal = undeductedAdvances(month, staff.id).reduce((sum, advance) => sum + advance.amount, 0);
@@ -156,6 +158,7 @@ export function createSalariesService({
       paid: null,
       deductible,
       estimated: !monthHasEnded,
+      currentSalary: { id: salary.id, mode: salary.mode, amount: salary.amount, validFrom: salary.validFrom },
     };
   }
 

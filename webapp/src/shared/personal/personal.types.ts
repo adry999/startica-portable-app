@@ -160,6 +160,8 @@ export interface SalaryRow {
   paid: { branchId: string; paidAt: string } | null;
   /** Luna nu s-a încheiat — suma nu e definitivă (M4, audit B). */
   estimated: boolean;
+  /** Intrarea de salariu validă pentru luna arătată — pentru precompletarea formularului (F31). */
+  currentSalary: Pick<Salary, 'id' | 'mode' | 'amount' | 'validFrom'> | null;
 }
 
 /** Un rând din `GET /api/personal/salaries/history?staffId=` — forma reală a lui `salaries.service.mjs#history`. */

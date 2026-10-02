@@ -984,12 +984,15 @@ de proces, nu o barieră tehnică de bază de date.
    „adăugat la filială” întâi (fluxul nou din §17.3). Recomandare: dezactivează acțiunile de
    plată cu motivul „Nu lucrează la {filiala deschisă}” — dar cer confirmare înainte, fiind o
    restricție nouă pe un flux folosit azi.
-2. **Server (`src/features/personal/server/*.mjs`)**: rutele de scriere (`/api/personal/staff`,
-   `/api/personal/advances`, `/api/personal/salaries`, timesheet, leaves) acceptă azi `branchIds`/
-   datele trimise de client fără să le valideze contra filialei sesiunii — repository are deja
-   `staffForBranch(branchId)`, dar rutele de scriere nu-l folosesc ca gardă. Impact redus (aplicație
-   desktop, un singur operator pe sesiune, nu o barieră multi-tenant reală), dar las neschimbat
-   până se decide forma exactă a validării (400 respins vs. `branchId` ignorat silențios).
+2. **Server (`src/features/personal/server/*.mjs`), corectat după verificare directă în cod:**
+   salariile (`salaries.routes.mjs:89,142`, `salaries.service.mjs:195,285`) **validează deja**
+   `isStaffInBranch(staff, branchId)` pe fiecare scriere (salariu/avans/plată) — niciun fix necesar
+   acolo, presupunerea mea inițială era greșită. Singura gaură reală: `handleSaveStaff`
+   (`personal.routes.mjs:70-81`, `/api/personal/staff`) verifică doar că fiecare id din `branchIds`
+   există în registrul de filiale, nu că e (doar) filiala deschisă — clientul nou (`StaffFormDrawer`)
+   nu mai trimite altceva decât filiala deschisă/un push la ea, deci gaura e doar teoretică (un
+   client modificat ar putea trimite orice `branchIds` valide). Impact redus (desktop, un operator
+   pe sesiune), las neschimbat până se decide forma validării (400 vs. ignorare silențioasă).
 3. **`AdvanceFormDrawer`/`LeaveFormDrawer`**: primesc deja un `staff: Staff | null` ales de apelant
    (fără listă proprie de angajați) — alegerea se face din `TeamView`/`StaffProfilePage` (punctul 1
    de mai sus), nu intern; nimic de schimbat în aceste două componente.
@@ -1002,3 +1005,25 @@ de proces, nu o barieră tehnică de bază de date.
    doar pentru eticheta „ambele filiale”, nu pentru alegerea unde se scrie) — `StaffFormDrawer` nu
    mai are pastile de filiale. Nimic de corectat; n-am adăugat un test de arhitectură nou pentru
    atât de puține cazuri, riscul de regresie tăcută e deja acoperit de audit manual.
+
+## §19 (F31, PROMPT-11) — salariul nu se putea edita: ce s-a închis, ce rămâne
+
+**Închis:** `SalaryFormDrawer` precompletează cu salariul valabil acum (`currentSalary`, nou pe
+`SalaryRow`, calculat în `rowForStaff`/`salaries.service.mjs`) și arată „Acum: X lei/lună din
+{lună}”; salvarea pe **aceeași** lună de start reutilizează `id`-ul intrării existente (nu mai
+dublează rândul — bug confirmat: `saveSalary` genera mereu `SAL-${uuid}` nou); toate modurile,
+inclusiv Bazin, se pot salva (`disabled={mode==='bazin'}` eliminat din buton și din `RowMenu`).
+
+**Neînchis, din scop acum:**
+1. **„Lună plătită deja → blocat, cu motiv”** — nu am implementat validarea care arată „Septembrie
+   e plătită; schimbarea se aplică din octombrie.” Ar cere fie o rută nouă („ultima lună plătită
+   pentru acest angajat”), fie încărcarea istoricului complet în formular doar ca să verifice asta
+   — cost disproporționat față de bug-ul real (editarea blocată), amânat.
+2. **Istoric în formular** (ultimele 3 schimbări + link „Tot istoricul”) — `SalaryHistoryDrawer`
+   existent arată istoricul de **plăți** lunare, nu istoricul de **schimbări ale ratei** (mode/
+   amount/validFrom); „Tot istoricul” din §19.4 pare să ceară al doilea tip de istoric, care nu
+   există încă ca atare. Nefăcut — ar fi un ecran/API nou, nu o reutilizare a celui existent.
+3. **Din fișa angajatului (23m), „Schimbă salariul” după PIN** — azi `StaffProfilePage` duce doar
+   la fila Salarii (`navigate('/personal?tab=salarii')`), nu deschide direct `SalaryFormDrawer`
+   pentru acel angajat. Ar cere un parametru de query citit de `PersonalPage`/`SalariesView` la
+   montare — nefăcut, risc de a introduce o cuplare nouă între pagini fără un mockup exact.

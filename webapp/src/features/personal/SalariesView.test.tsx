@@ -47,6 +47,7 @@ let removedAdvanceIds: string[] = [];
 let salariesLoadCount = 0;
 // A3f: un test înlocuiește rândurile implicite ca să verifice un angajat fără salariu setat (mode: null).
 let salariesRowsOverride: unknown[] | null = null;
+let postedSalaries: unknown[] = [];
 
 function stubFetch() {
   postedPay = [];
@@ -54,6 +55,7 @@ function stubFetch() {
   removedAdvanceIds = [];
   salariesLoadCount = 0;
   salariesRowsOverride = null;
+  postedSalaries = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
@@ -86,6 +88,7 @@ function stubFetch() {
               advances,
               net: 10000 - advances,
               paid: null,
+              currentSalary: { id: 'SAL-1', mode: 'fix', amount: 10000, validFrom: '2026-01' },
             },
             {
               staff: { id: 'STF-2', name: 'Ion Antrenor' },
@@ -95,6 +98,7 @@ function stubFetch() {
               advances: 0,
               net: 1200,
               paid: null,
+              currentSalary: { id: 'SAL-2', mode: 'bazin', amount: 0, validFrom: '2026-01' },
             },
           ],
           totals: { gross: 11200, advances, net: 11200 - advances, paid: 0 },
@@ -104,6 +108,11 @@ function stubFetch() {
         const body = JSON.parse(options.body as string);
         postedPay.push(body);
         return jsonResponse({ paid: body.staffIds, skipped: [] });
+      }
+      if (path === '/api/personal/salaries' && options?.method === 'POST') {
+        const body = JSON.parse(options.body as string);
+        postedSalaries.push(body);
+        return jsonResponse({ salary: body });
       }
       if (path === '/api/personal/advances' && options?.method === 'POST') {
         const body = JSON.parse(options.body as string);
@@ -287,5 +296,65 @@ describe('SalariesView', () => {
     expect((fetch as ReturnType<typeof vi.fn>).mock.calls.some(([calledPath]) => calledPath === '/api/undo')).toBe(
       false,
     );
+  });
+
+  // F31 (PROMPT-11 §19): formularul pornea mereu gol — acum precompletează cu salariul valabil
+  // acum și, pe aceeași lună de start, înlocuiește intrarea (același id) în loc să dubleze rândul.
+  it('F31: „Schimbă salariul” precompletează cu salariul curent și, pe aceeași lună, înlocuiește intrarea', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ana Popescu');
+    const row = screen.getByText('Ana Popescu').closest('div')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: 'Schimbă salariul' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Salariul: Ana Popescu' });
+    expect(within(dialog).getByText(/Acum: 10.000,00 lei\/lună din Ian 2026/)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('Sumă (lei)')).toHaveValue(10000);
+
+    await userEvent.clear(within(dialog).getByLabelText('Sumă (lei)'));
+    await userEvent.type(within(dialog).getByLabelText('Sumă (lei)'), '11000');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Salvează salariul' }));
+
+    expect(await screen.findByText('Salariul a fost salvat.')).toBeInTheDocument();
+    expect(postedSalaries).toHaveLength(1);
+    expect(postedSalaries[0]).toMatchObject({ id: 'SAL-1', staffId: 'STF-1', amount: 11000, validFrom: '2026-01' });
+  });
+
+  it('F31: un antrenor de Bazin poate fi trecut pe Fix (butonul de salvare nu mai e dezactivat)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    render(
+      <ToastProvider>
+        <UndoToastProvider>
+          <SalariesView month="2026-08" />
+        </UndoToastProvider>
+      </ToastProvider>,
+    );
+
+    await screen.findByText('Ion Antrenor');
+    const row = screen.getByText('Ion Antrenor').closest('div')!;
+    await userEvent.click(within(row).getByLabelText('Mai multe acțiuni'));
+    await userEvent.click(within(row).getByRole('button', { name: 'Schimbă salariul' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Salariul: Ion Antrenor' });
+    expect(within(dialog).getByRole('button', { name: 'Salvează salariul' })).not.toBeDisabled();
+
+    await userEvent.selectOptions(within(dialog).getByLabelText('Mod'), 'Fix — lei / lună');
+    await userEvent.type(within(dialog).getByLabelText('Sumă (lei)'), '6000');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Salvează salariul' }));
+
+    expect(await screen.findByText('Salariul a fost salvat.')).toBeInTheDocument();
+    expect(postedSalaries[0]).toMatchObject({ staffId: 'STF-2', mode: 'fix', amount: 6000 });
   });
 });

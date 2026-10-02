@@ -21,7 +21,7 @@ export interface SalariesData {
   estimated: boolean;
   reload: () => Promise<void>;
   pay: (staffIds: string[], method: string) => Promise<{ paid: string[]; skipped: string[] }>;
-  saveSalary: (salary: Omit<Salary, 'id'> & { staffId: string; mode: SalaryMode }) => Promise<void>;
+  saveSalary: (salary: Omit<Salary, 'id'> & { id?: string; staffId: string; mode: SalaryMode }) => Promise<void>;
 }
 
 function isForbidden(error: unknown): boolean {
@@ -78,8 +78,9 @@ export function useSalaries(month: string): SalariesData {
     return response;
   }
 
-  async function saveSalary(salary: Omit<Salary, 'id'> & { staffId: string; mode: SalaryMode }) {
-    await requestJson('/api/personal/salaries', { id: `SAL-${crypto.randomUUID()}`, ...salary });
+  async function saveSalary(salary: Omit<Salary, 'id'> & { id?: string; staffId: string; mode: SalaryMode }) {
+    const { id, ...rest } = salary;
+    await requestJson('/api/personal/salaries', { id: id ?? `SAL-${crypto.randomUUID()}`, ...rest });
     await load();
   }
 

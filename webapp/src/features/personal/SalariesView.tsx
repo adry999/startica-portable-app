@@ -231,11 +231,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
                   items={[
                     { label: 'Avans', onClick: () => setAdvanceStaffId(row.staff.id) },
                     { label: 'Istoric', onClick: () => setHistoryStaffId(row.staff.id) },
-                    {
-                      label: 'Setează salariul',
-                      onClick: () => setSalaryFormStaffId(row.staff.id),
-                      disabled: row.mode === 'bazin',
-                    },
+                    { label: 'Schimbă salariul', onClick: () => setSalaryFormStaffId(row.staff.id) },
                   ]}
                 />
               </span>
@@ -288,6 +284,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
       <SalaryFormDrawer
         key={`salary-${salaryFormStaffId ?? 'closed'}`}
         staff={salaryFormStaffId ? (personal.staffById.get(salaryFormStaffId) ?? null) : null}
+        currentSalary={salaries.rows.find(row => row.staff.id === salaryFormStaffId)?.currentSalary ?? null}
         onClose={() => setSalaryFormStaffId(null)}
         onSubmit={async input => {
           await salaries.saveSalary(input);
