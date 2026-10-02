@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, IconButton, MonthStepper, SegmentedControl, useTopbarActions } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today, shiftDays } from '@domain/calendar-month.mjs';
+import { formatDayLabel } from '#shared/format/date-format.mjs';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { shiftMonth } from '@shared/format/month-shift';
 import { usePoolWeek, usePoolMonth, usePoolSettings } from '@shared/pool/usePool';
@@ -9,7 +10,9 @@ import { weekOf } from '#features/pool/index.web.mjs';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { WeekView } from './WeekView';
 import { MonthView } from './MonthView';
+import { TodayView } from './TodayView';
 import { BookingDrawer } from './BookingDrawer';
+import { buildTodaySessions, type TodaySession } from './today-sessions';
 import styles from './PoolPage.module.css';
 
 export interface PoolPageProps {
@@ -28,9 +31,31 @@ function weekRangeLabel(weekDate: string): string {
   return fromMonth === toMonth ? `${fromDay}–${toDay} ${toMonth}` : `${fromDay} ${fromMonth} – ${toDay} ${toMonth}`;
 }
 
+/** „Bazin · joi, 2 octombrie” — antetul paginii „Azi” (43b), literă mică pentru ziua săptămânii. */
+function todayDateLabel(date: string): string {
+  const label = formatDayLabel(date);
+  return `Bazin · ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+}
+
+/** Minutele de la miezul nopții, recalculate la fiecare minut — pentru ședința „în curs” (43b). */
+function useMinutesNow(): number {
+  const [minutes, setMinutes] = useState(() => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+  });
+  useEffect(() => {
+    const id = setInterval(() => {
+      const now = new Date();
+      setMinutes(now.getHours() * 60 + now.getMinutes());
+    }, 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return minutes;
+}
+
 /** Ecranul „Bazin" (spec 23): comutator Săptămâna/Luna, ca la Prezența. */
 export function PoolPage({ month }: PoolPageProps) {
-  const [mode, setMode] = usePersistedState<'week' | 'month'>('view.pool', 'week');
+  const [mode, setMode] = usePersistedState<'today' | 'week' | 'month'>('view.pool', 'week');
   const [weekDate, setWeekDate] = useState(() => today());
   const [monthKey, setMonthKey] = useState(month);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -39,19 +64,35 @@ export function PoolPage({ month }: PoolPageProps) {
   const monthData = usePoolMonth(monthKey);
   const session = useAppSession();
   const groups = (session.state.state as RecordsSnapshot).groups;
+  const nowMinutes = useMinutesNow();
+  const todayKey = today();
+
+  /** 43b: „Marchează” deschide prezența la bazin pe ziua ședinței — reutilizează Săptămâna, fără UI de marcat nouă. */
+  function markToday(_session: TodaySession) {
+    setWeekDate(todayKey);
+    setMode('week');
+  }
+
+  // „Azi” arată mereu ziua curentă — dacă utilizatorul a navigat în altă săptămână înainte să
+  // comute pe „Azi”, readucem `weekDate` pe azi, altfel `week.days` n-ar conține ziua căutată.
+  function changeMode(next: 'today' | 'week' | 'month') {
+    if (next === 'today') setWeekDate(todayKey);
+    setMode(next);
+  }
 
   useTopbarActions(
     <>
       <SegmentedControl
         ariaLabel="Mod de afișare"
         value={mode}
-        onChange={setMode}
+        onChange={changeMode}
         options={[
+          { value: 'today', label: 'Azi' },
           { value: 'week', label: 'Săptămâna' },
           { value: 'month', label: 'Luna' },
         ]}
       />
-      {mode === 'week' ? (
+      {mode === 'week' && (
         <>
           <div className={styles.weekNav}>
             <IconButton
@@ -70,7 +111,8 @@ export function PoolPage({ month }: PoolPageProps) {
           </div>
           {settings.settings && <Button onClick={() => setBookingOpen(true)}>+ Programare nouă</Button>}
         </>
-      ) : (
+      )}
+      {mode === 'month' && (
         <MonthStepper
           value={monthKey}
           onPrev={() => setMonthKey(shiftMonth(monthKey, -1))}
@@ -92,7 +134,20 @@ export function PoolPage({ month }: PoolPageProps) {
 
   return (
     <>
-      {mode === 'week' ? (
+      {mode === 'today' && (
+        <TodayView
+          status={week.loading ? 'loading' : 'ready'}
+          dateLabel={todayDateLabel(todayKey)}
+          sessions={buildTodaySessions(
+            week.days.find(day => day.date === todayKey),
+            settings.coaches,
+            settings.settings?.durationMin ?? 0,
+            nowMinutes,
+          )}
+          onMark={markToday}
+        />
+      )}
+      {mode === 'week' && (
         <WeekView
           days={week.days}
           stats={week.stats}
@@ -100,7 +155,8 @@ export function PoolPage({ month }: PoolPageProps) {
           coaches={settings.coaches}
           onCycle={(bookingId, date, next) => void week.markSession(bookingId, date, next)}
         />
-      ) : (
+      )}
+      {mode === 'month' && (
         <MonthView
           month={monthKey}
           children={monthData.children}

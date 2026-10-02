@@ -33,6 +33,7 @@ const KEYS_35C: EmptyStateKey[] = [
   'prezenta.nochildren',
   'situatia.year.period',
   'bazin.month.period',
+  'bazin.today.period',
   'raport.period',
   'bonzi.period',
 ];

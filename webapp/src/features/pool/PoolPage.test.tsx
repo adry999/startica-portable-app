@@ -96,6 +96,20 @@ describe('PoolPage', () => {
     expect(nextLabel).not.toBe(firstLabel);
   });
 
+  it('43b: tabul „Azi” arată cardul zilei, fără butonul „+ Programare nouă” din Săptămâna', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole('radio', { name: 'Azi' }));
+
+    expect(screen.getByText(/^Bazin ·/)).toBeInTheDocument();
+    expect(screen.getByText('Nicio ședință azi')).toBeInTheDocument();
+    expect(screen.queryByText('+ Programare nouă')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('radio', { name: 'Săptămâna' }));
+    expect(screen.getByText('+ Programare nouă')).toBeInTheDocument();
+  });
+
   it('o programare nouă reîncarcă atât săptămâna cât și luna, nu doar săptămâna (A-8)', async () => {
     const user = userEvent.setup();
     weekReload.mockClear();

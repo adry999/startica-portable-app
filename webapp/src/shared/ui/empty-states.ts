@@ -37,6 +37,7 @@ export type EmptyStateKey =
   | 'prezenta.nochildren'
   | 'situatia.year.period'
   | 'bazin.month.period'
+  | 'bazin.today.period'
   | 'raport.period'
   | 'bonzi.period'
   // 35d — compact, în interiorul unui card
@@ -221,6 +222,11 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
     variant: 'period',
     title: params => `Nicio programare în ${params.luna ?? 'luna aleasă'}`,
     text: 'Programările făcute în Săptămâna apar aici, cu totalul pe copil.',
+  },
+  'bazin.today.period': {
+    variant: 'period',
+    title: 'Nicio ședință azi',
+    text: 'Bazinul nu are nicio programare pentru ziua de azi.',
   },
   'raport.period': {
     variant: 'period',

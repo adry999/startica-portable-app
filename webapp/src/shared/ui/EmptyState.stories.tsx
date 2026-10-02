@@ -72,6 +72,7 @@ export const ZilenasterePeriod: Story = fromCatalog('zilenastere.period');
 export const PrezentaNochildren: Story = fromCatalog('prezenta.nochildren');
 export const SituatiaYearPeriod: Story = fromCatalog('situatia.year.period');
 export const BazinMonthPeriod: Story = fromCatalog('bazin.month.period');
+export const BazinTodayPeriod: Story = fromCatalog('bazin.today.period');
 export const RaportPeriod: Story = fromCatalog('raport.period');
 export const BonziPeriod: Story = fromCatalog('bonzi.period');
 
