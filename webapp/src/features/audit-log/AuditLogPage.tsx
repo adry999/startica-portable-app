@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Badge, Button, LoadingState, SearchInput, SearchSelect, SegmentedControl, useTopbarActions } from '@shared/ui';
+import {
+  Badge,
+  Button,
+  LoadingState,
+  SearchInput,
+  SearchSelect,
+  SegmentedControl,
+  Tabs,
+  useTopbarActions,
+} from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
@@ -9,7 +18,17 @@ import { childNameOf } from '#shared/domain/record-labels.mjs';
 import type { RecordType } from '@contracts/record-types.mjs';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { useAuditLog, type AuditRowView, type AuditScopeEntry } from '@shared/audit-log';
+import { AccessLogPanel } from './AccessLogPanel';
 import styles from './AuditLogPage.module.css';
+
+// §7 (36g): a doua filă, „Acces” — evenimentele access.* (PIN, gărzi de profil), doar pe
+// profil Complet (serverul respinge restul cu 403, AccessLogPanel arată mesajul). Istoricul
+// obișnuit rămâne implicit, ca ecranul să nu se schimbe pentru nimeni altcineva.
+type AuditPageTab = 'istoric' | 'acces';
+const TAB_OPTIONS: { value: AuditPageTab; label: string }[] = [
+  { value: 'istoric', label: 'Istoric' },
+  { value: 'acces', label: 'Acces' },
+];
 
 type AuditFilter = 'toate' | 'copii' | 'achitari' | 'grupe';
 
@@ -128,20 +147,41 @@ export function AuditLogPage() {
   const auditLogData = useAuditLog(scope);
   const [filter, setFilter] = useState<AuditFilter>('toate');
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<AuditPageTab>('istoric');
 
+  // §7 (36g): căutarea și filtrul privesc doar fila „Istoric” — pe „Acces” n-ar avea ce filtra.
   useTopbarActions(
-    <>
-      <span className={styles.topbarSearch}>
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Caută copil, achitare…"
-          ariaLabel="Caută în istoric"
-        />
-      </span>
-      <SegmentedControl options={FILTER_OPTIONS} value={filter} onChange={setFilter} ariaLabel="Filtru istoric" />
-    </>,
+    activeTab === 'istoric' ? (
+      <>
+        <span className={styles.topbarSearch}>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Caută copil, achitare…"
+            ariaLabel="Caută în istoric"
+          />
+        </span>
+        <SegmentedControl options={FILTER_OPTIONS} value={filter} onChange={setFilter} ariaLabel="Filtru istoric" />
+      </>
+    ) : null,
   );
+
+  const tabs = (
+    <Tabs
+      options={TAB_OPTIONS}
+      value={activeTab}
+      onChange={value => setActiveTab(value as AuditPageTab)}
+      ariaLabel="Secțiunile Istoricului"
+    />
+  );
+
+  if (activeTab === 'acces')
+    return (
+      <div className={styles.page}>
+        {tabs}
+        <AccessLogPanel />
+      </div>
+    );
 
   const filteredRows = useMemo(() => {
     const needle = normalizeSearchText(search.trim());
@@ -176,6 +216,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'loading')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <LoadingState />
       </div>
@@ -183,6 +224,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'failed')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <p className={styles.notice}>{auditLogData.failureMessage || 'Istoricul nu a putut fi încărcat.'}</p>
       </div>
@@ -190,6 +232,7 @@ export function AuditLogPage() {
   if (auditLogData.status === 'empty')
     return (
       <div className={styles.page}>
+        {tabs}
         {recordFilterBar}
         <p className={styles.notice}>
           {selection ? `Fără modificări înregistrate pentru ${selectedLabel}.` : 'Nu există modificări înregistrate.'}
@@ -199,6 +242,7 @@ export function AuditLogPage() {
 
   return (
     <div className={styles.page}>
+      {tabs}
       {recordFilterBar}
       {groups.length === 0 && <p className={styles.notice}>Niciun rezultat pentru filtrele alese.</p>}
       {groups.map(group => (
