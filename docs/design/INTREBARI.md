@@ -1,5 +1,28 @@
 # Întrebări / decizii blocate
 
+## ✅ §9.2 (PROMPT-8) — WeekFillBar „Toți prezenți”: conflict cu decizia 12, rezolvat cu un cod nou 'P' (02.10)
+
+41b cere ca „Toți prezenți L–V”/„Prezent toată săptămâna” să completeze celulele goale ale
+pontajului cu „prezent”. Decizia 12 (24-personal.md) spune însă explicit: **lipsa rândului
+într-o zi lucrătoare ÎNSEAMNĂ deja lucrat 8 ore** — nu exista niciun cod „prezent” în
+`TIMESHEET_CODES` (`'CO' | 'CM' | 'A' | 'I' | 'FP'`), deci „completarea” unei celule goale cu
+„prezent” era, luată literal, un no-op (nimic de scris, pentru că e deja starea implicită).
+
+Cerința explicită de o singură intrare `audit_log` pentru tot lotul (ca să poată fi anulată ca
+o acțiune, §8.2) arată însă clar că se așteaptă o scriere reală. Am ales să adaug codul nou
+`'P'` (prezent confirmat explicit) în `TIMESHEET_CODES`/`TimesheetCode`, numărat identic cu
+lipsa rândului în `summarizeTimesheetMonth` (`worked`/`hours` includ și `'P'`, nu doar `''`) —
+deci orele și salariul nu se schimbă față de o zi nemarcată; codul există doar ca să fie ceva
+de scris/anulat. Vizual, o celulă `'P'` arată identic cu o zi lucrată nemarcată (fără literă,
+`data-kind="worked"`), ca să nu introducă un simbol nou pe care operatorul ar trebui să-l învețe.
+
+Fișiere atinse: `src/features/personal/domain/personal-schema.mjs` (TIMESHEET_CODES),
+`src/features/personal/domain/timesheet-month.mjs` + portul webapp
+`webapp/src/shared/personal/timesheet-rules.ts` (worked/hours), `personal.types.d.mts` +
+portul webapp. Dacă asta nu e interpretarea dorită (de exemplu, dacă „P” ar trebui să apară
+totuși vizibil distinct în grilă sau în tipărire), spune și ajustez — codul rămâne izolat,
+ușor de redenumit/eliminat fără să atingă restul pontajului.
+
 ## ⚠️ §3.2 (PROMPT-8) — F9 MDL/EUR: verificare făcută, o neconcordanță găsită (02.10)
 
 Verificat în cod cele 3 puncte cerute:
