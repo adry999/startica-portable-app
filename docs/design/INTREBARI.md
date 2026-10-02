@@ -1297,3 +1297,36 @@ Story nouă: `Button.stories.tsx` — link pe cremă, link pe card colorat cu `t
 
 **Neatins din scop:**
 - Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț).
+
+## §11 (F23, PROMPT-11)
+
+`useDashboard.ts`: `revenueHistory`/`expenseHistory` pornesc acum de la prima lună cu date (venit
+SAU cheltuială > 0) în fereastra de 12 luni calculată ca și azi (ancorată pe luna afișată pe
+Dashboard, nu pe data calendaristică reală — „luna curentă" din prompt citită ca luna selectată pe
+ecran, consistent cu restul punctului, care n-a menționat `today()`); fără nicio dată vreodată →
+array gol (EmptyState deja existent). `BarChart` (`@shared/ui`) primește 3 prop-uri noi, opt-in
+(`showScale`, `formatValue`, `currentLabelHint`) — fără ele, comportamentul vechi (fără scară)
+rămâne neschimbat pentru orice alt eventual consumator. Cu `showScale`: coloană de 44px cu
+0/jumătate/max, linii punctate `#efe8db` + axă `#e3dccf` (hex direct, ca în `Card.module.css` —
+o singură folosire), bare 18px (`gap` 4 în grup / 10 între luni), valoare compactă deasupra barei
+de încasări (`--text-secondary`, `--orange-ink` pe luna curentă), eticheta lunii curente
+`--orange-ink`/800 + „în curs” sub ea. Culori: încasări `--orange-bar-past`/`--orange` (neschimbate,
+coincid deja cu hex-ul din prompt); cheltuieli trecute hex nou `#7cc6a0`, curente `var(--mint)`.
+`DashboardPage.tsx`: etichetele lunilor prin `formatMonthAbbrev` („Iun”, nu „09”), subtitlu „Din
+{lună an}” / „Ultimele 12 luni”, tooltip de grup extins la „{Lună An} · încasări X lei · cheltuieli
+Y lei · diferență Z lei”.
+
+**Deviere de la spec (motivată):**
+- Pragurile exacte pentru alegerea pasului de rotunjire (10k/50k/100k) nu sunt date în prompt — am
+  ales: pasul 100k dacă maximul brut > 500.000, 50k dacă > 100.000, altfel 10k, rotunjit în sus
+  (`niceScaleMax` în `BarChart.tsx`). Dacă un ecran real arată o scară ciudată la o sumă anume,
+  pragurile se pot ajusta fără să schimbe restul logicii.
+- Pe „cheltuieli”, spec-ul dă `#7cc6a0` pentru luna trecută și `var(--mint)` pentru luna curentă —
+  dar `#7cc6a0` e vizual mai saturat decât `--mint` (`#a8d8be`), deci bara „curentă” iese mai
+  deschisă decât cele trecute, invers față de tiparul de la încasări (curentă mai intensă). Am pus
+  exact ce scrie promptul, fără să corectez din ochi — merită verificat la captură dacă nu era o
+  inversare de nume în spec.
+
+**Neatins din scop:**
+- Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț) — exact pentru cazul de
+  mai sus (culoarea cheltuielilor curente), o captură ar lămuri imediat dacă e corect.

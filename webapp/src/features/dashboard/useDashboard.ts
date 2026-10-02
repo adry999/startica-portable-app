@@ -129,16 +129,21 @@ export function useDashboard(month: string): DashboardData {
   const advance = sumUnallocatedAdvance(records.payments, todayStr);
   const activeChildren = records.children.filter(child => !child.archived);
 
-  const revenueHistory: RevenueBar[] = [];
-  const expenseHistory: RevenueBar[] = [];
+  // F23 (PROMPT-11 §11): intervalul pornește de la prima lună cu date (încasări SAU cheltuieli >
+  // 0), nu mereu 12 luni fixe — lunile goale de dinainte nu se desenează.
+  const fullHistory: RevenueBar[] = [];
+  const fullExpenseHistory: RevenueBar[] = [];
   for (let i = 11; i >= 0; i--) {
     const d = new Date(`${month}-15T12:00:00`);
     d.setMonth(d.getMonth() - i);
     const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const monthCash = summarizeCashForMonth(records, m);
-    revenueHistory.push({ month: m, value: monthCash.income, byMethod: monthCash.byMethod });
-    expenseHistory.push({ month: m, value: monthCash.expense });
+    fullHistory.push({ month: m, value: monthCash.income, byMethod: monthCash.byMethod });
+    fullExpenseHistory.push({ month: m, value: monthCash.expense });
   }
+  const firstDataIndex = fullHistory.findIndex((bar, index) => bar.value > 0 || fullExpenseHistory[index].value > 0);
+  const revenueHistory = firstDataIndex === -1 ? [] : fullHistory.slice(firstDataIndex);
+  const expenseHistory = firstDataIndex === -1 ? [] : fullExpenseHistory.slice(firstDataIndex);
 
   // 45c (PROMPT-8 §14) — „Necesită atenție”, 5 surse posibile, ordinea bani/date/prezență/sistem,
   // „apar doar elementele care au o acțiune” (deci fiecare intră în listă doar dacă count > 0 /

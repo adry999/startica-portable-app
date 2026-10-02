@@ -124,6 +124,33 @@ describe('DashboardPage', () => {
     expect(screen.queryByRole('button', { name: /încasări.*cheltuieli/ })).not.toBeInTheDocument();
   });
 
+  it('F23 (PROMPT-11 §11): date doar din iunie → 5 luni, „Iun” prima, luna curentă „în curs”, scara rotunjită', async () => {
+    const months = ['2026-06', '2026-07', '2026-08', '2026-09', '2026-10'];
+    stubFetch({
+      ...fixtureState,
+      payments: months.map((m, i) => ({
+        id: `p-${m}`,
+        date: `${m}-10`,
+        childId: 'c1',
+        amount: 10000 + i * 5000,
+        method: 'Cash',
+        allocations: [],
+        archived: false,
+      })),
+      expenses: [],
+    });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderDashboard({ month: '2026-10', onNavigate: () => {} });
+    expect(screen.getByText('Din iunie 2026')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /încasări/ })).toHaveLength(5);
+    expect(screen.getByText('Iun')).toBeInTheDocument();
+    expect(screen.getByText('în curs')).toBeInTheDocument();
+    // max = 10000 + 4*5000 = 30000 -> rotunjit în sus la pasul de 10k = 30000 (scara + bara curentă).
+    expect(screen.getAllByText('30k').length).toBeGreaterThanOrEqual(1);
+  });
+
   it('A8: graficul Evoluția încasărilor arată legenda cu pătrate, nu comutatorul Încasări/Cheltuieli', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

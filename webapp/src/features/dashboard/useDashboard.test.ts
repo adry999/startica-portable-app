@@ -399,13 +399,48 @@ describe('useDashboard', () => {
     expect(result.current.upcomingBirthdays[0].turningAge).toBe(EXPECTED_TURNING_AGE);
   });
 
-  it('generează 12 luni de istoric, ultima fiind luna cerută', async () => {
+  it('F23 (PROMPT-11 §11): istoricul pornește de la prima lună cu date, nu mereu 12', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    // Fixtura are date doar în 2026-09 (p1/e1) — istoricul trebuie să înceapă acolo, nu în 2025-10.
+    const { result } = renderHook(() => useDashboard('2026-09'));
+    expect(result.current.revenueHistory).toHaveLength(1);
+    expect(result.current.revenueHistory[0].month).toBe('2026-09');
+    expect(result.current.expenseHistory).toHaveLength(1);
+  });
+
+  it('F23: cu date în fiecare din ultimele 12 luni, istoricul rămâne la 12 (nu caută mai departe)', async () => {
+    const payments = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date('2026-09-15T12:00:00');
+      d.setMonth(d.getMonth() - i);
+      return {
+        id: `p-${i}`,
+        date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-05`,
+        childId: '',
+        amount: 500,
+        method: 'Cash',
+        allocations: [],
+        archived: false,
+      };
+    });
+    stubFetch({ children: [], payments, expenses: [], groups: [], categories: [], visits: [] });
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     const { result } = renderHook(() => useDashboard('2026-09'));
     expect(result.current.revenueHistory).toHaveLength(12);
-    expect(result.current.revenueHistory.at(-1)?.month).toBe('2026-09');
     expect(result.current.revenueHistory[0].month).toBe('2025-10');
+    expect(result.current.revenueHistory.at(-1)?.month).toBe('2026-09');
+  });
+
+  it('F23: fără nicio încasare/cheltuială vreodată, istoricul e gol', async () => {
+    stubFetch({ children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { result } = renderHook(() => useDashboard('2026-09'));
+    expect(result.current.revenueHistory).toHaveLength(0);
+    expect(result.current.expenseHistory).toHaveLength(0);
   });
 });

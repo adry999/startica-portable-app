@@ -13,7 +13,7 @@ import {
   type ProgressBarTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { capitalize } from '#shared/format/date-format.mjs';
+import { capitalize, formatMonthAbbrev } from '#shared/format/date-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
@@ -133,7 +133,11 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
           <div className={styles.panelHead}>
             <div>
               <p className={styles.panelTitle}>Evoluția încasărilor</p>
-              <p className={styles.panelSubtitle}>Ultimele 12 luni</p>
+              <p className={styles.panelSubtitle}>
+                {chartMonths.length >= 12
+                  ? 'Ultimele 12 luni'
+                  : `Din ${fullMonthLabel(chartMonths[0]?.month ?? month)}`}
+              </p>
             </div>
             <Legend
               className={styles.chartLegend}
@@ -145,14 +149,16 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
           </div>
           {hasRevenueData ? (
             <BarChart
-              ariaLabel="Evoluția încasărilor și cheltuielilor, ultimele 12 luni"
+              ariaLabel={`Evoluția încasărilor și cheltuielilor, ${chartMonths.length >= 12 ? 'ultimele 12 luni' : `din ${fullMonthLabel(chartMonths[0]?.month ?? month)}`}`}
+              showScale
+              currentLabelHint="în curs"
               series={chartMonths.map((bar, index) => ({
-                label: bar.month.slice(5),
+                label: formatMonthAbbrev(bar.month),
                 value: bar.income,
                 current: index === currentMonthIndex,
               }))}
               secondarySeries={chartMonths.map((bar, index) => ({
-                label: bar.month.slice(5),
+                label: formatMonthAbbrev(bar.month),
                 value: bar.expense,
                 current: index === currentMonthIndex,
               }))}
@@ -164,7 +170,7 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               groupTooltip={(_item, _secondary, index) => {
                 const bar = chartMonths[index];
                 const diff = bar.income - bar.expense;
-                return `${capitalize(fullMonthLabel(bar.month))} · diferență ${formatCompactMoney(diff)} lei`;
+                return `${capitalize(fullMonthLabel(bar.month))} · încasări ${formatCompactMoney(bar.income)} lei · cheltuieli ${formatCompactMoney(bar.expense)} lei · diferență ${formatCompactMoney(diff)} lei`;
               }}
             />
           ) : (
