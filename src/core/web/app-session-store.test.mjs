@@ -70,6 +70,43 @@ test('load reușit pune filiala curentă și lista de filiale din sesiune', asyn
   assert.deepEqual(store.state.branches, [branch]);
 });
 
+test('load reușit pune starea de actualizare din sesiune (§5.2, sursă pentru AppBanner-ul §11)', async () => {
+  const update = {
+    updateAvailable: true,
+    currentVersion: '2.1.0',
+    latestVersion: '2.2.0',
+    releaseUrl: 'https://github.com/adry999/startica-portable-app/releases/latest',
+    downloadUrl: 'https://github.com/adry999/startica-portable-app/releases/download/v2.2.0/Startica_Setup_2.2.0.exe',
+    sha256: 'abc123',
+    notes: '',
+    checkedAt: '2026-10-02T10:00:00.000Z',
+    error: null,
+  };
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1', update };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  assert.deepEqual(store.state.update, update);
+});
+
+test('load reușit fără „update” în răspuns păstrează starea implicită, fără actualizare', async () => {
+  const { store } = createHarness(async path => {
+    if (path === '/api/session') return { token: 'TOKEN-1' };
+    if (path === '/api/state') return successfulState;
+    if (path === '/api/health') return {};
+    throw new Error(`cale neașteptată: ${path}`);
+  });
+
+  await store.load();
+
+  assert.equal(store.state.update.updateAvailable, false);
+});
+
 test('load reușit înregistrează cronologia pornirii, pentru pașii din ecranul de încărcare', async () => {
   const { store } = createHarness(async path => {
     if (path === '/api/session') return { token: 'TOKEN-1' };

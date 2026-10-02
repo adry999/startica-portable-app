@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
-import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, loadEnvironment, dataLayout } from './environment.mjs';
+import { DEFAULT_AUTO_BACKUP_INTERVAL_MS, DEFAULT_RELEASE_REPO, loadEnvironment, dataLayout } from './environment.mjs';
 
 test('fără variabile, profilul este development și deschide browserul', () => {
   assert.deepEqual(loadEnvironment({}), {
@@ -10,6 +10,7 @@ test('fără variabile, profilul este development și deschide browserul', () =>
     openBrowser: true,
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
     home: undefined,
+    releaseRepo: DEFAULT_RELEASE_REPO,
   });
 });
 
@@ -26,6 +27,7 @@ test('lansatorul desktop primește production, portul ales și fără browser se
     openBrowser: false,
     autoBackupIntervalMs: DEFAULT_AUTO_BACKUP_INTERVAL_MS,
     home: undefined,
+    releaseRepo: DEFAULT_RELEASE_REPO,
   });
   assert.equal(Object.isFrozen(environment), true);
 });
@@ -37,7 +39,16 @@ test('profilul test alege un port liber și face backup la fiecare scriere', () 
     openBrowser: false,
     autoBackupIntervalMs: 0,
     home: undefined,
+    releaseRepo: DEFAULT_RELEASE_REPO,
   });
+});
+
+test('STARTICA_RELEASE_REPO suprascrie repo-ul implicit de release-uri (§5.2)', () => {
+  assert.equal(loadEnvironment({}).releaseRepo, DEFAULT_RELEASE_REPO);
+  assert.equal(
+    loadEnvironment({ STARTICA_RELEASE_REPO: 'adry999/startica-releases' }).releaseRepo,
+    'adry999/startica-releases',
+  );
 });
 
 test('STARTICA_PORT=0 lasă sistemul să aleagă portul', () => {

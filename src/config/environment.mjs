@@ -24,6 +24,14 @@ export const COMMON_DATASET_ID = 'comun';
 // decizia 2), tot per instalare, lângă filiale.json — nu per filială.
 export const SYNC_DEVICE_FILE_NAME = 'sync.json';
 
+// §5.2 (PROMPT-CLAUDE-CODE-8.md §5 / arhiva PROMPT-7 §3, screens/32-actualizari.md): sursa
+// manifestului de versiuni e GitHub Releases, verificat fără API/token prin URL-ul fix
+// `releases/latest/download/latest.json` (vezi update-check.service.mjs). Implicit = repo-ul
+// curent (`origin`, verificat cu `git remote -v`) — vezi docs/design/INTREBARI.md pentru
+// întrebarea dacă release-urile trebuie publicate într-un repo public separat, dacă
+// `startica-portable-app` rămâne privat. Un singur loc de schimbat dacă răspunsul e altul.
+export const DEFAULT_RELEASE_REPO = 'adry999/startica-portable-app';
+
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */
 
 /**
@@ -33,6 +41,7 @@ export const SYNC_DEVICE_FILE_NAME = 'sync.json';
  * @property {boolean} openBrowser
  * @property {number} autoBackupIntervalMs 0 = backup la fiecare scriere
  * @property {string | undefined} home rădăcina de date a lansatorului desktop; absentă = folderul aplicației
+ * @property {string} releaseRepo "owner/repo" GitHub Releases pentru verificarea de versiune (§5.2)
  */
 
 const PROFILE_DEFAULTS = {
@@ -92,5 +101,6 @@ export function loadEnvironment(variables = process.env) {
     openBrowser: variables.STARTICA_NO_BROWSER === '1' ? false : defaults.openBrowser,
     autoBackupIntervalMs: defaults.autoBackupIntervalMs,
     home: parseHome(variables.STARTICA_HOME),
+    releaseRepo: variables.STARTICA_RELEASE_REPO || DEFAULT_RELEASE_REPO,
   });
 }

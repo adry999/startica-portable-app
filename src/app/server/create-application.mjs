@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import {
   DEFAULT_AUTO_BACKUP_INTERVAL_MS,
+  DEFAULT_RELEASE_REPO,
   BRANCH_REGISTRY_FILE_NAME,
   SYNC_DEVICE_FILE_NAME,
   COMMON_DATASET_ID,
@@ -27,6 +28,7 @@ import { createBranchContext } from './create-branch-context.mjs';
 import { createCommonContext } from './create-common-context.mjs';
 import { createBranchRoutes } from './branches.routes.mjs';
 import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
+import { createUpdateChecker } from './update-check.service.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 
@@ -47,6 +49,7 @@ const RESTORE_AUDIT_ACTION = 'restaurare';
  *   autoBackupIntervalMs?: number,
  *   allowShutdown?: boolean,
  *   fetch?: typeof fetch,
+ *   releaseRepo?: string,
  * }} [options]
  */
 export function createApplication(options = {}) {
@@ -64,6 +67,15 @@ export function createApplication(options = {}) {
     : DEFAULT_AUTO_BACKUP_INTERVAL_MS;
   const registryFile = join(home, BRANCH_REGISTRY_FILE_NAME);
   const registry = createBranchRegistryStore({ file: registryFile, createId: randomUUID });
+
+  // §5.2: un singur checker per proces (nu per filială/schimbare de filială) — verificarea
+  // de rețea e aceeași indiferent de filiala activă, deci starea rămâne valabilă peste o
+  // schimbare de filială (reopenBranchContext mai jos nu o reconstruiește).
+  const updateChecker = createUpdateChecker({
+    fetch: options.fetch ?? globalThis.fetch,
+    repo: options.releaseRepo || DEFAULT_RELEASE_REPO,
+    currentVersion: version,
+  });
 
   // Citit o singură dată la pornirea procesului, ca filiale.json: un sync.json corupt
   // oprește pornirea aici, înainte de a deschide vreo filială (decizia 2 din planul de
@@ -181,6 +193,7 @@ export function createApplication(options = {}) {
       common,
       fullBackupService,
       restoreFullBackup,
+      updateStatus: updateChecker.status,
     });
   }
 
@@ -472,6 +485,10 @@ export function createApplication(options = {}) {
     expireSmsLog: todayStr => active.expireSmsLog(todayStr),
     refreshExchangeRateIfMissing: () => active.refreshExchangeRateIfMissing(),
     refreshTomorrowRateIfMissing: () => active.refreshTomorrowRateIfMissing(),
+    // §5.2: verificare de rețea explicită (pornire + o dată la 6 ore, vezi main.mjs) — nu
+    // aruncă niciodată (createUpdateChecker/checkForUpdate), doar actualizează updateStatus().
+    checkForUpdate: () => updateChecker.refresh(),
+    updateStatus: () => updateChecker.status(),
     runStartupSweeps: () => active.runStartupSweeps(),
     // Pornirea motorului de sincronizare al filialei active (Faza 3) — separată de
     // runStartupSweeps() pentru că lansatorul (main.mjs) o apelă tot amânat, dar

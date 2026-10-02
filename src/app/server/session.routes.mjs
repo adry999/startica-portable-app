@@ -16,6 +16,7 @@ import { RESPONSE_SENT } from '#core/server/http/route-dispatcher.mjs';
  *   listBranches: () => import('#core/server/branches/branch-registry.mjs').BranchEntry[],
  *   syncDevice?: { read: () => import('#features/sync/index.server.mjs').SyncDeviceFile | null },
  *   poolEnabled?: () => boolean,
+ *   updateStatus?: () => import('./update-check.service.mjs').UpdateStatus,
  * }} dependencies
  */
 export function createSessionRoutes({
@@ -36,6 +37,19 @@ export function createSessionRoutes({
   syncDevice = { read: () => null },
   // Bazin (23, decizia 10): Sidebar ascunde „Bazin” cât timp filiala nu l-a configurat.
   poolEnabled = () => false,
+  // §5.2: un context fără verificare de actualizare (teste izolate) vede „nicio verificare
+  // încă”, nu o eroare — vezi createUpdateChecker din update-check.service.mjs.
+  updateStatus = () => ({
+    updateAvailable: false,
+    currentVersion: version,
+    latestVersion: version,
+    releaseUrl: null,
+    downloadUrl: null,
+    sha256: null,
+    notes: null,
+    checkedAt: null,
+    error: null,
+  }),
 }) {
   let closing = false;
   // Ecranul de pornire (21a) arată pasul „Sincronizez cu serverul comun” doar când
@@ -65,6 +79,9 @@ export function createSessionRoutes({
         branches: listBranches(),
         sync: syncSummary(),
         pool: { enabled: poolEnabled() },
+        // §5.2: sursa pentru AppBanner „Actualizare gata” (§11, 42a/42b) — construit aici,
+        // UI-ul rămâne de făcut separat.
+        update: updateStatus(),
       }),
     },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },

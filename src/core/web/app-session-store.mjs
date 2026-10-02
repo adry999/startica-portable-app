@@ -81,6 +81,30 @@ export function createAppSessionStore({
     // Bazin (23, decizia 10): Sidebar ascunde rândul cât timp filiala activă nu l-a configurat.
     /** @type {{ enabled: boolean }} */
     pool: { enabled: false },
+    // §5.2 (32-actualizari.md): sursa pentru AppBanner „Actualizare gata” (§11, 42a/42b, nu
+    // construit încă) — populat din /api/session, niciodată cerut separat de acest store.
+    /** @type {{
+     *   updateAvailable: boolean,
+     *   currentVersion: string,
+     *   latestVersion: string,
+     *   releaseUrl: string | null,
+     *   downloadUrl: string | null,
+     *   sha256: string | null,
+     *   notes: string | null,
+     *   checkedAt: string | null,
+     *   error: string | null,
+     * }} */
+    update: {
+      updateAvailable: false,
+      currentVersion: '',
+      latestVersion: '',
+      releaseUrl: null,
+      downloadUrl: null,
+      sha256: null,
+      notes: null,
+      checkedAt: null,
+      error: null,
+    },
     // 21c (DECIZII.md punctul 55) — „Lucrez fără legătură”: ieșire optimistă din ecranul de
     // pornire când încărcarea durează mult; AppShell arată interfața reală cât timp load()
     // continuă în fundal. Nu înlocuiește `ready` (datele pot încă să nu fi sosit).
@@ -156,6 +180,7 @@ export function createAppSessionStore({
       state.branches = session.branches ?? [];
       state.sync = session.sync ?? null;
       state.pool = session.pool ?? { enabled: false };
+      if (session.update) state.update = session.update;
       state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
       state.startupTimings.databaseAt = Date.now();

@@ -15,6 +15,10 @@ const BNM_POLL_WINDOW_START_HOUR = 13;
 const BNM_POLL_WINDOW_END_HOUR = 18;
 const HOUR_MS = 60 * 60 * 1000;
 
+// §5.2 (32-actualizari.md): verificare de actualizare la pornire și o dată la 6 ore —
+// manifestul e static (GitHub Releases), nicio fereastră orară nu se aplică aici.
+const UPDATE_POLL_INTERVAL_MS = 6 * HOUR_MS;
+
 // Lansatorul desktop nu are altă fereastră pentru mesajele serverului, deci consola merge în jurnal.
 /** @param {string} logFile */
 function redirectConsoleToLogFile(logFile) {
@@ -40,6 +44,8 @@ export function startServer() {
   let app;
   /** @type {NodeJS.Timeout | undefined} */
   let bnmPollTimer;
+  /** @type {NodeJS.Timeout | undefined} */
+  let updatePollTimer;
   // Înregistrat înaintea createApplication: și o bază coruptă la deschidere trebuie să ajungă în jurnal.
   process.on('uncaughtException', e => {
     const failure = /** @type {Error} */ (e);
@@ -106,6 +112,12 @@ export function startServer() {
       app.runStartupSweeps();
       // Motorul de sincronizare (Faza 3): no-op pe o instalare fără sync.json.
       app.startSync();
+      // §5.2: verificarea de versiune nu face parte din runStartupSweeps() (acela ține de
+      // filiala activă; actualizarea e per proces, vezi create-application.mjs) — nu
+      // blochează pornirea, eșecul (fără internet) rămâne doar în jurnal.
+      app.checkForUpdate().catch(e => {
+        console.error('Verificare actualizare la pornire: ' + /** @type {Error} */ (e).message);
+      });
     }, 0);
     // F12: verificare orară a cursului BNM de mâine, doar în fereastra 13–18 — restul orelor
     // timer-ul tot bate, dar funcția de mai jos se oprește imediat (vezi comentariul de sus).
@@ -117,6 +129,14 @@ export function startServer() {
       });
     }, HOUR_MS);
     bnmPollTimer.unref();
+    // §5.2: o dată la 6 ore (32-actualizari.md) — manifestul `latest.json` e static, deci
+    // nu are nevoie de o fereastră orară ca BNM de mai sus.
+    updatePollTimer = setInterval(() => {
+      app.checkForUpdate().catch(e => {
+        console.error('Verificare actualizare (periodică): ' + /** @type {Error} */ (e).message);
+      });
+    }, UPDATE_POLL_INTERVAL_MS);
+    updatePollTimer.unref();
   });
   // Lansatorul folosește existența fișierului ca să afle dacă instanța găsită mai este vie.
   app.server.on('close', () => {
@@ -127,6 +147,7 @@ export function startServer() {
     if (closing) return;
     closing = true;
     clearInterval(bnmPollTimer);
+    clearInterval(updatePollTimer);
     try {
       app.backup('inchidere');
     } catch (e) {

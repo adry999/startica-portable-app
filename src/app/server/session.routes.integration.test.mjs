@@ -17,6 +17,73 @@ test('/api/session întoarce versiunea din package.json', async t => {
   assert.equal((await app.get('/api/session')).version, version);
 });
 
+// §5.2: /api/session nu face nicio cerere de rețea la citire — update rămâne „nicio
+// verificare încă” până la un app.checkForUpdate() explicit (main.mjs, pornire + 6 ore).
+test('/api/session: fără checkForUpdate(), update arată „nicio verificare încă”, fără rețea', async t => {
+  let fetchCalls = 0;
+  const fetch = async () => {
+    fetchCalls++;
+    throw new Error('fetch nu ar trebui chemat');
+  };
+  const app = await startTestApplication(t, { prefix: 'startica-session-update-', fetch });
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+
+  const session = await app.get('/api/session');
+
+  assert.deepEqual(session.update, {
+    updateAvailable: false,
+    currentVersion: version,
+    latestVersion: version,
+    releaseUrl: null,
+    downloadUrl: null,
+    sha256: null,
+    notes: null,
+    checkedAt: null,
+    error: null,
+  });
+  assert.equal(fetchCalls, 0);
+});
+
+test('/api/session: după app.checkForUpdate(), update reflectă manifestul latest.json', async t => {
+  const fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      version: '99.0.0',
+      downloadUrl:
+        'https://github.com/adry999/startica-portable-app/releases/download/v99.0.0/Startica_Setup_99.0.0.exe',
+      sha256: 'deadbeef',
+      notes: 'Note de test',
+    }),
+  });
+  const app = await startTestApplication(t, { prefix: 'startica-session-update-', fetch });
+
+  await app.app.checkForUpdate();
+  const session = await app.get('/api/session');
+
+  assert.equal(session.update.updateAvailable, true);
+  assert.equal(session.update.latestVersion, '99.0.0');
+  assert.equal(session.update.sha256, 'deadbeef');
+  assert.equal(session.update.releaseUrl, 'https://github.com/adry999/startica-portable-app/releases/latest');
+});
+
+test('/api/session: un repo de release configurat ajunge în URL-ul verificat', async t => {
+  const requestedUrls = [];
+  const fetch = async url => {
+    requestedUrls.push(String(url));
+    return { ok: true, json: async () => ({ version: '1.0.0' }) };
+  };
+  const app = await startTestApplication(t, {
+    prefix: 'startica-session-update-',
+    fetch,
+    releaseRepo: 'adry999/startica-releases',
+  });
+
+  await app.app.checkForUpdate();
+
+  assert.equal(requestedUrls.length, 1);
+  assert.equal(requestedUrls[0], 'https://github.com/adry999/startica-releases/releases/latest/download/latest.json');
+});
+
 test('POST /api/state refuză scrierea cu 409 și un mesaj explicit', async t => {
   const app = await startTestApplication(t, { prefix: 'startica-session-' });
   const result = await app.post('/api/state', {});

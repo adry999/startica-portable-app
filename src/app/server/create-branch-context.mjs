@@ -95,6 +95,7 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   common?: import('./create-common-context.mjs').CommonContext,
  *   fullBackupService?: ReturnType<typeof import('#features/backup/index.server.mjs').createFullBackupService>,
  *   restoreFullBackup?: (file: string) => void,
+ *   updateStatus?: () => import('./update-check.service.mjs').UpdateStatus,
  * }} options
  */
 export function createBranchContext({
@@ -124,6 +125,10 @@ export function createBranchContext({
   // de arhivă completă indisponibilă” și păstrează doar fluxul legacy pe un singur `.db`.
   fullBackupService,
   restoreFullBackup,
+  // §5.2: construit o singură dată în create-application.mjs (createUpdateChecker), ca
+  // verificarea de rețea să nu se repete pe fiecare schimbare de filială — implicit aici
+  // „nicio verificare încă” pentru un context de test izolat de filială.
+  updateStatus,
 }) {
   // Per context de filială (deschidere sau schimbare), nu per proces (A-1 din audit): un
   // token unic la nivel de proces era valid pe orice filială, deci o filă rămasă deschisă
@@ -330,6 +335,7 @@ export function createBranchContext({
       listBranches,
       syncDevice,
       poolEnabled: () => !!parsePoolSettings(readSetting(POOL_SETTINGS_KEY))?.enabled,
+      ...(updateStatus ? { updateStatus } : {}),
     }),
     ...createDiagnosticRoutes({
       version,

@@ -1,5 +1,55 @@
 # Întrebări / decizii blocate
 
+## ⏳ §5.2 — ce repo găzduiește latest.json / release-urile (02.10)
+
+PROMPT-CLAUDE-CODE-7.md §3 (reluat neschimbat în PROMPT-8 §5, punctul 2) cere explicit: „Dacă
+repo-ul de release nu există încă, folosește URL-ul din config și treci în INTREBARI.md numele
+lui.” `docs/design/screens/32-actualizari.md` precizează mai departe: sursa versiunilor e
+GitHub Releases, verificată **fără API și fără token** (limită 60 cereri/oră/IP) printr-un
+singur URL fix, `releases/latest/download/latest.json` — ceea ce cere ca acel repo să fie
+**public**. Exemplul dat acolo pentru cazul în care codul rămâne privat: un repo separat,
+`adry999/startica-releases`.
+
+**Întrebare:** `origin` al acestui checkout e `https://github.com/adry999/startica-portable-app.git`
+(verificat cu `git remote -v`). Rămâne acest repo public (releases-urile se publică direct
+pe el), sau codul e/devine privat și trebuie un repo public separat doar pentru release-uri
+(de exemplu `adry999/startica-releases`)?
+
+**Implementat cu valoarea implicită `adry999/startica-portable-app`** (repo-ul curent,
+`origin`) — e singurul verificabil acum din acest checkout, și oricum cel din care s-ar
+construi instalerul. Nu e o decizie definitivă: `STARTICA_RELEASE_REPO`
+(`src/config/environment.mjs`, constanta `DEFAULT_RELEASE_REPO`) e **singurul loc** de
+schimbat dacă răspunsul e alt repo — restul mecanismului (`compareVersions`, `checkForUpdate`,
+`/api/session.update`, `scripts/release.mjs --repo`) citește repo-ul din acest config, nu are
+URL-ul scris în altă parte. Până la răspuns, trec mai departe cu acest implicit.
+
+**Stare §5.2 — construit, fără AppBanner (acela e §11, 42a/42b din PROMPT-8, explicit amânat
+pentru după acest task):**
+- `src/shared/domain/version-compare.mjs` — `compareVersions`/`parseSemver`/`isNewerVersion`
+  (pure, izomorfe), cu teste pe egal/mai vechi/mai nou/malformat (niciodată nu aruncă — o
+  versiune invalidă întoarce `null`, tratată ca „nu există actualizare”).
+- `src/app/server/update-check.service.mjs` — `checkForUpdate`/`createUpdateChecker`, citește
+  manifestul de mai sus; nu aruncă niciodată (exact tiparul `fetchBnmEurRate` din
+  `bnm-exchange-rate.mjs`). Starea e ținută în memorie (`status()` sincron, fără rețea;
+  `refresh()` face verificarea reală).
+- `/api/session` (`session.routes.mjs`) → câmp nou `update: { updateAvailable, currentVersion,
+  latestVersion, releaseUrl, downloadUrl, sha256, notes, checkedAt, error }`. Verificare la
+  pornire și o dată la 6 ore (`main.mjs`, `app.checkForUpdate()`, același tipar ca
+  `bnmPollTimer` orar de mai sus în fișier). `app-session-store.mjs` (`state.update`, izomorf)
+  expune aceeași formă în `webapp/`, gata de citit de AppBanner (§11) fără nicio schimbare de
+  contract.
+- `scripts/release.mjs` — bump versiune → commit (`chore(packaging): pregătire vX.Y.Z` —
+  `build-client-package.ps1` cere arborele de lucru curat) → instaler
+  (`build-client-package.ps1`/ISCC) → SHA-256 → `latest.json` → `gh release create`. Implicit
+  dry-run (ca scripturile din `scripts/migrate/`), `--execute` pentru publicarea reală.
+  **Neexecutat încă** — nicio versiune nouă publicată de această sesiune, niciun commit de
+  versiune făcut.
+- Rămâne neconstruit, din afara scopului acestui task (pașii următori ai `Ordinea` din
+  PROMPT-8, 37a–37d din 32-actualizari.md): 426 pe `sync-server` pentru
+  `SYNC_MIN_CLIENT_VERSION` (secțiunea „Compatibilitate”), descărcarea/instalarea automată din
+  lansator în `<home>\Actualizari`, coloana Versiune în Calculatoare conectate, `AppBanner`
+  „Actualizare gata” (§11, 42a/42b — explicit amânat de acest task).
+
 ## ✅ §9.2 (PROMPT-8) — WeekFillBar „Toți prezenți”: conflict cu decizia 12, rezolvat cu un cod nou 'P' (02.10)
 
 41b cere ca „Toți prezenți L–V”/„Prezent toată săptămâna” să completeze celulele goale ale
