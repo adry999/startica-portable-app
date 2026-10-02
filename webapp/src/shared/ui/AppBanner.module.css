@@ -42,7 +42,8 @@
   color: var(--teal-ink);
 }
 
-/* 42b — „Actualizare gata”, singura bară mint (COMPONENTE.md §0i, rândul AppBanner nou). */
+/* 42b — „Actualizare gata” (COMPONENTE.md §0i, rândul AppBanner nou); refolosit și pentru
+   „Calculator blocat" (§5, punctul 3, PROMPT-CLAUDE-CODE-10) — ambele bare mint, dismisibile. */
 .update {
   background: var(--mint-soft);
   color: var(--mint-ink);
