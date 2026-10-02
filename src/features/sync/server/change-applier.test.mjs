@@ -176,6 +176,44 @@ test('o fișă cu id invalid întoarce SyncApplyError, nu o eroare oarecare', ()
   );
 });
 
+test('AUDIT-COD-02-10-B.md #1: recordId din plic diferit de payload.id respinge modificarea, nu scrie peste altă înregistrare', () => {
+  const { rawRecordRepository, applier } = createHarness();
+  rawRecordRepository.save('children', { id: 'CHILD-REAL', name: 'Existent' });
+
+  assert.throws(
+    () =>
+      applier.apply({
+        kind: 'children',
+        recordId: 'CHILD-FAKE',
+        payload: { id: 'CHILD-REAL', name: 'Suprascris pe furiș' },
+        revision: 1,
+        changedAt: '2026-09-27T10:00:00.000Z',
+        device: DEVICE,
+      }),
+    SyncApplyError,
+  );
+  assert.equal(rawRecordRepository.find('children', 'CHILD-REAL').name, 'Existent');
+});
+
+test('AUDIT-COD-02-10-B.md #1: aceeași verificare se aplică și kind-urilor din setul comun (normalize: false)', () => {
+  const { rawRecordRepository, applier } = createHarness();
+  rawRecordRepository.save('staff', { id: 'STF-REAL', name: 'Existent' });
+
+  assert.throws(
+    () =>
+      applier.apply({
+        kind: 'staff',
+        recordId: 'STF-FAKE',
+        payload: { id: 'STF-REAL', name: 'Suprascris pe furiș' },
+        revision: 1,
+        changedAt: '2026-09-27T10:00:00.000Z',
+        device: DEVICE,
+      }),
+    SyncApplyError,
+  );
+  assert.equal(rawRecordRepository.find('staff', 'STF-REAL').name, 'Existent');
+});
+
 test('applySnapshotEntry scrie prezența dintr-un snapshot fără să apeleze normalizeRecord (C-5)', () => {
   const { database, rawRecordRepository, attendanceRepository } = createHarness();
 

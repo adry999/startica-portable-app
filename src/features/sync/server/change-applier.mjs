@@ -56,6 +56,13 @@ function applyRecordEntry(rawRecordRepository, kind, recordId, payload, { normal
     rawRecordRepository.remove(kind, recordId);
     return;
   }
+  // AUDIT-COD-02-10-B.md #1: plicul (recordId, pe care se ține revizia/conflictul în
+  // changes.service.mjs) și conținutul (payload.id, cheia reală cu care se scrie aici) nu erau
+  // niciodată verificate ca fiind același id — un plic cu recordId:'X' și payload:{id:'Y',...}
+  // ar fi scris peste Y (altă înregistrare reală), în timp ce audit/sync state ar fi raportat X.
+  const payloadId = /** @type {{ id?: unknown }} */ (payload).id;
+  if (payloadId !== recordId)
+    throw new SyncApplyError(`Modificare cu id inconsecvent (plic: ${recordId}, conținut: ${payloadId}).`);
   if (!normalize) {
     rawRecordRepository.save(kind, /** @type {{ id: string }} */ (payload));
     return;
