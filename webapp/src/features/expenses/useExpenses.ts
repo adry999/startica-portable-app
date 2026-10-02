@@ -44,7 +44,8 @@ export interface ExpensesData {
   renameCategory: (id: string, typed: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   setExpenseArchived: (expense: Expense, archived: boolean) => Promise<void>;
-  createExpense: (input: ExpenseFormInput) => Promise<void>;
+  // auditId: 40b — ExpensesPage îl ține minte pentru UndoToast/POST /api/undo.
+  createExpense: (input: ExpenseFormInput) => Promise<{ auditId?: number }>;
   updateExpense: (previous: Expense, input: ExpenseFormInput) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   deleteManyForever: (ids: string[]) => Promise<void>;
@@ -170,7 +171,8 @@ export function useExpenses(month: string): ExpensesData {
 
   async function createExpense(input: ExpenseFormInput) {
     const record = expenseFromInput({ id: `EXP-${crypto.randomUUID()}` }, input);
-    await session.mutate('/api/record', { type: 'expenses', mode: 'create', record });
+    const result = await session.mutate('/api/record', { type: 'expenses', mode: 'create', record });
+    return { auditId: (result as { auditId?: number } | undefined)?.auditId };
   }
 
   async function updateExpense(previous: Expense, input: ExpenseFormInput) {

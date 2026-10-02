@@ -16,6 +16,7 @@ const REQUEST_RETENTION = 1000;
  *   replayed?: true,
  *   warning?: string,
  *   health: unknown,
+ *   auditId?: number,
  * }} RevisionEnvelope
  */
 
@@ -61,10 +62,13 @@ export function createRevisionTransaction({ database, recordRepository, backups,
           500,
         );
       }
+    // applyChanges poate întoarce un obiect simplu (ex. {auditId} — 40b, UndoToast) care se
+    // adaugă la plic: un punct, nu câte un parametru nou pentru fiecare rută care are nevoie de ceva înapoi.
+    let extra;
     database.exec('BEGIN IMMEDIATE');
     try {
       if (request.revision !== recordRepository.currentRevision()) fail('Date modificate în altă filă.', 409);
-      applyChanges();
+      extra = applyChanges();
       database.prepare('UPDATE meta SET revision=revision+1,updated_at=? WHERE id=1').run(new Date().toISOString());
       database.prepare('INSERT INTO requests VALUES(?,?,?)').run(request.requestId, digest, request.revision + 1);
       database.prepare('DELETE FROM requests WHERE revision<?').run(request.revision + 1 - REQUEST_RETENTION);
@@ -79,6 +83,7 @@ export function createRevisionTransaction({ database, recordRepository, backups,
       ...recordRepository.readEnvelope(),
       warning: backupResult.warning || '',
       health: backups.health(),
+      ...(extra && typeof extra === 'object' ? extra : null),
     };
   }
 

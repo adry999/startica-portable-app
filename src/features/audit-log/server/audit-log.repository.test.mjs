@@ -121,6 +121,50 @@ test('o modificare cu date medicale pe un copil e păstrată redactată în isto
   assert.equal(entry.after.healthNotes, '[date medicale]');
 });
 
+test('recordChange întoarce id-ul intrării create (40b: UndoToast îl ține pentru POST /api/undo)', t => {
+  const repository = createRepository(t);
+  const id = repository.recordChange({ action: 'adăugare', recordType: 'expenses', recordId: 'E1' });
+  assert.equal(typeof id, 'number');
+  assert.ok(id > 0);
+});
+
+test('findById găsește o intrare după id, cu sessionToken (40b)', t => {
+  const database = new DatabaseSync(':memory:');
+  applySchema(database);
+  t.after(() => database.close());
+  const repository = createAuditLogRepository(database, { sessionToken: 'TOKEN-A' });
+
+  const id = repository.recordChange({
+    action: 'adăugare',
+    recordType: 'expenses',
+    recordId: 'E1',
+    before: null,
+    after: { id: 'E1', amount: 100 },
+  });
+
+  const entry = repository.findById(id);
+  assert.ok(entry);
+  assert.equal(entry.recordId, 'E1');
+  assert.deepEqual(entry.after, { id: 'E1', amount: 100 });
+  assert.equal(entry.sessionToken, 'TOKEN-A');
+});
+
+test('findById întoarce null pentru un id inexistent sau invalid', t => {
+  const repository = createRepository(t);
+  assert.equal(repository.findById(999999), null);
+  assert.equal(repository.findById(0), null);
+  assert.equal(repository.findById(-1), null);
+  assert.equal(repository.findById(1.5), null);
+});
+
+test('fără sessionToken la construcție, intrările se salvează cu session_token null', t => {
+  const repository = createRepository(t);
+  const id = repository.recordChange({ action: 'adăugare', recordType: 'expenses', recordId: 'E1' });
+  const entry = repository.findById(id);
+  assert.ok(entry);
+  assert.equal(entry.sessionToken, null);
+});
+
 test('redactarea nu atinge alte câmpuri sau alte tipuri de înregistrare', t => {
   const repository = createRepository(t);
   repository.recordChange({

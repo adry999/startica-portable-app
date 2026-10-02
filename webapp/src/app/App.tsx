@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
-import { useToast } from '@shared/ui';
+import { UnsavedChangesDialog, useToast } from '@shared/ui';
 import { AppShell } from './shell/AppShell';
 import { performBranchSwitch, readBranchSwitchNote } from './shell/useBranchSwitch';
+import { useNavigationGuard } from './shell/useNavigationGuard';
 import { today } from '@domain/calendar-month.mjs';
 import type { ViewKey } from './shell/nav-items';
 import { VIEW_PATHS, viewForPathname } from './shell/routes';
@@ -14,7 +15,15 @@ import { AttendancePage, WeeklySheetPrintPage } from '@features/attendance';
 import { PoolPage, PoolReceiptPage } from '@features/pool';
 import { VisitsPage } from '@features/visits';
 import { PersonalPage, StaffProfilePage } from '@features/personal';
-import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
+import {
+  PaymentsPage,
+  PaymentReceipt,
+  PaymentReceiptThermal,
+  DayClosingReceipt,
+  PaymentFormDrawer,
+  usePayments,
+  type PaymentFormValues,
+} from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
@@ -93,6 +102,10 @@ export function App() {
     const path = VIEW_PATHS[nextView];
     navigate(params ? `${path}?${new URLSearchParams(params).toString()}` : path);
   };
+  // 40c (PROMPT-8 §8.1): un formular nesalvat cere confirmare înainte de a schimba modulul din
+  // Sidebar — `onNavigate` brut rămâne disponibil mai sus pentru rutele interne (ex. „+ Plată”
+  // din fișa copilului), care nu schimbă de modul.
+  const navGuard = useNavigationGuard(view, onNavigate);
 
   // Contoarele din sidebar reutilizează exact numerele deja afișate pe Dashboard
   // (attentionItems) și pe Taxe și grupe (missingCount) — nicio logică nouă.
@@ -109,7 +122,7 @@ export function App() {
   };
 
   return (
-    <AppShell view={view} onNavigate={onNavigate} month={month} onMonthChange={setMonth} counts={counts}>
+    <AppShell view={view} onNavigate={navGuard.guardedNavigate} month={month} onMonthChange={setMonth} counts={counts}>
       <Routes>
         <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
         <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
@@ -135,7 +148,7 @@ export function App() {
         <Route
           path="/situatia-platilor"
           element={
-            <StatusPage
+            <StatusRoute
               month={month}
               onMonthChange={setMonth}
               onNavigate={onNavigate}
@@ -165,6 +178,17 @@ export function App() {
         <Route path="/tiparire/stickere" element={<StickerPrintPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {navGuard.pending && (
+        <UnsavedChangesDialog
+          open
+          formName={navGuard.formName}
+          changedFields={navGuard.pending.form.changedFields}
+          onDiscard={navGuard.discardAndNavigate}
+          onStay={navGuard.stay}
+          onSaveAndContinue={navGuard.saveAndNavigate}
+          saving={navGuard.saving}
+        />
+      )}
     </AppShell>
   );
 }
@@ -186,6 +210,65 @@ function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view
 function VisitsRoute() {
   const [searchParams] = useSearchParams();
   return <VisitsPage initialDate={searchParams.get('zi') ?? undefined} />;
+}
+
+/** 40a: PaymentFormDrawer randat aici, nu în StatusPage — features/status nu are voie să
+ * importe direct din features/payments (granițele dintre module). Copilul salvează direct în
+ * sesiunea comună, deci rândul din Situația plăților se reîmprospătează singur (useStatus
+ * citește din aceeași sesiune), fără reîncărcarea tabelului sau navigare în altă pagină. */
+function StatusRoute({
+  month,
+  onMonthChange,
+  onNavigate,
+  onOpenChild,
+}: {
+  month: string;
+  onMonthChange: (month: string) => void;
+  onNavigate: (view: ViewKey) => void;
+  onOpenChild: (id: string) => void;
+}) {
+  const toast = useToast();
+  const paymentsForRow = usePayments();
+  const [quickPaymentChildId, setQuickPaymentChildId] = useState<string | null>(null);
+
+  async function submitQuickPayment(values: PaymentFormValues): Promise<boolean> {
+    try {
+      const saved = await paymentsForRow.createPayment(values, () =>
+        window.confirm(
+          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
+        ),
+      );
+      if (saved) {
+        setQuickPaymentChildId(null);
+        toast.show({ message: 'Achitare adăugată.' });
+      }
+      return saved;
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+      return false;
+    }
+  }
+
+  return (
+    <>
+      <StatusPage
+        month={month}
+        onMonthChange={onMonthChange}
+        onNavigate={onNavigate}
+        onOpenChild={onOpenChild}
+        onOpenPayment={setQuickPaymentChildId}
+      />
+      <PaymentFormDrawer
+        key={quickPaymentChildId ?? 'closed'}
+        target={quickPaymentChildId ? 'new' : null}
+        records={paymentsForRow.records}
+        defaultChildId={quickPaymentChildId ?? undefined}
+        defaultCheckArrears
+        onSubmit={submitQuickPayment}
+        onClose={() => setQuickPaymentChildId(null)}
+      />
+    </>
+  );
 }
 
 function PaymentsRoute() {

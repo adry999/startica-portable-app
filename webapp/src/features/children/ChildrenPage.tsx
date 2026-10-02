@@ -8,6 +8,7 @@ import {
   LoadingState,
   useToast,
   useTopbarActions,
+  useUndoToast,
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
@@ -54,6 +55,7 @@ function ChildrenListView({
   const childrenData = useChildren(month);
   const session = useAppSession();
   const toast = useToast();
+  const undoToast = useUndoToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -118,6 +120,30 @@ function ChildrenListView({
     if (targets.length === 0) return;
     const archivedAt = new Date().toISOString();
     try {
+      // 40b: pentru un singur copil, UndoToast cere POST /api/undo (fereastră 15s, verificată
+      // server-side — nu doar o reaplicare optimistă locală ca mai jos). Pentru mai mulți deodată,
+      // „Anulează · N” din UndoToast n-are cum să arate N copii — rămâne mecanismul existent
+      // (Toast cu acțiune, dezarhivare imediată, secvențial — M1).
+      if (targets.length === 1) {
+        const [row] = targets;
+        const result = await session.mutate('/api/record', {
+          type: 'children',
+          mode: 'update',
+          record: { ...row.child, archived: true, archivedAt },
+        });
+        setSelectedRowKeys(new Set());
+        const auditId = (result as { auditId?: number } | undefined)?.auditId;
+        if (auditId) {
+          undoToast.show({
+            title: 'Copil arhivat',
+            detail: row.name,
+            onUndo: () => session.mutate('/api/undo', { auditId }),
+          });
+        } else {
+          toast.show({ message: 'copil arhivat' });
+        }
+        return;
+      }
       for (const row of targets) {
         await session.mutate('/api/record', {
           type: 'children',
@@ -127,7 +153,7 @@ function ChildrenListView({
       }
       setSelectedRowKeys(new Set());
       toast.show({
-        message: `${targets.length} ${targets.length === 1 ? 'copil arhivat' : 'copii arhivați'}`,
+        message: `${targets.length} copii arhivați`,
         actionLabel: 'Anulează',
         onAction: () => void undoArchiveSelected(targets),
       });

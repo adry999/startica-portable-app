@@ -58,13 +58,16 @@ export function createRecordEditingRoutes({
       assertRecordReferencesExist(request.type, record, recordRepository.exists);
       assertUniqueName(request.type, record, recordRepository.readSnapshot());
       recordRepository.save(request.type, record);
-      auditTrail.recordChange({
+      // auditId ajunge în plicul răspunsului (revision-transaction.mjs) — UndoToast (40b) îl ține
+      // minte ca să ceară POST /api/undo dacă operatorul apasă „Anulează” în cele 10s.
+      const auditId = auditTrail.recordChange({
         action: existing ? 'modificare' : 'adăugare',
         recordType: request.type,
         recordId: record.id,
         before: existing,
         after: record,
       });
+      return { auditId };
     });
   }
 

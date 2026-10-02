@@ -19,7 +19,7 @@ import {
   TextInput,
   useToast,
 } from '@shared/ui';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { diffChangedFields, useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { useSmsSend, useSmsStatus } from '@shared/sms';
 import { formatMoney, formatMoneyInput } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
@@ -55,6 +55,9 @@ export interface PaymentFormDrawerProps {
   defaultChildId?: string;
   /** Serviciul presetat la creare (B3) — „+ Plată” pornește cu Grădiniță, „Încasează” din Bazin cu Bazin. */
   defaultService?: string;
+  /** 40a: „Plată +” din Situația plăților pornește cu restanța deja bifată — spre deosebire de
+   * F11 („+ Plată” din fișa copilului), unde rămâne opțională. Fără efect la editare. */
+  defaultCheckArrears?: boolean;
   /** C1: întoarce succesul real al salvării (true doar după mutate reușit) — save() din
    * dirty-forms (13b) și garda „Salvează și schimbă” a filialei se bazează pe asta. */
   onSubmit: (values: PaymentFormValues) => Promise<boolean>;
@@ -67,6 +70,7 @@ export function PaymentFormDrawer({
   records,
   defaultChildId = '',
   defaultService = DEFAULT_SERVICE_ID,
+  defaultCheckArrears = false,
   onSubmit,
   onClose,
 }: PaymentFormDrawerProps) {
@@ -188,6 +192,15 @@ export function PaymentFormDrawer({
     prefilledAmountRef.current = true;
     setTender(activeMethod, formatMoneyInput(amount));
   }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
+
+  // 40a: „Plată +” din Situația plăților pornește cu restanța deja bifată (spre deosebire de F11,
+  // unde rămâne opțională) — o singură dată, de îndată ce restanțele copilului sunt disponibile.
+  const arrearsAutoCheckedRef = useRef(false);
+  useEffect(() => {
+    if (!defaultCheckArrears || editing || arrearsAutoCheckedRef.current || arrearsList.length === 0) return;
+    arrearsAutoCheckedRef.current = true;
+    setCheckedArrears(new Set(arrearsList.map(a => a.month)));
+  }, [defaultCheckArrears, editing, arrearsList]);
 
   useEffect(() => {
     // F7 (FEEDBACK-01-10.md): odată ales un copil la o plată NOUĂ, repartizarea automată e
@@ -371,7 +384,29 @@ export function PaymentFormDrawer({
   // Formular nesalvat (13b): drawer-ul rămâne montat între deschideri (key-ul din PaymentsPage
   // schimbă instanța doar la editare), deci verificăm și `target !== null` — nu doar valorile.
   const dirty = target !== null && JSON.stringify(values) !== JSON.stringify(initialValuesRef.current);
-  useDirtyForm(dirty ? { label: 'o achitare', save: handleSubmit } : null);
+  const changedFields = dirty
+    ? diffChangedFields(values, initialValuesRef.current, {
+        childId: 'copilul',
+        date: 'data',
+        service: 'serviciul',
+        tenders: 'suma',
+        sourceName: 'plătitorul',
+        reviewed: 'verificarea',
+        allocations: 'repartizarea',
+        notes: 'observațiile',
+        sendSmsConfirmation: 'confirmarea SMS',
+      })
+    : undefined;
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose` —
+  // formular nesalvat arată UnsavedChangesDialog în loc să închidă tăcut (PROMPT-8 §8.1).
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'o achitare',
+    formName: editing ? 'achitarea' : 'achitarea nouă',
+    changedFields,
+    save: handleSubmit,
+    onClose,
+  });
 
   const allocated = values.allocations.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
   const balanceCurrency = isEurChild ? 'EUR' : 'MDL';
@@ -404,307 +439,312 @@ export function PaymentFormDrawer({
   }
 
   return (
-    <Drawer
-      open={target !== null}
-      title={editing ? 'Editează achitarea' : 'Achitare nouă'}
-      width={560}
-      onClose={onClose}
-      footer={
-        <Button type="submit" form="payment-form-drawer" disabled={submitting || (isEurChild && !effectiveRate)}>
-          Salvează · {formatMoney(totalAmount, 'MDL')}
-        </Button>
-      }
-    >
-      <form
-        id="payment-form-drawer"
-        className={styles.form}
-        autoComplete="off"
-        onSubmit={event => {
-          event.preventDefault();
-          void handleSubmit();
-        }}
+    <>
+      <Drawer
+        open={target !== null}
+        title={editing ? 'Editează achitarea' : 'Achitare nouă'}
+        width={560}
+        onClose={unsavedGuard.requestClose}
+        footer={
+          <Button type="submit" form="payment-form-drawer" disabled={submitting || (isEurChild && !effectiveRate)}>
+            Salvează · {formatMoney(totalAmount, 'MDL')}
+          </Button>
+        }
       >
-        <div className={styles.field}>
-          Copil
-          {selectedChild && !pickerOpen ? (
-            <div className={styles.childCard}>
-              <PersonCell
-                name={selectedChild.name}
-                tone={groupTone(selectedChild.groupId, records.groups)}
-                sub={
-                  <>
-                    {groupLabel}
-                    {feeEntry && <> · taxă {formatMoney(feeEntry.amount, feeEntry.currency)}</>}
-                    {unpaidMonth && <> · {formatMonthLabel(unpaidMonth)} neachitat</>}
-                  </>
-                }
-              />
-              <Button variant="link" className={styles.linkButton} onClick={() => setPickerOpen(true)}>
-                Schimbă
-              </Button>
-            </div>
-          ) : (
-            <SearchSelect
-              ariaLabel="Copil"
-              options={childSelectOptions}
-              value={values.childId}
-              onChange={childId => {
-                setChildId(childId);
-                setPickerOpen(false);
-              }}
-            />
-          )}
-        </div>
-
-        {serviceOptions.length > 0 && (
+        <form
+          id="payment-form-drawer"
+          className={styles.form}
+          autoComplete="off"
+          onSubmit={event => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
           <div className={styles.field}>
-            Serviciu
-            <SegmentedControl
-              ariaLabel="Serviciu"
-              value={values.service}
-              onChange={service => setValues(previous => ({ ...previous, service }))}
-              options={serviceOptions}
-            />
-          </div>
-        )}
-
-        <div className={styles.field}>
-          Sumă
-          {splitByMethod ? (
-            <div className={styles.allocationRows}>
-              {methods.map(method => (
-                <Field key={method} label={method} htmlFor={`tender-${method}`}>
-                  <NumberInput
-                    id={`tender-${method}`}
-                    min={0}
-                    step="0.01"
-                    value={values.tenders[method] ?? ''}
-                    onChange={value => setTender(method, value)}
-                  />
-                </Field>
-              ))}
-            </div>
-          ) : (
-            <AmountInput
-              ariaLabel="Sumă"
-              min={0}
-              step="0.01"
-              value={values.tenders[activeMethod] ?? ''}
-              onChange={value => setTender(activeMethod, value)}
-              currency="lei"
-              shortcuts={
-                amountShortcuts.length > 0 ? (
-                  <ChipSelect
-                    ariaLabel="Sumă rapidă"
-                    options={amountShortcuts.map(shortcut => ({ value: shortcut.key, label: shortcut.label }))}
-                    value={amountShortcuts.find(s => Number(values.tenders[activeMethod]) === s.amount)?.key ?? ''}
-                    onChange={key => {
-                      const shortcut = amountShortcuts.find(s => s.key === key);
-                      if (shortcut) setTender(activeMethod, String(shortcut.amount));
-                    }}
-                  />
-                ) : undefined
-              }
-            />
-          )}
-          {splitByMethod ? (
-            <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>
-          ) : (
-            <Button variant="link" className={styles.linkButton} onClick={() => setSplitByMethod(true)}>
-              Împarte pe metode
-            </Button>
-          )}
-          {isEurChild && (
-            <>
-              <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
-              <Field label="Curs EUR" htmlFor="payment-eur-rate">
-                <NumberInput
-                  id="payment-eur-rate"
-                  step="0.0001"
-                  min={0}
-                  placeholder={bnmRate !== undefined ? String(bnmRate) : ''}
-                  value={manualRate}
-                  onChange={setManualRate}
+            Copil
+            {selectedChild && !pickerOpen ? (
+              <div className={styles.childCard}>
+                <PersonCell
+                  name={selectedChild.name}
+                  tone={groupTone(selectedChild.groupId, records.groups)}
+                  sub={
+                    <>
+                      {groupLabel}
+                      {feeEntry && <> · taxă {formatMoney(feeEntry.amount, feeEntry.currency)}</>}
+                      {unpaidMonth && <> · {formatMonthLabel(unpaidMonth)} neachitat</>}
+                    </>
+                  }
                 />
-              </Field>
-              <p className={styles.notice}>
-                {manualRate
-                  ? 'Curs manual pentru această plată'
-                  : bnmRate !== undefined
-                    ? `BNM ${formatDate(values.date)} · ${formatRate(bnmRate)}`
-                    : 'Curs necunoscut pentru această dată — completează manual'}
-                {values.date && <BnmRateLink date={values.date} />}
-              </p>
-            </>
-          )}
-        </div>
+                <Button variant="link" className={styles.linkButton} onClick={() => setPickerOpen(true)}>
+                  Schimbă
+                </Button>
+              </div>
+            ) : (
+              <SearchSelect
+                ariaLabel="Copil"
+                options={childSelectOptions}
+                value={values.childId}
+                onChange={childId => {
+                  setChildId(childId);
+                  setPickerOpen(false);
+                }}
+              />
+            )}
+          </div>
 
-        <div className={splitByMethod ? undefined : styles.grid2}>
-          <Field label="Data" htmlFor="payment-date">
-            <DateInput id="payment-date" required value={values.date} onChange={setDate} />
-          </Field>
-          {!splitByMethod && (
+          {serviceOptions.length > 0 && (
             <div className={styles.field}>
-              Metodă
+              Serviciu
               <SegmentedControl
-                ariaLabel="Metodă"
-                value={activeMethod}
-                onChange={selectMethod}
-                options={methods.map(method => ({ value: method, label: method }))}
+                ariaLabel="Serviciu"
+                value={values.service}
+                onChange={service => setValues(previous => ({ ...previous, service }))}
+                options={serviceOptions}
               />
             </div>
           )}
-        </div>
 
-        <div className={styles.field}>
-          {allocationMode === 'auto' ? (
-            <>
-              {arrearsList.length > 0 && (
-                <div className={styles.allocationRows}>
-                  {arrearsList.map(arrear => (
-                    <label key={arrear.month} className={styles.checkboxField}>
-                      <Checkbox
-                        checked={checkedArrears.has(arrear.month)}
-                        onChange={checked =>
-                          setCheckedArrears(previous => {
-                            const next = new Set(previous);
-                            if (checked) next.add(arrear.month);
-                            else next.delete(arrear.month);
-                            return next;
-                          })
-                        }
-                        ariaLabel={`Acoperă restanța din ${formatMonthLabel(arrear.month)}`}
-                      />
-                      <span className={styles.arrearText}>
-                        Are restanță: {formatMonthLabel(arrear.month)} · {formatMoney(arrear.rest, arrear.currency)}
-                      </span>
-                      <span className={styles.notice}>Bifează ca s-o acoperi</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              Se repartizează automat
-              <div className={styles.autoList}>
-                {values.allocations.map(row => {
-                  const status = allocationStatus(row);
-                  const tone = allocationTone(status);
-                  return (
-                    <div key={row.id} className={styles.autoRow}>
-                      <span className={`${styles.autoDot} ${tone}`} />
-                      <span className={styles.autoMonth}>{formatMonthLabel(row.month)}</span>
-                      <span className={styles.autoAmount}>{formatMoney(Number(row.amount) || 0, balanceCurrency)}</span>
-                      {status && <span className={`${styles.autoStatus} ${tone}`}>{status}</span>}
-                    </div>
-                  );
-                })}
-              </div>
-              <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
-                Repartizează manual
-              </Button>
-            </>
-          ) : (
-            <>
-              Repartizare manuală
-              <p className={styles.notice}>Suma rămasă nerepartizată este evidențiată ca avans.</p>
+          <div className={styles.field}>
+            Sumă
+            {splitByMethod ? (
               <div className={styles.allocationRows}>
-                {values.allocations.map((row, index) => (
-                  <div key={row.id} className={styles.allocationRow}>
-                    <div className={styles.allocationField}>
-                      <Field label="Luna" htmlFor={`allocation-month-${row.id}`}>
-                        <MonthInput
-                          id={`allocation-month-${row.id}`}
-                          required
-                          value={row.month}
-                          onChange={value => setAllocationField(index, 'month', value)}
-                        />
-                      </Field>
-                    </div>
-                    <div className={styles.allocationAmountField}>
-                      <Field label="Suma" htmlFor={`allocation-amount-${row.id}`}>
-                        <NumberInput
-                          id={`allocation-amount-${row.id}`}
-                          required
-                          min={0.01}
-                          step="0.01"
-                          value={row.amount}
-                          onChange={value => setAllocationField(index, 'amount', value)}
-                        />
-                      </Field>
-                    </div>
-                    <IconButton
-                      icon="close"
-                      className={styles.removeRow}
-                      ariaLabel="Elimină repartizarea"
-                      onClick={() => removeAllocationRow(index)}
+                {methods.map(method => (
+                  <Field key={method} label={method} htmlFor={`tender-${method}`}>
+                    <NumberInput
+                      id={`tender-${method}`}
+                      min={0}
+                      step="0.01"
+                      value={values.tenders[method] ?? ''}
+                      onChange={value => setTender(method, value)}
                     />
-                  </div>
+                  </Field>
                 ))}
               </div>
-              <Button variant="ghost" onClick={addAllocationRow}>
-                + Lună
-              </Button>
-              <p className={styles.balance}>
-                Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
-                {formatMoney(balanceTotal - allocated, balanceCurrency)}
-              </p>
-              <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('auto')}>
-                Se repartizează automat
-              </Button>
-            </>
-          )}
-        </div>
-
-        <Field label="Plătitor" htmlFor="payment-source-name">
-          <TextInput
-            id="payment-source-name"
-            placeholder="Numele din extras, dacă diferă de părinte"
-            value={values.sourceName}
-            onChange={value => setValues(p => ({ ...p, sourceName: value }))}
-          />
-        </Field>
-
-        {editing?.verification && (
-          <fieldset className={styles.section}>
-            <legend>Verificare import</legend>
-            <label className={styles.checkboxField}>
-              <Checkbox
-                checked={values.reviewed}
-                onChange={checked => setValues(p => ({ ...p, reviewed: checked }))}
-                ariaLabel="Am verificat observațiile importului"
+            ) : (
+              <AmountInput
+                ariaLabel="Sumă"
+                min={0}
+                step="0.01"
+                value={values.tenders[activeMethod] ?? ''}
+                onChange={value => setTender(activeMethod, value)}
+                currency="lei"
+                shortcuts={
+                  amountShortcuts.length > 0 ? (
+                    <ChipSelect
+                      ariaLabel="Sumă rapidă"
+                      options={amountShortcuts.map(shortcut => ({ value: shortcut.key, label: shortcut.label }))}
+                      value={amountShortcuts.find(s => Number(values.tenders[activeMethod]) === s.amount)?.key ?? ''}
+                      onChange={key => {
+                        const shortcut = amountShortcuts.find(s => s.key === key);
+                        if (shortcut) setTender(activeMethod, String(shortcut.amount));
+                      }}
+                    />
+                  ) : undefined
+                }
               />
-              <span>Am verificat observațiile importului</span>
-            </label>
-            <p className={styles.notice}>{editing.verification}</p>
-          </fieldset>
-        )}
+            )}
+            {splitByMethod ? (
+              <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>
+            ) : (
+              <Button variant="link" className={styles.linkButton} onClick={() => setSplitByMethod(true)}>
+                Împarte pe metode
+              </Button>
+            )}
+            {isEurChild && (
+              <>
+                <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
+                <Field label="Curs EUR" htmlFor="payment-eur-rate">
+                  <NumberInput
+                    id="payment-eur-rate"
+                    step="0.0001"
+                    min={0}
+                    placeholder={bnmRate !== undefined ? String(bnmRate) : ''}
+                    value={manualRate}
+                    onChange={setManualRate}
+                  />
+                </Field>
+                <p className={styles.notice}>
+                  {manualRate
+                    ? 'Curs manual pentru această plată'
+                    : bnmRate !== undefined
+                      ? `BNM ${formatDate(values.date)} · ${formatRate(bnmRate)}`
+                      : 'Curs necunoscut pentru această dată — completează manual'}
+                  {values.date && <BnmRateLink date={values.date} />}
+                </p>
+              </>
+            )}
+          </div>
 
-        {notesOpen ? (
-          <Field label="Observații" htmlFor="payment-notes">
-            <TextArea
-              id="payment-notes"
-              rows={3}
-              autoFocus
-              value={values.notes}
-              onChange={value => setValues(p => ({ ...p, notes: value }))}
+          <div className={splitByMethod ? undefined : styles.grid2}>
+            <Field label="Data" htmlFor="payment-date">
+              <DateInput id="payment-date" required value={values.date} onChange={setDate} />
+            </Field>
+            {!splitByMethod && (
+              <div className={styles.field}>
+                Metodă
+                <SegmentedControl
+                  ariaLabel="Metodă"
+                  value={activeMethod}
+                  onChange={selectMethod}
+                  options={methods.map(method => ({ value: method, label: method }))}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className={styles.field}>
+            {allocationMode === 'auto' ? (
+              <>
+                {arrearsList.length > 0 && (
+                  <div className={styles.allocationRows}>
+                    {arrearsList.map(arrear => (
+                      <label key={arrear.month} className={styles.checkboxField}>
+                        <Checkbox
+                          checked={checkedArrears.has(arrear.month)}
+                          onChange={checked =>
+                            setCheckedArrears(previous => {
+                              const next = new Set(previous);
+                              if (checked) next.add(arrear.month);
+                              else next.delete(arrear.month);
+                              return next;
+                            })
+                          }
+                          ariaLabel={`Acoperă restanța din ${formatMonthLabel(arrear.month)}`}
+                        />
+                        <span className={styles.arrearText}>
+                          Are restanță: {formatMonthLabel(arrear.month)} · {formatMoney(arrear.rest, arrear.currency)}
+                        </span>
+                        <span className={styles.notice}>Bifează ca s-o acoperi</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+                Se repartizează automat
+                <div className={styles.autoList}>
+                  {values.allocations.map(row => {
+                    const status = allocationStatus(row);
+                    const tone = allocationTone(status);
+                    return (
+                      <div key={row.id} className={styles.autoRow}>
+                        <span className={`${styles.autoDot} ${tone}`} />
+                        <span className={styles.autoMonth}>{formatMonthLabel(row.month)}</span>
+                        <span className={styles.autoAmount}>
+                          {formatMoney(Number(row.amount) || 0, balanceCurrency)}
+                        </span>
+                        {status && <span className={`${styles.autoStatus} ${tone}`}>{status}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('manual')}>
+                  Repartizează manual
+                </Button>
+              </>
+            ) : (
+              <>
+                Repartizare manuală
+                <p className={styles.notice}>Suma rămasă nerepartizată este evidențiată ca avans.</p>
+                <div className={styles.allocationRows}>
+                  {values.allocations.map((row, index) => (
+                    <div key={row.id} className={styles.allocationRow}>
+                      <div className={styles.allocationField}>
+                        <Field label="Luna" htmlFor={`allocation-month-${row.id}`}>
+                          <MonthInput
+                            id={`allocation-month-${row.id}`}
+                            required
+                            value={row.month}
+                            onChange={value => setAllocationField(index, 'month', value)}
+                          />
+                        </Field>
+                      </div>
+                      <div className={styles.allocationAmountField}>
+                        <Field label="Suma" htmlFor={`allocation-amount-${row.id}`}>
+                          <NumberInput
+                            id={`allocation-amount-${row.id}`}
+                            required
+                            min={0.01}
+                            step="0.01"
+                            value={row.amount}
+                            onChange={value => setAllocationField(index, 'amount', value)}
+                          />
+                        </Field>
+                      </div>
+                      <IconButton
+                        icon="close"
+                        className={styles.removeRow}
+                        ariaLabel="Elimină repartizarea"
+                        onClick={() => removeAllocationRow(index)}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button variant="ghost" onClick={addAllocationRow}>
+                  + Lună
+                </Button>
+                <p className={styles.balance}>
+                  Repartizat: {formatMoney(allocated, balanceCurrency)} · Nerepartizat:{' '}
+                  {formatMoney(balanceTotal - allocated, balanceCurrency)}
+                </p>
+                <Button variant="link" className={styles.linkButton} onClick={() => setAllocationMode('auto')}>
+                  Se repartizează automat
+                </Button>
+              </>
+            )}
+          </div>
+
+          <Field label="Plătitor" htmlFor="payment-source-name">
+            <TextInput
+              id="payment-source-name"
+              placeholder="Numele din extras, dacă diferă de părinte"
+              value={values.sourceName}
+              onChange={value => setValues(p => ({ ...p, sourceName: value }))}
             />
           </Field>
-        ) : (
-          <Button variant="link" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
-            + Adaugă observație
-          </Button>
-        )}
 
-        <label className={styles.checkboxField}>
-          <Checkbox
-            checked={values.sendSmsConfirmation}
-            onChange={checked => setValues(p => ({ ...p, sendSmsConfirmation: checked }))}
-            disabled={!smsConfigured}
-            ariaLabel="Trimite confirmare părintelui prin SMS"
-          />
-          <span>Trimite confirmare părintelui prin SMS</span>
-        </label>
-        {!smsConfigured && <p className={styles.notice}>SMS neconectat</p>}
-      </form>
-    </Drawer>
+          {editing?.verification && (
+            <fieldset className={styles.section}>
+              <legend>Verificare import</legend>
+              <label className={styles.checkboxField}>
+                <Checkbox
+                  checked={values.reviewed}
+                  onChange={checked => setValues(p => ({ ...p, reviewed: checked }))}
+                  ariaLabel="Am verificat observațiile importului"
+                />
+                <span>Am verificat observațiile importului</span>
+              </label>
+              <p className={styles.notice}>{editing.verification}</p>
+            </fieldset>
+          )}
+
+          {notesOpen ? (
+            <Field label="Observații" htmlFor="payment-notes">
+              <TextArea
+                id="payment-notes"
+                rows={3}
+                autoFocus
+                value={values.notes}
+                onChange={value => setValues(p => ({ ...p, notes: value }))}
+              />
+            </Field>
+          ) : (
+            <Button variant="link" className={styles.linkButton} onClick={() => setNotesOpen(true)}>
+              + Adaugă observație
+            </Button>
+          )}
+
+          <label className={styles.checkboxField}>
+            <Checkbox
+              checked={values.sendSmsConfirmation}
+              onChange={checked => setValues(p => ({ ...p, sendSmsConfirmation: checked }))}
+              disabled={!smsConfigured}
+              ariaLabel="Trimite confirmare părintelui prin SMS"
+            />
+            <span>Trimite confirmare părintelui prin SMS</span>
+          </label>
+          {!smsConfigured && <p className={styles.notice}>SMS neconectat</p>}
+        </form>
+      </Drawer>
+      {unsavedGuard.confirmDialog}
+    </>
   );
 }

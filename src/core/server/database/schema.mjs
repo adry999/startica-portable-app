@@ -31,6 +31,10 @@ export function applySchema(database) {
   // o singură dată; o bază nouă îl are deja, iar ALTER devine un no-op.
   ensureColumn(database, 'sms_log', 'batch_id', 'TEXT');
   database.exec('CREATE INDEX IF NOT EXISTS sms_log_batch ON sms_log(batch_id);');
+  // 40b (PROMPT-8 §8.2): „doar de pe același calculator" — ștampila sesiunii active la
+  // momentul scrierii (regenerată la fiecare deschidere/schimbare de filială, vezi
+  // create-branch-context.mjs), comparată la POST /api/undo.
+  ensureColumn(database, 'audit_changes', 'session_token', 'TEXT');
 }
 
 /**

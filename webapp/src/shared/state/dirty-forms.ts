@@ -9,6 +9,9 @@ import { useEffect, useRef } from 'react';
 export interface DirtyForm {
   label: string;
   save: () => Promise<boolean>;
+  /** Câmpurile schimbate față de valorile inițiale (40c) — `UnsavedChangesDialog` le arată
+   * (max. 3 + „și încă N”); opțional, formularele fără urmărire pe câmp nu-l completează. */
+  changedFields?: string[];
 }
 
 // Registru la nivel de modul, nu React context: useBranchSwitch (alt subarbore,
@@ -23,11 +26,21 @@ const registry = new Set<DirtyForm>();
 export function useDirtyForm(form: DirtyForm | null): void {
   const saveRef = useRef(form?.save ?? null);
   saveRef.current = form?.save ?? null;
+  // Ca save — poate fi refăcut la fiecare randare (câmpurile se schimbă pe măsură ce se tastează)
+  // fără să reînregistreze intrarea; `entry.changedFields` e un getter care citește mereu valoarea curentă.
+  const changedFieldsRef = useRef(form?.changedFields);
+  changedFieldsRef.current = form?.changedFields;
   const label = form?.label ?? null;
 
   useEffect(() => {
     if (!label) return;
-    const entry: DirtyForm = { label, save: () => saveRef.current!() };
+    const entry: DirtyForm = {
+      label,
+      save: () => saveRef.current!(),
+      get changedFields() {
+        return changedFieldsRef.current;
+      },
+    };
     registry.add(entry);
     return () => {
       registry.delete(entry);

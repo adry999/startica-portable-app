@@ -136,6 +136,21 @@
   gap: var(--space-4);
 }
 
+/* 40a: „Plată +”/„Notifică” apar doar la hover pe rând sau la focus de la tastatură pe unul
+   dintre cele două butoane — DataTable randează rândurile ca <tr>, deci :focus-within pe tr
+   acoperă și tab-ul direct pe buton, nu doar mouse-ul. */
+.rowActions {
+  display: flex;
+  gap: var(--space-4);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+tr:hover .rowActions,
+tr:focus-within .rowActions {
+  opacity: 1;
+}
+
 .yearCards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
