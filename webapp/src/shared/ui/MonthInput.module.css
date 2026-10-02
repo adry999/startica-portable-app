@@ -1,4 +1,5 @@
 .box {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-8);
@@ -41,10 +42,13 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--slate);
+  text-align: left;
+  cursor: pointer;
 }
 
 .input:disabled {
   color: var(--subtle);
+  cursor: default;
 }
 
 .affix {
@@ -52,4 +56,108 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--subtle);
+}
+
+/* §3 (PROMPT-11 F17): câmp text vizual-ascuns care ține `required` activ pentru validarea nativă
+ * a formularului (NU `type="hidden"`, scutit de constrângeri) — tipar „sr-only" standard. */
+.validityMirror {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--space-8));
+  left: 0;
+  z-index: var(--z-popover);
+  width: 280px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.menuHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-heading);
+}
+
+.menuHead button {
+  border: none;
+  background: var(--neutral-soft);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.option {
+  position: relative;
+  border: none;
+  background: var(--neutral-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.option:disabled {
+  color: var(--subtle);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.optionSelected {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.paid .dot {
+  background: var(--mint-bar);
+}
+
+.debt .dot {
+  background: var(--raspberry);
+}
+
+.used .dot {
+  background: var(--subtle);
+}
+
+.currentMonth {
+  align-self: center;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--orange-ink);
 }

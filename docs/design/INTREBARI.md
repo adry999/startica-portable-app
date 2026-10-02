@@ -1149,3 +1149,50 @@ plată nouă fără `defaultChildId` (nu doar din fișă) — fără să suprasc
 
 Nu s-a găsit niciun alt tipar „secțiune ascunsă pentru o setare lipsă” în cele 6 module, în afara
 celor de mai sus (toate contextuale sau deja conforme).
+
+## §6 (F19, PROMPT-11) — Subsolul formularelor, unificat: amânat (motiv concret)
+
+**Nefăcut.** `grep -rln "footer={" webapp/src/features` dă **28** fișiere (nu ~24 ca-n plan), cu
+cel puțin trei forme diferite azi:
+1. Un singur `<Button type="submit" form="...">`, fără Anulează explicit (`PaymentFormDrawer.tsx`,
+   `AdvanceFormDrawer.tsx` ș.a.) — submit-ul pleacă din `<form onSubmit>`, nu dintr-un `onClick`.
+2. `<div>` cu `footerNote` + Anulează (`onClick={unsavedGuard.requestClose}`) + Salvează, submit tot
+   prin `form=` (`ChildFormDrawer.tsx`, `GroupFormDrawer.tsx`).
+3. Dialoguri de confirmare fără `<form>` deloc, unde „principal” e un `onClick` direct, nu un submit
+   de formular (ex. confirmări de ștergere/arhivare).
+
+API-ul din plan (`primary: {label, loading, disabled, disabledReason}`) nu specifică explicit cum
+alege între „submit de formular” (`form="id"`) și „onClick direct” pentru butonul principal — o
+decizie greșită aici ar introduce un singur punct de eșec pentru *toate* formularele din aplicație
+(Enter-to-submit, stare `loading`, Anulează cu gardă nesalvate). Diferența față de §1/§2/§5/§7:
+acolo o presupunere greșită afecta un singur ecran; aici afectează cele 28 de formulare deodată,
+într-un singur commit „atomic” cum cere planul (nu se poate verifica incremental fără să rupă
+testele intermediare, conform planului însuși). Fără verificare vizuală (nicio captură reală
+produsă încă în acest lanț) și fără o decizie clară pe discriminarea submit/onClick, riscul unei
+regresii lățite pe toată aplicația a depășit beneficiul — amânat pentru o sesiune dedicată, cu
+clarificarea explicită a formei (`primary: {kind:'submit', form} | {kind:'onClick', onClick}`)
+înainte de a migra cele 28 de fișiere.
+
+## §3 (F17, PROMPT-11) — MonthInput propriu în repartizarea manuală: ce s-a închis, ce rămâne
+
+**Închis:** `MonthInput` nu mai e `<input type="month">` nativ — popover propriu (an cu ‹ ›, grilă
+4×3, „Luna curentă”, Esc închide + readuce focusul, săgeți pe grilă, `aria-label` pe fiecare lună
+inclusiv anul, ca în testele noi `getByRole('gridcell', {name:'Noiembrie 2026'})`). Props noi:
+`markers?: Record<'YYYY-MM','paid'|'debt'|'used'>` (punct colorat pe celulă) și `isDisabled?
+(month)` (separat de `min`/`max`). `PaymentFormDrawer.tsx` (repartizare manuală): rândurile
+folosesc `isDisabled` ca lunile deja alese pe alt rând să nu mai poată fi alese a doua oară; „+
+Lună” propune acum direct luna de după ultimul rând + suma rămasă nerepartizată (nu un rând gol).
+Trece automat prin `ChildFormDrawer`/`SalaryFormDrawer` (aceleași props, fără cod nou acolo).
+`required` nu are echivalent nativ pe un buton — un câmp text vizual-ascuns (NU `type="hidden"`,
+scutit de validare) ține browserul blocând trimiterea formularului la o lună neleasă, la fel ca
+înainte. Storybook: poveste nouă cu `markers`+`min`/`max`+`isDisabled` împreună.
+
+**Neatins din scop:**
+- `PaymentFormDrawer.tsx` nu trimite `markers` (achitat/restanță) pe rândurile de repartizare
+  manuală — spec-ul §3 cere `isDisabled` explicit acolo, dar nu menționează explicit `markers` pe
+  acest ecran; prop-ul există și e testat la nivel de componentă, dar neconsumat încă de niciun
+  ecran real. Ar avea sens pe rândurile de repartizare (arătând ce luni sunt deja achitate/
+  restante), dar ar cere o sursă de date suplimentară (`arrears`/`records.payments` per lună) peste
+  ce există azi în bucla de randare a rândurilor — nefăcut, risc de a ghici formatul corect fără un
+  mockup exact.
+- Fără captură lângă artboard (ca la toate punctele anterioare din acest lanț).

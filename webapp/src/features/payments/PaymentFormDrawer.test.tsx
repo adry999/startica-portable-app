@@ -139,6 +139,27 @@ async function goManual(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: 'Repartizează manual' }));
 }
 
+// §3 (PROMPT-11 F17): butonul `MonthInput` arată „{Lună completă} {an}” — oglindă locală a
+// `MONTH_NAMES` din MonthInput.tsx, ca să nu importăm un array intern din componentă.
+const FULL_MONTH_NAMES = [
+  'Ianuarie',
+  'Februarie',
+  'Martie',
+  'Aprilie',
+  'Mai',
+  'Iunie',
+  'Iulie',
+  'August',
+  'Septembrie',
+  'Octombrie',
+  'Noiembrie',
+  'Decembrie',
+];
+function formatMonthLabelFull(dateOrMonth: string) {
+  const [year, month] = dateOrMonth.slice(0, 7).split('-').map(Number);
+  return `${FULL_MONTH_NAMES[month - 1]} ${year}`;
+}
+
 /** Implicit sms.md neconectat — testele 15b care au nevoie de „conectat” își suprascriu propriul fetch. */
 function stubFetch({
   smsStatus = { configured: false },
@@ -213,20 +234,23 @@ describe('PaymentFormDrawer', () => {
     expect(allocationAmount.value).toBe('100');
   });
 
+  function monthButtons() {
+    return screen.getAllByRole('button', { name: 'Luna' });
+  }
+
   it('data încasării actualizează luna repartizării cât timp e singurul rând, neatins', async () => {
     renderDrawer();
     const user = userEvent.setup();
 
     await goManual(user);
     const dateInput = screen.getByLabelText('Data') as HTMLInputElement;
-    const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
-    const initialMonth = monthInput.value;
+    const initialMonth = monthButtons()[0].textContent;
 
     await user.clear(dateInput);
     await user.type(dateInput, '2026-11-05');
 
-    expect(monthInput.value).not.toBe(initialMonth);
-    expect(monthInput.value).toBe('2026-11');
+    expect(monthButtons()[0].textContent).not.toBe(initialMonth);
+    expect(monthButtons()[0]).toHaveTextContent('Noiembrie 2026');
   });
 
   it('F7 (FEEDBACK-01-10.md): alegerea copilului NU propune restanța — luna rămâne cea a plății', async () => {
@@ -235,9 +259,8 @@ describe('PaymentFormDrawer', () => {
 
     await pickChild(user, 'Andrei Popescu');
     await goManual(user);
-    const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
 
-    expect(monthInput.value).toBe(todayFn().slice(0, 7));
+    expect(monthButtons()[0]).toHaveTextContent(formatMonthLabelFull(todayFn()));
   });
 
   it('"+ Lună" adaugă un rând nou și oprește sincronizarea automată', async () => {
@@ -246,7 +269,7 @@ describe('PaymentFormDrawer', () => {
 
     await goManual(user);
     await user.click(screen.getByRole('button', { name: '+ Lună' }));
-    expect(document.querySelectorAll('input[type="month"]')).toHaveLength(2);
+    expect(monthButtons()).toHaveLength(2);
   });
 
   it('onSubmit primește valorile curente ale formularului', async () => {
@@ -314,8 +337,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
     await goManual(user);
 
-    const monthInput = document.querySelector('input[type="month"]') as HTMLInputElement;
-    expect(monthInput.value).toBe(todayFn().slice(0, 7));
+    expect(monthButtons()[0]).toHaveTextContent(formatMonthLabelFull(todayFn()));
   });
 
   it('F11: defaultChildId precompletează suma cu taxa lunii (copil MDL)', async () => {

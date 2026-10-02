@@ -25,7 +25,7 @@ import { useSmsSend, useSmsStatus } from '@shared/sms';
 import { formatMoney, formatMoneyInput } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
-import { feeEntryFor, arrears } from '@domain/tuition-obligation.mjs';
+import { feeEntryFor, arrears, nextMonth } from '@domain/tuition-obligation.mjs';
 import { autoAllocatePayment } from '@domain/payment-auto-allocation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -378,11 +378,22 @@ export function PaymentFormDrawer({
     }));
   }
 
+  // §3 (PROMPT-11 F17): „+ Lună” propune direct luna de după ultimul rând și suma rămasă
+  // nerepartizată — utilizatorul doar confirmă/ajustează, nu pornește de la un rând gol.
   function addAllocationRow() {
-    setValues(previous => ({
-      ...previous,
-      allocations: [...previous.allocations, { id: crypto.randomUUID(), month: '', amount: '' }],
-    }));
+    setValues(previous => {
+      const lastRow = previous.allocations[previous.allocations.length - 1];
+      const month = lastRow?.month ? nextMonth(lastRow.month) : paymentMonth;
+      const alreadyAllocated = previous.allocations.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+      const remaining = Math.max(0, (isEurChild ? (eurEquivalent ?? 0) : totalAmount) - alreadyAllocated);
+      return {
+        ...previous,
+        allocations: [
+          ...previous.allocations,
+          { id: crypto.randomUUID(), month, amount: remaining ? formatMoneyInput(remaining) : '' },
+        ],
+      };
+    });
   }
 
   function removeAllocationRow(index: number) {
@@ -929,6 +940,11 @@ export function PaymentFormDrawer({
                             required
                             value={row.month}
                             onChange={value => setAllocationField(index, 'month', value)}
+                            // §3 (PROMPT-11 F17): o lună deja aleasă pe alt rând nu se poate alege
+                            // a doua oară — rândul ei propriu rămâne mereu selectabil.
+                            isDisabled={month =>
+                              values.allocations.some((other, otherIndex) => otherIndex !== index && other.month === month)
+                            }
                           />
                         </Field>
                       </div>
