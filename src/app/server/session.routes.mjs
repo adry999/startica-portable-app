@@ -18,6 +18,7 @@ import { completProfile, normalizeProfile } from '#shared/domain/computer-profil
  *   syncDevice?: { read: () => import('#features/sync/index.server.mjs').SyncDeviceFile | null },
  *   poolEnabled?: () => boolean,
  *   updateStatus?: () => import('./update-check.service.mjs').UpdateStatus,
+ *   hasAnyData?: () => boolean,
  * }} dependencies
  */
 export function createSessionRoutes({
