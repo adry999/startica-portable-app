@@ -958,3 +958,47 @@ Două opțiuni, ambele cu cost real:
 
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
+
+## §17 (F29, PROMPT-11) — Scrii doar în filiala deschisă: ce s-a închis, ce rămâne
+
+**Închis acum:** `StaffFormDrawer` (angajat nou intră direct în filiala deschisă, fără pastile;
+editarea nu mai schimbă `branchIds`; comutator „Angajat existent” adaugă la filiala deschisă un
+angajat din altă filială, fără să-l scoată de acolo) · `GroupTeamPicker` (candidații grupei vin
+acum din `branchStaff` — `personal.staff` filtrat cu `isStaffInBranch(staff, filialaDeschisă)` în
+`GroupsPage.tsx`, nu tot Comun-ul).
+
+**Descoperire importantă, schimbă premisa auditului:** Personal (angajați, roluri, departamente,
+**avansuri, salarii, pontaj, concedii**) locuiește într-o singură bază **Comună**
+(`<home>\Comun\Startica_Date`, `commonDirectories()` în `branch-layout.mjs`), nu una per filială —
+spre deosebire de copii/grupe/plăți, care sunt per filială. Deci „a scrie în altă filială” la
+Personal nu înseamnă a scrie într-un fișier greșit (există un singur fișier), ci a lega greșit
+o acțiune de plată (avans/salariu) de un angajat care nu lucrează la filiala deschisă — o regulă
+de proces, nu o barieră tehnică de bază de date.
+
+**Neînchis, audit făcut, decizie necesară înainte de cod:**
+1. **`TeamView.tsx`** arată `personal.staff` nefiltrat (toți angajații, din toate filialele) — citirea
+   e explicit permisă de regulă. Dar un rând duce la `StaffProfilePage`, de unde pornesc Avans/
+   Salariu/Concediu pentru ORICE angajat, inclusiv unul fără filiala deschisă în `branchIds`. Nu am
+   restricționat asta — nu există încă un mockup/decizie clară dacă „Avans”/„Schimbă salariul” ar
+   trebui dezactivate (cu motiv) pentru un angajat din altă filială, sau dacă angajatul trebuie
+   „adăugat la filială” întâi (fluxul nou din §17.3). Recomandare: dezactivează acțiunile de
+   plată cu motivul „Nu lucrează la {filiala deschisă}” — dar cer confirmare înainte, fiind o
+   restricție nouă pe un flux folosit azi.
+2. **Server (`src/features/personal/server/*.mjs`)**: rutele de scriere (`/api/personal/staff`,
+   `/api/personal/advances`, `/api/personal/salaries`, timesheet, leaves) acceptă azi `branchIds`/
+   datele trimise de client fără să le valideze contra filialei sesiunii — repository are deja
+   `staffForBranch(branchId)`, dar rutele de scriere nu-l folosesc ca gardă. Impact redus (aplicație
+   desktop, un singur operator pe sesiune, nu o barieră multi-tenant reală), dar las neschimbat
+   până se decide forma exactă a validării (400 respins vs. `branchId` ignorat silențios).
+3. **`AdvanceFormDrawer`/`LeaveFormDrawer`**: primesc deja un `staff: Staff | null` ales de apelant
+   (fără listă proprie de angajați) — alegerea se face din `TeamView`/`StaffProfilePage` (punctul 1
+   de mai sus), nu intern; nimic de schimbat în aceste două componente.
+4. **`BranchesSettings.tsx`** (redenumire/culoare altă filială) și raportul „Ambele” +
+   `/api/branches/records`: confirmate corecte — scriu doar în registrul de filiale
+   (`filiale.json`, excepție explicită din regulă) respectiv doar GET (`route-modules.mjs`:
+   `'/api/branches/records': 'report'`, nicio rută-pereche de scriere).
+5. **Verificat** (`grep -rn "branches.map" webapp/src/features`): doar `BranchesSettings.tsx` (listă
+   editabilă a registrului, excepție) și `TeamView.tsx`/`StaffProfilePage.tsx` (`.map(b => b.id)`,
+   doar pentru eticheta „ambele filiale”, nu pentru alegerea unde se scrie) — `StaffFormDrawer` nu
+   mai are pastile de filiale. Nimic de corectat; n-am adăugat un test de arhitectură nou pentru
+   atât de puține cazuri, riscul de regresie tăcută e deja acoperit de audit manual.

@@ -46,6 +46,16 @@ const fixturePersonalState = {
       archivedAt: null,
       notes: [],
     },
+    {
+      id: 'STF-2',
+      name: 'Ion Rusu',
+      roleId: 'ROL-1',
+      branchIds: ['alta-filiala'],
+      phone: '',
+      since: '2020-01-01',
+      archivedAt: null,
+      notes: [],
+    },
   ],
   settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
 };
@@ -81,7 +91,8 @@ describe('GroupsPage', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string) => {
-        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/session')
+          return jsonResponse({ token: 'tok', version: '1.6.3', branch: { id: 'bu', name: 'Buiucani', color: '' } });
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
@@ -178,7 +189,8 @@ describe('GroupsPage', () => {
             : fixtureState;
         return jsonResponse({ state: nextState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
       }
-      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/session')
+        return jsonResponse({ token: 'tok', version: '1.6.3', branch: { id: 'bu', name: 'Buiucani', color: '' } });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       throw new Error(`neașteptat: ${path}`);
@@ -224,7 +236,8 @@ describe('GroupsPage', () => {
         calls.push(body);
         return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
       }
-      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/session')
+        return jsonResponse({ token: 'tok', version: '1.6.3', branch: { id: 'bu', name: 'Buiucani', color: '' } });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       throw new Error(`neașteptat: ${path}`);
@@ -257,7 +270,8 @@ describe('GroupsPage', () => {
         calls.push(body);
         return jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
       }
-      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/session')
+        return jsonResponse({ token: 'tok', version: '1.6.3', branch: { id: 'bu', name: 'Buiucani', color: '' } });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
       throw new Error(`neașteptat: ${path}`);
@@ -272,6 +286,19 @@ describe('GroupsPage', () => {
     expect(calls).toHaveLength(1);
     const lastCall = calls.at(-1) as { type: string; record: { id: string; team: unknown } };
     expect(lastCall.record.team).toEqual([{ staffId: 'STF-1', role: 'asistent' }]);
+  });
+
+  // F29 (DECIZII 02.10): echipa grupei se alege doar din angajații filialei deschise.
+  it('F29: GroupTeamPicker nu arată angajații din alte filiale', async () => {
+    await loadedSession();
+    renderPage();
+    await switchToCards();
+
+    const teamCard = screen.getByText('Echipa grupei').closest('div')!;
+    await userEvent.click(within(teamCard).getByRole('button', { name: '+ Asistent' }));
+
+    expect(within(teamCard).getByRole('button', { name: /Ana Popescu/ })).toBeInTheDocument();
+    expect(within(teamCard).queryByText(/Ion Rusu/)).not.toBeInTheDocument();
   });
 
   // 13b (m10): adăugarea unui membru în echipa grupei, înainte de „Salvează”, trebuie

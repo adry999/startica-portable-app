@@ -57,24 +57,7 @@ describe('StaffFormDrawer', () => {
   beforeEach(() => stubFetch());
   afterEach(() => vi.unstubAllGlobals());
 
-  it('cere cel puțin o filială înainte de a salva un angajat nou', async () => {
-    await loadedSession();
-    await act(() => reloadPersonal());
-
-    render(
-      <ToastProvider>
-        <StaffFormDrawer target="new" onClose={() => {}} />
-      </ToastProvider>,
-    );
-
-    await userEvent.type(screen.getByLabelText('Nume angajat'), 'Maria Ionescu');
-    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
-
-    expect(await screen.findByText('Alege cel puțin o filială.')).toBeInTheDocument();
-    expect(savedStaffCalls).toHaveLength(0);
-  });
-
-  it('salvează un angajat nou cu funcția și filiala alese', async () => {
+  it('F29: angajat nou intră direct în filiala deschisă, fără alegere', async () => {
     await loadedSession();
     await act(() => reloadPersonal());
     const onClose = vi.fn();
@@ -85,9 +68,11 @@ describe('StaffFormDrawer', () => {
       </ToastProvider>,
     );
 
+    expect(screen.getByText('Se adaugă în Filiala Buiucani (filiala deschisă).')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Buiucani' })).not.toBeInTheDocument();
+
     await userEvent.type(screen.getByLabelText('Nume angajat'), 'Maria Ionescu');
-    await userEvent.click(screen.getByRole('button', { name: 'Buiucani' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Salvează angajatul' }));
 
     expect(await screen.findByText('Angajat adăugat.')).toBeInTheDocument();
     expect(savedStaffCalls).toHaveLength(1);
@@ -96,5 +81,21 @@ describe('StaffFormDrawer', () => {
       branchIds: ['bu'],
     });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('F29: comutatorul „Angajat existent" arată căutarea, fără angajați de alt branchId disponibili', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+    const onClose = vi.fn();
+
+    render(
+      <ToastProvider>
+        <StaffFormDrawer target="new" onClose={onClose} />
+      </ToastProvider>,
+    );
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Angajat existent' }));
+    expect(screen.getByRole('button', { name: 'Angajat existent' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Adaugă la Buiucani/ })).toBeDisabled();
   });
 });

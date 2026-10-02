@@ -19,7 +19,9 @@ import {
 } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { readDirtyForms, useDirtyForm, type DirtyForm } from '@shared/state/dirty-forms';
+import { useAppSession } from '@shared/api/session';
 import { usePersonal } from '@shared/personal/usePersonal';
+import { isStaffInBranch } from '@shared/personal/timesheet-rules';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
 import { useLeaves } from '@shared/personal/useLeaves';
@@ -73,9 +75,13 @@ export interface GroupsPageProps {
 export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
   const groupsData = useGroups();
   const personal = usePersonal();
+  const session = useAppSession();
   const leavesData = useLeaves(String(new Date().getFullYear()));
   const toast = useToast();
   const staffById = new Map(personal.staff.map(person => [person.id, person]));
+  // F29 (DECIZII 02.10): echipa unei grupe se alege doar din angajații filialei deschise.
+  const openBranchId = session.state.branch?.id ?? '';
+  const branchStaff = personal.staff.filter(person => isStaffInBranch(person, openBranchId));
   const displayGroups = groupsData.groups.map(group => withComputedEducator(group, staffById));
   const [viewMode, setViewMode] = usePersistedState<ViewMode>(VIEW_KEY, initialViewMode());
   const [formOpen, setFormOpen] = useState(false);
@@ -190,7 +196,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
         open={formOpen}
         groups={groupsData.groups}
         unassignedChildren={groupsData.unassignedChildren}
-        staff={personal.staff}
+        staff={branchStaff}
         roleName={personal.roleName}
         leaves={leavesData.leaves}
         onSubmit={submitNewGroup}
@@ -233,7 +239,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
               key={selectedGroup.id}
               group={selectedGroup}
               unassignedChildren={groupsData.unassignedChildren}
-              staff={personal.staff}
+              staff={branchStaff}
               roleName={personal.roleName}
               allGroups={groupsData.groups}
               leaves={leavesData.leaves}
