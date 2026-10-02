@@ -42,6 +42,7 @@ function toWireChange(row) {
  *   client: ReturnType<typeof import('./sync-http-client.mjs').createSyncHttpClient>,
  *   deviceId: string,
  *   deviceName?: string,
+ *   writeProfile?: (profile: import('#shared/domain/computer-profile.mjs').ComputerProfile | null) => void,
  *   now?: () => Date,
  *   onStatus?: (status: { connection: 'online' | 'offline' | 'revoked', pending: number, pushing: boolean, lastSyncedAt: string, conflicts: number, lastError: string }) => void,
  *   onRecordsChanged?: (revision: number) => void,
@@ -77,6 +78,9 @@ export function createSyncEngine({
   client,
   deviceId,
   deviceName = '',
+  // §5.3 (36g): persistă profilul reîmprospătat în sync.json — implicitul (teste, motorul
+  // setului comun, care nu are nevoie de restricții pe el însuși) nu scrie nimic.
+  writeProfile = () => {},
   now = () => new Date(),
   onStatus = () => {},
   onRecordsChanged = () => {},
@@ -111,6 +115,9 @@ export function createSyncEngine({
   // O eroare de aplicare (fișă nerecunoscută) oprește doar pull-ul, nu push-ul — o
   // reluare completă vine abia la următoarea pornire a motorului (decizia din plan).
   let pullPaused = false;
+  // §5.3: profilul curent al acestui calculator, reîmprospătat la fiecare ciclu — `null`
+  // până la primul răspuns (status necunoscut, nu „fără restricții”).
+  let currentProfile = null;
 
   /** @type {ReturnType<typeof setInterval> | null} */
   let pollTimer = null;
@@ -129,7 +136,22 @@ export function createSyncEngine({
       lastSyncedAt,
       conflicts: conflicts.count(),
       lastError,
+      profile: currentProfile,
     };
+  }
+
+  /** §5.3 (36g): cel mai bun-efort — un server fără suport încă pentru `/v1/devices/me`
+   * (sau o eroare de rețea) nu trebuie să oprească restul ciclului de sincronizare, care
+   * are grija lui proprie de reîncercare; profilul rămâne pur și simplu neschimbat. */
+  async function refreshProfile() {
+    if (typeof client.fetchMyProfile !== 'function') return;
+    try {
+      const { profile } = await client.fetchMyProfile();
+      currentProfile = profile ?? null;
+      writeProfile(currentProfile);
+    } catch {
+      // Lăsăm profilul cunoscut anterior — nu blocăm sincronizarea pentru asta.
+    }
   }
 
   function notify() {
@@ -373,6 +395,8 @@ export function createSyncEngine({
     // Oprit în timpul push-ului (schimbare de filială, închidere): baza poate fi deja închisă.
     if (halted) return;
     await pullOnce();
+    if (halted) return;
+    await refreshProfile();
   }
 
   function handleError(error) {

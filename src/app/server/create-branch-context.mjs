@@ -228,6 +228,15 @@ export function createBranchContext({
       }),
       deviceId: syncDeviceFile.deviceId,
       deviceName: syncDeviceFile.deviceName,
+      // §5.3 (36g): profilul reîmprospătat la fiecare ciclu se persistă în sync.json, ca
+      // `/api/session` (session.routes.mjs) să-l poată citi fără o cerere de rețea proprie.
+      // Citește `syncDevice.read()` proaspăt, nu `syncDeviceFile` închis la construcție —
+      // același motiv ca în `sync-last-synced-tracker.mjs`.
+      writeProfile: profile => {
+        const current = syncDevice.read();
+        if (!current) return;
+        syncDevice.write({ ...current, profile: profile ?? undefined });
+      },
       onStatus: status => {
         lastSyncedAtTracker.handleStatus(status);
         syncRoutes.onStatus();

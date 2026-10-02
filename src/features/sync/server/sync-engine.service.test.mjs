@@ -14,7 +14,7 @@ import { createSyncEngine } from './sync-engine.service.mjs';
 
 const DEVICE_ID = 'dev-a';
 
-/** @param {Partial<Record<'pushChanges' | 'pullChanges' | 'downloadSnapshot' | 'openEvents', Function>>} overrides */
+/** @param {Partial<Record<'pushChanges' | 'pullChanges' | 'downloadSnapshot' | 'openEvents' | 'fetchMyProfile', Function>>} overrides */
 function fakeClient(overrides = {}) {
   return {
     pushChanges: async () => ({ results: [] }),
@@ -565,4 +565,45 @@ test('S-4: o resincronizare 410 a setului comun nu șterge candidates — kind c
   assert.ok(rawRecordRepository.find('staff', 'STF-1'), 'staff supraviețuiește (era deja în COMMON_KINDS)');
   assert.ok(rawRecordRepository.find('candidates', 'CAND-1'), 'primul candidat supraviețuiește resincronizării');
   assert.ok(rawRecordRepository.find('candidates', 'CAND-2'), 'al doilea candidat supraviețuiește resincronizării');
+});
+
+// §5.3 (36g) — profilul calculatorului, reîmprospătat la fiecare ciclu
+
+test('syncNow reîmprospătează profilul de pe server și îl expune în status()', async () => {
+  const profile = { preset: 'educator', modules: {}, pinModules: [], blocked: false };
+  const written = [];
+  const { engine } = createHarness({
+    client: fakeClient({ fetchMyProfile: async () => ({ profile }) }),
+    writeProfile: p => written.push(p),
+  });
+
+  await engine.syncNow();
+
+  assert.deepEqual(engine.status().profile, profile);
+  assert.deepEqual(written, [profile]);
+});
+
+test('syncNow nu aruncă dacă clientul nu are fetchMyProfile (server vechi, fără §5.3)', async () => {
+  const { engine } = createHarness({ client: fakeClient() });
+  await assert.doesNotReject(() => engine.syncNow());
+  assert.equal(engine.status().profile, null);
+});
+
+test('syncNow păstrează ultimul profil cunoscut dacă reîmprospătarea eșuează', async () => {
+  const profile = { preset: 'bazin', modules: {}, pinModules: [], blocked: false };
+  let callCount = 0;
+  const { engine } = createHarness({
+    client: fakeClient({
+      fetchMyProfile: async () => {
+        callCount += 1;
+        if (callCount === 1) return { profile };
+        throw new Error('rețea picată');
+      },
+    }),
+  });
+
+  await engine.syncNow();
+  assert.deepEqual(engine.status().profile, profile);
+  await engine.syncNow();
+  assert.deepEqual(engine.status().profile, profile, 'profilul anterior rămâne, nu dispare la o eroare');
 });

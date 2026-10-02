@@ -2,7 +2,8 @@ import type { ChangeSink } from '#shared/contracts/change-sink.d.mts';
 
 export type { ChangeSink };
 
-/** Tipurile sincronizate (records/TYPES) plus prezența, șabloanele SMS și setările sincronizate (Fazele 2-6). */
+/** Tipurile sincronizate (records/TYPES) plus prezența, șabloanele SMS, setările sincronizate
+ * (Fazele 2-6) și istoricul pe calculatoare (§5.3, 36g — append-only, doar profil Complet). */
 export type SyncKind =
   | 'children'
   | 'payments'
@@ -12,7 +13,8 @@ export type SyncKind =
   | 'visits'
   | 'attendance'
   | 'sms_templates'
-  | 'settings';
+  | 'settings'
+  | 'audit_log';
 
 export type SyncOutboxStatus = 'pending' | 'sent' | 'parked';
 
@@ -61,6 +63,10 @@ export interface SyncDeviceFile {
   connectedAt: string;
   /** Ultima sincronizare reușită (oricare motor — filiala sau comunul), pentru 21c/14a. */
   lastSyncedAt?: string;
+  /** §5.3 (36g): profilul acestui calculator, reîmprospătat de motorul de sincronizare la
+   * fiecare ciclu din `GET /v1/devices/me` — `undefined` până la primul ciclu reușit după
+   * conectare (tratat ca Complet, vezi `computer-profile.mjs#completProfile`). */
+  profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile;
 }
 
 export interface SyncDeviceRepository {
