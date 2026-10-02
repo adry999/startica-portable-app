@@ -63,6 +63,7 @@ export function ServicesSettings() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (submitting) return;
     setFormError('');
     setSubmitting(true);
     try {

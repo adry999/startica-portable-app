@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
@@ -7,6 +7,15 @@ import { ServicesSettings } from './ServicesSettings';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
+}
+
+/** Promise.withResolvers e ES2024 — webapp/tsconfig.json ține lib la ES2023 (StartupScreen.test.tsx). */
+function withResolvers<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>(res => {
+    resolve = res;
+  });
+  return { promise, resolve };
 }
 
 const fixtureState = {
@@ -112,6 +121,37 @@ describe('ServicesSettings', () => {
     expect(created.record.priceMode).toBe('fixed');
     expect(created.record.price).toBe(250);
     expect(created.record.system).toBe(false);
+  });
+
+  // §6 (AUDIT-COD-02-10-B.md, Scăzut): gardă de apăsare dublă, ca la celelalte formulare. Garda
+  // reală e lacătul sincron din `session.mutate` (app-session-store.mjs) — un al doilea submit nu
+  // dublează înregistrarea, dar FĂRĂ gardă în `submit()` ajunge până la `mutate()`, care respinge
+  // cu „Verifică operațiunea anterioară cu «Reîncarcă».” — eroare confuză, arătată în formular cât
+  // timp prima cerere chiar reușește în fundal. Cu garda, al doilea submit nu ajunge până acolo.
+  it('un al doilea submit al formularului cât timp primul e pending nu arată eroarea lacătului', async () => {
+    await loadedSession();
+    renderPage();
+    const user = userEvent.setup();
+
+    const { promise, resolve } = withResolvers<Response>();
+    (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(() => promise);
+
+    await user.click(screen.getByRole('button', { name: '+ Serviciu' }));
+    await user.type(screen.getByLabelText('Nume'), 'Excursie');
+    // Primul clic e real (trece prin `act`, deci `submitting` chiar devine true înainte de al
+    // doilea apel) — butonul e deja dezactivat, deci al doilea „submit” vine direct pe formular,
+    // ca la Ctrl+Enter (Drawer/Dialog, COMPONENTE.md §2 44d), care nu ține cont de disabled.
+    await user.click(screen.getByRole('button', { name: 'Creează serviciul' }));
+    await act(async () => {
+      fireEvent.submit(document.getElementById('service-form-drawer') as HTMLFormElement);
+    });
+
+    expect(screen.queryByText(/Verifică operațiunea anterioară/)).not.toBeInTheDocument();
+
+    resolve(jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' }) as unknown as Response);
+    await screen.findByRole('button', { name: '+ Serviciu' });
+
+    expect(recordCallsTo('services').filter(body => body.mode === 'create')).toHaveLength(1);
   });
 
   it('numele duplicat respins de server apare ca eroare în formular, fără să închidă drawer-ul', async () => {
