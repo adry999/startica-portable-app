@@ -243,3 +243,41 @@ test('GET /v1/devices expune profilul fiecărui dispozitiv listat', () => {
   );
   assert.deepEqual(result.devices[0].profile, profile);
 });
+
+test('GET /v1/devices expune version (ultima văzută) din fiecare dispozitiv listat', () => {
+  const route = routeFor(
+    { method: 'GET', path: '/v1/devices' },
+    {
+      devices: {
+        list: () => [
+          {
+            id: 'dev-2',
+            name: 'Recepție',
+            os: 'Windows',
+            lastSeenAt: '',
+            lastBranchId: null,
+            revokedAt: null,
+            profile: completProfile(),
+            version: '2.2.0',
+          },
+          {
+            id: 'dev-3',
+            name: 'Vechi',
+            os: 'Windows',
+            lastSeenAt: '',
+            lastBranchId: null,
+            revokedAt: null,
+            profile: completProfile(),
+            version: null,
+          },
+        ],
+      },
+    },
+  );
+  const complet = { id: 'dev-1', profile: completProfile() };
+  const result = /** @type {{ devices: { version: string | null }[] }} */ (
+    route.handle(/** @type {any} */ ({ params: {}, device: complet, url: new URL('http://x/') }))
+  );
+  assert.equal(result.devices[0].version, '2.2.0');
+  assert.equal(result.devices[1].version, null);
+});

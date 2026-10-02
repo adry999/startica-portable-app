@@ -958,3 +958,24 @@ Două opțiuni, ambele cu cost real:
 
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
+
+## ⏳ §8 PROMPT-10 — corpul 426 e mai sărac decât `32-actualizari.md`; „oprite primele” (37d) neconstruit
+
+`docs/design/screens/32-actualizari.md` („Compatibilitate”) cere corpul 426 cu
+`{ minVersion, latestVersion, downloadUrl }` — construit acum doar cu `minVersion`
+(`sync-server/src/version-gate.mjs`). `sync-server/` nu cunoaște `latestVersion`/`downloadUrl`
+(acelea vin din GitHub Releases, citite doar de `update-check.service.mjs` în aplicație, nu în
+`sync-server/`, care rămâne fără nicio dependență externă) — a le adăuga ar cere fie noi
+variabile de mediu (`SYNC_LATEST_VERSION`/`SYNC_LATEST_DOWNLOAD_URL`, setate manual la fiecare
+deploy, dublând ce `scripts/release.mjs` scrie deja în `latest.json`), fie ca sync-server să
+cheme el însuși GitHub — ambele în afara celor 7 pași din PROMPT-10 §8 Partea 1. Las doar
+`minVersion`, suficient pentru banda „Sincronizare oprită” (37a/37c/42a) — clientul oricum
+citește `latestVersion`/`downloadUrl` din `update-check.service.mjs`, nu din 426.
+
+Neconstruit din 37d: „oprite primele, banner cu numărul lor” — adică la o ridicare de
+`SYNC_MIN_CLIENT_VERSION`, calculatoarele cu versiune veche ar trebui deconectate/oprite
+înaintea celor la zi, cu un banner care arată câte sunt. PROMPT-10 §8 Partea 3 cere explicit
+doar coloana „Versiune” din `DevicesList.tsx` (construită) — „oprite primele” + banner e o
+funcționalitate separată, nemenționată în pașii concreți ai Părții 1/3, care ar cere o decizie
+de produs (cine le oprește — admin manual din listă, sau automat la pornirea serverului cu
+noul `SYNC_MIN_CLIENT_VERSION`?) înainte de implementare.

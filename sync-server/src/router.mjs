@@ -10,10 +10,12 @@ const DEFAULT_MAX_BODY_BYTES = 20 * 1024 * 1024;
 /**
  * @param {string} message
  * @param {number} [status]
+ * @param {Record<string, unknown>} [details] câmpuri suplimentare în corpul JSON (ex. 426
+ *   „minVersion” — vezi version-gate.mjs), alături de „error”, niciodată în locul lui.
  * @returns {never}
  */
-export function fail(message, status = 400) {
-  throw Object.assign(new Error(message), { status });
+export function fail(message, status = 400, details = undefined) {
+  throw Object.assign(new Error(message), { status, ...details });
 }
 
 /**
@@ -94,6 +96,7 @@ export function clientIp(request, trustProxy) {
  *   trustProxy?: boolean,
  *   log?: (message: unknown) => void,
  *   accessLog?: (message: string) => void,
+ *   checkClientVersion?: (request: import('node:http').IncomingMessage) => void,
  * }} options
  */
 export function createRouter({
@@ -102,6 +105,11 @@ export function createRouter({
   trustProxy = false,
   log = console.error,
   accessLog = console.log,
+  // version-gate.mjs (SYNC_MIN_CLIENT_VERSION): verificată înaintea oricărei rute — inclusiv
+  // /v1/devices/pair, care nu cere autentificare — ca un client prea vechi să afle imediat,
+  // nu abia la primul push/pull autentificat. Implicit no-op (fără SYNC_MIN_CLIENT_VERSION,
+  // comportamentul rămâne neschimbat).
+  checkClientVersion = () => {},
 }) {
   /**
    * @param {import('node:http').IncomingMessage} request
@@ -115,6 +123,7 @@ export function createRouter({
     try {
       const url = new URL(/** @type {string} */ (request.url), `http://${request.headers.host ?? 'localhost'}`);
       path = url.pathname;
+      checkClientVersion(request);
       const route = routes.find(
         candidate => candidate.method === request.method && candidate.pattern.test(url.pathname),
       );
@@ -142,7 +151,10 @@ export function createRouter({
       const failure = /** @type {Error & { status?: number, code?: string }} */ (error);
       if (failure.status) {
         status = failure.status;
-        sendJson(response, { error: failure.message }, failure.status);
+        // Orice câmp suplimentar pus de fail(message, status, details) — „status” însuși,
+        // enumerabil pe instanța de Error (Object.assign), e scos ca să nu dubleze codul HTTP.
+        const { status: _status, ...details } = /** @type {Record<string, unknown>} */ (failure);
+        sendJson(response, { error: failure.message, ...details }, failure.status);
         return;
       }
       status = 500;

@@ -9,6 +9,17 @@ test('configurația refuză portul și ora de backup invalide', () => {
   assert.throws(() => loadSyncConfig({ SYNC_DATA_DIR: '/tmp/sync', SYNC_BACKUP_HOUR: 'noapte' }), /SYNC_BACKUP_HOUR/);
 });
 
+test('configurația refuză SYNC_MIN_CLIENT_VERSION fără forma X.Y.Z', () => {
+  assert.throws(
+    () => loadSyncConfig({ SYNC_DATA_DIR: '/tmp/sync', SYNC_MIN_CLIENT_VERSION: '2.2' }),
+    /SYNC_MIN_CLIENT_VERSION/,
+  );
+  assert.throws(
+    () => loadSyncConfig({ SYNC_DATA_DIR: '/tmp/sync', SYNC_MIN_CLIENT_VERSION: 'v2.2.0' }),
+    /SYNC_MIN_CLIENT_VERSION/,
+  );
+});
+
 test('configurația refuză un director de date relativ', () => {
   assert.throws(() => loadSyncConfig({ SYNC_DATA_DIR: 'relativ' }), /SYNC_DATA_DIR/);
 });
@@ -22,6 +33,7 @@ test('valorile implicite se aplică atunci când variabilele nu sunt setate', ()
   assert.equal(config.backupKeep, 14);
   assert.equal(config.historyDays, 365);
   assert.equal(config.trustProxy, false);
+  assert.equal(config.minClientVersion, undefined);
 });
 
 test('variabilele valide se preiau ca atare', () => {
@@ -35,6 +47,7 @@ test('variabilele valide se preiau ca atare', () => {
     SYNC_BACKUP_KEEP: '30',
     SYNC_HISTORY_DAYS: '90',
     SYNC_TRUST_PROXY: '1',
+    SYNC_MIN_CLIENT_VERSION: '2.2.0',
   });
   assert.deepEqual(config, {
     port: 9000,
@@ -46,5 +59,6 @@ test('variabilele valide se preiau ca atare', () => {
     backupKeep: 30,
     historyDays: 90,
     trustProxy: true,
+    minClientVersion: '2.2.0',
   });
 });

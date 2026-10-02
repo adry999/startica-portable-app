@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { openSyncDatabase } from './database.mjs';
 import { createRouter, fail } from './router.mjs';
 import { bearerToken, createRateLimiter, hashToken } from './auth.mjs';
+import { clientVersionHeader, createVersionGate } from './version-gate.mjs';
 import { createDevicesRepository } from './devices.repository.mjs';
 import { createPairingService } from './pairing.service.mjs';
 import { createBranchesRepository } from './branches.repository.mjs';
@@ -41,6 +42,7 @@ export function createSyncServer({
   const changesService = createChangesService({ database, devices });
   const events = createEventHub();
   const pairingRateLimiter = createRateLimiter(PAIRING_RATE_LIMIT);
+  const checkClientVersion = createVersionGate({ minClientVersion: config.minClientVersion });
 
   /** @param {import('node:http').IncomingMessage} request */
   function authenticate(request) {
@@ -49,7 +51,9 @@ export function createSyncServer({
     const device = devices.findByTokenHash(hashToken(token));
     if (!device) fail('device-unknown', 401);
     if (device.revokedAt) fail('device-revoked', 401);
-    devices.touchLastSeen(device.id, { now: now().toISOString() });
+    // §5.2 (37d): ținută pe dispozitiv la fiecare cerere autentificată, nu doar la pair() —
+    // ultima văzută, pentru coloana Versiune din Calculatoare conectate.
+    devices.touchLastSeen(device.id, { version: clientVersionHeader(request), now: now().toISOString() });
     return device;
   }
 
@@ -64,6 +68,7 @@ export function createSyncServer({
     trustProxy: config.trustProxy,
     log,
     accessLog,
+    checkClientVersion,
   });
 
   const server = createServer((request, response) => {

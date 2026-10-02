@@ -11,7 +11,13 @@ import { isAbsolute, join } from 'node:path';
  * @property {number} backupKeep
  * @property {number} historyDays
  * @property {boolean} trustProxy
+ * @property {string | undefined} minClientVersion
  */
+
+// Doar forma X.Y.Z — nicio comparație semantică aici (version-compare.mjs face asta); o
+// valoare greșită trebuie să oprească pornirea, nu să ajungă silențios la o comparație care
+// întoarce mereu `null` (deci niciun client nu s-ar bloca niciodată, din greșeală).
+const SEMVER_PATTERN = /^\d+\.\d+\.\d+$/;
 
 const DEFAULT_PORT = 8790;
 const DEFAULT_BIND = '127.0.0.1';
@@ -50,6 +56,14 @@ function parsePositiveInt(raw, name, fallback) {
 }
 
 /** @param {string | undefined} raw */
+function parseMinClientVersion(raw) {
+  if (raw === undefined) return undefined;
+  if (!SEMVER_PATTERN.test(raw))
+    throw new Error(`SYNC_MIN_CLIENT_VERSION invalid: „${raw}”. Folosește forma X.Y.Z.`);
+  return raw;
+}
+
+/** @param {string | undefined} raw */
 function parseDataDir(raw) {
   // Implicit: sync-server/data, relativ la rădăcina din care pornește procesul
   // (vezi README.md — `node sync-server/src/main.mjs` din rădăcina depozitului).
@@ -75,5 +89,6 @@ export function loadSyncConfig(variables = process.env) {
     backupKeep: parsePositiveInt(variables.SYNC_BACKUP_KEEP, 'SYNC_BACKUP_KEEP', DEFAULT_BACKUP_KEEP),
     historyDays: parsePositiveInt(variables.SYNC_HISTORY_DAYS, 'SYNC_HISTORY_DAYS', DEFAULT_HISTORY_DAYS),
     trustProxy: variables.SYNC_TRUST_PROXY === '1',
+    minClientVersion: parseMinClientVersion(variables.SYNC_MIN_CLIENT_VERSION),
   });
 }

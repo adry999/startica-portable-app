@@ -26,6 +26,7 @@ Configurare exclusiv prin variabile de mediu (niciuna nu e obligatorie, în afar
 | `SYNC_BACKUP_KEEP`        | `14`                                      | Câte fișiere de backup se păstrează.                                |
 | `SYNC_HISTORY_DAYS`       | `365`                                     | Cât ține istoricul `changes`; mai vechi → 410 (resincronizare din snapshot). |
 | `SYNC_TRUST_PROXY`        | `0`                                       | `1` = are încredere doar în **ultimul salt** al `X-Forwarded-For` — cel adăugat chiar de Caddy-ul propriu; primul salt (ales de client) nu e niciodată de încredere, ca să nu poată ocoli limitatorul de rată. |
+| `SYNC_MIN_CLIENT_VERSION` | —                                         | Versiune minimă acceptată (`X.Y.Z`, §5.2/32-actualizari.md). Nesetat = fără filtrare (comportamentul de azi). Un client mai vechi (din antetul `X-Startica-Version`) primește `426 Upgrade Required` cu `{ minVersion }` în corp, la orice cerere — inclusiv `POST /v1/devices/pair`. Un client fără acest antet (instalare dinaintea lui) trece neatins. |
 
 Exemplu, pornire de dezvoltare cu prima cheie de instalare:
 
@@ -90,11 +91,15 @@ Toate rutele `/v1/*` (în afară de `POST /v1/devices/pair`) cer
 clar doar în `sync.json` de pe calculator. Corpul e JSON, fără date în URL (id-urile din
 cale sunt UUID-uri); limita e 20 MB, 64 MB pentru `snapshot`.
 
+Fiecare cerere trimite și `X-Startica-Version` (versiunea aplicației client, `X.Y.Z`) —
+folosită pentru `SYNC_MIN_CLIENT_VERSION` de mai sus și ținută pe dispozitiv (`version` în
+`GET /v1/devices`, ultima văzută).
+
 | Metodă & cale                                 | Auth      | Corp / query                                | Răspuns                                                                        |
 | ---------------------------------------------- | --------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
 | `POST /v1/devices/pair`                        | — (limitat la 5/10 min per IP) | `{ code? , setupKey?, name, os }`            | `{ deviceId, token, createdBy }` — 400 cod greșit/expirat, 403 cheie neacceptată, 429 prea multe încercări |
 | `POST /v1/pairing-codes`                       | dispozitiv | —                                             | `{ code, expiresAt }`                                                           |
-| `GET /v1/devices`                              | dispozitiv | —                                             | `{ devices: [{ id, name, os, lastSeenAt, lastBranchId, revokedAt, me }] }`      |
+| `GET /v1/devices`                              | dispozitiv | —                                             | `{ devices: [{ id, name, os, lastSeenAt, lastBranchId, revokedAt, version, me }] }` |
 | `POST /v1/devices/:id/revoke`                  | dispozitiv | —                                             | `{ ok }` — 400 pe sine însuși                                                   |
 | `GET /v1/status`                               | dispozitiv | —                                             | `{ branches, devices, lastBackupAt, serverTime }` (numere, nu liste)            |
 | `GET /v1/branches`                             | dispozitiv | —                                             | `{ branches: [{ id, name, color, address, createdAt, updatedAt }] }`           |
