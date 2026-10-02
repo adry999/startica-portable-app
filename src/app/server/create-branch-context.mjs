@@ -415,7 +415,14 @@ export function createBranchContext({
       listBranches,
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
-    ...createUndoRoutes({ auditLogRepository, recordRepository, runRevisionTransaction, sessionToken }),
+    ...createUndoRoutes({
+      auditLogRepository,
+      recordRepository,
+      runRevisionTransaction,
+      sessionToken,
+      assertModuleAccess,
+      assertPinUnlocked,
+    }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
     ...createVisitsRoutes({ visitsService }),
     ...createRecordEditingRoutes({

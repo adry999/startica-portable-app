@@ -118,15 +118,18 @@ export const STATIC_PATH_MODULE = {
 };
 
 /**
- * Căi mereu deschise, fără gardă de modul — infrastructură (sesiune, filiale, sincronizare
- * de bază) necesară oricărui profil, inclusiv unuia blocat (ca să poată arăta ecranul
- * `profil.blocked`), plus `/api/record`/`/api/record-delete`/`/api/undo`, rezolvate dinamic
+ * Căi mereu deschise, fără gardă de modul PRIN resolveRouteModule — infrastructură (sesiune,
+ * filiale, sincronizare de bază) necesară oricărui profil, inclusiv unuia blocat (ca să poată
+ * arăta ecranul `profil.blocked`), plus `/api/record`/`/api/record-delete`, rezolvate dinamic
  * mai jos (nu lipsesc din acoperire — vezi testul de arhitectură).
  *
- * `/api/undo`: anularea (40b) acționează pe o intrare din audit log creată cu cel mult 15 s
- * în urmă, de pe ACEEAȘI sesiune locală (`checkUndoEligibility`) — cine a putut crea acea
- * intrare a trecut deja prin garda de modul la scriere; anularea ei nu deschide un modul nou,
- * doar revine la starea dinainte. Nu există, așadar, o cale de escaladare prin `/api/undo`.
+ * `/api/undo`: modulul nu se poate ști din corpul cererii (doar `auditId`) — depinde de
+ * `recordType`-ul intrării, cunoscut abia după căutarea ei în audit log. De-aia e în lista de
+ * mai jos (resolveRouteModule nu-l poate gărda dinainte de dispatch), dar NU e nepăzit: garda
+ * reală rulează chiar în handler (`undo.routes.mjs`, `assertModuleAccess`/`assertPinUnlocked`
+ * pe modulul calculat din `KIND_MODULE[entry.recordType]`), fiindcă `checkUndoEligibility`
+ * (15s, aceeași sesiune) nu garantează că profilul mai are acces ACUM — poate fi restrâns
+ * de pe alt calculator conectat chiar în acea fereastră (AUDIT-COD-02-10.md #5).
  */
 export const OPEN_PATHS = new Set([
   '/api/session',

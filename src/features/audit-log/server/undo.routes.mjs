@@ -1,5 +1,6 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
 import { normalizeRecord } from '#shared/domain/record-schema.mjs';
+import { KIND_MODULE } from '#shared/domain/computer-profile.mjs';
 import { checkUndoEligibility, restoreValueForUndo } from '../domain/undo-eligibility.mjs';
 
 const UNDO_ACTION = 'anulare';
@@ -18,9 +19,18 @@ const UNDO_ACTION = 'anulare';
  *   recordRepository: ReturnType<typeof import('#core/server/persistence/record-repository.mjs').createRecordRepository>,
  *   runRevisionTransaction: ReturnType<typeof import('#core/server/persistence/revision-transaction.mjs').createRevisionTransaction>['runRevisionTransaction'],
  *   sessionToken: string,
+ *   assertModuleAccess: (moduleId: string | string[], options: { write: boolean }) => void,
+ *   assertPinUnlocked: (moduleId: string | string[]) => void,
  * }} dependencies
  */
-export function createUndoRoutes({ auditLogRepository, recordRepository, runRevisionTransaction, sessionToken }) {
+export function createUndoRoutes({
+  auditLogRepository,
+  recordRepository,
+  runRevisionTransaction,
+  sessionToken,
+  assertModuleAccess,
+  assertPinUnlocked,
+}) {
   /** @param {{ auditId?: unknown, requestId: string, revision: number }} request */
   function undo(request) {
     const auditId = Number(request.auditId);
@@ -39,6 +49,18 @@ export function createUndoRoutes({ auditLogRepository, recordRepository, runRevi
       /** @type {{ action: string, recordType: RecordType, recordId: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null }} */ (
         entry
       );
+
+    // AUDIT-COD-02-10.md #5: eligibilitatea de mai sus (15s, aceeași sesiune) NU garantează că
+    // profilul calculatorului mai are acces la acest modul CHIAR ACUM — un profil restrâns/un
+    // modul adăugat la pinModules de pe alt calculator conectat, chiar în această fereastră de
+    // 15s, nu trebuie ocolit de anulare. Rezolvat dinamic aici (nu în route-modules.mjs), fiindcă
+    // modulul depinde de `recordType`-ul intrării, cunoscut abia după căutarea ei de mai sus
+    // (eligibility.ok garantează recordType non-null — vezi checkUndoEligibility). Un `recordType`
+    // care n-ar avea încă o intrare în `KIND_MODULE` (kind nou, uitat la mapare) cere implicit
+    // `admin`, cel mai restrictiv, ca o mapare lipsă să nu fie tăcut mai permisivă decât ar trebui.
+    const undoModuleId = KIND_MODULE[safeEntry.recordType] ?? 'admin';
+    assertModuleAccess(undoModuleId, { write: true });
+    assertPinUnlocked(undoModuleId);
 
     return runRevisionTransaction(request, { action: UNDO_ACTION, backupBefore: false }, () => {
       // Recitit în tranzacție: starea verificată mai sus poate fi depășită dacă altă filă a
