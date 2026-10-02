@@ -241,6 +241,7 @@ describe('SyncSettings', () => {
 
     await waitFor(() => expect(screen.getByText('482913')).toBeInTheDocument());
     expect(screen.getByText('https://sync.exemplu.md')).toBeInTheDocument();
+    expect(screen.getByText('Profil: Complet')).toBeInTheDocument();
     expect(requestJsonMock).toHaveBeenCalledWith(
       '/api/sync/pairing-codes',
       expect.objectContaining({ profile: expect.objectContaining({ preset: 'complet' }) }),

@@ -19,6 +19,9 @@ export function SyncSettings() {
   const status = useSyncStatus();
   const toast = useToast();
   const [pairing, setPairing] = useState<PairingCode | null>(null);
+  // Profilul deja folosit la generarea codului curent — pentru linia „Profil: …” de pe
+  // PairingCodeCard, separat de `pairingProfile` (dialogul, închis după generare).
+  const [pairingCodeProfile, setPairingCodeProfile] = useState<Profile | null>(null);
   const [creatingPairing, setCreatingPairing] = useState(false);
   // §5.3 (36a): pasul de alegere a profilului, înainte de generarea codului — non-null = dialog
   // deschis, cu profilul în curs de editare (implicit Complet, ca orice calculator fără restricții).
@@ -52,6 +55,7 @@ export function SyncSettings() {
     setCreatingPairing(true);
     try {
       setPairing(await sync.createPairingCode(profile));
+      setPairingCodeProfile(profile);
       setPairingProfile(null);
     } catch (error) {
       toast.show({ message: (error as Error).message });
@@ -145,7 +149,16 @@ export function SyncSettings() {
         </Card>
       </div>
 
-      {pairing && <PairingCodeCard pairing={pairing} onClose={() => setPairing(null)} />}
+      {pairing && (
+        <PairingCodeCard
+          pairing={pairing}
+          profile={pairingCodeProfile}
+          onClose={() => {
+            setPairing(null);
+            setPairingCodeProfile(null);
+          }}
+        />
+      )}
 
       {pairingProfile && (
         <Dialog
