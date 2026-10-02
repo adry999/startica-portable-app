@@ -56,6 +56,9 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
   );
 
   async function submit() {
+    // AUDIT-COD-02-10.md #3: fără gardă, Ctrl+Enter (PROMPT-9 §3) + click imediat pot trimite
+    // două rezervări pentru același interval înainte ca butonul să se dezactiveze la re-render.
+    if (saving) return;
     if (!childId || !coachId || !time) {
       setError('Completează copilul, antrenorul și ora.');
       return;
