@@ -365,6 +365,47 @@ describe('R12 — fiecare rută din App.tsx are moduleId și trece prin ModuleGu
   });
 });
 
+/**
+ * R13 (44d, COMPONENTE.md §0b) — „fără drawer în drawer”: un `<Drawer>`/`<Dialog>` nu randează
+ * direct, în propriile `children`, un alt `<Drawer>`/`<Dialog>` — convenția e o confirmare
+ * imbricată (`UnsavedChangesDialog`, 40c) randată ca SOR în fragment, nu ca descendent în JSX
+ * (vezi orice `*FormDrawer.tsx` care folosește `useUnsavedChangesGuard`). Scanare pe text, ca și
+ * restul regulilor R1-R12: pe fiecare fișier, o stivă de token-uri `<Drawer`/`<Dialog`/`</Drawer>`/
+ * `</Dialog>` — o deschidere nouă cât stiva nu e goală înseamnă o imbricare reală.
+ */
+describe('R13 — niciun Drawer/Dialog nu randează alt Drawer/Dialog ca descendant direct', () => {
+  const PANEL_TOKEN_PATTERN = /<(\/)?(Drawer|Dialog)\b/g;
+
+  function collectAllSourceFiles(pattern: RegExp): string[] {
+    return readdirSync(SRC_ROOT, { withFileTypes: true, recursive: true })
+      .filter(entry => entry.isFile() && pattern.test(entry.name))
+      .map(entry => join(entry.parentPath, entry.name));
+  }
+
+  function hasNestedPanel(text: string): boolean {
+    const stack: string[] = [];
+    for (const match of stripComments(text).matchAll(PANEL_TOKEN_PATTERN)) {
+      const isClosing = match[1] === '/';
+      if (isClosing) {
+        stack.pop();
+        continue;
+      }
+      if (stack.length > 0) return true;
+      stack.push(match[2]);
+    }
+    return false;
+  }
+
+  it('fiecare fișier .tsx folosește cel mult un Drawer/Dialog nenimbricat (literal <Drawer>/<Dialog>)', () => {
+    const files = collectAllSourceFiles(/\.tsx$/).filter(f => !/\.(test|stories)\.tsx$/.test(f));
+    const violations = files
+      .filter(file => hasNestedPanel(readFileSync(file, 'utf8')))
+      .map(file => relative(SRC_ROOT, file).split(sep).join('/'))
+      .sort();
+    expect(violations).toEqual([]);
+  });
+});
+
 describe('granițele dintre module (webapp/src/features)', () => {
   it('niciun fișier dintr-un feature nu importă direct dintr-un alt feature', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-feature');

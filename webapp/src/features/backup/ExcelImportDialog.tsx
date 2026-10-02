@@ -31,7 +31,7 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
     <Drawer
       open={data.open}
       title="Import Excel"
-      width={620}
+      size="form"
       onClose={() => {
         data.closeDialog();
         onClose();

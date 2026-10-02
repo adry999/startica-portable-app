@@ -256,7 +256,6 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
         open={payDialogOpen}
         title={`Plătește ${selected.size} ${selected.size === 1 ? 'salariu' : 'salarii'}`}
         ariaLabel="Confirmă plata"
-        width={420}
         onClose={() => setPayDialogOpen(false)}
         shouldBlockClose={() => paying}
         footer={
@@ -264,7 +263,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
             <Button variant="outline" disabled={paying} onClick={() => setPayDialogOpen(false)}>
               Anulează
             </Button>
-            <Button disabled={paying} onClick={() => void payment()}>
+            <Button loading={paying} onClick={() => void payment()}>
               Plătește · {formatMoney(selectedTotal)}
             </Button>
           </>

@@ -71,3 +71,13 @@
   align-items: center;
   gap: 10px;
 }
+
+/* „N erori” (44d) — fix, deasupra butoanelor, parte din subsolul care nu scrolează cu conținutul. */
+.errorBanner {
+  margin: 0;
+  padding: var(--space-10) 30px;
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+  font-weight: 700;
+  font-size: 13px;
+}

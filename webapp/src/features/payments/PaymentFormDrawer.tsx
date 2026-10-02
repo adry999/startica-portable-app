@@ -543,10 +543,10 @@ export function PaymentFormDrawer({
       <Drawer
         open={target !== null}
         title={editing ? 'Editează achitarea' : 'Achitare nouă'}
-        width={560}
+        size="form"
         onClose={unsavedGuard.requestClose}
         footer={
-          <Button type="submit" form="payment-form-drawer" disabled={submitting || (isEurChild && !effectiveRate)}>
+          <Button type="submit" form="payment-form-drawer" loading={submitting} disabled={isEurChild && !effectiveRate}>
             Salvează · {formatMoney(totalAmount, 'MDL')}
           </Button>
         }

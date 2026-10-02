@@ -19,4 +19,25 @@ export default meta;
 
 type Story = StoryObj<typeof Dialog>;
 
+/** Lățime implicită — 440px, token `--dialog` (44d). */
 export const Default: Story = {};
+
+/** Butonul principal cu `loading` (44d) — dezactivat, cu spinner, cât acțiunea e în curs. */
+export const Loading: Story = {
+  args: {
+    footer: (
+      <Button loading onClick={fn()}>
+        Se trimite…
+      </Button>
+    ),
+  },
+};
+
+/** „N erori” fix în subsol (44d) — focus pe primul câmp cu eroare, numărate din validarea nativă
+ * a `<form>`-ului din panou dacă apelantul nu dă `errorCount` explicit. */
+export const WithErrors: Story = {
+  args: {
+    errorCount: 1,
+    children: <p>Conținut scurt — „N erori” arată aici doar demonstrativ, prin `errorCount`.</p>,
+  },
+};

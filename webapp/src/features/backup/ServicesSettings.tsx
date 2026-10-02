@@ -145,10 +145,15 @@ export function ServicesSettings() {
       <Drawer
         open={drawerTarget !== null}
         title={drawerTarget === 'new' ? 'Serviciu nou' : `Editează ${drawerTarget?.name ?? ''}`}
-        width={480}
+        size="detail"
         onClose={closeDrawer}
         footer={
-          <Button type="submit" form="service-form-drawer" disabled={submitting || !form.name.trim() || priceInvalid}>
+          <Button
+            type="submit"
+            form="service-form-drawer"
+            loading={submitting}
+            disabled={!form.name.trim() || priceInvalid}
+          >
             {drawerTarget === 'new' ? 'Creează serviciul' : 'Salvează'}
           </Button>
         }

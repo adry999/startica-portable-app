@@ -12,7 +12,7 @@ import {
   type BadgeTone,
 } from '@shared/ui';
 import { usePersonal } from '@shared/personal/usePersonal';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import type { Department, PersonalSettings, Role } from '@shared/personal/personal.types';
 import styles from './RolesDrawer.module.css';
 
@@ -174,131 +174,141 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
     (JSON.stringify(departments) !== JSON.stringify(personal.departments) ||
       JSON.stringify(roles) !== JSON.stringify(personal.roles) ||
       settingsDirty);
-  useDirtyForm(dirty ? { label: 'o modificare la funcții', save } : null);
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose`.
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'o modificare la funcții',
+    formName: 'departamentele și funcțiile',
+    save,
+    onClose,
+  });
 
   return (
-    <Drawer
-      open={open}
-      title="Departamente și funcții"
-      width={520}
-      onClose={onClose}
-      footer={
-        <Button onClick={() => void save()} disabled={saving || settingsInvalid}>
-          Salvează
-        </Button>
-      }
-    >
-      <div className={styles.root}>
-        <div className={styles.settingsGroup}>
-          <p className={styles.settingsTitle}>Setări concedii și salarii</p>
-          <Field label="Zile de concediu anual" htmlFor="roles-annual-leave-days">
-            <NumberInput
-              id="roles-annual-leave-days"
-              min={0}
-              max={365}
-              value={String(settings.annualLeaveDays)}
-              onChange={value => setSettings(previous => ({ ...previous, annualLeaveDays: Number(value) }))}
-            />
-          </Field>
-          <label className={styles.settingsCheckbox}>
-            <Checkbox
-              checked={settings.deductOnlyUnexcused}
-              onChange={checked => setSettings(previous => ({ ...previous, deductOnlyUnexcused: checked }))}
-              ariaLabel="Scade din salariu doar absențele nemotivate (A)"
-            />
-            <span>Scade din salariu doar absențele nemotivate (A)</span>
-          </label>
-          <p className={styles.settingsHint}>
-            Debifat: se scad și învoirile (I) și zilele fără plată (FP), nu doar absențele nemotivate.
-          </p>
-        </div>
-
-        {departments
-          .slice()
-          .sort((a, b) => a.order - b.order)
-          .map(department => (
-            <div key={department.id} className={styles.departmentGroup}>
-              <div className={styles.departmentRow}>
-                <TextInput
-                  ariaLabel="Nume departament"
-                  className={styles.rowField}
-                  value={department.name}
-                  onChange={value => renameDepartment(department.id, value)}
-                />
-                <Button variant="danger" onClick={() => removeDepartment(department.id)}>
-                  Șterge
-                </Button>
-              </div>
-            </div>
-          ))}
-
-        <div className={styles.addRow}>
-          <TextInput
-            ariaLabel="Departament nou"
-            className={styles.rowField}
-            placeholder="Departament nou"
-            value={newDepartmentName}
-            onChange={setNewDepartmentName}
-          />
-          <Button variant="outline" onClick={addDepartment}>
-            + Adaugă
+    <>
+      <Drawer
+        open={open}
+        title="Departamente și funcții"
+        size="detail"
+        onClose={unsavedGuard.requestClose}
+        footer={
+          <Button loading={saving} onClick={() => void save()} disabled={settingsInvalid}>
+            Salvează
           </Button>
-        </div>
+        }
+      >
+        <div className={styles.root}>
+          <div className={styles.settingsGroup}>
+            <p className={styles.settingsTitle}>Setări concedii și salarii</p>
+            <Field label="Zile de concediu anual" htmlFor="roles-annual-leave-days">
+              <NumberInput
+                id="roles-annual-leave-days"
+                min={0}
+                max={365}
+                value={String(settings.annualLeaveDays)}
+                onChange={value => setSettings(previous => ({ ...previous, annualLeaveDays: Number(value) }))}
+              />
+            </Field>
+            <label className={styles.settingsCheckbox}>
+              <Checkbox
+                checked={settings.deductOnlyUnexcused}
+                onChange={checked => setSettings(previous => ({ ...previous, deductOnlyUnexcused: checked }))}
+                ariaLabel="Scade din salariu doar absențele nemotivate (A)"
+              />
+              <span>Scade din salariu doar absențele nemotivate (A)</span>
+            </label>
+            <p className={styles.settingsHint}>
+              Debifat: se scad și învoirile (I) și zilele fără plată (FP), nu doar absențele nemotivate.
+            </p>
+          </div>
 
-        <EditableList<Role>
-          title="Funcții"
-          items={roles.slice().sort((a, b) => a.order - b.order)}
-          getId={role => role.id}
-          mode={rolesMode}
-          renderView={role => (
-            <div className={styles.roleView}>
-              <span
-                className={`${styles.roleDot} ${styles[departmentTone(role.departmentId, departments)]}`}
-                aria-hidden="true"
-              />
-              <div className={styles.roleInfo}>
-                <b className={styles.roleViewName}>{role.name}</b>
-                <span className={styles.roleViewDept}>{departmentNameFor(role.departmentId)}</span>
+          {departments
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map(department => (
+              <div key={department.id} className={styles.departmentGroup}>
+                <div className={styles.departmentRow}>
+                  <TextInput
+                    ariaLabel="Nume departament"
+                    className={styles.rowField}
+                    value={department.name}
+                    onChange={value => renameDepartment(department.id, value)}
+                  />
+                  <Button variant="danger" onClick={() => removeDepartment(department.id)}>
+                    Șterge
+                  </Button>
+                </div>
               </div>
-              <span className={styles.roleViewCount}>
-                {roleStaffCount(role.id)} {roleStaffCount(role.id) === 1 ? 'angajat' : 'angajați'}
-              </span>
-            </div>
-          )}
-          renderEdit={role => (
-            <div className={styles.roleEditRow}>
-              <TextInput
-                ariaLabel="Nume funcție"
-                className={styles.rowField}
-                value={role.name}
-                onChange={value => renameRole(role.id, value)}
-              />
-              <Select
-                ariaLabel="Departamentul funcției"
-                className={styles.roleEditDepartment}
-                value={role.departmentId}
-                onChange={value => setRoleDepartment(role.id, value)}
-                options={departments.map(department => ({ value: department.id, label: department.name }))}
-              />
-            </div>
-          )}
-          deleteHint={role => {
-            const count = roleStaffCount(role.id);
-            return count > 0 ? `Folosit de ${count} ${count === 1 ? 'angajat' : 'angajați'}` : undefined;
-          }}
-          onDelete={removeRole}
-          onAdd={addRole}
-          addLabel="+ Adaugă funcția"
-          editLabel="Editează funcțiile"
-          onEnterEdit={() => setRolesMode('edit')}
-          dirty={rolesDirty}
-          saving={savingRoles}
-          onSave={() => void saveRolesSection()}
-          onCancel={discardRoleChanges}
-          footerNote="Ștergerea apare doar la funcțiile fără angajați. Funcțiile se sincronizează între filiale și intră în backup."
-          emptyState={<p className={styles.settingsHint}>Fără funcții adăugate.</p>}
-        />
-      </div>
-    </Drawer>
+            ))}
+
+          <div className={styles.addRow}>
+            <TextInput
+              ariaLabel="Departament nou"
+              className={styles.rowField}
+              placeholder="Departament nou"
+              value={newDepartmentName}
+              onChange={setNewDepartmentName}
+            />
+            <Button variant="outline" onClick={addDepartment}>
+              + Adaugă
+            </Button>
+          </div>
+
+          <EditableList<Role>
+            title="Funcții"
+            items={roles.slice().sort((a, b) => a.order - b.order)}
+            getId={role => role.id}
+            mode={rolesMode}
+            renderView={role => (
+              <div className={styles.roleView}>
+                <span
+                  className={`${styles.roleDot} ${styles[departmentTone(role.departmentId, departments)]}`}
+                  aria-hidden="true"
+                />
+                <div className={styles.roleInfo}>
+                  <b className={styles.roleViewName}>{role.name}</b>
+                  <span className={styles.roleViewDept}>{departmentNameFor(role.departmentId)}</span>
+                </div>
+                <span className={styles.roleViewCount}>
+                  {roleStaffCount(role.id)} {roleStaffCount(role.id) === 1 ? 'angajat' : 'angajați'}
+                </span>
+              </div>
+            )}
+            renderEdit={role => (
+              <div className={styles.roleEditRow}>
+                <TextInput
+                  ariaLabel="Nume funcție"
+                  className={styles.rowField}
+                  value={role.name}
+                  onChange={value => renameRole(role.id, value)}
+                />
+                <Select
+                  ariaLabel="Departamentul funcției"
+                  className={styles.roleEditDepartment}
+                  value={role.departmentId}
+                  onChange={value => setRoleDepartment(role.id, value)}
+                  options={departments.map(department => ({ value: department.id, label: department.name }))}
+                />
+              </div>
+            )}
+            deleteHint={role => {
+              const count = roleStaffCount(role.id);
+              return count > 0 ? `Folosit de ${count} ${count === 1 ? 'angajat' : 'angajați'}` : undefined;
+            }}
+            onDelete={removeRole}
+            onAdd={addRole}
+            addLabel="+ Adaugă funcția"
+            editLabel="Editează funcțiile"
+            onEnterEdit={() => setRolesMode('edit')}
+            dirty={rolesDirty}
+            saving={savingRoles}
+            onSave={() => void saveRolesSection()}
+            onCancel={discardRoleChanges}
+            footerNote="Ștergerea apare doar la funcțiile fără angajați. Funcțiile se sincronizează între filiale și intră în backup."
+            emptyState={<p className={styles.settingsHint}>Fără funcții adăugate.</p>}
+          />
+        </div>
+      </Drawer>
+      {unsavedGuard.confirmDialog}
+    </>
   );
 }

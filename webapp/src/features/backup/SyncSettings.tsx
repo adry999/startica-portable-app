@@ -168,6 +168,8 @@ export function SyncSettings() {
         <Dialog
           open
           title="Ce poate face calculatorul nou?"
+          // Excepție documentată (44d): matricea de module (`ProfileEditor`) are nevoie de lățimea
+          // unui Drawer „form”, nu de lățimea standard `--dialog` (440px).
           width={620}
           onClose={() => setPairingProfile(null)}
           footer={

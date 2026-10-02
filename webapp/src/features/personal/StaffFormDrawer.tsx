@@ -93,10 +93,10 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
     <Drawer
       open={target !== null}
       title={editing ? 'Editează: angajat' : 'Adaugă: angajat'}
-      width={560}
+      size="form"
       onClose={onClose}
       footer={
-        <Button type="submit" form="staff-form-drawer" disabled={submitting}>
+        <Button type="submit" form="staff-form-drawer" loading={submitting}>
           Salvează
         </Button>
       }

@@ -80,7 +80,7 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
       <Drawer
         open={target !== null}
         title={editing ? 'Editează: concediu' : 'Adaugă: concediu'}
-        width={480}
+        size="detail"
         onClose={onClose}
         footer={
           <div className={styles.footer}>
@@ -95,7 +95,7 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
               <Button variant="outline" onClick={onClose}>
                 Anulează
               </Button>
-              <Button type="submit" form="leave-form-drawer" disabled={submitting}>
+              <Button type="submit" form="leave-form-drawer" loading={submitting}>
                 Salvează
               </Button>
             </div>

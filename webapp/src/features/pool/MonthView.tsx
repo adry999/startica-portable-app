@@ -254,7 +254,7 @@ export function MonthView({
       <Drawer
         open={!!endingRow}
         title={`Oprește programarea — ${endingRow?.child?.name ?? endingRow?.childId ?? ''}`}
-        width={420}
+        size="detail"
         onClose={() => setEndingRow(null)}
         footer={
           <Button disabled={endBusy} onClick={() => void confirmEndBooking()}>

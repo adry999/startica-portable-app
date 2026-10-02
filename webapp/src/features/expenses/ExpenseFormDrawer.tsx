@@ -106,7 +106,7 @@ export function ExpenseFormDrawer({
       <Drawer
         open={target !== null}
         title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
-        width={520}
+        size="detail"
         onClose={unsavedGuard.requestClose}
         footer={
           <div className={styles.footer}>
@@ -117,7 +117,7 @@ export function ExpenseFormDrawer({
                   Salvează și adaugă alta
                 </Button>
               )}
-              <Button type="submit" form="expense-form-drawer" disabled={submitting}>
+              <Button type="submit" form="expense-form-drawer" loading={submitting}>
                 Salvează
               </Button>
             </div>

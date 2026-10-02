@@ -42,10 +42,10 @@ export function SalaryFormDrawer({ staff, onClose, onSubmit }: SalaryFormDrawerP
     <Drawer
       open={staff !== null}
       title={staff ? `Setează salariul: ${staff.name}` : 'Setează salariul'}
-      width={440}
+      size="detail"
       onClose={onClose}
       footer={
-        <Button type="submit" form="salary-form-drawer" disabled={submitting || mode === 'bazin'}>
+        <Button type="submit" form="salary-form-drawer" loading={submitting} disabled={mode === 'bazin'}>
           Salvează
         </Button>
       }

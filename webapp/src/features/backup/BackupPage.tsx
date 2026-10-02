@@ -374,7 +374,7 @@ export function BackupPage() {
       <Drawer
         open={restore.open}
         title="Restaurare"
-        width={520}
+        size="detail"
         onClose={restore.closeDialog}
         footer={
           <Button disabled={!restore.canCommit || restore.committing} onClick={() => void commitRestore()}>

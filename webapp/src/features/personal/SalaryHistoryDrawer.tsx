@@ -33,7 +33,7 @@ export function SalaryHistoryDrawer({ staff, onClose }: SalaryHistoryDrawerProps
     <Drawer
       open={staff !== null}
       title={staff ? `Istoric salariu: ${staff.name}` : 'Istoric salariu'}
-      width={480}
+      size="detail"
       onClose={onClose}
     >
       {status === 'loading' && <LoadingState />}

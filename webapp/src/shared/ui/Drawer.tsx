@@ -1,48 +1,64 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Icon } from './Icon';
 import { ScrollArea } from './ScrollArea';
+import { errorCountLabel, usePanelController } from './usePanelController';
 import styles from './Drawer.module.css';
+
+export type DrawerSize = 'form' | 'detail';
 
 export interface DrawerProps {
   open: boolean;
   title: string;
-  /** 620 pentru copil (3a), 560 pentru achitare (3b), 520 pentru cheltuială (3c). */
+  /** `'form'` (620px, implicit) pentru formulare complete, `'detail'` (480px) pentru panouri mai
+   * simple — token-izate în tokens.css (`--drawer-form`/`--drawer-detail`, 44d). Un `width` numeric
+   * explicit rămâne o portiță de ieșire pentru un caz documentat separat, dar nu mai e calea obișnuită. */
+  size?: DrawerSize;
   width?: number;
   onClose: () => void;
   /** Întors true blochează închiderea (ex. modificări nesalvate) — Drawer nu decide cum se confirmă, doar cere voie. */
   shouldBlockClose?: () => boolean;
+  /** „N erori” în subsol (44d) — dacă lipsește, Drawer își numără singur câmpurile native nevalide. */
+  errorCount?: number;
   footer?: ReactNode;
   children: ReactNode;
 }
 
-/** Panou lateral fix dreapta — înlocuiește `dialog` pentru creare/editare. */
-export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, footer, children }: DrawerProps) {
-  function requestClose() {
-    if (shouldBlockClose?.()) return;
-    onClose();
-  }
+const SIZE_WIDTH: Record<DrawerSize, string> = {
+  form: 'var(--drawer-form)',
+  detail: 'var(--drawer-detail)',
+};
 
-  // Ref, nu closure direct în effect: Esc trebuie să vadă mereu shouldBlockClose/onClose
-  // curente, nu pe cele din randarea în care s-a deschis panoul.
-  const requestCloseRef = useRef(requestClose);
-  requestCloseRef.current = requestClose;
-
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') requestCloseRef.current();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+/**
+ * Panou lateral fix dreapta — înlocuiește `dialog` pentru creare/editare. Comportamentul comun
+ * (focus inițial, Esc → `onClose`, Ctrl+Enter = submit, „N erori”) vine din `usePanelController`
+ * (44d) — un singur loc, nu pe fiecare formular.
+ */
+export function Drawer({
+  open,
+  title,
+  size = 'form',
+  width,
+  onClose,
+  shouldBlockClose,
+  errorCount,
+  footer,
+  children,
+}: DrawerProps) {
+  const { panelRef, requestClose, effectiveErrorCount } = usePanelController({
+    open,
+    onClose,
+    shouldBlockClose,
+    errorCount,
+  });
 
   if (!open) return null;
 
   return (
     <div className={styles.overlay} onClick={requestClose}>
       <div
+        ref={panelRef}
         className={styles.panel}
-        style={{ width }}
+        style={{ width: width !== undefined ? `${width}px` : SIZE_WIDTH[size] }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -55,6 +71,11 @@ export function Drawer({ open, title, width = 620, onClose, shouldBlockClose, fo
           </button>
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
+        {effectiveErrorCount > 0 && (
+          <p className={styles.errorBanner} role="status">
+            {errorCountLabel(effectiveErrorCount)}
+          </p>
+        )}
         {footer && <footer className={styles.footer}>{footer}</footer>}
       </div>
     </div>

@@ -109,6 +109,8 @@ export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListP
         <Dialog
           open
           title={`Schimbă profilul · ${editingDevice.name}`}
+          // Excepție documentată (44d): matricea de module (`ProfileEditor`) are nevoie de lățimea
+          // unui Drawer „form”, nu de lățimea standard `--dialog` (440px).
           width={620}
           onClose={() => {
             setEditingDevice(null);

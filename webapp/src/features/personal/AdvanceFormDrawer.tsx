@@ -48,10 +48,10 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
     <Drawer
       open={staff !== null}
       title={staff ? `Avans: ${staff.name}` : 'Avans'}
-      width={420}
+      size="detail"
       onClose={onClose}
       footer={
-        <Button type="submit" form="advance-form-drawer" disabled={submitting}>
+        <Button type="submit" form="advance-form-drawer" loading={submitting}>
           Salvează
         </Button>
       }
