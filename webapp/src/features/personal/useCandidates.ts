@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import type { Candidate } from '@shared/personal/personal.types';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface CandidateFormInput {
   id?: string;
@@ -35,7 +36,7 @@ export function useCandidates(): CandidatesData {
       setCandidates(response.candidates);
       setStatus('ready');
     } catch (error) {
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }

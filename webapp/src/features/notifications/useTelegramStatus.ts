@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import { toUserError } from '@shared/api/to-user-error';
 
 export type TelegramScreenStatus = 'loading' | 'ready' | 'failed';
 
@@ -62,7 +63,7 @@ export function useTelegramStatus(): TelegramStatusData {
       .catch((error: Error) => {
         if (requestId !== requestIdRef.current) return;
         setStatus('failed');
-        setFailureMessage(error.message);
+        setFailureMessage(toUserError(error));
       });
   }, []);
 

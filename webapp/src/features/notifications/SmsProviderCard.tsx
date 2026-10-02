@@ -4,6 +4,7 @@ import { useSmsStatus } from '@shared/sms';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import styles from './SmsProviderCard.module.css';
 import notificationsStyles from './NotificationsPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const MONTHLY_LIMIT_MAX = 5000;
 const TEST_SMS_COST_LEI = 0.3;
@@ -43,7 +44,7 @@ export function SmsProviderCard() {
       });
       setToken('');
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -53,7 +54,7 @@ export function SmsProviderCard() {
       setTesting(false);
       setTestPhone('');
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -61,7 +62,7 @@ export function SmsProviderCard() {
     try {
       await sms.disconnect();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

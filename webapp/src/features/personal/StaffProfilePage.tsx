@@ -24,6 +24,7 @@ import { useLeaves } from '@shared/personal/useLeaves';
 import { StaffFormDrawer } from './StaffFormDrawer';
 import type { Group, GroupTeamMember } from '@contracts/record-types.mjs';
 import styles from './StaffProfilePage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const TIMESHEET_CELL_LABEL: Record<string, string> = {
   CO: 'C',
@@ -85,7 +86,7 @@ export function StaffProfilePage() {
       setArchiveConfirmOpen(false);
       navigate('/personal');
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

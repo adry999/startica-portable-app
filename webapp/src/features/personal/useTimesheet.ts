@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { timesheetKey } from '@shared/personal/timesheet-rules';
 import type { TimesheetCode, TimesheetRow } from '@shared/personal/personal.types';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface TimesheetChange {
   staffId: string;
@@ -57,7 +58,7 @@ export function useTimesheet(month: string | null): TimesheetData {
       setStatus('ready');
     } catch (error) {
       if (requestId !== requestIdRef.current) return;
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }
@@ -85,7 +86,7 @@ export function useTimesheet(month: string | null): TimesheetData {
       });
       setSaveError('');
     } catch (error) {
-      setSaveError((error as Error).message);
+      setSaveError(toUserError(error));
       await load();
     } finally {
       setSaving(false);

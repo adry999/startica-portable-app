@@ -17,6 +17,7 @@ import { normalizeMoldovanPhone } from '#shared/domain/phone-number.mjs';
 import { renderSmsTemplate } from '@domain/sms-template.mjs';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './SmsNewMessageDialog.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 type RecipientMode = 'app' | 'other';
 type BodyMode = 'template' | 'free';
@@ -183,7 +184,7 @@ export function SmsNewMessageDialog({ open, unitCostLei, onClose, onSent }: SmsN
         });
       if (sent) onSent(sendResult);
     } catch (error) {
-      setErrorMessage((error as Error).message);
+      setErrorMessage(toUserError(error));
     } finally {
       setSending(false);
     }

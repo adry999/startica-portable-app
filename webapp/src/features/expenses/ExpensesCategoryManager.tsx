@@ -3,6 +3,7 @@ import { Button, EMPTY_STATES, EmptyState, IconButton, TextInput, resolveEmptySt
 import { GENERAL_CATEGORY_ID } from '#shared/domain/expense-categories.mjs';
 import type { ExpenseCategory } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface ExpensesCategoryManagerProps {
   categories: ExpenseCategory[];
@@ -30,7 +31,7 @@ export function ExpensesCategoryManager({
       setNewCategoryName('');
       toast.show({ message: 'Categorie adăugată.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -47,7 +48,7 @@ export function ExpensesCategoryManager({
       await onRenameCategory(id, editingCategoryName);
       toast.show({ message: 'Categorie redenumită.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

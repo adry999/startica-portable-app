@@ -5,6 +5,7 @@ import { today } from '#shared/domain/calendar-month.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import type { Staff } from '@shared/personal/personal.types';
 import styles from './StaffFormDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface StaffFormDrawerProps {
   target: Staff | 'new' | null;
@@ -83,7 +84,7 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
       toast.show({ message: editing ? 'Angajat actualizat.' : 'Angajat adăugat.' });
       onClose();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setSubmitting(false);
     }

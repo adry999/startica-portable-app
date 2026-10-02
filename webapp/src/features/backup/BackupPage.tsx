@@ -30,6 +30,7 @@ import { SyncSettings } from './SyncSettings';
 import { PoolSettings } from './PoolSettings';
 import { ServicesSettings } from './ServicesSettings';
 import styles from './BackupPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
@@ -162,7 +163,7 @@ export function BackupPage() {
     try {
       await excel.exportAll();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -176,7 +177,7 @@ export function BackupPage() {
           : 'Backup local configurat.',
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -185,7 +186,7 @@ export function BackupPage() {
       await backupData.backupNow();
       toast.show({ message: 'Backup local verificat creat.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -193,7 +194,7 @@ export function BackupPage() {
     try {
       await backupData.downloadDiagnostic();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -208,7 +209,7 @@ export function BackupPage() {
           restore.source === 'extern' ? 'Datele au fost restaurate din folderul extern.' : 'Datele au fost restaurate.',
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button, Field, SegmentedControl, TextInput } from '@shared/ui';
 import backupStyles from './BackupPage.module.css';
 import type { ConnectInput, ConnectResult } from './useSyncSettings';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface ConnectServerFormProps {
   suggestedName: string;
@@ -38,7 +39,7 @@ export function ConnectServerForm({
       });
       onConnected(result);
     } catch (error) {
-      onError((error as Error).message);
+      onError(toUserError(error));
     }
   }
 

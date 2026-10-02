@@ -6,6 +6,7 @@ import type { BranchSummary } from '@shared/api/branches';
 import { useBranches } from './useBranches';
 import backupStyles from './BackupPage.module.css';
 import styles from './BranchesSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 /** Fila „Filiale” din Backup și setări (13c) — carduri cu redenumire și culoare. O filială nu se poate șterge. */
 export function BranchesSettings() {
@@ -49,7 +50,7 @@ export function BranchesSettings() {
       await branchesData.rename(renamingId, renameValue);
       setRenamingId(null);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setBusy(false);
     }
@@ -60,7 +61,7 @@ export function BranchesSettings() {
     try {
       await branchesData.setColor(id, color);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -76,7 +77,7 @@ export function BranchesSettings() {
       setAddName('');
       setAddAddress('');
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setBusy(false);
     }

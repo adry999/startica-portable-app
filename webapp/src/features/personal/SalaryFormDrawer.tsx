@@ -3,6 +3,7 @@ import { Button, Drawer, Field, MonthInput, NumberInput, Select, useToast } from
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Salary, SalaryMode, Staff } from '@shared/personal/personal.types';
 import styles from './SalaryFormDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface SalaryFormDrawerProps {
   staff: Staff | null;
@@ -32,7 +33,7 @@ export function SalaryFormDrawer({ staff, onClose, onSubmit }: SalaryFormDrawerP
       toast.show({ message: 'Salariul a fost salvat.' });
       onClose();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setSubmitting(false);
     }

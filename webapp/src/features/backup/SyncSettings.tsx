@@ -10,6 +10,7 @@ import { useSyncSettings, type PairingCode } from './useSyncSettings';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
 import backupStyles from './BackupPage.module.css';
 import styles from './SyncSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 type Profile = import('#shared/domain/computer-profile.mjs').ComputerProfile;
 
@@ -39,7 +40,7 @@ export function SyncSettings() {
       await sync.disconnect();
       window.location.reload();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -47,7 +48,7 @@ export function SyncSettings() {
     try {
       await sync.syncNow();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -58,7 +59,7 @@ export function SyncSettings() {
       setPairingCodeProfile(profile);
       setPairingProfile(null);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setCreatingPairing(false);
     }

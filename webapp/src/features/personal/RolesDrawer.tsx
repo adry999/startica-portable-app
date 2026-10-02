@@ -15,6 +15,7 @@ import { usePersonal } from '@shared/personal/usePersonal';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import type { Department, PersonalSettings, Role } from '@shared/personal/personal.types';
 import styles from './RolesDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface RolesDrawerProps {
   open: boolean;
@@ -137,7 +138,7 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
       setRolesMode('view');
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     } finally {
       setSavingRoles(false);
@@ -161,7 +162,7 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
       onClose();
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     } finally {
       setSaving(false);

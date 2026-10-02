@@ -23,6 +23,7 @@ import { AdvanceFormDrawer } from './AdvanceFormDrawer';
 import { SalaryHistoryDrawer } from './SalaryHistoryDrawer';
 import { AdvancesTab } from './AdvancesTab';
 import styles from './SalariesView.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface SalariesViewProps {
   /** Luna arătată (YYYY-MM) — stepperul din antetul PersonalPage o controlează (23c). */
@@ -119,7 +120,7 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
             : `${result.paid.length} salarii plătite.`,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setPaying(false);
     }

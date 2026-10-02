@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createBranch, fetchBranches, updateBranch, type BranchSummary } from '@shared/api/branches';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface BranchesData {
   ready: boolean;
@@ -30,7 +31,7 @@ export function useBranches(): BranchesData {
       setBranches(response.branches);
       setStatus('ready');
     } catch (error) {
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }, []);

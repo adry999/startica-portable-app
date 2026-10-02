@@ -7,6 +7,7 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import type { Advance } from '@shared/personal/personal.types';
 import styles from './AdvancesTab.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 /** Avansuri (23g) — istoricul anului; un avans scăzut nu se mai poate șterge. */
 export function AdvancesTab() {
@@ -25,7 +26,7 @@ export function AdvancesTab() {
       setAdvances(response.advances);
       setStatus('ready');
     } catch (error) {
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }
@@ -41,7 +42,7 @@ export function AdvancesTab() {
       await session.mutate('/api/personal/advances', { id, remove: true });
       await load();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

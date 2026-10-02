@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Button, Drawer, Field, TextInput, useToast } from '@shared/ui';
 import type { ExcelImportData } from './useExcelTransfer';
 import styles from './ExcelImportDialog.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface ExcelImportDialogProps {
   data: ExcelImportData;
@@ -23,7 +24,7 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
       toast.show({ message: 'Datele au fost importate din Excel.' });
       onClose();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

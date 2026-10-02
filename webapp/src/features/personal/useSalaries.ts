@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Salary, SalaryMode, SalaryRow } from '@shared/personal/personal.types';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface SalariesTotals {
   gross: number;
@@ -52,7 +53,7 @@ export function useSalaries(month: string): SalariesData {
       if (isForbidden(error)) {
         setStatus('locked');
       } else {
-        setFailureMessage((error as Error).message);
+        setFailureMessage(toUserError(error));
         setStatus('failed');
       }
     }

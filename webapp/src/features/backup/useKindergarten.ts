@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
+import { toUserError } from '@shared/api/to-user-error';
 
 export type ReceiptFormat = 'a5' | 'a4-third';
 
@@ -44,7 +45,7 @@ export function useKindergarten(): KindergartenData {
       setSettings((await requestJson('/api/kindergarten')) as KindergartenSettings);
       setStatus('ready');
     } catch (error) {
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }, []);

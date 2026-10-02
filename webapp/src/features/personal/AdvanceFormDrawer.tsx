@@ -5,6 +5,7 @@ import { today } from '#shared/domain/calendar-month.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { Staff } from '@shared/personal/personal.types';
 import styles from './AdvanceFormDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface AdvanceFormDrawerProps {
   staff: Staff | null;
@@ -57,7 +58,7 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
         });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setSubmitting(false);
     }

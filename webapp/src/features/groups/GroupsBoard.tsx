@@ -4,6 +4,7 @@ import { initials } from '@shared/format/initials';
 import { GroupTile } from './GroupTile';
 import type { GroupsData } from './useGroups';
 import styles from './GroupsBoard.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const POOL_KEY = 'pool';
 
@@ -29,7 +30,7 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
     try {
       await groupsData.assignChild(groupId, childId);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -38,7 +39,7 @@ export function GroupsBoard({ data: groupsData, onOpenGroupStickers, onExpandGro
     try {
       await groupsData.removeChild(childId);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

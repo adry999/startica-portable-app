@@ -406,6 +406,27 @@ describe('R13 — niciun Drawer/Dialog nu randează alt Drawer/Dialog ca descend
   });
 });
 
+/**
+ * R14 (PROMPT-CLAUDE-CODE-10.md §3, FEEDBACK-01-10.md 41d) — un `error.message`/`err.message` brut
+ * (cu sau fără cast `as Error`, cu sau fără `?.`) nu ajunge niciodată direct într-un text arătat
+ * utilizatorului din features/** — trebuie să treacă prin `toUserError` (`@shared/api/to-user-error`),
+ * care scoate codurile HTTP din răspunsurile neașteptate și fixează mereu același text la un
+ * conflict de revizie (409), păstrând neschimbate mesajele de domeniu deja scrise în română pentru
+ * operator (vezi `fail()`, `#core/server/errors/domain-error.mjs`). Scanare pe text, ca R1-R13: un
+ * `.message` precedat de identificatorul `error`/`err` e o încălcare oriunde ar apărea — toast,
+ * `setXxx(...)` de stare, sau orice alt loc care ajunge pe ecran — `toUserError(error)` nu se
+ * prinde în regulă pentru că nu mai conține `.message`.
+ */
+describe('R14 — fără error.message/err.message brut în features/** — doar prin toUserError', () => {
+  const RAW_ERROR_MESSAGE_PATTERN = /\b(?:error|err)\b(?:\s+as\s+Error)?\)?\??\.message\b/;
+
+  it('niciun .message brut pe o excepție prinsă, în afara toUserError', () => {
+    const files = collectFeatureFilesByName(/\.tsx?$/).filter(f => !/\.test\.tsx?$/.test(f));
+    const actual = featureFilesMatching(files, text => RAW_ERROR_MESSAGE_PATTERN.test(stripComments(text)));
+    expect(actual).toEqual([]);
+  });
+});
+
 describe('granițele dintre module (webapp/src/features)', () => {
   it('niciun fișier dintr-un feature nu importă direct dintr-un alt feature', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-feature');

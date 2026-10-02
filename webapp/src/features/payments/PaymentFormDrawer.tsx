@@ -31,6 +31,7 @@ import { today as todayFn } from '@domain/calendar-month.mjs';
 import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from '@domain/record-schema.mjs';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { toUserError } from '@shared/api/to-user-error';
 import {
   renderSmsTemplate,
   smsVariablesForPayment,
@@ -446,7 +447,7 @@ export function PaymentFormDrawer({
         const outcome = result.results[0];
         if (outcome && outcome.outcome !== 'sent') toast.show({ message: `SMS de confirmare eșuat: ${outcome.error}` });
       })
-      .catch((error: Error) => toast.show({ message: `SMS de confirmare eșuat: ${error.message}` }));
+      .catch((error: Error) => toast.show({ message: `SMS de confirmare eșuat: ${toUserError(error)}` }));
   }
 
   async function handleSubmit(): Promise<boolean> {

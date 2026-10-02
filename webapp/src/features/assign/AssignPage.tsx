@@ -22,6 +22,7 @@ import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { useAssign, type AssignRowView, type ChildOption } from './useAssign';
 import styles from './AssignPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface AssignPageProps {
   month: string;
@@ -97,7 +98,7 @@ export function AssignPage({ month }: AssignPageProps) {
       const { saved } = await assignData.save();
       toast.show({ message: `${saved} achitări asociate.` });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
