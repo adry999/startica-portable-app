@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, UndoToastProvider, useTopbarActionsSlot } from '@shared/ui';
 import { ChildrenPage } from './ChildrenPage';
 
 /** Randează slot-ul de antet ca Topbar-ul real — butoanele „Import CSV"/„+ Adaugă copil" ajung acolo, nu în pagină. */
@@ -99,17 +99,25 @@ function renderPage(initialPath = '/') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <ToastProvider>
-        <TopbarActionsProvider>
-          <TopbarActionsSlot />
-          <ChildrenHarness />
-        </TopbarActionsProvider>
+        <UndoToastProvider>
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <ChildrenHarness />
+          </TopbarActionsProvider>
+        </UndoToastProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
 }
 
 describe('ChildrenPage', () => {
+  // 40b: auditId-ul ultimei scrieri pe un copil — testul de undo îl trimite la POST /api/undo.
+  let nextAuditId = 9000;
+  let auditIdToChildId = new Map<number, string>();
+
   beforeEach(() => {
+    nextAuditId = 9000;
+    auditIdToChildId = new Map();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -117,6 +125,18 @@ describe('ChildrenPage', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/undo') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const childId = auditIdToChildId.get(body.auditId);
+          if (!childId) return { ok: false, status: 404, json: async () => ({ error: 'Nu există.' }) };
+          const updated = {
+            ...fixtureState,
+            children: fixtureState.children.map(c =>
+              c.id === childId ? { ...c, archived: false, archivedAt: null } : c,
+            ),
+          };
+          return jsonResponse({ state: updated, revision: 3, updatedAt: '2026-09-23T10:06:00Z' });
+        }
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           const updated = {
@@ -126,7 +146,9 @@ describe('ChildrenPage', () => {
                 ? [...fixtureState.children, body.record]
                 : fixtureState.children.map(c => (c.id === body.record.id ? body.record : c)),
           };
-          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+          const auditId = nextAuditId++;
+          auditIdToChildId.set(auditId, body.record.id);
+          return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z', auditId });
         }
         if (path === '/api/record-delete') {
           const body = JSON.parse(String(init?.body ?? '{}'));
@@ -316,7 +338,7 @@ describe('ChildrenPage', () => {
     expect(within(paymentRow).getByRole('button', { name: 'Tipărește confirmarea' })).toBeInTheDocument();
   });
 
-  it('arhivează copilul selectat prin bara de selecție și afișează un toast', async () => {
+  it('40b: arhivează copilul selectat prin bara de selecție — UndoToast cu „Anulează · N” îl dezarhivează', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
@@ -327,7 +349,13 @@ describe('ChildrenPage', () => {
     const selectionBar = screen.getByText('1 selectați').closest('div')!;
     await userEvent.click(within(selectionBar).getByRole('button', { name: 'Arhivează' }));
 
-    expect(await screen.findByText('1 copil arhivat')).toBeInTheDocument();
+    expect(await screen.findByText('Copil arhivat')).toBeInTheDocument();
+    expect(screen.getByText('Maria Ionescu')).toBeInTheDocument(); // detaliul din UndoToast
+    expect(screen.queryByRole('row', { name: /Maria Ionescu/ })).not.toBeInTheDocument(); // dispare din listă (filtrul „Activi”)
+
+    await userEvent.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await screen.findByRole('row', { name: /Maria Ionescu/ }); // POST /api/undo a readus-o în listă
   });
 
   it('adaugă un copil nou din formular', async () => {

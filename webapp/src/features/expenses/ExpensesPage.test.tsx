@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
-import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
+import { ToastProvider, TopbarActionsProvider, UndoToastProvider, useTopbarActionsSlot } from '@shared/ui';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ExpensesPage } from './ExpensesPage';
 
@@ -58,10 +58,12 @@ function renderPage(initialPath = '/cheltuieli') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <ToastProvider>
-        <TopbarActionsProvider>
-          <TopbarActionsSlot />
-          <ExpensesPage month="2026-09" />
-        </TopbarActionsProvider>
+        <UndoToastProvider>
+          <TopbarActionsProvider>
+            <TopbarActionsSlot />
+            <ExpensesPage month="2026-09" />
+          </TopbarActionsProvider>
+        </UndoToastProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
@@ -72,9 +74,14 @@ describe('ExpensesPage', () => {
   // aceeași interacțiune (ex. arhivarea secvențială a mai multor rânduri, M1) ar porni mereu
   // de la fixtureState-ul static și ar anula modificarea primului apel.
   let currentExpenses = fixtureState.expenses;
+  // 40b: auditId-ul ultimei cheltuieli create — testul de undo îl trimite la POST /api/undo.
+  let nextAuditId = 9000;
+  let auditIdToExpenseId = new Map<number, string>();
 
   beforeEach(() => {
     currentExpenses = fixtureState.expenses;
+    nextAuditId = 9000;
+    auditIdToExpenseId = new Map();
     vi.stubGlobal(
       'fetch',
       vi.fn(async (path: string, init?: RequestInit) => {
@@ -82,6 +89,14 @@ describe('ExpensesPage', () => {
         if (path === '/api/state')
           return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
         if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/undo') {
+          const body = JSON.parse(String(init?.body ?? '{}'));
+          const expenseId = auditIdToExpenseId.get(body.auditId);
+          if (!expenseId) return { ok: false, status: 404, json: async () => ({ error: 'Nu există.' }) };
+          currentExpenses = currentExpenses.filter(e => e.id !== expenseId);
+          const updated = { ...fixtureState, expenses: currentExpenses };
+          return jsonResponse({ state: updated, revision: 3, updatedAt: '2026-09-23T10:06:00Z' });
+        }
         if (path === '/api/record') {
           const body = JSON.parse(String(init?.body ?? '{}'));
           if (body.type === 'expenses') {
@@ -90,7 +105,9 @@ describe('ExpensesPage', () => {
                 ? [...currentExpenses, body.record]
                 : currentExpenses.map(e => (e.id === body.record.id ? body.record : e));
             const updated = { ...fixtureState, expenses: currentExpenses };
-            return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z' });
+            const auditId = body.mode === 'create' ? nextAuditId++ : undefined;
+            if (auditId) auditIdToExpenseId.set(auditId, body.record.id);
+            return jsonResponse({ state: updated, revision: 2, updatedAt: '2026-09-23T10:05:00Z', auditId });
           }
           if (body.type === 'categories') {
             const updated = {
@@ -308,6 +325,28 @@ describe('ExpensesPage', () => {
 
     expect(await screen.findByText('Cheltuială adăugată.')).toBeInTheDocument();
     expect(screen.getByText('Detergenți')).toBeInTheDocument();
+  });
+
+  it('40b: „Anulează” din UndoToast, după o cheltuială nou-creată, o elimină din evidență', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('+ Cheltuială nouă'));
+    await user.clear(screen.getByLabelText('Data cheltuielii'));
+    await user.type(screen.getByLabelText('Data cheltuielii'), '2026-09-15');
+    await user.type(screen.getByLabelText('Suma'), '250');
+    await user.type(screen.getByLabelText('Descriere'), 'Detergenți');
+    await user.click(screen.getByRole('button', { name: 'Salvează' }));
+
+    expect(await screen.findByText('Detergenți')).toBeInTheDocument();
+    expect(screen.getByText('Cheltuială adăugată')).toBeInTheDocument(); // titlul din UndoToast (fără punct — Toast separat îl are)
+
+    await user.click(screen.getByRole('button', { name: /Anulează · \d+/ }));
+
+    await waitFor(() => expect(screen.queryByText('Detergenți')).not.toBeInTheDocument());
   });
 
   it('categoria se alege dintr-un chip, nu dintr-un câmp de text (FM-2)', async () => {

@@ -14,8 +14,10 @@ import {
   SelectionBar,
   useToast,
   useTopbarActions,
+  useUndoToast,
   type PeriodPreset,
 } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { downloadCsv } from '@shared/csv-export';
 import { shiftMonth } from '@shared/format/month-shift';
@@ -47,6 +49,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [monthKey, setMonthKey] = useState(month);
   const expensesData = useExpenses(monthKey);
   const toast = useToast();
+  const undoToast = useUndoToast();
+  const session = useAppSession();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.expenses', 'table');
@@ -138,12 +142,27 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     }
   }
 
+  // 40b: cheltuială nou-creată — „Anulează · N” cere POST /api/undo (fereastră 15s, verificată
+  // server-side); auditId vine din plicul lui /api/record (revision-transaction.mjs).
+  function showUndoAfterCreate(input: ExpenseFormInput, auditId: number | undefined) {
+    if (!auditId) return;
+    undoToast.show({
+      title: 'Cheltuială adăugată',
+      detail: `${formatMoney(Number(input.amount))} · ${input.category}`,
+      onUndo: () => session.mutate('/api/undo', { auditId }),
+    });
+  }
+
   // C1: întoarce succesul real, nu doar dacă cererea a pornit — „Salvează și schimbă” din
   // useBranchSwitch schimbă filiala doar când save() (deci și funcția asta) întoarce true.
   async function submitExpenseForm(input: ExpenseFormInput): Promise<boolean> {
     try {
-      if (formTarget && formTarget !== 'new') await expensesData.updateExpense(formTarget, input);
-      else await expensesData.createExpense(input);
+      if (formTarget && formTarget !== 'new') {
+        await expensesData.updateExpense(formTarget, input);
+      } else {
+        const { auditId } = await expensesData.createExpense(input);
+        showUndoAfterCreate(input, auditId);
+      }
       setFormTarget(null);
       toast.show({ message: formTarget !== 'new' && formTarget ? 'Cheltuială actualizată.' : 'Cheltuială adăugată.' });
       return true;
@@ -155,7 +174,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
 
   async function quickAddExpense(input: ExpenseFormInput): Promise<boolean> {
     try {
-      await expensesData.createExpense(input);
+      const { auditId } = await expensesData.createExpense(input);
+      showUndoAfterCreate(input, auditId);
       toast.show({ message: 'Cheltuială adăugată.' });
       return true;
     } catch (error) {
