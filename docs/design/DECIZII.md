@@ -12,6 +12,12 @@ Toate deciziile de produs din sesiunile de design. **Au prioritate** față de o
 ## Actualizări (01.10)
 - **Versiunile noi se descarcă din GitHub Releases**, nu de pe VPS. Repo public de release, `latest.json` + instaler ca asset-uri; VPS-ul rămâne doar server de sincronizare. Detalii în `screens/32-actualizari.md`.
 
+- **C6–C13 în pauză (02.10):** teme pe grădiniță, conturi cu roluri, prezență pe telefon, SMS automat, contracte, ajutor în aplicație, burse, verificare backup. Nu se construiesc până la o decizie nouă.
+
+- **Rotunjire la achitare (02.10):** se încasează suma reală. Precompletat rotunjit la leu. Diferență ≤ 5 lei = luna achitată, diferența salvată ca rotunjire. Peste = parțial / avans. Pasul și toleranța se setează pe filială.
+
+- **Telefon (02.10):** salvat ca `+373XXXXXXXX`, afișat ca `069 123 456`. Intrarea acceptă orice formă. Numerele existente fără 0 se migrează după backup.
+
 ## Dashboard
 6. Pastila curs € stă între căutare și selectorul de lună.
 7. „Evoluția încasărilor” are **două coloane pe lună** (încasări portocaliu, cheltuieli verde), max. 13px fiecare, aceeași scală; comutatorul Încasări/Cheltuieli dispare; tooltip cu diferența.

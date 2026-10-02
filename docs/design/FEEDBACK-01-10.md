@@ -15,9 +15,9 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | F8 Funcții custom | ✅ 38f (exista deja în Personal 23e) | ✅ `c045b40` |
 | F9 MDL/EUR | — | ⏳ `5ec6429` (verificat — un conflict găsit, în `INTREBARI.md`) |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
-| F11 Plată din fișă | ✅ 38c | ✅ `53653b7` |
-| F12 Curs BNM istoric | ✅ 38e | ✅ `81f979c` |
-| F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
+| F11 Plată din fișă | ✅ 38c | ⏳ §3.4 |
+| F12 Curs BNM istoric | ✅ 38e | ⏳ §3.3 |
+| F13 Planuri view/edit | ✅ 38d | ⏳ §3.5 |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
 | C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |

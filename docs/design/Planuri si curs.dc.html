@@ -29,7 +29,8 @@
           </header>
           <div style="padding:28px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start">
             <div style="display:flex;flex-direction:column;gap:14px">
-              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><div style="display:flex;align-items:center;gap:10px"><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Planuri</h3><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fcead3;color:#a34f00"><span style="width:8px;height:8px;border-radius:50%;background:#ef8a1d"></span>doar pentru Filiala Buiucani</span></div><span style="font-size:13px;color:#6b7780;text-align:right">Fiecare filială are prețurile ei. Prețul nou se aplică de la luna următoare.</span></div>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><div style="display:flex;align-items:center;gap:10px"><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Planuri</h3><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fcead3;color:#a34f00"><span style="width:8px;height:8px;border-radius:50%;background:#ef8a1d"></span>doar pentru Filiala Buiucani</span></div><div style="display:flex;gap:8px"><span style="padding:8px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px;white-space:nowrap">Editează planuri</span><span style="padding:8px 18px;border-radius:999px;background:#b85a00;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;white-space:nowrap">+ Adaugă plan</span></div></div>
+              <span style="font-size:13px;color:#6b7780">Fiecare filială are prețurile ei. Prețul nou se aplică de la luna următoare. Ștergerea și modificarea doar în „Editează planuri” (<a href="Feedback 01-10.dc.html#38d">38d</a>).</span>
               <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
                 <div style="display:grid;grid-template-columns:8px minmax(0,1fr) 170px 150px;gap:18px;align-items:center;background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:18px 22px 18px 18px">
                   <span style="align-self:stretch;border-radius:99px;background:{{ p.bar }}"></span>
@@ -38,11 +39,11 @@
                     <span style="font-size:13px;color:#6b7780;text-wrap:pretty">{{ p.desc }}</span>
                     <span style="font-size:12px;color:#9aa3a9;font-weight:700">{{ p.kids }}</span>
                   </div>
-                  <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:800;color:#6b7780;text-transform:uppercase;letter-spacing:.06em">Preț lunar<span style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-radius:12px;border:1px solid #c9c4ba;font-size:18px;font-family:'Baloo 2',sans-serif;font-weight:800;color:#3a4750;text-transform:none;letter-spacing:0">{{ p.eur }}<span style="font-size:14px;color:#9aa3a9">€</span></span></label>
+                  <div style="display:flex;flex-direction:column;gap:2px;text-align:right"><span style="font-size:11px;font-weight:800;color:#6b7780;text-transform:uppercase;letter-spacing:.06em">Preț lunar</span><span style="font-size:22px;font-family:'Baloo 2',sans-serif;font-weight:800">{{ p.eur }} €</span></div>
                   <div style="display:flex;flex-direction:column;gap:2px;text-align:right"><span style="font-size:12px;color:#9aa3a9;font-weight:700">la cursul de azi</span><span style="font-weight:800;font-size:15px">≈ {{ p.mdl }} lei</span></div>
                 </div>
               </sc-for>
-              <div style="display:flex;justify-content:flex-end;gap:10px"><span style="padding:9px 16px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:14px">Renunță</span><span style="padding:9px 18px;border-radius:999px;background:#b85a00;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează planurile</span></div>
+              
             </div>
             <div style="display:flex;flex-direction:column;gap:14px">
               <div style="position:relative;overflow:hidden;border-radius:22px;background:{{ rateBg }};padding:20px 22px;display:flex;flex-direction:column;gap:10px">
@@ -50,6 +51,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;position:relative"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:{{ rateInk }}">Curs EUR · 26.09.2026</span><span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#fff;color:{{ rateInk }}">{{ rateSrc }}</span></div>
                 <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:36px;line-height:1;position:relative">1 € = {{ rateNow }} lei</span>
                 <span style="font-size:13px;color:#5b666e;position:relative">{{ rateNote }}</span>
+                <div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:8px 12px;font-size:13px;position:relative"><b>Mâine, 27.09:</b><span>19,6620 lei</span><span style="font-size:12px;font-weight:800;color:#b0284f">▼ 0,028</span><span style="flex:1;text-align:right;color:#9aa3a9;font-size:12px">publicat de BNM</span></div>
                 <span onClick="{{ rateAction }}" style="align-self:flex-start;font-size:13px;font-weight:800;color:{{ rateInk }};cursor:pointer;position:relative">{{ rateActionLbl }}</span>
               </div>
               <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
@@ -68,7 +70,8 @@
                 <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
                   <div style="display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid #f3eee5"><span style="flex:1;color:#6b7780">{{ h.d }}</span><span style="font-weight:800">{{ h.r }}</span><span style="width:78px;text-align:right;font-size:11px;font-weight:800;color:{{ h.fg }}">{{ h.src }}</span></div>
                 </sc-for>
-                <span style="font-size:12px;color:#9aa3a9;margin-top:4px">Cursul se ia automat de la BNM în fiecare zi lucrătoare. În weekend și de sărbători se folosește ultimul curs publicat.</span>
+                <span style="font-size:12px;color:#9aa3a9;margin-top:4px">Cursul se ia automat de la BNM în fiecare zi lucrătoare, se salvează local și intră în backup. În weekend și de sărbători se folosește ultimul curs publicat.</span>
+                <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:800"><a href="Feedback 01-10.dc.html#38e">Vezi calendarul</a><span style="color:#a34f00">Vezi încă 10 zile</span></div>
               </div>
             </div>
           </div>

@@ -50,11 +50,11 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 | `SegmentedControl` cu contoare | 27e | Pentru stări exclusive. Contorul ignoră celelalte filtre. |
 | `SearchInput` | 27e | 260–360px, pill, fără diacritice, fără spații în telefon, debounce 150 ms, × golește, Esc golește. |
 | `FilterMenu` **nou** | 27e | Buton sm (`8px 12px` radius 10). Activ = `--orange-soft` + border 1.5px `--orange` + valoarea sau numărul. Popover 260px: căutare, opțiuni cu bifă și contor, „Golește” / „Doar X”. Înlocuiește `<select>`-urile din bare (Achitări, Mesaje SMS, Cheltuieli). |
-| `PeriodFilter` | 27e | Implementat §5.1: presetări (luna curentă, luna trecută, 30 zile, an școlar, tot) + „Interval personalizat” cu 2 DateInput, peste `Button`+`Popover`. Model pe zi (`YYYY-MM-DD`). În Achitări și Cheltuieli. |
+| `PeriodFilter` | 27e · 41e | Implementat §5.1: presetări (luna curentă, luna trecută, 30 zile, an școlar, tot) + „Interval personalizat” cu 2 DateInput, peste `Button`+`Popover`. Model pe zi (`YYYY-MM-DD`). An școlar = 1 sep – 31 aug. În Achitări și Cheltuieli. |
 | `ActiveFilters` **nou** | 27a | Rând de chip-uri „Cheie: valoare ×” + „Șterge filtrele”. Apare doar dacă e activ cel puțin un filtru. |
 | Contor rezultate | 27a | „**24** din 146” în dreapta barei. |
 | `TableFooter` (`totals`) **nou** | 27a | Rând `--cream` cu „Total pe filtru · N” + sumele pe coloanele `money`. |
-| `Pagination` | 27a · 38a | „Pe pagină 25 ▾” (opțional, via `onPageSizeChange`, `Select size="sm"`) · „26–50 din 312” · ‹ 1 2 3 4 … 13 › (32×32 radius 10, pagina activă slate). Maximum 7 poziții, prima și ultima mereu vizibile, „…” 13/800 `--subtle`, săgețile dezactivate la capete. Ascunsă la o singură pagină. Logica în `pageWindow(page, total)`, funcție pură (`page-window.ts`). `DataTable` o folosește implicit (25/pagină) și resetează la pagina 1 la schimbarea setului de rânduri. |
+| `Pagination` | 27a · 38a | „Pe pagină 25 ▾” · „26–50 din 312” · ‹ 1 2 3 4 … 13 › (32×32 radius 10, pagina activă slate). Maximum 7 poziții, prima și ultima mereu vizibile, „…” 13/800 `--subtle`, săgețile dezactivate la capete. Ascunsă la o singură pagină. Logica în `pageWindow(page, total)`, funcție pură. Se resetează la schimbarea filtrelor. **01.10:** în cod e încă v1 („Pagina X din Y”). |
 | `groupBy` + restrângere | 27f | Antet de grup `#faf7f1`, Baloo 15, contor, sumă pe grup, ▼/▶. |
 | Gol / fără rezultate / încărcare | 27f · 29h | Automat din `state` + `empty="<cheie>"` (29h). `EmptyState` cu CTA. „Nimic pentru X” (chenar punctat) + „Șterge filtrele”. Rânduri schelet cu aceleași coloane, după 300 ms. |
 | `SelectionBar` | 27g | În linie (Copii, Cheltuieli) sau `floating` (Achitări). „Selectează toate N”. Slot danger. Esc = Anulează. |
@@ -215,6 +215,22 @@ Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2
 | `EditableList` (mod `view` / `edit`) | 38d · 38f | Lista de planuri și lista de funcții: în `view` doar citire + „+ Adaugă” (primar) și „Editează” (secundar). În `edit`: câmpuri, `×` doar pe elementele nefolosite (altfel inactiv, tooltip „Folosit de N”), „Salvează” inactiv până la prima modificare, „Anulează” revine la `view`. |
 | `ChildLockedRow` | 38c | Rândul copilului fixat în Achitare nouă: avatar cu tonul grupei, nume 15/800, „grupă · contract · scadență” 12px, „Schimbă” 13/800 `--orange-ink`. Fundal `--cream`, border `--border`, radius 16. |
 | `ArrearsRow` | 38c | „Are restanță: Lună · sumă” pe `--pink-soft`, radius 12, text `--pink-ink`; acțiune „Bifează ca s-o acoperi”. |
+| `MissingFieldsBanner` **nou** | 41a | Bandă sub antetul fișei, radius 16: „Lipsesc N date” Baloo 16 + pastile albe 13/800 + „Completează”. Galben (`--yellow-soft` / `--yellow-ink`) pentru recomandate, roz dacă lipsește un obligatoriu. Ascunsă când totul e completat. Logica: `missingChildFields(child)`. |
+| `ErrorNotice` (peste `Notice`) | 41d | Cerc 26px cu „!”, titlu 14/800 = ce s-a întâmplat, text 13px = ce s-a păstrat și ce urmează, 1–2 acțiuni link 13/800 `--orange-ink`. Roz = blocant, galben = degradat (merge mai departe). Fără coduri HTTP. Text din `toUserError(err)`. |
+| `WeekFillBar` | 41b | În antetul pontajului: interval Baloo 18 + „Toți prezenți L–V” (mint plin) + „Copiază săpt. trecută” (secundar). Completează doar celulele goale. |
+| `RoundingRow` | 41f | Sub suma încasată, radius 12: mint „Luna achitată · rotunjire ±X lei” (în toleranță), roz „Rămân X lei” (parțial), portocaliu-soft „+X lei avans pentru Lună” (surplus). Dreapta: „≈ N €”. Calculul „plan € × curs = X lei” 13px `--muted` deasupra câmpului. |
+| `GlobalSearch` (grupuri noi) | 41c | Grupuri „Copii · după telefonul părintelui” (sufix potrivit în bold) și „Achitări”/„Cheltuieli” când textul e numeric (max. 5). |
+| `AppBanner` **nou** | 42a · 42b | Bandă full-width deasupra antetului: roz (blocant, fără ×) sau mint (informativ, cu ×). Cerc „!” 26px sau text simplu, titlu 14/800, text 13px, acțiune primară sau link-uri. Un singur banner odată; prioritate: sincronizare oprită > actualizare gata. |
+| `SetupWizard` | 42d | 3 pași în card 420–440px: Alege (ChoiceCards radio) → Verifică (rânduri din manifest + notă galbenă) → Gata (bife + link-uri). Eticheta „Pasul N din 3” 12/800 uppercase. |
+| `QuickPaySearch` | 44a | `SearchSelect` în antetul Achitări, border 1.5px `--orange` + inel focus, `Kbd` „N”. Rând rezultat: nume 14/800 + grupă·plan 12px, restanță `--pink-ink` 13/800, suma lunii, `Kbd` „Enter” pe rândul activ (`--cream`). Frații sub copil. |
+| `SiblingPaymentRows` | 44b | În `PaymentFormDrawer`: rânduri bifă + nume + luni + sumă, total Baloo 24 sub linie 1.5px. „+ Adaugă fratele” link. |
+| `CashSummaryCard` | 44c | Card alb radius 22: ziua Baloo 20 + nr. achitări; 3 mini-carduri pe ton (numerar orange, card blue, transfer mint) etichetă 11/800 + sumă Baloo 20; total + „Tipărește raportul zilei”. Clic pe mini-card = filtru. |
+| `Drawer` / `Dialog` (comportament) | 44d | `initialFocus`, Ctrl+Enter = submit, Esc → `UnsavedChangesDialog`, subsol fix, focus pe prima eroare + „N erori” în subsol, `loading` pe principal, fără drawer în drawer. Lățimi: `--drawer-form: 620px`, `--drawer-detail: 480px`, `--dialog: 440px`. |
+| `HistoryRow` + `RecordFilter` | 45a | Rând: dată 14/800 + oră 12px, `Badge` modul, acțiune 14/800 + „înainte → după” 13px, cine + calculator aliniat dreapta. Filtru: pastilă slate cu × pentru înregistrarea aleasă. |
+| `RecentChanges` | 45b | Card fișă: titlu 12/800 uppercase, max. 3 rânduri cu punct 8px pe tonul modulului, „Tot istoricul”. Doar profil Complet. |
+| `AttentionList` | 45c | Rânduri radius 16 pe ton (roz bani, galben date/prezență, neutru sistem): număr Baloo 16 pe alb 34px, titlu 14/800 + detaliu 12px, buton pill alb 12/800. Max. 5. |
+| `UndoToast` **nou** | 40b | Slate `#3a4750`, radius 16, bifă pe `--mint`, titlu 14/800 + detaliu 12px `#b9c1c6`, „Anulează · N” pe alb 14%. Jos-centru, 10 s. |
+| `UnsavedChangesDialog` | 40c | Dialog 440px: „Închizi fără să salvezi?”, câmpurile schimbate în bold, „Renunță la modificări” (text `--pink-ink`) + „Salvează” primar, implicit pe Enter. |
 | `BackupContents` | 38g | Rezumat (Baloo 22) + rânduri tip · sursă · număr, din `manifest.json`. Același bloc în previzualizarea restaurării. |
 
 ## 4. Ordine
