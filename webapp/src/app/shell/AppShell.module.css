@@ -1,6 +1,20 @@
+/* §11, 42a/42b: bandă full-width DEASUPRA întregului shell (meniu + antet), nu doar a antetului —
+   „pe toate rutele”, un singur banner deodată (roz > mint, vezi AppShell.tsx). */
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--cream);
+}
+
+.banners > * {
+  width: 100%;
+}
+
 .shell {
   display: flex;
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   background: var(--cream);
 }
 
@@ -35,6 +49,10 @@
 
 /* Tipărire (confirmarea de plată, Situația plăților, Prezența · Luna): doar conținutul, fără meniu sau antet. */
 @media print {
+  .banners {
+    display: none;
+  }
+
   .shell > aside {
     display: none;
   }

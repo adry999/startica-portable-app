@@ -10,16 +10,21 @@ import { VIEW_TITLES, type ViewKey } from './nav-items';
 import { searchRecords, type SearchResult } from './search-records';
 import { pathForSearchResult } from './routes';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
+import { SyncStatusPill } from './SyncStatusPill';
+import type { SyncCardMode } from './sync-status';
 import styles from './Topbar.module.css';
 
 export interface TopbarProps {
   view: ViewKey;
   month: string;
   onMonthChange: (month: string) => void;
+  /** Pastila de sincronizare (§11, 42a/42b) — absentă cât sincronizarea nu e configurată, la fel
+   * ca `syncStatus` din Sidebar (aceeași sursă, `deriveSyncStatus`, nu o a doua logică). */
+  syncStatus?: { mode: SyncCardMode; label: string; onClick?: () => void };
 }
 
 /** Antetul paginii — eyebrow+titlu la stânga, acțiuni la dreapta (căutare globală doar pe Dashboard + selector lună). */
-export function Topbar({ view, month, onMonthChange }: TopbarProps) {
+export function Topbar({ view, month, onMonthChange, syncStatus }: TopbarProps) {
   const titleOverride = useTopbarTitleSlot();
   const { eyebrow: baseEyebrow, title } = titleOverride ?? VIEW_TITLES[view];
   const pageActions = useTopbarActionsSlot();
@@ -68,6 +73,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
         <p className={styles.eyebrow}>{eyebrow}</p>
       </div>
       <div className={styles.actions}>
+        {syncStatus && <SyncStatusPill mode={syncStatus.mode} label={syncStatus.label} onClick={syncStatus.onClick} />}
         {view === 'dashboard' && (
           <div className={styles.searchWrap}>
             <label className={styles.search}>

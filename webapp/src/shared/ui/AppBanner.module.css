@@ -41,3 +41,9 @@
   background: var(--teal-soft);
   color: var(--teal-ink);
 }
+
+/* 42b — „Actualizare gata”, singura bară mint (COMPONENTE.md §0i, rândul AppBanner nou). */
+.update {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}

@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
-import { TopbarActionsProvider } from '@shared/ui';
+import { AppBanner, TopbarActionsProvider } from '@shared/ui';
+import { usePersistedState } from '@shared/state/usePersistedState';
 import { Sidebar } from './Sidebar';
 import { StartupScreen } from './StartupScreen';
 import { Topbar } from './Topbar';
@@ -11,9 +12,15 @@ import { BranchSwitchDialog } from './BranchSwitchDialog';
 import { useBranchSwitch } from './useBranchSwitch';
 import { deriveSaveStatus } from './save-status';
 import { deriveSyncStatus } from './sync-status';
+import { deriveSyncBanner } from './sync-banner';
+import { UPDATE_DISMISS_KEY, dismissUpdateValue, shouldShowUpdateBanner } from './update-banner';
 import { VIEW_PATHS } from './routes';
 import type { ViewKey } from './nav-items';
 import styles from './AppShell.module.css';
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export interface AppShellProps {
   view: ViewKey;
@@ -32,6 +39,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // Hook-urile rulează necondiționat, înainte de întoarcerea din ecranul de pornire de mai jos.
   const branchSwitch = useBranchSwitch();
   const syncStatusData = useSyncStatus();
+  // §11, 42b: „revine a doua zi” — valoarea persistă cât bara mint a fost închisă ultima dată
+  // (dată + versiune respinsă), citită înainte de orice return condiționat (regula hook-urilor).
+  const [updateDismissedUntil, setUpdateDismissedUntil] = usePersistedState<string>(UPDATE_DISMISS_KEY, '');
   // Cât timp sesiunea nu are încă snapshot-ul (ready), nu are rost meniul sau antetul —
   // ecranul de pornire (21a) ia locul întregului shell, nu doar al conținutului.
   // `forceReady` (21c, „Lucrez fără legătură”) lasă utilizatorul să treacă mai departe cât
@@ -55,6 +65,22 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
               : undefined,
       }
     : undefined;
+  // Pastila din antet (§11, 42a/42b) — același mod+etichetă ca syncCard de mai sus (sidebar),
+  // doar randată compact; click deschide fila Sincronizare, ca și cardul.
+  const syncPill = syncCard ? { mode: syncCard.mode, label: syncCard.label, onClick: goToSyncTab } : undefined;
+
+  // §11, 42a — bandă roz, deasupra antetului, pe toate rutele, fără ×: apare doar cât
+  // sincronizarea e configurată și chiar nu merge (offline/revoked), nu la conflict/syncing
+  // (vezi `deriveSyncBanner`). Întâietate asupra benzii mint de mai jos (o singură bandă deodată).
+  const syncBanner = session.state.sync?.configured ? deriveSyncBanner(syncStatusData) : null;
+
+  // §11, 42b — bandă mint, se închide cu × și revine a doua zi (sau mai devreme, dacă apare o
+  // versiune și mai nouă — vezi `shouldShowUpdateBanner`). Nu se arată deodată cu banda roz.
+  const update = session.state.update;
+  const today = todayIso();
+  const showUpdateBanner =
+    !syncBanner && update.updateAvailable && shouldShowUpdateBanner(updateDismissedUntil, update.latestVersion, today);
+  const updateLink = update.releaseUrl ?? update.downloadUrl;
 
   // Fila implicită se alege din localStorage, citită de BackupPage la montare
   // (usePersistedState('view.backup', …)).
@@ -80,30 +106,55 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
 
   return (
     <TopbarActionsProvider>
-      <div className={styles.shell}>
-        <Sidebar
-          activeView={view}
-          onNavigate={onNavigate}
-          counts={counts}
-          version={session.state.version}
-          saveStatus={{ ...saveStatus, onRetry: () => void session.load() }}
-          syncStatus={syncStatus}
-          branch={session.state.branch}
-          branches={session.state.branches}
-          onSwitchBranch={branchSwitch.requestSwitch}
-          onManageBranches={goToBranchesTab}
-          poolEnabled={!!session.state.pool?.enabled}
-        />
-        <div className={styles.workspace}>
-          <div
-            className={
-              branchSwitch.switching ? `${styles.workspaceInner} ${styles.workspaceDimmed}` : styles.workspaceInner
-            }
-          >
-            <Topbar view={view} month={month} onMonthChange={onMonthChange} />
-            <main className={styles.content}>{children}</main>
+      <div className={styles.root}>
+        {syncBanner && (
+          <div className={styles.banners}>
+            <AppBanner
+              tone="error"
+              message={syncBanner.message}
+              action={syncBanner.actionLabel ? { label: syncBanner.actionLabel, onClick: goToSyncTab } : undefined}
+            />
           </div>
-          {branchSwitch.switching && <BranchSwitchOverlay toName={branchSwitch.switching.toName} />}
+        )}
+        {showUpdateBanner && (
+          <div className={styles.banners}>
+            <AppBanner
+              tone="update"
+              message={`Startica ${update.latestVersion} e gata de descărcat.`}
+              action={
+                updateLink
+                  ? { label: 'Ce e nou', onClick: () => window.open(updateLink, '_blank', 'noopener') }
+                  : undefined
+              }
+              onDismiss={() => setUpdateDismissedUntil(dismissUpdateValue(update.latestVersion, today))}
+            />
+          </div>
+        )}
+        <div className={styles.shell}>
+          <Sidebar
+            activeView={view}
+            onNavigate={onNavigate}
+            counts={counts}
+            version={session.state.version}
+            saveStatus={{ ...saveStatus, onRetry: () => void session.load() }}
+            syncStatus={syncStatus}
+            branch={session.state.branch}
+            branches={session.state.branches}
+            onSwitchBranch={branchSwitch.requestSwitch}
+            onManageBranches={goToBranchesTab}
+            poolEnabled={!!session.state.pool?.enabled}
+          />
+          <div className={styles.workspace}>
+            <div
+              className={
+                branchSwitch.switching ? `${styles.workspaceInner} ${styles.workspaceDimmed}` : styles.workspaceInner
+              }
+            >
+              <Topbar view={view} month={month} onMonthChange={onMonthChange} syncStatus={syncPill} />
+              <main className={styles.content}>{children}</main>
+            </div>
+            {branchSwitch.switching && <BranchSwitchOverlay toName={branchSwitch.switching.toName} />}
+          </div>
         </div>
       </div>
       {branchSwitch.dialog && (

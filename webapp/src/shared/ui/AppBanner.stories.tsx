@@ -29,3 +29,12 @@ export const Warning: Story = {
 export const Offline: Story = {
   args: { tone: 'offline', message: 'Fără conexiune la internet.', action: undefined },
 };
+
+export const Update: Story = {
+  args: {
+    tone: 'update',
+    message: 'Startica 2.2.0 e gata de descărcat.',
+    action: { label: 'Ce e nou', onClick: fn() },
+    onDismiss: fn(),
+  },
+};

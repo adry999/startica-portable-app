@@ -1,0 +1,56 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: var(--neutral-soft);
+  color: var(--slate);
+  border: none;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--subtle);
+}
+
+/* „Sincronizat” — mint, ca în artboard (Feedback 01-10.dc.html#42b). */
+.synced {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
+.synced .dot {
+  background: var(--success-dot);
+}
+
+/* „Se trimit N modificări…” — galben, ca la cardul din sidebar (SyncStatusCard). */
+.syncing .dot {
+  background: var(--yellow);
+}
+
+/* Oprită (offline/revoked) sau conflict — roz, ca în artboard (#42a). */
+.stopped {
+  background: var(--pink-soft);
+  color: var(--pink-ink);
+}
+
+.stopped .dot {
+  background: var(--raspberry);
+}

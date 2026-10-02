@@ -2,7 +2,7 @@ import { Button } from './Button';
 import { IconButton } from './IconButton';
 import styles from './AppBanner.module.css';
 
-export type AppBannerTone = 'error' | 'offline' | 'warning' | 'info';
+export type AppBannerTone = 'error' | 'offline' | 'warning' | 'info' | 'update';
 
 export interface AppBannerProps {
   tone: AppBannerTone;
@@ -10,7 +10,7 @@ export interface AppBannerProps {
   /** Acțiune opțională (ex. "Reîncearcă") — arată `loading` cât timp `actionLoading` e adevărat. */
   action?: { label: string; onClick: () => void };
   actionLoading?: boolean;
-  /** Lipsă (implicit) pe error/offline — acelea nu se pot închide (spec). Poate fi dat pe warning/info. */
+  /** Lipsă (implicit) pe error/offline — acelea nu se pot închide (spec). Poate fi dat pe warning/info/update. */
   onDismiss?: () => void;
   className?: string;
 }

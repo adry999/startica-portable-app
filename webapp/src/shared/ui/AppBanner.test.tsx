@@ -18,6 +18,14 @@ describe('AppBanner', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Fără conexiune.');
   });
 
+  it('tonul update (42b) randează banda mint, închisă prin onDismiss ca info/warning', async () => {
+    const onDismiss = vi.fn();
+    render(<AppBanner tone="update" message="Startica 2.2.0 e gata de descărcat." onDismiss={onDismiss} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Startica 2.2.0 e gata de descărcat.');
+    await userEvent.click(screen.getByRole('button', { name: 'Închide' }));
+    expect(onDismiss).toHaveBeenCalledOnce();
+  });
+
   it('nu arată butonul de închidere fără onDismiss', () => {
     render(<AppBanner tone="error" message="Eroare." />);
     expect(screen.queryByRole('button', { name: 'Închide' })).not.toBeInTheDocument();
