@@ -932,3 +932,29 @@ O decizie tehnică luată pe loc, cu un implicit rezonabil aplicat, fără să o
    Dacă produsul chiar vrea `/api/undo` literal și aici, soluția corectă ar fi să extindă
    `undo.routes.mjs` să cunoască și `personalRepository` — nu am făcut asta neasumat, fiind o
    cuplare nouă între feature-urile `audit-log` și `personal`.
+
+## AUDIT-COD-02-10-B.md #4 — Luna (attendance, 18b) arată roster-ul curent al grupei, nu istoric
+
+**Întrebare de produs, nerezolvată — las punctul deschis, nu aleg unilateral.**
+
+`webapp/src/features/attendance/useAttendanceMonth.ts:94-99` (și `WeeklySheet.tsx`/
+`WeeklySheetDialog.tsx`, același tipar) filtrează copiii dintr-o grupă, la Luna, după
+`child.groupId` CURENT — nu după grupa pe care copilul o avea efectiv în luna vizualizată.
+Schema nu ține niciun istoric de apartenență la grupă (doar `groupId` curent pe fișa copilului).
+
+Scenariu concret: copil mutat din Grupa A în Grupa B pe 1 octombrie. Deschizi Luna/septembrie/
+Grupa A → copilul dispare din listă, deși a avut prezență reală marcată acolo în septembrie.
+Deschizi Luna/septembrie/Grupa B → copilul apare, deși la acea dată încă nu fusese mutat acolo.
+
+Două opțiuni, ambele cu cost real:
+1. **Documentează limitarea** — Luna arată „roster-ul curent”, nu un instantaneu istoric; fără
+   schimbare de cod, doar un indiciu în UI (ex. „copiii din grupa curentă” lângă titlu) ca
+   administratorul să nu interpreteze greșit o lună trecută după o mutare.
+2. **Adaugă istoric de apartenență** — un interval valabil per grupă pe copil (`groupHistory:
+   [{groupId, from, to}]`), folosit la filtrare în Luna/WeeklySheet după data vizualizată, nu
+   după `groupId` curent. Schimbare de schemă + migrare pentru datele existente (grupa curentă
+   devine primul interval, fără `to`), plus actualizarea celor 3 locuri care filtrează după
+   `groupId` direct.
+
+Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
+nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
