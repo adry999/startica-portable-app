@@ -1069,3 +1069,46 @@ sub `ChoiceCards` apare „Taxa lunară = prețul planului: {nume} · {preț} �
   `localStorage.setItem('view.backup', 'curs')` (deja folosit de `Topbar.tsx` pentru același scop),
   nu un parametru de query `?tab=curs` cum sugerează litera promptului — `BackupPage.tsx` nu
   citește deloc query string-ul azi; mecanismul ales e cel deja funcțional și testat în cod.
+
+## §5 (F18, PROMPT-11) — Achitare nouă refăcută după 15b: ce s-a închis, ce rămâne
+
+**Închis:** cardul copilului arată acum „{grupă} · contract {N} · scadență {Z}” (nu mai „taxă X ·
+{lună} neachitat”); cardurile alăturate **Plan** (`--orange-soft`, numele presetării potrivite din
+`/api/plan-presets` + taxa, „pe lună”) + **Curs BNM** (`--mint-soft`, data, „1 € = {curs} lei”,
+link „Curs manual”) pentru copil EUR; copil MDL arată doar cardul Plan/Taxă, cu suma în lei; copil
+fără taxă deloc arată cardul galben „Copilul nu are plan sau taxă” + link „Completează” spre
+`/copii/:id` (ca `fixLink`-ul din `SmsConfirmDialog.tsx`). Rândul „X € × curs = Y lei” s-a mutat
+deasupra câmpului Sumă (fără eticheta „De încasat:”, ca-n artboard). Sub pastilele „Rotunjește”,
+banda de stare (mint/galben/roz) urmează starea rândului unic de repartizare automată, în loc de
+nota gri simplă „= X €”. Prefill-ul taxei rulează acum și la prima alegere a copilului într-o
+plată nouă fără `defaultChildId` (nu doar din fișă) — fără să suprascrie o sumă deja tastată.
+
+**Neatins din scop (motive concrete, nu doar „lipsă de timp”):**
+1. **„Luni acoperite” ca pastile `ChipSelect` multi-select** (punctul 4 din §5) — NU e doar un
+   restyling: artboard-ul arată pastile bifabile ("✓ Oct 2026 / Nov 2026 / Dec 2026") care par să
+   controleze direct ce luni intră în repartizarea automată, spre deosebire de lista read-only
+   „Se repartizează automat” de azi (calculată din `autoAllocatePayment`, fără intervenție directă
+   pe lună). A schimba interacțiunea fără o decizie clară despre cum pastilele bifate/debifate
+   realimentează `autoAllocatePayment` ar risca alocări greșite de bani — amânat, rămâne lista
+   curentă (deja corectă funcțional). Planul scris pentru §5 nota deja acest risc („rămâne pe
+   UI-ul curent de alocare manuală până §3 e gata”).
+2. **Link-ul „Curs manual” nu ascunde/arată câmpul „Curs EUR”** — doar îl focalizează (câmpul
+   rămâne mereu randat, ca azi). Motiv: `PaymentFormDrawer.test.tsx` are teste (ex. „copil cu taxă
+   EUR: arată conversia în €, câmpul Curs EUR...”) care verifică acest câmp vizibil IMEDIAT după
+   alegerea copilului, fără niciun clic — a-l ascunde în spatele link-ului ar fi o regresie reală
+   de utilizare (corectarea cursului e des necesară, inclusiv când cursul e complet necunoscut și
+   blochează salvarea), nu doar o rescriere de teste.
+3. **Nota „BNM {dată} · {curs}” / „Curs necunoscut...” de sub câmpul Curs EUR rămâne**, deși
+   informația e acum (parțial) duplicată în cardul Curs BNM de mai sus — păstrată neschimbată ca
+   să nu rupă testul care verifică exact textul „Curs necunoscut pentru această dată — completează
+   manual” la lipsa cursului.
+4. **Banda de stare pentru cazurile galben „Rămân X pe {lună}” / „+X avans pentru {lună
+   următoare}”** din spec nu sunt replicate literal — banda refolosește `allocationStatus`/
+   `allocationTone` deja existente (plată parțială/avans/achitat/neachitat), al căror text diferă
+   ușor de formulările exacte din artboard; schimbarea textelor acolo ar afecta și lista „Se
+   repartizează automat” de mai jos, care le folosește identic — amânat ca să nu introducă
+   inconsistență între bandă și listă.
+5. **Fără captură lângă artboard** — ca la §17/§19/§18/§2/§1, verificarea a fost făcută prin
+   teste (inclusiv 4 teste noi pentru cele două carduri + cardul de avertizare), nu prin captură
+   vizuală comparată la `npx serve docs/design` (nicio sesiune din acest lanț n-a produs încă o
+   captură reală; ar cere pornirea serverului + browser headless, nefăcut până acum).

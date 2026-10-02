@@ -188,6 +188,121 @@
   width: 130px;
 }
 
+/* §5 (PROMPT-11 F18, 15b): Plan + Curs BNM alăturate — copil EUR; MDL arată doar cardul Plan
+   (un singur element, fără grid). Cardul galben de avertizare (fără plan/taxă) e autonom. */
+.planCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-10);
+}
+
+.planCard {
+  border-radius: var(--radius-md-lg);
+  padding: var(--space-12) var(--space-14);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planCardOrange {
+  background: var(--orange-soft);
+}
+
+.planCardMint {
+  background: var(--mint-soft);
+}
+
+.planCardYellow {
+  background: var(--yellow-soft);
+  border: 1.5px solid var(--yellow-border);
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.planCardLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange-ink);
+}
+
+.planCardMint .planCardLabel {
+  color: var(--mint-ink);
+}
+
+.planCardValue {
+  font-family: var(--font-heading);
+  font-size: 20px;
+}
+
+/* Textul cardului galben de avertizare nu e o sumă/titlu Baloo — rămâne pe fontul corpului. */
+.planCardWarningText {
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.planCardSub {
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.planCardSubRow {
+  font-size: 12px;
+  color: var(--subtle);
+  display: flex;
+  justify-content: space-between;
+}
+
+.planCardLink {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--orange-ink);
+}
+
+/* §5: banda de stare sub pastilele de rotunjire (copil EUR) — urmează starea rândului unic de
+   repartizare automată, ca în lista „Se repartizează automat” de mai jos. */
+.statusBand {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  font-size: 12px;
+  color: var(--subtle);
+}
+
+.statusBand.mint,
+.statusBand.yellow,
+.statusBand.pink {
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-md);
+}
+
+.statusBand.mint {
+  background: var(--mint-soft);
+}
+.statusBand.mint .statusBandLabel {
+  color: var(--mint-ink);
+}
+.statusBand.yellow {
+  background: var(--yellow-soft);
+}
+.statusBand.yellow .statusBandLabel {
+  color: var(--yellow-ink);
+}
+.statusBand.pink {
+  background: var(--pink-soft);
+}
+.statusBand.pink .statusBandLabel {
+  color: var(--pink-ink);
+}
+
+.statusBandLabel {
+  flex: 1;
+}
+
 /* 44b: „Total grup” — sub o linie 1.5px, text mare (Baloo), sub `AmountInput` editabil. */
 .groupTotalRow {
   display: flex;

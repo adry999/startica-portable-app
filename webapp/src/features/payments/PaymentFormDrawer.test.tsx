@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readDirtyForms } from '@shared/state/dirty-forms';
 import { ToastProvider } from '@shared/ui';
@@ -8,12 +9,15 @@ import { today as todayFn } from '@domain/calendar-month.mjs';
 import { PaymentFormDrawer, type PaymentFormDrawerProps } from './PaymentFormDrawer';
 import type { Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
-/** `useToast()` (15b) cere `ToastProvider` — un singur loc care randează drawer-ul, pentru toate testele. */
+/** `useToast()` (15b) cere `ToastProvider`; §5 (PROMPT-11): cardul galben „fără plan/taxă” are un
+ * `<Link>` spre fișa copilului — are nevoie de context de router, ca în `ChildFormDrawer.test.tsx`. */
 function renderDrawerWithProps(props: PaymentFormDrawerProps) {
   return render(
-    <ToastProvider>
-      <PaymentFormDrawer {...props} />
-    </ToastProvider>,
+    <MemoryRouter>
+      <ToastProvider>
+        <PaymentFormDrawer {...props} />
+      </ToastProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -78,10 +82,21 @@ const records = {
       archived: false,
       feeHistory: [{ from: '2026-01', amount: 650, currency: 'EUR' }],
     },
+    // §5 (PROMPT-11 F18): grupă + contract + scadență pentru cardul copilului; taxă EUR care se
+    // potrivește unei presetări (`/api/plan-presets`), pentru cardul „Plan”.
+    {
+      id: 'c8',
+      name: 'Gabriel Vasile',
+      archived: false,
+      groupId: 'g1',
+      contractNumber: '7',
+      dueDay: 15,
+      feeHistory: [{ from: '2026-01', amount: 500, currency: 'EUR' }],
+    },
   ],
   payments: [],
   expenses: [],
-  groups: [],
+  groups: [{ id: 'g1', name: 'Fluturași', order: 1 }],
   categories: [],
   visits: [],
   charges: [],
@@ -106,6 +121,15 @@ function sumInput() {
   return screen.getByLabelText('Sumă') as HTMLInputElement;
 }
 
+/** §5 (PROMPT-11 F18): precompletarea taxei pornește acum și la prima alegere a copilului
+ * într-o plată nouă (nu doar din fișă, `defaultChildId`) — câmpul Sumă poate avea deja o
+ * valoare propusă când testul vrea să scrie una proprie, de-aia golim întâi. */
+async function typeSum(user: ReturnType<typeof userEvent.setup>, value: string) {
+  const input = sumInput();
+  await user.clear(input);
+  await user.type(input, value);
+}
+
 async function pickChild(user: ReturnType<typeof userEvent.setup>, name: string) {
   await user.click(screen.getByRole('button', { name: 'Copil' }));
   await user.click(screen.getByRole('option', { name }));
@@ -116,7 +140,11 @@ async function goManual(user: ReturnType<typeof userEvent.setup>) {
 }
 
 /** Implicit sms.md neconectat — testele 15b care au nevoie de „conectat” își suprascriu propriul fetch. */
-function stubFetch({ smsStatus = { configured: false }, smsSend }: { smsStatus?: object; smsSend?: unknown } = {}) {
+function stubFetch({
+  smsStatus = { configured: false },
+  smsSend,
+  planPresets = [],
+}: { smsStatus?: object; smsSend?: unknown; planPresets?: unknown[] } = {}) {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string) => {
@@ -124,6 +152,7 @@ function stubFetch({ smsStatus = { configured: false }, smsSend }: { smsStatus?:
         return { ok: true, status: 200, json: async () => ({ rates: { [KNOWN_RATE_DATE]: KNOWN_RATE }, sources: {} }) };
       if (path === '/api/sms-status') return { ok: true, status: 200, json: async () => smsStatus };
       if (path === '/api/sms-send' && smsSend) return { ok: true, status: 200, json: async () => smsSend };
+      if (path === '/api/plan-presets') return { ok: true, status: 200, json: async () => planPresets };
       throw new Error(`neașteptat: ${path}`);
     }),
   );
@@ -142,7 +171,7 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     expect(sumInput().value).toBe('500');
 
     await user.click(saveButton());
@@ -155,7 +184,7 @@ describe('PaymentFormDrawer', () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     await user.click(screen.getByRole('radio', { name: 'Card' }));
     expect(sumInput().value).toBe('500');
 
@@ -169,7 +198,7 @@ describe('PaymentFormDrawer', () => {
     renderDrawer();
     const user = userEvent.setup();
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     await goManual(user);
 
     const allocationAmount = document.querySelector('input[type="number"][min="0.01"]') as HTMLInputElement;
@@ -178,7 +207,7 @@ describe('PaymentFormDrawer', () => {
     await user.clear(allocationAmount);
     await user.type(allocationAmount, '100');
     await user.clear(sumInput());
-    await user.type(sumInput(), '700');
+    await typeSum(user, '700');
 
     // Suma repartizării nu se mai actualizează automat după editarea manuală.
     expect(allocationAmount.value).toBe('100');
@@ -225,7 +254,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Maria Ionescu');
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     await user.click(saveButton());
 
     expect(onSubmit).toHaveBeenCalledWith(
@@ -264,7 +293,7 @@ describe('PaymentFormDrawer', () => {
     renderDrawerWithProps({ target: 'new', records, onSubmit, onClose: vi.fn() });
     const user = userEvent.setup();
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     const button = saveButton();
 
     await user.click(button);
@@ -322,7 +351,7 @@ describe('PaymentFormDrawer', () => {
     });
     // 100,03 € × 19,5 = 1.950,585 lei → exact 1.950,59 (R: 02.10, nu mai rotunjește la leu).
     expect(await screen.findByDisplayValue('1950.59')).toBeInTheDocument();
-    expect(screen.getByText(/De încasat: 100,03 €/)).toBeInTheDocument();
+    expect(screen.getByText(/100,03 €.*1\.950,59 lei/)).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'Exact 1950,59' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'în sus la leu' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('radio', { name: 'în sus la leu' }));
@@ -340,7 +369,7 @@ describe('PaymentFormDrawer', () => {
     await screen.findByDisplayValue('1500.00');
     const user = userEvent.setup();
     await user.clear(sumInput());
-    await user.type(sumInput(), '2000');
+    await typeSum(user, '2000');
     expect(sumInput().value).toBe('2000');
   });
 
@@ -368,7 +397,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Andrei Popescu');
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     await user.click(saveButton());
 
     expect(screen.queryByLabelText('Curs EUR')).toBeNull();
@@ -383,7 +412,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Elena Rusu');
-    await user.type(sumInput(), '1000');
+    await typeSum(user, '1000');
 
     expect(screen.getByText('= 51,28 €')).toBeInTheDocument();
     expect(screen.getByLabelText('Curs EUR')).toHaveAttribute('placeholder', String(KNOWN_RATE));
@@ -401,7 +430,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Elena Rusu');
-    await user.type(sumInput(), '1000');
+    await typeSum(user, '1000');
     await user.type(screen.getByLabelText('Curs EUR'), '20');
 
     await user.click(saveButton());
@@ -418,7 +447,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Ioana Barbu');
-      await user.type(sumInput(), '4920');
+      await typeSum(user, '4920');
       await user.click(saveButton());
 
       const submitted = onSubmit.mock.calls[0][0];
@@ -430,7 +459,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Ioana Barbu');
-      await user.type(sumInput(), '4922');
+      await typeSum(user, '4922');
       await user.click(saveButton());
 
       const submitted = onSubmit.mock.calls[0][0];
@@ -442,7 +471,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Ioana Barbu');
-      await user.type(sumInput(), '4900');
+      await typeSum(user, '4900');
       await user.click(saveButton());
 
       const submitted = onSubmit.mock.calls[0][0];
@@ -473,7 +502,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Victor Marin');
-      await user.type(sumInput(), '13069.42');
+      await typeSum(user, '13069.42');
 
       await user.click(screen.getByRole('radio', { name: 'în sus la leu' }));
       expect(sumInput().value).toBe('13070');
@@ -488,7 +517,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Victor Marin');
-      await user.type(sumInput(), '13069.42');
+      await typeSum(user, '13069.42');
 
       await user.click(screen.getByRole('radio', { name: 'în jos la leu' }));
       expect(sumInput().value).toBe('13069');
@@ -502,7 +531,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Ioana Barbu');
-      await user.type(sumInput(), '5000');
+      await typeSum(user, '5000');
       await user.click(saveButton());
 
       const submitted = onSubmit.mock.calls[0][0];
@@ -524,7 +553,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Elena Rusu');
-    await user.type(sumInput(), '1000');
+    await typeSum(user, '1000');
 
     expect(screen.getByText('Curs necunoscut pentru această dată — completează manual')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
@@ -539,7 +568,7 @@ describe('PaymentFormDrawer', () => {
 
     expect(readDirtyForms()).toEqual([]);
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
 
     const [dirtyForm] = readDirtyForms();
     expect(dirtyForm.label).toBe('o achitare');
@@ -553,7 +582,7 @@ describe('PaymentFormDrawer', () => {
     renderDrawerWithProps({ target: 'new', records, onSubmit, onClose: vi.fn() });
     const user = userEvent.setup();
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     const [dirtyForm] = readDirtyForms();
 
     await expect(dirtyForm.save()).resolves.toBe(false);
@@ -603,7 +632,7 @@ describe('PaymentFormDrawer', () => {
     const user = userEvent.setup();
 
     await pickChild(user, 'Andrei Popescu');
-    await user.type(sumInput(), '3000');
+    await typeSum(user, '3000');
     await user.click(saveButton());
 
     const submitted = onSubmit.mock.calls[0][0];
@@ -621,7 +650,7 @@ describe('PaymentFormDrawer', () => {
     await pickChild(user, 'Andrei Popescu');
     expect(screen.getByText(/Are restanță: Ian 2026/)).toBeInTheDocument();
 
-    await user.type(sumInput(), '1500');
+    await typeSum(user, '1500');
     await user.click(saveButton());
 
     const submitted = onSubmit.mock.calls[0][0];
@@ -664,7 +693,7 @@ describe('PaymentFormDrawer', () => {
 
     await pickChild(user, 'Andrei Popescu');
     await user.click(screen.getByRole('checkbox', { name: 'Acoperă restanța din Ian 2026' }));
-    await user.type(sumInput(), '1500');
+    await typeSum(user, '1500');
     await user.click(saveButton());
 
     const submitted = onSubmit.mock.calls[0][0];
@@ -680,7 +709,7 @@ describe('PaymentFormDrawer', () => {
     expect(within(serviceGroup).getByRole('radio', { name: 'Grădiniță' })).toHaveAttribute('aria-checked', 'true');
     expect(within(serviceGroup).getByRole('radio', { name: 'Bazin' })).toHaveAttribute('aria-checked', 'false');
 
-    await user.type(sumInput(), '500');
+    await typeSum(user, '500');
     await user.click(saveButton());
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ service: 'gradinita' }));
   });
@@ -771,7 +800,7 @@ describe('PaymentFormDrawer', () => {
       const user = userEvent.setup();
 
       await pickChild(user, 'Andrei Popescu');
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
       await user.click(saveButton());
 
       await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -798,7 +827,7 @@ describe('PaymentFormDrawer', () => {
 
       await pickChild(user, 'Maria Ionescu');
       await user.click(screen.getByRole('checkbox', { name: 'Trimite confirmare părintelui prin SMS' }));
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
       await user.click(saveButton());
 
       await screen.findByText('Confirmarea nu s-a trimis: fără telefon valid.');
@@ -820,7 +849,7 @@ describe('PaymentFormDrawer', () => {
     it('×, cu modificări nesalvate, nu închide direct — arată UnsavedChangesDialog', async () => {
       const { onClose } = renderDrawer();
       const user = userEvent.setup();
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.click(screen.getByRole('button', { name: 'Închide' }));
       expect(onClose).not.toHaveBeenCalled();
@@ -833,7 +862,7 @@ describe('PaymentFormDrawer', () => {
     it('Esc, cu modificări nesalvate, arată dialogul — „Rămân” nu închide drawer-ul', async () => {
       const { onClose } = renderDrawer();
       const user = userEvent.setup();
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.keyboard('{Escape}');
       expect(screen.getByRole('dialog', { name: 'Renunți la modificările din achitarea nouă?' })).toBeInTheDocument();
@@ -846,7 +875,7 @@ describe('PaymentFormDrawer', () => {
     it('clicul pe fundal, cu modificări nesalvate, arată dialogul în loc să închidă', async () => {
       const { onClose } = renderDrawer();
       const user = userEvent.setup();
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.click(screen.getByRole('dialog', { name: 'Achitare nouă' }).parentElement!);
       expect(onClose).not.toHaveBeenCalled();
@@ -856,7 +885,7 @@ describe('PaymentFormDrawer', () => {
     it('„Salvez și continui” salvează formularul, apoi închide drawer-ul', async () => {
       const { onSubmit, onClose } = renderDrawer();
       const user = userEvent.setup();
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.click(screen.getByRole('button', { name: 'Închide' }));
       await user.click(screen.getByRole('button', { name: 'Salvez și continui' }));
@@ -868,7 +897,7 @@ describe('PaymentFormDrawer', () => {
     it('câmpurile schimbate apar numite în dialog (suma modifică și repartizarea automată)', async () => {
       renderDrawer();
       const user = userEvent.setup();
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.click(screen.getByRole('button', { name: 'Închide' }));
       expect(screen.getByText('Câmpuri modificate: suma, repartizarea.')).toBeInTheDocument();
@@ -924,7 +953,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Andrei Popescu');
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
       await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
 
       await user.click(saveButton());
@@ -939,7 +968,7 @@ describe('PaymentFormDrawer', () => {
       const { onSubmit } = renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Andrei Popescu');
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
 
       await user.click(saveButton());
 
@@ -952,7 +981,7 @@ describe('PaymentFormDrawer', () => {
       renderDrawer();
       const user = userEvent.setup();
       await pickChild(user, 'Andrei Popescu');
-      await user.type(sumInput(), '500');
+      await typeSum(user, '500');
       await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
 
       // Total grup = 500 (principal) + 1200 (Radu) = 1700.
@@ -964,6 +993,46 @@ describe('PaymentFormDrawer', () => {
 
       expect(sumInput()).toHaveValue(600);
       expect(screen.getByLabelText('Suma pentru Radu Popescu')).toHaveValue(1200);
+    });
+  });
+
+  describe('§5 (PROMPT-11 F18): cardul copilului și cardurile Plan/Curs BNM (15b)', () => {
+    it('cardul copilului arată grupa, contractul și scadența (nu taxa)', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Gabriel Vasile');
+
+      expect(screen.getByText(/Fluturași.*contract 7.*scadență 15/)).toBeInTheDocument();
+    });
+
+    it('cu plan: cardurile Plan și Curs BNM arată presetarea, taxa și cursul', async () => {
+      stubFetch({ planPresets: [{ id: 'p1', name: 'Program mediu', priceEur: 500 }] });
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Gabriel Vasile');
+
+      expect(await screen.findByText(/Program mediu.*500,00 €/)).toBeInTheDocument();
+      expect(screen.getByText('pe lună')).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`1 € = ${KNOWN_RATE.toFixed(4).replace('.', ',')} lei`))).toBeInTheDocument();
+    });
+
+    it('copil cu taxă MDL arată doar cardul Plan (fără Curs BNM)', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+
+      const planCard = screen.getByText('Taxă').parentElement;
+      expect(planCard).toHaveTextContent('1.500,00 lei');
+      expect(screen.queryByText(/Curs BNM/)).not.toBeInTheDocument();
+    });
+
+    it('copil fără plan sau taxă arată cardul de avertizare cu link spre fișă', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Maria Ionescu');
+
+      expect(screen.getByText('Copilul nu are plan sau taxă')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Completează' })).toHaveAttribute('href', '/copii/c2');
     });
   });
 });

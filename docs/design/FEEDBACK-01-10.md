@@ -26,7 +26,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F15 Plan mereu vizibil la Copil nou/Editează (gol = mesaj) | ✅ 15a, 15i | ✅ PROMPT-11 §1 (EmptyState `planuri.childForm`, fără gardă `presetsReady`) |
 | F16 Rotunjire la alegere, precompletat exact | ✅ 15b, 41f | ✅ PROMPT-11 §2 (pastile Rotunjește: Exact/jos/sus/10 lei) |
 | F17 MonthInput propriu (repartizare manuală) | ✅ 15j | ⏳ PROMPT-11 §3 |
-| F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ⏳ PROMPT-11 §5 |
+| F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ✅ PROMPT-11 §5 (carduri Plan/Curs BNM, bandă de stare; „Luni acoperite” pastile amânat, vezi INTREBARI.md) |
 | F19 Subsoluri de formular diferite | ✅ 15k | ⏳ PROMPT-11 §6 |
 | Secțiuni ascunse fără date (tipar F15) | — | ⏳ PROMPT-11 §7 (audit) |
 | F20 Grupe → Carduri ≠ 4a (editor) | ✅ 4a | ⏳ PROMPT-11 §8 |

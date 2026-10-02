@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   AmountInput,
   BnmRateLink,
@@ -24,13 +25,14 @@ import { useSmsSend, useSmsStatus } from '@shared/sms';
 import { formatMoney, formatMoneyInput } from '#shared/format/money-format.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatRate } from '#shared/format/rate-format.mjs';
-import { firstUnpaidMonth, feeEntryFor, arrears } from '@domain/tuition-obligation.mjs';
+import { feeEntryFor, arrears } from '@domain/tuition-obligation.mjs';
 import { autoAllocatePayment } from '@domain/payment-auto-allocation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID, PAYMENT_ROUNDING_TOLERANCE } from '@domain/record-schema.mjs';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
+import { usePlanPresets } from '@shared/api/usePlanPresets';
 import { toUserError } from '@shared/api/to-user-error';
 import {
   renderSmsTemplate,
@@ -140,7 +142,6 @@ export function PaymentFormDrawer({
   const paymentMonth = values.date.slice(0, 7);
   const feeEntry = selectedChild ? feeEntryFor(selectedChild, paymentMonth) : null;
   const isEurChild = feeEntry?.currency === 'EUR';
-  const unpaidMonth = selectedChild ? firstUnpaidMonth(selectedChild, records.payments) : null;
   const groupLabel = records.groups.find(group => group.id === selectedChild?.groupId)?.name ?? 'Fără grupă';
   // F7: restanțele (strict înaintea lunii plății) ale copilului ales, pentru o plată NOUĂ —
   // la editare, o plată deja salvată nu se recalculează (spec F7), deci lista rămâne goală.
@@ -195,6 +196,13 @@ export function PaymentFormDrawer({
   const exactFeeLei =
     isEurChild && feeEntry && effectiveRate ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : null;
 
+  // §5 (PROMPT-11 F18): cardul „Plan” arată numele presetării al cărei preț se potrivește taxei
+  // EUR curente a copilului — presetările nu au echivalent pentru taxele MDL (`usePlanPresets`
+  // ține doar `priceEur`), deci acolo cardul arată generic „Taxă”.
+  const { presets: planPresets } = usePlanPresets();
+  const matchedPreset =
+    isEurChild && feeEntry ? planPresets.find(preset => preset.priceEur === feeEntry.amount) : undefined;
+
   // F16 (PROMPT-11 §2): suma afișată e mereu exactă — pastilele „Rotunjește” (sub Sumă) dau
   // alegerea, nu o rotunjire automată tăcută. Apar doar cât timp suma tastată are bani (fracțiune
   // de leu); „la 10 lei” doar dacă diferă de celelalte și rămâne în toleranța de rotunjire.
@@ -235,12 +243,17 @@ export function PaymentFormDrawer({
     setManualRate('');
   }, [values.date]);
 
-  // F11 (FEEDBACK-01-10.md): „+ Plată” din fișa copilului deschide formularul cu copilul deja
-  // ales (defaultChildId) — suma pornește precompletată cu taxa lunii, la cursul zilei pentru
-  // un copil EUR, ca utilizatorul să n-o calculeze manual. O singură dată, nu la fiecare randare.
+  // F11 (FEEDBACK-01-10.md) + §5 (PROMPT-11 F18): suma pornește precompletată cu taxa lunii, la
+  // cursul zilei pentru un copil EUR, fie la deschiderea cu copilul deja ales (defaultChildId, din
+  // fișă), fie la prima alegere a copilului într-o plată nouă fără copil presetat (din Achitări).
+  // O singură dată, nu la fiecare randare.
   const prefilledAmountRef = useRef(false);
   useEffect(() => {
-    if (editing || prefilledAmountRef.current || !defaultChildId || !selectedChild || !feeEntry) return;
+    if (editing || prefilledAmountRef.current || !selectedChild || !feeEntry) return;
+    // §5: dacă suma a fost deja tastată (copil ales după ce suma a fost introdusă manual),
+    // precompletarea nu o suprascrie — latch-ul `prefilledAmountRef` rămâne totuși netrecut,
+    // ca prefill-ul să rămână posibil la o alegere ulterioară de copil fără sumă încă introdusă.
+    if (Number(values.tenders[activeMethod]) > 0) return;
     if (isEurChild && !effectiveRate) return;
     const converted = isEurChild ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : feeEntry.amount;
     if (!converted) return;
@@ -249,7 +262,7 @@ export function PaymentFormDrawer({
     const amount = converted;
     prefilledAmountRef.current = true;
     setTender(activeMethod, formatMoneyInput(amount));
-  }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
+  }, [editing, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
 
   // 40a: „Plată +” din Situația plăților pornește cu restanța deja bifată (spre deosebire de F11,
   // unde rămâne opțională) — o singură dată, de îndată ce restanțele copilului sunt disponibile.
@@ -634,8 +647,8 @@ export function PaymentFormDrawer({
                   sub={
                     <>
                       {groupLabel}
-                      {feeEntry && <> · taxă {formatMoney(feeEntry.amount, feeEntry.currency)}</>}
-                      {unpaidMonth && <> · {formatMonthLabel(unpaidMonth)} neachitat</>}
+                      {selectedChild.contractNumber && <> · contract {selectedChild.contractNumber}</>}
+                      {selectedChild.dueDay != null && <> · scadență {selectedChild.dueDay}</>}
                     </>
                   }
                 />
@@ -655,6 +668,50 @@ export function PaymentFormDrawer({
               />
             )}
           </div>
+
+          {/* §5 (PROMPT-11 F18, 15b): Plan + Curs BNM alăturate — copil MDL arată doar cardul
+              Plan (taxa în lei, fără curs); copil fără taxă deloc arată cardul galben de
+              avertizare, cu link spre fișă (ca `fixLink`-ul din SmsConfirmDialog). */}
+          {selectedChild &&
+            (feeEntry ? (
+              <div className={isEurChild ? styles.planCards : undefined}>
+                <div className={`${styles.planCard} ${styles.planCardOrange}`}>
+                  <span className={styles.planCardLabel}>{matchedPreset ? 'Plan' : 'Taxă'}</span>
+                  <b className={styles.planCardValue}>
+                    {matchedPreset ? `${matchedPreset.name} · ` : ''}
+                    {formatMoney(feeEntry.amount, feeEntry.currency)}
+                  </b>
+                  <span className={styles.planCardSub}>pe lună</span>
+                </div>
+                {isEurChild && (
+                  <div className={`${styles.planCard} ${styles.planCardMint}`}>
+                    <span className={styles.planCardLabel}>
+                      {manualRate ? 'Curs manual' : `Curs BNM · ${formatDate(values.date)}`}
+                    </span>
+                    <b className={styles.planCardValue}>
+                      {effectiveRate ? `1 € = ${formatRate(effectiveRate)} lei` : 'Curs necunoscut'}
+                    </b>
+                    <span className={styles.planCardSubRow}>
+                      {manualRate ? 'curs manual' : 'data plății'}
+                      <Button
+                        variant="link"
+                        className={styles.planCardLink}
+                        onClick={() => document.getElementById('payment-eur-rate')?.focus()}
+                      >
+                        Curs manual
+                      </Button>
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={`${styles.planCard} ${styles.planCardYellow}`}>
+                <span className={styles.planCardWarningText}>Copilul nu are plan sau taxă</span>
+                <Link className={styles.planCardLink} to={`/copii/${selectedChild.id}`}>
+                  Completează
+                </Link>
+              </div>
+            ))}
 
           {serviceOptions.length > 0 && (
             <div className={styles.field}>
@@ -685,27 +742,34 @@ export function PaymentFormDrawer({
                 ))}
               </div>
             ) : (
-              <AmountInput
-                ariaLabel="Sumă"
-                min={0}
-                step="0.01"
-                value={values.tenders[activeMethod] ?? ''}
-                onChange={value => setTender(activeMethod, value)}
-                currency="lei"
-                shortcuts={
-                  amountShortcuts.length > 0 ? (
-                    <ChipSelect
-                      ariaLabel="Sumă rapidă"
-                      options={amountShortcuts.map(shortcut => ({ value: shortcut.key, label: shortcut.label }))}
-                      value={amountShortcuts.find(s => Number(values.tenders[activeMethod]) === s.amount)?.key ?? ''}
-                      onChange={key => {
-                        const shortcut = amountShortcuts.find(s => s.key === key);
-                        if (shortcut) setTender(activeMethod, String(shortcut.amount));
-                      }}
-                    />
-                  ) : undefined
-                }
-              />
+              <>
+                {isEurChild && exactFeeLei !== null && feeEntry && effectiveRate && (
+                  <p className={styles.notice}>
+                    {formatMoney(feeEntry.amount, 'EUR')} × {formatRate(effectiveRate)} = {formatMoney(exactFeeLei, 'MDL')}
+                  </p>
+                )}
+                <AmountInput
+                  ariaLabel="Sumă"
+                  min={0}
+                  step="0.01"
+                  value={values.tenders[activeMethod] ?? ''}
+                  onChange={value => setTender(activeMethod, value)}
+                  currency="lei"
+                  shortcuts={
+                    amountShortcuts.length > 0 ? (
+                      <ChipSelect
+                        ariaLabel="Sumă rapidă"
+                        options={amountShortcuts.map(shortcut => ({ value: shortcut.key, label: shortcut.label }))}
+                        value={amountShortcuts.find(s => Number(values.tenders[activeMethod]) === s.amount)?.key ?? ''}
+                        onChange={key => {
+                          const shortcut = amountShortcuts.find(s => s.key === key);
+                          if (shortcut) setTender(activeMethod, String(shortcut.amount));
+                        }}
+                      />
+                    ) : undefined
+                  }
+                />
+              </>
             )}
             {roundingPills.length > 0 && (
               <div className={styles.field}>
@@ -730,13 +794,23 @@ export function PaymentFormDrawer({
             )}
             {isEurChild && (
               <>
-                {exactFeeLei !== null && feeEntry && effectiveRate && (
-                  <p className={styles.notice}>
-                    De încasat: {formatMoney(feeEntry.amount, 'EUR')} × {formatRate(effectiveRate)} ={' '}
-                    {formatMoney(exactFeeLei, 'MDL')}
-                  </p>
-                )}
-                <p className={styles.notice}>= {formatMoney(eurEquivalent, 'EUR')}</p>
+                {(() => {
+                  // §5 (PROMPT-11 F18, 15b): banda de stare (mint/galben/roz) înlocuiește nota
+                  // gri „= X €” — urmează starea rândului unic de repartizare automată, ca în
+                  // lista de mai jos (`allocationStatus`/`allocationTone`); fallback simplu altfel
+                  // (mod manual, mai multe rânduri, sau fără copil ales).
+                  const singleRow =
+                    allocationMode === 'auto' && values.allocations.length === 1 ? values.allocations[0] : null;
+                  const status = singleRow ? allocationStatus(singleRow) : null;
+                  const statusLabel = singleRow && status ? `${formatMonthLabel(singleRow.month)} ${status}` : null;
+                  const tone = allocationTone(status);
+                  return (
+                    <p className={`${styles.statusBand} ${status ? tone : ''}`}>
+                      {statusLabel && <b className={styles.statusBandLabel}>{statusLabel}</b>}
+                      <span>= {formatMoney(eurEquivalent, 'EUR')}</span>
+                    </p>
+                  );
+                })()}
                 <Field label="Curs EUR" htmlFor="payment-eur-rate">
                   <NumberInput
                     id="payment-eur-rate"
