@@ -15,7 +15,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F6 Backup complet | ✅ 38g | 🔁 arhivă completă + restaurare server ✅ (F6, `971d906`,`b161008`,`fa78d4a`; restaurare `7610e5f`…`4635ecc`); UI prima pornire + reîncărcare → PROMPT-9 §4 |
 | F7 Luni de la luna curentă | ✅ 38c | ✅ `7d8c64f` |
 | F8 Funcții custom | ✅ 38f (exista deja în Personal 23e) | ✅ `c045b40` |
-| F9 MDL/EUR | — | ✅ verificat; secțiunea EUR din Raport contabil se păstrează (02.10). Plăți vechi fără `fxRate` → PROMPT-9 §9 |
+| F9 MDL/EUR | — | ✅ verificat; secțiunea EUR din Raport contabil se păstrează (02.10). Plăți vechi fără `fxRate` → PROMPT-9 §9: script de migrare scris și testat (`446885a`), doar cu `startTestApplication` (date de test, temporare) — nicio filială reală n-a fost migrată încă în această sesiune (regula sesiunii: niciodată `--execute` împotriva datelor reale) |
 | F10 Grafic Dashboard | — | ✅ `a2a80e8` |
 | F11 Plată din fișă | ✅ 38c | ✅ `53653b7`; doar taxa lunii, restanța bifă manuală (02.10) |
 | F12 Curs BNM istoric | ✅ 38e | ✅ polling + calendar + backfill ✅ (`81f979c`); mutare în baza comună (`b0393e4`) — script de migrare scris și testat doar cu `startTestApplication` (date de test, temporare); nicio filială reală n-a fost migrată încă în această sesiune |

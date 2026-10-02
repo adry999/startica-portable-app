@@ -833,3 +833,24 @@ reîncărcarea de după restaurare (46d), plus actualizarea `BackupPage.tsx`/`us
 
 **De decis / eventual mai târziu:** dacă o viitoare componentă `BackupContents` (38g) ajunge totuși
 necesară separat, verifică mai întâi dacă poate înlocui tabelul din `BackupPreviewTable` (vezi mai sus).
+
+## PROMPT-9 §9 — migrare `fxRate` plăți vechi (`scripts/migrate/fxrate-backfill.mjs`, `446885a`)
+
+Două decizii tehnice luate pe loc (nu de produs, dar nu erau explicite în prompt), cu un implicit
+rezonabil aplicat, fără să opresc lucrul:
+
+1. **Ce înseamnă „plată pe taxă EUR"**: am folosit exact `feeEntryFor(child, payment.date.slice(0,7))
+   ?.currency === 'EUR'` — aceeași funcție și aceeași lună pe care le folosește deja
+   `PaymentFormDrawer.tsx` (`isEurChild`) la salvare. O plată cu `currency === 'EUR'` pe ea însăși
+   (date foarte vechi/importate, unde `amount` e deja suma în euro, nu lei) a fost tratată ca **în
+   afara scope-ului** acestei migrări, nu ca „nerezolvată" — formula §9 (conversie MDL→EUR cu
+   cursul zilei) nu se aplică unei sume deja în euro; dacă există vreodată asemenea rânduri reale,
+   e nevoie de o migrare separată, cu formula ei.
+2. **Proveniența cursului (`fxRateSource`) când ziua rezolvată n-are provenență înregistrată** în
+   `exchangeRateSources` (curs vechi, scris înainte de acest câmp, sau adus de fetch-ul automat de
+   la pornire — vezi comentariul din `exchange-rates.mjs`): am presupus `'bnm'`, consistent cu
+   formularea din `PROMPT-CLAUDE-CODE-9.md` §9 („primesc cursul BNM al zilei"). O zi cu provenență
+   `'manual'` explicită rămâne `'manual'` pe plata migrată.
+
+Nicio filială reală nu a fost migrată — scriptul a fost rulat (dry-run și `--execute`) exclusiv cu
+`startTestApplication`, pe directoare temporare.
