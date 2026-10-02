@@ -5,7 +5,7 @@ import { createRecordRepository } from '#core/server/persistence/record-reposito
 import { seedServices } from '#features/services/index.server.mjs';
 import { createRevisionTransaction } from '#core/server/persistence/revision-transaction.mjs';
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
-import { createAuditLogRepository, createAuditLogRoutes } from '#features/audit-log/index.server.mjs';
+import { createAuditLogRepository, createAuditLogRoutes, createUndoRoutes } from '#features/audit-log/index.server.mjs';
 import { createBackupService, createBackupRoutes } from '#features/backup/index.server.mjs';
 import {
   createPaymentAssignmentService,
@@ -148,7 +148,9 @@ export function createBranchContext({
   });
 
   const rawRecordRepository = createRecordRepository(db);
-  const auditLogRepository = createAuditLogRepository(db);
+  // 40b: ștampila sesiunii active (nu per proces — vezi comentariul lui sessionToken mai sus),
+  // citită de POST /api/undo ca gardă „doar de pe același calculator".
+  const auditLogRepository = createAuditLogRepository(db, { sessionToken });
 
   // Semințele Grădiniță/Bazin (B3) trebuie să existe înainte ca vreo achitare să se poată
   // salva (validarea cere un `service` existent) — sincron, aici, nu în rutele Servicii
@@ -335,6 +337,7 @@ export function createBranchContext({
       listBranches,
     }),
     ...createAuditLogRoutes({ auditLogRepository }),
+    ...createUndoRoutes({ auditLogRepository, recordRepository, runRevisionTransaction, sessionToken }),
     ...createPaymentAssignmentRoutes({ paymentAssignmentService }),
     ...createVisitsRoutes({ visitsService }),
     ...createRecordEditingRoutes({
