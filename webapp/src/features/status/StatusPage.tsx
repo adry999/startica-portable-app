@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Badge,
   Button,
@@ -193,6 +194,24 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild, onOp
   const [printOptions, setPrintOptions] = useState<PrintOptions | null>(null);
   const statusData = useStatus(month);
   const yearData = useSchoolYearStatus(mode === 'year' ? startYear : null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // 45c (PROMPT-8 §14): „Necesită atenție" de pe Dashboard deschide Situația cu segmentul
+  // „Restanță" ales — un singur parcurs, ca `nou`/`filtru` din ChildrenPage.
+  useEffect(() => {
+    if (searchParams.get('segment') !== 'overdue') return;
+    setMode('month');
+    statusData.setSegment('overdue');
+    setSearchParams(
+      params => {
+        const next = new URLSearchParams(params);
+        next.delete('segment');
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   // Montat aici (nu în StatusPrint) ca cererea /api/kindergarten să pornească la intrarea pe
   // ecran, nu la apăsarea „Tipărește” — vezi gardă kindergarten.ready din efectul de tipărire (M4).
   const kindergarten = useKindergarten();

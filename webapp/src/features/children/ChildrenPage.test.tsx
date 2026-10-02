@@ -367,6 +367,88 @@ describe('ChildrenPage', () => {
     expect(screen.getByText('Incomplet Marin')).toBeInTheDocument();
   });
 
+  it('45c: filtrul „Telefon invalid” arată doar copiii cu phoneInvalid/phone2Invalid', async () => {
+    const phoneFixture = {
+      ...fixtureState,
+      children: [
+        {
+          id: 'ok-1',
+          name: 'Telefon Bun',
+          status: 'Activ',
+          groupId: 'g1',
+          parent: 'Un părinte',
+          phone: '069000009',
+          fee: 1000,
+          feeHistory: [],
+          statusHistory: [],
+          dueDay: 10,
+          archived: false,
+        },
+        {
+          id: 'bad-1',
+          name: 'Telefon Rău',
+          status: 'Activ',
+          groupId: 'g1',
+          parent: 'Un părinte',
+          phone: '12345',
+          phoneInvalid: true,
+          fee: 1000,
+          feeHistory: [],
+          statusHistory: [],
+          dueDay: 10,
+          archived: false,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: phoneFixture, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'Telefon invalid' }));
+    expect(screen.queryByText('Telefon Bun')).not.toBeInTheDocument();
+    expect(screen.getByText('Telefon Rău')).toBeInTheDocument();
+  });
+
+  it('45c: ?filtru=telefon-invalid din Dashboard deschide Copiii cu filtrul „Telefon invalid” ales', async () => {
+    const phoneFixture = {
+      ...fixtureState,
+      children: [
+        { ...fixtureState.children[0], id: 'ok-1', name: 'Telefon Bun', phone: '069000009' },
+        { ...fixtureState.children[0], id: 'bad-1', name: 'Telefon Rău', phone: '12345', phoneInvalid: true },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: phoneFixture, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage('/copii?filtru=telefon-invalid');
+
+    expect(await screen.findByText('Telefon Rău')).toBeInTheDocument();
+    expect(screen.queryByText('Telefon Bun')).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Telefon invalid' })).toBeChecked();
+  });
+
   it('deschide fișa copilului la click pe rând și revine la listă din breadcrumb', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());

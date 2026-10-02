@@ -50,18 +50,23 @@ const fixtureState = {
   visits: [],
 };
 
+function stubFetch(state: unknown = fixtureState, health: unknown = { lastExternal: new Date().toISOString() }) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (path: string) => {
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/state') return jsonResponse({ state, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+      if (path === '/api/health') return jsonResponse(health);
+      // 45c: useDashboard cere prezența zilei curente/trecute pentru „Prezență nemarcată".
+      if (path.startsWith('/api/attendance?date=')) return jsonResponse({ entries: [] });
+      throw new Error(`neașteptat: ${path}`);
+    }),
+  );
+}
+
 describe('DashboardPage', () => {
   beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
-        if (path === '/api/state')
-          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
-        if (path === '/api/health') return jsonResponse({});
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    stubFetch();
   });
 
   it('arată starea de încărcare înainte ca sesiunea să fie gata', () => {
@@ -98,20 +103,7 @@ describe('DashboardPage', () => {
   });
 
   it('dashboard.attention.first: fără niciun copil, cardul „Necesită atenție” arată „Adaugă primii copii”', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
-        if (path === '/api/state')
-          return jsonResponse({
-            state: { ...fixtureState, children: [], payments: [] },
-            revision: 1,
-            updatedAt: '2026-09-23T10:00:00Z',
-          });
-        if (path === '/api/health') return jsonResponse({});
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    stubFetch({ ...fixtureState, children: [], payments: [] });
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
     const onNavigate = vi.fn();
@@ -143,15 +135,118 @@ describe('DashboardPage', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('diferență 1.500 lei');
   });
 
-  it('ascunde CTA-ul unui rând „Necesită atenție" fără elemente', async () => {
+  it('45c: „Necesită atenție" arată „Date incomplete" (fișa de bază e incompletă) cu link spre Copii', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    const onNavigate = vi.fn();
+
+    renderDashboard({ month: '2026-09', onNavigate });
+
+    const row = screen.getByText('Date incomplete').closest('article') as HTMLElement;
+    expect(within(row).getByText('1')).toBeInTheDocument();
+    await userEvent.click(within(row).getByRole('button', { name: 'Completează →' }));
+    expect(onNavigate).toHaveBeenCalledWith('children', { filtru: 'incomplete' });
+  });
+
+  it('45c: fără nicio problemă, cardul arată „Nimic de rezolvat azi." (dashboard.attention.done)', async () => {
+    stubFetch({
+      children: [
+        {
+          id: 'c1',
+          name: 'Complet Ionescu',
+          status: 'Activ',
+          groupId: 'g1',
+          parent: 'Un părinte',
+          phone: '069000009',
+          parent2: 'Alt părinte',
+          idnp: '2001234567890',
+          pickupPersons: [{ id: 'P1', name: 'Bunica' }],
+          fee: 1500,
+          feeHistory: [{ from: '2020-01', amount: 1500 }],
+          dueDay: 10,
+          attendanceDate: '2099-01-01',
+          birthDate: '2020-01-01',
+          archived: false,
+        },
+      ],
+      payments: [
+        {
+          id: 'p1',
+          date: '2026-09-01',
+          childId: 'c1',
+          amount: 1500,
+          method: 'Cash',
+          allocations: [{ month: '2026-09', amount: 1500 }],
+          archived: false,
+        },
+      ],
+      expenses: [],
+      groups: [{ id: 'g1', name: 'Mars', capacity: 10 }],
+      categories: [],
+      visits: [],
+    });
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
 
     renderDashboard({ month: '2026-09', onNavigate: () => {} });
 
-    const clearRow = screen.getByText('Achitări neasociate').closest('article');
-    expect(clearRow).not.toBeNull();
-    expect(within(clearRow as HTMLElement).queryByRole('button')).not.toBeInTheDocument();
+    expect(await screen.findByText('Nimic de rezolvat azi.')).toBeInTheDocument();
+  });
+
+  it('45c: restanțele (Situația) duc la ?segment=overdue', async () => {
+    stubFetch({
+      children: [
+        {
+          id: 'c1',
+          name: 'Restanțier',
+          status: 'Activ',
+          groupId: 'g1',
+          parent: 'Un părinte',
+          phone: '069000009',
+          parent2: 'Alt părinte',
+          idnp: '2001234567890',
+          pickupPersons: [{ id: 'P1', name: 'Bunica' }],
+          fee: 1500,
+          feeHistory: [{ from: '2020-01', amount: 1500 }],
+          statusHistory: [],
+          dueDay: 1,
+          // 2020-01-01, nu în viitor: un attendanceDate în viitor face copilul „inactiv" pe
+          // luna 2026-09 (obligation() din tuition-obligation.mjs), deci fără Restanță.
+          attendanceDate: '2020-01-01',
+          birthDate: '2020-01-01',
+          archived: false,
+        },
+      ],
+      payments: [],
+      expenses: [],
+      groups: [{ id: 'g1', name: 'Mars', capacity: 10 }],
+      categories: [],
+      visits: [],
+    });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    const onNavigate = vi.fn();
+
+    renderDashboard({ month: '2026-09', onNavigate });
+
+    const row = (await screen.findByText('Restanțe')).closest('article') as HTMLElement;
+    await userEvent.click(within(row).getByRole('button', { name: 'Vezi lista →' }));
+    expect(onNavigate).toHaveBeenCalledWith('status', { segment: 'overdue' });
+  });
+
+  it('45c: backup extern vechi duce spre Setări (backup-si-setari)', async () => {
+    stubFetch({ ...fixtureState }, { lastExternal: new Date(Date.now() - 10 * 86400000).toISOString() });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+    const onNavigate = vi.fn();
+
+    renderDashboard({ month: '2026-09', onNavigate });
+
+    const row = await screen.findByText('Backup extern vechi');
+    await userEvent.click(
+      within(row.closest('article') as HTMLElement).getByRole('button', { name: 'Verifică backup →' }),
+    );
+    expect(onNavigate).toHaveBeenCalledWith('settings', undefined);
   });
 
   it('arată un chip separat pentru fiecare copil cu ziua de naștere în aceeași zi', async () => {

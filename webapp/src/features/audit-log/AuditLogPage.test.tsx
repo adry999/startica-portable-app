@@ -1,6 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useAppSession } from '@shared/api/session';
+import { reloadPersonal } from '@shared/personal/usePersonal';
 import { TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
 import { AuditLogPage } from './AuditLogPage';
 
@@ -9,21 +12,28 @@ function TopbarActionsSlot() {
   return <>{useTopbarActionsSlot()}</>;
 }
 
-function renderPage() {
-  return render(
-    <TopbarActionsProvider>
-      <TopbarActionsSlot />
-      <AuditLogPage />
-    </TopbarActionsProvider>,
-  );
-}
-
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
 }
 
 const now = new Date();
 const todayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0).toISOString();
+
+const fixtureState = {
+  children: [{ id: 'c1', name: 'Ana Popescu', status: 'Activ', groupId: null, archived: false }],
+  payments: [{ id: 'p1', date: '2026-09-10', childId: 'c1', amount: 1500, method: 'Cash', archived: false }],
+  expenses: [],
+  groups: [{ id: 'G1', name: 'Mars', capacity: 10 }],
+  categories: [],
+  visits: [],
+};
+
+const fixturePersonalState = {
+  departments: [],
+  roles: [],
+  staff: [{ id: 'STF-1', name: 'Doina Cebotari', roleId: '', branchIds: [], phone: '', since: '', notes: [] }],
+  settings: { annualLeaveDays: 28, deductOnlyUnexcused: true },
+};
 
 const page1 = {
   entries: [
@@ -64,19 +74,44 @@ const page2 = {
   nextBeforeEntryId: null,
 };
 
+function stubFetch(auditHandler: (path: string) => unknown = path => (path === '/api/audit' ? page1 : undefined)) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (path: string) => {
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/state') return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '' });
+      if (path === '/api/health') return jsonResponse({});
+      if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      const body = auditHandler(path);
+      if (body !== undefined) return jsonResponse(body);
+      throw new Error(`neașteptat: ${path}`);
+    }),
+  );
+}
+
+async function loadedSession() {
+  const session = renderHook(() => useAppSession());
+  await act(() => session.result.current.load());
+}
+
+function renderPage(initialEntries: string[] = ['/istoric']) {
+  return render(
+    <TopbarActionsProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <TopbarActionsSlot />
+        <AuditLogPage />
+      </MemoryRouter>
+    </TopbarActionsProvider>,
+  );
+}
+
 describe('AuditLogPage', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  beforeEach(() => stubFetch());
+  afterEach(() => vi.unstubAllGlobals());
 
   it('arată o încărcare, apoi intrările grupate pe zi, cu eticheta acțiunii și diferența', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/audit') return jsonResponse(page1);
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    await loadedSession();
+    await act(() => reloadPersonal());
 
     renderPage();
 
@@ -87,14 +122,13 @@ describe('AuditLogPage', () => {
   });
 
   it('"Mai multe" încarcă pagina următoare fără să șteargă rândurile deja afișate', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/audit') return jsonResponse(page1);
-        if (path === '/api/audit?beforeEntryId=1') return jsonResponse(page2);
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    stubFetch(path => {
+      if (path === '/api/audit') return page1;
+      if (path === '/api/audit?beforeEntryId=1') return page2;
+      return undefined;
+    });
+    await loadedSession();
+    await act(() => reloadPersonal());
 
     renderPage();
     const user = userEvent.setup();
@@ -106,13 +140,8 @@ describe('AuditLogPage', () => {
   });
 
   it('comutatorul „Copii" ascunde rândurile altui tip de înregistrare', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/audit') return jsonResponse(page1);
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    await loadedSession();
+    await act(() => reloadPersonal());
 
     renderPage();
     const user = userEvent.setup();
@@ -125,13 +154,8 @@ describe('AuditLogPage', () => {
   });
 
   it('căutarea filtrează după identificatorul înregistrării', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (path: string) => {
-        if (path === '/api/audit') return jsonResponse(page1);
-        throw new Error(`neașteptat: ${path}`);
-      }),
-    );
+    await loadedSession();
+    await act(() => reloadPersonal());
 
     renderPage();
     const user = userEvent.setup();
@@ -141,5 +165,64 @@ describe('AuditLogPage', () => {
 
     await waitFor(() => expect(screen.queryByText('Modificat')).not.toBeInTheDocument());
     expect(screen.getByText('Asociat')).toBeInTheDocument();
+  });
+
+  it('45a: SearchSelect oferă copii, angajați, grupe și achitări (după sumă)', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Alege o înregistrare' }));
+    expect(screen.getByRole('option', { name: 'Copii · Ana Popescu' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Angajați · Doina Cebotari' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Grupe · Mars' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Achitări · 1.500,00 lei · Ana Popescu/ })).toBeInTheDocument();
+  });
+
+  it('45a: alegerea unui copil cere /api/audit/scope cu copilul și achitările lui', async () => {
+    const fetchSpy = vi.fn((path: string) => {
+      if (path.startsWith('/api/audit/scope')) return page1;
+      if (path === '/api/audit') return { entries: [], nextBeforeEntryId: null };
+      return undefined;
+    });
+    stubFetch(fetchSpy);
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    renderPage();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Alege o înregistrare' }));
+    await user.click(screen.getByRole('option', { name: 'Copii · Ana Popescu' }));
+
+    await screen.findByText('Modificat');
+    const scopeCall = fetchSpy.mock.calls
+      .map(call => call[0] as string)
+      .find(path => path.startsWith('/api/audit/scope'));
+    expect(scopeCall).toBeDefined();
+    const scope = JSON.parse(decodeURIComponent(scopeCall!.split('scope=')[1]));
+    expect(scope).toEqual(
+      expect.arrayContaining([
+        { recordType: 'children', recordId: 'c1' },
+        { recordType: 'payments', recordId: 'p1' },
+      ]),
+    );
+    expect(screen.getByRole('button', { name: 'Tot istoricul' })).toBeInTheDocument();
+  });
+
+  it('45a/45b: recordType+recordId din URL preselectează copilul („Tot istoricul” din fișă)', async () => {
+    stubFetch(path => {
+      if (path.startsWith('/api/audit/scope')) return page1;
+      return undefined;
+    });
+    await loadedSession();
+    await act(() => reloadPersonal());
+
+    renderPage(['/istoric?recordType=children&recordId=c1']);
+
+    await screen.findByText('Modificat');
+    expect(screen.getByRole('button', { name: 'Tot istoricul' })).toBeInTheDocument();
   });
 });

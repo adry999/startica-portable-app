@@ -1,5 +1,6 @@
 import { act, fireEvent, render, renderHook, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider, TopbarActionsProvider, useTopbarActionsSlot } from '@shared/ui';
@@ -82,15 +83,17 @@ async function waitForDebounce() {
   await act(() => new Promise(resolve => setTimeout(resolve, 450)));
 }
 
-async function renderPage() {
+async function renderPage(initialEntries: string[] = ['/prezenta']) {
   const session = renderHook(() => useAppSession());
   await act(() => session.result.current.load());
   render(
     <ToastProvider>
-      <TopbarActionsProvider>
-        <TopbarActionsSlot />
-        <AttendancePage month="2026-09" />
-      </TopbarActionsProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <TopbarActionsProvider>
+          <TopbarActionsSlot />
+          <AttendancePage month="2026-09" />
+        </TopbarActionsProvider>
+      </MemoryRouter>
     </ToastProvider>,
   );
   await screen.findByText('Prezenți');
@@ -101,6 +104,30 @@ describe('AttendancePage · Ziua', () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     localStorage.clear(); // usePersistedState scrie mod-ul (Ziua/Luna) — fără curățare, testele următoare pornesc în Luna.
+  });
+
+  it('45c: ?data=&grupa= din Dashboard deschide ziua și grupa alese', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, init?: RequestInit) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/attendance?date=2026-09-15') return jsonResponse({ entries: [] });
+        if (path.startsWith('/api/attendance?month=')) return jsonResponse({ entries: [] });
+        if (path === '/api/attendance' && init?.method === 'POST')
+          return jsonResponse({ ok: true, saved: [], removed: [] });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await renderPage(['/prezenta?data=2026-09-15&grupa=g1']);
+
+    // g1 (Fluturași): Ana și Bogdan rămân; Cristina (fără grupă) dispare — grupa din URL a filtrat ziua.
+    expect(screen.getByRole('button', { name: /Ana Popescu:/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Bogdan Rusu:/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Cristina Ionescu:/ })).not.toBeInTheDocument();
   });
 
   it('un clic pe placă trece Prezent → Absent → Motivat → nemarcat și trimite POST-ul după 400 ms', async () => {

@@ -44,9 +44,12 @@ function fixtureState(
 
 // eslint-disable-next-line prefer-const
 let currentState = fixtureState();
+// 45b: istoricul copilului (useAuditLog în ChildProfileView) — gol implicit, suprascris per test.
+let historyEntries: unknown[] = [];
 
 function stubFetch() {
   currentState = fixtureState();
+  historyEntries = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
@@ -54,6 +57,8 @@ function stubFetch() {
       if (path === '/api/state') return jsonResponse({ state: currentState, revision: 1, updatedAt: '' });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+      if (path.startsWith('/api/audit/scope'))
+        return jsonResponse({ entries: historyEntries, nextBeforeEntryId: null });
       if (path === '/api/record' && options?.method === 'POST') {
         const body = JSON.parse(String(options.body));
         currentState = {
@@ -80,11 +85,11 @@ async function loadedSession() {
   await act(() => session.result.current.load());
 }
 
-function renderProfile() {
+function renderProfile(onNavigate: (view: string, params?: Record<string, string>) => void = () => {}) {
   return render(
     <ToastProvider>
       <MemoryRouter>
-        <ChildProfileView childId="C1" month="2026-09" onBack={() => {}} onNavigate={() => {}} />
+        <ChildProfileView childId="C1" month="2026-09" onBack={() => {}} onNavigate={onNavigate} />
       </MemoryRouter>
     </ToastProvider>,
   );
@@ -213,5 +218,65 @@ describe('ChildProfileView', () => {
 
     await waitFor(() => expect(screen.queryByText('Ion Popescu IBAN MD00XYZ')).not.toBeInTheDocument());
     expect(currentState.payerAliases).toEqual([]);
+  });
+
+  it('45b: „Ultimele modificări” arată ultimele intrări din istoricul copilului, ca Timeline', async () => {
+    historyEntries = [
+      {
+        id: 2,
+        occurredAt: '2026-09-20T10:00:00.000Z',
+        action: 'modificare',
+        recordType: 'children',
+        recordId: 'C1',
+        before: { fee: 1000 },
+        after: { fee: 1500 },
+      },
+    ];
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(await screen.findByText(/Modificat/)).toBeInTheDocument();
+    expect(screen.getByText(/fee: 1000 → 1500/)).toBeInTheDocument();
+  });
+
+  it('45b: fără modificări înregistrate, cardul arată un mesaj neutru, nu o eroare', async () => {
+    historyEntries = [];
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(await screen.findByText('Fără modificări înregistrate încă.')).toBeInTheDocument();
+  });
+
+  it('45b: notă medicală modificată nu arată conținutul, doar faptul că s-a schimbat', async () => {
+    historyEntries = [
+      {
+        id: 2,
+        occurredAt: '2026-09-20T10:00:00.000Z',
+        action: 'modificare',
+        recordType: 'children',
+        recordId: 'C1',
+        before: { healthNotes: '[date medicale]' },
+        after: { healthNotes: '[date medicale: modificat]' },
+      },
+    ];
+    await loadedSession();
+    renderProfile();
+
+    await screen.findByText('notă veche');
+    expect(await screen.findByText('Notă medicală modificată')).toBeInTheDocument();
+    expect(screen.queryByText(/\[date medicale/)).not.toBeInTheDocument();
+  });
+
+  it('45b: „Tot istoricul →” deschide Istoricul cu copilul ales', async () => {
+    await loadedSession();
+    const onNavigate = vi.fn();
+    renderProfile(onNavigate);
+
+    await screen.findByText('notă veche');
+    fireEvent.click(screen.getByRole('button', { name: 'Tot istoricul →' }));
+
+    expect(onNavigate).toHaveBeenCalledWith('audit', { recordType: 'children', recordId: 'C1' });
   });
 });

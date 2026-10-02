@@ -103,7 +103,10 @@ test('o modificare cu date medicale pe o vizită e păstrată redactată în ist
   assert.equal(entry.before.name, 'Ana');
 });
 
-test('o modificare cu date medicale pe un copil e păstrată redactată în istoric', t => {
+test('45a: o notă medicală schimbată dintr-un text ne-gol în altul rămâne distinsă după redactare', t => {
+  // Fără marcajul din markSensitiveFieldChanges, ambele părți ar redacta identic la „[date
+  // medicale]” și listChangedFields (webapp) ar vedea câmpul „neschimbat” — exact bug-ul pe care
+  // 45a cere să-l evite („notă medicală modificată”, fără conținut).
   const repository = createRepository(t);
   repository.recordChange({
     action: 'modificare',
@@ -111,6 +114,25 @@ test('o modificare cu date medicale pe un copil e păstrată redactată în isto
     recordId: 'CHILD-1',
     before: { healthNotes: 'Astm' },
     after: { healthNotes: 'Astm ușor' },
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
+  assert.ok(entry.before);
+  assert.ok(entry.after);
+  assert.equal(entry.before.healthNotes, '[date medicale]');
+  assert.notEqual(entry.after.healthNotes, entry.before.healthNotes);
+  assert.ok(String(entry.after.healthNotes).includes('date medicale'));
+});
+
+test('45a: o notă medicală nemodificată redactează identic pe ambele părți (fără fals-pozitiv)', t => {
+  const repository = createRepository(t);
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: { healthNotes: 'Astm', name: 'Veche' },
+    after: { healthNotes: 'Astm', name: 'Nouă' },
   });
 
   const [entry] = repository.readPage({ beforeEntryId: null }).entries;
@@ -163,6 +185,88 @@ test('fără sessionToken la construcție, intrările se salvează cu session_to
   const entry = repository.findById(id);
   assert.ok(entry);
   assert.equal(entry.sessionToken, null);
+});
+
+test('readForScope: istoricul unui copil, filtrat pe tipul și id-ul lui, cel mai recent primul', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'adăugare', recordType: 'children', recordId: 'CHILD-1' });
+  repository.recordChange({ action: 'modificare', recordType: 'children', recordId: 'CHILD-2' });
+  repository.recordChange({
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: { groupId: null },
+    after: { groupId: 'G1' },
+  });
+
+  const { entries, nextBeforeEntryId } = repository.readForScope({
+    scope: [{ recordType: 'children', recordId: 'CHILD-1' }],
+    beforeEntryId: null,
+  });
+
+  assert.deepEqual(
+    entries.map(entry => entry.recordId),
+    ['CHILD-1', 'CHILD-1'],
+  );
+  assert.equal(nextBeforeEntryId, null);
+});
+
+test('readForScope: mai multe perechi (tip, id) — fișa unui copil cu achitările lui', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'adăugare', recordType: 'children', recordId: 'CHILD-1' });
+  repository.recordChange({ action: 'adăugare', recordType: 'payments', recordId: 'PAY-1' });
+  // O altă achitare, a altui copil — nu trebuie să apară în scope-ul lui CHILD-1.
+  repository.recordChange({ action: 'adăugare', recordType: 'payments', recordId: 'PAY-2' });
+
+  const { entries } = repository.readForScope({
+    scope: [
+      { recordType: 'children', recordId: 'CHILD-1' },
+      { recordType: 'payments', recordId: 'PAY-1' },
+    ],
+    beforeEntryId: null,
+  });
+
+  assert.deepEqual(entries.map(entry => entry.recordId).sort(), ['CHILD-1', 'PAY-1']);
+});
+
+test('readForScope: cursorul pe id nu dublează intrări între pagini', t => {
+  const repository = createRepository(t);
+  for (let number = 1; number <= 3; number++)
+    repository.recordChange({ action: 'modificare', recordType: 'children', recordId: 'CHILD-1' });
+
+  const scope = [{ recordType: 'children', recordId: 'CHILD-1' }];
+  const firstId = repository.readForScope({ scope, beforeEntryId: null }).entries[0].id;
+  const { entries } = repository.readForScope({ scope, beforeEntryId: firstId });
+
+  assert.equal(entries.length, 2);
+  assert.ok(entries.every(entry => entry.id < firstId));
+});
+
+test('readForScope: recordType null (personalul, salvat fără kind) se potrivește cu IS, nu =', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'salariu', recordType: null, recordId: 'STAFF-1' });
+  repository.recordChange({ action: 'configurare backup', recordType: null, recordId: null });
+
+  const { entries } = repository.readForScope({
+    scope: [{ recordType: null, recordId: 'STAFF-1' }],
+    beforeEntryId: null,
+  });
+
+  assert.deepEqual(
+    entries.map(entry => entry.recordId),
+    ['STAFF-1'],
+  );
+});
+
+test('readForScope: refuză un scope gol sau invalid', t => {
+  const repository = createRepository(t);
+  assert.throws(() => repository.readForScope({ scope: [], beforeEntryId: null }), { status: 400 });
+  assert.throws(
+    () => repository.readForScope({ scope: [{ recordType: 'children', recordId: '' }], beforeEntryId: null }),
+    {
+      status: 400,
+    },
+  );
 });
 
 test('redactarea nu atinge alte câmpuri sau alte tipuri de înregistrare', t => {

@@ -21,6 +21,17 @@
   max-width: 980px;
 }
 
+/* 45a: SearchSelect „copil, angajat, grupă sau achitare" + „Tot istoricul" când e o selecție activă. */
+.recordFilterBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.recordFilterBar > :first-child {
+  width: 320px;
+}
+
 .dayGroup {
   display: flex;
   flex-direction: column;

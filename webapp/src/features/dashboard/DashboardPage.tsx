@@ -39,10 +39,10 @@ const MONTH_NAMES = [
 const METHOD_LABELS: Record<string, string> = { Cash: 'Cash', Card: 'Card', Transfer: 'Transfer' };
 const METHOD_TONE: Record<string, ProgressBarTone & LegendTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
 const ATTENTION_TONE_CLASS: Record<AttentionTone, string> = {
-  urgent: styles.tonePink,
-  review: styles.toneYellow,
-  assign: styles.toneMint,
-  visits: styles.toneYellow,
+  bani: styles.tonePink,
+  date: styles.toneYellow,
+  prezenta: styles.toneOrange,
+  sistem: styles.tonePink,
 };
 
 const formatCompactMoney = (value: number) =>
@@ -266,6 +266,8 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
   );
 }
 
+// 45c (PROMPT-8 §14): „apar doar elementele care au o acțiune” — useDashboard filtrează deja
+// sursele cu count 0 / backup la zi, deci fiecare rând ajuns aici are mereu un CTA.
 function AttentionRow({
   item,
   onNavigate,
@@ -273,24 +275,21 @@ function AttentionRow({
   item: AttentionItem;
   onNavigate: (view: ViewKey, params?: Record<string, string>) => void;
 }) {
-  const clear = item.count === 0 && !item.forceShow;
   return (
-    <article className={`${styles.attentionRow} ${clear ? styles.attentionRowClear : ATTENTION_TONE_CLASS[item.tone]}`}>
+    <article className={`${styles.attentionRow} ${ATTENTION_TONE_CLASS[item.tone]}`}>
       <span className={styles.attentionCount}>{item.count}</span>
       <div className={styles.attentionText}>
         <strong>{item.title}</strong>
         <small>{item.detail}</small>
       </div>
-      {!clear && (
-        <Button
-          variant="link"
-          tone="inherit"
-          className={styles.attentionAction}
-          onClick={() => onNavigate(item.view as ViewKey, item.params)}
-        >
-          {item.action} →
-        </Button>
-      )}
+      <Button
+        variant="link"
+        tone="inherit"
+        className={styles.attentionAction}
+        onClick={() => onNavigate(item.view as ViewKey, item.params)}
+      >
+        {item.action} →
+      </Button>
     </article>
   );
 }

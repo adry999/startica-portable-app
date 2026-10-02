@@ -101,6 +101,23 @@ function ChildrenListView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // 45c (PROMPT-8 §14): „Necesită atenție" de pe Dashboard deschide Copiii cu filtrul „Date"
+  // deja ales (`incomplete`/`telefon-invalid`) — un singur parcurs, ca `nou` de mai sus.
+  useEffect(() => {
+    const filtru = searchParams.get('filtru');
+    if (filtru !== 'incomplete' && filtru !== 'telefon-invalid') return;
+    setCompletenessFilter(filtru);
+    setSearchParams(
+      params => {
+        const next = new URLSearchParams(params);
+        next.delete('filtru');
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useTopbarActions(
     <div className={styles.headerActions}>
       <Button variant="outline" onClick={() => navigate('/copii/zile-de-nastere')}>
@@ -119,6 +136,9 @@ function ChildrenListView({
       if (groupFilter !== 'all' && groupFilter !== 'none' && row.groupId !== groupFilter) return false;
       if (paymentFilter !== 'all' && row.payment?.label !== paymentFilter) return false;
       if (completenessFilter === 'incomplete' && missingChildFields(row.child).length === 0) return false;
+      // 45c (PROMPT-8 §14): sursa „telefon invalid" din „Necesită atenție" — applyPhoneField
+      // (record-schema.mjs, §10) pune phoneInvalid/phone2Invalid când telefonul nu e valid.
+      if (completenessFilter === 'telefon-invalid' && !row.child.phoneInvalid && !row.child.phone2Invalid) return false;
       if (normalizedQuery) {
         // A8: căutarea găsește și după al doilea părinte (nume + telefon), nu doar contactul principal.
         const haystack = `${row.name} ${row.parent} ${row.phone} ${row.child.parent2 ?? ''} ${
@@ -332,6 +352,7 @@ function ChildrenListView({
   }
   if (paymentFilter !== 'all') activeFilterLabels.push(paymentFilter);
   if (completenessFilter === 'incomplete') activeFilterLabels.push('Date incomplete');
+  if (completenessFilter === 'telefon-invalid') activeFilterLabels.push('Telefon invalid');
 
   const selectedRows = childrenData.rows.filter(row => selectedRowKeys.has(row.id));
   const allSelectedArchived = selectedRows.length > 0 && selectedRows.every(row => row.archived);

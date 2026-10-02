@@ -90,23 +90,47 @@ function toRow(entry: AuditEntry): AuditRowView {
 }
 
 /**
- * Încărcare pe pagini (`/api/audit`), cu `beforeEntryId` pentru continuare.
- * Fără sesiunea de records — istoricul vine direct din API, nu din `useAppSession()`.
- * Gruparea pe zile și filtrarea (căutare + tip) se fac în `AuditLogPage`, pe rândurile deja încărcate.
+ * O pereche (tip, id) din `scope` — vezi `readForScope` din `audit-log.repository.mjs`.
+ * `recordType` poate fi `null` (personalul se salvează fără `kind`, vezi `personal.routes.mjs`).
  */
-export function useAuditLog(): AuditLogData {
+export interface AuditScopeEntry {
+  recordType: string | null;
+  recordId: string;
+}
+
+function pathFor(scope: AuditScopeEntry[] | null, beforeEntryId: number | null): string {
+  const cursor = beforeEntryId === null ? '' : `beforeEntryId=${beforeEntryId}`;
+  if (!scope) return cursor ? `/api/audit?${cursor}` : '/api/audit';
+  const scopeParam = `scope=${encodeURIComponent(JSON.stringify(scope))}`;
+  return `/api/audit/scope?${cursor ? `${scopeParam}&${cursor}` : scopeParam}`;
+}
+
+/**
+ * Încărcare pe pagini (`/api/audit`, sau `/api/audit/scope` pentru istoricul unei singure
+ * înregistrări — 45a, PROMPT-8 §14), cu `beforeEntryId` pentru continuare. Fără sesiunea de
+ * records — istoricul vine direct din API, nu din `useAppSession()`. Gruparea pe zile și
+ * filtrarea (căutare + tip) se fac în `AuditLogPage`, pe rândurile deja încărcate.
+ * @param scope Perechile (tip, id) de urmărit. `null` cere istoricul complet (nefiltrat);
+ *   `[]` (tablou gol) pune hook-ul în așteptare, fără nicio cerere — pentru un consumator ca
+ *   `ChildProfileView` (45b), care nu știe încă `childId`-ul real cât timp fișa se încarcă, și
+ *   nu trebuie să ceară istoricul global doar ca să-l arunce o clipă mai târziu.
+ */
+export function useAuditLog(scope: AuditScopeEntry[] | null = null): AuditLogData {
   const [rows, setRows] = useState<AuditRowView[]>([]);
   const [status, setStatus] = useState<AuditLogStatus>('loading');
   const [failureMessage, setFailureMessage] = useState('');
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const nextBeforeEntryId = useRef<number | null>(null);
+  const scopeKey = scope ? JSON.stringify(scope) : '';
+  const paused = scope !== null && scope.length === 0;
 
   useEffect(() => {
+    if (paused) return;
     let cancelled = false;
     setStatus('loading');
     setFailureMessage('');
-    requestJson('/api/audit')
+    requestJson(pathFor(scope, null))
       .then(response => {
         if (cancelled) return;
         const page = response as AuditPage;
@@ -123,15 +147,15 @@ export function useAuditLog(): AuditLogData {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // Cheia efectivă e conținutul lui `scope`, nu identitatea obiectului (ca la useAttendance).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scopeKey, paused]);
 
   function loadMore() {
-    if (status !== 'ready' || !hasMore || isLoadingMore) return;
+    if (paused || status !== 'ready' || !hasMore || isLoadingMore) return;
     setIsLoadingMore(true);
     setFailureMessage('');
-    const path =
-      nextBeforeEntryId.current === null ? '/api/audit' : `/api/audit?beforeEntryId=${nextBeforeEntryId.current}`;
-    requestJson(path)
+    requestJson(pathFor(scope, nextBeforeEntryId.current))
       .then(response => {
         const page = response as AuditPage;
         nextBeforeEntryId.current = page.nextBeforeEntryId;

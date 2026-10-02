@@ -165,11 +165,6 @@
   padding: 10px 12px 10px 10px;
 }
 
-.attentionRowClear {
-  background: var(--neutral-softer);
-  color: var(--subtle);
-}
-
 .tonePink {
   background: var(--pink-soft);
 }
@@ -180,6 +175,11 @@
 
 .toneMint {
   background: var(--mint-soft);
+}
+
+/* 45c (PROMPT-8 §14): „prezență nemarcată" — al 4-lea ton, lângă pink/yellow/mint deja folosite. */
+.toneOrange {
+  background: var(--orange-soft);
 }
 
 .tonePink .attentionCount,
@@ -195,6 +195,11 @@
 .toneMint .attentionCount,
 .toneMint .attentionAction {
   color: var(--mint-ink);
+}
+
+.toneOrange .attentionCount,
+.toneOrange .attentionAction {
+  color: var(--orange-ink);
 }
 
 .attentionCount {

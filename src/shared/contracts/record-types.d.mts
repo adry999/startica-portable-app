@@ -48,10 +48,14 @@ export interface Child {
   contractNumber?: string;
   parent: string;
   phone: string;
+  /** Pus de applyPhoneField (record-schema.mjs, §10) când `phone` nu e un mobil moldovenesc
+   * valid nici un „alt număr” cu „+” — bannerul „de verificat” (§14, filtrul „Telefon invalid”). */
+  phoneInvalid?: boolean;
   /** „Mamă”, „Tată”, „Bunică”… liber, ≤ 40 (A2, screens/29-copil-nou-diferente.md). */
   parentRelation?: string;
   parent2?: string;
   phone2?: string;
+  phone2Invalid?: boolean;
   parent2Relation?: string;
   /** ≤ 10 (A3, Copii.dc.html#2b). */
   pickupPersons?: PickupPerson[];

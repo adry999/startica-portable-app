@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Button,
   DayStepper,
@@ -42,6 +43,28 @@ export function AttendancePage({ month }: AttendancePageProps) {
   const dayData = useAttendanceDay(date);
   const monthData = useAttendanceMonth(monthKey);
   const activeData = mode === 'day' ? dayData : monthData;
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // 45c (PROMPT-8 §14): „Necesită atenție" de pe Dashboard deschide Prezența pe ziua nemarcată
+  // (și grupa ei, dacă e una singură) — un singur parcurs, ca filtrele deep-link din alte ecrane.
+  useEffect(() => {
+    const deepLinkDate = searchParams.get('data');
+    if (!deepLinkDate) return;
+    setMode('day');
+    setDate(deepLinkDate);
+    const grupa = searchParams.get('grupa');
+    if (grupa) dayData.setGroupFilter(grupa);
+    setSearchParams(
+      params => {
+        const next = new URLSearchParams(params);
+        next.delete('data');
+        next.delete('grupa');
+        return next;
+      },
+      { replace: true },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Ctrl+Z anulează ultima acțiune a filei active (A3c/A3e), indiferent unde e focusul pe pagină.
   useEffect(() => {
