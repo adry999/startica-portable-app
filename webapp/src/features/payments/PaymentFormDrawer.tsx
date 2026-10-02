@@ -55,6 +55,9 @@ export interface PaymentFormDrawerProps {
   defaultChildId?: string;
   /** Serviciul presetat la creare (B3) — „+ Plată” pornește cu Grădiniță, „Încasează” din Bazin cu Bazin. */
   defaultService?: string;
+  /** 40a: „Plată +” din Situația plăților pornește cu restanța deja bifată — spre deosebire de
+   * F11 („+ Plată” din fișa copilului), unde rămâne opțională. Fără efect la editare. */
+  defaultCheckArrears?: boolean;
   /** C1: întoarce succesul real al salvării (true doar după mutate reușit) — save() din
    * dirty-forms (13b) și garda „Salvează și schimbă” a filialei se bazează pe asta. */
   onSubmit: (values: PaymentFormValues) => Promise<boolean>;
@@ -67,6 +70,7 @@ export function PaymentFormDrawer({
   records,
   defaultChildId = '',
   defaultService = DEFAULT_SERVICE_ID,
+  defaultCheckArrears = false,
   onSubmit,
   onClose,
 }: PaymentFormDrawerProps) {
@@ -188,6 +192,15 @@ export function PaymentFormDrawer({
     prefilledAmountRef.current = true;
     setTender(activeMethod, formatMoneyInput(amount));
   }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
+
+  // 40a: „Plată +” din Situația plăților pornește cu restanța deja bifată (spre deosebire de F11,
+  // unde rămâne opțională) — o singură dată, de îndată ce restanțele copilului sunt disponibile.
+  const arrearsAutoCheckedRef = useRef(false);
+  useEffect(() => {
+    if (!defaultCheckArrears || editing || arrearsAutoCheckedRef.current || arrearsList.length === 0) return;
+    arrearsAutoCheckedRef.current = true;
+    setCheckedArrears(new Set(arrearsList.map(a => a.month)));
+  }, [defaultCheckArrears, editing, arrearsList]);
 
   useEffect(() => {
     // F7 (FEEDBACK-01-10.md): odată ales un copil la o plată NOUĂ, repartizarea automată e

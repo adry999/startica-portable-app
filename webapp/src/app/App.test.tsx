@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,5 +73,99 @@ describe('App', () => {
       </MemoryRouter>,
     );
     expect(await screen.findByRole('heading', { name: 'Rezumatul lunii' })).toBeInTheDocument();
+  });
+
+  describe('40a: „Plată +” din Situația plăților', () => {
+    const statusFixture = {
+      children: [
+        {
+          id: 'c1',
+          name: 'Andrei Popescu',
+          contractDate: '2026-01-01',
+          attendanceDate: '2026-01-01',
+          status: 'Activ',
+          statusHistory: [],
+          feeHistory: [{ from: '2026-01', amount: 1500 }],
+          archived: false,
+        },
+      ],
+      payments: [],
+      expenses: [],
+      groups: [],
+      categories: [],
+      visits: [],
+    };
+    let currentPayments: Record<string, unknown>[] = [];
+
+    beforeEach(() => {
+      currentPayments = [];
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string, init?: RequestInit) => {
+          if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+          if (path === '/api/state')
+            return jsonResponse({
+              state: { ...statusFixture, payments: currentPayments },
+              revision: 1,
+              updatedAt: '2026-09-23T10:00:00Z',
+            });
+          if (path === '/api/health') return jsonResponse({});
+          if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+          if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+          if (path === '/api/sms-status')
+            return jsonResponse({
+              configured: false,
+              sender: '',
+              tokenMasked: '',
+              monthlyLimit: null,
+              sentThisMonth: 0,
+              failedThisMonth: 0,
+              segmentsThisMonth: 0,
+              balance: null,
+              balanceCheckedAt: '',
+              unitCost: 0.3,
+              lastError: '',
+            });
+          if (path === '/api/sms-last-notified') return jsonResponse({});
+          if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
+          if (path === '/api/record') {
+            const body = JSON.parse(String(init?.body ?? '{}'));
+            currentPayments = [...currentPayments, body.record];
+            return jsonResponse({
+              state: { ...statusFixture, payments: currentPayments },
+              revision: 2,
+              updatedAt: '2026-09-23T10:05:00Z',
+            });
+          }
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+    });
+
+    it('deschide PaymentFormDrawer cu copilul rândului, salvează și rămâne pe Situația plăților', async () => {
+      render(
+        <MemoryRouter initialEntries={['/situatia-platilor']}>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </MemoryRouter>,
+      );
+
+      expect(await screen.findByRole('heading', { name: 'Situația plăților' })).toBeInTheDocument();
+      const user = userEvent.setup();
+      const row = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+
+      await user.click(within(row).getByRole('button', { name: 'Plată +' }));
+      const drawer = await screen.findByRole('dialog', { name: 'Achitare nouă' });
+      expect(within(drawer).getByText('Andrei Popescu')).toBeInTheDocument();
+
+      // F11: suma pornește precompletată cu taxa lunii (1.500,00) — salvăm direct, fără să o schimbăm.
+      await user.click(screen.getByRole('button', { name: /^Salvează/ }));
+
+      await screen.findByText('Achitare adăugată.');
+      // Rămânem pe Situația plăților — nu s-a navigat în alt modul (fără reîncărcarea tabelului).
+      expect(screen.getByRole('heading', { name: 'Situația plăților' })).toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Achitare nouă' })).not.toBeInTheDocument();
+    });
   });
 });

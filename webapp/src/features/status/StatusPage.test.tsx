@@ -115,17 +115,24 @@ function renderPage() {
   const onMonthChange = vi.fn();
   const onNavigate = vi.fn();
   const onOpenChild = vi.fn();
+  const onOpenPayment = vi.fn();
   render(
     <MemoryRouter>
       <ToastProvider>
         <TopbarActionsProvider>
           <TopbarActionsSlot />
-          <StatusPage month="2026-09" onMonthChange={onMonthChange} onNavigate={onNavigate} onOpenChild={onOpenChild} />
+          <StatusPage
+            month="2026-09"
+            onMonthChange={onMonthChange}
+            onNavigate={onNavigate}
+            onOpenChild={onOpenChild}
+            onOpenPayment={onOpenPayment}
+          />
         </TopbarActionsProvider>
       </ToastProvider>
     </MemoryRouter>,
   );
-  return { onMonthChange, onNavigate, onOpenChild };
+  return { onMonthChange, onNavigate, onOpenChild, onOpenPayment };
 }
 
 async function loadedSession() {
@@ -283,6 +290,22 @@ describe('StatusPage', () => {
     const paidRow = screen.getByText('Elena Marin').closest('tr') as HTMLElement;
     await userEvent.click(within(paidRow).getByRole('button', { name: 'Vezi fișa' }));
     expect(onOpenChild).toHaveBeenCalledWith('c4');
+  });
+
+  it('40a: rândul cu restanță are „Plată +” — clic cheamă onOpenPayment cu copilul rândului', async () => {
+    await loadedSession();
+    const { onOpenPayment } = renderPage();
+    const overdueRow = screen.getByText('Andrei Popescu').closest('tr') as HTMLElement;
+
+    await userEvent.click(within(overdueRow).getByRole('button', { name: 'Plată +' }));
+    expect(onOpenPayment).toHaveBeenCalledWith('c1');
+  });
+
+  it('40a: un rând achitat nu are „Plată +” (doar „Vezi fișa”)', async () => {
+    await loadedSession();
+    renderPage();
+    const paidRow = screen.getByText('Elena Marin').closest('tr') as HTMLElement;
+    expect(within(paidRow).queryByRole('button', { name: 'Plată +' })).not.toBeInTheDocument();
   });
 
   it('bannerul de restanțieri apare cu „Notifică toți" dezactivat cât sms.md nu e conectat', async () => {

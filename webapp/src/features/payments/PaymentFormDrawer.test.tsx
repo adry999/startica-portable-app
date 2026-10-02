@@ -478,6 +478,35 @@ describe('PaymentFormDrawer', () => {
     expect(submitted.allocations[0].month).toBe(todayFn().slice(0, 7));
   });
 
+  it('40a: defaultCheckArrears bifează automat restanța copilului presetat (spre deosebire de F11)', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c1',
+      defaultCheckArrears: true,
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+
+    expect(
+      await screen.findByRole('checkbox', { name: 'Acoperă restanța din Ian 2026', checked: true }),
+    ).toBeInTheDocument();
+  });
+
+  it('fără defaultCheckArrears (F11), restanța copilului presetat rămâne nebifată', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c1',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+
+    expect(
+      await screen.findByRole('checkbox', { name: 'Acoperă restanța din Ian 2026', checked: false }),
+    ).toBeInTheDocument();
+  });
+
   it('F7: bifarea restanței o include în repartizare, înaintea lunii plății', async () => {
     const { onSubmit } = renderDrawer();
     const user = userEvent.setup();

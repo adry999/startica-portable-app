@@ -175,6 +175,9 @@ export interface StatusPageProps {
   onMonthChange: (month: string) => void;
   onNavigate: (view: ViewKey) => void;
   onOpenChild: (id: string) => void;
+  /** 40a: „Plată +” pe rând — deschide `PaymentFormDrawer` cu restanța bifată; randat de App.tsx
+   * (nu de `StatusPage`), ca granița dintre module (features/status ↔ features/payments) să rămână. */
+  onOpenPayment: (childId: string) => void;
 }
 
 type StatusMode = 'month' | 'year';
@@ -183,7 +186,7 @@ const MODE_OPTIONS = [
   { value: 'year', label: 'An școlar' },
 ] as const;
 
-export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: StatusPageProps) {
+export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild, onOpenPayment }: StatusPageProps) {
   const [mode, setMode] = usePersistedState<StatusMode>('view.status', 'month');
   const [startYear, setStartYear] = useState(() => schoolYearStartOf(month));
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
@@ -354,6 +357,7 @@ export function StatusPage({ month, onMonthChange, onNavigate, onOpenChild }: St
             isNotifiedToday={isNotifiedToday}
             onNavigate={onNavigate}
             onOpenChild={onOpenChild}
+            onOpenPayment={onOpenPayment}
             onNotifyRow={openRowNotify}
             onNotifyAll={openBannerNotify}
           />
@@ -417,6 +421,7 @@ function MonthView({
   isNotifiedToday,
   onNavigate,
   onOpenChild,
+  onOpenPayment,
   onNotifyRow,
   onNotifyAll,
 }: {
@@ -425,6 +430,7 @@ function MonthView({
   isNotifiedToday: (id: string) => boolean;
   onNavigate: (view: ViewKey) => void;
   onOpenChild: (id: string) => void;
+  onOpenPayment: (childId: string) => void;
   onNotifyRow: (row: StatusRowView) => void;
   onNotifyAll: () => void;
 }) {
@@ -486,15 +492,22 @@ function MonthView({
       render: row =>
         NOTIFIABLE_LABELS.has(row.label) ? (
           <div className={styles.ctaCell}>
-            <Button
-              variant="outline"
-              className={styles.ctaButton}
-              disabled={!smsConfigured}
-              title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
-              onClick={() => onNotifyRow(row)}
-            >
-              Notifică
-            </Button>
+            {/* 40a: apar la hover și la focus de la tastatură (styles.rowActions) — „Plată +” cu
+                restanța deja bifată, „SMS” = Notifică (SmsConfirmDialog mode="single", șablon implicit). */}
+            <div className={styles.rowActions}>
+              <Button variant="outline" className={styles.ctaButton} onClick={() => onOpenPayment(row.id)}>
+                Plată +
+              </Button>
+              <Button
+                variant="outline"
+                className={styles.ctaButton}
+                disabled={!smsConfigured}
+                title={smsConfigured ? undefined : SMS_DISABLED_TITLE}
+                onClick={() => onNotifyRow(row)}
+              >
+                Notifică
+              </Button>
+            </div>
             {isNotifiedToday(row.id) && <Badge tone="mint">Notificat azi</Badge>}
           </div>
         ) : (

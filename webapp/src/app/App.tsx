@@ -15,7 +15,15 @@ import { AttendancePage, WeeklySheetPrintPage } from '@features/attendance';
 import { PoolPage, PoolReceiptPage } from '@features/pool';
 import { VisitsPage } from '@features/visits';
 import { PersonalPage, StaffProfilePage } from '@features/personal';
-import { PaymentsPage, PaymentReceipt, PaymentReceiptThermal, DayClosingReceipt } from '@features/payments';
+import {
+  PaymentsPage,
+  PaymentReceipt,
+  PaymentReceiptThermal,
+  DayClosingReceipt,
+  PaymentFormDrawer,
+  usePayments,
+  type PaymentFormValues,
+} from '@features/payments';
 import { ExpensesPage } from '@features/expenses';
 import { StatusPage } from '@features/status';
 import { NotifyPage } from '@features/notify';
@@ -140,7 +148,7 @@ export function App() {
         <Route
           path="/situatia-platilor"
           element={
-            <StatusPage
+            <StatusRoute
               month={month}
               onMonthChange={setMonth}
               onNavigate={onNavigate}
@@ -202,6 +210,65 @@ function ChildrenRoute({ month, onNavigate }: { month: string; onNavigate: (view
 function VisitsRoute() {
   const [searchParams] = useSearchParams();
   return <VisitsPage initialDate={searchParams.get('zi') ?? undefined} />;
+}
+
+/** 40a: PaymentFormDrawer randat aici, nu în StatusPage — features/status nu are voie să
+ * importe direct din features/payments (granițele dintre module). Copilul salvează direct în
+ * sesiunea comună, deci rândul din Situația plăților se reîmprospătează singur (useStatus
+ * citește din aceeași sesiune), fără reîncărcarea tabelului sau navigare în altă pagină. */
+function StatusRoute({
+  month,
+  onMonthChange,
+  onNavigate,
+  onOpenChild,
+}: {
+  month: string;
+  onMonthChange: (month: string) => void;
+  onNavigate: (view: ViewKey) => void;
+  onOpenChild: (id: string) => void;
+}) {
+  const toast = useToast();
+  const paymentsForRow = usePayments();
+  const [quickPaymentChildId, setQuickPaymentChildId] = useState<string | null>(null);
+
+  async function submitQuickPayment(values: PaymentFormValues): Promise<boolean> {
+    try {
+      const saved = await paymentsForRow.createPayment(values, () =>
+        window.confirm(
+          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
+        ),
+      );
+      if (saved) {
+        setQuickPaymentChildId(null);
+        toast.show({ message: 'Achitare adăugată.' });
+      }
+      return saved;
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+      return false;
+    }
+  }
+
+  return (
+    <>
+      <StatusPage
+        month={month}
+        onMonthChange={onMonthChange}
+        onNavigate={onNavigate}
+        onOpenChild={onOpenChild}
+        onOpenPayment={setQuickPaymentChildId}
+      />
+      <PaymentFormDrawer
+        key={quickPaymentChildId ?? 'closed'}
+        target={quickPaymentChildId ? 'new' : null}
+        records={paymentsForRow.records}
+        defaultChildId={quickPaymentChildId ?? undefined}
+        defaultCheckArrears
+        onSubmit={submitQuickPayment}
+        onClose={() => setQuickPaymentChildId(null)}
+      />
+    </>
+  );
 }
 
 function PaymentsRoute() {
