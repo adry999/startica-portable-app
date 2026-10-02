@@ -50,7 +50,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   const saveStatus = deriveSaveStatus(session.state);
   // Cardul de sincronizare (14a) înlocuiește „Salvat · ora” doar când e configurat și
   // fără eroare locală (deriveSyncStatus întoarce null în acel caz — Sidebar arată saveStatus).
-  const syncCard = session.state.sync?.configured ? deriveSyncStatus(syncStatusData, session.state) : null;
+  const syncCard = session.state.sync?.configured
+    ? deriveSyncStatus(syncStatusData, session.state, session.state.profile)
+    : null;
   const syncStatus = syncCard
     ? {
         ...syncCard,
