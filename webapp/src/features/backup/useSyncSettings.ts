@@ -56,9 +56,7 @@ export interface SyncSettingsData {
   syncNow: () => Promise<void>;
   syncing: boolean;
   /** §5.3 (36a): profilul ales la pasul 1 — lipsă păstrează comportamentul dinaintea profilurilor. */
-  createPairingCode: (
-    profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile,
-  ) => Promise<PairingCode>;
+  createPairingCode: (profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile) => Promise<PairingCode>;
   revokeDevice: (deviceId: string) => Promise<void>;
   /** §5.3 (36c): „Schimbă” din lista de calculatoare. */
   changeDeviceProfile: (
