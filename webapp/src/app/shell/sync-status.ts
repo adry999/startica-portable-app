@@ -22,9 +22,7 @@ function pendingLabel(count: number): string {
 
 /** §5.3 (36d): „Profil X · acces limitat” — doar pentru un profil restrâns, nu pentru Complet.
  * Un profil blocat arată „Acces blocat”, mai grav decât o simplă restrângere. */
-function profileNote(
-  profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null,
-): string | null {
+function profileNote(profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null): string | null {
   if (!profile) return null;
   if (profile.blocked) return 'Acces blocat';
   if (profile.preset === 'complet') return null;

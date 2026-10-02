@@ -79,7 +79,9 @@ describe('deriveSyncStatus', () => {
         BASE_LOCAL,
         normalizeProfile({ preset: 'bazin' }),
       );
-      expect(result?.detail).toBe('3 modificări salvate local. Se trimit automat când revine conexiunea. · Profil Bazin · acces limitat');
+      expect(result?.detail).toBe(
+        '3 modificări salvate local. Se trimit automat când revine conexiunea. · Profil Bazin · acces limitat',
+      );
     });
 
     it('un profil blocat arată „Acces blocat”, nu doar „acces limitat”', () => {

@@ -17,7 +17,8 @@ async function loadSession(profile?: unknown) {
     'fetch',
     vi.fn(async (path: string) => {
       if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', profile });
-      if (path === '/api/state') return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
+      if (path === '/api/state')
+        return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
       if (path === '/api/health') return jsonResponse({});
       throw new Error(`neașteptat: ${path}`);
     }),

@@ -256,7 +256,9 @@ export function ChildProfileView({
                     Editează fișa
                   </Button>
                 )}
-                {canWritePayments && <Button onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}>+ Plată</Button>}
+                {canWritePayments && (
+                  <Button onClick={() => navigate(`/achitari/nou?copil=${child.id}`)}>+ Plată</Button>
+                )}
               </>
             ) : undefined,
         }}
@@ -565,7 +567,10 @@ export function ChildProfileView({
                     variant={EMPTY_STATES['fisa.payers'].variant}
                     size="compact"
                     title={resolveEmptyStateTitle(EMPTY_STATES['fisa.payers'])}
-                    action={{ label: EMPTY_STATES['fisa.payers'].actionLabel ?? '', onClick: () => onNavigate('assign') }}
+                    action={{
+                      label: EMPTY_STATES['fisa.payers'].actionLabel ?? '',
+                      onClick: () => onNavigate('assign'),
+                    }}
                   />
                 ) : (
                   profileData.payerAliases.map(alias => {
