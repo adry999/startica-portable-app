@@ -912,3 +912,23 @@ rezonabil aplicat, fără să opresc lucrul:
 
 Nicio filială reală nu a fost migrată — scriptul a fost rulat (dry-run și `--execute`) exclusiv cu
 `startTestApplication`, pe directoare temporare.
+
+## PROMPT-9 §5 — UndoToast pentru achitare/avans/copil nou/mutare în grupă (40b, restul acțiunilor)
+
+O decizie tehnică luată pe loc, cu un implicit rezonabil aplicat, fără să opresc lucrul:
+
+1. **Avansul (`AdvanceFormDrawer.tsx`) NU folosește `/api/undo` generic**, spre deosebire de
+   celelalte trei acțiuni din §5. `/api/undo` lucrează doar pe `recordRepository` (tipurile din
+   `records`), dar un avans e dublu: o cheltuială obișnuită (în `records`, cu `auditId`) ȘI un rând
+   propriu în `personalRepository` (`advances`, cu `expenseId` spre acea cheltuială) — cele două NU
+   sunt scrise în aceeași tranzacție auditată împreună. Dacă UndoToast ar fi cerut `/api/undo` cu
+   `auditId`-ul cheltuielii, ar fi refăcut doar cheltuiala, lăsând rândul din `advances` orfan
+   (`expenseId` spre o cheltuială ștearsă) — un bug de integritate, nu doar o inconsecvență minoră.
+   Am păstrat tiparul vizual/temporal al `UndoToast` (10s, „Anulează”), dar „Anulează” cheamă
+   ștergerea deja corectă și existentă — `POST /api/personal/advances` cu `{ id, remove: true }`
+   (exact ce folosește deja `AdvancesTab.tsx`), care arhivează cheltuiala ȘI scoate rândul din
+   `advances` — nu am adăugat nicio rută nouă. `UndoToast.onUndo` e documentat explicit ca „apelantul
+   decide cum” (nu doar `/api/undo`), deci asta rămâne în spiritul componentei, nu o excepție ad-hoc.
+   Dacă produsul chiar vrea `/api/undo` literal și aici, soluția corectă ar fi să extindă
+   `undo.routes.mjs` să cunoască și `personalRepository` — nu am făcut asta neasumat, fiind o
+   cuplare nouă între feature-urile `audit-log` și `personal`.

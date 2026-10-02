@@ -23,7 +23,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
 | C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
-| Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | 🔁 40a/40c ✅ (`217250b`,`01f6881`); 40b: server gata, UndoToast doar cheltuială + arhivare 1 copil (`74f9317`+`fcbbc39`); restul → PROMPT-9 §5 |
+| Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ✅ 40a/40c (`217250b`,`01f6881`); 40b complet — UndoToast cheltuială + arhivare 1 copil (`74f9317`+`fcbbc39`), apoi achitare/copil nou/mutare în grupă/avans + Grup frați 44b (`5112298`, PROMPT-9 §5; avans folosește `/api/personal/advances` remove, nu `/api/undo` generic — vezi INTREBARI.md) |
 | Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
 | Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting, pasă separată |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` |
