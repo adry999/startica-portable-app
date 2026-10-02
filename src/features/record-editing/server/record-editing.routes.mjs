@@ -99,13 +99,17 @@ export function createRecordEditingRoutes({
         if (!record.archived) fail('Doar înregistrările arhivate pot fi șterse definitiv.', 409);
         return record;
       });
-      if (request.type === 'children')
+      if (request.type === 'children') {
+        // AUDIT-COD-02-10.md #8: un singur scan, nu 2×N (vizite + taxe) pe fiecare id din lot —
+        // instantaneul nu se schimbă între aceste verificări (suntem deja în tranzacție).
+        const { visits, charges } = recordRepository.readSnapshot();
         for (const id of ids) {
-          if (recordRepository.readSnapshot().visits.some(visit => visit.childId === id && !visit.archived))
+          if (visits.some(visit => visit.childId === id && !visit.archived))
             fail('Arhivează mai întâi vizita care l-a înscris, altfel ar rămâne fără copil valid.');
-          if ((recordRepository.readSnapshot().charges ?? []).some(charge => charge.childId === id))
+          if ((charges ?? []).some(charge => charge.childId === id))
             fail('Copilul are taxe de bazin înregistrate — nu poate fi șters.');
         }
+      }
       for (const record of records) {
         if (request.type === 'children') cascadeChildDeletion(record.id);
         recordRepository.remove(request.type, record.id);
