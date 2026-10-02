@@ -25,7 +25,7 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | Fișă incompletă, pontaj săptămână, căutare, erori | ✅ 41a–41d | ⏳ §9 |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` (§5.1/§9.2) |
 | Rotunjire la achitare | ✅ 41f | ⏳ §9.1 |
-| Telefon +373 / 069 | ✅ 25b | ⏳ §10 |
+| Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ⏳ §11 |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ⏳ §12 |
