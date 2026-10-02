@@ -57,7 +57,14 @@ describe('DataTable', () => {
   });
 
   it('folosește defaultSort la montare (13.1 — liste cu dată, cele mai noi primele)', () => {
-    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} defaultSort={{ key: 'fee', direction: 'desc' }} />);
+    render(
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        defaultSort={{ key: 'fee', direction: 'desc' }}
+      />,
+    );
     const rows = screen.getAllByRole('row').slice(1);
     expect(within(rows[0]).getByText('Maria')).toBeInTheDocument(); // 2000
     expect(within(rows[2]).getByText('Ioana')).toBeInTheDocument(); // 1000
@@ -97,7 +104,14 @@ describe('DataTable', () => {
   it('pagina controlată (page/onPageChange) — apelantul ține numărul paginii', async () => {
     const onPageChange = vi.fn();
     render(
-      <DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} page={1} onPageChange={onPageChange} />,
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        pageSize={2}
+        page={1}
+        onPageChange={onPageChange}
+      />,
     );
     await userEvent.click(screen.getByRole('button', { name: '2' }));
     expect(onPageChange).toHaveBeenCalledWith(2);

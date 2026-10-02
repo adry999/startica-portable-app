@@ -19,6 +19,7 @@ import {
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { usePersistedSort } from '@shared/state/usePersistedSort';
 import { downloadCsv } from '@shared/csv-export';
 import { shiftMonth } from '@shared/format/month-shift';
 import { formatNameList } from '@shared/format/name-list';
@@ -68,6 +69,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
+  // §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină.
+  const [sort, setSort] = usePersistedSort('sort.expenses', { key: 'date', direction: 'desc' });
 
   // „+ Adaugă cheltuială" de pe Dashboard trece direct la formular (08-dashboard.md #3), fără
   // să rămână în URL — altfel s-ar redeschide la orice re-render sau navigare înapoi.
@@ -344,6 +347,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
               selectable
               selectedRowKeys={selectedRowKeys}
               onSelectedRowKeysChange={setSelectedRowKeys}
+              sort={sort}
+              onSortChange={setSort}
               emptyState={<p>Nu există înregistrări pentru filtrele alese.</p>}
             />
             <p className={styles.summaryText}>

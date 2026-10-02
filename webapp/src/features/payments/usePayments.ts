@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { useSessionStatus } from '@shared/api/useSessionStatus';
+import { usePersistedSort } from '@shared/state/usePersistedSort';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { total } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
@@ -10,7 +11,7 @@ import { summarizePaymentsByMethod } from '#shared/ui/record-list-summary.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
-import type { PeriodPreset } from '@shared/ui';
+import type { DataTableSort, PeriodPreset } from '@shared/ui';
 import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
 import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot, Service } from '@contracts/record-types.mjs';
 
@@ -95,6 +96,9 @@ export interface PaymentsData {
   setPeriodTo: (value: string) => void;
   archiveFilter: ArchiveFilter;
   setArchiveFilter: (value: ArchiveFilter) => void;
+  /** §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină. */
+  sort: DataTableSort;
+  setSort: (sort: DataTableSort | null) => void;
   archivePayment: (id: string) => Promise<void>;
   unarchivePayment: (id: string) => Promise<void>;
   archiveMany: (ids: string[]) => Promise<void>;
@@ -174,6 +178,7 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const [periodFrom, setPeriodFrom] = useState('');
   const [periodTo, setPeriodTo] = useState('');
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
+  const [sort, setSort] = usePersistedSort('sort.payments', { key: 'date', direction: 'desc' });
 
   // m8: citesc `session.state.state` la momentul apelului, nu `records` din closure-ul randării în
   // care a fost capturată funcția — o referință ținută de un toast „Anulează” (arhivare/dezarhivare)
@@ -251,6 +256,8 @@ export function usePayments(initialChildId = ''): PaymentsData {
     setPeriodTo,
     archiveFilter,
     setArchiveFilter,
+    sort,
+    setSort,
     archivePayment,
     unarchivePayment,
     archiveMany,

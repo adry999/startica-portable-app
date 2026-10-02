@@ -289,6 +289,8 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
           selectable
           selectedRowKeys={selectedRowKeys}
           onSelectedRowKeysChange={setSelectedRowKeys}
+          sort={data.sort}
+          onSortChange={data.setSort}
           onRowClick={row => !row.unassigned && onOpenChild(row.childId)}
           emptyState={
             <EmptyState

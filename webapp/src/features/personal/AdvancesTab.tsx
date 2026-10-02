@@ -59,31 +59,33 @@ export function AdvancesTab() {
         <span>Stare</span>
         <span />
       </div>
-      {advances.map(advance => {
-        const deducted = Boolean(advance.deductedAt);
-        return (
-          <div key={advance.id} className={styles.row}>
-            <span>{personal.staffById.get(advance.staffId)?.name ?? advance.staffId}</span>
-            <span>{formatDate(advance.date)}</span>
-            <span>{formatMoney(advance.amount)}</span>
-            <span>{advance.method}</span>
-            <span>{advance.month}</span>
-            <span>
-              <Badge tone={deducted ? 'mint' : 'yellow'}>{deducted ? 'Scăzut' : 'De scăzut'}</Badge>
-            </span>
-            <span>
-              <Button
-                variant="danger"
-                disabled={deducted}
-                title={deducted ? 'Avansul a fost deja scăzut' : undefined}
-                onClick={() => void remove(advance.id)}
-              >
-                Șterge
-              </Button>
-            </span>
-          </div>
-        );
-      })}
+      {[...advances]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .map(advance => {
+          const deducted = Boolean(advance.deductedAt);
+          return (
+            <div key={advance.id} className={styles.row}>
+              <span>{personal.staffById.get(advance.staffId)?.name ?? advance.staffId}</span>
+              <span>{formatDate(advance.date)}</span>
+              <span>{formatMoney(advance.amount)}</span>
+              <span>{advance.method}</span>
+              <span>{advance.month}</span>
+              <span>
+                <Badge tone={deducted ? 'mint' : 'yellow'}>{deducted ? 'Scăzut' : 'De scăzut'}</Badge>
+              </span>
+              <span>
+                <Button
+                  variant="danger"
+                  disabled={deducted}
+                  title={deducted ? 'Avansul a fost deja scăzut' : undefined}
+                  onClick={() => void remove(advance.id)}
+                >
+                  Șterge
+                </Button>
+              </span>
+            </div>
+          );
+        })}
     </Card>
   );
 }

@@ -91,9 +91,10 @@ describe('AdvancesTab', () => {
     expect(screen.getByText('Scăzut')).toBeInTheDocument();
     expect(screen.getByText('De scăzut')).toBeInTheDocument();
 
+    // §13.1: cele mai noi primele — ADV-2 (10 sep., nescăzut) înaintea ADV-1 (5 sep., scăzut).
     const removeButtons = screen.getAllByRole('button', { name: 'Șterge' });
     expect(removeButtons).toHaveLength(2);
-    expect(removeButtons[0]).toBeDisabled();
-    expect(removeButtons[1]).not.toBeDisabled();
+    expect(removeButtons[0]).not.toBeDisabled();
+    expect(removeButtons[1]).toBeDisabled();
   });
 });
