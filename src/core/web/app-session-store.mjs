@@ -109,6 +109,10 @@ export function createAppSessionStore({
     // pornire când încărcarea durează mult; AppShell arată interfața reală cât timp load()
     // continuă în fundal. Nu înlocuiește `ready` (datele pot încă să nu fi sosit).
     forceReady: false,
+    // 46a (PROMPT-9 §4): filiala activă nu are nicio evidență reală încă — AppShell arată
+    // StartSourceScreen în loc de restul aplicației. `true` implicit, ca un calculator cu
+    // date să nu clipească spre acel ecran în intervalul dintre primul randament și load().
+    hasAnyData: true,
   };
 
   /** @param {any} result */
@@ -181,6 +185,7 @@ export function createAppSessionStore({
       state.sync = session.sync ?? null;
       state.pool = session.pool ?? { enabled: false };
       if (session.update) state.update = session.update;
+      state.hasAnyData = session.hasAnyData ?? true;
       state.startupTimings.serverAt = Date.now();
       accept(await requestJson('/api/state'));
       state.startupTimings.databaseAt = Date.now();

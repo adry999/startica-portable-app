@@ -240,6 +240,35 @@ test('proba „calculator nou” cu arhivă completă (.startica-backup): B prim
   assert.deepEqual((await b.get('/api/state')).state, sourceState);
 });
 
+// 46b: BackupPreviewTable are nevoie de rândul per bază (nu doar totalul agregat deja
+// verificat mai sus), direct din manifestul arhivei — fără nicio cerere suplimentară.
+test('previzualizarea unei arhive complete include rândul per bază din manifest', async t => {
+  const a = await startTestApplication(t, { prefix: 'startica-preview-databases-source-', autoBackupIntervalMs: 0 });
+  const created = await a.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: { id: 'ID-preview-1', name: 'Copil previzualizare', dueDay: 10, status: 'Activ' },
+    revision: 0,
+    requestId: 'preview-databases-01',
+  });
+  assert.equal(created.status, 200, created.body.error);
+  const branch = (await a.get('/api/session')).branch;
+
+  const backup = await a.post('/api/backup', {});
+  assert.equal(backup.status, 200, backup.body.error);
+
+  const preview = await a.get('/api/backup-preview?name=' + encodeURIComponent(backup.body.name));
+  assert.equal(preview.archive, true);
+  assert.ok(preview.appVersion);
+  assert.ok(preview.createdAt);
+  assert.ok(Array.isArray(preview.databases));
+  const common = preview.databases.find(entry => entry.kind === 'common');
+  assert.ok(common, 'lipsește baza Comun din manifest');
+  const branchEntry = preview.databases.find(entry => entry.kind === 'branch' && entry.id === branch.id);
+  assert.ok(branchEntry, 'lipsește filiala activă din manifest');
+  assert.equal(branchEntry.counts.children, 1);
+});
+
 // Acoperă explicit ramura „filială necunoscută local” din restoreFullBackup() (create-application.mjs):
 // id-ul din arhivă e adoptat exact (nu regenerat), pe un folder nou alocat local.
 test('restaurarea unei arhive cu o filială suplimentară o adoptă pe calculatorul nou, cu exact id-ul din arhivă', async t => {

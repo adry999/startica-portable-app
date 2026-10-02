@@ -348,6 +348,13 @@ export function createBranchContext({
       syncDevice,
       poolEnabled: () => !!parsePoolSettings(readSetting(POOL_SETTINGS_KEY))?.enabled,
       ...(updateStatus ? { updateStatus } : {}),
+      // 46a (PROMPT-9 §4): un calculator genuin gol are filiala activă fără nicio evidență
+      // reală — copii, achitări sau cheltuieli. readEnvelope() e deja citit la fiecare
+      // /api/state, deci verificarea nu adaugă o interogare nouă pe disc.
+      hasAnyData: () => {
+        const { state } = recordRepository.readEnvelope();
+        return state.children.length > 0 || state.payments.length > 0 || state.expenses.length > 0;
+      },
     }),
     ...createDiagnosticRoutes({
       version,

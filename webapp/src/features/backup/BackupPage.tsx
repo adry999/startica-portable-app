@@ -21,6 +21,8 @@ import { useBackup, type BackupHealthView, type HealthTone } from './useBackup';
 import { useRestore } from './useRestore';
 import { useExcelTransfer } from './useExcelTransfer';
 import { ExcelImportDialog } from './ExcelImportDialog';
+import { RestoreDoneDialog } from './RestoreDoneDialog';
+import { writeRestoreDoneNote } from './restore-reload-note';
 import { ExchangeRateSettings } from './ExchangeRateSettings';
 import { KindergartenSettings } from './KindergartenSettings';
 import { BranchesSettings } from './BranchesSettings';
@@ -198,6 +200,9 @@ export function BackupPage() {
   async function commitRestore() {
     try {
       await restore.commit();
+      // 46d: o arhivă completă nu se termină cu un toast imediat — RestoreDoneDialog ia locul
+      // Drawer-ului și arată de ce (reîncărcare obligatorie), toast-ul vine abia după.
+      if (restore.restoredArchive) return;
       toast.show({
         message:
           restore.source === 'extern' ? 'Datele au fost restaurate din folderul extern.' : 'Datele au fost restaurate.',
@@ -205,6 +210,12 @@ export function BackupPage() {
     } catch (error) {
       toast.show({ message: (error as Error).message });
     }
+  }
+
+  function reloadAfterRestore() {
+    if (!restore.restoredArchive) return;
+    writeRestoreDoneNote({ createdAt: restore.restoredArchive.createdAt });
+    window.location.reload();
   }
 
   if (!backupData.ready) return <LoadingState />;
@@ -438,6 +449,12 @@ export function BackupPage() {
           <TextInput id="restore-confirm-text" value={restore.confirmText} onChange={restore.setConfirmText} />
         </Field>
       </Drawer>
+
+      <RestoreDoneDialog
+        open={!!restore.restoredArchive}
+        branchCount={restore.restoredArchive?.branchCount ?? 0}
+        onReload={reloadAfterRestore}
+      />
     </>
   );
 }

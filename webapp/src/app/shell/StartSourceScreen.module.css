@@ -1,0 +1,127 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cream);
+  padding: var(--space-24);
+}
+
+.card {
+  width: 100%;
+  max-width: 1120px;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-panel);
+  padding: 56px 64px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-28);
+}
+
+.logo {
+  height: 40px;
+  align-self: flex-start;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.title {
+  font-size: 36px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-18);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-10);
+  padding: var(--space-24);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.optionActive {
+  border: 2px solid var(--orange);
+  box-shadow: 0 6px 18px rgba(239, 138, 29, 0.15);
+}
+
+.badge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.optionActive .badge {
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.option:not(.optionActive) .badge {
+  background: var(--neutral-soft);
+  color: var(--muted);
+}
+
+.optionTitle {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--slate);
+}
+
+.optionDescription {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.optionFooter {
+  margin-top: auto;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mint-ink);
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.continueButton {
+  margin-left: auto;
+}

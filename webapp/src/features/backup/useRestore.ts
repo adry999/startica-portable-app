@@ -24,6 +24,11 @@ export interface RestorePreview {
   totalsLine: string;
   notes: string[];
   errors: string[];
+  /** Rândul per bază din manifest — doar pe o arhivă completă (46b); lipsește pe un `.db` vechi. */
+  databases?: { id: string; name: string; kind: 'branch' | 'common' }[];
+  /** Data creării arhivei (manifest.createdAt) — doar pe o arhivă completă; folosit de toast-ul
+   * de după reîncărcare (46d: „Date restaurate din arhiva din …”). */
+  createdAt?: string;
 }
 
 export interface RestoreData {
@@ -48,6 +53,10 @@ export interface RestoreData {
   canCommit: boolean;
   committing: boolean;
   commit: () => Promise<void>;
+  /** 46d: restaurarea unei arhive complete a reușit, dar clientul a rămas cu date vechi în
+   * memorie (pot apărea/dispărea filiale întregi) — răspunsul serverului nu are `state` inline
+   * (motiv: INTREBARI.md „42d”). `null` cât timp nu s-a întâmplat încă un asemenea restore. */
+  restoredArchive: { branchCount: number; createdAt: string } | null;
 }
 
 function previewOf(response: {
@@ -58,12 +67,16 @@ function previewOf(response: {
   expenseTotal: number;
   notes: string[];
   errors: string[];
+  databases?: { id: string; name: string; kind: 'branch' | 'common' }[];
+  createdAt?: string;
 }): RestorePreview {
   return {
     summaryLine: `${response.children} copii · ${response.payments} achitări · ${response.expenses} cheltuieli`,
     totalsLine: `Total achitări: ${formatMoney(response.paymentTotal)} · Total cheltuieli: ${formatMoney(response.expenseTotal)}`,
     notes: response.notes || [],
     errors: response.errors || [],
+    databases: response.databases,
+    createdAt: response.createdAt,
   };
 }
 
@@ -82,6 +95,7 @@ export function useRestore(defaultExternalDir: string): RestoreData {
   const [previewError, setPreviewError] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [committing, setCommitting] = useState(false);
+  const [restoredArchive, setRestoredArchive] = useState<{ branchCount: number; createdAt: string } | null>(null);
 
   function resetSelection() {
     setOptions([]);
@@ -185,8 +199,16 @@ export function useRestore(defaultExternalDir: string): RestoreData {
     const dir = source === 'extern' ? externalFolder.trim() : '';
     setCommitting(true);
     try {
-      await session.mutate('/api/restore', { name: selectedName, dir, confirm: confirmText });
+      const result = (await session.mutate('/api/restore', { name: selectedName, dir, confirm: confirmText })) as {
+        state?: unknown;
+      };
       setOpen(false);
+      // O arhivă completă nu întoarce `state` inline (poate schimba filiale întregi, nu doar
+      // rânduri) — RestoreDoneDialog preia de aici, nu mai există alt semnal de „a mers”.
+      if (!result.state) {
+        const branchCount = preview.databases?.filter(entry => entry.kind === 'branch').length ?? 0;
+        setRestoredArchive({ branchCount, createdAt: preview.createdAt ?? '' });
+      }
     } finally {
       setCommitting(false);
     }
@@ -214,5 +236,6 @@ export function useRestore(defaultExternalDir: string): RestoreData {
     canCommit: Boolean(selectedName && preview && !preview.errors.length && confirmText === RESTORE_CONFIRMATION),
     committing,
     commit,
+    restoredArchive,
   };
 }

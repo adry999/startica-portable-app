@@ -51,6 +51,10 @@ export function createSessionRoutes({
     checkedAt: null,
     error: null,
   }),
+  // 46a (PROMPT-9 §4): „fără date” pe filiala activă — StartSourceScreen îl folosește ca
+  // să decidă dacă arată alegerea Backup/Sincronizare/De la zero, în loc de restul aplicației.
+  // Implicit `true` (un context fără verificare, ex. teste izolate, nu arată niciodată ecranul).
+  hasAnyData = () => true,
 }) {
   let closing = false;
   // Ecranul de pornire (21a) arată pasul „Sincronizez cu serverul comun” doar când
@@ -97,6 +101,7 @@ export function createSessionRoutes({
         // §5.3: profilul acestui calculator — meniul, rutele (ModuleGuard) și gărzile /api
         // locale se construiesc din el (31-profiluri-calculator.md).
         profile: currentProfile(),
+        hasAnyData: hasAnyData(),
       }),
     },
     { method: 'GET', path: '/api/state', handle: () => readEnvelope() },

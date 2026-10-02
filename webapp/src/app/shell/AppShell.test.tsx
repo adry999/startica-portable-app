@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
+import { writeRestoreDoneNote } from '@features/backup';
 import { AppShell } from './AppShell';
 
 function jsonResponse(body: unknown) {
@@ -155,5 +156,82 @@ describe('AppShell — benzile §11 (42a/42b)', () => {
     expect(await screen.findByText('Conținut')).toBeInTheDocument();
     expect(screen.queryByText(/Sincronizare oprită/)).not.toBeInTheDocument();
     expect(screen.queryByText(/e gata de descărcat/)).not.toBeInTheDocument();
+  });
+});
+
+describe('AppShell — 46a (StartSourceFlow) și 46d (toast de după reîncărcare)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    vi.stubGlobal('EventSource', FakeEventSource as unknown as typeof EventSource);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  function stubNoDataSession() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session')
+          return jsonResponse({ token: 'tok', version: '1.6.3', update: NO_UPDATE, hasAnyData: false });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+  }
+
+  it('un calculator fără date arată StartSourceFlow în loc de conținutul normal', async () => {
+    stubNoDataSession();
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderShell();
+
+    expect(await screen.findByText('Bun venit! De unde pornim?')).toBeInTheDocument();
+    expect(screen.queryByText('Conținut')).not.toBeInTheDocument();
+  });
+
+  it('„De la zero” ascunde definitiv StartSourceFlow (persistă în localStorage)', async () => {
+    stubNoDataSession();
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderShell();
+    await screen.findByText('Bun venit! De unde pornim?');
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('radio', { name: /De la zero/ }));
+    await user.click(screen.getByRole('button', { name: /Continuă/ }));
+
+    expect(await screen.findByText('Conținut')).toBeInTheDocument();
+    expect(localStorage.getItem('firstRun.dismissed')).toBe('1');
+  });
+
+  it('46d: biletul lăsat înainte de reîncărcare arată un toast cu data arhivei', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', update: NO_UPDATE });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    writeRestoreDoneNote({ createdAt: '2026-10-01T18:42:00.000Z' });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderShell();
+
+    expect(await screen.findByText(/Date restaurate din arhiva din/)).toBeInTheDocument();
   });
 });

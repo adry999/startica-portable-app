@@ -653,3 +653,46 @@ rulează în continuare versiunea veche, fără niciuna din aceste reguli, pân�
 Migrarea coloanei (`ensureColumn`) e scrisă să fie sigură pe o bază deja existentă (ALTER idempotent),
 dar nu se aplică singură. Pas operațional, în afara acestei sesiuni — semnalat aici ca să nu fie uitat
 înainte de a considera §5.3 „live”.
+
+## ✅ 42d UI — coada de prim-pornire (46a–46d) e gata, pe fundația de server deja descrisă mai sus
+
+`PROMPT-CLAUDE-CODE-9.md` §4 cerea exact pașii 9-10 rămași neatinși din intrarea `42d` de mai sus:
+ecranul nou de alegere (46a), previzualizarea din manifest (46b), arhiva respinsă (46c) și
+reîncărcarea de după restaurare (46d), plus actualizarea `BackupPage.tsx`/`useRestore.ts`.
+
+**Gata, testat:**
+- `StartSourceScreen` (46a, `webapp/src/app/shell/StartSourceScreen.tsx`) + `StartSourceFlow`
+  (orchestrarea celor 3 alegeri — nu e în `COMPONENTE.md`, e doar firul ecranelor).
+- `BackupPreviewTable` (46b), `RestoreRejected` (46c), `RestoreDoneDialog` (46d), toate în
+  `webapp/src/features/backup/`, cu teste + Storybook pentru toate stările cerute (loading/empty/
+  eroare/blocat/avertisment).
+- Server: `hasAnyData` nou pe `/api/session` (`session.routes.mjs`/`create-branch-context.mjs`) —
+  semnalul de „calculator genuin gol” (nicio evidență reală pe filiala activă), citit din
+  `readEnvelope()`, fără interogare suplimentară. `AppShell.tsx` arată `StartSourceFlow` în locul
+  restului aplicației cât timp `hasAnyData` e fals și alegerea n-a fost încă făcută (persistă în
+  `localStorage` — „De la zero”/„Alt calculator” nu mai revine, ca să nu enerveze la fiecare pornire).
+- `useRestore.ts` (fluxul existent din Backup și setări) + `StartSourceFlow` (prima pornire) expun
+  acum amândouă `restoredArchive`, calculat din absența `state` în răspunsul `/api/restore` —
+  exact gaura semnalată în intrarea `42d` de mai sus. `RestoreDoneDialog` e cablat în ambele puncte
+  de intrare; toast-ul de confirmare vine după reîncărcare, printr-un bilet în `sessionStorage`
+  (`restore-reload-note.ts`), la fel ca biletul de comutare de filială (`useBranchSwitch.ts`).
+
+**Două decizii luate pe loc, fără artboard explicit pentru ele:**
+1. **`BackupContents` (38g), citat de `COMPONENTE.md` ca „deja folosit în altă parte”, nu există
+   nicăieri în `webapp/src/`** (căutare completă după „BackupContents” și după „manifest” — niciun
+   rezultat). Am construit `BackupPreviewTable` de sine stătător, cu randarea tabelului direct în ea,
+   fără să extrag o componentă `BackupContents` separată care n-are încă niciun alt consumator real.
+   Dacă 38g se construiește separat mai târziu, ar trebui să verifice dacă poate reutiliza
+   `BackupPreviewTable` în loc să dubleze tabelul.
+2. **Selecția fișierului de backup la prima pornire nu are un dialog nativ „Alege fișier”** — am
+   căutat în tot `src/`/`webapp/src/` (`showOpenDialog`, `openFileDialog`) și n-am găsit niciunul
+   folosit nicăieri în aplicație, nici măcar pentru folderul extern din Backup și setări (acolo e tot
+   un `TextInput` cu calea scrisă de mână). Am păstrat același tipar: un câmp cu calea completă către
+   fișier, apoi „Previzualizează” — reutilizează exact `/api/backup-preview?name=&dir=` existent
+   (split pe ultimul separator de cale), fără cod nou pe server pentru rezolvarea fișierului.
+3. `/api/backup-preview` are acum, suplimentar (nu înlocuiește nimic din ce citea deja
+   `useRestore.ts`), `archive`, `appVersion`, `createdAt`, `databases[]` — rândul per bază din
+   manifest, cerut explicit de 46b, lipsă din răspunsul agregat dinainte.
+
+**De decis / eventual mai târziu:** dacă o viitoare componentă `BackupContents` (38g) ajunge totuși
+necesară separat, verifică mai întâi dacă poate înlocui tabelul din `BackupPreviewTable` (vezi mai sus).

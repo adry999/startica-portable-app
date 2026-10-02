@@ -70,6 +70,15 @@ describe('Dialog', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('hideClose ascunde butonul ×, fără altă schimbare de comportament (46d)', () => {
+    render(
+      <Dialog open title="Restaurare gata" onClose={() => {}} hideClose>
+        Conținut
+      </Dialog>,
+    );
+    expect(screen.queryByRole('button', { name: 'Închide' })).not.toBeInTheDocument();
+  });
+
   it('randează footer-ul când e dat', () => {
     render(
       <Dialog open title="Confirmă" onClose={() => {}} footer={<button type="button">Salvează</button>}>
