@@ -38,8 +38,8 @@ Spre deosebire de migrarea §8 (`exchange-rates-plan-presets-to-common.mjs`, car
 ### 8. ✅ Rezolvat (`b59a8ef`) — Ștergere în lot de copii arhivați — scanare dublă a tabelului per id
 `record-editing.routes.mjs:102-108` — `readSnapshot()` chemat de 2 ori per id, în interiorul buclei `for (const id of ids)` (verificare vizite + verificare taxe). **Rezolvat**: ambele citiri scoase în afara buclei, un singur scan pentru tot lotul.
 
-### 10. Componente mult folosite, fără niciun test unitar
-`RowMenu` (13 fișiere), `FilterPills` (12), `ConfirmDeleteDialog` (11), `SelectionBar` (5), `MonthStepper` (6), `ServiceBadge` (3), `ScrollArea` (3) — au Storybook, dar nicio verificare automată la o regresie.
+### 10. ✅ Rezolvat (`36214e1`) — Componente mult folosite, fără niciun test unitar
+`RowMenu` (13 fișiere), `FilterPills` (12), `ConfirmDeleteDialog` (11), `SelectionBar` (5), `MonthStepper` (6), `ServiceBadge` (3), `ScrollArea` (3) — au Storybook, dar nicio verificare automată la o regresie. **Rezolvat**: `*.test.tsx` adăugat pentru toate cele 7 — comportament de click/gardă/stare, nu doar randare.
 
 ### 11. Testul de backup blocat (locked-file) nu testează de fapt nimic pe Windows
 `backup.service.test.mjs:192-213`, unul din cele 2 teste `skip` permanente ale repo-ului — `openSync(locked, 'r')` nu blochează `unlinkSync` pe Windows, deci scenariul real (antivirus/Google Drive ținând un fișier deschis) nu a fost niciodată testat cu adevărat. Merită un lacăt mai puternic (deschidere pentru scriere / flag `O_EXCL`-style) ca testul să chiar exercite calea de avertizare.
