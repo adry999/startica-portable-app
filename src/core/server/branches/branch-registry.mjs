@@ -83,6 +83,7 @@ export function writeBranchRegistry(file, registry) {
  *   ensure: (initialBranch: { name: string, color: string, address: string, folder: string | null }) => BranchRegistry,
  *   adopt: (entry: { id: string, name: string, color: string, address: string, createdAt: string }, options?: { folder?: string | null }) => BranchEntry,
  *   replaceEmpty: (oldId: string, entry: { id: string, name: string, color: string, address: string, createdAt: string }) => BranchEntry,
+ *   replaceAll: (branches: BranchEntry[], lastBranchId: string) => void,
  * }} BranchRegistryStore
  */
 
@@ -208,6 +209,19 @@ export function createBranchRegistryStore({ file, now = () => new Date().toISOSt
     return replaced;
   }
 
+  // Restaurarea unei arhive complete (42d): „restaurarea e du instalarea la starea de
+  // atunci, nu o îmbinare” (decizia 7 din docs/superpowers/plans/2026-10-01-backup-complet.md)
+  // — filiale.json e ÎNLOCUIT cu exact lista din arhivă, nu îmbinat cu cea locală. Apelantul
+  // (create-application.mjs) decide deja folderul fiecărei filiale (păstrat pentru cele deja
+  // cunoscute local, alocat nou pentru cele necunoscute) — aici doar se scrie, atomic.
+  /**
+   * @param {BranchEntry[]} branches
+   * @param {string} lastBranchId
+   */
+  function replaceAll(branches, lastBranchId) {
+    writeBranchRegistry(file, { version: REGISTRY_VERSION, lastBranchId, branches });
+  }
+
   // Marca existenței registrului: scrie o singură dată, la prima pornire fără
   // filiale.json. O a doua pornire (registrul deja există) nu îl mai schimbă,
   // altfel o filială #2 creată manual ar fi înlocuită.
@@ -226,5 +240,5 @@ export function createBranchRegistryStore({ file, now = () => new Date().toISOSt
     return registry;
   }
 
-  return { list, find, add, update, setLastBranchId, ensure, adopt, replaceEmpty };
+  return { list, find, add, update, setLastBranchId, ensure, adopt, replaceEmpty, replaceAll };
 }

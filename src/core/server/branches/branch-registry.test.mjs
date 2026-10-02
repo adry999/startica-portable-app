@@ -202,6 +202,21 @@ test('replaceEmpty pe un id inexistent aruncă', t => {
   );
 });
 
+test('replaceAll înlocuiește toată lista de filiale cu una nouă (42d: restaurare completă)', t => {
+  const file = tempRegistryFile(t);
+  const store = createBranchRegistryStore({ file, now: () => '2026-09-27T00:00:00.000Z', createId: () => 'x' });
+  store.ensure({ name: 'Filiala veche, locală', color: 'orange', address: '', folder: null });
+
+  const restored = [
+    { id: 'br-active', name: 'Filiala principală', color: 'orange', address: '', createdAt: '2026-09-01', folder: null },
+    { id: 'br-other', name: 'Botanica', color: 'mint', address: '', createdAt: '2026-09-02', folder: 'botanica' },
+  ];
+  store.replaceAll(restored, 'br-active');
+
+  assert.deepEqual(store.list(), restored);
+  assert.equal(readBranchRegistry(file).lastBranchId, 'br-active');
+});
+
 test('setLastBranchId schimbă doar câmpul lastBranchId', t => {
   const file = tempRegistryFile(t);
   let counter = 0;
