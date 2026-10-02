@@ -149,8 +149,50 @@ test('--execute completează fxRate/amountEur cu exact formula de la salvare (Pa
   assert.equal(payment.amountEur, expectedAmountEur);
   // amount-ul (lei) nu se atinge — doar metadatele de conversie se adaugă.
   assert.equal(payment.amount, 500);
+  // AUDIT-COD-02-10.md, critic: allocations[].amount TREBUIE convertit în € — altfel
+  // allocationCurrency() ar citi suma veche în lei ca și cum ar fi deja în €.
+  assert.deepEqual(payment.allocations, [{ month: '2026-09', amount: expectedAmountEur }]);
 
   assert.ok(readdirSync(app.backupDir).length > 0, 'Backup complet luat înainte de scriere.');
+});
+
+test('--execute convertește fiecare rând al repartizării pe mai multe luni, fără deviere de la amountEur', async t => {
+  const app = await startApp(t);
+  const setup = await createEurChild(app, { id: 'C1', from: '2026-01', amount: 100 });
+  await importCommonRates(app, { '2026-09-18': 19.8 }, { '2026-09-18': 'bnm' });
+  // Repartizare pe 3 luni (restanță + luna curentă + avans), ca la o plată reală multi-lună.
+  const result0 = await app.post('/api/record', {
+    type: 'payments',
+    mode: 'create',
+    record: {
+      id: 'PAY-MULTI',
+      childId: 'C1',
+      date: '2026-09-18',
+      amount: 300,
+      allocations: [
+        { month: '2026-07', amount: 100 },
+        { month: '2026-08', amount: 100 },
+        { month: '2026-09', amount: 100 },
+      ],
+    },
+    revision: setup.revision,
+    requestId: randomUUID(),
+  });
+  assert.equal(result0.ok, true, result0.error);
+
+  const result = await runFxRateBackfillMigration({ home: app.dir, baseUrl: app.origin, dryRun: false, log: () => {} });
+  assert.equal(result.written, 1);
+
+  const expectedAmountEur = convertAmount(300, 'MDL', 'EUR', 19.8);
+  const { state } = await app.get('/api/state');
+  const payment = state.payments.find(p => p.id === 'PAY-MULTI');
+  assert.equal(payment.allocations.length, 3);
+  assert.equal(payment.allocations[0].month, '2026-07');
+  assert.equal(payment.allocations[1].month, '2026-08');
+  assert.equal(payment.allocations[2].month, '2026-09');
+  // Suma rândurilor convertite cade exact pe amountEur — ultimul rând absoarbe rotunjirea.
+  const sum = payment.allocations.reduce((s, row) => s + row.amount, 0);
+  assert.equal(Math.round(sum * 100) / 100, expectedAmountEur);
 });
 
 test('o plată cu fxRate deja existent rămâne neatinsă', async t => {

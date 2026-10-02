@@ -10,11 +10,22 @@
 // Formula e identică cu cea de la salvare (`PaymentFormDrawer.handleSubmit`, linia cu
 // `amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!)`):
 //   - `amount` al plății (lei, deja suma tenders-urilor — vezi `record-schema.mjs`) rămâne
-//     NESCHIMBAT; doar se adaugă `fxRate`/`fxRateSource`/`amountEur`.
+//     NESCHIMBAT; se adaugă `fxRate`/`fxRateSource`/`amountEur` — ȘI se CONVERTEȘTE
+//     `allocations[].amount` din lei în €, cu același curs. E obligatoriu, nu opțional:
+//     `allocationCurrency()` (`payment-allocations.mjs`) decide moneda repartizărilor DOAR după
+//     prezența `amountEur` — din clipa în care scriem `amountEur` fără să convertim și
+//     `allocations`, restul aplicației (sold/obligation, Situația plăților, dashboard) ar citi
+//     suma veche în LEI ca și cum ar fi în EURO (credit fantomă ~cursul× mai mare decât real,
+//     găsit la auditul din 02.10.2026 — vezi `docs/design/AUDIT-COD-02-10.md`).
 //   - cursul = `eurToMdlRate(rates, payment.date)` (exchange-rates.mjs): ziua exactă, sau — dacă
 //     lipsește (weekend/sărbătoare) — cea mai recentă zi anterioară cunoscută. NICIODATĂ o zi
 //     ulterioară plății. Aceeași regulă ca la formular, ca la `obligation()`.
 //   - `amountEur = convertAmount(amount, 'MDL', 'EUR', cursul rezolvat)`.
+//   - fiecare rând din `allocations` se convertește cu ACELAȘI curs (`convertAmount(row.amount,
+//     'MDL', 'EUR', cursul rezolvat)`), păstrând astfel exact repartizarea pe luni pe care a
+//     introdus-o administratorul (restanțe/luna curentă/avans), nu o recalculează de la zero —
+//     ultimul rând primește diferența exactă până la `amountEur`, ca suma rândurilor convertite
+//     să nu se abată de la total prin rotunjiri independente pe fiecare rând.
 //   - `fxRateSource`: provenența înregistrată pentru ZIUA CURSULUI REZOLVAT (poate fi anterioară
 //     datei plății, vezi mai sus), din `exchangeRateSources`; dacă ziua n-are provenență
 //     înregistrată (curs vechi, scris înainte de acest câmp, sau adus de fetch-ul de la pornire —
@@ -58,6 +69,7 @@ import { isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { feeEntryFor } from '../../src/shared/domain/tuition-obligation.mjs';
 import { eurToMdlRate, convertAmount } from '../../src/shared/domain/exchange-rates.mjs';
+import { allocations as allocationsOf } from '../../src/shared/domain/payment-allocations.mjs';
 
 const DEFAULT_BASE_URL = process.env.STARTICA_BASE_URL || 'http://127.0.0.1:8765';
 
@@ -101,6 +113,24 @@ function childLabelFor(payment, child) {
 }
 
 /**
+ * Convertește repartizarea (lei → €) cu cursul rezolvat, păstrând lunile și proporția introdusă
+ * de administrator; ultimul rând absoarbe diferența de rotunjire, ca suma să cadă exact pe
+ * `amountEur` (vezi comentariul din capul fișierului — altfel `allocationCurrency()` ar citi
+ * sume vechi în lei ca și cum ar fi în euro).
+ * @param {{ month: string, amount: number, id?: string }[]} rows
+ * @param {number} rate
+ * @param {number} amountEur
+ */
+function convertAllocationsToEur(rows, rate, amountEur) {
+  const converted = rows.map(row => ({ ...row, amount: convertAmount(row.amount, 'MDL', 'EUR', rate) }));
+  if (converted.length > 0) {
+    const sumExceptLast = converted.slice(0, -1).reduce((sum, row) => sum + row.amount, 0);
+    converted[converted.length - 1].amount = Math.round((amountEur - sumExceptLast) * 100) / 100;
+  }
+  return converted;
+}
+
+/**
  * Evaluează o singură plată: dacă intră în scope și, dacă da, ce s-ar scrie.
  * Funcție pură — nu atinge rețeaua, folosită identic de raportul dry-run și de pasul de scriere.
  * @param {any} payment
@@ -129,7 +159,8 @@ export function evaluatePayment(payment, children, rates, sources) {
   const amountEur = convertAmount(payment.amount, 'MDL', 'EUR', rate);
   // Vezi comentariul din capul fișierului: o zi fără provenență înregistrată presupune 'bnm'.
   const fxRateSource = sources[resolvedDate] ?? 'bnm';
-  return { applicable: true, resolved: true, child, resolvedDate, rate, fxRateSource, amountEur };
+  const convertedAllocations = convertAllocationsToEur(allocationsOf(payment), rate, amountEur);
+  return { applicable: true, resolved: true, child, resolvedDate, rate, fxRateSource, amountEur, convertedAllocations };
 }
 
 /**
@@ -182,10 +213,11 @@ export async function runFxRateBackfillMigration({
   if (resolved.length) {
     log('\nDe completat:');
     for (const f of resolved) {
+      const allocationsLabel = f.convertedAllocations.map(row => `${row.month}: ${row.amount.toFixed(2)} €`).join(', ');
       log(
         `  [${f.branchName}] ${f.payment.id} (${f.payment.date}, ${f.payment.amount.toFixed(2)} lei, ` +
           `${childLabelFor(f.payment, f.child)}): curs ${f.resolvedDate} = ${f.rate} (${f.fxRateSource}) → ` +
-          `amountEur ${f.amountEur.toFixed(2)} €.`,
+          `amountEur ${f.amountEur.toFixed(2)} €; repartizare convertită: ${allocationsLabel}.`,
       );
     }
   }
@@ -252,7 +284,13 @@ export async function runFxRateBackfillMigration({
         log(`  ${f.payment.id}: deja are fxRate/amountEur (rulare anterioară sau concurentă) — sar peste.`);
         continue;
       }
-      const updated = { ...record, fxRate: f.rate, fxRateSource: f.fxRateSource, amountEur: f.amountEur };
+      const updated = {
+        ...record,
+        fxRate: f.rate,
+        fxRateSource: f.fxRateSource,
+        amountEur: f.amountEur,
+        allocations: f.convertedAllocations,
+      };
       await postJson(
         baseUrl,
         '/api/record',
