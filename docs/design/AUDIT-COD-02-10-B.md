@@ -39,13 +39,17 @@ un viitor apelant cu `amountEur` fără `allocations` ar fi scris suma în lei c
 `accounting-report.test.mjs` avea exact acest defect (allocations implicite în lei pe un payment cu
 `amountEur`), expus de garda mai strictă — corectat să folosească `amountEur` pentru alocarea implicită.
 
-### 3. `b3-pool-expenses-to-payments.mjs` — fără test, oprire totală la primul conflict
+### 3. ✅ Rezolvat (`dd2a8cf`) — `b3-pool-expenses-to-payments.mjs` — fără test, oprire totală la primul conflict
 Spre deosebire de sibling-ii ei (toate cu `.test.mjs`), acest script nu are niciun test, și bucla
 `--execute` oprește tot restul lotului la primul eșec — exact pattern-ul reparat la #7
 (fxrate-backfill). Risc practic scăzut (rularea reală din 30.09 a reușit 143/143; idempotent la
 rerulare), dar un candidat viitor eșuat ar bloca tăcut restul lotului.
 
-**Fix:** același try/catch + `failed[]` ca la fxrate-backfill, plus un test minim.
+**Rezolvat**: refactorizat la aceeași convenție ca `fxrate-backfill.mjs` (export parametrizat
+`runB3PoolExpensesMigration({home, baseUrl, dryRun, log})` + CLI guard separat), cu try/catch
+per-cheltuială (`failed[]`, loghează și continuă) în loc de `STOP`+`return`; 3 teste noi (dry-run,
+execute+idempotent, conflict-pe-un-item-nu-oprește-lotul). Rularea reală din 30.09 (143/143, 0
+erori) rămâne neatinsă — fixul schimbă doar comportamentul pentru o viitoare rulare cu candidați noi.
 
 ### 4. Luna (attendance, 18b) filtrează copiii după grupa CURENTĂ, nu cea din luna vizualizată
 `webapp/src/features/attendance/useAttendanceMonth.ts:94-99` (și `WeeklySheet.tsx`/
