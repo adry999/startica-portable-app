@@ -465,7 +465,11 @@ export function PaymentFormDrawer({
       const singleRowFee =
         !editing && singleRow && selectedChild ? feeEntryFor(selectedChild, singleRow.month)?.amount : null;
       const owedLei =
-        singleRowFee == null ? null : isEurChild ? convertAmount(singleRowFee, 'EUR', 'MDL', effectiveRate!) : singleRowFee;
+        singleRowFee == null
+          ? null
+          : isEurChild
+            ? convertAmount(singleRowFee, 'EUR', 'MDL', effectiveRate!)
+            : singleRowFee;
       const roundingDiff = owedLei == null ? values.roundingDiff : paymentRoundingDiff(totalAmount, owedLei);
 
       const eurValues = isEurChild
@@ -548,7 +552,8 @@ export function PaymentFormDrawer({
     // DECIZII.md (02.10): o diferență mică (≤ PAYMENT_ROUNDING_TOLERANCE) e rotunjire, nu
     // plată parțială/avans — vezi `paymentRoundingDiff` (payment-form.ts) pentru ce se salvează.
     const diff = Math.round((amount - fee) * 100) / 100;
-    if (diff !== 0 && Math.abs(diff) <= PAYMENT_ROUNDING_TOLERANCE) return `achitat · rotunjire ${formatRoundingDiff(diff)}`;
+    if (diff !== 0 && Math.abs(diff) <= PAYMENT_ROUNDING_TOLERANCE)
+      return `achitat · rotunjire ${formatRoundingDiff(diff)}`;
     if (amount < fee) return 'plată parțială';
     if (amount > fee) return 'avans';
     return 'achitat complet';

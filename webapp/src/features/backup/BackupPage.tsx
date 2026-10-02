@@ -91,9 +91,11 @@ function useBackupPreviewDrawer() {
   const [target, setTarget] = useState<BackupListEntry | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [preview, setPreview] = useState<{ createdAt?: string; appVersion?: string; databases: BackupPreviewDatabaseRow[] } | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<{
+    createdAt?: string;
+    appVersion?: string;
+    databases: BackupPreviewDatabaseRow[];
+  } | null>(null);
 
   function close() {
     setTarget(null);

@@ -148,7 +148,9 @@ describe('ServicesSettings', () => {
 
     expect(screen.queryByText(/Verifică operațiunea anterioară/)).not.toBeInTheDocument();
 
-    resolve(jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' }) as unknown as Response);
+    resolve(
+      jsonResponse({ state: fixtureState, revision: 2, updatedAt: '2026-09-23T10:05:00Z' }) as unknown as Response,
+    );
     await screen.findByRole('button', { name: '+ Serviciu' });
 
     expect(recordCallsTo('services').filter(body => body.mode === 'create')).toHaveLength(1);
