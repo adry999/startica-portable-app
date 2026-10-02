@@ -31,7 +31,9 @@ import { readBackupSnapshotDetails } from './backup-snapshot.mjs';
 /** @typedef {{ version: 1, appVersion: string, activeBranchId: string, createdAt: string, databases: ManifestDatabaseEntry[] }} BackupManifest */
 
 export const ARCHIVE_EXTENSION = '.startica-backup';
-const COMMON_ENTRY_ID = 'common';
+// Exportat: create-application.mjs (restoreFullBackup) trebuie să recunoască exact
+// aceeași bază „Comun” din manifest.databases, fără să dubleze acest șir literal.
+export const COMMON_ENTRY_ID = 'common';
 const MANIFEST_FILE = 'manifest.json';
 
 // „1.10.0” > „1.9.0” — compară numeric segment cu segment, nu ca text (altfel
@@ -430,8 +432,14 @@ export function createFullBackupService({
         const staged = join(stagingDir, entry.file);
         writeFileSync(staged, /** @type {Buffer} */ (databaseFiles.get(entry.id)));
         const { snapshot } = readBackupSnapshotDetails(staged);
-        for (const key of /** @type {const} */ (['children', 'payments', 'expenses', 'groups', 'categories', 'visits']))
-          merged[key].push(...(snapshot[key] || []));
+        // Pe rând, nu într-o buclă generică pe `key`: TS nu poate verifica `merged[key].push(...)`
+        // când cheile indexează tipuri de element diferite (ar reduce intersecția la `never`).
+        merged.children.push(...snapshot.children);
+        merged.payments.push(...snapshot.payments);
+        merged.expenses.push(...snapshot.expenses);
+        merged.groups.push(...snapshot.groups);
+        merged.categories.push(...snapshot.categories);
+        merged.visits.push(...snapshot.visits);
       }
       return { summary: summary(merged), manifest, notes: [] };
     } finally {

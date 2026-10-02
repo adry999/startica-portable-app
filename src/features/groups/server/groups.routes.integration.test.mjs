@@ -50,11 +50,11 @@ test('Nu se șterge grupa folosită de un copil arhivat; exportul și restaurare
     requestId: randomUUID(),
   });
   assert.equal(restored.status, 200, restored.body.error);
-  assert.deepEqual(
-    validateState(restored.body.state),
-    restored.body.state,
-    'Backupul se poate restaura fără referințe orfane.',
-  );
+  // 42d: /api/backup produce acum o arhivă completă — restaurarea ei nu mai întoarce
+  // starea inline (e o înlocuire de fișiere, nu o tranzacție pe revizie), deci verificarea
+  // se face printr-un /api/state separat, după restaurare.
+  const restoredState = (await app.get('/api/state')).state;
+  assert.deepEqual(validateState(restoredState), restoredState, 'Backupul se poate restaura fără referințe orfane.');
 });
 
 test('Ștergerea grupei golește desiredGroupId pe vizitele care o aveau ca preferință, nu blochează ștergerea', async t => {

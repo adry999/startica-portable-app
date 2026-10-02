@@ -113,7 +113,8 @@ export function createBackupRoutes({
         try {
           // 42d: backupul manual devine arhiva completă (toate bazele), nu doar filiala
           // activă — decizia 6 din plan. Backupul automat rămâne per-filială, neschimbat.
-          if (fullBackupService) return { ok: true, ...fullBackupService.backup('manual'), health: backupService.health() };
+          if (fullBackupService)
+            return { ok: true, ...fullBackupService.backup('manual'), health: backupService.health() };
           return { ok: true, ...backupService.backup(), health: backupService.health() };
         } catch (e) {
           // Backupul manual e acțiunea operatorului: eroarea generică nu i-ar spune ce să facă.

@@ -205,17 +205,21 @@ test('restore() respinge o arhivă creată cu o versiune de Startica mai nouă (
   const { service } = createHarness(t);
   const { file } = service.backup('manual');
 
-  const newer = createFullBackupService({
-    registry: { list: () => [] },
-    home: '',
-    legacy: { dataDir: '', backupDir: '' },
-    activeBranch: () => ({ branch: { id: 'x' }, db: null }),
-    common: () => ({ db: null }),
-    backupDirectory: () => dirname(file),
-    readSetting: () => '',
-    writeSetting: () => {},
-    appVersion: '2.0.0',
-  });
+  // Stub minimal: restore() pe un eșec de versiune nu ajunge niciodată să citească
+  // activeBranch()/common() — valorile lor n-au nevoie să fie baze SQLite reale aici.
+  const newer = createFullBackupService(
+    /** @type {any} */ ({
+      registry: { list: () => [] },
+      home: '',
+      legacy: { dataDir: '', backupDir: '' },
+      activeBranch: () => ({ branch: { id: 'x' }, db: null }),
+      common: () => ({ db: null }),
+      backupDirectory: () => dirname(file),
+      readSetting: () => '',
+      writeSetting: () => {},
+      appVersion: '2.0.0',
+    }),
+  );
 
   assert.throws(
     () => newer.restore(file, { apply: () => assert.fail('apply nu trebuia chemat') }),
@@ -232,7 +236,10 @@ test('restore() respinge o arhivă căreia îi lipsește o bază declarată în 
   writeFileSync(truncated, createZipArchive(entries));
 
   assert.throws(() => service.restore(truncated, { apply: () => {} }), /nu conține branch-br-other\.db/);
-  assert.equal(manifest.databases.some(entry => entry.file === 'branch-br-other.db'), true);
+  assert.equal(
+    manifest.databases.some(entry => entry.file === 'branch-br-other.db'),
+    true,
+  );
 });
 
 test('restore() respinge o arhivă a cărei numărătoare nu corespunde manifestului (coruptă/alterată)', t => {
@@ -241,6 +248,7 @@ test('restore() respinge o arhivă a cărei numărătoare nu corespunde manifest
 
   const entries = readZipArchive(readFileSync(file));
   const manifestEntry = entries.find(entry => entry.name === 'manifest.json');
+  assert.ok(manifestEntry);
   const manifest = JSON.parse(manifestEntry.data.toString('utf8'));
   manifest.databases.find(entry => entry.id === 'br-active').counts.children = 99;
   manifestEntry.data = Buffer.from(JSON.stringify(manifest));
@@ -276,13 +284,15 @@ test('restore() cheamă apply() cu manifestul și conținutul fiecărei baze, du
   const { service } = createHarness(t);
   const { file, manifest } = service.backup('manual');
 
-  let received = null;
+  /** @type {{ manifest: unknown, databaseFiles: Map<string, Buffer> }[]} */
+  const calls = [];
   service.restore(file, {
     apply: args => {
-      received = args;
+      calls.push(args);
     },
   });
 
-  assert.deepEqual(received.manifest, manifest);
-  assert.equal(received.databaseFiles.size, 3);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0].manifest, manifest);
+  assert.equal(calls[0].databaseFiles.size, 3);
 });

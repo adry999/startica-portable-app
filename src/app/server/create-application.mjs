@@ -33,6 +33,9 @@ import { SCHEDULE_FILE_NAME } from './notification-settings.routes.mjs';
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 // Citit o singură dată la încărcarea modulului: versiunea nu se schimbă cât rulează procesul.
 const { version } = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+// 42d: aceeași acțiune ca restaurarea legacy (backup.routes.mjs) — un restore din
+// Istoric nu are de unde să știe dacă a fost o arhivă completă sau o bază singură.
+const RESTORE_AUDIT_ACTION = 'restaurare';
 
 /**
  * @param {{
@@ -422,6 +425,15 @@ export function createApplication(options = {}) {
           writeFileSync(join(dirs.dataDir, 'startica.db'), activeBuffer);
         }
         active = openBranchContext(previousActiveBranch);
+        // Scrisă în baza PROASPĂT restaurată (nu în cea de dinainte, care tocmai a fost
+        // suprascrisă) — la fel ca restaurarea legacy, apare în Istoric (45a).
+        active.auditLogRepository.recordChange({
+          action: RESTORE_AUDIT_ACTION,
+          recordType: null,
+          recordId: null,
+          before: null,
+          after: { sursa: 'arhiva completa', baze: manifest.databases.map(entry => entry.name) },
+        });
       },
     });
 

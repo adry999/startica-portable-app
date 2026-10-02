@@ -93,11 +93,17 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   assert.equal((await post('/api/restore', { name, confirm: '', revision: 2, requestId: randomUUID() })).status, 400);
   const archive = request({ ...payment(), archived: true }, 'payments', 2, 'update');
   assert.equal((await post('/api/record', archive)).status, 200);
+  // 42d: `/api/backup` manual produce acum o arhivă completă (.startica-backup, nu doar
+  // filiala activă) — restaurarea ei e o înlocuire de FIȘIERE (create-application.mjs,
+  // restoreFullBackup), nu o tranzacție pe înregistrări: răspunsul nu mai conține `state`
+  // (clientul trebuie să reîncarce pagina complet — pot apărea/dispărea filiale întregi),
+  // deci verificarea se face printr-un /api/state separat, după restaurare.
   const restored = await post('/api/restore', { name, confirm: 'RESTAUREAZA', revision: 3, requestId: randomUUID() });
   assert.equal(restored.status, 200);
-  assert.equal(restored.body.state.payments[0].archived, undefined);
+  assert.equal(restored.body.ok, true);
+  assert.equal((await get('/api/state')).state.payments[0].archived, undefined);
   const audit = await get('/api/audit');
-  assert.ok(audit.entries.some(entry => entry.action === 'restaurare' && entry.before && entry.after));
+  assert.ok(audit.entries.some(entry => entry.action === 'restaurare' && entry.after));
   assert.equal(audit.nextBeforeEntryId, null);
   assert.equal((await fetch(origin + '/api/audit?beforeEntryId=0')).status, 400);
   const external = join(dir, 'external');
@@ -108,20 +114,27 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   assert.deepEqual(readFileSync(join(external, copied)), readFileSync(join(backupDir, copied)));
   assert.equal((await get('/api/health')).cloudVerified, false);
   renameSync(external, external + '-offline');
-  response = await post('/api/record', request({ ...child(), phone: '123' }, 'children', 4, 'update'));
+  // 42d: restaurarea unei arhive complete e o înlocuire de fișiere, nu o tranzacție pe
+  // revizie — contorul revine la ce era ÎN ARHIVĂ (dinaintea actualizării de mai sus care
+  // marca plata arhivată), nu continuă de unde rămăsese înainte de restaurare. Citit din
+  // nou, nu presupus, ca restul testului să urmeze exact noua bază.
+  let revision = (await get('/api/state')).revision;
+  response = await post('/api/record', request({ ...child(), phone: '123' }, 'children', revision, 'update'));
   assert.equal(response.status, 200);
   assert.match(response.body.warning, /extern/);
+  revision = response.body.revision;
   renameSync(backupDir, backupDir + '-offline');
-  response = await post('/api/record', request({ ...child(), phone: '456' }, 'children', 5, 'update'));
+  response = await post('/api/record', request({ ...child(), phone: '456' }, 'children', revision, 'update'));
   assert.equal(response.status, 200);
   assert.match(response.body.warning, /backupul local/);
   assert.equal(response.body.state.children[0].phone, '456');
+  revision = response.body.revision;
   renameSync(backupDir + '-offline', backupDir);
   assert.equal(
     (
       await post('/api/restore', {
         name: '../startica.db',
-        revision: 6,
+        revision,
         confirm: 'RESTAUREAZA',
         requestId: randomUUID(),
       })
@@ -130,29 +143,29 @@ test('API: conflicte, reîncercări, backup, restaurare, jurnal și securitate',
   );
   const invalid = { children: [child(), child()], payments: [], expenses: [], groups: [], categories: [], visits: [] };
   assert.equal(
-    (await post('/api/import', { state: invalid, confirm: 'IMPORT', revision: 6, requestId: randomUUID() })).status,
+    (await post('/api/import', { state: invalid, confirm: 'IMPORT', revision, requestId: randomUUID() })).status,
     400,
   );
   assert.equal((await get('/api/state')).state.children[0].phone, '456');
   const importRequest = {
     state: { children: [child()], payments: [payment()], expenses: [], groups: [], categories: [], visits: [] },
     confirm: 'IMPORT',
-    revision: 6,
+    revision,
     requestId: randomUUID(),
   };
   response = await post('/api/import', importRequest);
   assert.equal(response.status, 200);
-  assert.equal(response.body.revision, 7);
+  assert.equal(response.body.revision, revision + 1);
+  revision = response.body.revision;
   response = await post('/api/import', importRequest);
   assert.equal(response.body.replayed, true);
   assert.equal(response.body.state.payments.length, 1);
   assert.ok(readdirSync(backupDir).some(name => name.includes('inainte-import')));
+  response = await post('/api/record', request({ ...payment(), archived: true }, 'payments', revision, 'update'));
+  assert.equal(response.status, 200);
+  revision = response.body.revision;
   assert.equal(
-    (await post('/api/record', request({ ...payment(), archived: true }, 'payments', 7, 'update'))).status,
-    200,
-  );
-  assert.equal(
-    (await post('/api/record', request({ ...payment(), archived: false }, 'payments', 8, 'update'))).status,
+    (await post('/api/record', request({ ...payment(), archived: false }, 'payments', revision, 'update'))).status,
     200,
   );
   assert.equal((await get('/api/state')).state.payments[0].archived, false);
