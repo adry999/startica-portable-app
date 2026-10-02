@@ -29,6 +29,7 @@ function buildData(overrides: Partial<AttendanceMonthData> = {}): AttendanceMont
     dayNumbers: [15],
     offDays: [false],
     todayIndex: -1,
+    isHistoricalMonth: false,
     rows: [buildRow()],
     presentPerDay: [0],
     groups: [],
@@ -61,5 +62,15 @@ describe('MonthView · popover-ul „Motivat”', () => {
 
     const dialog = screen.getByRole('dialog', { name: /Ana Popescu/ });
     expect(within(dialog).getByPlaceholderText('Motivul absenței…')).toHaveValue('Boală');
+  });
+});
+
+describe('MonthView · indiciul „Copiii din grupa de azi” (Audit-B #4)', () => {
+  it('apare doar când luna vizualizată nu e luna curentă', () => {
+    const { rerender } = render(<MonthView month="2026-09" data={buildData({ isHistoricalMonth: false })} />);
+    expect(screen.queryByText('Copiii din grupa de azi')).not.toBeInTheDocument();
+
+    rerender(<MonthView month="2020-01" data={buildData({ isHistoricalMonth: true })} />);
+    expect(screen.getByText('Copiii din grupa de azi')).toBeInTheDocument();
   });
 });

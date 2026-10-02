@@ -51,16 +51,23 @@ per-cheltuială (`failed[]`, loghează și continuă) în loc de `STOP`+`return`
 execute+idempotent, conflict-pe-un-item-nu-oprește-lotul). Rularea reală din 30.09 (143/143, 0
 erori) rămâne neatinsă — fixul schimbă doar comportamentul pentru o viitoare rulare cu candidați noi.
 
-### 4. Luna (attendance, 18b) filtrează copiii după grupa CURENTĂ, nu cea din luna vizualizată
+### 4. ✅ Rezolvat (`4848fdf`) — Luna (attendance, 18b) filtrează copiii după grupa CURENTĂ, nu cea din luna vizualizată
 `webapp/src/features/attendance/useAttendanceMonth.ts:94-99` (și `WeeklySheet.tsx`/
 `WeeklySheetDialog.tsx`, același tipar) — un copil mutat din Grupa A în Grupa B pe 1 octombrie:
 deschizi Luna/septembrie/Grupa A → copilul dispare, deși a avut prezență reală acolo; Luna/
 septembrie/Grupa B → copilul apare, deși nu era acolo încă. Nu există istoric de apartenență la
 grupă în schemă.
 
-**Fix (necesită decizie de produs):** fie documentează explicit limitarea, fie adaugă un interval
-valabil per grupă pe copil. Las în `docs/design/INTREBARI.md` ca decizie de produs, nu o rezolv
-unilateral.
+**Decizie de produs (PROMPT-CLAUDE-CODE-10.md §7): varianta 1.** Fără schimbare de schemă, fără
+istoric de apartenență (`groupHistory` rămâne neconstruit) — doar un indiciu UI.
+
+**Rezolvat**: `useAttendanceMonth` expune `isHistoricalMonth` (luna cerută ≠ luna curentă);
+`WeeklySheet.tsx` expune `isHistoricalWeek` (comparat pe `weekStart` față de `mondayOf(today())`,
+nu pe lună, ca o săptămână care doar traversează granița dintre luni — ex. 28 sep – 2 oct — să nu
+fie marcată greșit ca „istorică” chiar azi). Când oricare e adevărat, textul „Copiii din grupa de
+azi” (12px, `--subtle`) apare sub titlu în Luna (18b), în antetul `WeeklySheetDialog` și pe foaia
+tipărită (`WeeklySheet`). Limitarea de fond (fără istoric de apartenență) rămâne — indiciul doar
+avertizează, nu o rezolvă.
 
 ### 5. ✅ Rezolvat (`e783c99`) — Bazin: crearea/oprirea unei programări și marcarea prezenței la ședințe nu scriu în audit
 `src/features/pool/server/pool.routes.mjs` (`postBooking`/`postSessions`) — spre deosebire de

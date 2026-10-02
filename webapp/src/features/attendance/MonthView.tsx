@@ -62,6 +62,8 @@ export function MonthView({ month, data }: MonthViewProps) {
         />
       </div>
 
+      {data.isHistoricalMonth && <p className={styles.hint}>Copiii din grupa de azi</p>}
+
       <h2 className={styles.printTitle}>
         Prezența · {data.groupName} · {formatMonthName(month)}
       </h2>

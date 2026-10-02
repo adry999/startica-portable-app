@@ -32,6 +32,13 @@
   display: none;
 }
 
+/* Audit-B #4: roster-ul arată grupa de azi, nu una istorică — avertisment doar pe o lună trecută/viitoare. */
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
 .tableCard {
   padding: 0;
   border-radius: var(--radius-xl);
