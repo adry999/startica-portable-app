@@ -101,6 +101,23 @@ describe('DataTable', () => {
     expect(within(rows[0]).getByText('Maria')).toBeInTheDocument(); // 2000, cea mai mare
   });
 
+  it('pagina controlată restaurată la montare (ex. din URL) nu e resetată la 1', () => {
+    const onPageChange = vi.fn();
+    render(
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        pageSize={2}
+        page={2}
+        onPageChange={onPageChange}
+      />,
+    );
+    expect(onPageChange).not.toHaveBeenCalled();
+    expect(screen.getByText('Ioana')).toBeInTheDocument();
+    expect(screen.queryByText('Andrei')).not.toBeInTheDocument();
+  });
+
   it('pagina controlată (page/onPageChange) — apelantul ține numărul paginii', async () => {
     const onPageChange = vi.fn();
     render(

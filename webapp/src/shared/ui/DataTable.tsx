@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { EmptyState } from './EmptyState';
 import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 import { Pagination } from './Pagination';
@@ -114,8 +114,15 @@ export function DataTable<Row>({
   // Semnătura (nu `rows` direct) ca să nu sară la pagina 1 doar pentru că apelantul
   // recalculează un array nou cu aceleași rânduri la fiecare randare.
   const rowsSignature = useMemo(() => rows.map(rowKey).join('\u0000'), [rows, rowKey]);
+  // Prima rulare (montarea) nu trebuie să forțeze pagina 1 — altfel o pagină controlată, restaurată
+  // din URL (§13.2 PROMPT-8, „pagina" păstrată la întoarcerea din fișă), ar fi suprascrisă imediat.
+  const isFirstRowsSignature = useRef(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- doar schimbarea semnăturii trebuie să resteze pagina.
   useEffect(() => {
+    if (isFirstRowsSignature.current) {
+      isFirstRowsSignature.current = false;
+      return;
+    }
     setPage(1);
   }, [rowsSignature]);
 

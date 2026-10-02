@@ -279,6 +279,31 @@ describe('ChildrenPage', () => {
     expect(screen.queryByText('Copil 26')).not.toBeInTheDocument();
   });
 
+  it('§13.2: căutarea și grupa rămân la întoarcerea din fișă — stare în URL (?q=&grupa=)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    // Simulează URL-ul la întoarcerea dintr-o fișă: filtrele au fost setate înainte de a naviga.
+    renderPage('/copii?q=Ionescu&grupa=none');
+    expect(screen.getByLabelText('Caută copil')).toHaveValue('Ionescu');
+    expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+  });
+
+  it('§13.2: căutarea pe mai multe cuvinte nu e suprascrisă de resetarea paginii', async () => {
+    // Regresie: setQuery + setPage separate (două navigări useSearchParams distincte) se
+    // suprascriu reciproc — un singur apel useUrlParams trebuie să țină ambele câmpuri.
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const search = screen.getByLabelText('Caută copil');
+    await userEvent.type(search, 'Ioana Ionescu');
+    expect(search).toHaveValue('Ioana Ionescu');
+    expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
+    expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
+  });
+
   it('41a: filtrul „Date incomplete” arată doar copiii cu fișă incompletă', async () => {
     const mixedFixture = {
       ...fixtureState,
