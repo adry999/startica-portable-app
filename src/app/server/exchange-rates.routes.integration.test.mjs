@@ -91,18 +91,20 @@ test('refreshExchangeRateIfMissing completează retroactiv fiecare zi lipsă, nu
   const { fetch, calls } = fakeBnmFetch();
   const { app } = await startTestApplication(t, { fetch });
   const fourDaysAgo = shiftDays(today(), -4);
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [fourDaysAgo]: 19.5 }));
-  writeSettingValue(app.db, 'exchangeRateSources', JSON.stringify({ [fourDaysAgo]: 'manual' }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ [fourDaysAgo]: 19.5 }));
+  writeSettingValue(app.commonDb, 'exchangeRateSources', JSON.stringify({ [fourDaysAgo]: 'manual' }));
 
   await app.refreshExchangeRateIfMissing();
 
   const expectedDates = [];
   for (let date = shiftDays(fourDaysAgo, 1); date <= today(); date = shiftDays(date, 1)) expectedDates.push(date);
   assert.deepEqual(calls, expectedDates);
-  const rates = JSON.parse(app.db.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
+  const rates = JSON.parse(app.commonDb.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
   assert.equal(rates[fourDaysAgo], 19.5); // ziua deja cunoscută rămâne neschimbată, fără cerere nouă
   assert.equal(Object.keys(rates).length, expectedDates.length + 1);
-  const sources = JSON.parse(app.db.prepare("SELECT value FROM settings WHERE key='exchangeRateSources'").get().value);
+  const sources = JSON.parse(
+    app.commonDb.prepare("SELECT value FROM settings WHERE key='exchangeRateSources'").get().value,
+  );
   assert.equal(sources[fourDaysAgo], 'manual');
   assert.equal(sources[expectedDates.at(-1)], 'bnm');
 });
@@ -112,12 +114,12 @@ test('refreshExchangeRateIfMissing sare peste o zi fără curs publicat, fără 
   const twoDaysAgo = shiftDays(today(), -2);
   const { fetch, calls } = fakeBnmFetch({ failDates: new Set([twoDaysAgo]) });
   const { app } = await startTestApplication(t, { fetch });
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [shiftDays(threeDaysAgo, -1)]: 19.5 }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ [shiftDays(threeDaysAgo, -1)]: 19.5 }));
 
   await app.refreshExchangeRateIfMissing();
 
   assert.deepEqual(calls, [threeDaysAgo, twoDaysAgo, shiftDays(twoDaysAgo, 1), today()]);
-  const rates = JSON.parse(app.db.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
+  const rates = JSON.parse(app.commonDb.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
   assert.equal(Object.hasOwn(rates, twoDaysAgo), false);
   assert.equal(Object.hasOwn(rates, threeDaysAgo), true);
   assert.equal(Object.hasOwn(rates, today()), true);
@@ -126,7 +128,7 @@ test('refreshExchangeRateIfMissing sare peste o zi fără curs publicat, fără 
 test('refreshExchangeRateIfMissing nu face nicio cerere când ultima zi cunoscută e deja azi', async t => {
   const { fetch, calls } = fakeBnmFetch();
   const { app } = await startTestApplication(t, { fetch });
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [today()]: 20.1 }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ [today()]: 20.1 }));
 
   await app.refreshExchangeRateIfMissing();
 
@@ -147,7 +149,7 @@ test('refreshExchangeRateIfMissing, fără niciun istoric, se oprește la limita
 test('o zi cu curs salvat înainte de acest câmp rămâne fără provenență în hartă (necunoscută, nu presupusă „bnm”)', async t => {
   const { app, get } = await startTestApplication(t);
   // Simulează date vechi: cursul exista deja când n-avea încă cheia de provenență în settings.
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ '2026-09-20': 20.1 }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ '2026-09-20': 20.1 }));
 
   const { rates, sources } = await get('/api/exchange-rates');
 
@@ -158,19 +160,19 @@ test('o zi cu curs salvat înainte de acest câmp rămâne fără provenență �
 test('F12: refreshTomorrowRateIfMissing cere doar ziua de mâine, nu intervalul până azi', async t => {
   const { fetch, calls } = fakeBnmFetch();
   const { app } = await startTestApplication(t, { fetch });
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [today()]: 20.1 }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ [today()]: 20.1 }));
 
   await app.refreshTomorrowRateIfMissing();
 
   assert.deepEqual(calls, [shiftDays(today(), 1)]);
-  const rates = JSON.parse(app.db.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
+  const rates = JSON.parse(app.commonDb.prepare("SELECT value FROM settings WHERE key='exchangeRates'").get().value);
   assert.equal(Object.hasOwn(rates, shiftDays(today(), 1)), true);
 });
 
 test('F12: refreshTomorrowRateIfMissing nu face nicio cerere dacă mâine e deja cunoscută', async t => {
   const { fetch, calls } = fakeBnmFetch();
   const { app } = await startTestApplication(t, { fetch });
-  writeSettingValue(app.db, 'exchangeRates', JSON.stringify({ [shiftDays(today(), 1)]: 20.1 }));
+  writeSettingValue(app.commonDb, 'exchangeRates', JSON.stringify({ [shiftDays(today(), 1)]: 20.1 }));
 
   await app.refreshTomorrowRateIfMissing();
 
@@ -203,4 +205,61 @@ test('F12: POST /api/exchange-rates/backfill respinge un număr de zile invalid'
   assert.equal(zero.status, 400);
   assert.equal(tooMany.status, 400);
   assert.equal(notInteger.status, 400);
+});
+
+// PROMPT-9 §8: cursul BNM și planurile trăiesc acum în baza comună — folosit de
+// scripts/migrate/ ca să aducă istoricul unei filiale vechi fără să-i piardă provenența.
+test('POST /api/exchange-rates/import adaugă istoricul păstrând provenența fiecărei zile', async t => {
+  const { post, get } = await startTestApplication(t);
+  await post('/api/exchange-rates', { date: '2026-09-18', rate: 19.8 }); // deja prezent, „manual”
+
+  const { status, body } = await post('/api/exchange-rates/import', {
+    rates: { '2026-09-18': 20, '2026-09-19': 19.9, '2026-09-20': 20.1 },
+    sources: { '2026-09-19': 'bnm', '2026-09-20': 'bnm' },
+  });
+
+  assert.equal(status, 200);
+  // Ziua deja prezentă (scrisă manual mai sus) câștigă față de import — nu se suprascrie tăcut.
+  assert.equal(body.rates['2026-09-18'], 19.8);
+  assert.equal(body.sources['2026-09-18'], 'manual');
+  assert.equal(body.rates['2026-09-19'], 19.9);
+  assert.equal(body.sources['2026-09-19'], 'bnm');
+  assert.equal(body.rates['2026-09-20'], 20.1);
+  assert.deepEqual(await get('/api/exchange-rates'), body);
+});
+
+test('POST /api/exchange-rates/import rulat de două ori nu duplică și nu schimbă rezultatul (idempotent)', async t => {
+  const { post } = await startTestApplication(t);
+  const payload = { rates: { '2026-09-19': 19.9, '2026-09-20': 20.1 }, sources: { '2026-09-19': 'bnm' } };
+
+  const first = await post('/api/exchange-rates/import', payload);
+  const second = await post('/api/exchange-rates/import', payload);
+
+  assert.deepEqual(first.body, second.body);
+  assert.deepEqual(second.body.rates, { '2026-09-19': 19.9, '2026-09-20': 20.1 });
+});
+
+test('POST /api/exchange-rates/import respinge un corp care nu e un obiect', async t => {
+  const { post } = await startTestApplication(t);
+
+  const { status } = await post('/api/exchange-rates/import', [1, 2, 3]);
+
+  assert.equal(status, 400);
+});
+
+test('PROMPT-9 §8: cursul și planurile sunt aceleași pentru toate filialele (baza comună)', async t => {
+  const { post, get } = await startTestApplication(t);
+  await post('/api/exchange-rates', { date: '2026-09-20', rate: 20.1 });
+  await post('/api/plan-presets', [{ id: 'PLAN-1', name: 'Plan Standard', priceEur: 120 }]);
+
+  const createdBranch = await post('/api/branches', { name: 'Bazin' });
+  assert.equal(createdBranch.status, 200);
+  const selected = await post('/api/branches/select', { id: createdBranch.body.branch.id });
+  assert.equal(selected.status, 200);
+
+  assert.deepEqual(await get('/api/exchange-rates'), {
+    rates: { '2026-09-20': 20.1 },
+    sources: { '2026-09-20': 'manual' },
+  });
+  assert.deepEqual(await get('/api/plan-presets'), [{ id: 'PLAN-1', name: 'Plan Standard', priceEur: 120 }]);
 });

@@ -55,6 +55,29 @@ export function createExchangeRatesRoutes({ readSetting, writeSetting, fetch: fe
     },
     {
       method: 'POST',
+      path: '/api/exchange-rates/import',
+      // PROMPT-9 §8: folosit doar de scripts/migrate/ (mutarea cursului în baza comună) —
+      // adaugă istoricul unei filiale vechi peste cel curent, păstrând provenența (bnm/manual)
+      // fiecărei zile, spre deosebire de POST /api/exchange-rates (o singură zi, mereu „manual”).
+      // Adiție, nu înlocuire: o zi deja prezentă rămâne cum era dacă importul n-o atinge, iar
+      // niciun istoric nu se șterge vreodată aici — doar se completează.
+      /** @param {{ body: any }} request */
+      handle: ({ body }) => {
+        if (!body || typeof body !== 'object' || Array.isArray(body)) fail('Corp invalid.');
+        const importedRates = clampExchangeRates(body.rates);
+        const importedSources = clampExchangeRateSources(body.sources);
+        // Ziua deja cunoscută aici (o corectare manuală, de exemplu) câștigă față de import —
+        // la fel ca fetchMissingRatesInRange mai sus (create-branch-context.mjs): importul
+        // completează doar ce lipsește, nu suprascrie tăcut ce există deja.
+        const after = clampExchangeRates({ ...importedRates, ...readRates() });
+        saveRates(after);
+        const afterSources = clampExchangeRateSources({ ...importedSources, ...readSources() });
+        saveSources(afterSources);
+        return { rates: after, sources: afterSources };
+      },
+    },
+    {
+      method: 'POST',
       path: '/api/exchange-rates/backfill',
       // F12 (FEEDBACK-01-10.md): „Vezi încă N zile” din calendarul lunar — extinde istoricul
       // înapoi de la cea mai veche zi cunoscută, nu doar golurile până la azi.

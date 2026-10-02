@@ -152,6 +152,12 @@ export function createBranchContext({
   // settings.setting citește o coloană SQLite (tip generic în node:sqlite); valorile scrise
   // sunt mereu string (vezi settings-repository.mjs), deci tipul e sigur aici.
   const readSetting = /** @type {(key: string) => string} */ (settings.setting);
+  // PROMPT-9 §8: cursul BNM și planurile presetate nu mai sunt „setări de filială” — trăiesc
+  // în baza comună (common.readSetting/writeSetting), la fel ca personalSettings (vezi
+  // personal.repository.mjs) — același port, aceeași convenție, ca ambele filiale să vadă
+  // exact același curs/planuri, nu câte o copie fiecare. Opțional doar pentru un context de
+  // test izolat de filială (fără common) — vezi comentariul lui `common` mai jos.
+  const commonSettings = common ? { readSetting: common.readSetting, writeSetting: common.writeSetting } : null;
   const backups = createBackupService({
     database: db,
     databaseFile: dbFile,
@@ -443,13 +449,17 @@ export function createBranchContext({
       writeSetting: settings.setSetting,
       auditTrail: auditLogRepository,
     }),
-    ...createExchangeRatesRoutes({
-      readSetting,
-      writeSetting: settings.setSetting,
-      fetch: fetchImpl ?? globalThis.fetch,
-      backfill: days => backfillExchangeRates(days),
-    }),
-    ...createPlanPresetsRoutes({ readSetting, writeSetting: settings.setSetting }),
+    ...(commonSettings
+      ? createExchangeRatesRoutes({
+          readSetting: commonSettings.readSetting,
+          writeSetting: commonSettings.writeSetting,
+          fetch: fetchImpl ?? globalThis.fetch,
+          backfill: days => backfillExchangeRates(days),
+        })
+      : []),
+    ...(commonSettings
+      ? createPlanPresetsRoutes({ readSetting: commonSettings.readSetting, writeSetting: commonSettings.writeSetting })
+      : []),
     ...createKindergartenSettingsRoutes({
       readSetting,
       writeSetting: settings.setSetting,
@@ -497,8 +507,10 @@ export function createBranchContext({
   // aruncă niciodată — o zi fără curs publicat (weekend, sărbătoare) sau un eșec de
   // rețea rămâne pur și simplu necompletată, fără să oprească celelalte zile din interval.
   async function fetchMissingRatesInRange(startDate, endDate) {
-    if (startDate > endDate) return;
-    const current = parseExchangeRates(readSetting('exchangeRates'));
+    // Fără bază comună (context de test izolat de filială), nu există unde să scriem —
+    // la fel ca `coachPaymentWriter`/`personalRepositoryForPool` mai sus, un no-op tăcut.
+    if (!commonSettings || startDate > endDate) return;
+    const current = parseExchangeRates(commonSettings.readSetting('exchangeRates'));
     const fetchedRates = {};
     const fetchedSources = {};
     for (let date = startDate; date <= endDate; date = shiftDays(date, 1)) {
@@ -512,10 +524,13 @@ export function createBranchContext({
     if (Object.keys(fetchedRates).length === 0) return;
     // Recitite chiar înainte de scriere, ca o corectare făcută în timpul buclei de mai
     // sus să câștige: completarea BNM se aplică doar peste zilele încă lipsă acum.
-    const latestRates = parseExchangeRates(readSetting('exchangeRates'));
-    const latestSources = parseExchangeRateSources(readSetting('exchangeRateSources'));
-    settings.setSetting('exchangeRates', JSON.stringify(clampExchangeRates({ ...fetchedRates, ...latestRates })));
-    settings.setSetting(
+    const latestRates = parseExchangeRates(commonSettings.readSetting('exchangeRates'));
+    const latestSources = parseExchangeRateSources(commonSettings.readSetting('exchangeRateSources'));
+    commonSettings.writeSetting(
+      'exchangeRates',
+      JSON.stringify(clampExchangeRates({ ...fetchedRates, ...latestRates })),
+    );
+    commonSettings.writeSetting(
       'exchangeRateSources',
       JSON.stringify(clampExchangeRateSources({ ...fetchedSources, ...latestSources })),
     );
@@ -528,8 +543,9 @@ export function createBranchContext({
   // pe cel mai recent cunoscut. Fără istoric deloc (filială nouă), completarea se
   // oprește la ultimele EXCHANGE_RATE_BACKFILL_DAYS zile.
   async function refreshExchangeRateIfMissing() {
+    if (!commonSettings) return;
     const todayStr = today();
-    const current = parseExchangeRates(readSetting('exchangeRates'));
+    const current = parseExchangeRates(commonSettings.readSetting('exchangeRates'));
     const lastKnownDate = Object.keys(current).sort().at(-1);
     const startDate = lastKnownDate ? shiftDays(lastKnownDate, 1) : shiftDays(todayStr, -EXCHANGE_RATE_BACKFILL_DAYS);
     await fetchMissingRatesInRange(startDate, todayStr);
@@ -548,7 +564,8 @@ export function createBranchContext({
   // asta merge înapoi în timp, pentru calendarul lunar.
   /** @param {number} days */
   async function backfillExchangeRates(days) {
-    const current = parseExchangeRates(readSetting('exchangeRates'));
+    if (!commonSettings) return;
+    const current = parseExchangeRates(commonSettings.readSetting('exchangeRates'));
     const earliestKnown = Object.keys(current).sort().at(0) ?? today();
     const endDate = shiftDays(earliestKnown, -1);
     const startDate = shiftDays(earliestKnown, -days);
