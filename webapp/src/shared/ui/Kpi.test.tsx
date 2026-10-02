@@ -11,6 +11,23 @@ describe('Kpi', () => {
     expect(screen.getByText('45 320 lei')).toBeInTheDocument();
   });
 
+  // 44c: un mini-card de metodă e clic-abil, ca să filtreze lista de achitări.
+  it('cu onClick, devine un buton care declanșează filtrul la clic', async () => {
+    const onClick = vi.fn();
+    render(<Kpi label="Cash" value="1 000 lei" onClick={onClick} />);
+    const user = userEvent.setup();
+
+    const card = screen.getByRole('button', { name: /Cash/ });
+    await user.click(card);
+
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+
+  it('fără onClick, rămâne un simplu container, nu un buton', () => {
+    render(<Kpi label="Cash" value="1 000 lei" />);
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
   it('randează children sub valoare', () => {
     render(
       <Kpi label="Încasări" value="45 320 lei">

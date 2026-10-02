@@ -8,6 +8,8 @@ import { PaymentsTable } from './PaymentsTable';
 import { PaymentsByMonth } from './PaymentsByMonth';
 import { PaymentFormDrawer } from './PaymentFormDrawer';
 import { QuickPaySearch } from './QuickPaySearch';
+import { CashSummaryCard } from './CashSummaryCard';
+import type { DayMethodTotals } from './useDayClosingReceipt';
 import type { PaymentFormValues } from './payment-form';
 import type { Payment } from '@contracts/record-types.mjs';
 import { today } from '@domain/calendar-month.mjs';
@@ -133,15 +135,28 @@ export function PaymentsPage({
     }
   }
 
+  // 44c: clic pe un mini-card de metodă din „Casa de azi” filtrează lista de dedesubt — metoda +
+  // ziua de azi (interval cu from = to = azi, singura cale să restrângem la o singură zi).
+  function filterByMethodToday(method: keyof DayMethodTotals) {
+    paymentsData.setMethod(method);
+    paymentsData.setPeriodPreset('interval');
+    paymentsData.setPeriodFrom(today());
+    paymentsData.setPeriodTo(today());
+  }
+
   return (
     <>
-      <QuickPaySearch records={paymentsData.records} onSelect={setQuickPayChildId} />
+      <div className={styles.screen}>
+        <QuickPaySearch records={paymentsData.records} onSelect={setQuickPayChildId} />
 
-      {viewMode === 'table' ? (
-        <PaymentsTable data={paymentsData} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
-      ) : (
-        <PaymentsByMonth data={paymentsData} onEdit={onOpenEdit} />
-      )}
+        <CashSummaryCard date={today()} onFilterMethod={filterByMethodToday} />
+
+        {viewMode === 'table' ? (
+          <PaymentsTable data={paymentsData} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
+        ) : (
+          <PaymentsByMonth data={paymentsData} onEdit={onOpenEdit} />
+        )}
+      </div>
 
       {/* C2: 'closed' e distinct de 'new' — la fiecare redeschidere „+ Achitare nouă” trece
           prin 'closed' (target null), deci instanța se remontează și useState pleacă de la
