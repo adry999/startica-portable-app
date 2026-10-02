@@ -47,13 +47,13 @@ let currentState = fixtureState();
 // 45b: istoricul copilului (useAuditLog în ChildProfileView) — gol implicit, suprascris per test.
 let historyEntries: unknown[] = [];
 
-function stubFetch() {
+function stubFetch(profile?: unknown) {
   currentState = fixtureState();
   historyEntries = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
-      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+      if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3', profile });
       if (path === '/api/state') return jsonResponse({ state: currentState, revision: 1, updatedAt: '' });
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
@@ -278,5 +278,55 @@ describe('ChildProfileView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Tot istoricul →' }));
 
     expect(onNavigate).toHaveBeenCalledWith('audit', { recordType: 'children', recordId: 'C1' });
+  });
+
+  describe('§5.3 (36e) — fișă doar-citire pe profil restrâns', () => {
+    it('profilul Educator ascunde toate butoanele de editare și arată „Doar citire”', async () => {
+      stubFetch({ preset: 'educator' });
+      await loadedSession();
+      renderProfile();
+
+      await screen.findByText('notă veche');
+      expect(screen.getByText('Doar citire')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Editează fișa' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ Plată' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ Notă' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Schimbă' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /adaugă telefon/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ Adaugă' })).not.toBeInTheDocument();
+    });
+
+    it('profilul Educator ascunde secțiunile de plăți și arată bannerul dedicat', async () => {
+      stubFetch({ preset: 'educator' });
+      await loadedSession();
+      renderProfile();
+
+      await screen.findByText('notă veche');
+      expect(screen.queryByText('Istoric plăți')).not.toBeInTheDocument();
+      expect(screen.queryByText('Plătitori reținuți')).not.toBeInTheDocument();
+      expect(
+        screen.getByText('Plățile, planul tarifar și notele medicale nu sunt pe acest calculator.'),
+      ).toBeInTheDocument();
+    });
+
+    it('profilul Educator ascunde „Ultimele modificări” (doar profil Complet, COMPONENTE.md)', async () => {
+      stubFetch({ preset: 'educator' });
+      await loadedSession();
+      renderProfile();
+
+      await screen.findByText('notă veche');
+      expect(screen.queryByText('Ultimele modificări')).not.toBeInTheDocument();
+    });
+
+    it('fără profil (implicit Complet) rămân toate acțiunile de editare, ca astăzi', async () => {
+      await loadedSession();
+      renderProfile();
+
+      await screen.findByText('notă veche');
+      expect(screen.queryByText('Doar citire')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Editează fișa' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+ Plată' })).toBeInTheDocument();
+      expect(screen.getByText('Ultimele modificări')).toBeInTheDocument();
+    });
   });
 });
