@@ -74,6 +74,10 @@ export interface BackupRoutesDependencies {
   replaceAllRecords: (snapshot: RecordsSnapshot, action: string) => void;
   backupDirectory: string;
   forbiddenFolders: () => string[];
+  /** 42d: arhiva completă (toate bazele) — opțional, lipsește doar într-un context de test izolat de filială. */
+  fullBackupService?: ReturnType<typeof import('./server/full-backup.service.mjs').createFullBackupService>;
+  /** 42d: restaurare dintr-o arhivă .startica-backup — create-application.mjs. */
+  restoreFullBackup?: (file: string) => void;
 }
 
 export interface BackupControllerDependencies {

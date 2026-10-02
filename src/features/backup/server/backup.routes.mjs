@@ -12,6 +12,9 @@ const SETTINGS_AUDIT_ACTION = 'configurare backup';
 const RESTORE_AUDIT_ACTION = 'restaurare';
 const EXTERNAL_READ_FAILURE =
   'Copia nu a putut fi citită. Dacă e în Google Drive, așteaptă să fie descărcată (bifa verde) și încearcă din nou.';
+// 42d, decizia 9 din plan: un backup vechi `.db` conține o singură filială — avertisment
+// clar în previzualizare, nu doar o restaurare tăcut incompletă.
+const LEGACY_SINGLE_BRANCH_NOTE = 'Acest backup conține o singură filială; Comun și celelalte filiale nu se schimbă.';
 
 // [] dacă snapshot-ul e o stare validă, altfel primul mesaj de eroare al validării.
 function previewErrors(snapshot) {
@@ -33,6 +36,12 @@ export function createBackupRoutes({
   replaceAllRecords,
   backupDirectory,
   forbiddenFolders,
+  // 42d: ambele opționale — un context de test izolat de filială (create-branch-context.test.mjs,
+  // dacă există vreunul) poate construi rutele fără ele; fără fullBackupService, `/api/backup`
+  // rămâne pe fluxul legacy per-filială, iar `/api/backup-preview`/`/api/restore` nu încearcă
+  // niciodată să detecteze o arhivă (isArchive nu există ca să-l apeleze).
+  fullBackupService,
+  restoreFullBackup,
 }) {
   // dir gol sau absent înseamnă lista locală.
   function resolveRestoreFile({ name, dir }) {
@@ -87,8 +96,14 @@ export function createBackupRoutes({
       handle: ({ url }) => {
         const dir = (url.searchParams.get('dir') || '').trim();
         const file = resolveRestoreFile({ name: url.searchParams.get('name'), dir });
+        // 42d, decizia 9 din plan: încearcă arhiva completă întâi — un `.startica-backup`
+        // e un ZIP valid, un `.db` legacy nu e niciodată, deci proba nu are ambiguitate.
+        if (fullBackupService?.isArchive(file)) {
+          const { summary: archiveSummary } = fullBackupService.previewArchive(file);
+          return { ...archiveSummary, errors: [], notes: [] };
+        }
         const { snapshot, notes } = readRestoreSnapshot(file, !!dir);
-        return { ...summary(snapshot), errors: previewErrors(snapshot), notes };
+        return { ...summary(snapshot), errors: previewErrors(snapshot), notes: [...notes, LEGACY_SINGLE_BRANCH_NOTE] };
       },
     },
     {
@@ -96,6 +111,9 @@ export function createBackupRoutes({
       path: '/api/backup',
       handle: () => {
         try {
+          // 42d: backupul manual devine arhiva completă (toate bazele), nu doar filiala
+          // activă — decizia 6 din plan. Backupul automat rămâne per-filială, neschimbat.
+          if (fullBackupService) return { ok: true, ...fullBackupService.backup('manual'), health: backupService.health() };
           return { ok: true, ...backupService.backup(), health: backupService.health() };
         } catch (e) {
           // Backupul manual e acțiunea operatorului: eroarea generică nu i-ar spune ce să facă.
@@ -113,6 +131,17 @@ export function createBackupRoutes({
         const dir = normalizeExternalFolder(body.dir);
         const { name } = body;
         const file = resolveRestoreFile({ name, dir });
+
+        // 42d: o arhivă completă nu trece prin runRevisionTransaction/replaceAllRecords — e o
+        // înlocuire de FIȘIERE pe mai multe baze, nu de rânduri pe cea deschisă acum (vezi
+        // decizia 8 din plan). restoreFullBackup() își face singur backupul de siguranță,
+        // validarea arhivei și redeschiderea conexiunilor; un eșec aici nu atinge nimic pe disc.
+        if (fullBackupService?.isArchive(file)) {
+          if (!restoreFullBackup) fail('Restaurarea unei arhive complete nu e disponibilă în acest context.', 500);
+          restoreFullBackup(file);
+          return { ok: true, warning: '' };
+        }
+
         const { snapshot } = readRestoreSnapshot(file, !!dir);
         const state = validateState(snapshot);
         const folder = dir || backupDirectory;
