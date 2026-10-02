@@ -2,12 +2,65 @@ import { randomUUID } from 'node:crypto';
 import { fail } from './router.mjs';
 import { isLastWriterWins } from './change-policy.mjs';
 import { branchFloorKey, readMeta } from './backup.service.mjs';
+import {
+  ACCESS_READ,
+  ACCESS_WRITE,
+  AUDIT_LOG_KIND,
+  CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS,
+  KIND_MODULE,
+  completProfile,
+  isModuleAllowed,
+} from './profile-policy.mjs';
 
 /** @typedef {{ branch_id: string, kind: string, id: string, revision: number, payload: string | null, updated_at: string, updated_by: string }} HeadRow */
 /** @typedef {{ seq: number, change_id: string, branch_id: string, kind: string, record_id: string, revision: number, payload: string | null, changed_at: string, received_at: string, device_id: string, result: string }} ChangeRow */
 /** @typedef {{ changeId: string, kind: string, recordId: string, baseRevision: number, payload: unknown, changedAt: string }} IncomingChange */
 /** @typedef {{ payload: unknown, revision: number, updatedAt: string, updatedBy: { id: string, name: string } }} HeadView */
 /** @typedef {{ changeId: string, status: string, revision: number, head?: HeadView }} PushResult */
+/** @typedef {{ blocked: boolean, modules: Record<string, number>, preset: string, pinModules: string[] }} DeviceProfile */
+
+/**
+ * §5.3 (36g): fiecare calculator trebuie să-și poată trimite propriile intrări de istoric
+ * (altfel istoricul central n-ar avea ce arăta pentru un calculator restrâns) — `audit_log`
+ * nu e guvernat de `admin` ca restul tipurilor din `KIND_MODULE`.
+ * @param {{ blocked: boolean, modules: Record<string, number> }} profile
+ * @param {string} kind
+ */
+function canWriteKind(profile, kind) {
+  if (profile.blocked) return false;
+  if (kind === AUDIT_LOG_KIND) return true;
+  const moduleId = KIND_MODULE[kind];
+  return moduleId ? isModuleAllowed(profile, moduleId, ACCESS_WRITE) : true;
+}
+
+/**
+ * §5.3 (36g): „doar dispozitivele Complet [primesc audit_log] la pull” — nu doar nivelul
+ * generic de citire pe `admin` (oricum mereu 0 în afara profilului Complet), explicit pe preset.
+ * @param {{ blocked: boolean, modules: Record<string, number>, preset: string }} profile
+ * @param {string} kind
+ */
+function canReadKind(profile, kind) {
+  if (profile.blocked) return false;
+  if (kind === AUDIT_LOG_KIND) return profile.preset === 'complet';
+  const moduleId = KIND_MODULE[kind];
+  return moduleId ? isModuleAllowed(profile, moduleId, ACCESS_READ) : true;
+}
+
+/** 36e: „plățile, planul tarifar și notele medicale nu sunt pe acest calculator” — câmpurile
+ * rămân tăiate din `children` indiferent de nivelul de acces pe modulul `children` însuși.
+ * @param {DeviceProfile} profile */
+function shouldHideChildrenFinancials(profile) {
+  return !isModuleAllowed(profile, 'payments', ACCESS_READ);
+}
+
+/** @param {string} kind @param {unknown} payload @param {DeviceProfile} profile */
+function redactPayloadForProfile(kind, payload, profile) {
+  if (kind !== 'children' || payload === null || typeof payload !== 'object' || !shouldHideChildrenFinancials(profile))
+    return payload;
+  const redacted = { ...payload };
+  for (const field of CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS) delete redacted[field];
+  return redacted;
+}
 
 /**
  * Nucleul politicii de sincronizare (decizia 5): o revizie curentă se aplică; una
@@ -16,6 +69,12 @@ import { branchFloorKey, readMeta } from './backup.service.mjs';
  * @param {{ database: import('node:sqlite').DatabaseSync, devices: ReturnType<typeof import('./devices.repository.mjs').createDevicesRepository> }} dependencies
  */
 export function createChangesService({ database, devices }) {
+  /** Un `deviceId` absent (apeluri vechi, teste) se comportă ca Complet — filtrarea de profil
+   * e strict aditivă peste contractul existent. @param {string | undefined} deviceId */
+  function profileForDevice(deviceId) {
+    if (!deviceId) return completProfile();
+    return devices.findById(deviceId)?.profile ?? completProfile();
+  }
   /** @param {string} branchId @param {string} kind @param {string} recordId @returns {HeadRow | undefined} */
   function findHeadRow(branchId, kind, recordId) {
     return /** @type {HeadRow | undefined} */ (
@@ -90,8 +149,8 @@ export function createChangesService({ database, devices }) {
       );
   }
 
-  /** @param {{ branchId: string, deviceId: string, change: IncomingChange, receivedAt: string }} input @returns {PushResult} */
-  function applyOne({ branchId, deviceId, change, receivedAt }) {
+  /** @param {{ branchId: string, deviceId: string, change: IncomingChange, receivedAt: string, profile: DeviceProfile }} input @returns {PushResult} */
+  function applyOne({ branchId, deviceId, change, receivedAt, profile }) {
     const prior = findStoredChange(change.changeId);
     if (prior) {
       // Reluare (retry de rețea): nu se mai scrie nimic, se întoarce ce s-a decis prima dată.
@@ -107,6 +166,68 @@ export function createChangesService({ database, devices }) {
         };
       }
       return { changeId: change.changeId, status: prior.result, revision: prior.revision };
+    }
+
+    // §5.3 (36g, 36f): profilul decide pe rând, nu pe tot lotul — restul modificărilor din
+    // același push nu trebuie respinse doar pentru că una dintre ele atinge un modul interzis.
+    if (!canWriteKind(profile, change.kind)) {
+      const headRow = findHeadRow(branchId, change.kind, change.recordId);
+      insertChangeRow({
+        changeId: change.changeId,
+        branchId,
+        kind: change.kind,
+        recordId: change.recordId,
+        revision: headRow?.revision ?? change.baseRevision,
+        payload: change.payload,
+        changedAt: change.changedAt,
+        deviceId,
+        result: 'rejected',
+        receivedAt,
+      });
+      return { changeId: change.changeId, status: 'rejected', revision: headRow?.revision ?? change.baseRevision };
+    }
+
+    // `audit_log` e append-only (36g): niciun client n-are voie să rescrie o intrare deja
+    // trimisă — fiecare modificare trebuie să fie o înregistrare nouă, cu baseRevision 0.
+    if (change.kind === AUDIT_LOG_KIND) {
+      const existing = findHeadRow(branchId, change.kind, change.recordId);
+      if (existing || change.baseRevision !== 0) {
+        insertChangeRow({
+          changeId: change.changeId,
+          branchId,
+          kind: change.kind,
+          recordId: change.recordId,
+          revision: existing?.revision ?? change.baseRevision,
+          payload: change.payload,
+          changedAt: change.changedAt,
+          deviceId,
+          result: 'rejected',
+          receivedAt,
+        });
+        return { changeId: change.changeId, status: 'rejected', revision: existing?.revision ?? change.baseRevision };
+      }
+      writeHead({
+        branchId,
+        kind: change.kind,
+        recordId: change.recordId,
+        revision: 1,
+        payload: change.payload,
+        updatedAt: change.changedAt,
+        deviceId,
+      });
+      insertChangeRow({
+        changeId: change.changeId,
+        branchId,
+        kind: change.kind,
+        recordId: change.recordId,
+        revision: 1,
+        payload: change.payload,
+        changedAt: change.changedAt,
+        deviceId,
+        result: 'applied',
+        receivedAt,
+      });
+      return { changeId: change.changeId, status: 'applied', revision: 1 };
     }
 
     const headRow = findHeadRow(branchId, change.kind, change.recordId);
@@ -207,11 +328,12 @@ export function createChangesService({ database, devices }) {
    */
   function applyPush({ branchId, deviceId, changes, now }) {
     const receivedAt = now.toISOString();
+    const profile = profileForDevice(deviceId);
     /** @type {PushResult[]} */
     const results = [];
     database.exec('BEGIN IMMEDIATE');
     try {
-      for (const change of changes) results.push(applyOne({ branchId, deviceId, change, receivedAt }));
+      for (const change of changes) results.push(applyOne({ branchId, deviceId, change, receivedAt, profile }));
       database.exec('COMMIT');
     } catch (error) {
       database.exec('ROLLBACK');
@@ -229,9 +351,9 @@ export function createChangesService({ database, devices }) {
   }
 
   /**
-   * @param {{ branchId: string, since: number, limit?: number }} input
+   * @param {{ branchId: string, since: number, limit?: number, deviceId?: string }} input
    */
-  function pull({ branchId, since, limit = 500 }) {
+  function pull({ branchId, since, limit = 500, deviceId }) {
     // Pragul e per filială (D-4): o filială fără istoric curățat nu primește 410 doar
     // pentru că altă filială a trecut de SYNC_HISTORY_DAYS.
     const floor = Number(readMeta(database, branchFloorKey(branchId)) ?? 0);
@@ -242,15 +364,19 @@ export function createChangesService({ database, devices }) {
         .all(branchId, since, limit)
     );
     const headSeq = branchHeadSeq(branchId);
+    // §5.3: cursorul avansează pe lotul complet (rows), nu pe cel filtrat — altfel un profil
+    // restrâns ar rămâne blocat la nesfârșit pe primul rând pe care nu are voie să-l vadă.
     const nextSince = rows.length ? rows[rows.length - 1].seq : Math.max(since, headSeq);
+    const profile = profileForDevice(deviceId);
+    const visible = rows.filter(row => canReadKind(profile, row.kind));
     return {
-      changes: rows.map(row => ({
+      changes: visible.map(row => ({
         seq: row.seq,
         changeId: row.change_id,
         kind: row.kind,
         recordId: row.record_id,
         revision: row.revision,
-        payload: row.payload === null ? null : JSON.parse(row.payload),
+        payload: row.payload === null ? null : redactPayloadForProfile(row.kind, JSON.parse(row.payload), profile),
         changedAt: row.changed_at,
         device: { id: row.device_id, name: devices.findById(row.device_id)?.name ?? '' },
       })),
@@ -261,16 +387,24 @@ export function createChangesService({ database, devices }) {
 
   /**
    * Prima încărcare a unei filiale (decizia 9): fiecare rând ajunge la revizia 1,
-   * cu un rând `changes` propriu — 409 dacă filiala are deja date pe server.
+   * cu un rând `changes` propriu — 409 dacă filiala are deja date pe server. §5.3: intrările
+   * pentru module nepermise se sar (nu opresc restul instantaneului), raportate în `skipped`.
    * @param {{ branchId: string, deviceId: string, entries: { kind: string, id: string, payload: unknown, updatedAt: string }[], now: Date }} input
    */
   function writeSnapshot({ branchId, deviceId, entries, now }) {
     const existing = database.prepare('SELECT 1 FROM records WHERE branch_id=? LIMIT 1').get(branchId);
     if (existing) fail('branch-has-records', 409);
     const receivedAt = now.toISOString();
+    const profile = profileForDevice(deviceId);
+    /** @type {string[]} */
+    const skipped = [];
     database.exec('BEGIN IMMEDIATE');
     try {
       for (const entry of entries) {
+        if (!canWriteKind(profile, entry.kind)) {
+          skipped.push(entry.id);
+          continue;
+        }
         writeHead({
           branchId,
           kind: entry.kind,
@@ -298,21 +432,23 @@ export function createChangesService({ database, devices }) {
       database.exec('ROLLBACK');
       throw error;
     }
-    return { headSeq: branchHeadSeq(branchId) };
+    return { headSeq: branchHeadSeq(branchId), skipped };
   }
 
-  /** @param {{ branchId: string }} input */
-  function readSnapshot({ branchId }) {
+  /** @param {{ branchId: string, deviceId?: string }} input */
+  function readSnapshot({ branchId, deviceId }) {
     const rows = /** @type {HeadRow[]} */ (
       database.prepare('SELECT * FROM records WHERE branch_id=? ORDER BY kind,id').all(branchId)
     );
+    const profile = profileForDevice(deviceId);
     /** @type {Record<string, { id: string, revision: number, payload: unknown, updatedAt: string }[]>} */
     const recordsByKind = {};
     for (const row of rows) {
+      if (!canReadKind(profile, row.kind)) continue;
       (recordsByKind[row.kind] ??= []).push({
         id: row.id,
         revision: row.revision,
-        payload: row.payload === null ? null : JSON.parse(row.payload),
+        payload: row.payload === null ? null : redactPayloadForProfile(row.kind, JSON.parse(row.payload), profile),
         updatedAt: row.updated_at,
       });
     }

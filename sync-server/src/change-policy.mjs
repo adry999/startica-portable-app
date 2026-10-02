@@ -45,7 +45,7 @@ export const COMMON_KINDS = [
 // Tipurile sincronizate în total: fișele (RECORD_KINDS) + prezența + tabelele proprii ale
 // Bazinului (decizia 11, 2026-09-27-personal-bazin.md — ca attendance, LWW) + setul comun
 // (COMMON_KINDS) + șabloanele SMS + setările sincronizate (Faza 6 le tratează efectiv; aici
-// numele de tip e deja rezervat).
+// numele de tip e deja rezervat) + istoricul pe calculatoare (§5.3, 36g).
 export const KINDS = [
   ...RECORD_KINDS,
   'attendance',
@@ -55,6 +55,7 @@ export const KINDS = [
   ...COMMON_KINDS,
   'sms_templates',
   'settings',
+  'audit_log',
 ];
 
 // Fișele și grupele nu se pierd niciodată în tăcere: o revizie depășită devine conflict,
