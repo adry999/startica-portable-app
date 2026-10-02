@@ -58,14 +58,17 @@ grupă în schemă.
 valabil per grupă pe copil. Las în `docs/design/INTREBARI.md` ca decizie de produs, nu o rezolv
 unilateral.
 
-### 5. Bazin: crearea/oprirea unei programări și marcarea prezenței la ședințe nu scriu în audit
+### 5. ✅ Rezolvat (`e783c99`) — Bazin: crearea/oprirea unei programări și marcarea prezenței la ședințe nu scriu în audit
 `src/features/pool/server/pool.routes.mjs` (`postBooking`/`postSessions`) — spre deosebire de
 orice altă acțiune structurală (copil, vizită, grupă, plată), aici nu se scrie niciodată în
 `auditTrail`, și nu există niciun comentariu care să explice de ce (spre deosebire de pontaj,
 care documentează explicit omisiunea). Pare scăpare, nu decizie.
 
-**Fix:** adaugă `auditTrail.recordChange(...)` la creare/oprire programare, cu același tipar ca
-restul rutelor structurale.
+**Rezolvat**: `postBooking` scrie acum `auditTrail.recordChange(...)` la creare ȘI la oprire
+(`recordType: null`, ca restul intrărilor „filiale”/personal — pool bookings nu trăiesc în
+tabela `records`). `postSessions` (marcarea ședințelor) rămâne fără audit, dar acum documentat
+explicit în cod — editare celulă-cu-celulă, prea frecventă, același precedent ca
+`handlePostTimesheet` din `personal.routes.mjs`.
 
 ## Scăzut
 
