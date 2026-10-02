@@ -22,14 +22,20 @@ nu mai reflectă adevărul.
 
 **Fix:** în `applyRecordEntry`, după `normalizeRecord`, `requireThat(normalized.id === recordId, ...)`.
 
-### 2. Garda de alocare pentru plăți EUR compară lei cu euro — efectiv moartă
+### 2. ✅ Rezolvat (`2541666`) — Garda de alocare pentru plăți EUR compară lei cu euro — efectiv moartă
 `src/shared/domain/record-schema.mjs:622` — `allocated <= cents(record.amount)` compară suma
 `allocations[]` (în EURO pentru copil cu tarif EUR) cu `cents(record.amount)` (mereu în LEI).
 Nu e exploatabil azi prin formular (`PaymentFormDrawer` calculează corect), dar garda server nu
 mai prinde nimic pentru acest caz — o repartizare incorectă de la orice alt client/bug viitor ar
 trece nedetectată.
 
-**Fix:** compară `allocated` cu `cents(record.amountEur ?? record.amount)`.
+**Rezolvat**: garda compară acum `allocated` cu `cents(record.amountEur ?? record.amount)`. În timp ce verificam
+asta, am găsit și reparat aceeași clasă de bug în repartizarea implicită (`record.allocations ??= ...`,
+folosită când un apelant pune `month` fără `allocations` explicit) — folosea tot `record.amount`, deci
+un viitor apelant cu `amountEur` fără `allocations` ar fi scris suma în lei ca repartizare „în euro"
+(nereproductibil azi — niciun apelant real nu face asta, dar latent). Fixture-ul din
+`accounting-report.test.mjs` avea exact acest defect (allocations implicite în lei pe un payment cu
+`amountEur`), expus de garda mai strictă — corectat să folosească `amountEur` pentru alocarea implicită.
 
 ### 3. `b3-pool-expenses-to-payments.mjs` — fără test, oprire totală la primul conflict
 Spre deosebire de sibling-ii ei (toate cu `.test.mjs`), acest script nu are niciun test, și bucla
