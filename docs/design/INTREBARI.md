@@ -355,3 +355,21 @@ N-am inclus restanța în suma precompletată pentru că F7 a decis explicit opu
 - **Achitare (payment), avans, copil nou, mutare în grupă** — serverul e deja gata pentru oricare dintre ele (orice creare/actualizare prin `/api/record` întoarce `auditId`, exact ca la cheltuială/arhivare). N-am mai legat butonul client (`PaymentFormDrawer`/`AdvancesTab`/`ChildFormDrawer`/mutarea de grupă din profilul copilului) din lipsă de timp pentru verificare robustă a fiecăruia (fiecare are propriul flux de succes — `toast.show(...)` — și propriul test de integrare de actualizat), nu dintr-un blocaj tehnic. Firul e identic cu cel de la cheltuială: ia `auditId` din răspunsul lui `session.mutate('/api/record', …)`, cheamă `undoToast.show({ title, detail, onUndo: () => session.mutate('/api/undo', { auditId }) })`.
 
 **Nimic de decis din partea ta** — doar consemnat ca să nu pară o gaură. Dacă urmează un pas separat, următorul e legarea celor 4 rămase, mecanic, după tiparul de la cheltuială/arhivare de mai sus.
+
+## ⏳ 44d — regulile de Drawer/Dialog rămân amânate într-o trecere separată (ca 41d)
+
+`PROMPT-CLAUDE-CODE-8.md` §13/44d cere, „aplicate o dată în componentele de bază, nu pe fiecare formular”: focus inițial, Ctrl+Enter = submit, Esc → 40c (deja există, vezi `UnsavedChangesDialog`), subsol fix, focus pe primul câmp cu eroare + număr de erori în subsol, `loading` pe butonul principal, fără drawer în drawer (test de arhitectură), lățimi 620/480/440 ca tokeni.
+
+E cross-cutting peste `Drawer`/`Dialog` din `@shared/ui` și, prin ele, peste aproape toate formularele aplicației (Achitări, Cheltuieli, Copii, Personal, Grupe, Vizite, Avansuri, Setări…) — exact tiparul de la 41d (`toUserError`, amânat deliberat, „pasă separată ulterioară”, `FEEDBACK-01-10.md` rândul „Mesaje de eroare”). N-am atins `Drawer`/`Dialog` de bază și n-am aplicat regulile pe formulare existente în §13 — risc prea mare de regresie într-o singură trecere făcută în grabă, pe lângă 44a–44c.
+
+**Ce am făcut în loc:** `PaymentFormDrawer` (singurul formular pe care l-am extins substanțial în §13, cu frații din 44b) n-a devenit un drawer nou — e cel existent, extins — deci nu intră nici la „componentă nouă care trebuie să respecte regulile de la început”.
+
+**De decis:** cine preia 44d ca pas separat (lățimi ca tokeni, apoi regulile de focus/Ctrl+Enter/eroare pe `Drawer`/`Dialog`, apoi o trecere prin formularele existente) — probabil după ce toate ecranele din coada ALINIERE-DESIGN.md sunt gata, ca să nu se reatingă fiecare formular de două ori.
+
+## ⏳ 44b — anularea unui grup de frați, odată ce Achitări capătă `UndoToast`
+
+Nota „✅ Anulează după salvare (40b)” de mai sus spune explicit că achitările n-au încă `UndoToast` legat client-side (server gata, buton nelegat — „din lipsă de timp”, nu blocaj tehnic). §13/44b cere: „Anularea (40b) anulează tot grupul” pentru o plată cu frați (`receiptGroupId`, vezi commitul 44b) — azi nu există nimic de „anulat” pe calea asta (nici pentru o achitare simplă, nici pentru un grup), deci cerința e imposibil de implementat înaintea notei de mai sus.
+
+**Ce rămâne de făcut, când se leagă `UndoToast` pentru Achitări:** `createPayment` din `usePayments.ts` apelează `session.mutate('/api/record', …)` o dată pentru plata principală și o dată per frate bifat (`buildSiblingPaymentRecords`) — fiecare apel întoarce propriul `auditId` (la fel ca la cheltuială/arhivare). Legarea pentru un grup de frați trebuie să rețină **toate** `auditId`-urile create (nu doar al plății principale) și, la „Anulează”, să cheme `POST /api/undo` o dată per `auditId` din grup — `/api/undo` ia un singur `auditId`, nu există azi o cale de anulare în lot pe server. Dacă fereastra de 15s expiră diferit pentru rânduri create la milisecunde distanță una de alta, primul `/api/undo` eșuat (timeout) nu trebuie să blocheze anularea celorlalte — tratează fiecare apel independent, raportează ce n-a mers.
+
+**Nimic de decis din partea ta** — doar consemnat ca să nu pară o gaură, la fel ca nota de mai sus.
