@@ -1,13 +1,26 @@
-import { monthDates } from '#shared/domain/calendar-month.mjs';
+import { monthDates, shiftDays } from '#shared/domain/calendar-month.mjs';
 import { isWorkingDay } from '#shared/domain/holidays-md.mjs';
 import type { Staff, TimesheetCode, TimesheetMonthSummary, TimesheetRow } from './personal.types';
 
 /**
- * Portul webapp al `src/features/personal/domain/timesheet-month.mjs` și al ciclului de clic din
- * `personal-schema.mjs` — vezi nota din `personal.types.ts`. Comportamentul trebuie să rămână identic.
+ * Portul webapp al `src/features/personal/domain/timesheet-month.mjs`, al ciclului de clic din
+ * `personal-schema.mjs` și al datelor de săptămână din `domain/timesheet-week-fill.mjs`
+ * (§9.2/41b) — vezi nota din `personal.types.ts`. Comportamentul trebuie să rămână identic.
  */
 
 export const timesheetKey = (staffId: string, date: string): string => `${staffId}|${date}`;
+
+/** Luni (ISO) a săptămânii care conține `date` — ancora pentru WeekFillBar. */
+export function weekStartOf(date: string): string {
+  const day = new Date(date + 'T12:00:00Z').getUTCDay(); // 0=duminică…6=sâmbătă
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  return shiftDays(date, diffToMonday);
+}
+
+/** Datele de luni până vineri ale săptămânii care începe la `weekStart`. */
+export function weekdaysOf(weekStart: string): string[] {
+  return Array.from({ length: 5 }, (_, index) => shiftDays(weekStart, index));
+}
 
 const CLICK_CYCLE: (TimesheetCode | '')[] = ['', 'CO', 'CM', 'A'];
 /** Zilele viitoare acceptă doar concediu planificat — fără A (absență constatabilă doar ≤ azi). */
@@ -72,12 +85,15 @@ export function summarizeTimesheetMonth({
 
   const counted = cells.filter(cell => cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future');
   const countOf = (code: TimesheetCode | '') => counted.filter(cell => cell.kind === code).length;
+  // 'P' (prezent, §9.2/41b) e doar o confirmare explicită a lipsei rândului — se numără
+  // la fel ca '', ca orele/salariul să nu se schimbe față de o zi nemarcată.
+  const workedCount = countOf('') + countOf('P');
 
   return {
     staffId: staff.id,
     cells,
-    worked: countOf(''),
-    hours: countOf('') * 8,
+    worked: workedCount,
+    hours: workedCount * 8,
     co: countOf('CO'),
     cm: countOf('CM'),
     a: countOf('A'),

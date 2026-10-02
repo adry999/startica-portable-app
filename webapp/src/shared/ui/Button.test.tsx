@@ -15,6 +15,11 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Anulează' }).className).toMatch(/ghost/);
   });
 
+  it('aplică varianta mint pentru acțiunea pozitivă a WeekFillBar (41b)', () => {
+    render(<Button variant="mint">Toți prezenți L–V</Button>);
+    expect(screen.getByRole('button', { name: 'Toți prezenți L–V' }).className).toMatch(/mint/);
+  });
+
   it('aplică varianta danger pentru acțiuni distructive în text', () => {
     render(<Button variant="danger">Șterge</Button>);
     expect(screen.getByRole('button', { name: 'Șterge' }).className).toMatch(/danger/);

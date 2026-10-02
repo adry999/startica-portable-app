@@ -1,4 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
+import { shiftDays } from '#shared/domain/calendar-month.mjs';
 import { normalizePersonalRecord, isStaffInBranch } from '../domain/personal-schema.mjs';
 import { seedDepartments, seedRoles, DEFAULT_PERSONAL_SETTINGS } from '../domain/personal-seeds.mjs';
 
@@ -115,6 +116,23 @@ export function createPersonalRepository(common) {
     if (!staffIds) return rows;
     const allowed = new Set(staffIds);
     return rows.filter(row => allowed.has(row.staffId));
+  }
+
+  /**
+   * Rândurile din săptămâna [weekStart .. weekStart+4] și cea anterioară (pentru „Copiază săpt.
+   * trecută”, §9.2/41b) — poate traversa două luni calendaristice, deci citește direct din
+   * `kinds.list`, nu prin `timesheetForMonth` (filtrat pe prefixul unei singure luni).
+   * @param {string} weekStart @returns {Map<string, TimesheetRow>} cheie `timesheetKey(staffId, date)`
+   */
+  function timesheetForWeeksAround(weekStart) {
+    const from = shiftDays(weekStart, -7);
+    const to = shiftDays(weekStart, 4);
+    return new Map(
+      kinds
+        .list('timesheet')
+        .filter(row => row.date >= from && row.date <= to)
+        .map(row => [timesheetRowId(row.staffId, row.date), row]),
+    );
   }
 
   /**
@@ -259,7 +277,9 @@ export function createPersonalRepository(common) {
     saveStaff,
     archiveStaff,
     replaceDepartmentsAndRoles,
+    timesheetRowId,
     timesheetForMonth,
+    timesheetForWeeksAround,
     applyTimesheetChanges,
     leavesForYear,
     salariesForStaff,

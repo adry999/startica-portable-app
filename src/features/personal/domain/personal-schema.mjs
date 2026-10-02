@@ -28,13 +28,17 @@ const ID_PREFIXES = {
   candidates: 'CAN-',
 };
 
-export const TIMESHEET_CODES = ['CO', 'CM', 'A', 'I', 'FP'];
+// 'P' (prezent, §9.2/41b): confirmare explicită, scrisă doar de completarea rapidă pe
+// săptămână (WeekFillBar) — numărată identic cu lipsa rândului (vezi timesheet-month.mjs),
+// ca să nu schimbe orele/salariul; există doar ca rândul să poată fi anulat ca o acțiune (§8.2).
+export const TIMESHEET_CODES = ['CO', 'CM', 'A', 'I', 'FP', 'P'];
 export const LEAVE_TYPES = ['CO', 'CM', 'FP'];
 export const SALARY_MODES = ['fix', 'zi', 'bazin'];
 
 // Ciclul din 23b (decizia 12): clic pe celulă merge gol → CO → CM → A → gol.
-// I și FP nu sunt în ciclu — vin doar din formularul de concediu, respectiv rămân
-// fără UI în V1 (întrebarea 3): un clic pe o astfel de celulă o golește.
+// I, FP și P nu sunt în ciclu — I/FP vin doar din formularul de concediu, rămân fără UI
+// în V1 (întrebarea 3); P vine doar din WeekFillBar (§9.2/41b). Un clic pe oricare din
+// ele o golește (vezi nextTimesheetCode, index -1 → cade pe poziția 0, „”).
 const CLICK_CYCLE = ['', 'CO', 'CM', 'A'];
 
 /**

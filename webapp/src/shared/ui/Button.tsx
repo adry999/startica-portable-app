@@ -2,7 +2,10 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Spinner } from './Spinner';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'ghost' | 'white' | 'outline' | 'link' | 'danger' | 'danger-solid';
+// 'mint': acțiune pozitivă plină, non-principală (ex. „Toți prezenți L–V” din WeekFillBar,
+// 41b) — nu înlocuiește `primary` (portocaliu), e pentru un al doilea accent, nu pentru
+// acțiunea principală a ecranului.
+export type ButtonVariant = 'primary' | 'mint' | 'ghost' | 'white' | 'outline' | 'link' | 'danger' | 'danger-solid';
 export type ButtonSize = 'md' | 'lg' | 'header';
 export type ButtonTone = 'default' | 'inherit';
 

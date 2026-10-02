@@ -1,0 +1,20 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.label {
+  font-family: var(--font-heading), Arial, sans-serif;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+}

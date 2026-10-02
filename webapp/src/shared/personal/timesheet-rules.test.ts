@@ -1,6 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { nextTimesheetCode, summarizeTimesheetMonth, worksAtAllBranches } from './timesheet-rules';
+import {
+  nextTimesheetCode,
+  summarizeTimesheetMonth,
+  weekStartOf,
+  weekdaysOf,
+  worksAtAllBranches,
+} from './timesheet-rules';
 import type { TimesheetRow } from './personal.types';
+
+describe('weekStartOf / weekdaysOf', () => {
+  it('weekStartOf întoarce lunea săptămânii, inclusiv când data e o duminică', () => {
+    expect(weekStartOf('2026-09-09')).toBe('2026-09-07');
+    expect(weekStartOf('2026-09-07')).toBe('2026-09-07');
+    expect(weekStartOf('2026-09-13')).toBe('2026-09-07');
+  });
+
+  it('weekdaysOf întoarce luni-vineri, în ordine', () => {
+    expect(weekdaysOf('2026-09-07')).toEqual(['2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11']);
+  });
+});
 
 describe('nextTimesheetCode', () => {
   it('ciclează gol → CO → CM → A → gol', () => {
@@ -59,6 +77,15 @@ describe('summarizeTimesheetMonth', () => {
     const summary = summarizeTimesheetMonth({ staff, month: '2020-02', rows, todayStr: '2020-02-29', upTo: 'month' });
     expect(summary.co).toBe(1);
     expect(summary.worked).toBe(summary.workingDays - 1);
+  });
+
+  it('§9.2/41b: codul P (prezent confirmat de WeekFillBar) se numără ca o zi lucrată, nu separat', () => {
+    const rows = new Map<string, TimesheetRow>([
+      ['STF-1|2020-02-03', { id: 'TS-1', staffId: 'STF-1', date: '2020-02-03', code: 'P' }],
+    ]);
+    const summary = summarizeTimesheetMonth({ staff, month: '2020-02', rows, todayStr: '2020-02-29', upTo: 'month' });
+    expect(summary.worked).toBe(summary.workingDays);
+    expect(summary.hours).toBe(summary.worked * 8);
   });
 
   it('o zi viitoare marcată (concediu planificat) își arată codul, nu „future”, și e numărată', () => {

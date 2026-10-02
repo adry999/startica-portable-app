@@ -41,6 +41,18 @@
   background: var(--orange-strong-pressed);
 }
 
+/* 41b (WeekFillBar) — accent mint plin, al doilea ton principal, nu înlocuiește .primary. */
+.mint {
+  background: var(--mint-bar);
+  color: var(--white);
+  box-shadow: none;
+}
+
+.mint:hover:not(:disabled),
+.mint:active:not(:disabled) {
+  background: var(--mint-bar-current);
+}
+
 .ghost {
   border: 1px solid var(--input-border);
   background: none;

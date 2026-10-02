@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { ToastProvider } from '@shared/ui';
 import { reloadPersonal } from '@shared/personal/usePersonal';
+import { weekStartOf } from '@shared/personal/timesheet-rules';
+import { today } from '#shared/domain/calendar-month.mjs';
 import { TimesheetView } from './TimesheetView';
 
 function jsonResponse(body: unknown) {
@@ -29,9 +31,11 @@ const fixturePersonalState = {
 };
 
 let posted: { changes: unknown[] }[] = [];
+let postedFill: { mode: string; weekStart: string; staffIds?: string[] }[] = [];
 
 function stubFetch() {
   posted = [];
+  postedFill = [];
   vi.stubGlobal(
     'fetch',
     vi.fn(async (path: string, options?: RequestInit) => {
@@ -45,6 +49,11 @@ function stubFetch() {
       if (path === '/api/health') return jsonResponse({});
       if (path === '/api/kindergarten') return jsonResponse({ name: 'Grădinița Test', idno: '' });
       if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+      if (path === '/api/personal/timesheet-fill' && options?.method === 'POST') {
+        const body = JSON.parse(options.body as string) as { mode: string; weekStart: string; staffIds?: string[] };
+        postedFill.push(body);
+        return jsonResponse({ filled: 3, rows: [] });
+      }
       if (path.startsWith('/api/personal/timesheet') && (!options || options.method !== 'POST'))
         return jsonResponse({ rows: [] });
       if (path === '/api/personal/timesheet' && options?.method === 'POST') {
@@ -176,5 +185,81 @@ describe('TimesheetView', () => {
 
     resolveKindergarten();
     await vi.waitFor(() => expect(printSpy).toHaveBeenCalled());
+  });
+
+  describe('§9.2/41b: completare rapidă pe săptămână', () => {
+    const currentMonth = today().slice(0, 7);
+    const expectedWeekStart = weekStartOf(today());
+
+    it('WeekFillBar apare doar pe luna curentă, nu pe o lună diferită', async () => {
+      await loadedSession();
+      await act(() => reloadPersonal());
+
+      const { rerender } = render(
+        <ToastProvider>
+          <TimesheetView month={currentMonth} printDialogOpen={false} onPrintDialogClose={() => {}} />
+        </ToastProvider>,
+      );
+      await screen.findByText('Ana Popescu');
+      expect(screen.getByRole('button', { name: 'Toți prezenți L–V' })).toBeInTheDocument();
+
+      rerender(
+        <ToastProvider>
+          <TimesheetView month="2026-12" printDialogOpen={false} onPrintDialogClose={() => {}} />
+        </ToastProvider>,
+      );
+      await screen.findByText('Ana Popescu');
+      expect(screen.queryByRole('button', { name: 'Toți prezenți L–V' })).not.toBeInTheDocument();
+    });
+
+    it('„Toți prezenți L–V” cheamă completarea pentru toată filiala, pe săptămâna curentă', async () => {
+      await loadedSession();
+      await act(() => reloadPersonal());
+
+      render(
+        <ToastProvider>
+          <TimesheetView month={currentMonth} printDialogOpen={false} onPrintDialogClose={() => {}} />
+        </ToastProvider>,
+      );
+      await screen.findByText('Ana Popescu');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Toți prezenți L–V' }));
+
+      expect(postedFill).toEqual([{ mode: 'present', weekStart: expectedWeekStart, staffIds: undefined }]);
+      expect(await screen.findByText('3 zile completate.')).toBeInTheDocument();
+    });
+
+    it('„Copiază săpt. trecută” cheamă completarea cu modul corespunzător', async () => {
+      await loadedSession();
+      await act(() => reloadPersonal());
+
+      render(
+        <ToastProvider>
+          <TimesheetView month={currentMonth} printDialogOpen={false} onPrintDialogClose={() => {}} />
+        </ToastProvider>,
+      );
+      await screen.findByText('Ana Popescu');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Copiază săpt. trecută' }));
+
+      expect(postedFill).toEqual([{ mode: 'copy-previous-week', weekStart: expectedWeekStart, staffIds: undefined }]);
+    });
+
+    it('„Prezent toată săptămâna” pe rând trimite doar staffId-ul acelui angajat', async () => {
+      await loadedSession();
+      await act(() => reloadPersonal());
+
+      render(
+        <ToastProvider>
+          <TimesheetView month={currentMonth} printDialogOpen={false} onPrintDialogClose={() => {}} />
+        </ToastProvider>,
+      );
+      await screen.findByText('Ana Popescu');
+
+      await userEvent.click(screen.getByLabelText('Acțiuni pontaj Ana Popescu'));
+      await userEvent.click(screen.getByRole('button', { name: 'Prezent toată săptămâna' }));
+
+      expect(postedFill).toEqual([{ mode: 'present', weekStart: expectedWeekStart, staffIds: ['STF-1'] }]);
+    });
   });
 });

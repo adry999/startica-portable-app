@@ -41,6 +41,14 @@ test('contoarele ecranului se opresc azi, cele de tipar și salariu iau toată l
   assert.equal(printOrSalary.co, 1);
 });
 
+test('§9.2/41b: codul P (prezent confirmat de WeekFillBar) se numără ca o zi lucrată, nu separat', () => {
+  /** @type {Map<string, Pick<import('../personal.types.d.mts').TimesheetRow, 'code'>>} */
+  const rows = new Map([[timesheetKey('STF-1', '2026-09-08'), { code: 'P' }]]);
+  const summary = summarizeTimesheetMonth({ staff, month: '2026-09', rows, todayStr: '2026-09-30', upTo: 'month' });
+  assert.equal(summary.worked, 22);
+  assert.equal(summary.hours, 176);
+});
+
 test('workingDatesFor exclude zilele dinaintea angajării și de după arhivare', () => {
   const midMonthStaff = { since: '2026-09-10', archivedAt: '2026-09-20' };
   const dates = workingDatesFor(midMonthStaff, '2026-09');

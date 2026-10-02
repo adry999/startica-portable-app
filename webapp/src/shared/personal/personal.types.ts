@@ -7,7 +7,9 @@
  * feature de backend, așa că tipurile și regulile pure sunt duplicate aici, izolat.
  */
 
-export type TimesheetCode = 'CO' | 'CM' | 'A' | 'I' | 'FP';
+// 'P' (prezent, §9.2/41b): confirmare explicită scrisă doar de completarea rapidă pe
+// săptămână (WeekFillBar) — numărată identic cu lipsa rândului, vezi timesheet-rules.ts.
+export type TimesheetCode = 'CO' | 'CM' | 'A' | 'I' | 'FP' | 'P';
 export type LeaveType = 'CO' | 'CM' | 'FP';
 export type SalaryMode = 'fix' | 'zi' | 'bazin';
 

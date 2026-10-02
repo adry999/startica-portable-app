@@ -99,6 +99,33 @@ describe('useTimesheet', () => {
     });
   });
 
+  it('fillWeek trimite modul/săptămâna/angajații și indexează rândurile primite (§9.2/41b)', async () => {
+    const posted: Record<string, unknown>[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, options?: RequestInit) => {
+        if (path === '/api/personal/timesheet?month=2026-09') return jsonResponse({ rows: [] });
+        if (path === '/api/personal/timesheet-fill' && options?.method === 'POST') {
+          const body = JSON.parse(options.body as string) as Record<string, unknown>;
+          posted.push(body);
+          return jsonResponse({
+            filled: 5,
+            rows: [{ id: 'TS-1', staffId: 'STF-1', date: '2026-09-07', code: 'P' }],
+          });
+        }
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const { result } = renderHook(() => useTimesheet('2026-09'));
+    await waitFor(() => expect(result.current.status).toBe('ready'));
+
+    const filled = await act(() => result.current.fillWeek('present', '2026-09-07', ['STF-1']));
+    expect(filled).toBe(5);
+    expect(posted).toEqual([{ mode: 'present', weekStart: '2026-09-07', staffIds: ['STF-1'] }]);
+    expect(result.current.rows.get('STF-1|2026-09-07')?.code).toBe('P');
+  });
+
   // M11: schimbarea rapidă a lunii poate porni un al doilea GET înainte ca primul să răspundă;
   // dacă luna părăsită răspunde ultima, nu trebuie să suprascrie luna curentă afișată.
   it('un răspuns întârziat al unei luni părăsite nu suprascrie luna curentă (race la schimbarea query-ului)', async () => {

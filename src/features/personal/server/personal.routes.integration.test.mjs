@@ -149,3 +149,124 @@ test('o funcție cu angajați nu se poate șterge din 23e; angajat inexistent la
   });
   assert.equal(response.status, 400);
 });
+
+test('§9.2/41b: „Toți prezenți L–V” completează doar celulele goale cu P, fără să atingă o zi deja marcată', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-present-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId) });
+
+  await post('/api/personal/timesheet', { changes: [{ staffId: 'STF-1', date: '2026-09-08', code: 'CM' }] });
+
+  const response = await post('/api/personal/timesheet-fill', { mode: 'present', weekStart: '2026-09-07' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.filled, 4); // luni, miercuri, joi, vineri — marți era deja CM
+
+  const timesheet = await get('/api/personal/timesheet?month=2026-09');
+  const byDate = Object.fromEntries(timesheet.rows.map(row => [row.date, row.code]));
+  assert.equal(byDate['2026-09-07'], 'P');
+  assert.equal(byDate['2026-09-08'], 'CM'); // neschimbat
+  assert.equal(byDate['2026-09-09'], 'P');
+  assert.equal(byDate['2026-09-10'], 'P');
+  assert.equal(byDate['2026-09-11'], 'P');
+});
+
+test('§9.2/41b: „Prezent toată săptămâna” pe rând completează doar angajatul cerut', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-row-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId, { id: 'STF-A' }) });
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId, { id: 'STF-B' }) });
+
+  const response = await post('/api/personal/timesheet-fill', {
+    mode: 'present',
+    weekStart: '2026-09-07',
+    staffIds: ['STF-A'],
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.filled, 5);
+  assert.ok(response.body.rows.every(row => row.staffId === 'STF-A'));
+
+  const timesheet = await get('/api/personal/timesheet?month=2026-09');
+  assert.deepEqual(
+    timesheet.rows.map(row => row.staffId),
+    Array(5).fill('STF-A'),
+  );
+});
+
+test('§9.2/41b: „Copiază săpt. trecută” copiază codul din aceeași zi a săptămânii trecute, cu date parțiale', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-copy-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId) });
+
+  // Săptămâna trecută (2026-08-31 luni): doar luni (CO) și miercuri (A) marcate.
+  await post('/api/personal/timesheet', {
+    changes: [
+      { staffId: 'STF-1', date: '2026-08-31', code: 'CO' },
+      { staffId: 'STF-1', date: '2026-09-02', code: 'A' },
+    ],
+  });
+
+  const response = await post('/api/personal/timesheet-fill', {
+    mode: 'copy-previous-week',
+    weekStart: '2026-09-07',
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.filled, 2);
+
+  const timesheet = await get('/api/personal/timesheet?month=2026-09');
+  const thisWeek = Object.fromEntries(
+    timesheet.rows.filter(row => row.date >= '2026-09-07' && row.date <= '2026-09-11').map(row => [row.date, row.code]),
+  );
+  assert.deepEqual(thisWeek, { '2026-09-07': 'CO', '2026-09-09': 'A' });
+});
+
+test('§9.2/41b: completarea scrie o singură intrare de audit pentru tot lotul, anulabilă ca o acțiune (§8.2)', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-audit-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId, { id: 'STF-A' }) });
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId, { id: 'STF-B' }) });
+
+  const response = await post('/api/personal/timesheet-fill', { mode: 'present', weekStart: '2026-09-07' });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.filled, 10); // 2 angajați × 5 zile lucrătoare
+
+  const history = await get('/api/audit');
+  const fillEntries = history.entries.filter(entry => entry.action === 'personal: pontaj — completare săptămână');
+  assert.equal(fillEntries.length, 1);
+  assert.equal(fillEntries[0].after.length, 10);
+});
+
+test('§9.2/41b: o completare fără nimic de făcut nu scrie o intrare de audit', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-noop-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId) });
+
+  const first = await post('/api/personal/timesheet-fill', { mode: 'present', weekStart: '2026-09-07' });
+  assert.equal(first.body.filled, 5);
+
+  // A doua completare pe aceeași săptămână, deja plină integral — nimic de scris.
+  const second = await post('/api/personal/timesheet-fill', { mode: 'present', weekStart: '2026-09-07' });
+  assert.equal(second.body.filled, 0);
+
+  const history = await get('/api/audit');
+  const fillEntries = history.entries.filter(entry => entry.action === 'personal: pontaj — completare săptămână');
+  assert.equal(fillEntries.length, 1);
+});
+
+test('§9.2/41b: mod invalid, săptămână invalidă sau angajat din altă filială sunt refuzate', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-personal-fill-invalid-' });
+  const branchId = (await get('/api/session')).branch.id;
+  await post('/api/personal/staff', { mode: 'create', staff: staffInput(branchId) });
+
+  let response = await post('/api/personal/timesheet-fill', { mode: 'altceva', weekStart: '2026-09-07' });
+  assert.equal(response.status, 400);
+
+  response = await post('/api/personal/timesheet-fill', { mode: 'present', weekStart: 'nu-e-dată' });
+  assert.equal(response.status, 400);
+
+  response = await post('/api/personal/timesheet-fill', {
+    mode: 'present',
+    weekStart: '2026-09-07',
+    staffIds: ['STF-altă-filială'],
+  });
+  assert.equal(response.status, 400);
+});

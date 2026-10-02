@@ -14,6 +14,7 @@ type Story = StoryObj<typeof Button>;
 
 export const Default: Story = {};
 
+export const Mint: Story = { args: { variant: 'mint', children: 'Toți prezenți L–V' } };
 export const Ghost: Story = { args: { variant: 'ghost', children: 'Anulează' } };
 export const White: Story = { args: { variant: 'white', children: 'White' } };
 export const Outline: Story = { args: { variant: 'outline', children: 'Outline' } };

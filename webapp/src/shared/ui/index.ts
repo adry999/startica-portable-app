@@ -134,6 +134,7 @@ export {
   type MissingFieldsBannerProps,
   type MissingFieldsBannerField,
 } from './MissingFieldsBanner';
+export { WeekFillBar, type WeekFillBarProps } from './WeekFillBar';
 export { UnsavedChangesDialog, type UnsavedChangesDialogProps } from './UnsavedChangesDialog';
 export { HoverCard, type HoverCardProps } from './HoverCard';
 export { Heatmap, type HeatmapCell, type HeatmapCellState, type HeatmapProps } from './Heatmap';

@@ -3,13 +3,16 @@ import { dateOK, monthOK } from '#shared/domain/calendar-month.mjs';
 import { createPersonalRepository } from './personal.repository.mjs';
 import { createLeavesService } from './leaves.service.mjs';
 import { createSalariesRoutes } from './salaries.routes.mjs';
+import { weekStartOf, computePresentWeekFill, computeCopyPreviousWeekFill } from '../domain/timesheet-week-fill.mjs';
 
 const AUDIT_STAFF = 'personal: angajat';
 const AUDIT_ROLES = 'personal: funcții și departamente';
 const AUDIT_LEAVE = 'personal: concediu';
 const AUDIT_SETTINGS = 'personal: setări';
 const AUDIT_CANDIDATE = 'personal: candidat';
+const AUDIT_TIMESHEET_FILL = 'personal: pontaj — completare săptămână';
 const MAX_TIMESHEET_CHANGES = 500;
+const TIMESHEET_FILL_MODES = ['present', 'copy-previous-week'];
 const YEAR_OK = /^\d{4}$/;
 
 /**
@@ -118,6 +121,47 @@ export function createPersonalRoutes({
     return { ok: true, rows: saved };
   }
 
+  /**
+   * Completare rapidă pe săptămână (§9.2/41b, WeekFillBar + „Prezent toată săptămâna” pe rând):
+   * un singur `recordChange` pentru tot lotul, ca să poată fi anulată ca o singură acțiune (§8.2) —
+   * spre deosebire de `handlePostTimesheet`, care nu scrie în istoric (editare celulă cu celulă,
+   * prea frecventă ca să merite un rând de audit fiecare).
+   * @param {{ body: { mode?: string, weekStart?: string, staffIds?: string[] } }} request
+   */
+  function handlePostTimesheetFill({ body }) {
+    const mode = body?.mode;
+    if (typeof mode !== 'string' || !TIMESHEET_FILL_MODES.includes(mode)) fail('Mod de completare invalid.');
+    const rawWeekStart = body?.weekStart;
+    if (typeof rawWeekStart !== 'string' || !dateOK(rawWeekStart)) fail('Săptămâna este invalidă.');
+    const weekStart = weekStartOf(rawWeekStart);
+
+    const allowed = new Set(branchStaffIds());
+    const staffIds = Array.isArray(body?.staffIds) && body.staffIds.length > 0 ? body.staffIds : [...allowed];
+    if (staffIds.length === 0) fail('Niciun angajat de completat.');
+    for (const staffId of staffIds) if (!allowed.has(staffId)) fail('Angajat inexistent în filiala activă.');
+
+    const existing = repository.timesheetForWeeksAround(weekStart);
+    const hasRow = (staffId, date) => existing.has(repository.timesheetRowId(staffId, date));
+    const readCode = (staffId, date) => existing.get(repository.timesheetRowId(staffId, date))?.code ?? null;
+
+    const changes =
+      mode === 'present'
+        ? computePresentWeekFill({ staffIds, weekStart, hasRow })
+        : computeCopyPreviousWeekFill({ staffIds, weekStart, hasRow, readCode });
+
+    if (changes.length === 0) return { ok: true, rows: [], filled: 0 };
+
+    const { saved } = repository.applyTimesheetChanges(changes);
+    auditTrail.recordChange({
+      action: AUDIT_TIMESHEET_FILL,
+      recordType: null,
+      recordId: null,
+      before: changes.map(({ staffId, date }) => ({ staffId, date, code: null })),
+      after: changes,
+    });
+    return { ok: true, rows: saved, filled: changes.length };
+  }
+
   /** @param {{ url: URL }} request */
   function handleGetLeaves({ url }) {
     const year = url.searchParams.get('year');
@@ -195,6 +239,7 @@ export function createPersonalRoutes({
     { method: 'POST', path: '/api/personal/roles', handle: handleSaveRoles },
     { method: 'GET', path: '/api/personal/timesheet', handle: handleGetTimesheet },
     { method: 'POST', path: '/api/personal/timesheet', handle: handlePostTimesheet },
+    { method: 'POST', path: '/api/personal/timesheet-fill', handle: handlePostTimesheetFill },
     { method: 'GET', path: '/api/personal/leaves', handle: handleGetLeaves },
     { method: 'POST', path: '/api/personal/leaves', handle: handlePostLeaves },
     { method: 'GET', path: '/api/personal/candidates', handle: handleGetCandidates },

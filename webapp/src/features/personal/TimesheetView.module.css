@@ -67,11 +67,21 @@
 }
 
 .nameCell {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding: var(--space-6) var(--space-16);
   border-bottom: 1px solid var(--row-divider);
+}
+
+/* §9.2/41b: acțiunea „Prezent toată săptămâna” nu trebuie să mărească înălțimea rândului —
+   altfel grila s-ar dezalinia între numele angajatului și celulele zilelor. */
+.rowMenuSlot {
+  position: absolute;
+  top: 50%;
+  right: var(--space-8);
+  transform: translateY(-50%);
 }
 
 .nameCell strong {

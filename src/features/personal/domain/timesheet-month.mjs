@@ -53,12 +53,15 @@ export function summarizeTimesheetMonth({ staff, month, rows, todayStr, upTo }) 
 
   const counted = cells.filter(cell => cell.kind !== 'off' && cell.kind !== 'none' && cell.kind !== 'future');
   const countOf = code => counted.filter(cell => cell.kind === code).length;
+  // 'P' (prezent, §9.2/41b) e doar o confirmare explicită a lipsei rândului — se numără
+  // la fel ca '', ca orele/salariul să nu se schimbe față de o zi nemarcată.
+  const workedCount = countOf('') + countOf('P');
 
   return {
     staffId: staff.id,
     cells,
-    worked: countOf(''),
-    hours: countOf('') * 8,
+    worked: workedCount,
+    hours: workedCount * 8,
     co: countOf('CO'),
     cm: countOf('CM'),
     a: countOf('A'),

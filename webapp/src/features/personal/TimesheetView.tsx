@@ -1,10 +1,17 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Card, FilterPills, LoadingState, type PillTone } from '@shared/ui';
+import { Card, FilterPills, LoadingState, RowMenu, WeekFillBar, useToast, type PillTone } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
+import { formatShortDayMonth } from '#shared/format/date-format.mjs';
 import { usePersonal } from '@shared/personal/usePersonal';
 import { useKindergarten } from '@shared/api/useKindergarten';
-import { nextTimesheetCode, summarizeTimesheetMonth, timesheetKey } from '@shared/personal/timesheet-rules';
-import { useTimesheet } from './useTimesheet';
+import {
+  nextTimesheetCode,
+  summarizeTimesheetMonth,
+  timesheetKey,
+  weekStartOf,
+  weekdaysOf,
+} from '@shared/personal/timesheet-rules';
+import { useTimesheet, type TimesheetFillMode } from './useTimesheet';
 import { TimesheetPrintDialog, type TimesheetPrintOptions } from './TimesheetPrintDialog';
 import { TimesheetPrint } from './TimesheetPrint';
 import type { TimesheetCode } from '@shared/personal/personal.types';
@@ -27,7 +34,14 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
   // Montat aici (nu în TimesheetPrint) ca cererea /api/kindergarten să pornească la intrarea pe
   // filă, nu la confirmarea dialogului — vezi gardă kindergarten.ready din efectul de tipărire (M4).
   const kindergarten = useKindergarten();
+  const toast = useToast();
   const [departmentFilter, setDepartmentFilter] = useState('all');
+  // §9.2/41b: completarea rapidă lucrează mereu pe săptămâna curentă (calendaristică), nu pe o
+  // săptămână navigabilă — bara/acțiunea pe rând apar doar când luna afișată e luna curentă, ca
+  // celulele vizate să fie chiar cele din grilă.
+  const [fillingPresentAll, setFillingPresentAll] = useState(false);
+  const [fillingCopyAll, setFillingCopyAll] = useState(false);
+  const [fillingRowStaffId, setFillingRowStaffId] = useState<string | null>(null);
   const [printOptions, setPrintOptions] = useState<TimesheetPrintOptions | null>(null);
 
   useEffect(() => {
@@ -76,12 +90,72 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
     timesheet.mark([{ staffId, date, code: next }]);
   }
 
+  // §9.2/41b: doar luna curentă arată bara/acțiunea de completare — altfel săptămâna curentă
+  // n-ar fi vizibilă deloc în grila lunii afișate.
+  const showWeekFill = month === todayStr.slice(0, 7);
+  const weekStart = weekStartOf(todayStr);
+  const weekLabel = (() => {
+    const [monday, , , , friday] = weekdaysOf(weekStart);
+    return `${formatShortDayMonth(monday)} – ${formatShortDayMonth(friday)}`;
+  })();
+
+  async function fillWeek(mode: TimesheetFillMode, staffIds?: string[]) {
+    try {
+      const filled = await timesheet.fillWeek(mode, weekStart, staffIds);
+      toast.show({
+        message:
+          filled > 0
+            ? `${filled} ${filled === 1 ? 'zi completată' : 'zile completate'}.`
+            : 'Nimic de completat — săptămâna era deja marcată.',
+      });
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+    }
+  }
+
+  async function fillPresentAll() {
+    setFillingPresentAll(true);
+    try {
+      await fillWeek('present');
+    } finally {
+      setFillingPresentAll(false);
+    }
+  }
+
+  async function copyPreviousWeekAll() {
+    setFillingCopyAll(true);
+    try {
+      await fillWeek('copy-previous-week');
+    } finally {
+      setFillingCopyAll(false);
+    }
+  }
+
+  async function fillPresentRow(staffId: string) {
+    setFillingRowStaffId(staffId);
+    try {
+      await fillWeek('present', [staffId]);
+    } finally {
+      setFillingRowStaffId(null);
+    }
+  }
+
   if (personal.status === 'loading' || timesheet.status === 'loading') return <LoadingState />;
   if (personal.status === 'failed') return <p className={styles.notice}>{personal.failureMessage}</p>;
   if (timesheet.status === 'failed') return <p className={styles.notice}>{timesheet.failureMessage}</p>;
 
   return (
     <div className={styles.root}>
+      {showWeekFill && (
+        <WeekFillBar
+          weekLabel={weekLabel}
+          onFillPresent={() => void fillPresentAll()}
+          onCopyPreviousWeek={() => void copyPreviousWeekAll()}
+          fillingPresent={fillingPresentAll}
+          fillingCopyPreviousWeek={fillingCopyAll}
+        />
+      )}
+
       <FilterPills
         groups={[
           {
@@ -165,6 +239,20 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                   <div className={styles.nameCell}>
                     <strong>{staff.name}</strong>
                     <small>{personal.roleName(staff.roleId)}</small>
+                    {showWeekFill && (
+                      <div className={styles.rowMenuSlot}>
+                        <RowMenu
+                          ariaLabel={`Acțiuni pontaj ${staff.name}`}
+                          items={[
+                            {
+                              label: 'Prezent toată săptămâna',
+                              disabled: fillingRowStaffId === staff.id,
+                              onClick: () => void fillPresentRow(staff.id),
+                            },
+                          ]}
+                        />
+                      </div>
+                    )}
                   </div>
                   {summary.cells.map(cell => {
                     const clickable = cell.kind !== 'off' && cell.kind !== 'none';
@@ -172,7 +260,9 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                       <div
                         key={cell.date}
                         className={styles.cell}
-                        data-kind={cell.kind || 'worked'}
+                        // 'P' (prezent, §9.2/41b) arată identic cu o zi lucrată nemarcată — e doar
+                        // o confirmare explicită scrisă de WeekFillBar, nu o stare vizuală nouă.
+                        data-kind={cell.kind === 'P' ? 'worked' : cell.kind || 'worked'}
                         onClick={
                           clickable
                             ? () =>
