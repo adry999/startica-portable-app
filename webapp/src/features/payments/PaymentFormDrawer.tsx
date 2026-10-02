@@ -191,24 +191,39 @@ export function PaymentFormDrawer({
   const effectiveRate = manualRate ? Number(manualRate) : bnmRate;
   const eurEquivalent = effectiveRate ? convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate) : null;
   // 650*20,1068 lasă bani (13.069,42) — exactFeeLei e suma exactă, fără rotunjire; câmpul Sumă
-  // pornește cu ea (vezi mai jos), iar „rotund” din scurtături dă alternativa la leu întreg.
+  // pornește cu ea (vezi mai jos), rotunjirea la alegere trăind separat în `roundingPills`.
   const exactFeeLei =
     isEurChild && feeEntry && effectiveRate ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : null;
-  if (exactFeeLei !== null && feeEntry && effectiveRate) {
-    amountShortcuts.push({
-      key: 'exact',
-      label: `exact · ${new Intl.NumberFormat('ro-RO').format(exactFeeLei)}`,
-      amount: exactFeeLei,
-    });
-    const rounded = Math.round(exactFeeLei);
-    if (rounded !== exactFeeLei) {
-      amountShortcuts.push({
-        key: 'rotund',
-        label: `rotund · ${new Intl.NumberFormat('ro-RO').format(rounded)}`,
-        amount: rounded,
-      });
-    }
-  }
+
+  // F16 (PROMPT-11 §2): suma afișată e mereu exactă — pastilele „Rotunjește” (sub Sumă) dau
+  // alegerea, nu o rotunjire automată tăcută. Apar doar cât timp suma tastată are bani (fracțiune
+  // de leu); „la 10 lei” doar dacă diferă de celelalte și rămâne în toleranța de rotunjire.
+  const currentTenderAmount = Number(values.tenders[activeMethod]) || 0;
+  const roundingPills: { key: string; label: string; amount: number }[] =
+    isEurChild && currentTenderAmount > 0 && currentTenderAmount !== Math.floor(currentTenderAmount)
+      ? (() => {
+          const down = Math.floor(currentTenderAmount);
+          const up = Math.ceil(currentTenderAmount);
+          const nearest10 = Math.round(currentTenderAmount / 10) * 10;
+          const pills = [
+            {
+              key: 'exact',
+              label: `Exact ${formatMoneyInput(currentTenderAmount).replace('.', ',')}`,
+              amount: currentTenderAmount,
+            },
+            { key: 'down', label: 'în jos la leu', amount: down },
+            { key: 'up', label: 'în sus la leu', amount: up },
+          ];
+          if (
+            nearest10 !== down &&
+            nearest10 !== up &&
+            Math.abs(nearest10 - currentTenderAmount) <= PAYMENT_ROUNDING_TOLERANCE
+          ) {
+            pills.push({ key: '10', label: 'la 10 lei', amount: nearest10 });
+          }
+          return pills;
+        })()
+      : [];
 
   const toast = useToast();
   const sms = useSmsStatus();
@@ -691,6 +706,20 @@ export function PaymentFormDrawer({
                   ) : undefined
                 }
               />
+            )}
+            {roundingPills.length > 0 && (
+              <div className={styles.field}>
+                Rotunjește:
+                <ChipSelect
+                  ariaLabel="Rotunjește"
+                  options={roundingPills.map(pill => ({ value: pill.key, label: pill.label }))}
+                  value={roundingPills.find(pill => currentTenderAmount === pill.amount)?.key ?? ''}
+                  onChange={key => {
+                    const pill = roundingPills.find(p => p.key === key);
+                    if (pill) setTender(activeMethod, formatMoneyInput(pill.amount));
+                  }}
+                />
+              </div>
             )}
             {splitByMethod ? (
               <p className={styles.balance}>Total: {formatMoney(totalAmount, 'MDL')}</p>

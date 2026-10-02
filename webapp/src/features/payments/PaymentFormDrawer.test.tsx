@@ -70,6 +70,14 @@ const records = {
       archived: false,
       feeHistory: [{ from: '2026-01', amount: 4921.83 }],
     },
+    // F16 (PROMPT-11 §2): 650 € × 20,1068 = 13.069,42 — cazul exact din cerere, pentru pastilele
+    // „Rotunjește” (în jos/în sus la leu, la 10 lei).
+    {
+      id: 'c7',
+      name: 'Victor Marin',
+      archived: false,
+      feeHistory: [{ from: '2026-01', amount: 650, currency: 'EUR' }],
+    },
   ],
   payments: [],
   expenses: [],
@@ -315,7 +323,10 @@ describe('PaymentFormDrawer', () => {
     // 100,03 € × 19,5 = 1.950,585 lei → exact 1.950,59 (R: 02.10, nu mai rotunjește la leu).
     expect(await screen.findByDisplayValue('1950.59')).toBeInTheDocument();
     expect(screen.getByText(/De încasat: 100,03 €/)).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /rotund · 1.951/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Exact 1950,59' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'în sus la leu' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('radio', { name: 'în sus la leu' }));
+    expect(screen.getByDisplayValue('1951.00')).toBeInTheDocument();
   });
 
   it('F11: suma precompletată rămâne editabilă', async () => {
@@ -437,6 +448,54 @@ describe('PaymentFormDrawer', () => {
       const submitted = onSubmit.mock.calls[0][0];
       expect(submitted.roundingDiff).toBeUndefined();
       expect(submitted.allocations).toMatchObject([{ amount: '4900.00' }]);
+    });
+
+    // F16 (PROMPT-11 §2): 650 € × 20,1068 = 13.069,42 — pastilele „Rotunjește” aleg rotunjirea,
+    // nu o rotunjire automată tăcută la precompletare.
+    function stubFetchWithRate201068() {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string) => {
+          if (path === '/api/exchange-rates')
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ rates: { [KNOWN_RATE_DATE]: 20.1068 }, sources: {} }),
+            };
+          if (path === '/api/sms-status') return { ok: true, status: 200, json: async () => ({ configured: false }) };
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+    }
+
+    it('650 € la 20,1068: „în sus la leu” dă 13.070 lei, roundingDiff +0,58', async () => {
+      stubFetchWithRate201068();
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Victor Marin');
+      await user.type(sumInput(), '13069.42');
+
+      await user.click(screen.getByRole('radio', { name: 'în sus la leu' }));
+      expect(sumInput().value).toBe('13070');
+
+      await user.click(saveButton());
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeCloseTo(0.58);
+    });
+
+    it('650 € la 20,1068: „în jos la leu” dă 13.069 lei, roundingDiff −0,42', async () => {
+      stubFetchWithRate201068();
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Victor Marin');
+      await user.type(sumInput(), '13069.42');
+
+      await user.click(screen.getByRole('radio', { name: 'în jos la leu' }));
+      expect(sumInput().value).toBe('13069');
+
+      await user.click(saveButton());
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeCloseTo(-0.42);
     });
 
     it('încasat 5.000 (peste toleranță) — fără roundingDiff, avans pe luna următoare', async () => {

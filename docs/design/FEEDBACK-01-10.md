@@ -24,7 +24,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
 | F15 Plan mereu vizibil la Copil nou/Editează (gol = mesaj) | ✅ 15a, 15i | ⏳ PROMPT-11 §1 |
-| F16 Rotunjire la alegere, precompletat exact | ✅ 15b, 41f | ⏳ PROMPT-11 §2 (înlocuiește rotunjirea automată din PROMPT-10 §2) |
+| F16 Rotunjire la alegere, precompletat exact | ✅ 15b, 41f | ✅ PROMPT-11 §2 (pastile Rotunjește: Exact/jos/sus/10 lei) |
 | F17 MonthInput propriu (repartizare manuală) | ✅ 15j | ⏳ PROMPT-11 §3 |
 | F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ⏳ PROMPT-11 §5 |
 | F19 Subsoluri de formular diferite | ✅ 15k | ⏳ PROMPT-11 §6 |

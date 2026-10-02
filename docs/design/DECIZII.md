@@ -14,7 +14,7 @@ Toate deciziile de produs din sesiunile de design. **Au prioritate** față de o
 
 - **C6–C13 în pauză (02.10):** teme pe grădiniță, conturi cu roluri, prezență pe telefon, SMS automat, contracte, ajutor în aplicație, burse, verificare backup. Nu se construiesc până la o decizie nouă.
 
-- **Rotunjire la achitare (02.10):** se încasează suma reală. Precompletat rotunjit la leu. Diferență ≤ 5 lei = luna achitată, diferența salvată ca rotunjire. Peste = parțial / avans. Pasul și toleranța se setează pe filială.
+- **Rotunjire la achitare (02.10, actualizat PROMPT-11 §2):** precompletat suma exactă, nu rotunjită — pastilele „Rotunjește” (Exact/în jos/în sus/la 10 lei) dau alegerea la plată. Diferență ≤ 5 lei = luna achitată, diferența salvată ca rotunjire. Peste = parțial / avans. 5 lei, fix; rotunjirea se alege la plată — fără setare de toleranță pe filială.
 
 - **Telefon (02.10):** salvat ca `+373XXXXXXXX`, afișat ca `069 123 456`. Intrarea acceptă orice formă. Numerele existente fără 0 se migrează după backup.
 
