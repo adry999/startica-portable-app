@@ -84,4 +84,29 @@ describe('TimesheetPrint', () => {
     expect(tables[0].querySelectorAll('tbody tr').length).toBe(14);
     expect(tables[1].querySelectorAll('tbody tr').length).toBe(6);
   });
+
+  it('PROMPT-9 §1.2: codul „P” se tipărește mereu „P”, chiar în modul „ore” — distinct de o zi nemarcată („8”)', async () => {
+    stubFetch();
+    await loadedSession();
+
+    const staff = makeStaff(1);
+    const rows = new Map<string, TimesheetRow>([
+      ['STF-0|2026-09-07', { id: 'r1', staffId: 'STF-0', date: '2026-09-07', code: 'P' }],
+    ]);
+
+    render(
+      <TimesheetPrint
+        month="2026-09"
+        staff={staff}
+        rows={rows}
+        roleName={() => 'Educator'}
+        kindergarten={{ displayName: 'Grădinița Startica' } as never}
+        display="hours"
+      />,
+    );
+
+    await screen.findByText(/Angajat 00/);
+    const dayCells = screen.getAllByText('P');
+    expect(dayCells.length).toBeGreaterThan(0);
+  });
 });

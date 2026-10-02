@@ -49,12 +49,10 @@ export function TimesheetPrint({ month, staff, rows, roleName, kindergarten, dis
   type StaffRow = (typeof staffRows)[number];
 
   function dayCellText(cell: { kind: string }): string {
-    // 'P' (prezent, §9.2/41b) se tipărește identic cu o zi lucrată nemarcată.
-    return cell.kind === '' || cell.kind === 'P'
-      ? workedLabel
-      : cell.kind === 'off' || cell.kind === 'none'
-        ? ''
-        : cell.kind;
+    // 'P' (prezent confirmat, §9.2/41b) se tipărește mereu „P”, distinct de o zi lucrată
+    // nemarcată (care urmează modul ales: „8” ore sau „P” prezență — RASPUNSURI-02-10.md #5).
+    if (cell.kind === 'P') return 'P';
+    return cell.kind === '' ? workedLabel : cell.kind === 'off' || cell.kind === 'none' ? '' : cell.kind;
   }
 
   return (

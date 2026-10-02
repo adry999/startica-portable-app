@@ -63,7 +63,7 @@ test('/api/session: după app.checkForUpdate(), update reflectă manifestul late
   assert.equal(session.update.updateAvailable, true);
   assert.equal(session.update.latestVersion, '99.0.0');
   assert.equal(session.update.sha256, 'deadbeef');
-  assert.equal(session.update.releaseUrl, 'https://github.com/adry999/startica-portable-app/releases/latest');
+  assert.equal(session.update.releaseUrl, 'https://github.com/adry999/startica-releases/releases/latest');
 });
 
 test('/api/session: un repo de release configurat ajunge în URL-ul verificat', async t => {

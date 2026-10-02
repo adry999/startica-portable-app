@@ -78,6 +78,41 @@ describe('TimesheetView', () => {
     vi.unstubAllGlobals();
   });
 
+  it('PROMPT-9 §1.2: codul „P” (prezent confirmat) apare distinct — literă P, nu identic cu o zi lucrată nemarcată', async () => {
+    await loadedSession();
+    await act(() => reloadPersonal());
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string, options?: RequestInit) => {
+        if (path === '/api/session')
+          return jsonResponse({ token: 'tok', version: '1.6.3', branch: null, branches: [] });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] },
+            revision: 1,
+            updatedAt: '2026-09-23T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Grădinița Test', idno: '' });
+        if (path === '/api/personal/state') return jsonResponse(fixturePersonalState);
+        if (path.startsWith('/api/personal/timesheet') && (!options || options.method !== 'POST'))
+          return jsonResponse({ rows: [{ staffId: 'STF-1', date: '2026-09-07', code: 'P' }] });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    render(
+      <ToastProvider>
+        <TimesheetView month="2026-09" printDialogOpen={false} onPrintDialogClose={() => {}} />
+      </ToastProvider>,
+    );
+
+    const cell = await screen.findByRole('button', { name: 'Ana Popescu: 2026-09-07' });
+    expect(cell).toHaveAttribute('data-kind', 'P');
+    expect(cell).toHaveTextContent('P');
+    expect(screen.getByText('Prezent confirmat')).toBeInTheDocument();
+  });
+
   it('clic pe celulă ciclează gol → CO → CM → A → gol și trimite un singur POST', async () => {
     await loadedSession();
     await act(() => reloadPersonal());

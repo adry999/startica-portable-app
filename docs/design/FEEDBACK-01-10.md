@@ -27,11 +27,11 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
 | Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting, pasă separată |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` |
-| Pontaj „Toți prezenți” (41b) | ✅ 41b | 🔁 cod nou „P” ✅ (`ed33495`); să apară distinct în grilă/tipar → PROMPT-9 §1.2 |
+| Pontaj „Toți prezenți” (41b) | ✅ 41b | ✅ cod nou „P” (`ed33495`); distinct în grilă/legendă/tipar (PROMPT-9 §1.2) |
 | Rotunjire la achitare | ✅ 41f | ⏳ §9.1 — rândul de pe bon (42c) e gata (`5017824`), nimic nu scrie încă `roundingDiff` |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d, 46a–46d | 🔁 42a/42b/42c ✅ (`86c744d`,`5017824`); 42d server ✅ (`7610e5f`…`4635ecc`), UI prima pornire + reîncărcare → PROMPT-9 §4 (`Prima pornire.dc.html#46a–46d`) |
-| Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo → `adry999/startica-releases` (PROMPT-9 §1.1); 426 + instalare automată rămân |
+| Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo = `adry999/startica-releases` ✅ cod (PROMPT-9 §1.1) — repo-ul însuși nu există încă pe GitHub, de creat manual; 426 + instalare automată rămân |
 | Profiluri calculator (§5.3) | ✅ 36a–36h | 🔁 server + sync ✅ (`be573f4`…`0969da7`); strat client → PROMPT-9 §2; 36g/36h → §7; fără ștergere locală (02.10); `sync-server` de redesfășurat |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` |

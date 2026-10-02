@@ -1,6 +1,16 @@
 # Întrebări / decizii blocate
 
-## ⏳ §5.2 — ce repo găzduiește latest.json / release-urile (02.10)
+## ✅ §5.2 — ce repo găzduiește latest.json / release-urile — rezolvat 02.10 (PROMPT-9 §1.1)
+
+**Răspuns** (`RASPUNSURI-02-10.md` #1): repo public separat `adry999/startica-releases`;
+`startica-portable-app` rămâne privat. `DEFAULT_RELEASE_REPO` schimbat în
+`src/config/environment.mjs`. Repo-ul `adry999/startica-releases` nu există încă pe GitHub —
+crearea lui (resursă publică nouă) a fost blocată de clasificatorul auto-mode al sesiunii;
+rămâne de creat manual (`gh repo create adry999/startica-releases --public` sau din interfața
+web) înainte de următorul `scripts/release.mjs --execute`. Până atunci, `--execute` ar eșua la
+pasul `gh release create` cu „repo not found”, nu ar publica nimic greșit.
+
+(Istoric — întrebarea inițială, păstrată pentru context:)
 
 PROMPT-CLAUDE-CODE-7.md §3 (reluat neschimbat în PROMPT-8 §5, punctul 2) cere explicit: „Dacă
 repo-ul de release nu există încă, folosește URL-ul din config și treci în INTREBARI.md numele

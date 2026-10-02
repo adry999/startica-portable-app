@@ -123,6 +123,11 @@
   background: var(--mint-soft);
 }
 
+.cell[data-kind='P'] {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
+}
+
 .cell[data-kind='future'] {
   background: none;
   border: 1px dashed var(--border);
@@ -203,6 +208,11 @@
 
 .legendSquare[data-kind='worked'] {
   background: var(--mint-soft);
+}
+
+.legendSquare[data-kind='P'] {
+  background: var(--mint-soft);
+  color: var(--mint-ink);
 }
 
 .legendSquare[data-kind='CO'] {

@@ -25,7 +25,7 @@ export interface TimesheetViewProps {
   onPrintDialogClose: () => void;
 }
 
-const CELL_LABEL: Record<string, string> = { CO: 'CO', CM: 'CM', A: 'A' };
+const CELL_LABEL: Record<string, string> = { CO: 'CO', CM: 'CM', A: 'A', P: 'P' };
 
 /** Pontaj (23b) — grilă lună × angajat, clic ciclează gol → CO → CM → A → gol. */
 export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: TimesheetViewProps) {
@@ -184,6 +184,12 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
           <span className={styles.legendSquare} data-kind="worked" />
           Lucrat
         </span>
+        <span className={styles.legendItem}>
+          <span className={styles.legendSquare} data-kind="P">
+            P
+          </span>
+          Prezent confirmat
+        </span>
         <div className={styles.legendRight}>
           <span className={styles.legendItem}>
             <span className={styles.legendSquare} data-kind="CO">
@@ -260,9 +266,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
                       <div
                         key={cell.date}
                         className={styles.cell}
-                        // 'P' (prezent, §9.2/41b) arată identic cu o zi lucrată nemarcată — e doar
-                        // o confirmare explicită scrisă de WeekFillBar, nu o stare vizuală nouă.
-                        data-kind={cell.kind === 'P' ? 'worked' : cell.kind || 'worked'}
+                        data-kind={cell.kind || 'worked'}
                         onClick={
                           clickable
                             ? () =>

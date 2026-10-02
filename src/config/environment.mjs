@@ -26,11 +26,10 @@ export const SYNC_DEVICE_FILE_NAME = 'sync.json';
 
 // §5.2 (PROMPT-CLAUDE-CODE-8.md §5 / arhiva PROMPT-7 §3, screens/32-actualizari.md): sursa
 // manifestului de versiuni e GitHub Releases, verificat fără API/token prin URL-ul fix
-// `releases/latest/download/latest.json` (vezi update-check.service.mjs). Implicit = repo-ul
-// curent (`origin`, verificat cu `git remote -v`) — vezi docs/design/INTREBARI.md pentru
-// întrebarea dacă release-urile trebuie publicate într-un repo public separat, dacă
-// `startica-portable-app` rămâne privat. Un singur loc de schimbat dacă răspunsul e altul.
-export const DEFAULT_RELEASE_REPO = 'adry999/startica-portable-app';
+// `releases/latest/download/latest.json` (vezi update-check.service.mjs). Răspuns 02.10
+// (RASPUNSURI-02-10.md #1): repo public separat doar pentru release-uri — codul sursă
+// (`startica-portable-app`) rămâne privat. Un singur loc de schimbat dacă răspunsul se mai schimbă.
+export const DEFAULT_RELEASE_REPO = 'adry999/startica-releases';
 
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */
 
