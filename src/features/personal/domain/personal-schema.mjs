@@ -1,5 +1,6 @@
 import { requireThat, requireAmount } from '#shared/domain/record-schema.mjs';
 import { dateOK, monthOK } from '#shared/domain/calendar-month.mjs';
+import { resolveStoredPhone } from '#shared/domain/phone-number.mjs';
 
 // Personal 24 (docs/superpowers/plans/2026-09-27-personal-bazin.md, decizia 2): kind-uri JSON în
 // baza comună, prin createKindRepository — niciodată prin TYPES/normalizeRecord.
@@ -80,6 +81,16 @@ function requireValidId(id, kind) {
   );
 }
 
+// §10 (02.10) — la fel ca în record-schema.mjs: un mobil moldovenesc valid devine E.164, un
+// „alt număr” cu „+” rămâne cum a fost scris, orice altceva rămâne cum a fost scris dar marcat
+// `phoneInvalid` (bannerul „de verificat”, nu construit aici, îl va găsi după asta).
+function applyPhoneField(record) {
+  const resolved = resolveStoredPhone(record.phone);
+  record.phone = resolved.value;
+  if (resolved.invalid) record.phoneInvalid = true;
+  else delete record.phoneInvalid;
+}
+
 const FIELDS = {
   departments: new Set(['id', 'name', 'order']),
   roles: new Set(['id', 'name', 'departmentId', 'order']),
@@ -89,6 +100,7 @@ const FIELDS = {
     'roleId',
     'branchIds',
     'phone',
+    'phoneInvalid',
     'birth',
     'idnp',
     'address',
@@ -109,6 +121,7 @@ const FIELDS = {
     'experience',
     'city',
     'phone',
+    'phoneInvalid',
     'notes',
     'createdAt',
     'updatedAt',
@@ -146,6 +159,7 @@ export function normalizePersonalRecord(kind, input) {
     );
     record.phone ??= '';
     text(record.phone, 'Telefon');
+    applyPhoneField(record);
     record.birth ??= '';
     text(record.birth, 'Data nașterii');
     if (record.birth) requireThat(dateOK(record.birth), 'Data nașterii este invalidă.');
@@ -222,6 +236,7 @@ export function normalizePersonalRecord(kind, input) {
     text(record.city, 'Unde locuiește');
     record.phone ??= '';
     text(record.phone, 'Telefon');
+    applyPhoneField(record);
     record.notes ??= '';
     text(record.notes, 'Notițe');
     requireThat(

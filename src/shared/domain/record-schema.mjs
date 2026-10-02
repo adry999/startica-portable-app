@@ -1,6 +1,7 @@
 import { monthOK, dateOK } from './calendar-month.mjs';
 import { cents } from './money.mjs';
 import { TENDER_METHODS, normalizeTenderMethod } from './payment-allocations.mjs';
+import { resolveStoredPhone } from './phone-number.mjs';
 
 // `payerAliases` = tabelul „payer_aliases” din decizia 25 sept. 2026 (docs/design/README.md
 // „Decizii funcții noi”) — numele e camelCase aici ca toate celelalte tipuri din TYPES, nu
@@ -94,6 +95,17 @@ function text(v, field, required = false) {
     `${field}: text invalid sau lipsă.`,
   );
 }
+// §10 (02.10) — un singur format salvat: un mobil moldovenesc valid devine E.164, un „alt număr"
+// cu „+” rămâne cum a fost scris, orice altceva rămâne cum a fost scris dar marcat `<field>Invalid`
+// (bannerul „de verificat”, §9.3/§14, nu construit aici, îl va găsi după asta). Câmpul lipsă
+// (`undefined`, nu trimis) rămâne neatins — o fișă veche, fără `phone2`, nu primește unul gol.
+function applyPhoneField(record, field, invalidField) {
+  if (record[field] === undefined) return;
+  const resolved = resolveStoredPhone(record[field]);
+  record[field] = resolved.value;
+  if (resolved.invalid) record[invalidField] = true;
+  else delete record[invalidField];
+}
 export function requireAmount(v, field, zero = false) {
   requireThat(
     typeof v === 'number' &&
@@ -117,9 +129,11 @@ const FIELDS = {
     'contractNumber',
     'parent',
     'phone',
+    'phoneInvalid',
     'parentRelation',
     'parent2',
     'phone2',
+    'phone2Invalid',
     'parent2Relation',
     'pickupPersons',
     'healthNotes',
@@ -190,8 +204,10 @@ const FIELDS = {
     'birthDate',
     'parent',
     'phone',
+    'phoneInvalid',
     'parent2',
     'phone2',
+    'phone2Invalid',
     'date',
     'time',
     'status',
@@ -300,6 +316,8 @@ export function normalizeRecord(type, input) {
       );
     record.parent ??= '';
     record.phone ??= '';
+    applyPhoneField(record, 'phone', 'phoneInvalid');
+    applyPhoneField(record, 'phone2', 'phone2Invalid');
     record.fee ??= null;
     if (record.fee !== null) requireAmount(record.fee, 'Taxa', true);
     record.dueDay ??= 10;
@@ -391,7 +409,9 @@ export function normalizeRecord(type, input) {
           id,
           name: person.name.trim(),
           ...(person.relation !== undefined && { relation: person.relation.trim() }),
-          ...(person.phone !== undefined && { phone: person.phone.trim() }),
+          // §10: la fel ca phone/phone2, dar fără `phoneInvalid` propriu — e o listă liberă, nu
+          // o fișă cu banner „de verificat” (acela se uită doar la copil/vizită/angajat).
+          ...(person.phone !== undefined && { phone: resolveStoredPhone(person.phone).value }),
           ...(person.note !== undefined && { note: person.note.trim() }),
         };
       });
@@ -456,6 +476,8 @@ export function normalizeRecord(type, input) {
     record.phone ??= '';
     record.parent2 ??= '';
     record.phone2 ??= '';
+    applyPhoneField(record, 'phone', 'phoneInvalid');
+    applyPhoneField(record, 'phone2', 'phone2Invalid');
     requireThat(dateOK(record.date), 'Data vizitei este invalidă.');
     requireThat(typeof record.time === 'string' && TIME_OK.test(record.time), 'Ora vizitei este invalidă.');
     record.status ||= 'Programată';

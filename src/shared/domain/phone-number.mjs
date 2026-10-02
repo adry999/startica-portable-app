@@ -18,3 +18,21 @@ export function normalizeMoldovanPhone(raw) {
   if (digits.length !== 8 || !MOLDOVAN_MOBILE_PREFIXES.includes(digits.slice(0, 2))) return null;
   return '+373' + digits;
 }
+
+/**
+ * Ce se salvează pentru un telefon introdus liber (decizia 02.10, §10 — un singur format
+ * salvat): un mobil moldovenesc valid devine E.164; un text cu prefix „+" care nu e moldovenesc
+ * e „alt număr" și se salvează exact cum a fost scris; orice altceva rămâne cum a fost scris,
+ * dar marcat `invalid` — vezi `phoneInvalid`/`phone2Invalid` din record-schema.mjs/personal-schema.mjs,
+ * pentru bannerul „de verificat" (§9.3/§14, nu construit aici).
+ * @param {unknown} raw
+ * @returns {{ value: string, invalid: boolean }}
+ */
+export function resolveStoredPhone(raw) {
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  if (!trimmed) return { value: '', invalid: false };
+  const normalized = normalizeMoldovanPhone(trimmed);
+  if (normalized) return { value: normalized, invalid: false };
+  if (trimmed.startsWith('+')) return { value: trimmed, invalid: false };
+  return { value: trimmed, invalid: true };
+}
