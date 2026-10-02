@@ -9,6 +9,9 @@ export interface SyncDevice {
   lastBranchId: string | null;
   revokedAt: string | null;
   me: boolean;
+  /** §5.3 (36c) — lipsă pe un calculator conectat înainte de profiluri (tratat ca Complet,
+   * vezi `completProfile()` server-side). */
+  profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null;
 }
 
 export interface SyncServerInfo {
@@ -52,8 +55,16 @@ export interface SyncSettingsData {
   disconnect: () => Promise<void>;
   syncNow: () => Promise<void>;
   syncing: boolean;
-  createPairingCode: () => Promise<PairingCode>;
+  /** §5.3 (36a): profilul ales la pasul 1 — lipsă păstrează comportamentul dinaintea profilurilor. */
+  createPairingCode: (
+    profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile,
+  ) => Promise<PairingCode>;
   revokeDevice: (deviceId: string) => Promise<void>;
+  /** §5.3 (36c): „Schimbă” din lista de calculatoare. */
+  changeDeviceProfile: (
+    deviceId: string,
+    profile: import('#shared/domain/computer-profile.mjs').ComputerProfile,
+  ) => Promise<void>;
   reload: () => Promise<void>;
 }
 
@@ -129,12 +140,22 @@ export function useSyncSettings(): SyncSettingsData {
     }
   }
 
-  async function createPairingCode(): Promise<PairingCode> {
-    return (await requestJson('/api/sync/pairing-codes', {})) as PairingCode;
+  async function createPairingCode(
+    profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile,
+  ): Promise<PairingCode> {
+    return (await requestJson('/api/sync/pairing-codes', { profile })) as PairingCode;
   }
 
   async function revokeDevice(deviceId: string) {
     await requestJson('/api/sync/devices/revoke', { deviceId });
+    await load();
+  }
+
+  async function changeDeviceProfile(
+    deviceId: string,
+    profile: import('#shared/domain/computer-profile.mjs').ComputerProfile,
+  ) {
+    await requestJson('/api/sync/devices/profile', { deviceId, profile });
     await load();
   }
 
@@ -155,6 +176,7 @@ export function useSyncSettings(): SyncSettingsData {
     syncing,
     createPairingCode,
     revokeDevice,
+    changeDeviceProfile,
     reload: load,
   };
 }
