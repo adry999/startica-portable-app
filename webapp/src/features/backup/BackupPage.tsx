@@ -131,7 +131,7 @@ function useBackupPreviewDrawer() {
             ];
         setPreview({ createdAt: data.createdAt, appVersion: data.appVersion, databases });
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err: Error) => setError(toUserError(err)))
       .finally(() => setLoading(false));
   }
 
