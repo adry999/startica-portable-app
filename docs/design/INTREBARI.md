@@ -933,9 +933,17 @@ O decizie tehnică luată pe loc, cu un implicit rezonabil aplicat, fără să o
    `undo.routes.mjs` să cunoască și `personalRepository` — nu am făcut asta neasumat, fiind o
    cuplare nouă între feature-urile `audit-log` și `personal`.
 
-## AUDIT-COD-02-10-B.md #4 — Luna (attendance, 18b) arată roster-ul curent al grupei, nu istoric
+## ✅ AUDIT-COD-02-10-B.md #4 — Luna (attendance, 18b) arată roster-ul curent al grupei, nu istoric — rezolvat 02.10 (PROMPT-CLAUDE-CODE-10.md §7)
 
-**Întrebare de produs, nerezolvată — las punctul deschis, nu aleg unilateral.**
+**Decizie (PROMPT-CLAUDE-CODE-10.md §7): varianta 1**, implicită — fără schimbare de schemă,
+fără istoric de apartenență la grupă (`groupHistory` rămâne neconstruit, opțiunea 2 de mai jos
+rămâne nealeasă). Doar un indiciu UI: textul „Copiii din grupa de azi” (12px, `--subtle`) sub
+titlu în Luna (18b) și pe foaia săptămânală (`WeeklySheetDialog` + foaia tipărită), vizibil doar
+când luna/săptămâna vizualizată nu e cea curentă (`isHistoricalMonth`/`isHistoricalWeek`, commit
+`4848fdf`). Limitarea de fond descrisă mai jos rămâne reală — indiciul doar o semnalează, ca
+administratorul să nu interpreteze greșit o lună/săptămână trecută după o mutare de grupă.
+
+(Istoric — întrebarea inițială, păstrată pentru context:)
 
 `webapp/src/features/attendance/useAttendanceMonth.ts:94-99` (și `WeeklySheet.tsx`/
 `WeeklySheetDialog.tsx`, același tipar) filtrează copiii dintr-o grupă, la Luna, după
