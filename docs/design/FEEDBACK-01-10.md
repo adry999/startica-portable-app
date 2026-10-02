@@ -32,7 +32,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d, 46a–46d | 🔁 42a/42b/42c ✅ (`86c744d`,`5017824`); 42d server ✅ (`7610e5f`…`4635ecc`), UI prima pornire + reîncărcare → PROMPT-9 §4 (`Prima pornire.dc.html#46a–46d`) |
 | Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo = `adry999/startica-releases` ✅ cod (PROMPT-9 §1.1) — repo-ul însuși nu există încă pe GitHub, de creat manual; 426 + instalare automată rămân |
-| Profiluri calculator (§5.3) | ✅ 36a–36h | 🔁 server + sync ✅ (`be573f4`…`0969da7`); strat client → PROMPT-9 §2; 36g/36h → §7; fără ștergere locală (02.10); `sync-server` de redesfășurat |
+| Profiluri calculator (§5.3) | ✅ 36a–36h | 🔁 server + sync ✅ (`be573f4`…`0969da7`); 36g/36h ✅ (`47b12d8`,`2ed0fc5`,`a172ae0`,`1466d69`, PROMPT-9 §7); strat client (meniu/rute filtrate) → PROMPT-9 §2; fără ștergere locală (02.10); `sync-server` de redesfășurat |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` |
 | Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | 🔁 44a–44c ✅ (`54b5ee3`,`0f6e0a6`,`7c9028b`); 44d → PROMPT-9 §3; anularea grupului de frați → §5 |
