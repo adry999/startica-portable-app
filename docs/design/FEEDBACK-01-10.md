@@ -27,7 +27,7 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` (§5.1/§9.2) |
 | Rotunjire la achitare | ✅ 41f | ⏳ §9.1 |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
-| Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ⏳ §11 |
+| Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ⏳ 42a/42b blocate pe §5.2 (neatins, vezi INTREBARI.md) · ✅ 42c `5017824` · ✅ 42d server `7610e5f`,`dc4bf5d`,`497cbf3`,`39c895a`,`5a0fdff`,`a2192ab`,`b427a71`,`4635ecc` (UI rămasă, vezi INTREBARI.md) |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ⏳ §12 |
 | Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ⏳ §13 |
