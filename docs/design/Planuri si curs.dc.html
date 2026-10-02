@@ -13,7 +13,27 @@
     <div style="display:flex;gap:6px 16px;font-size:14px;flex-wrap:wrap"><a href="Set final.dc.html">Set final</a><a href="Dashboard.dc.html">Dashboard</a><a href="Copii.dc.html">Copii</a><a href="Grupe.dc.html">Grupe</a><a href="Prezenta.dc.html">Prezența</a><a href="Bazin.dc.html">Bazin</a><a href="Vizite.dc.html">Vizite</a><a href="Personal.dc.html">Personal</a><a href="Achitari.dc.html">Achitări</a><a href="Cheltuieli.dc.html">Cheltuieli</a><a href="Situatia.dc.html">Situația plăților</a><a href="De notificat.dc.html">De notificat</a><a href="Raport contabil.dc.html">Raport contabil</a><a href="De rezolvat.dc.html">De rezolvat</a><a href="Administrare.dc.html">Administrare</a><a href="Sms.dc.html">Mesaje SMS</a><span style="font-weight:800;color:#3a4750">Planuri și curs</span><a href="Filiale.dc.html">Filiale</a><a href="Sincronizare.dc.html">Sincronizare</a><a href="Formulare.dc.html">Formulare</a><a href="Tiparire.dc.html">Tipărire</a><a href="Bon 58mm.dc.html">Bon 58 mm</a><a href="Incarcare.dc.html">Încărcare</a><a href="Prima pornire.dc.html">Prima pornire</a><a href="Responsive.dc.html">Ecrane mici</a></div>
     <h1 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:48px;margin:8px 0 0;line-height:1.05">Planuri în EUR, plată în lei</h1>
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Taxa lunară e fixă, în EUR, și vine din planul copilului. Datoria și restul se țin tot în EUR. Părintele plătește în lei, iar suma se transformă la cursul BNM din ziua plății, rotunjit la ban. Din acest motiv, lei încasați pentru aceeași taxă diferă de la o lună la alta. Avansurile rămân în lei până se repartizează. Pe Dashboard totalurile sunt în lei. Prețurile se introduc din Setări (<a href="#12a">12a</a>), separat pentru fiecare filială. Cele din exemple sunt fictive.</p>
-    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:14px"><a href="#12a">12a Planuri și curs</a><a href="#12g">12g Taxe și grupe</a><a href="#12b">12b Achitare nouă</a><a href="#12c">12c Situația plăților</a><a href="#12d">12d Fișa copilului</a><a href="#12e">12e Confirmare de plată</a><a href="#12f">12f Dashboard</a></div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:14px"><a href="#12a">12a Planuri și curs</a><a href="#12g">12g Taxe și grupe</a><a href="#12b">12b Achitare nouă</a><a href="#12d">12d Fișa copilului</a><a href="#12e">12e Confirmare de plată</a><a href="#12f">12f Dashboard</a></div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+<div id="38d" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">38d</span><span style="font-size:16px;font-weight:700">F13 · Planuri: întâi vizualizare, editarea la cerere</span></div>
+      <div style="width:760px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between"><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Planuri</h3><div style="display:flex;gap:8px"><span style="padding:8px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px">Editează planuri</span><span style="padding:8px 18px;border-radius:999px;background:#b85a00;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">+ Adaugă plan</span></div></div>
+        <sc-for list="{{ fbPlans }}" as="p" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:8px minmax(0,1fr) 110px 140px;gap:16px;align-items:center;background:#fff;border:1px solid #ede7dc;border-radius:20px;padding:16px 20px 16px 16px"><span style="align-self:stretch;border-radius:99px;background:{{ p.bar }}"></span><div style="display:flex;flex-direction:column;gap:2px"><b style="font-family:'Baloo 2',sans-serif;font-size:18px">{{ p.name }}</b><span style="font-size:12px;color:#9aa3a9;font-weight:700">{{ p.kids }}</span></div><b style="font-family:'Baloo 2',sans-serif;font-size:20px;text-align:right">{{ p.eur }} €</b><span style="font-size:13px;color:#6b7780;text-align:right">≈ {{ p.mdl }} lei</span></div>
+        </sc-for>
+        <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9;margin-top:10px">În modul de editare</span>
+        <div style="display:grid;grid-template-columns:8px minmax(0,1fr) 150px 40px;gap:14px;align-items:center;background:#fff;border:1.5px solid #ef8a1d;border-radius:20px;padding:14px 16px">
+          <span style="align-self:stretch;border-radius:99px;background:#ef8a1d"></span>
+          <span style="padding:9px 12px;border-radius:12px;border:1px solid #c9c4ba;font-weight:700">Program scurt</span>
+          <span style="display:flex;justify-content:space-between;padding:9px 12px;border-radius:12px;border:1px solid #c9c4ba;font-family:'Baloo 2',sans-serif;font-weight:800">250<span style="color:#9aa3a9">€</span></span>
+          <span title="Folosit de 14 copii" style="width:36px;height:36px;border-radius:50%;background:#f4f1ea;color:#c9c4ba;display:flex;align-items:center;justify-content:center;font-weight:800">×</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="flex:1;font-size:12px;color:#6b7780">Planul folosit de copii nu se poate șterge („Folosit de 14 copii”). Salvează e inactiv până la prima modificare.</span><span style="padding:8px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px">Anulează</span><span style="padding:8px 18px;border-radius:999px;background:#f1ece2;color:#9aa3a9;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px">Salvează</span></div>
+      </div>
+    </div>
   </div>
 
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
@@ -30,7 +50,7 @@
           <div style="padding:28px 40px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start">
             <div style="display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px"><div style="display:flex;align-items:center;gap:10px"><h3 style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:20px;margin:0">Planuri</h3><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fcead3;color:#a34f00"><span style="width:8px;height:8px;border-radius:50%;background:#ef8a1d"></span>doar pentru Filiala Buiucani</span></div><div style="display:flex;gap:8px"><span style="padding:8px 16px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-weight:800;font-size:14px;white-space:nowrap">Editează planuri</span><span style="padding:8px 18px;border-radius:999px;background:#b85a00;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;white-space:nowrap">+ Adaugă plan</span></div></div>
-              <span style="font-size:13px;color:#6b7780">Fiecare filială are prețurile ei. Prețul nou se aplică de la luna următoare. Ștergerea și modificarea doar în „Editează planuri” (<a href="Feedback 01-10.dc.html#38d">38d</a>).</span>
+              <span style="font-size:13px;color:#6b7780">Fiecare filială are prețurile ei. Prețul nou se aplică de la luna următoare. Ștergerea și modificarea doar în „Editează planuri” (<a href="Planuri si curs.dc.html#38d">38d</a>).</span>
               <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
                 <div style="display:grid;grid-template-columns:8px minmax(0,1fr) 170px 150px;gap:18px;align-items:center;background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:18px 22px 18px 18px">
                   <span style="align-self:stretch;border-radius:99px;background:{{ p.bar }}"></span>
@@ -65,13 +85,17 @@
                   <div style="display:flex;justify-content:flex-end;gap:8px"><span onClick="{{ cancelEdit }}" style="padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;font-weight:800;font-size:13px;cursor:pointer">Anulează</span><span onClick="{{ saveEdit }}" style="padding:8px 16px;border-radius:999px;background:#b85a00;color:#fff;font-weight:800;font-size:13px;cursor:pointer">Salvează cursul</span></div>
                 </div>
               </sc-if>
-              <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
-                <span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780;margin-bottom:4px">Ultimele zile</span>
-                <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
-                  <div style="display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid #f3eee5"><span style="flex:1;color:#6b7780">{{ h.d }}</span><span style="font-weight:800">{{ h.r }}</span><span style="width:78px;text-align:right;font-size:11px;font-weight:800;color:{{ h.fg }}">{{ h.src }}</span></div>
-                </sc-for>
-                <span style="font-size:12px;color:#9aa3a9;margin-top:4px">Cursul se ia automat de la BNM în fiecare zi lucrătoare, se salvează local și intră în backup. În weekend și de sărbători se folosește ultimul curs publicat.</span>
-                <div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:800"><a href="Feedback 01-10.dc.html#38e">Vezi calendarul</a><span style="color:#a34f00">Vezi încă 10 zile</span></div>
+              <div style="background:#fff;border:1px solid #ede7dc;border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+                <span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px">Calendar curs</span>
+                <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:32px;height:32px;border-radius:50%;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800">‹</span><b style="font-size:15px">Septembrie 2026</b><span style="width:32px;height:32px;border-radius:50%;border:1.5px solid #ede7dc;display:flex;align-items:center;justify-content:center;font-weight:800;color:#c9c4ba">›</span></div>
+                <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:11px;font-weight:800;color:#9aa3a9;text-align:center"><span>L</span><span>Ma</span><span>Mi</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+                <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px">
+                  <sc-for list="{{ cal }}" as="c" hint-placeholder-count="31">
+                    <div title="{{ c.tip }}" style="height:44px;box-sizing:border-box;border-radius:10px;background:{{ c.bg }};border:{{ c.bd }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px"><span style="font-size:11px;font-weight:800;color:{{ c.dfg }}">{{ c.d }}</span><span style="font-size:11px;font-weight:700;color:{{ c.rfg }}">{{ c.r }}</span></div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;gap:6px 14px;font-size:12px;color:#6b7780;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#f4f1ea"></span>weekend: cursul de vineri</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#fdf3d2"></span>corectat manual</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;border:1.5px solid #b85a00"></span>azi</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #f3eee5;padding-top:10px"><span style="font-size:12px;color:#9aa3a9">Salvat local, intră în backup.</span><span style="font-size:13px;font-weight:800;color:#a34f00;white-space:nowrap">Vezi încă 10 zile</span></div>
               </div>
             </div>
           </div>
@@ -158,32 +182,7 @@
   </div>
 
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
-    <div id="12c" style="display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">12c</span><span style="font-size:16px;font-weight:700">Situația plăților (Lună): taxe și rest în EUR</span></div>
-      <div style="width:1192px;display:flex;flex-direction:column;gap:14px">
-        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
-          <div style="padding:18px 22px;border-radius:20px;background:#fcead3;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#a34f00">De încasat · sep</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">32.450 €</span><span style="font-size:12px;color:#5b666e">≈ 636.669 lei azi</span></div>
-          <div style="padding:18px 22px;border-radius:20px;background:#e7f4ec;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2e6b4c">Încasat</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">24.180 €</span><span style="font-size:12px;color:#5b666e">473.720 lei primiți</span></div>
-          <div style="padding:18px 22px;border-radius:20px;background:#fce9ef;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b0284f">Rest</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">8.270 €</span><span style="font-size:12px;color:#5b666e">≈ 162.257 lei azi</span></div>
-          <div style="padding:18px 22px;border-radius:20px;background:#fff;border:1px solid #ede7dc;display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6b7780">Curs azi</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1.1">19,62</span><span style="font-size:12px;color:#5b666e">BNM · 26.09.2026</span></div>
-        </div>
-        <div style="background:#fff;border-radius:22px;border:1px solid #ede7dc;overflow:hidden">
-          <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.3fr 1fr 130px;padding:12px 20px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Copil</span><span>Plan</span><span>Taxă</span><span>Achitat</span><span>Rest</span><span>Statut</span><span></span></div>
-          <sc-for list="{{ status }}" as="r" hint-placeholder-count="5">
-            <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.3fr 1fr 130px;align-items:center;padding:11px 20px;border-bottom:1px solid #f3eee5;font-size:14px">
-              <span style="font-weight:800">{{ r.name }}</span>
-              <span style="color:#6b7780">{{ r.plan }}</span>
-              <span>{{ r.fee }}</span>
-              <div style="display:flex;flex-direction:column"><span style="font-weight:700">{{ r.paid }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.paidLei }}</span></div>
-              <div style="display:flex;flex-direction:column"><span style="font-weight:800;color:{{ r.restFg }}">{{ r.rest }}</span><span style="font-size:12px;color:#9aa3a9">{{ r.restLei }}</span></div>
-              <span style="justify-self:start;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }}">{{ r.s }}</span>
-              <span style="justify-self:end;font-size:13px;font-weight:800;color:#a34f00">{{ r.cta }}</span>
-            </div>
-          </sc-for>
-        </div>
-        <span style="font-size:13px;color:#6b7780">Sub „Achitat” apar lei efectiv primiți. Sub „Rest” apare echivalentul la cursul de azi, care se schimbă zilnic. SMS-ul către părinte trimite restul în lei la cursul zilei trimiterii, cu mențiunea „la cursul BNM de azi”.</span>
-      </div>
-    </div>
+    
   </div>
 
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
@@ -223,7 +222,94 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { editing: false, over: false };
-  renderVals() {
+  renderVals() { return Object.assign(this.__fb(), this.__rv()); }
+  __fb() {
+    const rows = [
+      { n: 'Hudic Amedeia', g: 'Neptun', s: '9.845,00' },
+      { n: 'Rusu Matei', g: 'Marte', s: '4.922,50' },
+      { n: 'Ceban Ilinca', g: 'Venus', s: '14.767,50' },
+    ];
+    const plans = [
+      { name: 'Program scurt', eur: '250', mdl: '4.922,50', kids: '14 copii', bar: '#ef8a1d' },
+      { name: 'Program mediu', eur: '500', mdl: '9.845,00', kids: '41 copii', bar: '#3f9a6b' },
+      { name: 'Program lung', eur: '750', mdl: '14.767,50', kids: '22 copii', bar: '#f9d257' },
+    ];
+    const rates = ['19,61','19,63','19,60','19,58','19,64','19,66','19,65','19,62','19,59','19,61','19,67','19,70','19,68','19,66','19,69','19,71','19,72','19,70','19,68','19,69','19,69','19,66'];
+    const cal = [];
+    for (let i = 0; i < 1; i++) cal.push({ d: '', r: '', bg: 'transparent', dfg: '#fff', rfg: '#fff' });
+    let ri = 0, last = '';
+    for (let d = 1; d <= 30; d++) {
+      const dow = (d) % 7; // 1 Sep 2026 = marți → index 1
+      const weekend = dow === 5 || dow === 6;
+      let r;
+      if (weekend) r = last; else { r = rates[ri++ % rates.length]; last = r; }
+      const manual = d === 18;
+      cal.push({ d: String(d), r, bg: weekend ? '#f4f1ea' : manual ? '#fdf3d2' : '#faf7f1', dfg: '#9aa3a9', rfg: weekend ? '#9aa3a9' : '#3a4750' });
+    }
+    const roles = [
+      { n: 'Educator', dep: 'Educațional', c: '9 angajați', dot: '#ef8a1d' },
+      { n: 'Educator ajutor', dep: 'Educațional', c: '6 angajați', dot: '#ef8a1d' },
+      { n: 'Bucătar', dep: 'Bucătărie', c: '2 angajați', dot: '#3f9a6b' },
+      { n: 'Antrenor înot', dep: 'Bazin', c: '1 angajat', dot: '#2c5a80' },
+      { n: 'Administrator', dep: 'Administrație', c: '1 angajat', dot: '#e9527c' },
+    ];
+    const backup = [
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Buiucani', c: '2.104' },
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Centru', c: '1.377' },
+      { n: 'Personal, funcții, salarii, avansuri, pontaj', src: 'Comun', c: '612' },
+      { n: 'Curs BNM (zile)', src: 'Comun', c: '214' },
+      { n: 'Filiale, planuri, setări', src: 'Comun', c: '11' },
+      { n: 'Istoric acțiuni', src: 'toate', c: 'inclus' },
+    ];
+    const on = { box: '✓', boxBg: '#3a4750' }, off = { box: '', boxBg: '#e0d5c2' };
+    const autoBatch = [
+      { ...on, n: 'Rusu Matei', info: 'Sep 2026 · prima reamintire · părinte 1', s: '4.922,50 lei' },
+      { ...on, n: 'Ceban Ilinca', info: 'Sep 2026 · a doua reamintire · părinte 1', s: '14.767,50 lei' },
+      { ...on, n: 'Lungu Daria', info: 'Aug–Sep 2026 · prima reamintire · părinte 2', s: '19.690,00 lei' },
+      { ...off, n: 'Popa Andrei', info: 'Debifat de tine · nu primește azi', s: '9.845,00 lei' },
+    ];
+    const debtRows = [
+      { n: 'Rusu Matei', m: 'Sep 2026', g: 'Marte', s: '4.922,50', sms: 'niciodată', bg: '#fff', op: '0' },
+      { n: 'Ceban Ilinca', m: 'Sep 2026', g: 'Venus', s: '14.767,50', sms: '24.09 · livrat', bg: '#fffaf0', op: '1' },
+      { n: 'Lungu Daria', m: 'Aug–Sep 2026', g: 'Neptun', s: '19.690,00', sms: '18.09 · livrat', bg: '#fff', op: '0' },
+    ];
+    const names = ['Amedeia','Matei','Ilinca','Daria','Andrei','Sofia','Luca','Maria','David','Ema','Victor','Alexia'];
+    const st = ['p','p','p','p','p','a','p','p','n','p','a','p'];
+    const bgOf = { p: '#e7f4ec', a: '#f4f1ea', n: '#fdf3d2' };
+    const eduKids = names.map((n, i) => ({ n, i: n.slice(0, 2).toUpperCase(), bg: bgOf[st[i]] }));
+    const poolSlots = [
+      { t: '09:30', g: 'Neptun', c: '9 copii · Antrenor: Pavel R.', st: 'Încheiată · 8/9', fg: '#2e6b4c', bg: '#fff', btn: 'Vezi', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+      { t: '10:30', g: 'Marte', c: '8 copii · Antrenor: Pavel R.', st: 'În curs', fg: '#a34f00', bg: '#fffaf0', btn: 'Marchează', btnBg: '#b85a00', btnFg: '#fff', btnBd: '#b85a00' },
+      { t: '11:30', g: 'Venus', c: '9 copii · Antrenor: Pavel R.', st: 'Urmează', fg: '#6b7780', bg: '#fff', btn: 'Marchează', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+    ];
+    const formRules = [
+      { t: 'Focus pe primul câmp', d: 'La deschidere, cursorul e în primul câmp gol. La editare, în câmpul pe care ai dat clic (ex. din banda 41a).' },
+      { t: 'Enter salvează, Esc închide', d: 'Enter în ultimul câmp sau Ctrl+Enter oriunde = butonul principal. Esc închide; cu modificări, întâi 40c.' },
+      { t: 'Tab în ordinea vizuală', d: 'Stânga → dreapta, sus → jos. Pastilele și cardurile de alegere se schimbă cu săgețile.' },
+      { t: 'Butonul principal mereu vizibil', d: 'Subsolul cu Salvează e fix în drawer; nu derulezi ca să ajungi la el.' },
+      { t: 'Erorile lângă câmp', d: 'Eroarea apare sub câmpul greșit, iar la salvare focusul sare la primul câmp cu eroare. Mesajul din subsol spune câte erori sunt.' },
+      { t: 'Salvarea nu închide brusc', d: 'Butonul arată „Salvez…”, apoi panoul se închide și apare 40b. Dacă salvarea eșuează, datele rămân în formular (41d).' },
+      { t: 'Un singur strat', d: 'Din drawer nu se deschide alt drawer. Confirmările sunt dialoguri mici, centrate, peste el.' },
+      { t: 'Lățimi fixe', d: 'Drawer 620px pentru formulare, 480px pentru detalii, dialog 440px. Nicio derulare orizontală (bug 2.1.0).' },
+    ];
+    const tone = { Achitări: ['#fcead3', '#a34f00'], Copii: ['#e4eef6', '#2c5a80'], Grupe: ['#e7f4ec', '#2e6b4c'], Prezența: ['#fdf3d2', '#7a5d00'] };
+    const histRows = [
+      { d: 'Azi', t: '10:42', m: 'Achitări', a: 'Achitare nouă · 9.845,00 lei', diff: 'Oct 2026 · numerar · curs 19,69', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Azi', t: '10:44', m: 'Achitări', a: 'Achitare anulată', diff: 'Anulată în 10 s după salvare', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Ieri', t: '16:05', m: 'Copii', a: 'Fișă modificată', diff: 'Telefon mamă: 069 111 222 → 069 123 456', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '24.09', t: '09:10', m: 'Prezența', a: 'Absență motivată', diff: '23.09 · Motiv: răceală', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '01.09', t: '08:30', m: 'Grupe', a: 'Mutată în grupă', diff: 'Marte → Neptun', who: 'Ana P.', pc: 'Recepție' },
+    ].map(r => ({ ...r, bg: tone[r.m][0], fg: tone[r.m][1] }));
+    const attn = [
+      { n: '7', t: 'Restanțe peste scadență', s: '34.460,00 lei · cea mai veche din august', btn: 'Vezi situația', bg: '#fce9ef', fg: '#b0284f' },
+      { n: '3', t: 'Copii cu date obligatorii lipsă', s: 'Telefon părinte, plan sau grupă', btn: 'Completează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '1', t: 'Prezența de ieri nemarcată', s: 'Grupa Venus · 12 copii', btn: 'Marchează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '2', t: 'Telefoane invalide', s: 'Nu primesc SMS', btn: 'Corectează', bg: '#f4f1ea', fg: '#5b666e' },
+      { n: '!', t: 'Backup-ul extern are 8 zile', s: 'Ultima copie pe stick: 24.09', btn: 'Fă backup', bg: '#f4f1ea', fg: '#5b666e' },
+    ];
+    return { fbPlans: plans };
+  }
+  __rv() {
     const rate = 19.62;
     const f2 = n => n.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const plans = [
@@ -235,6 +321,22 @@ class Component extends DCLogic {
     const history = [['Vi, 26.09', '19,62', 'BNM'], ['Jo, 25.09', '19,58', 'BNM'], ['Mi, 24.09', '19,55', 'BNM'], ['Ma, 23.09', '19,60', 'corectat'], ['Lu, 22.09', '19,57', 'BNM']]
       .map(([d, r, src]) => ({ d, r, src, fg: src === 'BNM' ? '#2e6b4c' : '#a34f00' }));
     if (over) { history[0] = { d: 'Vi, 26.09', r: '19,65', src: 'corectat', fg: '#a34f00' }; }
+    const rates = ['19,54','19,56','19,59','19,61','19,58','19,55','19,57','19,60','19,63','19,61','19,59','19,62','19,64','19,60','19,57','19,60','19,55','19,58', over ? '19,65' : '19,62'];
+    const cal = [{ d: '', r: '', bg: 'transparent', bd: 'none', dfg: '#fff', rfg: '#fff', tip: '' }];
+    let ri = 0, last = '';
+    for (let d = 1; d <= 30; d++) {
+      const dow = (d + 1) % 7; // 1 sept 2026 = marți
+      const weekend = dow === 6 || dow === 0;
+      const future = d > 26;
+      let r = '';
+      if (!future) { if (weekend) r = last; else { r = rates[ri++]; last = r; } }
+      if (d === 26) r = over ? '19,65' : '19,62';
+      const manual = d === 23 || (over && d === 26);
+      cal.push({ d: String(d), r, tip: future ? '' : weekend ? 'Cursul de vineri' : manual ? 'Corectat manual' : 'BNM',
+        bg: future ? 'transparent' : weekend ? '#f4f1ea' : manual ? '#fdf3d2' : '#faf7f1',
+        bd: d === 26 ? '1.5px solid #b85a00' : 'none',
+        dfg: d === 26 ? '#a34f00' : '#9aa3a9', rfg: weekend ? '#6b7780' : '#3a4750' });
+    }
     const G = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'], 'Fără grupă': ['#f4f1ea', '#6b7780'] };
     const fees = [
       ['Cerba Alexander', 'Contract #3 · 4 ani', 'Mars', 'Program mediu', 350, 350, '26', 0, 0],
@@ -271,7 +373,7 @@ class Component extends DCLogic {
         s, bg: ST[s][0], fg: ST[s][1], cta: rest > 0 ? 'Notifică' : 'Vezi fișa' };
     });
     return {
-      plans, history, fees, hist, status,
+      plans, history, cal, fees, hist, status,
       editing: this.state.editing,
       rateNow: over ? '19,65' : '19,62',
       rateSrc: over ? 'Corectat manual' : 'BNM · automat',

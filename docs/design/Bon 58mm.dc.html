@@ -26,11 +26,13 @@
         <div style="border-top:1px dashed #000"></div>
         <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:14px"><span>Copil</span><b style="text-align:right">Avram Maria</b><span>Grupa</span><b style="text-align:right">Mars</b><span>Plătitor</span><b style="text-align:right">Avram Valentin</b><span>Metodă</span><b style="text-align:right">Cash</b></div>
         <div style="border-top:1px dashed #000"></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Taxă sept. · integral</span><b>9.993,00</b></div>
-        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Taxă oct. · parțial</span><b>5.007,00</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Sept. · 500 € × 19,6873</span><b>9.843,65</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:14px"><span>Oct. · parțial</span><b>5.156,35</b></div>
         <div style="border-top:2px solid #000"></div>
         <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:800">TOTAL</span><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:28px;line-height:1">15.000,00 lei</span></div>
-        <div style="border:1.5px solid #000;border-radius:8px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between"><span>Rest octombrie</span><b>4.986,00 lei · 6 oct.</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Echivalent</span><span>761,91 €</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span>Curs BNM 24.09.2026</span><span>19,6873</span></div>
+        <div style="border:1.5px solid #000;border-radius:8px;padding:8px 10px;font-size:13px;display:flex;justify-content:space-between"><span>Rest octombrie</span><b>238,09 € · 6 oct.</b></div>
         <div style="display:flex;justify-content:center;gap:4px;padding:4px 0"><sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="width:22px;height:22px;border-radius:50%;border:1.5px solid #000;background:{{ m.bg }};color:{{ m.fg }};font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">{{ m.l }}</span></sc-for></div>
         <span style="text-align:center;font-size:11px">● achitat · ◐ parțial · ○ urmează</span>
         <div style="border-top:1px dashed #000"></div>
@@ -104,6 +106,35 @@
 
   </div>
   <div style="max-width:1100px;font-size:14px;color:#6b7780;line-height:1.55;text-wrap:pretty"><b style="color:#3a4750">Cum se tipărește:</b> în Achitări ⋯ → „Tipărește confirmarea” apare alegerea <b style="color:#3a4750">A4 · A5 · Bon 58 mm</b> (implicit se ține minte ultima). La 58 mm, pagina are <code>@page { size: 58mm auto; margin: 0 }</code>, lățime 48 mm, fără culori (<code>filter: grayscale(1)</code> pe logo). Imprimanta SK58 se alege în Windows ca imprimantă implicită pentru bonuri. „Închiderea zilei” se tipărește din Dashboard, seara.</div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+<div id="42c" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">42c</span><span style="font-size:16px;font-weight:700">Bon 58 mm · cu curs și rotunjire</span></div>
+      <div style="width:300px;background:#fff;padding:20px 18px;box-shadow:0 20px 50px rgba(58,71,80,.14);font-family:'Courier New',monospace;font-size:13px;line-height:1.45;color:#000;display:flex;flex-direction:column;gap:2px">
+        <b style="text-align:center;font-size:15px">GRĂDINIȚA STARTICA</b>
+        <span style="text-align:center">Filiala Buiucani</span>
+        <span style="text-align:center">str. Alba Iulia 75, Chișinău</span>
+        <span>--------------------------------</span>
+        <span>Bon nr. 0412      01.10.2026 10:42</span>
+        <span>Copil: Hudic Amedeia</span>
+        <span>Grupa: Neptun</span>
+        <span>--------------------------------</span>
+        <span>Program scurt · Oct 2026</span>
+        <span style="display:flex;justify-content:space-between"><span>250,00 € × 19,6873</span><span>4921,83</span></span>
+        <span style="display:flex;justify-content:space-between"><span>Rotunjire</span><span>+0,17</span></span>
+        <span>--------------------------------</span>
+        <b style="display:flex;justify-content:space-between;font-size:16px"><span>ACHITAT</span><span>4922,00 lei</span></b>
+        <span style="display:flex;justify-content:space-between"><span>Numerar</span><span>4922,00</span></span>
+        <span style="display:flex;justify-content:space-between"><span>Echivalent</span><span>250,01 €</span></span>
+        <span>--------------------------------</span>
+        <span>Curs BNM 01.10.2026: 19,6873</span>
+        <span>Restanță rămasă: 0,00 lei</span>
+        <span>Operator: Ana P.</span>
+        <span style="text-align:center;margin-top:6px">Mulțumim!</span>
+      </div>
+      <p style="width:300px;margin:0;font-size:13px;color:#6b7780;text-wrap:pretty">32 de caractere pe rând. Fără rotunjire: rândul lipsește. Plată parțială: „Rămân 21,83 lei pe Oct 2026”. Avans: rând „Avans Nov 2026  78,17”. Doar lei la total; € doar ca echivalent.</p>
+    </div>
+  </div>
 </section>
 </x-dc>
 <script type="text/x-dc" data-dc-script>

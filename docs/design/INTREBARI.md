@@ -420,7 +420,7 @@ N-am inclus restanța în suma precompletată pentru că F7 a decis explicit opu
 
 Blocajul de mai jos (istoric, păstrat) s-a rezolvat: §5.2 (verificare de versiune, GitHub Releases) e construit și în `master-v2` (`state.update` în `app-session-store.mjs`). Implementat acum:
 
-- **`AppBanner`** (`webapp/src/shared/ui/AppBanner.tsx`) — ton nou `'update'` (mint, `--mint-soft`/`--mint-ink`, exact culorile din artboard `Feedback 01-10.dc.html#42b`). Restul API-ului (message/action/onDismiss) era deja suficient — n-a fost nevoie de titlu/subtitlu/cerc „!” separate (spec COMPONENTE.md §0i permite explicit „cerc „!” 26px SAU text simplu”).
+- **`AppBanner`** (`webapp/src/shared/ui/AppBanner.tsx`) — ton nou `'update'` (mint, `--mint-soft`/`--mint-ink`, exact culorile din artboard `Actualizari.dc.html#42b`). Restul API-ului (message/action/onDismiss) era deja suficient — n-a fost nevoie de titlu/subtitlu/cerc „!” separate (spec COMPONENTE.md §0i permite explicit „cerc „!” 26px SAU text simplu”).
 - **Banda roz „Sincronizare oprită” (42a)** — `webapp/src/app/shell/sync-banner.ts` (`deriveSyncBanner`, pur, testat în `sync-banner.test.ts`): apare doar când sincronizarea e configurată ȘI conexiunea e `offline` sau `revoked` (nu și la `conflict`, care are deja propriul flux — cardul din sidebar + „Rezolvă” → `/conflicte` — și nici la `syncing`, care e sincronizare normală, nu oprită). Mesajul include numărul de modificări nesincronizate (`sync.pending`, de la `/api/sync/status`, deja expus); `revoked` primește acțiunea „Reconectează” → fila Sincronizare (`goToSyncTab`, deja existentă). Tonul `error` (roz) nu primește niciodată `onDismiss` — nu se poate închide, ca în spec.
 - **Banda mint „Actualizare gata” (42b)** — `webapp/src/app/shell/update-banner.ts` (`shouldShowUpdateBanner`/`dismissUpdateValue`, pure, testate): se închide cu ×, revine a doua zi (persistat în `localStorage`, cheia `appBanner.update.dismissedUntil`, cu `usePersistedState`) — și revine mai devreme dacă apare o versiune și mai nouă decât cea respinsă. Acțiunea „Ce e nou” deschide `releaseUrl` (sau `downloadUrl`, dacă primul lipsește) într-un tab nou.
 - **Prioritate, o singură bandă deodată** (spec): în `AppShell.tsx`, banda roz are întâietate — banda mint nu se calculează deloc cât timp cea roz e activă.
@@ -454,7 +454,7 @@ Am făcut partea care ține strict de bon (42c), fără să ating §9.1 (calculu
 - Teste: 15 la `full-backup.service.mjs` (inclusiv versiune blocată, bază lipsă, numărătoare alterată), 2 la `backup.routes.integration.test.mjs` prin HTTP real (calculator gol cu o filială, și cu o a doua filială adoptată), 1 la `branch-registry.test.mjs` (`replaceAll`).
 
 **Neatins, din scop (pașii 9-10 ai planului, nu cer explicit „42d” din prompt dar sunt dependențele lui de UI):**
-1. **Coada „La prima pornire fără date: alegere Backup/Sincronizare/De la zero”** — n-am găsit nimic din asta în `webapp/src/app/shell/StartupScreen.tsx` (doar progres/eroare/prea-lent) sau în altă parte. E un ecran nou de onboarding, nu o conectare de piese existente — l-am lăsat neconstruit ca să nu improvizez un design fără artboard dedicat (artboard-ul §11 citat de prompt e tot `Feedback 01-10.dc.html#42d`, dar nu descrie pașii ecranului, doar comportamentul din spate).
+1. **Coada „La prima pornire fără date: alegere Backup/Sincronizare/De la zero”** — n-am găsit nimic din asta în `webapp/src/app/shell/StartupScreen.tsx` (doar progres/eroare/prea-lent) sau în altă parte. E un ecran nou de onboarding, nu o conectare de piese existente — l-am lăsat neconstruit ca să nu improvizez un design fără artboard dedicat (artboard-ul §11 citat de prompt e tot `Prima pornire.dc.html#46a`, dar nu descrie pașii ecranului, doar comportamentul din spate).
 2. **`BackupPage.tsx`/`useRestore.ts`** nu știu încă să anunțe utilizatorul că, pentru o arhivă completă, restaurarea cere reîncărcarea completă a paginii (nu doar un refetch) — răspunsul `/api/restore` pentru o arhivă e `{ok:true}`, fără `state` inline (motivul: pot apărea/dispărea filiale întregi, nu doar rânduri). Până la actualizarea UI, un restore de arhivă din ecranul deja existent lasă clientul cu starea veche în memorie, până la un refresh manual (F5).
 
 **De decis / următorul pas:** cine construiește coada de prim-pornire (ecran nou + detectarea „fără date”) și actualizarea `BackupPage.tsx` pentru reload — următorul punct din plan, nu inclus aici ca să nu se suprapună cu alt agent care ar putea lucra pe `BackupPage.tsx`.
@@ -543,7 +543,7 @@ Nota „✅ Anulează după salvare (40b)” de mai sus spune explicit că achit
 2. **Filtrele „modul"/„calculator"/„perioadă" de pe Istoric** — spec-ul le cere alături de `SearchSelect`. Am construit doar filtrul pe înregistrare (`SearchSelect` cu copii/angajați/grupe/achitări + „înregistrările legate"); filtrele de modul/calculator/perioadă de pe `AuditLogPage` nu există încă (pagina nu avea niciun filtru înainte de §14 — am adăugat doar ce cerea explicit 45a). Rămân de construit separat.
 3. **„Cine" a făcut modificarea** — 45a cere „cine + calculatorul" pe fiecare rând. Nu există cont/utilizator nominal în aplicație, doar `sessionToken` (folosit azi exclusiv ca poartă de anulare la 40b, nu expus ca identitate pe rând). Rândurile din Istoric arată azi doar dată/modul/acțiune/diff, fără „cine" — nimic de afișat fără un sistem de conturi/nume de operator, care nu există.
 4. **Nota medicală** — am reparat un bug real descoperit cu ocazia asta: `redactSensitiveFields` redacta orice `healthNotes` nenul la același literal `'[date medicale]'`, deci o schimbare reală (Astm → Astm ușor) devenea invizibilă în diff (ambele părți identice după redactare). Adăugat `markSensitiveFieldChanges` în `audit-log.repository.mjs`, care marchează distinct partea „after" când valorile brute chiar diferă, fără să scrie conținutul — rândul arată „Notă medicală modificată", ca în spec.
-5. **Dashboard „Necesită atenție" — înlocuire, nu adăugare.** Cardul avea deja 4 surse vechi (achitări de urmărit/de verificat, achitări neasociate, vizite programate), construite într-o trecere anterioară. Artboard-ul autoritar (`Feedback 01-10.dc.html#45c`) descrie explicit cele 5 surse noi din §14 (bani/date/prezență/sistem) și „apar doar elementele cu acțiune... max. 5 rânduri" — sursele vechi nu se încadrează în această taxonomie și nu apar deloc în artboard. Am înlocuit integral `attentionItems` din `useDashboard.ts` cu cele 5 surse noi (restanțe, fișe incomplete, telefon invalid, prezență nemarcată, backup extern vechi), am eliminat `reviewCount`/`forceShow`/tonurile vechi. Dacă vreun alt agent concurent se aștepta la păstrarea surselor vechi alături de cele noi, aceasta e decizia luată — motivată de artboard, nu de interpretare liberă.
+5. **Dashboard „Necesită atenție" — înlocuire, nu adăugare.** Cardul avea deja 4 surse vechi (achitări de urmărit/de verificat, achitări neasociate, vizite programate), construite într-o trecere anterioară. Artboard-ul autoritar (`Dashboard.dc.html#45c`) descrie explicit cele 5 surse noi din §14 (bani/date/prezență/sistem) și „apar doar elementele cu acțiune... max. 5 rânduri" — sursele vechi nu se încadrează în această taxonomie și nu apar deloc în artboard. Am înlocuit integral `attentionItems` din `useDashboard.ts` cu cele 5 surse noi (restanțe, fișe incomplete, telefon invalid, prezență nemarcată, backup extern vechi), am eliminat `reviewCount`/`forceShow`/tonurile vechi. Dacă vreun alt agent concurent se aștepta la păstrarea surselor vechi alături de cele noi, aceasta e decizia luată — motivată de artboard, nu de interpretare liberă.
 6. **Rutele/parametrii literali din prompt** (`/situatia?filtru=restanta`, `/administrare/backup`) nu corespund rutelor reale din `routes.ts` (`/situatia-platilor`, `/backup-si-setari`) nici convenției de parametri existente (`useStatus` folosește `segment`, nu `filtru=restanta`). Am legat deep-link-urile la mecanismul real: `?segment=overdue` (Situația), `?filtru=incomplete`/`?filtru=telefon-invalid` (Copii, filtru nou „Telefon invalid" adăugat în `ChildrenToolbar`), `?data=&grupa=` (Prezența), navigare directă spre `settings` (Backup, pagină unică, fără parametru). Tratez asta ca o clarificare a formei literale din prompt, nu ca o gaură — fiecare link a fost testat să deschidă efectiv ecranul filtrat corect.
 
 **Nimic de decis din partea ta** — consemnat ca să nu pară scăpat din vedere; punctele 1-3 sunt candidați pentru o trecere viitoare dacă apare un sistem de roluri/conturi sau dacă se cer explicit filtrele calculator/perioadă.
@@ -933,17 +933,9 @@ O decizie tehnică luată pe loc, cu un implicit rezonabil aplicat, fără să o
    `undo.routes.mjs` să cunoască și `personalRepository` — nu am făcut asta neasumat, fiind o
    cuplare nouă între feature-urile `audit-log` și `personal`.
 
-## ✅ AUDIT-COD-02-10-B.md #4 — Luna (attendance, 18b) arată roster-ul curent al grupei, nu istoric — rezolvat 02.10 (PROMPT-CLAUDE-CODE-10.md §7)
+## AUDIT-COD-02-10-B.md #4 — Luna (attendance, 18b) arată roster-ul curent al grupei, nu istoric
 
-**Decizie (PROMPT-CLAUDE-CODE-10.md §7): varianta 1**, implicită — fără schimbare de schemă,
-fără istoric de apartenență la grupă (`groupHistory` rămâne neconstruit, opțiunea 2 de mai jos
-rămâne nealeasă). Doar un indiciu UI: textul „Copiii din grupa de azi” (12px, `--subtle`) sub
-titlu în Luna (18b) și pe foaia săptămânală (`WeeklySheetDialog` + foaia tipărită), vizibil doar
-când luna/săptămâna vizualizată nu e cea curentă (`isHistoricalMonth`/`isHistoricalWeek`, commit
-`4848fdf`). Limitarea de fond descrisă mai jos rămâne reală — indiciul doar o semnalează, ca
-administratorul să nu interpreteze greșit o lună/săptămână trecută după o mutare de grupă.
-
-(Istoric — întrebarea inițială, păstrată pentru context:)
+**Întrebare de produs, nerezolvată — las punctul deschis, nu aleg unilateral.**
 
 `webapp/src/features/attendance/useAttendanceMonth.ts:94-99` (și `WeeklySheet.tsx`/
 `WeeklySheetDialog.tsx`, același tipar) filtrează copiii dintr-o grupă, la Luna, după
@@ -966,80 +958,3 @@ Două opțiuni, ambele cu cost real:
 
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
-
-## PROMPT-CLAUDE-CODE-10.md §4 — numărătoarea locală de blocaj PIN (`usePinLock`) rămâne la 60s
-
-**Observație, nu o decizie blocantă — am mers mai departe fără să schimb nimic aici.**
-
-`pin.service.mjs` (server) a trecut blocajul după 5 greșeli de la 60 de secunde la 15 minute (§4).
-`webapp/src/shared/state/usePinLock.ts:44` are propriul `lockoutMs = 60_000` implicit, independent,
-pentru numărătoarea afișată în `LockedContent` — nimeni din `PinGate`/`LockedContent` nu-i dă
-`lockoutMs` explicit, deci rămâne 60s peste tot. Înainte de §4, cele două coincideau din
-întâmplare (ambele „un minut”); acum numărătoarea locală ajunge la 0 și reactivează câmpul de PIN
-la 60s, deși serverul tot respinge cu 429 („Așteaptă 15 minute.”) încă 14 minute — nu e un bug de
-securitate (greșeala repetată în fereastra asta nu mai incrementează `failedAttempts`, server-ul
-respinge înainte de verificarea PIN-ului), doar o numărătoare care arată gata prea devreme.
-Fix simplu dacă se dorește: `PinGate`/`LockedContent` să primească `lockoutMs={15 * 60 * 1000}`
-pentru ecranele legate de `pin.service.mjs`. Nu l-am aplicat neasumat — nu era în scopul §4 cerut.
-
-## §2 PROMPT-10 — toleranța de rotunjire: am implementat 5 lei (DECIZII 02.10), nu ±0,99 (PROMPT-10)
-
-**Nu e o întrebare deschisă, ci o deviere asumată de la text — consemnată ca atare.**
-
-`PROMPT-CLAUDE-CODE-10.md` §2 cere: „încasat ≠ datorat cu < 1 leu → `roundingDiff` pe plată (...
-validare ±0,99)”. Dar `DECIZII.md` (02.10, „Rotunjire la achitare”, intrare adăugată în aceeași zi,
-deci mai nouă) spune: „Diferență ≤ 5 lei = luna achitată, diferența salvată ca rotunjire. Peste =
-parțial / avans.” — iar `CLAUDE.md` pune explicit DECIZII înaintea oricărui alt document la un
-conflict de design.
-
-Cele două nu pot fi amândouă adevărate: testul deja existent în `record-schema.test.mjs`
-(„acceptă roundingDiff pozitiv sau negativ”, cu `roundingDiff: -1.83`) ar fi picat la o validare
-±0,99 — și exact cazul verbatim din `VERIFICARE-DUPA-PROMPT-8.md` §4 (taxă 4.921,83, încasat 4.920
-→ „achitat · rotunjire −1,83”) are o diferență de 1,83 lei, peste 0,99 dar sub 5. Am implementat
-toleranța **5 lei** (`PAYMENT_ROUNDING_TOLERANCE`, `src/shared/domain/record-schema.mjs`), folosită
-atât la validarea schemei cât și la `paymentRoundingDiff`/`autoAllocatePayment` — singura valoare
-care face testul existent și cele 4 cazuri din VERIFICARE să treacă simultan.
-
-**Rămâne neimplementat din DECIZII:** „Pasul și toleranța se setează pe filială” — nu există încă
-niciun loc de configurare per filială (nici în `ServicesSettings`, nici în vreun alt ecran de
-setări); `PAYMENT_ROUNDING_TOLERANCE` e o constantă fixă, la fel pentru toate filialele. Dacă
-produsul chiar vrea tolerație/pas configurabile per filială, e un punct nou de lucru (schemă de
-setări + UI), nu un fix în `payment-form.ts`.
-## ⏳ §8 PROMPT-10 Partea 2 — descărcarea instalerului e manuală (POST /api/update/download), nu automată „în fundal”
-
-`docs/design/screens/32-actualizari.md` (linia 15): „Descărcare în fundal în `<home>\Actualizari`,
-verificare SHA-256, instalare silențioasă la închidere” — sugerează o descărcare pornită singură
-de server, de îndată ce `checkForUpdate()` anunță o versiune nouă (la pornire sau o dată la 6 ore,
-`main.mjs`). Am construit în schimb doar o rută manuală (`POST /api/update/download`, declanșată
-de client) + `GET /api/update/pending` (interogare) — motivul: `app.checkForUpdate()` rulează deja
-necondiționat la pornire și la 6 ore (inclusiv în `test:e2e`, cu `fetch` real spre GitHub, dacă
-rulează cu rețea) — a lega automat o descărcare reală de acel ciclu ar fi riscat o descărcare reală
-de pe GitHub în orice rulare care ajunge pe acel cod, inclusiv `npm run test:e2e`, ceva ce regula
-de siguranță din `CLAUDE.md` („fully mockable/injectable... tests never actually execute a binary”)
-cere evitat explicit. Serviciul (`update-download.service.mjs`) și rutele sunt complet construite
-și testate (fetch injectat, niciun test atinge rețeaua reală) — rămâne de decis dacă `main.mjs`
-trebuie să cheme el însuși `POST /api/update/download` după un `checkForUpdate()` reușit (și, dacă
-da, cum se evită redescărcarea la fiecare 6 ore odată ce versiunea e deja `pendingUpdate()`).
-
-Corpul 426 e totodată mai sărac decât ar sugera același document — vezi intrarea de mai jos.
-
-## ⏳ §8 PROMPT-10 — corpul 426 e mai sărac decât `32-actualizari.md`; „oprite primele” (37d) neconstruit
-
-`docs/design/screens/32-actualizari.md` („Compatibilitate”) cere corpul 426 cu
-`{ minVersion, latestVersion, downloadUrl }` — construit acum doar cu `minVersion`
-(`sync-server/src/version-gate.mjs`). `sync-server/` nu cunoaște `latestVersion`/`downloadUrl`
-(acelea vin din GitHub Releases, citite doar de `update-check.service.mjs` în aplicație, nu în
-`sync-server/`, care rămâne fără nicio dependență externă) — a le adăuga ar cere fie noi
-variabile de mediu (`SYNC_LATEST_VERSION`/`SYNC_LATEST_DOWNLOAD_URL`, setate manual la fiecare
-deploy, dublând ce `scripts/release.mjs` scrie deja în `latest.json`), fie ca sync-server să
-cheme el însuși GitHub — ambele în afara celor 7 pași din PROMPT-10 §8 Partea 1. Las doar
-`minVersion`, suficient pentru banda „Sincronizare oprită” (37a/37c/42a) — clientul oricum
-citește `latestVersion`/`downloadUrl` din `update-check.service.mjs`, nu din 426.
-
-Neconstruit din 37d: „oprite primele, banner cu numărul lor” — adică la o ridicare de
-`SYNC_MIN_CLIENT_VERSION`, calculatoarele cu versiune veche ar trebui deconectate/oprite
-înaintea celor la zi, cu un banner care arată câte sunt. PROMPT-10 §8 Partea 3 cere explicit
-doar coloana „Versiune” din `DevicesList.tsx` (construită) — „oprite primele” + banner e o
-funcționalitate separată, nemenționată în pașii concreți ai Părții 1/3, care ar cere o decizie
-de produs (cine le oprește — admin manual din listă, sau automat la pornirea serverului cu
-noul `SYNC_MIN_CLIENT_VERSION`?) înainte de implementare.

@@ -1,10 +1,10 @@
 # Feedback 01.10 (seara) — plan de design + cod
 
-Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md`, `-9.md` (arhivate) → `PROMPT-CLAUDE-CODE-10.md`.
+Sursă: testarea utilizatorului pe 2.1.0. Design: artboard-urile 38–45 sunt acum în paginile de modul (02.10, seara); `arhiva/Feedback 01-10.dc.html` rămâne doar istoric.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md`, `-9.md` (arhivate) → `PROMPT-CLAUDE-CODE-10.md`.
 
 ## Stare (sync 02.10, 13:25) — PROMPT-9 §1–§9 închis (`c2c745e`) + AUDIT-COD-02-10 / -B
 
-Deschis acum → PROMPT-10: F4 test Chrome, 41d `toUserError`, 41f `roundingDiff`, `PinGate` pe ecrane, 36g goluri (instantaneu/pairing, `access.locked` live), 36c ton pe profil, 37 (426 + instalare automată), Toast story, COMPONENTE nepotriviri, Luna/grupă (Audit B #4). Operațional (tu): repo `startica-releases`, redesfășurare `sync-server`, rularea migrărilor §8/§9 pe date reale.
+Sync 02.10, 16:50: PROMPT-10 aproape închis (§2–§4, §6–§8 în cod). Resturi → PROMPT-11 §4 (numărătoare PIN 15 min, descărcare automată, 37d). Nou → PROMPT-11 §1–§3 (F15–F17). Operațional (tu): repo `startica-releases`, redesfășurare `sync-server`, migrările §8/§9 pe o copie.
 
 Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de testat manual (VERIFICARE-DUPA-PROMPT-8.md) · ⏸ pauză
 | # | Design | Cod |
@@ -23,17 +23,35 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F12 Curs BNM istoric | ✅ 38e | ✅ polling + calendar + backfill ✅ (`81f979c`); mutare în baza comună (`b0393e4`) — script de migrare scris și testat doar cu `startTestApplication` (date de test, temporare); nicio filială reală n-a fost migrată încă în această sesiune |
 | F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
+| F15 Plan mereu vizibil la Copil nou/Editează (gol = mesaj) | ✅ 15a, 15i | ⏳ PROMPT-11 §1 |
+| F16 Rotunjire la alegere, precompletat exact | ✅ 15b, 41f | ⏳ PROMPT-11 §2 (înlocuiește rotunjirea automată din PROMPT-10 §2) |
+| F17 MonthInput propriu (repartizare manuală) | ✅ 15j | ⏳ PROMPT-11 §3 |
+| F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ⏳ PROMPT-11 §5 |
+| F19 Subsoluri de formular diferite | ✅ 15k | ⏳ PROMPT-11 §6 |
+| Secțiuni ascunse fără date (tipar F15) | — | ⏳ PROMPT-11 §7 (audit) |
+| F20 Grupe → Carduri ≠ 4a (editor) | ✅ 4a | ⏳ PROMPT-11 §8 |
+| F21 Copii: sortare pe toate coloanele, antet corect | ✅ 2a | ⏳ PROMPT-11 §9 |
+| F22 Button link cu fundal („Vezi calendarul →”) | — | ⏳ PROMPT-11 §10 |
+| F23 Grafic Evoluția încasărilor | ✅ 1a refăcut | ⏳ PROMPT-11 §11 |
+| F24 Necesită atenție ≠ design (texte, prezența de azi) | ✅ 1a/45c | ⏳ PROMPT-11 §12 |
+| F25 Zile de naștere: gol fără „Următoarea” | ✅ 1b | ⏳ PROMPT-11 §13 |
+| F26 Meniul stâng (inițiale filială, bordură, card jos) | ✅ Sidebar a | ⏳ PROMPT-11 §14 |
+| F27 Antet module mai înalt (64px) | ✅ | ⏳ PROMPT-11 §15 |
+| F28 + Angajat: Funcția ca listă nativă | ✅ 23n | ⏳ PROMPT-11 §16 |
+| F29 Scrii doar în filiala deschisă (angajat cu alegere de filiale) | ✅ 23n, 23o | ⏳ PROMPT-11 §17 + audit |
+| F30 Salarii: nu se poate plăti, fără motiv | — | ⏳ PROMPT-11 §18 |
+| F31 Salariul nu se poate edita (formular gol, Bazin blocat) | — | ⏳ PROMPT-11 §19 |
 | C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
 | Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ✅ 40a/40c (`217250b`,`01f6881`); 40b complet — UndoToast cheltuială + arhivare 1 copil (`74f9317`+`fcbbc39`), apoi achitare/copil nou/mutare în grupă/avans + Grup frați 44b (`5112298`, PROMPT-9 §5; avans folosește `/api/personal/advances` remove, nu `/api/undo` generic — vezi INTREBARI.md) |
 | Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
-| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ PROMPT-10 §3 |
+| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ✅ PROMPT-10 §3 (`to-user-error.ts`) |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` |
 | Pontaj „Toți prezenți” (41b) | ✅ 41b | ✅ cod nou „P” (`ed33495`); distinct în grilă/legendă/tipar (PROMPT-9 §1.2) |
-| Rotunjire la achitare | ✅ 41f | ⏳ PROMPT-10 §2 — rândul de pe bon (42c) e gata (`5017824`), nimic nu scrie încă `roundingDiff` |
+| Rotunjire la achitare | ✅ 41f | ✅ PROMPT-10 §2 (`roundingDiff`, toleranță 5 lei) → schimbat de F16: precompletat exact, rotunjire la alegere (PROMPT-11 §2) |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d, 46a–46d | ✅ 42a/42b/42c (`86c744d`,`5017824`); 42d server (`7610e5f`…`4635ecc`); 46a–46d UI prima pornire + reîncărcare (`fc42764`) |
-| Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo = `adry999/startica-releases` ✅ cod (PROMPT-9 §1.1) — repo-ul însuși nu există încă pe GitHub, de creat manual; PROMPT-10 §8: `SYNC_MIN_CLIENT_VERSION` + 426 pe `sync-server` ✅ (`7e33eba`), client (`SyncIncompatibleError`, bandă roz „versiune prea veche”, card+pastilă sidebar) ✅ (`88c51ae`), descărcare+verificare SHA-256 a instalerului + spawn detașat la închidere (`shutdownServer`/`close` din `create-application.mjs`, nu `main.mjs`) ✅ server (`c2f6434`), bandă verde „se instalează când închizi aplicația” + buton „Descarcă” ✅ client (`3309c31`), coloana Versiune pe lista de calculatoare ✅ (vezi commit-ul următor); rămân manuale/operaționale: crearea repo-ului pe GitHub, publicarea reală a unui release, pornirea descărcării automate în fundal (acum doar manual, din bandă) — vezi INTREBARI.md pentru goluri (corpul 426 fără `latestVersion`/`downloadUrl`, 37d „oprite primele” neconstruit) |
+| Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo = `adry999/startica-releases` ✅ cod (PROMPT-9 §1.1) — repo-ul însuși nu există încă pe GitHub, de creat manual; 426 + instalare automată rămân |
 | Profiluri calculator (§5.3) | ✅ 36a–36h | ✅ server + sync (`be573f4`…`0969da7`); strat client 36a–36f ✅ PROMPT-9 §2 (`cc27549`…`1eda866`) — ModuleGuard + `profil.blocked` (36f), meniu filtrat (36d), card sincronizare „Profil X · acces limitat” (36d), fișă copil doar-citire (36e), pairing cu alegere profil + matrice Personalizat (36a/36b), listă calculatoare cu coloana Profil + „Schimbă” (36c); pașii 1+2 din 36a țin într-un singur dialog (simplificare V1), matricea 36b fără grupe de titlu, rândul Administrare informativ, nu interactiv; test de arhitectură client (R12, architecture.test.ts) verifică moduleId pe fiecare rută; 36g/36h ✅ PROMPT-9 §7 (`47b12d8`,`2ed0fc5`,`a172ae0`,`1466d69`) — istoric sincronizat între calculatoare + PIN generalizat pe module; fără ștergere locală (02.10, verificat — niciun cod nou nu șterge date la restrângere); `sync-server` de redesfășurat |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` |
@@ -101,3 +119,12 @@ Formularul iese din drawer pe dreapta (Data nașterii, Scadență, „Program lu
 
 ## Ordinea propusă pentru Claude Code
 F5 → F6 (backup, risc de date) → F4 → F1 → F2/F3 → F7 → F9 → F12 → F11 → F13 → F8.
+
+## F15. Planul dispare din Copil nou / Editează (02.10)
+Secțiunea Plan era ascunsă când filiala nu are planuri. Decizie: apare mereu; fără planuri, mesaj „Nu sunt planuri setate” + „Setează planurile” + taxa manuală. Design `Formulare.dc.html#15i`. Cod: PROMPT-11 §1.
+
+## F16. Rotunjire la alegere (02.10)
+650 € × 20,1068 = 13.069,42 era precompletat 13.069. Decizie: se precompletează suma exactă; pastile „Exact / ↓ leu / ↑ leu / 10 lei” pentru rotunjire. Design `#41f`, `#15b`. Cod: PROMPT-11 §2.
+
+## F17. Selector de lună al browserului în repartizarea manuală (02.10)
+Decizie: `MonthInput` cu popover propriu (MonthPicker 30b), luni în română, stare pe lună. Design `#15j`. Cod: PROMPT-11 §3.

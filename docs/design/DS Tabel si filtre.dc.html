@@ -15,6 +15,58 @@
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Același tabel și aceeași bară de filtre pe Copii, Achitări, Cheltuieli, Vizite, Personal, Candidați, Mesaje SMS și Istoric. <a href="#27a">27a</a> tabelul complet: bară, filtre active, sortare, selecție, paginare. <a href="#27b">27b</a> antetul de coloană și sortarea. <a href="#27c">27c</a> tipuri de celulă. <a href="#27d">27d</a> stările rândului. <a href="#27e">27e</a> filtrele: pastile, meniu cu opțiuni, perioadă, filtre active. <a href="#27f">27f</a> grupare, subsol cu totaluri, gol, încărcare, fără rezultate. <a href="#27g">27g</a> bara de selecție. <a href="#27h">27h</a> coloane, densitate, export.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+<div id="38a" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">38a</span><span style="font-size:16px;font-weight:700">F1 · Paginare în toate tabelele</span></div>
+      <div style="width:900px;background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 120px;gap:12px;padding:12px 22px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9aa3a9;border-bottom:1px solid #ede7dc"><span>Copil</span><span>Grupă</span><span>Plată Oct</span><span style="text-align:right">Sumă</span></div>
+        <sc-for list="{{ fbRows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 120px;gap:12px;padding:12px 22px;font-size:14px;border-bottom:1px solid #f3eee5;align-items:center"><span style="font-weight:700">{{ r.n }}</span><span style="color:#6b7780">{{ r.g }}</span><span><span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:#e7f4ec;color:#2e6b4c">Achitat</span></span><span style="text-align:right;font-weight:800">{{ r.s }}</span></div>
+        </sc-for>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 22px">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px;color:#6b7780"><span style="display:flex;align-items:center;gap:6px">Pe pagină <span style="padding:5px 10px;border-radius:10px;border:1px solid #ede7dc;font-weight:800;color:#3a4750">25 ▾</span></span><span>26–50 din 312</span></div>
+          <nav style="display:flex;align-items:center;gap:4px;font-size:14px;font-weight:800">
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid #ede7dc">‹</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center">1</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#3a4750;color:#fff">2</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center">3</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center">4</span>
+            <span style="min-width:28px;text-align:center;color:#9aa3a9">…</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center">13</span>
+            <span style="width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px solid #ede7dc">›</span>
+          </nav>
+        </div>
+      </div>
+      <div style="width:900px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;font-size:13px">
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px"><b>1 pagină</b><span style="color:#6b7780">Paginarea nu apare. Rămâne doar „18 copii”.</span></div>
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px"><b>Pagina 1 din 13</b><span style="font-weight:800;letter-spacing:.06em"><span style="color:#c9c4ba">‹</span>  <span style="color:#3a4750;text-decoration:underline">1</span>  2  3  4  5  …  13  ›</span></div>
+        <div style="background:#fff;border:1px solid #ede7dc;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px"><b>Pagina 7 din 13</b><span style="font-weight:800;letter-spacing:.06em">‹  1  …  6  <span style="color:#3a4750;text-decoration:underline">7</span>  8  …  13  ›</span></div>
+      </div>
+      <p style="width:900px;margin:0;font-size:13px;color:#6b7780;text-wrap:pretty">25 de rânduri pe pagină. Maximum 7 poziții, cu prima și ultima pagină mereu vizibile. Săgețile sunt dezactivate la capete. Pagina revine la 1 când se schimbă filtrul sau căutarea. Se aplică la Copii, Achitări, Cheltuieli, Vizite, Personal, Istoric.</p>
+    </div>
+<div id="41e" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">41e</span><span style="font-size:16px;font-weight:700">Filtru de perioadă cu presetări (Achitări, Cheltuieli)</span></div>
+      <div style="width:620px;background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(58,71,80,.16);padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;background:#3a4750;color:#fff">Luna asta</span>
+          <span style="font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;border:1.5px solid #ede7dc">Luna trecută</span>
+          <span style="font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;border:1.5px solid #ede7dc">Ultimele 30 de zile</span>
+          <span style="font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;border:1.5px solid #ede7dc">An școlar 2026–27</span>
+          <span style="font-size:13px;font-weight:800;padding:7px 14px;border-radius:999px;border:1.5px solid #ede7dc">Tot</span>
+        </div>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">De la<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-weight:700">01.10.2026</span></label>
+          <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700">Până la<span style="padding:10px 14px;border-radius:12px;border:1px solid #c9c4ba;font-weight:700">31.10.2026</span></label>
+        </div>
+        <span style="font-size:12px;color:#6b7780">Dacă schimbi o dată, presetarea devine „Interval”. „An școlar” = 1 sep – 31 aug.</span>
+      </div>
+      <div style="width:620px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:#6b7780">În bara de filtre, închis:</span>
+        <span style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1.5px solid #ede7dc;background:#fff;font-size:13px;font-weight:800">Ultimele 30 de zile <span style="color:#9aa3a9;font-weight:700">02.09 – 01.10</span> <span style="color:#9aa3a9">▾</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
     <div id="27a" style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">27a</span><span style="font-size:16px;font-weight:700">DataTable · anatomie completă</span></div>
@@ -205,7 +257,94 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  renderVals() {
+  renderVals() { return Object.assign(this.__fb(), this.__rv()); }
+  __fb() {
+    const rows = [
+      { n: 'Hudic Amedeia', g: 'Neptun', s: '9.845,00' },
+      { n: 'Rusu Matei', g: 'Marte', s: '4.922,50' },
+      { n: 'Ceban Ilinca', g: 'Venus', s: '14.767,50' },
+    ];
+    const plans = [
+      { name: 'Program scurt', eur: '250', mdl: '4.922,50', kids: '14 copii', bar: '#ef8a1d' },
+      { name: 'Program mediu', eur: '500', mdl: '9.845,00', kids: '41 copii', bar: '#3f9a6b' },
+      { name: 'Program lung', eur: '750', mdl: '14.767,50', kids: '22 copii', bar: '#f9d257' },
+    ];
+    const rates = ['19,61','19,63','19,60','19,58','19,64','19,66','19,65','19,62','19,59','19,61','19,67','19,70','19,68','19,66','19,69','19,71','19,72','19,70','19,68','19,69','19,69','19,66'];
+    const cal = [];
+    for (let i = 0; i < 1; i++) cal.push({ d: '', r: '', bg: 'transparent', dfg: '#fff', rfg: '#fff' });
+    let ri = 0, last = '';
+    for (let d = 1; d <= 30; d++) {
+      const dow = (d) % 7; // 1 Sep 2026 = marți → index 1
+      const weekend = dow === 5 || dow === 6;
+      let r;
+      if (weekend) r = last; else { r = rates[ri++ % rates.length]; last = r; }
+      const manual = d === 18;
+      cal.push({ d: String(d), r, bg: weekend ? '#f4f1ea' : manual ? '#fdf3d2' : '#faf7f1', dfg: '#9aa3a9', rfg: weekend ? '#9aa3a9' : '#3a4750' });
+    }
+    const roles = [
+      { n: 'Educator', dep: 'Educațional', c: '9 angajați', dot: '#ef8a1d' },
+      { n: 'Educator ajutor', dep: 'Educațional', c: '6 angajați', dot: '#ef8a1d' },
+      { n: 'Bucătar', dep: 'Bucătărie', c: '2 angajați', dot: '#3f9a6b' },
+      { n: 'Antrenor înot', dep: 'Bazin', c: '1 angajat', dot: '#2c5a80' },
+      { n: 'Administrator', dep: 'Administrație', c: '1 angajat', dot: '#e9527c' },
+    ];
+    const backup = [
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Buiucani', c: '2.104' },
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Centru', c: '1.377' },
+      { n: 'Personal, funcții, salarii, avansuri, pontaj', src: 'Comun', c: '612' },
+      { n: 'Curs BNM (zile)', src: 'Comun', c: '214' },
+      { n: 'Filiale, planuri, setări', src: 'Comun', c: '11' },
+      { n: 'Istoric acțiuni', src: 'toate', c: 'inclus' },
+    ];
+    const on = { box: '✓', boxBg: '#3a4750' }, off = { box: '', boxBg: '#e0d5c2' };
+    const autoBatch = [
+      { ...on, n: 'Rusu Matei', info: 'Sep 2026 · prima reamintire · părinte 1', s: '4.922,50 lei' },
+      { ...on, n: 'Ceban Ilinca', info: 'Sep 2026 · a doua reamintire · părinte 1', s: '14.767,50 lei' },
+      { ...on, n: 'Lungu Daria', info: 'Aug–Sep 2026 · prima reamintire · părinte 2', s: '19.690,00 lei' },
+      { ...off, n: 'Popa Andrei', info: 'Debifat de tine · nu primește azi', s: '9.845,00 lei' },
+    ];
+    const debtRows = [
+      { n: 'Rusu Matei', m: 'Sep 2026', g: 'Marte', s: '4.922,50', sms: 'niciodată', bg: '#fff', op: '0' },
+      { n: 'Ceban Ilinca', m: 'Sep 2026', g: 'Venus', s: '14.767,50', sms: '24.09 · livrat', bg: '#fffaf0', op: '1' },
+      { n: 'Lungu Daria', m: 'Aug–Sep 2026', g: 'Neptun', s: '19.690,00', sms: '18.09 · livrat', bg: '#fff', op: '0' },
+    ];
+    const names = ['Amedeia','Matei','Ilinca','Daria','Andrei','Sofia','Luca','Maria','David','Ema','Victor','Alexia'];
+    const st = ['p','p','p','p','p','a','p','p','n','p','a','p'];
+    const bgOf = { p: '#e7f4ec', a: '#f4f1ea', n: '#fdf3d2' };
+    const eduKids = names.map((n, i) => ({ n, i: n.slice(0, 2).toUpperCase(), bg: bgOf[st[i]] }));
+    const poolSlots = [
+      { t: '09:30', g: 'Neptun', c: '9 copii · Antrenor: Pavel R.', st: 'Încheiată · 8/9', fg: '#2e6b4c', bg: '#fff', btn: 'Vezi', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+      { t: '10:30', g: 'Marte', c: '8 copii · Antrenor: Pavel R.', st: 'În curs', fg: '#a34f00', bg: '#fffaf0', btn: 'Marchează', btnBg: '#b85a00', btnFg: '#fff', btnBd: '#b85a00' },
+      { t: '11:30', g: 'Venus', c: '9 copii · Antrenor: Pavel R.', st: 'Urmează', fg: '#6b7780', bg: '#fff', btn: 'Marchează', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+    ];
+    const formRules = [
+      { t: 'Focus pe primul câmp', d: 'La deschidere, cursorul e în primul câmp gol. La editare, în câmpul pe care ai dat clic (ex. din banda 41a).' },
+      { t: 'Enter salvează, Esc închide', d: 'Enter în ultimul câmp sau Ctrl+Enter oriunde = butonul principal. Esc închide; cu modificări, întâi 40c.' },
+      { t: 'Tab în ordinea vizuală', d: 'Stânga → dreapta, sus → jos. Pastilele și cardurile de alegere se schimbă cu săgețile.' },
+      { t: 'Butonul principal mereu vizibil', d: 'Subsolul cu Salvează e fix în drawer; nu derulezi ca să ajungi la el.' },
+      { t: 'Erorile lângă câmp', d: 'Eroarea apare sub câmpul greșit, iar la salvare focusul sare la primul câmp cu eroare. Mesajul din subsol spune câte erori sunt.' },
+      { t: 'Salvarea nu închide brusc', d: 'Butonul arată „Salvez…”, apoi panoul se închide și apare 40b. Dacă salvarea eșuează, datele rămân în formular (41d).' },
+      { t: 'Un singur strat', d: 'Din drawer nu se deschide alt drawer. Confirmările sunt dialoguri mici, centrate, peste el.' },
+      { t: 'Lățimi fixe', d: 'Drawer 620px pentru formulare, 480px pentru detalii, dialog 440px. Nicio derulare orizontală (bug 2.1.0).' },
+    ];
+    const tone = { Achitări: ['#fcead3', '#a34f00'], Copii: ['#e4eef6', '#2c5a80'], Grupe: ['#e7f4ec', '#2e6b4c'], Prezența: ['#fdf3d2', '#7a5d00'] };
+    const histRows = [
+      { d: 'Azi', t: '10:42', m: 'Achitări', a: 'Achitare nouă · 9.845,00 lei', diff: 'Oct 2026 · numerar · curs 19,69', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Azi', t: '10:44', m: 'Achitări', a: 'Achitare anulată', diff: 'Anulată în 10 s după salvare', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Ieri', t: '16:05', m: 'Copii', a: 'Fișă modificată', diff: 'Telefon mamă: 069 111 222 → 069 123 456', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '24.09', t: '09:10', m: 'Prezența', a: 'Absență motivată', diff: '23.09 · Motiv: răceală', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '01.09', t: '08:30', m: 'Grupe', a: 'Mutată în grupă', diff: 'Marte → Neptun', who: 'Ana P.', pc: 'Recepție' },
+    ].map(r => ({ ...r, bg: tone[r.m][0], fg: tone[r.m][1] }));
+    const attn = [
+      { n: '7', t: 'Restanțe peste scadență', s: '34.460,00 lei · cea mai veche din august', btn: 'Vezi situația', bg: '#fce9ef', fg: '#b0284f' },
+      { n: '3', t: 'Copii cu date obligatorii lipsă', s: 'Telefon părinte, plan sau grupă', btn: 'Completează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '1', t: 'Prezența de ieri nemarcată', s: 'Grupa Venus · 12 copii', btn: 'Marchează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '2', t: 'Telefoane invalide', s: 'Nu primesc SMS', btn: 'Corectează', bg: '#f4f1ea', fg: '#5b666e' },
+      { n: '!', t: 'Backup-ul extern are 8 zile', s: 'Ultima copie pe stick: 24.09', btn: 'Fă backup', bg: '#f4f1ea', fg: '#5b666e' },
+    ];
+    return { fbRows: rows };
+  }
+  __rv() {
     const h = React.createElement;
     const cols = '16px 90px minmax(0,1.6fr) 90px 90px 110px 100px 32px';
     const G = { Mars: ['#fcead3', '#a34f00', '#f6d3ad'], Soare: ['#e7f4ec', '#2e6b4c', '#c6e6d3'], Stele: ['#fce9ef', '#b0284f', '#f6c6d5'], Luna: ['#fdf3d2', '#7a5d00', '#f6e3a6'] };

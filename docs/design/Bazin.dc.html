@@ -15,6 +15,19 @@
     <p style="margin:0;font-size:17px;line-height:1.5;color:#6b7780;text-wrap:pretty">Pagină nouă în meniu, sub Prezența, la ambele filiale. Fiecare copil are o oră fixă pe săptămână. <a href="#22a">22a</a>: săptămâna, cu prezența la bazin marcată direct pe program. <a href="#22b">22b</a>: programare nouă. <a href="#22c">22c</a>: luna, cu suma de încasat de la fiecare copil și salariul antrenorului, ambele calculate din prezențe. <a href="#22d">22d</a>: setările bazinului.</p>
   </div>
   <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
+<div id="43b" style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">43b</span><span style="font-size:16px;font-weight:700">Bazin · pagina „Azi”</span></div>
+      <div style="width:760px;background:#fff;border:1px solid #ede7dc;border-radius:22px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid #ede7dc"><b style="flex:1;font-family:'Baloo 2',sans-serif;font-size:22px">Bazin · joi, 2 octombrie</b><span style="font-size:13px;color:#6b7780">3 ședințe · 26 copii</span></div>
+        <sc-for list="{{ fbPoolSlots }}" as="s" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:90px minmax(0,1fr) 120px 150px;gap:14px;align-items:center;padding:14px 22px;border-bottom:1px solid #f3eee5;background:{{ s.bg }}"><b style="font-family:'Baloo 2',sans-serif;font-size:18px">{{ s.t }}</b><div style="display:flex;flex-direction:column"><b style="font-size:14px">{{ s.g }}</b><span style="font-size:12px;color:#6b7780">{{ s.c }}</span></div><span style="font-size:13px;font-weight:800;color:{{ s.fg }}">{{ s.st }}</span><span style="justify-self:end;padding:7px 14px;border-radius:999px;font-weight:800;font-size:13px;background:{{ s.btnBg }};color:{{ s.btnFg }};border:1.5px solid {{ s.btnBd }}">{{ s.btn }}</span></div>
+        </sc-for>
+      </div>
+      <p style="width:760px;margin:0;font-size:13px;color:#6b7780;text-wrap:pretty">Ședința în curs e evidențiată. „Marchează” deschide prezența la bazin pe ședința respectivă. Fără plăți și abonamente pe acest profil; doar cine vine și cine a lipsit.</p>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:72px;flex-wrap:wrap;align-items:flex-start">
 
     <div id="22a" style="display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:center;gap:12px"><span style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:18px;background:#ef8a1d;color:#fff;border-radius:10px;padding:2px 12px">22a</span><span style="font-size:16px;font-weight:700">Săptămâna · clic pe copil marchează prezența</span></div>
@@ -167,7 +180,94 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   state = { st: {} };
-  renderVals() {
+  renderVals() { return Object.assign(this.__fb(), this.__rv()); }
+  __fb() {
+    const rows = [
+      { n: 'Hudic Amedeia', g: 'Neptun', s: '9.845,00' },
+      { n: 'Rusu Matei', g: 'Marte', s: '4.922,50' },
+      { n: 'Ceban Ilinca', g: 'Venus', s: '14.767,50' },
+    ];
+    const plans = [
+      { name: 'Program scurt', eur: '250', mdl: '4.922,50', kids: '14 copii', bar: '#ef8a1d' },
+      { name: 'Program mediu', eur: '500', mdl: '9.845,00', kids: '41 copii', bar: '#3f9a6b' },
+      { name: 'Program lung', eur: '750', mdl: '14.767,50', kids: '22 copii', bar: '#f9d257' },
+    ];
+    const rates = ['19,61','19,63','19,60','19,58','19,64','19,66','19,65','19,62','19,59','19,61','19,67','19,70','19,68','19,66','19,69','19,71','19,72','19,70','19,68','19,69','19,69','19,66'];
+    const cal = [];
+    for (let i = 0; i < 1; i++) cal.push({ d: '', r: '', bg: 'transparent', dfg: '#fff', rfg: '#fff' });
+    let ri = 0, last = '';
+    for (let d = 1; d <= 30; d++) {
+      const dow = (d) % 7; // 1 Sep 2026 = marți → index 1
+      const weekend = dow === 5 || dow === 6;
+      let r;
+      if (weekend) r = last; else { r = rates[ri++ % rates.length]; last = r; }
+      const manual = d === 18;
+      cal.push({ d: String(d), r, bg: weekend ? '#f4f1ea' : manual ? '#fdf3d2' : '#faf7f1', dfg: '#9aa3a9', rfg: weekend ? '#9aa3a9' : '#3a4750' });
+    }
+    const roles = [
+      { n: 'Educator', dep: 'Educațional', c: '9 angajați', dot: '#ef8a1d' },
+      { n: 'Educator ajutor', dep: 'Educațional', c: '6 angajați', dot: '#ef8a1d' },
+      { n: 'Bucătar', dep: 'Bucătărie', c: '2 angajați', dot: '#3f9a6b' },
+      { n: 'Antrenor înot', dep: 'Bazin', c: '1 angajat', dot: '#2c5a80' },
+      { n: 'Administrator', dep: 'Administrație', c: '1 angajat', dot: '#e9527c' },
+    ];
+    const backup = [
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Buiucani', c: '2.104' },
+      { n: 'Copii, grupe, achitări, cheltuieli', src: 'Centru', c: '1.377' },
+      { n: 'Personal, funcții, salarii, avansuri, pontaj', src: 'Comun', c: '612' },
+      { n: 'Curs BNM (zile)', src: 'Comun', c: '214' },
+      { n: 'Filiale, planuri, setări', src: 'Comun', c: '11' },
+      { n: 'Istoric acțiuni', src: 'toate', c: 'inclus' },
+    ];
+    const on = { box: '✓', boxBg: '#3a4750' }, off = { box: '', boxBg: '#e0d5c2' };
+    const autoBatch = [
+      { ...on, n: 'Rusu Matei', info: 'Sep 2026 · prima reamintire · părinte 1', s: '4.922,50 lei' },
+      { ...on, n: 'Ceban Ilinca', info: 'Sep 2026 · a doua reamintire · părinte 1', s: '14.767,50 lei' },
+      { ...on, n: 'Lungu Daria', info: 'Aug–Sep 2026 · prima reamintire · părinte 2', s: '19.690,00 lei' },
+      { ...off, n: 'Popa Andrei', info: 'Debifat de tine · nu primește azi', s: '9.845,00 lei' },
+    ];
+    const debtRows = [
+      { n: 'Rusu Matei', m: 'Sep 2026', g: 'Marte', s: '4.922,50', sms: 'niciodată', bg: '#fff', op: '0' },
+      { n: 'Ceban Ilinca', m: 'Sep 2026', g: 'Venus', s: '14.767,50', sms: '24.09 · livrat', bg: '#fffaf0', op: '1' },
+      { n: 'Lungu Daria', m: 'Aug–Sep 2026', g: 'Neptun', s: '19.690,00', sms: '18.09 · livrat', bg: '#fff', op: '0' },
+    ];
+    const names = ['Amedeia','Matei','Ilinca','Daria','Andrei','Sofia','Luca','Maria','David','Ema','Victor','Alexia'];
+    const st = ['p','p','p','p','p','a','p','p','n','p','a','p'];
+    const bgOf = { p: '#e7f4ec', a: '#f4f1ea', n: '#fdf3d2' };
+    const eduKids = names.map((n, i) => ({ n, i: n.slice(0, 2).toUpperCase(), bg: bgOf[st[i]] }));
+    const poolSlots = [
+      { t: '09:30', g: 'Neptun', c: '9 copii · Antrenor: Pavel R.', st: 'Încheiată · 8/9', fg: '#2e6b4c', bg: '#fff', btn: 'Vezi', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+      { t: '10:30', g: 'Marte', c: '8 copii · Antrenor: Pavel R.', st: 'În curs', fg: '#a34f00', bg: '#fffaf0', btn: 'Marchează', btnBg: '#b85a00', btnFg: '#fff', btnBd: '#b85a00' },
+      { t: '11:30', g: 'Venus', c: '9 copii · Antrenor: Pavel R.', st: 'Urmează', fg: '#6b7780', bg: '#fff', btn: 'Marchează', btnBg: '#fff', btnFg: '#3a4750', btnBd: '#ede7dc' },
+    ];
+    const formRules = [
+      { t: 'Focus pe primul câmp', d: 'La deschidere, cursorul e în primul câmp gol. La editare, în câmpul pe care ai dat clic (ex. din banda 41a).' },
+      { t: 'Enter salvează, Esc închide', d: 'Enter în ultimul câmp sau Ctrl+Enter oriunde = butonul principal. Esc închide; cu modificări, întâi 40c.' },
+      { t: 'Tab în ordinea vizuală', d: 'Stânga → dreapta, sus → jos. Pastilele și cardurile de alegere se schimbă cu săgețile.' },
+      { t: 'Butonul principal mereu vizibil', d: 'Subsolul cu Salvează e fix în drawer; nu derulezi ca să ajungi la el.' },
+      { t: 'Erorile lângă câmp', d: 'Eroarea apare sub câmpul greșit, iar la salvare focusul sare la primul câmp cu eroare. Mesajul din subsol spune câte erori sunt.' },
+      { t: 'Salvarea nu închide brusc', d: 'Butonul arată „Salvez…”, apoi panoul se închide și apare 40b. Dacă salvarea eșuează, datele rămân în formular (41d).' },
+      { t: 'Un singur strat', d: 'Din drawer nu se deschide alt drawer. Confirmările sunt dialoguri mici, centrate, peste el.' },
+      { t: 'Lățimi fixe', d: 'Drawer 620px pentru formulare, 480px pentru detalii, dialog 440px. Nicio derulare orizontală (bug 2.1.0).' },
+    ];
+    const tone = { Achitări: ['#fcead3', '#a34f00'], Copii: ['#e4eef6', '#2c5a80'], Grupe: ['#e7f4ec', '#2e6b4c'], Prezența: ['#fdf3d2', '#7a5d00'] };
+    const histRows = [
+      { d: 'Azi', t: '10:42', m: 'Achitări', a: 'Achitare nouă · 9.845,00 lei', diff: 'Oct 2026 · numerar · curs 19,69', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Azi', t: '10:44', m: 'Achitări', a: 'Achitare anulată', diff: 'Anulată în 10 s după salvare', who: 'Ana P.', pc: 'Recepție' },
+      { d: 'Ieri', t: '16:05', m: 'Copii', a: 'Fișă modificată', diff: 'Telefon mamă: 069 111 222 → 069 123 456', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '24.09', t: '09:10', m: 'Prezența', a: 'Absență motivată', diff: '23.09 · Motiv: răceală', who: 'Elena C.', pc: 'Educator Neptun' },
+      { d: '01.09', t: '08:30', m: 'Grupe', a: 'Mutată în grupă', diff: 'Marte → Neptun', who: 'Ana P.', pc: 'Recepție' },
+    ].map(r => ({ ...r, bg: tone[r.m][0], fg: tone[r.m][1] }));
+    const attn = [
+      { n: '7', t: 'Restanțe peste scadență', s: '34.460,00 lei · cea mai veche din august', btn: 'Vezi situația', bg: '#fce9ef', fg: '#b0284f' },
+      { n: '3', t: 'Copii cu date obligatorii lipsă', s: 'Telefon părinte, plan sau grupă', btn: 'Completează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '1', t: 'Prezența de ieri nemarcată', s: 'Grupa Venus · 12 copii', btn: 'Marchează', bg: '#fdf3d2', fg: '#7a5d00' },
+      { n: '2', t: 'Telefoane invalide', s: 'Nu primesc SMS', btn: 'Corectează', bg: '#f4f1ea', fg: '#5b666e' },
+      { n: '!', t: 'Backup-ul extern are 8 zile', s: 'Ultima copie pe stick: 24.09', btn: 'Fă backup', bg: '#f4f1ea', fg: '#5b666e' },
+    ];
+    return { fbPoolSlots: poolSlots };
+  }
+  __rv() {
     const G = { Mars: ['#fcead3', '#a34f00'], Soare: ['#e7f4ec', '#2e6b4c'] };
     const kids = { 'Avram Maria': 'Mars', 'Bivol Eva': 'Mars', 'Conea Timur': 'Mars', 'Lungu Matei': 'Mars', 'Popa David': 'Mars', 'Rusu Ana': 'Mars', 'Ursu Sofia': 'Mars', 'Hudic Amedeia': 'Mars', 'Coceva Alisa': 'Soare', 'Brinza Iustina': 'Soare', 'Ciobanu Luca': 'Soare', 'Dodon Mira': 'Soare', 'Istrati Ema': 'Soare', 'Moraru Tudor': 'Soare', 'Sirbu Iana': 'Soare', 'Gutu Andrei': 'Soare' };
     const times = ['09:00', '09:30', '10:00', '10:30', '11:00'];

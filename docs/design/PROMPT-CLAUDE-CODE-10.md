@@ -1,6 +1,6 @@
 # PROMPT-CLAUDE-CODE-10 — 02.10 (după sync 13:25, `master-v2` după `c2c745e` + AUDIT-COD-02-10-B)
 
-Mută `PROMPT-CLAUDE-CODE-9.md` în `arhiva/`. Copiază din pachet doar `FEEDBACK-01-10.md`, `VERIFICARE-DUPA-PROMPT-8.md` și acest fișier; restul din `docs/design/` e mai nou în repo — nu suprascrie. Fiecare punct: test + captură; ce nu se închide intră în `INTREBARI.md`. Nu rula niciun `--execute` pe date reale.
+Mută `PROMPT-CLAUDE-CODE-9.md` în `arhiva/`. Copiază din pachet doar `FEEDBACK-01-10.md`, `VERIFICARE-DUPA-PROMPT-8.md` și acest fișier; restul din `docs/design/` e mai nou în repo — nu suprascrie. Dacă `COMPONENTE.md`/`DECIZII.md` au fost deja suprascrise: `git restore docs/design/COMPONENTE.md docs/design/DECIZII.md` (versiunea comisă e cea bună; utilizatorul a confirmat). Fiecare punct: test + captură; ce nu se închide intră în `INTREBARI.md`. Nu rula niciun `--execute` pe date reale.
 
 Deciziile marcate „implicit” se aplică așa dacă utilizatorul nu răspunde altfel în `RASPUNSURI-*.md`.
 

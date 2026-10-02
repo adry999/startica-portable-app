@@ -205,7 +205,7 @@ Un singur `DataTable` + o singură bară de filtre (`ListToolbar`) pe toate list
 ## 3. Storybook (fostă pagina `/design-system`)
 Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2 și pentru variantele noi din tabelul 1: `Button danger`, `SegmentedControl field`, `Badge sm`, `PersonCell sm/md`, `SelectionBar` cu danger, `ConfirmDeleteDialog` cu listă, `AttendanceDot` pe 3 mărimi. Fiecare secțiune arată toate stările. Scara de tokeni (culori, tipografie pe roluri, raze, umbre) din `TOKENS.md` apare sus pe pagină.
 
-## 3b. Noi după feedback 01.10 — `Feedback 01-10.dc.html`
+## 3b. Noi după feedback 01.10 (artboard-urile 38–45, acum în paginile de modul)
 
 | Componentă | Id | Valori |
 |---|---|---|
@@ -223,7 +223,7 @@ Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2
 | `AppBanner` **nou** | 42a · 42b | Bandă full-width deasupra antetului: roz (blocant, fără ×) sau mint (informativ, cu ×). Cerc „!” 26px sau text simplu, titlu 14/800, text 13px, acțiune primară sau link-uri. Un singur banner odată; prioritate: sincronizare oprită > actualizare gata. |
 | `SetupWizard` | 42d | 3 pași în card 420–440px: Alege (ChoiceCards radio) → Verifică (rânduri din manifest + notă galbenă) → Gata (bife + link-uri). Eticheta „Pasul N din 3” 12/800 uppercase. |
 | `QuickPaySearch` | 44a | **Implementat** (`54b5ee3`) cu `TextInput` + `SelectableRow` din `@shared/ui`, nu `SearchSelect` — `SearchSelect` presupune o listă de opțiuni fixă, nu rezultate calculate la fiecare literă tastată cu subrânduri de frați; `architecture.test.ts` R1 interzice oricum `<input>`/`<button>` brute în `features/**`, iar `SelectableRow` e exact varianta sancționată acolo pentru rânduri de listă custom. Restul (border orange, `Kbd` „N”/„Enter”, frații sub copil) ca mai jos. |
-| `SiblingPaymentRows` | 44b | **Nu e un component extras** — rândurile bifă + nume + lună (informativ) + sumă editabilă trăiesc inline în `PaymentFormDrawer.tsx` (secțiunea „Frați”), nu într-un fișier `SiblingPaymentRows.tsx` din `@shared/`; numele rămâne doar ca etichetă de spec. „+ Adaugă fratele” per frate disponibil. „Total” e un `AmountInput` reutilizat (40/36px, nu 24px literal) — editabil, cum cere `PROMPT-CLAUDE-CODE-8.md` §13, cu diferența alocată automat prin pipeline-ul existent de repartizare (restanța cea mai veche bifată întâi). Anularea de grup (40b) — vezi PROMPT-9 §5. |
+| `SiblingPaymentRows` | 44b | **Implementat** (`0f6e0a6`) — rânduri bifă + nume + lună (informativ) + sumă editabilă, în `PaymentFormDrawer`, „+ Adaugă fratele” per frate disponibil. „Total” e un `AmountInput` reutilizat (40/36px, nu 24px literal) — editabil, cum cere `PROMPT-CLAUDE-CODE-8.md` §13, cu diferența alocată automat prin pipeline-ul existent de repartizare (restanța cea mai veche bifată întâi). Anularea de grup (40b) — vezi PROMPT-9 §5. |
 | `CashSummaryCard` | 44c | **Implementat** (`7c9028b`) — ziua Baloo 20 + nr. achitări, 3 mini-carduri (`Kpi` reutilizat, cu `onClick` nou) pe ton (numerar orange, card albastru, transfer mint), total + „Tipărește raportul zilei” (pagină A4 nouă, `PrintTable`, distinctă de bonul termic al §11). Eticheta/suma mini-cardului urmează mărimile proprii ale `Kpi`, nu literal 11/800+Baloo 20 — reutilizare peste o componentă nouă doar pentru atât. Clic pe mini-card filtrează lista de dedesubt (metodă + ziua aleasă). |
 | `Drawer` / `Dialog` (comportament) | 44d | `initialFocus`, Ctrl+Enter = submit, Esc → `UnsavedChangesDialog`, subsol fix, focus pe prima eroare + „N erori” în subsol, `loading` pe principal, fără drawer în drawer. Lățimi: `--drawer-form: 620px`, `--drawer-detail: 480px`, `--dialog: 440px`. |
 | `HistoryRow` + `RecordFilter` | 45a | Rând: dată 14/800 + oră 12px, `Badge` modul, acțiune 14/800 + „înainte → după” 13px, cine + calculator aliniat dreapta. Filtru: pastilă slate cu × pentru înregistrarea aleasă. |
@@ -231,7 +231,7 @@ Adaugă (sau actualizează) câte o secțiune pentru fiecare rând din tabelul 2
 | `AttentionList` | 45c | Rânduri radius 16 pe ton (roz bani, galben date/prezență, neutru sistem): număr Baloo 16 pe alb 34px, titlu 14/800 + detaliu 12px, buton pill alb 12/800. Max. 5. |
 | `UndoToast` **nou** | 40b | Slate `#3a4750`, radius 16, bifă pe `--mint`, titlu 14/800 + detaliu 12px `#b9c1c6`, „Anulează · N” pe alb 14%. Jos-centru, 10 s. |
 | `UnsavedChangesDialog` | 40c | Dialog 440px: „Închizi fără să salvezi?”, câmpurile schimbate în bold, „Renunță la modificări” (text `--pink-ink`) + „Salvează” primar, implicit pe Enter. |
-| `BackupContents` | 38g | **Înlocuit de `BackupPreviewTable`** (§3c, 46b) — `BackupContents` n-a fost construit niciodată ca fișier separat; previzualizarea (rezumat + rânduri din `manifest.json`, în restaurare și acum și pe cardul Backup din 10c, „Vezi conținutul”) folosește `BackupPreviewTable`. |
+| `BackupContents` | 38g | Rezumat (Baloo 22) + rânduri tip · sursă · număr, din `manifest.json`. Același bloc în previzualizarea restaurării. |
 
 ## 3c. Noi pentru PROMPT-9 (02.10) — `Prima pornire.dc.html#46a–46d`
 

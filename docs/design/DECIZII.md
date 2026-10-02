@@ -79,3 +79,7 @@ Varianta (a): `--orange-strong` #b85a00 pentru orice fundal cu text alb (4,7:1).
 - Pontaj: codul „P” (prezent confirmat) apare distinct, literă pe mint, în grilă și la tipărire.
 - La restrângerea profilului nu se șterg date locale; doar se ascund (ModuleGuard).
 - Prima pornire începe cu alegerea Backup / Alt calculator / De la zero (46a–46d).
+
+
+## 02.10 — Scrii doar în filiala deschisă
+O acțiune făcută într-o filială nu adaugă și nu modifică date ale altei filiale. Angajatul nou intră în filiala deschisă; ca să lucreze și în alta, se adaugă din acea filială („Angajat existent”). Datele din Comun se citesc de oriunde; setările Comun se etichetează „pentru toate filialele”. Excepții: registrul de filiale (nume, culoare, adresă) și rapoartele „Ambele”, doar citire.
