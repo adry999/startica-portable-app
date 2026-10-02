@@ -30,8 +30,8 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d | ⏳ §11 |
 | Pagina de start Educator (43a) | ⏸ în pauză (02.10) | — |
 | Pagina de start Bazin (43b) | ✅ 43b | ⏳ §12 |
-| Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ⏳ §13 |
-| Liste: cele mai noi primele; filtre păstrate | — | ⏳ §13.1–2 |
+| Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ✅ `54b5ee3` (44a) · `0f6e0a6` (44b — frați+receiptGroupId; anularea grupului amânată, vezi `INTREBARI.md`) · `7c9028b` (44c) · ⏳ 44d amânat deliberat — cross-cutting ca 41d, `INTREBARI.md` |
+| Liste: cele mai noi primele; filtre păstrate | — | ✅ `ba8a80d`+`1e09940` (§13.1 — sortare descrescătoare, Achitări/Cheltuieli/Vizite/Avansuri) · `b1dfb88`+`fba3164` (§13.2 — filtre/căutare în URL, Copii/Achitări/Cheltuieli) |
 | Storybook: 3 componente fără poveste + regulă R12 | — | ⏳ §6c |
 | Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | ⏳ §14 |
 | Personal complet (salarii, avansuri, stat) | ⏸ de decis ce intră | — |
