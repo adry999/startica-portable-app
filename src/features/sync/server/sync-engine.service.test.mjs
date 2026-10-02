@@ -515,6 +515,64 @@ test('410 reface filiala din snapshot', async () => {
   assert.deepEqual(recordsChangedRevisions, [1]);
 });
 
+test('§5 (PROMPT-CLAUDE-CODE-10, punctul 1): 410 aplică un audit_log din instantaneu prin mergeSyncedEntry, cu identitatea din `updatedBy` al rândului, nu scrie nimic prin depozitul brut', async () => {
+  /** @type {any[]} */
+  const merged = [];
+  // Fals local, nu createRecordingAuditTrail (acela n-are mergeSyncedEntry) — suficient
+  // pentru acest test, ca în change-applier.test.mjs.
+  const customAuditTrail = { recordChange: () => {}, mergeSyncedEntry: entry => void merged.push(entry) };
+  const { rawRecordRepository, syncState, engine } = createHarness({
+    auditTrail: customAuditTrail,
+    client: fakeClient({
+      pullChanges: async () => {
+        throw new SyncHttpError(410, 'cursor-expirat');
+      },
+      downloadSnapshot: async () => ({
+        records: {
+          audit_log: [
+            {
+              id: 'ENTRY-UID-1',
+              revision: 1,
+              payload: {
+                action: 'modificare',
+                recordType: 'children',
+                recordId: 'CHILD-1',
+                before: null,
+                after: { id: 'CHILD-1', name: 'Ana' },
+                occurredAt: '2026-09-27T08:00:00.000Z',
+              },
+              updatedAt: '2026-09-27T08:30:00.000Z',
+              updatedBy: { id: 'dev-b', name: 'Calculator B' },
+            },
+          ],
+        },
+        headSeq: 1,
+      }),
+    }),
+  });
+
+  await engine.syncNow();
+
+  assert.equal(merged.length, 1);
+  assert.deepEqual(merged[0], {
+    entryUid: 'ENTRY-UID-1',
+    deviceId: 'dev-b',
+    deviceName: 'Calculator B',
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: null,
+    after: { id: 'CHILD-1', name: 'Ana' },
+    occurredAt: '2026-09-27T08:00:00.000Z',
+  });
+  assert.equal(
+    rawRecordRepository.find('children', 'CHILD-1'),
+    undefined,
+    'audit_log nu scrie nimic prin depozitul brut',
+  );
+  assert.equal(syncState.get('audit_log', 'ENTRY-UID-1'), undefined, 'fără sync_state pentru audit_log, ca la pull');
+});
+
 test('S-4: o resincronizare 410 a setului comun nu șterge candidates — kind comun, ca staff', async () => {
   const { rawRecordRepository, engine } = createHarness({
     client: fakeClient({

@@ -73,4 +73,21 @@ describe('DevicesList (§5.3, 36c)', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(onChangeProfile).not.toHaveBeenCalled();
   });
+
+  it('§5 (PROMPT-CLAUDE-CODE-10, punctul 4): fiecare preset are tonul lui, nu un singur „yellow” pentru toate', () => {
+    const devices: SyncDevice[] = [
+      { ...DEVICE_COMPLET, id: 'p-complet', profile: normalizeProfile({ preset: 'complet' }) },
+      { ...DEVICE_COMPLET, id: 'p-educator', profile: normalizeProfile({ preset: 'educator' }) },
+      { ...DEVICE_COMPLET, id: 'p-receptie', profile: normalizeProfile({ preset: 'receptie' }) },
+      { ...DEVICE_COMPLET, id: 'p-bazin', profile: normalizeProfile({ preset: 'bazin' }) },
+      { ...DEVICE_COMPLET, id: 'p-personalizat', profile: normalizeProfile({ preset: 'personalizat' }) },
+    ];
+    render(<DevicesList devices={devices} onRevoke={vi.fn()} />);
+
+    expect(screen.getByText('Complet').className).toMatch(/orange/);
+    expect(screen.getByText('Educator').className).toMatch(/mint/);
+    expect(screen.getByText('Recepție').className).toMatch(/pink/);
+    expect(screen.getByText('Bazin').className).toMatch(/yellow/);
+    expect(screen.getByText('Personalizat').className).toMatch(/blue/);
+  });
 });

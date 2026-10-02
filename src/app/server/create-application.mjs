@@ -17,6 +17,7 @@ import { createSettingsRepository } from '#core/server/settings/settings-reposit
 import { readBranchRegistry, createBranchRegistryStore } from '#core/server/branches/branch-registry.mjs';
 import { branchDirectories, commonDirectories } from '#core/server/branches/branch-layout.mjs';
 import { createFullBackupService, COMMON_ENTRY_ID } from '#features/backup/index.server.mjs';
+import { createAuditLogRepository } from '#features/audit-log/index.server.mjs';
 import { parseKindergartenSettings } from '#shared/domain/kindergarten-settings.mjs';
 import {
   createSyncDeviceRepository,
@@ -145,6 +146,12 @@ export function createApplication(options = {}) {
     // târziu, după ce `common` s-a inițializat).
     getCommon: () => common,
     commonDatasetId: COMMON_DATASET_ID,
+    // §5 (PROMPT-CLAUDE-CODE-10, punctul 2): instanța minimă de istoric a bazei abia deschise
+    // (pairing/reconectare) — doar `mergeSyncedEntry` e folosit aici (instantaneul scrie
+    // intrări venite de pe alte calculatoare, nu creează unele noi), deci fără
+    // deviceId/outbox/sessionToken, spre deosebire de `auditLogRepository` din
+    // create-branch-context.mjs (acela servește și scrierile locale ale filialei active).
+    createAuditTrail: db => createAuditLogRepository(db),
   });
 
   // Rutele filialelor sunt construite o singură dată, nu per filială: ele nu

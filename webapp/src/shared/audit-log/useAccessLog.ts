@@ -36,6 +36,10 @@ function moduleLabel(recordId: string | null): string {
 
 export interface AccessRowView {
   id: number;
+  // §5 (PROMPT-CLAUDE-CODE-10, punctul 3): acțiunea brută (`access.locked` etc.), nu doar
+  // eticheta de afișare — `access-locked-banner.ts` are nevoie să deosebească `access.locked`
+  // de `access.blocked` (același ton „pink”, etichete diferite — fragil de distins după text).
+  action: string;
   dayKey: string;
   dayLabel: string;
   timeLabel: string;
@@ -84,6 +88,7 @@ function toAccessRow(entry: AuditEntry): AccessRowView {
   const occurredAt = new Date(entry.occurredAt);
   return {
     id: entry.id,
+    action: entry.action,
     dayKey: dayKeyOf(occurredAt),
     dayLabel: dayLabelOf(occurredAt),
     timeLabel: occurredAt.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' }),
@@ -103,16 +108,27 @@ function pathFor(beforeEntryId: number | null): string {
  * istoricului (`useAuditLog`). Doar profilul Complet le vede (server: `/api/audit/access` e pe
  * modulul `admin`) — un profil restrâns primește 403, tratat ca `failed` mai jos, la fel ca orice
  * altă cerere fără acces.
+ * @param enabled §5 (PROMPT-CLAUDE-CODE-10, punctul 3): implicit true (AccessLogPanel, fila
+ *   „Acces”, neschimbat) — `access-locked-banner.ts` îl dă fals pe un calculator fără profil
+ *   Complet (AppShell îl apelează pe orice ecran, nu doar fila Acces), ca să nu trimită o
+ *   cerere la `/api/audit/access` menită doar să primească 403 la fiecare pornire.
  */
-export function useAccessLog(): AccessLogData {
+export function useAccessLog(enabled: boolean = true): AccessLogData {
   const [rows, setRows] = useState<AccessRowView[]>([]);
-  const [status, setStatus] = useState<AuditLogStatus>('loading');
+  const [status, setStatus] = useState<AuditLogStatus>(enabled ? 'loading' : 'empty');
   const [failureMessage, setFailureMessage] = useState('');
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const nextBeforeEntryId = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setStatus('empty');
+      setFailureMessage('');
+      setRows([]);
+      setHasMore(false);
+      return;
+    }
     let cancelled = false;
     setStatus('loading');
     setFailureMessage('');
@@ -133,10 +149,10 @@ export function useAccessLog(): AccessLogData {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   function loadMore() {
-    if (status !== 'ready' || !hasMore || isLoadingMore) return;
+    if (!enabled || status !== 'ready' || !hasMore || isLoadingMore) return;
     setIsLoadingMore(true);
     setFailureMessage('');
     requestJson(pathFor(nextBeforeEntryId.current))

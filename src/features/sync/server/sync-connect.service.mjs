@@ -126,6 +126,7 @@ function resetSyncState(db, { serverUrl } = {}) {
  *   reopenActiveBranch: () => void,
  *   getCommon?: () => { db: import('node:sqlite').DatabaseSync, kinds: { list: (kind: string) => { id: string }[], save: (kind: string, record: { id: string } & Record<string, unknown>) => unknown, transaction: <T>(fn: () => T) => T }, sync: { outbox: { enqueue: (change: { kind: string, recordId: string, payload: unknown }) => unknown } } } | undefined,
  *   commonDatasetId?: string,
+ *   createAuditTrail?: (database: import('node:sqlite').DatabaseSync) => import('#shared/contracts/audit-trail.d.mts').AuditTrail | undefined,
  * }} dependencies
  */
 export function createSyncConnectService({
@@ -142,6 +143,13 @@ export function createSyncConnectService({
   // filiale) nu atinge deloc setul comun, exact comportamentul de dinainte de Personal 24.
   getCommon = () => undefined,
   commonDatasetId = 'comun',
+  // §5 (PROMPT-CLAUDE-CODE-10, punctul 2): instanța de istoric a filialei abia deschise —
+  // `sync-connect.service.mjs` nu importă `#features/audit-log` direct (un feature nu importă
+  // alt feature), primește o fabrică de la `create-application.mjs` (singurul loc care leagă
+  // mai multe feature-uri). Implicit un no-op, ca un apelant de test care nu-l dă (reconcilierea
+  // de filiale existentă) să se comporte exact ca înainte — `audit_log` din instantaneu rămâne
+  // doar ignorat (applySnapshotEntry, fals), nu o eroare.
+  createAuditTrail = () => undefined,
 }) {
   /** @param {import('#core/server/branches/branch-registry.mjs').BranchEntry} branch */
   const dirsOf = branch => branchDirectories({ home, legacy, branch });
@@ -280,7 +288,7 @@ export function createSyncConnectService({
       const opened = openDatabase(dirs);
       try {
         backupBeforeOverwrite(opened.db, dirs.backupDir, 'inainte-reconectare');
-        overwriteLocalSnapshot(opened.db, serverSnapshot);
+        overwriteLocalSnapshot(opened.db, serverSnapshot, { auditTrail: createAuditTrail(opened.db) });
         downloaded.push({ id: local.id, name: local.name });
       } finally {
         opened.db.close();
@@ -292,7 +300,9 @@ export function createSyncConnectService({
       if (!target) continue;
       const opened = openDatabase(dirsOf(target));
       try {
-        writeLocalSnapshot(opened.db, await client.downloadSnapshot(serverBranch.id));
+        writeLocalSnapshot(opened.db, await client.downloadSnapshot(serverBranch.id), {
+          auditTrail: createAuditTrail(opened.db),
+        });
         downloaded.push({ id: serverBranch.id, name: serverBranch.name });
       } finally {
         opened.db.close();
@@ -305,7 +315,9 @@ export function createSyncConnectService({
       const adopted = registry.adopt(serverBranch);
       const opened = openDatabase(dirsOf(adopted));
       try {
-        writeLocalSnapshot(opened.db, await client.downloadSnapshot(adopted.id));
+        writeLocalSnapshot(opened.db, await client.downloadSnapshot(adopted.id), {
+          auditTrail: createAuditTrail(opened.db),
+        });
         downloaded.push({ id: adopted.id, name: adopted.name });
       } finally {
         opened.db.close();

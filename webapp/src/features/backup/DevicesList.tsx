@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Badge, Button, ConfirmDeleteDialog, Dialog } from '@shared/ui';
+import { Badge, Button, ConfirmDeleteDialog, Dialog, type BadgeTone } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { completProfile, normalizeProfile, PRESET_LABELS } from '#shared/domain/computer-profile.mjs';
 import { ProfileEditor } from './ProfileEditor';
@@ -9,6 +9,17 @@ import styles from './DevicesList.module.css';
 type Profile = import('#shared/domain/computer-profile.mjs').ComputerProfile;
 
 const presetLabels: Record<string, string> = PRESET_LABELS;
+
+// §5 (PROMPT-CLAUDE-CODE-10 §5, punctul 4; Sincronizare.dc.html#36c): un ton pe preset, nu
+// un singur „yellow” pentru toate (INTREBARI.md, simplificare V1 închisă acum). Recepție nu
+// are o culoare dată în spec — „pink” păstrează fiecare preset vizual distinct de celelalte.
+const PRESET_BADGE_TONES: Record<string, BadgeTone> = {
+  complet: 'orange',
+  educator: 'mint',
+  receptie: 'pink',
+  bazin: 'yellow',
+  personalizat: 'blue',
+};
 
 export interface DevicesListProps {
   devices: SyncDevice[];
@@ -81,7 +92,7 @@ export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListP
                 {offlineDays > 0 ? `Offline de ${offlineDays} zile` : 'Sincronizat'}
               </span>
             </div>
-            <Badge tone="yellow">{presetLabels[preset] ?? preset}</Badge>
+            <Badge tone={PRESET_BADGE_TONES[preset] ?? 'yellow'}>{presetLabels[preset] ?? preset}</Badge>
             {onChangeProfile && (
               <Button variant="ghost" onClick={() => openProfileEditor(device)}>
                 Schimbă

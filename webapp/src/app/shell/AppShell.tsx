@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
+import { useAccessLog } from '@shared/audit-log';
 import { AppBanner, TopbarActionsProvider, useToast } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { readRestoreDoneNote } from '@features/backup';
@@ -17,6 +18,7 @@ import { deriveSaveStatus } from './save-status';
 import { deriveSyncStatus } from './sync-status';
 import { deriveSyncBanner } from './sync-banner';
 import { UPDATE_DISMISS_KEY, dismissUpdateValue, shouldShowUpdateBanner } from './update-banner';
+import { ACCESS_LOCKED_SEEN_KEY, deriveAccessLockedBanner } from './access-locked-banner';
 import { VIEW_PATHS } from './routes';
 import type { ViewKey } from './nav-items';
 import styles from './AppShell.module.css';
@@ -68,6 +70,12 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // §11, 42b: „revine a doua zi” — valoarea persistă cât bara mint a fost închisă ultima dată
   // (dată + versiune respinsă), citită înainte de orice return condiționat (regula hook-urilor).
   const [updateDismissedUntil, setUpdateDismissedUntil] = usePersistedState<string>(UPDATE_DISMISS_KEY, '');
+  // §5 (PROMPT-CLAUDE-CODE-10, punctul 3): „access.locked” ajunge aici prin pull-ul normal de
+  // sincronizare (fără canal live — vezi access-locked-banner.ts) — reutilizează sursa filei
+  // „Acces” (useAccessLog), fără o cerere nouă. `enabled` fals pentru un profil ne-Complet:
+  // server-ul oricum respinge /api/audit/access cu 403 pentru el (vezi useAccessLog).
+  const accessLog = useAccessLog(session.state.profile?.preset === 'complet');
+  const [accessLockedSeenId, setAccessLockedSeenId] = usePersistedState<string>(ACCESS_LOCKED_SEEN_KEY, '');
   // 46a: odată aleasă „De la zero” sau „Am Startica pe alt calculator”, ecranul nu mai revine
   // pe acest calculator, chiar dacă filiala activă rămâne fără nicio evidență reală încă
   // (nu s-a importat nimic, sau sincronizarea n-a adus încă prima bază).
@@ -123,15 +131,29 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
 
   // §11, 42a — bandă roz, deasupra antetului, pe toate rutele, fără ×: apare doar cât
   // sincronizarea e configurată și chiar nu merge (offline/revoked), nu la conflict/syncing
-  // (vezi `deriveSyncBanner`). Întâietate asupra benzii mint de mai jos (o singură bandă deodată).
+  // (vezi `deriveSyncBanner`). Întâietate asupra celorlalte bande de mai jos (o singură bandă
+  // deodată — COMPONENTE.md §0i, rândul AppBanner: „sincronizare oprită > actualizare gata”,
+  // extins aici cu „blocare calculator”, relevantă pentru securitate, dar nu blocantă).
   const syncBanner = session.state.sync?.configured ? deriveSyncBanner(syncStatusData) : null;
 
+  // §5 (PROMPT-CLAUDE-CODE-10, punctul 3) — bandă mint, se închide cu × și nu reapare pentru
+  // ACEEAȘI intrare `access.locked` (vezi access-locked-banner.ts). A doua prioritate, după
+  // banda roz de mai sus — „blocarea unui calculator” e relevantă pentru securitate, dar nu
+  // blochează lucrul pe ACEST calculator, spre deosebire de sincronizarea oprită.
+  const accessLockedBanner = !syncBanner
+    ? deriveAccessLockedBanner(accessLog.rows, session.state.profile, accessLockedSeenId)
+    : null;
+
   // §11, 42b — bandă mint, se închide cu × și revine a doua zi (sau mai devreme, dacă apare o
-  // versiune și mai nouă — vezi `shouldShowUpdateBanner`). Nu se arată deodată cu banda roz.
+  // versiune și mai nouă — vezi `shouldShowUpdateBanner`). Ultima prioritate — rutină, nu
+  // securitate sau întrerupere de sincronizare.
   const update = session.state.update;
   const today = todayIso();
   const showUpdateBanner =
-    !syncBanner && update.updateAvailable && shouldShowUpdateBanner(updateDismissedUntil, update.latestVersion, today);
+    !syncBanner &&
+    !accessLockedBanner &&
+    update.updateAvailable &&
+    shouldShowUpdateBanner(updateDismissedUntil, update.latestVersion, today);
   const updateLink = update.releaseUrl ?? update.downloadUrl;
 
   // Fila implicită se alege din localStorage, citită de BackupPage la montare
@@ -172,6 +194,15 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
               tone="error"
               message={syncBanner.message}
               action={syncBanner.actionLabel ? { label: syncBanner.actionLabel, onClick: goToSyncTab } : undefined}
+            />
+          </div>
+        )}
+        {accessLockedBanner && (
+          <div className={styles.banners}>
+            <AppBanner
+              tone="update"
+              message={accessLockedBanner.message}
+              onDismiss={() => setAccessLockedSeenId(accessLockedBanner.entryId)}
             />
           </div>
         )}

@@ -16,6 +16,7 @@ import {
   createSyncAttendanceWriter,
   createSyncHttpClient,
   createSyncEngine,
+  writeLocalSnapshot,
 } from '#features/sync/index.server.mjs';
 
 // §7 (36g): „Istoric sincronizat” — confirmă pe o sincronizare REALĂ (server adevărat, pornit
@@ -48,7 +49,7 @@ async function startRealServer(t) {
     await app.close();
     rmSync(dataDir, { recursive: true, force: true });
   });
-  return { origin };
+  return { origin, devices: app.devices };
 }
 
 /** Un `backups` fals — evită VACUUM INTO pe o bază `:memory:` în teste de integrare. */
@@ -194,4 +195,77 @@ test('36g: o reluare a aceluiași pull nu dublează intrarea (entry_uid e idempo
 
   const after = harnessB.auditTrail.readPage({ beforeEntryId: null }).entries.length;
   assert.equal(after, before, 'un entry_uid deja aplicat nu creează un al doilea rând');
+});
+
+// §5 (PROMPT-CLAUDE-CODE-10, puncte 1+2): instantaneul inițial (pairing-ul unui calculator
+// nou) trebuie să ducă istoricul deja scris de un alt calculator — doar unui profil Complet
+// (restricția e deja pe server, changes.service.mjs#canReadKind) — și aplicarea lui locală
+// (writeLocalSnapshot → applySnapshotEntry, NU calea de pull) trebuie să fie idempotentă la
+// o reluare, la fel ca mergeSyncedEntry la pull (vezi testul de mai sus).
+test('36g/§5: un calculator Complet, la prima pereche, descarcă istoricul audit_log scris de alt calculator; unul ne-Complet nu îl primește', async t => {
+  const branchId = 'branch-pairing-audit-1';
+  const { origin, devices } = await startRealServer(t);
+
+  const pairingClientA = createSyncHttpClient({ serverUrl: origin, fetch: globalThis.fetch });
+  const deviceA = await pairingClientA.pair({ setupKey: SETUP_KEY, name: 'Calculator A', os: 'Windows 11' });
+  const clientA = createSyncHttpClient({ serverUrl: origin, token: deviceA.token, fetch: globalThis.fetch });
+  await clientA.registerBranch({
+    id: branchId,
+    name: 'Filiala principală',
+    color: 'orange',
+    address: '',
+    createdAt: '2026-09-27T08:00:00.000Z',
+  });
+  const harnessA = createDeviceHarness({
+    branchId,
+    deviceId: deviceA.deviceId,
+    deviceName: 'Calculator A',
+    client: clientA,
+  });
+  harnessA.auditTrail.recordChange({
+    action: 'modificare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: null,
+    after: { name: 'Ana' },
+  });
+  await harnessA.engine.syncNow();
+
+  // Calculator C: pereche nouă, profil Complet — trebuie să primească istoricul lui A în
+  // instantaneul inițial (descărcat direct, nu printr-un pull — calculatorul tocmai s-a asociat).
+  const pairingClientC = createSyncHttpClient({ serverUrl: origin, fetch: globalThis.fetch });
+  const deviceC = await pairingClientC.pair({ setupKey: SETUP_KEY, name: 'Calculator C', os: 'Windows 11' });
+  devices.setProfile(deviceC.deviceId, { preset: 'complet' });
+  const clientC = createSyncHttpClient({ serverUrl: origin, token: deviceC.token, fetch: globalThis.fetch });
+  const snapshotForComplet = await clientC.downloadSnapshot(branchId);
+  assert.equal(snapshotForComplet.records.audit_log?.length, 1, 'Complet primește audit_log în instantaneul inițial');
+  assert.equal(snapshotForComplet.records.audit_log[0].updatedBy.id, deviceA.deviceId);
+  assert.equal(snapshotForComplet.records.audit_log[0].updatedBy.name, 'Calculator A');
+
+  // Aplicat local prin writeLocalSnapshot (calea applySnapshotEntry a pairing-ului, nu pull).
+  const localDb = new DatabaseSync(':memory:');
+  applySchema(localDb);
+  const localAuditTrail = createAuditLogRepository(localDb);
+  writeLocalSnapshot(localDb, snapshotForComplet, { auditTrail: localAuditTrail });
+
+  const merged = localAuditTrail.readPage({ beforeEntryId: null }).entries.find(entry => entry.recordId === 'CHILD-1');
+  assert.ok(merged, 'intrarea lui A trebuie să apară local, prin applySnapshotEntry');
+  assert.equal(merged.deviceId, deviceA.deviceId, 'identitatea vine din `updatedBy`, verificat de server');
+  assert.equal(merged.deviceName, 'Calculator A');
+
+  // Reluare (ex. pairing întrerupt și reluat): aplicarea ACELUIAȘI instantaneu a doua oară
+  // nu dublează rândul — idempotența entry_uid (indexul unic), nu doar la mergeSyncedEntry.
+  const countBefore = localAuditTrail.readPage({ beforeEntryId: null }).entries.length;
+  writeLocalSnapshot(localDb, snapshotForComplet, { auditTrail: localAuditTrail });
+  const countAfter = localAuditTrail.readPage({ beforeEntryId: null }).entries.length;
+  assert.equal(countAfter, countBefore, 'reaplicarea instantaneului nu dublează intrarea');
+
+  // Calculator D: pereche nouă, profil Bazin (nu Complet) — NU primește audit_log (restricția
+  // de pe server, canReadKind, neschimbată aici — doar verificată).
+  const pairingClientD = createSyncHttpClient({ serverUrl: origin, fetch: globalThis.fetch });
+  const deviceD = await pairingClientD.pair({ setupKey: SETUP_KEY, name: 'Calculator D', os: 'Windows 11' });
+  devices.setProfile(deviceD.deviceId, { preset: 'bazin' });
+  const clientD = createSyncHttpClient({ serverUrl: origin, token: deviceD.token, fetch: globalThis.fetch });
+  const snapshotForBazin = await clientD.downloadSnapshot(branchId);
+  assert.ok(!snapshotForBazin.records.audit_log?.length, 'un profil ne-Complet nu primește audit_log la pairing');
 });

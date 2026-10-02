@@ -441,15 +441,22 @@ export function createChangesService({ database, devices }) {
       database.prepare('SELECT * FROM records WHERE branch_id=? ORDER BY kind,id').all(branchId)
     );
     const profile = profileForDevice(deviceId);
-    /** @type {Record<string, { id: string, revision: number, payload: unknown, updatedAt: string }[]>} */
+    /** @type {Record<string, { id: string, revision: number, payload: unknown, updatedAt: string, updatedBy: { id: string, name: string } }[]>} */
     const recordsByKind = {};
     for (const row of rows) {
       if (!canReadKind(profile, row.kind)) continue;
+      // §5.3/36g (Point 1/2, PROMPT-CLAUDE-CODE-10 §5): o intrare `audit_log` dintr-un
+      // instantaneu (pairing sau resincronizare 410) are nevoie de identitatea calculatorului
+      // care a scris-o, la fel ca la pull() mai sus (`device`) — altfel clientul n-ar avea de
+      // unde să știe cui să atribuie intrarea fără să se bazeze pe `payload.deviceId`
+      // (auto-raportat, nesigur). Adăugat pe fiecare rând, nu doar pe `audit_log`: ieftin
+      // (devices.findById e deja folosit identic la pull()) și consistent cu `toHeadView`.
       (recordsByKind[row.kind] ??= []).push({
         id: row.id,
         revision: row.revision,
         payload: row.payload === null ? null : redactPayloadForProfile(row.kind, JSON.parse(row.payload), profile),
         updatedAt: row.updated_at,
+        updatedBy: { id: row.updated_by, name: devices.findById(row.updated_by)?.name ?? '' },
       });
     }
     return { records: recordsByKind, headSeq: branchHeadSeq(branchId) };
