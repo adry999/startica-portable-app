@@ -143,6 +143,7 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
             onSwitchBranch={branchSwitch.requestSwitch}
             onManageBranches={goToBranchesTab}
             poolEnabled={!!session.state.pool?.enabled}
+            profile={session.state.profile}
           />
           <div className={styles.workspace}>
             <div

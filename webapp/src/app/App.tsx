@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearch
 import { useAppSession } from '@shared/api/session';
 import { UnsavedChangesDialog, useToast } from '@shared/ui';
 import { AppShell } from './shell/AppShell';
+import { ModuleGuard } from './shell/ModuleGuard';
 import { performBranchSwitch, readBranchSwitchNote } from './shell/useBranchSwitch';
 import { useNavigationGuard } from './shell/useNavigationGuard';
 import { today } from '@domain/calendar-month.mjs';
@@ -123,59 +124,252 @@ export function App() {
 
   return (
     <AppShell view={view} onNavigate={navGuard.guardedNavigate} month={month} onMonthChange={setMonth} counts={counts}>
+      {/* R12 (architecture.test.ts): fiecare <Route> de mai jos are un `element` care începe cu
+          <ModuleGuard moduleId="…">, exact modulul din view-modules.ts (VIEW_MODULE) — singura
+          excepție admisă e catch-all-ul `*`, care nu randează conținut, doar redirecționează. */}
       <Routes>
-        <Route path="/" element={<DashboardPage month={month} onNavigate={onNavigate} />} />
-        <Route path="/copii" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
-        <Route path="/copii/zile-de-nastere" element={<BirthdaysPage />} />
-        <Route path="/copii/:childId" element={<ChildrenRoute month={month} onNavigate={onNavigate} />} />
+        <Route
+          path="/"
+          element={
+            <ModuleGuard moduleId="dashboard">
+              <DashboardPage month={month} onNavigate={onNavigate} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/copii"
+          element={
+            <ModuleGuard moduleId="children">
+              <ChildrenRoute month={month} onNavigate={onNavigate} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/copii/zile-de-nastere"
+          element={
+            <ModuleGuard moduleId="children">
+              <BirthdaysPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/copii/:childId"
+          element={
+            <ModuleGuard moduleId="children">
+              <ChildrenRoute month={month} onNavigate={onNavigate} />
+            </ModuleGuard>
+          }
+        />
         <Route
           path="/grupe"
-          element={<GroupsPage onOpenGroupStickers={id => navigate(`/tiparire/stickere?grupa=${id}`)} />}
+          element={
+            <ModuleGuard moduleId="groups">
+              <GroupsPage onOpenGroupStickers={id => navigate(`/tiparire/stickere?grupa=${id}`)} />
+            </ModuleGuard>
+          }
         />
-        <Route path="/prezenta" element={<AttendancePage month={month} />} />
-        <Route path="/prezenta/foi" element={<WeeklySheetPrintPage />} />
-        <Route path="/bazin" element={<PoolPage month={month} />} />
-        <Route path="/bazin/bon/:childId" element={<PoolReceiptPage />} />
-        <Route path="/vizite" element={<VisitsRoute />} />
-        <Route path="/personal" element={<PersonalPage month={month} />} />
-        <Route path="/personal/:id" element={<StaffProfilePage />} />
-        <Route path="/achitari" element={<PaymentsRoute />} />
-        <Route path="/achitari/:id/confirmare" element={<PaymentReceipt />} />
-        <Route path="/achitari/:id/bon-58mm" element={<PaymentReceiptThermal />} />
-        <Route path="/achitari/bon-zi" element={<DayClosingReceipt />} />
-        <Route path="/achitari/:paymentId" element={<PaymentsRoute />} />
-        <Route path="/cheltuieli" element={<ExpensesPage month={month} />} />
+        <Route
+          path="/prezenta"
+          element={
+            <ModuleGuard moduleId="attendance">
+              <AttendancePage month={month} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/prezenta/foi"
+          element={
+            <ModuleGuard moduleId="attendance">
+              <WeeklySheetPrintPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/bazin"
+          element={
+            <ModuleGuard moduleId="pool">
+              <PoolPage month={month} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/bazin/bon/:childId"
+          element={
+            <ModuleGuard moduleId="pool">
+              <PoolReceiptPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/vizite"
+          element={
+            <ModuleGuard moduleId="visits">
+              <VisitsRoute />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/personal"
+          element={
+            <ModuleGuard moduleId="personal">
+              <PersonalPage month={month} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/personal/:id"
+          element={
+            <ModuleGuard moduleId="personal">
+              <StaffProfilePage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/achitari"
+          element={
+            <ModuleGuard moduleId="payments">
+              <PaymentsRoute />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/achitari/:id/confirmare"
+          element={
+            <ModuleGuard moduleId="payments">
+              <PaymentReceipt />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/achitari/:id/bon-58mm"
+          element={
+            <ModuleGuard moduleId="payments">
+              <PaymentReceiptThermal />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/achitari/bon-zi"
+          element={
+            <ModuleGuard moduleId="payments">
+              <DayClosingReceipt />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/achitari/:paymentId"
+          element={
+            <ModuleGuard moduleId="payments">
+              <PaymentsRoute />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/cheltuieli"
+          element={
+            <ModuleGuard moduleId="expenses">
+              <ExpensesPage month={month} />
+            </ModuleGuard>
+          }
+        />
         <Route
           path="/situatia-platilor"
           element={
-            <StatusRoute
-              month={month}
-              onMonthChange={setMonth}
-              onNavigate={onNavigate}
-              onOpenChild={id => navigate(`/copii/${id}`)}
-            />
+            <ModuleGuard moduleId="status">
+              <StatusRoute
+                month={month}
+                onMonthChange={setMonth}
+                onNavigate={onNavigate}
+                onOpenChild={id => navigate(`/copii/${id}`)}
+              />
+            </ModuleGuard>
           }
         />
-        <Route path="/de-notificat" element={<NotifyPage month={month} onNavigate={onNavigate} />} />
+        <Route
+          path="/de-notificat"
+          element={
+            <ModuleGuard moduleId="notify">
+              <NotifyPage month={month} onNavigate={onNavigate} />
+            </ModuleGuard>
+          }
+        />
         <Route
           path="/raport"
           element={
-            <ReportPage
-              month={month}
-              onMonthChange={setMonth}
-              onOpenPayments={() => navigate('/achitari')}
-              onOpenAssign={() => navigate('/asociere-achitari')}
-            />
+            <ModuleGuard moduleId="report">
+              <ReportPage
+                month={month}
+                onMonthChange={setMonth}
+                onOpenPayments={() => navigate('/achitari')}
+                onOpenAssign={() => navigate('/asociere-achitari')}
+              />
+            </ModuleGuard>
           }
         />
-        <Route path="/taxe-si-grupe" element={<FeeSetupPage />} />
-        <Route path="/asociere-achitari" element={<AssignPage month={month} />} />
-        <Route path="/de-verificat" element={<ReviewPage onNavigate={onNavigate} />} />
-        <Route path="/conflicte" element={<ConflictsPage />} />
-        <Route path="/istoric" element={<AuditLogPage />} />
-        <Route path="/notificari" element={<NotificationsPage />} />
-        <Route path="/backup-si-setari" element={<BackupPage />} />
-        <Route path="/tiparire/stickere" element={<StickerPrintPage />} />
+        <Route
+          path="/taxe-si-grupe"
+          element={
+            <ModuleGuard moduleId="resolve">
+              <FeeSetupPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/asociere-achitari"
+          element={
+            <ModuleGuard moduleId="resolve">
+              <AssignPage month={month} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/de-verificat"
+          element={
+            <ModuleGuard moduleId="resolve">
+              <ReviewPage onNavigate={onNavigate} />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/conflicte"
+          element={
+            <ModuleGuard moduleId="resolve">
+              <ConflictsPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/istoric"
+          element={
+            <ModuleGuard moduleId="admin">
+              <AuditLogPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/notificari"
+          element={
+            <ModuleGuard moduleId="admin">
+              <NotificationsPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/backup-si-setari"
+          element={
+            <ModuleGuard moduleId="admin">
+              <BackupPage />
+            </ModuleGuard>
+          }
+        />
+        <Route
+          path="/tiparire/stickere"
+          element={
+            <ModuleGuard moduleId="groups">
+              <StickerPrintPage />
+            </ModuleGuard>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {navGuard.pending && (

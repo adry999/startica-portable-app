@@ -62,6 +62,12 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
+/** Eticheta de meniu a fiecărui ecran, derivată din `NAV_GROUPS` — un singur loc (ModuleGuard,
+ * „Mergi la …” din 36f, nu mai repetă etichetele unui alt tabel). */
+export const VIEW_LABELS: Record<ViewKey, string> = Object.fromEntries(
+  NAV_GROUPS.flatMap(group => group.items).map(item => [item.view, item.label]),
+) as Record<ViewKey, string>;
+
 /** Eyebrow + titlu pentru topbar, câte unul per ecran. */
 export const VIEW_TITLES: Record<ViewKey, { eyebrow: string; title: string }> = {
   dashboard: { eyebrow: 'Privire de ansamblu', title: 'Rezumatul lunii' },
