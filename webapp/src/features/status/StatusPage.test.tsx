@@ -111,13 +111,13 @@ const smsUnconfigured = {
 
 const smsConfigured = { ...smsUnconfigured, configured: true, sender: 'Startica' };
 
-function renderPage() {
+function renderPage(initialEntries: string[] = ['/situatia-platilor']) {
   const onMonthChange = vi.fn();
   const onNavigate = vi.fn();
   const onOpenChild = vi.fn();
   const onOpenPayment = vi.fn();
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <ToastProvider>
         <TopbarActionsProvider>
           <TopbarActionsSlot />
@@ -277,6 +277,15 @@ describe('StatusPage', () => {
     expect(screen.getByText('Elena Marin')).toBeInTheDocument();
     expect(screen.queryByText('Andrei Popescu')).not.toBeInTheDocument();
     expect(screen.getByText('De încasat').closest('div')).toHaveTextContent('2.500,00 lei');
+  });
+
+  it('45c: ?segment=overdue din Dashboard deschide Situația cu „Restanță” deja ales', async () => {
+    await loadedSession();
+    renderPage(['/situatia-platilor?segment=overdue']);
+
+    expect(await screen.findByText('Andrei Popescu')).toBeInTheDocument();
+    expect(screen.queryByText('Elena Marin')).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Restanțieri · 1' })).toBeChecked();
   });
 
   it('Rest > 0 e roșu, Statut e badge, CTA depinde de statut', async () => {

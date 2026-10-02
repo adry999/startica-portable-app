@@ -137,6 +137,8 @@ test('45a: o notă medicală nemodificată redactează identic pe ambele părți
 
   const [entry] = repository.readPage({ beforeEntryId: null }).entries;
 
+  assert.ok(entry.before);
+  assert.ok(entry.after);
   assert.equal(entry.before.healthNotes, '[date medicale]');
   assert.equal(entry.after.healthNotes, '[date medicale]');
 });

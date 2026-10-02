@@ -14,18 +14,20 @@ const SENSITIVE_CHANGED_MARK = '[date medicale: modificat]';
 
 /**
  * Mutează `redactedAfter` în loc — apelat după `redactSensitiveFields`, cât timp valorile brute
- * (`before`/`after`, neredactate) mai sunt la îndemână.
+ * (`before`/`after`, neredactate) mai sunt la îndemână. `before`/`after` sunt `unknown` ca în
+ * `AuditChange` (audit-trail.d.mts) — orice formă de intrare poate ajunge în `recordChange`.
  * @param {string | null} recordType
- * @param {Record<string, unknown> | null} before
- * @param {Record<string, unknown> | null} after
+ * @param {unknown} before
+ * @param {unknown} after
  * @param {Record<string, unknown> | null} redactedAfter
  */
 function markSensitiveFieldChanges(recordType, before, after, redactedAfter) {
   const fields = recordType ? SENSITIVE_FIELDS[recordType] : null;
-  if (!before || !after || !redactedAfter || !fields?.length) return;
+  if (!before || typeof before !== 'object' || !after || typeof after !== 'object' || !redactedAfter || !fields?.length)
+    return;
   for (const field of fields) {
-    const previous = before[field];
-    const next = after[field];
+    const previous = /** @type {Record<string, unknown>} */ (before)[field];
+    const next = /** @type {Record<string, unknown>} */ (after)[field];
     if (previous && next && previous !== next) redactedAfter[field] = SENSITIVE_CHANGED_MARK;
   }
 }

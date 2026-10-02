@@ -92,6 +92,8 @@ export function ChildrenToolbar({
             options: [
               { value: 'all', label: 'Toate', tone: 'neutral' },
               { value: 'incomplete', label: 'Date incomplete', tone: 'yellow' },
+              // 45c (PROMPT-8 §14): sursa „telefon invalid" din „Necesită atenție" al Dashboard-ului.
+              { value: 'telefon-invalid', label: 'Telefon invalid', tone: 'pink' },
             ],
           },
         ]}
