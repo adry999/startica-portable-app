@@ -958,3 +958,27 @@ Două opțiuni, ambele cu cost real:
 
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
+
+## §2 PROMPT-10 — toleranța de rotunjire: am implementat 5 lei (DECIZII 02.10), nu ±0,99 (PROMPT-10)
+
+**Nu e o întrebare deschisă, ci o deviere asumată de la text — consemnată ca atare.**
+
+`PROMPT-CLAUDE-CODE-10.md` §2 cere: „încasat ≠ datorat cu < 1 leu → `roundingDiff` pe plată (...
+validare ±0,99)”. Dar `DECIZII.md` (02.10, „Rotunjire la achitare”, intrare adăugată în aceeași zi,
+deci mai nouă) spune: „Diferență ≤ 5 lei = luna achitată, diferența salvată ca rotunjire. Peste =
+parțial / avans.” — iar `CLAUDE.md` pune explicit DECIZII înaintea oricărui alt document la un
+conflict de design.
+
+Cele două nu pot fi amândouă adevărate: testul deja existent în `record-schema.test.mjs`
+(„acceptă roundingDiff pozitiv sau negativ”, cu `roundingDiff: -1.83`) ar fi picat la o validare
+±0,99 — și exact cazul verbatim din `VERIFICARE-DUPA-PROMPT-8.md` §4 (taxă 4.921,83, încasat 4.920
+→ „achitat · rotunjire −1,83”) are o diferență de 1,83 lei, peste 0,99 dar sub 5. Am implementat
+toleranța **5 lei** (`PAYMENT_ROUNDING_TOLERANCE`, `src/shared/domain/record-schema.mjs`), folosită
+atât la validarea schemei cât și la `paymentRoundingDiff`/`autoAllocatePayment` — singura valoare
+care face testul existent și cele 4 cazuri din VERIFICARE să treacă simultan.
+
+**Rămâne neimplementat din DECIZII:** „Pasul și toleranța se setează pe filială” — nu există încă
+niciun loc de configurare per filială (nici în `ServicesSettings`, nici în vreun alt ecran de
+setări); `PAYMENT_ROUNDING_TOLERANCE` e o constantă fixă, la fel pentru toate filialele. Dacă
+produsul chiar vrea tolerație/pas configurabile per filială, e un punct nou de lucru (schemă de
+setări + UI), nu un fix în `payment-form.ts`.
