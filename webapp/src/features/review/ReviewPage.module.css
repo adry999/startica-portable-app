@@ -224,7 +224,6 @@
 
 .skipButton {
   margin-left: auto;
-  font-weight: 800;
   font-size: 13px;
   color: var(--muted);
 }

@@ -64,7 +64,6 @@
 
 .statLink.statLink {
   color: var(--yellow-ink);
-  font-weight: 800;
   font-size: 13px;
   white-space: nowrap;
 }

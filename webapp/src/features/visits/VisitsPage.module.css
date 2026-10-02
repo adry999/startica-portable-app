@@ -283,10 +283,7 @@
 }
 
 .detailLink {
-  padding: var(--space-8) 0 0 !important;
   font-size: 13px !important;
-  font-weight: 800 !important;
-  color: var(--orange-ink) !important;
 }
 
 .detailActionsRight {
@@ -296,9 +293,7 @@
 }
 
 .detailLinkMuted {
-  padding: var(--space-8) 0 0 !important;
   font-size: 13px !important;
-  font-weight: 800 !important;
   color: var(--subtle) !important;
 }
 

@@ -31,7 +31,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Secțiuni ascunse fără date (tipar F15) | — | ✅ PROMPT-11 §7 (audit + Serviciu/backup/antrenor/SMS corectate, restul contextual) |
 | F20 Grupe → Carduri ≠ 4a (editor) | ✅ 4a | ⏳ PROMPT-11 §8 |
 | F21 Copii: sortare pe toate coloanele, antet corect | ✅ 2a | ✅ PROMPT-11 §9 |
-| F22 Button link cu fundal („Vezi calendarul →”) | — | ⏳ PROMPT-11 §10 |
+| F22 Button link cu fundal („Vezi calendarul →”) | — | ✅ PROMPT-11 §10 |
 | F23 Grafic Evoluția încasărilor | ✅ 1a refăcut | ⏳ PROMPT-11 §11 |
 | F24 Necesită atenție ≠ design (texte, prezența de azi) | ✅ 1a/45c | ✅ PROMPT-11 §12 |
 | F25 Zile de naștere: gol fără „Următoarea” | ✅ 1b | ⏳ PROMPT-11 §13 |

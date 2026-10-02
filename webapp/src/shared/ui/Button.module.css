@@ -76,8 +76,20 @@
 /* Link fără chenar/fundal — acțiuni secundare în text (ex. „Schimbă”, „+ Adaugă” dintr-o fișă). */
 .link {
   padding: 0;
+  background: none;
+  border: none;
   color: var(--orange-ink);
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.link:hover:not(:disabled) {
+  color: var(--orange);
+  text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--orange-ink);
+  outline-offset: 2px;
 }
 
 /* Link fără chenar/fundal, în roz — acțiuni distructive în text (ex. „Șterge” dintr-un rând). */

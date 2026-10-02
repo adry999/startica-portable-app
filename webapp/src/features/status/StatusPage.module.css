@@ -83,7 +83,6 @@
 .cardLink {
   color: var(--yellow-ink);
   font-size: 12px;
-  font-weight: 800;
   white-space: nowrap;
 }
 

@@ -1282,3 +1282,18 @@ numărul de zile — `AttentionItem.count` a devenit `number | string`), ton `si
 
 **Neatins din scop:**
 - Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț).
+
+## §10 (F22, PROMPT-11)
+
+`Button.module.css` `.link`: `background:none; border:none; padding:0; font-weight:800;
+color:var(--orange-ink)`, `:hover` (`color:var(--orange)` + underline), `:focus-visible` (inel 2px,
+`outline-offset:2px`) — nicio schimbare la apăsare (fără fundal nicăieri în cascadă). Audit complet
+(`grep -rn 'variant="link"'`) pe cele 16 locuri cu `className` local: 7 clase duplicau declarații
+ale variantei (`font-weight: 800` repetat, sau în `VisitsPage.module.css` chiar `padding`/`color`
+cu `!important` peste varianta nouă) — declarațiile duplicate au fost scoase, păstrând doar ce e
+cu adevărat propriu locului (mărime de font, ton diferit intenționat ca `--yellow-ink`/`--mint-ink`/
+`--muted`/`--subtle`, poziționare). Restul (9 clase) erau deja doar layout/poziționare — neatinse.
+Story nouă: `Button.stories.tsx` — link pe cremă, link pe card colorat cu `tone="inherit"`.
+
+**Neatins din scop:**
+- Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț).
