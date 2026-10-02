@@ -19,8 +19,11 @@ import { assertUsableExternalFolder } from './external-backup-folder.mjs';
 // Fișiere mai vechi au nume cu diacritice și spații (motivul nenormalizat, ex.
 // "inainte-ștergere definitivă"): trebuie recunoscute în continuare, ca să
 // rămână vizibile și restaurabile, chiar dacă backup() nu le mai produce așa.
-const BACKUP_NAME = /^startica_[\p{L}\p{N}_. -]+\.db$/u;
-const TEMPORARY_NAME = /^startica_[\p{L}\p{N}_. -]+\.db\.tmp$/u;
+// `.startica-backup` (42d, full-backup.service.mjs) e acceptat alături de `.db` legacy —
+// aceeași listă/rezolvare de fișier din acest serviciu arată și arhivele complete,
+// fără cod nou în BackupPage.tsx/useRestore.ts (decizia 4 din plan).
+const BACKUP_NAME = /^startica_[\p{L}\p{N}_. -]+\.(db|startica-backup)$/u;
+const TEMPORARY_NAME = /^startica_[\p{L}\p{N}_. -]+\.(db|startica-backup)\.tmp$/u;
 // Un .tmp mai nou decât atât poate aparține unui backup aflat în curs.
 const TEMPORARY_GRACE_MS = 3600000;
 

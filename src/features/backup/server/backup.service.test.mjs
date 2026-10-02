@@ -96,6 +96,15 @@ test('un backup existent cu diacritice și spații în nume este listat, contori
   assert.equal(service.resolveBackupFile(legacyName), join(backupDirectory, legacyName));
 });
 
+test('un fișier .startica-backup (arhivă completă, 42d) e listat și rezolvabil alături de .db', t => {
+  const { service, backupDirectory } = createHarness(t);
+  const archiveName = 'startica_2026-10-02T10-00-00-000Z_manual_73c52b1f.startica-backup';
+  writeFileSync(join(backupDirectory, archiveName), 'PK\u0003\u0004');
+
+  assert.ok(service.listBackups().some(entry => entry.name === archiveName));
+  assert.equal(service.resolveBackupFile(archiveName), join(backupDirectory, archiveName));
+});
+
 test('resolveBackupFile respinge un nume cu separator de cale', t => {
   const { service } = createHarness(t);
 
