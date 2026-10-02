@@ -13,7 +13,12 @@ import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
 import type { DataTableSort, PeriodPreset } from '@shared/ui';
-import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
+import {
+  buildPaymentRecord,
+  buildSiblingPaymentRecords,
+  findDuplicatePayment,
+  type PaymentFormValues,
+} from './payment-form';
 import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot, Service } from '@contracts/record-types.mjs';
 
 export type PaymentsStatus = 'loading' | 'ready' | 'failed';
@@ -243,6 +248,11 @@ export function usePayments(initialChildId = ''): PaymentsData {
     const duplicate = findDuplicatePayment(records, record);
     if (duplicate && !confirmDuplicate()) return false;
     await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+    // 44b: frați bifați în „+ Adaugă fratele” — câte o achitare pe copil, același receiptGroupId,
+    // un singur bon (§11.2). Nicio verificare de duplicat pe rândurile astea — fac parte dintr-o
+    // plată voit grupată, nu sunt o eroare de reintroducere.
+    for (const siblingRecord of buildSiblingPaymentRecords(values))
+      await session.mutate('/api/record', { type: 'payments', mode: 'create', record: siblingRecord });
     return true;
   }
 

@@ -164,6 +164,10 @@ const FIELDS = {
     // fișier; păstrează proveniența pentru asocierea manuală de mai târziu.
     'sourceChildId',
     'group',
+    // 44b (PROMPT-8 §13): comun tuturor achitărilor dintr-o singură plată „+ Adaugă fratele" —
+    // un rând per copil, un singur bon (§11.2). Spre deosebire de `group` (mort, niciodată citit),
+    // ăsta chiar leagă înregistrări între ele.
+    'receiptGroupId',
     'month',
     'method',
     'service',

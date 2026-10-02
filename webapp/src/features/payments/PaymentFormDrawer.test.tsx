@@ -43,6 +43,17 @@ const records = {
       archived: false,
       feeHistory: [{ from: '2026-01', amount: 100, currency: 'EUR' }],
     },
+    // 44b: frate al c1 (același telefon de părinte) — pentru testele „+ Adaugă fratele”.
+    {
+      id: 'c4',
+      name: 'Radu Popescu',
+      archived: false,
+      status: 'Activ',
+      statusHistory: [{ from: '2026-01', status: 'Activ' }],
+      attendanceDate: '2026-01-10',
+      feeHistory: [{ from: '2026-01', amount: 1200 }],
+      phone: '069123456',
+    },
   ],
   payments: [],
   expenses: [],
@@ -721,6 +732,98 @@ describe('PaymentFormDrawer', () => {
 
       await user.click(screen.getByRole('button', { name: 'Închide' }));
       expect(screen.getByText('Câmpuri modificate: suma, repartizarea.')).toBeInTheDocument();
+    });
+  });
+
+  describe('44b: frați într-o plată', () => {
+    it('fără frați (același telefon de părinte), linkul „+ Adaugă fratele” nu apare', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Maria Ionescu');
+      expect(screen.queryByText(/Adaugă fratele/)).not.toBeInTheDocument();
+    });
+
+    it('„+ Adaugă fratele” adaugă rândul bifat, cu suma implicită a taxei lui', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+
+      const addSiblingLink = screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ });
+      await user.click(addSiblingLink);
+
+      expect(screen.getByRole('checkbox', { name: 'Include pe Radu Popescu în plată' })).toBeChecked();
+      expect(screen.getByText('Radu Popescu')).toBeInTheDocument();
+      expect(screen.getByLabelText('Suma pentru Radu Popescu')).toHaveValue(1200);
+      // Odată adăugat, linkul dispare — nu mai sunt alți frați disponibili.
+      expect(screen.queryByText(/Adaugă fratele/)).not.toBeInTheDocument();
+    });
+
+    it('debifarea unui frate îl scoate din grup fără să-i șteargă rândul', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+      await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
+
+      await user.click(screen.getByRole('checkbox', { name: 'Include pe Radu Popescu în plată' }));
+      expect(screen.getByRole('checkbox', { name: 'Include pe Radu Popescu în plată' })).not.toBeChecked();
+      expect(screen.getByText('Radu Popescu')).toBeInTheDocument();
+    });
+
+    it('eliminarea unui frate îi șterge rândul și readuce linkul „+ Adaugă fratele”', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+      await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
+
+      await user.click(screen.getByRole('button', { name: 'Elimină Radu Popescu din plată' }));
+      expect(screen.queryByText('Radu Popescu')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ })).toBeInTheDocument();
+    });
+
+    it('la trimitere, onSubmit primește frații bifați cu un receiptGroupId comun', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+      await user.type(sumInput(), '500');
+      await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
+
+      await user.click(saveButton());
+
+      await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      const sent = onSubmit.mock.calls[0][0];
+      expect(sent.siblings).toEqual([{ childId: 'c4', month: expect.any(String), amount: '1200.00' }]);
+      expect(sent.receiptGroupId).toMatch(/^GRP-/);
+    });
+
+    it('fără niciun frate bifat, onSubmit nu primește receiptGroupId', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+      await user.type(sumInput(), '500');
+
+      await user.click(saveButton());
+
+      await vi.waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].siblings).toEqual([]);
+      expect(onSubmit.mock.calls[0][0].receiptGroupId).toBeUndefined();
+    });
+
+    it('„Total grup” editabil ajustează suma principală, nu pe a fratelui', async () => {
+      renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Andrei Popescu');
+      await user.type(sumInput(), '500');
+      await user.click(screen.getByRole('button', { name: /Adaugă fratele \(Radu Popescu\)/ }));
+
+      // Total grup = 500 (principal) + 1200 (Radu) = 1700.
+      const totalInput = screen.getByLabelText('Total grup') as HTMLInputElement;
+      expect(totalInput).toHaveValue(1700);
+
+      await user.clear(totalInput);
+      await user.type(totalInput, '1800');
+
+      expect(sumInput()).toHaveValue(600);
+      expect(screen.getByLabelText('Suma pentru Radu Popescu')).toHaveValue(1200);
     });
   });
 });

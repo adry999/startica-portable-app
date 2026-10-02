@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPaymentRecord,
+  buildSiblingPaymentRecords,
   defaultPaymentFormValues,
   findDuplicatePayment,
   tenderMethodsFor,
@@ -88,6 +89,7 @@ describe('buildPaymentRecord', () => {
     allocations: [{ month: '2026-09', amount: '1500' }],
     notes: '',
     sendSmsConfirmation: false,
+    siblings: [],
   };
 
   it('calculează suma și metoda din tenders, ignorând amount-ul trimis', () => {
@@ -116,6 +118,60 @@ describe('buildPaymentRecord', () => {
     expect(() =>
       buildPaymentRecord(null, 'PAY-1', { ...baseValues, tenders: { Cash: '', Card: '', Transfer: '' } }),
     ).toThrow();
+  });
+});
+
+describe('buildSiblingPaymentRecords (44b)', () => {
+  const baseValues = {
+    childId: 'c1',
+    date: '2026-09-10',
+    service: 'gradinita',
+    tenders: { Cash: '1500', Card: '', Transfer: '' },
+    sourceName: '',
+    reviewed: false,
+    allocations: [{ month: '2026-09', amount: '1500' }],
+    notes: '',
+    sendSmsConfirmation: false,
+    siblings: [],
+  };
+
+  it('gol fără frați sau fără receiptGroupId', () => {
+    expect(buildSiblingPaymentRecords(baseValues)).toEqual([]);
+    expect(
+      buildSiblingPaymentRecords({ ...baseValues, siblings: [{ childId: 'c2', month: '2026-09', amount: '500' }] }),
+    ).toEqual([]);
+  });
+
+  it('câte un Payment pe frate bifat, cu același receiptGroupId și metoda plății principale', () => {
+    const records = buildSiblingPaymentRecords({
+      ...baseValues,
+      receiptGroupId: 'GRP-1',
+      siblings: [
+        { childId: 'c2', month: '2026-09', amount: '500' },
+        { childId: 'c3', month: '2026-08', amount: '300' },
+      ],
+    });
+    expect(records).toHaveLength(2);
+    expect(records[0]).toMatchObject({
+      childId: 'c2',
+      date: '2026-09-10',
+      service: 'gradinita',
+      amount: 500,
+      method: 'Cash',
+      receiptGroupId: 'GRP-1',
+      allocations: [{ month: '2026-09', amount: 500 }],
+    });
+    expect(records[1]).toMatchObject({ childId: 'c3', receiptGroupId: 'GRP-1', amount: 300 });
+    expect(records[0].id).not.toBe(records[1].id);
+  });
+
+  it('ignoră rândurile cu sumă zero sau negativă', () => {
+    const records = buildSiblingPaymentRecords({
+      ...baseValues,
+      receiptGroupId: 'GRP-1',
+      siblings: [{ childId: 'c2', month: '2026-09', amount: '0' }],
+    });
+    expect(records).toEqual([]);
   });
 });
 
