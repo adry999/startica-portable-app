@@ -47,7 +47,7 @@ test('unlock deblochează 10 minute, assertUnlocked prelungește, iar 403 apare 
   assert.throws(() => service.assertUnlocked());
 });
 
-test('5 greșeli blochează 60 de secunde, apoi permite din nou', () => {
+test('5 greșeli blochează 15 minute, apoi permite din nou', () => {
   let nowMs = Date.parse('2026-09-27T10:00:00.000Z');
   const now = () => new Date(nowMs);
   const { readSetting, writeSetting } = createSettingsStore();
@@ -64,8 +64,12 @@ test('5 greșeli blochează 60 de secunde, apoi permite din nou', () => {
     lockedError = error;
   }
   assert.equal(lockedError?.status, 429);
+  assert.match(lockedError?.message ?? '', /15 minute/);
 
-  nowMs += 61 * 1000;
+  nowMs += 15 * 60 * 1000 - 1000;
+  assert.throws(() => service.unlock('1234'), /429|minute/i);
+
+  nowMs += 2000;
   assert.doesNotThrow(() => service.unlock('1234'));
 });
 

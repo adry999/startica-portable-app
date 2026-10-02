@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
+import { PinGate } from '@shared/app/PinGate';
 import { EMPTY_STATES, EmptyState, resolveEmptyStateText, resolveEmptyStateTitle } from '@shared/ui';
 import {
   completProfile,
@@ -8,6 +9,7 @@ import {
   isModuleAllowed,
   MODULE_LABELS,
   PRESET_LABELS,
+  requiresPin,
 } from '#shared/domain/computer-profile.mjs';
 import { VIEW_LABELS } from './nav-items';
 import { VIEW_PATHS } from './routes';
@@ -27,15 +29,28 @@ export interface ModuleGuardProps {
  * modul neinclus în profil; aici e doar vizibilitate/UX peste acea graniță deja impusă.
  *
  * Nu șterge și nu atinge nicio dată locală (decizia 02.10, RASPUNSURI-02-10.md #6) — doar ascunde.
+ *
+ * §4 (PROMPT-CLAUDE-CODE-10.md, screens/31-profiluri-calculator.md): tot aici, după ce modulul e
+ * permis, se verifică `requiresPin` — modulul e în `profile.pinModules` (bifa „PIN la intrare” din
+ * ProfileEditor). E singurul loc unde se face asta la nivel de rută; Salarii (`features/personal`)
+ * își păstrează propriul `PinGate` hardcodat (decizia 23d — mereu protejate, indiferent de profil),
+ * care poate ajunge înfășurat și de acesta când `personal` e bifat — fără prompt dublu, cele două
+ * citesc aceeași stare de deblocare de pe server (`usePinStatus`/`/api/personal/pin`).
  */
 export function ModuleGuard({ moduleId, children }: ModuleGuardProps) {
   const session = useAppSession();
   const navigate = useNavigate();
   const profile = session.state.profile ?? completProfile();
 
-  if (isModuleAllowed(profile, moduleId)) return <>{children}</>;
-
   const moduleLabels: Record<string, string> = MODULE_LABELS;
+
+  if (isModuleAllowed(profile, moduleId)) {
+    if (requiresPin(profile, moduleId)) {
+      return <PinGate label={moduleLabels[moduleId] ?? 'acest modul'}>{children}</PinGate>;
+    }
+    return <>{children}</>;
+  }
+
   const presetLabels: Record<string, string> = PRESET_LABELS;
   const params = {
     modul: moduleLabels[moduleId] ?? 'acest modul',
