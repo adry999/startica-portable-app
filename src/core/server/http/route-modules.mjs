@@ -79,6 +79,7 @@ export const STATIC_PATH_MODULE = {
   '/api/sync/pairing-codes': 'admin',
   '/api/sync/devices': 'admin',
   '/api/sync/devices/revoke': 'admin',
+  '/api/sync/devices/profile': 'admin',
   '/api/sync/conflicts': 'admin',
   '/api/sync/conflicts/resolve': 'admin',
 
