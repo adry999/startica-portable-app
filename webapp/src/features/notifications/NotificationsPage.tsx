@@ -20,6 +20,7 @@ import { useNotificationPreferences } from './useNotificationPreferences';
 import { SmsMessagesPanel } from './SmsMessagesPanel';
 import { SmsTemplatesPanel } from './SmsTemplatesPanel';
 import styles from './NotificationsPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 type NotificationsTab = 'canale' | 'mesaje' | 'sabloane';
 
@@ -39,7 +40,7 @@ export function NotificationsPage() {
       await telegram.sendTest();
       toast.show({ message: 'Mesaj de probă trimis.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -81,7 +82,7 @@ function TelegramSection({ telegram }: { telegram: TelegramStatusData }) {
       setChangingAccount(false);
       toast.show({ message: 'Bot conectat. Ai primit un mesaj de probă în Telegram.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -90,7 +91,7 @@ function TelegramSection({ telegram }: { telegram: TelegramStatusData }) {
       await telegram.disconnect();
       toast.show({ message: 'Telegram deconectat.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -193,7 +194,7 @@ function PreferencesSection() {
       await prefs.save();
       toast.show({ message: 'Preferințele au fost salvate.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

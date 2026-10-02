@@ -15,6 +15,7 @@ import { createPaymentUndo, paymentUndoDetail, type PaymentFormValues } from './
 import type { Payment } from '@contracts/record-types.mjs';
 import { today } from '@domain/calendar-month.mjs';
 import styles from './PaymentsPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 type ViewMode = 'table' | 'months';
 
@@ -125,7 +126,7 @@ export function PaymentsPage({
       }
       return saved;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     }
   }
@@ -146,7 +147,7 @@ export function PaymentsPage({
       }
       return saved;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     }
   }

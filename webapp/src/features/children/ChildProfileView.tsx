@@ -52,6 +52,7 @@ import type {
 } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const GROUP_SQUARE_TONE_CLASS: Record<PillTone, string> = {
   orange: 'groupSquareOrange',
@@ -135,7 +136,7 @@ export function ChildProfileView({
         record: { ...child, groupId: groupId || null },
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
     setChangingGroup(false);
   }
@@ -153,7 +154,7 @@ export function ChildProfileView({
       setNoteText('');
       setAddingNote(false);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -173,7 +174,7 @@ export function ChildProfileView({
       });
       setEditingNoteId(null);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -188,7 +189,7 @@ export function ChildProfileView({
         } satisfies Child,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -213,7 +214,7 @@ export function ChildProfileView({
         onAction: () => void session.mutate('/api/record', { type: 'payerAliases', mode: 'create', record: alias }),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -223,7 +224,7 @@ export function ChildProfileView({
     try {
       await session.mutate('/api/record', { type: 'children', mode: 'update', record });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       throw error;
     }
     setEditDrawerOpen(false);

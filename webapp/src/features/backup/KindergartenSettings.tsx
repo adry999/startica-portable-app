@@ -21,6 +21,7 @@ import {
 } from './useKindergarten';
 import backupStyles from './BackupPage.module.css';
 import styles from './KindergartenSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const RECEIPT_FORMAT_OPTIONS: { value: ReceiptFormat; label: string }[] = [
   { value: 'a5', label: 'A5' },
@@ -104,7 +105,7 @@ export function KindergartenSettings() {
       toast.show({ message: 'Datele grădiniței au fost salvate.' });
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     } finally {
       setSaving(false);

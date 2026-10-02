@@ -29,6 +29,7 @@ import { GroupCardCompact } from './GroupCardCompact';
 import { GroupFormDrawer } from './GroupFormDrawer';
 import { GroupTeamPicker } from './GroupTeamPicker';
 import styles from './GroupsPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 /** Numele afișat al educatorului: principalul din `team`, cu revenire la textul vechi `educator`. */
 function withComputedEducator(group: GroupCardView, staffById: Map<string, Staff>): GroupCardView {
@@ -110,7 +111,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
     try {
       await groupsData.deleteGroup(id);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -134,7 +135,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
         onAction: () => void undoCreateGroup(newId),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -143,7 +144,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
       await groupsData.deleteGroup(group.id);
       toast.show({ message: 'Grupă ștearsă.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -242,7 +243,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                   await groupsData.saveTeam(selectedGroup.id, team);
                   toast.show({ message: 'Grupă actualizată.' });
                 } catch (error) {
-                  toast.show({ message: (error as Error).message });
+                  toast.show({ message: toUserError(error) });
                 }
               }}
               onDelete={() => setDeleteTarget(selectedGroup)}
@@ -251,7 +252,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                   await groupsData.assignChild(selectedGroup.id, childId);
                   toast.show({ message: 'Copil atribuit grupei.' });
                 } catch (error) {
-                  toast.show({ message: (error as Error).message });
+                  toast.show({ message: toUserError(error) });
                 }
               }}
               onRemove={async childId => {
@@ -259,7 +260,7 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
                   await groupsData.removeChild(childId);
                   toast.show({ message: 'Copil scos din grupă.' });
                 } catch (error) {
-                  toast.show({ message: (error as Error).message });
+                  toast.show({ message: toUserError(error) });
                 }
               }}
             />

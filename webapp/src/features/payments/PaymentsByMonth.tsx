@@ -5,6 +5,7 @@ import { formatMonthAbbrev, formatMonthName } from '#shared/format/date-format.m
 import { PaymentDetailPanel } from './PaymentDetailPanel';
 import type { PaymentRowView, PaymentsData } from './usePayments';
 import styles from './PaymentsByMonth.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 type MonthFilter = 'all' | 'unassigned' | 'archived';
 
@@ -58,7 +59,7 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
         toast.show({ message: 'Achitare arhivată.' });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

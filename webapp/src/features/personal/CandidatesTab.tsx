@@ -5,6 +5,7 @@ import { buildCandidateColumns } from './candidateColumns';
 import { CandidateFormDrawer } from './CandidateFormDrawer';
 import type { Candidate } from '@shared/personal/personal.types';
 import styles from './CandidatesTab.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface CandidatesTabProps {
   formTarget: Candidate | 'new' | null;
@@ -48,7 +49,7 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
       toast.show({ message: 'Candidatul a fost salvat.' });
       onCloseForm();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -58,7 +59,7 @@ export function CandidatesTab({ formTarget, onNew, onOpenRow, onCloseForm }: Can
       toast.show({ message: 'Candidatul a fost șters.' });
       onCloseForm();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

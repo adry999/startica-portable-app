@@ -3,6 +3,7 @@ import { requestJson, useAppSession } from '@shared/api/session';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { formatFileSize } from '#shared/format/file-size-format.mjs';
 import { today } from '@domain/calendar-month.mjs';
+import { toUserError } from '@shared/api/to-user-error';
 
 // O zi în ms: peste atât, un backup local sau extern e considerat vechi.
 const STALE_AFTER_MS = 86400000;
@@ -111,7 +112,7 @@ export function useBackup(): BackupData {
       await session.mutate('/api/settings', { externalDir: externalDirInput });
       setDirDirty(false);
     } catch (error) {
-      setSettingsError((error as Error).message);
+      setSettingsError(toUserError(error));
       throw error;
     } finally {
       setSettingsBusy(false);

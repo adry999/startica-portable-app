@@ -428,9 +428,10 @@ describe('ExpensesPage', () => {
 
     const [dirtyForm] = readDirtyForms();
 
-    // Simulăm eșecul mutației (ex. 409 „Verifică operațiunea anterioară”) — înainte de C1,
-    // ExpenseFormDrawer.submitForm întorcea true fără să aștepte deloc mutația, deci
-    // „Salvează și schimbă” din useBranchSwitch ar fi schimbat filiala cu formularul pierdut.
+    // Simulăm eșecul mutației (409, conflict de revizie) — înainte de C1, ExpenseFormDrawer.submitForm
+    // întorcea true fără să aștepte deloc mutația, deci „Salvează și schimbă” din useBranchSwitch ar
+    // fi schimbat filiala cu formularul pierdut. §3: un 409 arată mereu textul fix din toUserError,
+    // nu mesajul original al serverului.
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => ({
       ok: false,
       status: 409,
@@ -440,7 +441,9 @@ describe('ExpensesPage', () => {
     await expect(dirtyForm.save()).resolves.toBe(false);
     // Formularul rămâne nesalvat — nu s-a închis, nu s-a golit registrul dirty-forms.
     expect(readDirtyForms()).toHaveLength(1);
-    expect(await screen.findByText('Verifică operațiunea anterioară cu „Reîncarcă”.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Altcineva a modificat între timp. Reîncarcă și încearcă din nou.'),
+    ).toBeInTheDocument();
   });
 
   it('a doua deschidere a formularului „Cheltuială nouă” e goală, nu precompletată cu prima (C2)', async () => {

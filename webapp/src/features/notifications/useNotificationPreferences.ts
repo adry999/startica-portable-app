@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { DEFAULT_NOTIFICATION_PREFERENCES } from '#shared/domain/notification-preferences.mjs';
 import type { NotificationPreferences } from '#shared/domain/notification-preferences.mjs';
+import { toUserError } from '@shared/api/to-user-error';
 
 export type PreferencesScreenStatus = 'loading' | 'ready' | 'failed';
 
@@ -36,7 +37,7 @@ export function useNotificationPreferences(): NotificationPreferencesData {
       .catch((error: Error) => {
         if (cancelled) return;
         setStatus('failed');
-        setFailureMessage(error.message);
+        setFailureMessage(toUserError(error));
       });
     return () => {
       cancelled = true;

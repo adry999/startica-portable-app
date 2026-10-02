@@ -28,6 +28,7 @@ import { formatNameList } from '@shared/format/name-list';
 import { exportPaymentsCsv } from './payments-export';
 import { ARCHIVE_FILTER_OPTIONS, type ArchiveFilter, type PaymentRowView, type PaymentsData } from './usePayments';
 import styles from './PaymentsTable.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const METHOD_TONE: Record<string, BadgeTone> = { Cash: 'orange', Card: 'yellow', Transfer: 'mint' };
 
@@ -62,7 +63,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
         onAction: () => void undoArchiveMany(targets),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -72,7 +73,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
     try {
       for (const row of targets) await data.unarchivePayment(row.id);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -84,7 +85,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
       setSelectedRowKeys(new Set());
       toast.show({ message: `${targets.length} achitări dezarhivate.` });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -96,7 +97,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
       setSelectedRowKeys(new Set());
       toast.show({ message: `${targets.length} achitări șterse definitiv.` });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -120,7 +121,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
         });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -129,7 +130,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
       await data.deletePayment(row.id);
       toast.show({ message: 'Achitare ștearsă definitiv.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

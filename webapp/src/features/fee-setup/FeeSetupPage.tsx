@@ -33,6 +33,7 @@ import {
   type FeeSetupRowView,
 } from './useFeeSetup';
 import styles from './FeeSetupPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const CURRENCY_OPTIONS: { value: FeeCurrency; label: string }[] = [
   { value: 'MDL', label: 'MDL' },
@@ -96,7 +97,7 @@ export function FeeSetupPage() {
       await feeSetupData.save([row.id]);
       toast.show({ message: `${row.name}: fișă completată.` });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

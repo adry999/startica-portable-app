@@ -20,6 +20,7 @@ import { SERVICE_TONES } from '@domain/record-schema.mjs';
 import { useServices, type ServiceInput, type ServiceView } from './useServices';
 import backupStyles from './BackupPage.module.css';
 import styles from './ServicesSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 function firstUnusedTone(services: ServiceView[]): string {
   const used = new Set(services.map(service => service.tone));
@@ -76,7 +77,7 @@ export function ServicesSettings() {
       closeDrawer();
     } catch (error) {
       // Server-side: assertUniqueName respinge un nume duplicat — eroarea lui apare direct aici.
-      setFormError((error as Error).message);
+      setFormError(toUserError(error));
     } finally {
       setSubmitting(false);
     }
@@ -86,7 +87,7 @@ export function ServicesSettings() {
     try {
       await data.setHidden(service.id, !service.hidden);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

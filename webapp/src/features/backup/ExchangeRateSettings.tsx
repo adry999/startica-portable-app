@@ -21,6 +21,7 @@ import { feeEntryFor } from '@domain/tuition-obligation.mjs';
 import { useExchangeRates, type PlanPreset } from './useExchangeRates';
 import backupStyles from './BackupPage.module.css';
 import styles from './ExchangeRateSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 // Culoarea benzii unui plan vine din poziția lui în listă, nu dintr-o proprietate salvată
 // (planurile nu au un ID de culoare — vezi group-tone.ts pentru același model la grupe).
@@ -78,7 +79,7 @@ export function ExchangeRateSettings() {
       setEditingRate(false);
       toast.show({ message: 'Cursul de azi a fost corectat.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -88,7 +89,7 @@ export function ExchangeRateSettings() {
       if (result.ok) toast.show({ message: 'Cursul BNM a fost actualizat.' });
       else toast.show({ message: result.error || 'BNM indisponibil.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -118,7 +119,7 @@ export function ExchangeRateSettings() {
       setPlansMode('view');
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     } finally {
       setSavingPresets(false);

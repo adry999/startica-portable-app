@@ -4,6 +4,7 @@ import { paymentTenders } from '@domain/payment-allocations.mjs';
 import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import type { Child, Payment, PaymentTender, RecordsSnapshot } from '@contracts/record-types.mjs';
+import { toUserError } from '@shared/api/to-user-error';
 
 export const DEFAULT_TENDER_METHODS = ['Cash', 'Card', 'Transfer'];
 
@@ -209,7 +210,7 @@ export function createPaymentUndo(
     const failed = settled.filter((outcome): outcome is PromiseRejectedResult => outcome.status === 'rejected');
     if (failed.length === 0) return;
     const succeededCount = auditIds.length - failed.length;
-    const reason = failed[0].reason instanceof Error ? failed[0].reason.message : String(failed[0].reason);
+    const reason = toUserError(failed[0].reason);
     throw new Error(
       `Anulat ${succeededCount} din ${auditIds.length} achitări — ${failed.length === 1 ? '1 nu a putut fi anulată' : `${failed.length} nu au putut fi anulate`} (${reason}).`,
     );

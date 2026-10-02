@@ -36,6 +36,7 @@ import { EnrollDrawer } from './EnrollDrawer';
 import { STATUS_LABEL, type VisitFormValues } from './visit-form';
 import type { Visit, VisitStatus } from '@contracts/record-types.mjs';
 import styles from './VisitsPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const STATUS_TONE: Record<VisitStatus, BadgeTone> = {
   Programată: 'yellow',
@@ -103,7 +104,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       }
       setFormTarget(null);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -111,7 +112,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
     try {
       await visitsData.applyQuickStatus(visit, status);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -124,12 +125,12 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           message: 'Vizită arhivată.',
           actionLabel: 'Anulează',
           onAction: () => {
-            visitsData.setArchived(visit, false).catch(error => toast.show({ message: (error as Error).message }));
+            visitsData.setArchived(visit, false).catch(error => toast.show({ message: toUserError(error) }));
           },
         });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -138,7 +139,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       await visitsData.deleteForever(visit.id);
       toast.show({ message: 'Vizită ștearsă definitiv.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -155,7 +156,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         message: `${selectedVisits.length} ${single ? 'vizită' : 'vizite'} ${targetArchived ? (single ? 'arhivată' : 'arhivate') : single ? 'dezarhivată' : 'dezarhivate'}.`,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -184,7 +185,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
         message: `${selectedVisits.length} ${selectedVisits.length === 1 ? 'vizită ștearsă' : 'vizite șterse'} definitiv.`,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -195,7 +196,7 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
       setEnrollTarget(null);
       toast.show({ message: 'Copil înscris. Vizita a fost marcată „Înscris”.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

@@ -24,6 +24,7 @@ import { endBooking } from '@shared/pool/usePool';
 import type { ChildMonthRow, CoachMonthRow } from '@shared/pool/usePool';
 import type { Group } from '@contracts/record-types.mjs';
 import styles from './MonthView.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface MonthViewProps {
   month: string;
@@ -84,7 +85,7 @@ export function MonthView({
       await onCloseMonth();
       toast.show({ message: 'Luna a fost închisă.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -105,7 +106,7 @@ export function MonthView({
       setEndingRow(null);
       onReload();
     } catch (error) {
-      setEndError((error as Error).message);
+      setEndError(toUserError(error));
     } finally {
       setEndBusy(false);
     }

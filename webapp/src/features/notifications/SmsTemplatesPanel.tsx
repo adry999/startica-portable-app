@@ -11,6 +11,7 @@ import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import { SmsProviderCard } from './SmsProviderCard';
 import notificationsStyles from './NotificationsPage.module.css';
 import styles from './SmsTemplatesPanel.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 // Date de exemplu (spec 14-sms.md §11b), folosite doar când nu există niciun restanțier real.
 const SAMPLE_VARIABLES: Record<string, string> = {
@@ -78,7 +79,7 @@ export function SmsTemplatesPanel() {
       const saved = await templatesData.save({ id: selectedId ?? undefined, ...draft });
       setSelectedId(saved.id);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -90,7 +91,7 @@ export function SmsTemplatesPanel() {
       setSelectedId(null);
       setDraft(blankDraft());
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

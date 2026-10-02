@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { requestJson, useAppSession } from '@shared/api/session';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface SyncDevice {
   id: string;
@@ -106,7 +107,7 @@ export function useSyncSettings(): SyncSettingsData {
       setDevicesError(null);
     } else {
       setDevices([]);
-      setDevicesError((devicesResult.reason as Error)?.message || 'Lista nu este disponibilă offline.');
+      setDevicesError(toUserError(devicesResult.reason) || 'Lista nu este disponibilă offline.');
     }
     setDevicesReady(true);
   }, [configured]);

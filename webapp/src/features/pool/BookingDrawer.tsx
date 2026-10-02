@@ -6,6 +6,7 @@ import { slotTimes } from '#features/pool/index.web.mjs';
 import type { PoolSettings } from '#features/pool/pool.types.d.mts';
 import { saveBooking, type WeekDay } from '@shared/pool/usePool';
 import styles from './BookingDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const WEEKDAYS = [
   { value: '1', label: 'Lu' },
@@ -71,7 +72,7 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
       onSaved();
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      setError(toUserError(err));
     } finally {
       setSaving(false);
     }

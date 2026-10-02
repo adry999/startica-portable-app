@@ -38,6 +38,7 @@ import { buildExpenseColumns } from './expenseColumns';
 import { DailyExpensesView, type DailyGroup } from './DailyExpensesView';
 import type { Expense } from '@contracts/record-types.mjs';
 import styles from './ExpensesPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface ExpensesPageProps {
   month: string;
@@ -142,7 +143,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       await expensesData.deleteCategory(id);
       toast.show({ message: 'Categorie ștearsă.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -150,7 +151,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     try {
       await expensesData.setExpenseArchived(expense, !expense.archived);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -179,7 +180,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       toast.show({ message: formTarget !== 'new' && formTarget ? 'Cheltuială actualizată.' : 'Cheltuială adăugată.' });
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     }
   }
@@ -191,7 +192,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       toast.show({ message: 'Cheltuială adăugată.' });
       return true;
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       return false;
     }
   }
@@ -201,7 +202,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       await expensesData.deleteExpense(expense.id);
       toast.show({ message: 'Cheltuială ștearsă definitiv.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -216,7 +217,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         message: `${targets.length} ${targets.length === 1 ? 'cheltuială ștearsă' : 'cheltuieli șterse'} definitiv.`,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -239,7 +240,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
         onAction: () => void undoArchiveSelected(targets, !targetArchived),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -249,7 +250,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
     try {
       for (const expense of targets) await expensesData.setExpenseArchived(expense, archived);
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

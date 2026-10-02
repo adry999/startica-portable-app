@@ -22,6 +22,7 @@ import { capitalize } from '#shared/format/date-format.mjs';
 import { useReview, type ReviewRowView, type ReviewTypeCounts, type ReviewTypeFilter } from './useReview';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ReviewPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const TYPE_LABEL: Record<ReviewRowView['type'], string> = {
   children: 'Fișă',
@@ -99,7 +100,7 @@ export function ReviewPage({ onNavigate: _onNavigate }: ReviewPageProps) {
       toast.show({ message: 'Marcat ca verificat.' });
       skip();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

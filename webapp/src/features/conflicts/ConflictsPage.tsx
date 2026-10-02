@@ -14,6 +14,7 @@ import { kindLabel } from './field-labels';
 import { useConflicts } from './useConflicts';
 import styles from './ConflictsPage.module.css';
 import { ConflictDetail } from './ConflictDetail';
+import { toUserError } from '@shared/api/to-user-error';
 
 export function ConflictsPage() {
   const { conflicts, loading, activeId, setActiveId, resolve } = useConflicts();
@@ -44,7 +45,7 @@ export function ConflictsPage() {
     } catch (error) {
       // B-6: fără acest catch, un 404 („conflictul nu mai există” — rezolvat din altă
       // filă) sau un 500 dispăreau doar în consolă; butonul părea că nu face nimic.
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setResolvingId(null);
     }

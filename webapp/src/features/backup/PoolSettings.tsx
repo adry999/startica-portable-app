@@ -17,6 +17,7 @@ import { usePoolSettings } from '@shared/pool/usePool';
 import type { PoolSettings as PoolSettingsValue } from '#features/pool/pool.types.d.mts';
 import backupStyles from './BackupPage.module.css';
 import styles from './PoolSettings.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 const COACH_PAY_MODE_OPTIONS: { value: PoolSettingsValue['coachPayMode']; label: string }[] = [
   { value: 'per_child', label: 'Pe copil prezent' },
@@ -45,7 +46,7 @@ export function PoolSettings() {
       setForm(saved);
       toast.show({ message: 'Setările bazinului au fost salvate.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setBusy(false);
     }

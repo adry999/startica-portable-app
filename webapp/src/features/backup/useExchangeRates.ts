@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { requestJson } from '@shared/api/session';
 import { latestKnownRate, latestKnownRateDate } from '#shared/domain/exchange-rates.mjs';
 import { today, shiftDays } from '@domain/calendar-month.mjs';
+import { toUserError } from '@shared/api/to-user-error';
 
 export type ExchangeRateSource = 'bnm' | 'manual';
 export type TodayTone = 'mint' | 'yellow' | null;
@@ -82,7 +83,7 @@ export function useExchangeRates(): ExchangeRatesData {
       setPresets(presetsResponse);
       setStatus('ready');
     } catch (error) {
-      setFailureMessage((error as Error).message);
+      setFailureMessage(toUserError(error));
       setStatus('failed');
     }
   }, []);

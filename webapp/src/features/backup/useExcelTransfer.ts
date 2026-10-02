@@ -6,6 +6,7 @@ import { readWorkbook, exportWorkbook } from '#features/data-transfer/domain/exc
 import { loadXlsx } from '@shared/xlsx-loader';
 import type { RecordsSnapshot } from '@contracts/record-types.mjs';
 import type { ImportReport } from '#features/data-transfer/data-transfer.types.d.mts';
+import { toUserError } from '@shared/api/to-user-error';
 
 const IMPORT_CONFIRMATION = 'IMPORT';
 
@@ -83,7 +84,7 @@ export function useExcelTransfer(): ExcelTransferData {
       });
       setParsedState(checked.state ?? null);
     } catch (error) {
-      setPickError((error as Error).message || 'Fișierul nu a putut fi previzualizat.');
+      setPickError(toUserError(error) || 'Fișierul nu a putut fi previzualizat.');
     } finally {
       setLoading(false);
     }

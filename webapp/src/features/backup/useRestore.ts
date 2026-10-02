@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { requestJson, useAppSession } from '@shared/api/session';
 import { formatDateTime } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { toUserError } from '@shared/api/to-user-error';
 
 const RESTORE_CONFIRMATION = 'RESTAUREAZA';
 // O zi în ms: peste atât, cea mai recentă copie externă atrage atenția.
@@ -114,7 +115,7 @@ export function useRestore(defaultExternalDir: string): RestoreData {
       setPreviewError('');
     } catch (error) {
       setPreview(null);
-      setPreviewError((error as Error).message);
+      setPreviewError(toUserError(error));
     }
   }
 
@@ -134,7 +135,7 @@ export function useRestore(defaultExternalDir: string): RestoreData {
         await fetchPreview(nextOptions[0].name, '');
       }
     } catch (error) {
-      setBackupsError((error as Error).message);
+      setBackupsError(toUserError(error));
     } finally {
       setLoadingBackups(false);
     }
@@ -165,7 +166,7 @@ export function useRestore(defaultExternalDir: string): RestoreData {
       setSelectedNameRaw(nextOptions[0].name);
       await fetchPreview(nextOptions[0].name, dir);
     } catch (error) {
-      setBackupsError((error as Error).message);
+      setBackupsError(toUserError(error));
     } finally {
       setLoadingBackups(false);
     }

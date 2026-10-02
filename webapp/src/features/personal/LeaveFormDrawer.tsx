@@ -13,6 +13,7 @@ import {
 import { today } from '#shared/domain/calendar-month.mjs';
 import type { Leave, LeaveType, Staff } from '@shared/personal/personal.types';
 import styles from './LeaveFormDrawer.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface LeaveFormDrawerProps {
   target: Leave | 'new' | null;
@@ -58,7 +59,7 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
       toast.show({ message: 'Concediul a fost salvat.' });
       onClose();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     } finally {
       setSubmitting(false);
     }
@@ -71,7 +72,7 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
       toast.show({ message: 'Concediul a fost șters.' });
       onClose();
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

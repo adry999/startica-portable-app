@@ -26,6 +26,7 @@ import { buildChildrenColumns } from './childrenColumns';
 import type { Child } from '@contracts/record-types.mjs';
 import type { ViewKey } from '@shared/view-key';
 import styles from './ChildrenPage.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface ChildrenPageProps {
   month: string;
@@ -194,7 +195,7 @@ function ChildrenListView({
         onAction: () => void undoArchiveSelected(targets),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -210,7 +211,7 @@ function ChildrenListView({
         });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -231,7 +232,7 @@ function ChildrenListView({
         message: `${targets.length} ${targets.length === 1 ? 'copil dezarhivat' : 'copii dezarhivați'}`,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -244,7 +245,7 @@ function ChildrenListView({
         await session.mutate('/api/record', { type: 'children', mode: 'update', record: row.child });
       }
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -294,7 +295,7 @@ function ChildrenListView({
         onAction: () => void undoMoveSelectedToGroup(targets),
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -325,7 +326,7 @@ function ChildrenListView({
         record: { ...row.child, archived: !row.archived, archivedAt: row.archived ? null : new Date().toISOString() },
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -342,7 +343,7 @@ function ChildrenListView({
         record,
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
       throw error;
     }
     setFormTarget(null);
@@ -364,7 +365,7 @@ function ChildrenListView({
       await session.mutate('/api/record-delete', { type: 'children', id: row.id });
       toast.show({ message: 'Fișă ștearsă definitiv.' });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
@@ -380,7 +381,7 @@ function ChildrenListView({
       setSelectedRowKeys(new Set());
       toast.show({ message: `${targets.length} ${targets.length === 1 ? 'copil șters' : 'copii șterși'} definitiv.` });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 

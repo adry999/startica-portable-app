@@ -16,6 +16,7 @@ import { TimesheetPrintDialog, type TimesheetPrintOptions } from './TimesheetPri
 import { TimesheetPrint } from './TimesheetPrint';
 import type { TimesheetCode } from '@shared/personal/personal.types';
 import styles from './TimesheetView.module.css';
+import { toUserError } from '@shared/api/to-user-error';
 
 export interface TimesheetViewProps {
   month: string;
@@ -109,7 +110,7 @@ export function TimesheetView({ month, printDialogOpen, onPrintDialogClose }: Ti
             : 'Nimic de completat — săptămâna era deja marcată.',
       });
     } catch (error) {
-      toast.show({ message: (error as Error).message });
+      toast.show({ message: toUserError(error) });
     }
   }
 
