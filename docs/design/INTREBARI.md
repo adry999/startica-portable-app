@@ -311,3 +311,24 @@ Dacă ar trebui să fie comun (un singur curs/planuri pentru toate filialele une
 N-am inclus restanța în suma precompletată pentru că F7 a decis explicit opus: „plata acoperă luna ei, restanțele devin opt-in” — o sumă precompletată care include automat restanța ar însemna o bifă pre-bifată, exact ce F7 a eliminat. Dacă „plus restanța” din F11 chiar cere suma totală (lună + restanță) pre-adunată, cu bifa pre-bifată doar în acest flux (venit direct din fișă, nu din achitare liberă), e o excepție de la regula F7, nu o aplicare a ei — am lăsat-o deschisă.
 
 **De decis:** suma precompletată rămâne doar taxa lunii (ca acum, utilizatorul bifează manual restanța dacă vrea s-o acopere) sau trebuie să includă automat restanța + bifa pre-bifată, doar pentru acest flux?
+
+## ✅ „Anulează după salvare” (40b) — doar 2 din cele 6 acțiuni legate la `UndoToast`, restul folosesc mecanismul existent — decizie tehnică, nu de business
+
+`PROMPT-CLAUDE-CODE-8.md` §8.2 cere `UndoToast` (slate, bifă mint, „Anulează · N”, fereastră 15s verificată server-side, `POST /api/undo`) pentru 6 acțiuni: achitare, cheltuială, avans, copil nou, mutare în grupă, arhivare — cu instrucțiune explicită să leg „câte pot verifica sigur” și să consemn restul aici.
+
+**Server, generic pentru toate cele 6 (gata, testat):**
+- `audit_changes` are acum `session_token` (ștampilat de `createAuditLogRepository`), `findById(id)` și `recordChange()` întoarce id-ul intrării.
+- `src/features/audit-log/domain/undo-eligibility.mjs` — `checkUndoEligibility` (fereastră 15s, același calculator prin `sessionToken`, înregistrarea neschimbată între timp) + `restoreValueForUndo` (nu rescrie cu placeholder-ul redactat `[date medicale]` peste date medicale reale curente).
+- `POST /api/undo` (`src/features/audit-log/server/undo.routes.mjs`) — nu `/api/undo/:auditId`, fiindcă `route-dispatcher.mjs` n-are segmente dinamice nicăieri în aplicație; id-ul vine în corp, ca `type` la `/api/record`.
+- `runRevisionTransaction` propagă acum ce întoarce `applyChanges()` (dacă e obiect) în plicul răspunsului — `saveRecord` (`record-editing.routes.mjs`) întoarce `{auditId}` la fiecare creare/actualizare prin `/api/record`. **Acoperă deopotrivă toate cele 6 acțiuni** (achitare, cheltuială, avans, copil nou, mutare în grupă, arhivare trec toate prin `/api/record`) — nu e nevoie de cod server suplimentar per acțiune.
+- 13 + 6 + 4 teste noi (`undo-eligibility.test.mjs`, `undo.routes.integration.test.mjs`, `audit-log.repository.test.mjs`), toate verzi.
+
+**Client — legate de `UndoToast` cu verificare completă (round-trip, cerința explicită „cel puțin 2 din 6”):**
+1. **Cheltuială nouă** (`ExpensesPage.tsx`, `submitExpenseForm`/`quickAddExpense`) — `createExpense()` întoarce `auditId`, `UndoToast` cu titlu „Cheltuială adăugată” + sumă/categorie. Test: `ExpensesPage.test.tsx` „40b: «Anulează» din UndoToast...” — creează, verifică toast-ul, dă click, verifică dispariția.
+2. **Arhivare copil, un singur rând selectat** (`ChildrenPage.tsx`, `archiveSelected`) — la fel, `UndoToast` cu titlul „Copil arhivat” + numele. Test: `ChildrenPage.test.tsx` „40b: arhivează copilul selectat...” — round-trip complet (arhivează → UndoToast → Anulează → reapare în listă).
+
+**Lăsate pe mecanismul vechi (Toast cu `actionLabel`, dezarhivare/reinversare imediată client-side, fără fereastră de 15s, fără verificare server „neschimbat între timp”) — nu pe `UndoToast`:**
+- **Arhivare în lot** (mai mulți copii/cheltuieli selectate deodată din `ChildrenPage.tsx`/`ExpensesPage.tsx`) — „Anulează · N” din spec e un numărător de secunde, pentru o singură acțiune; n-are cum să reprezinte „anulează arhivarea pentru M copii” fără un design nou (listă? un toast per copil?), neclar din prompt. Mecanismul existent (deja testat, M1) rămâne pentru loturi; doar arhivarea unui singur rând selectat a trecut pe `UndoToast`.
+- **Achitare (payment), avans, copil nou, mutare în grupă** — serverul e deja gata pentru oricare dintre ele (orice creare/actualizare prin `/api/record` întoarce `auditId`, exact ca la cheltuială/arhivare). N-am mai legat butonul client (`PaymentFormDrawer`/`AdvancesTab`/`ChildFormDrawer`/mutarea de grupă din profilul copilului) din lipsă de timp pentru verificare robustă a fiecăruia (fiecare are propriul flux de succes — `toast.show(...)` — și propriul test de integrare de actualizat), nu dintr-un blocaj tehnic. Firul e identic cu cel de la cheltuială: ia `auditId` din răspunsul lui `session.mutate('/api/record', …)`, cheamă `undoToast.show({ title, detail, onUndo: () => session.mutate('/api/undo', { auditId }) })`.
+
+**Nimic de decis din partea ta** — doar consemnat ca să nu pară o gaură. Dacă urmează un pas separat, următorul e legarea celor 4 rămase, mecanic, după tiparul de la cheltuială/arhivare de mai sus.
