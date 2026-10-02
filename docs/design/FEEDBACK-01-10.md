@@ -1,8 +1,10 @@
 # Feedback 01.10 (seara) — plan de design + cod
 
-Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md` (arhivat) → `PROMPT-CLAUDE-CODE-9.md`.
+Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…38g`. Cod: `PROMPT-CLAUDE-CODE-8.md`, `-9.md` (arhivate) → `PROMPT-CLAUDE-CODE-10.md`.
 
-## Stare (sync 02.10) — după INTREBARI PROMPT-8 + RASPUNSURI-02-10.md
+## Stare (sync 02.10, 13:25) — PROMPT-9 §1–§9 închis (`c2c745e`) + AUDIT-COD-02-10 / -B
+
+Deschis acum → PROMPT-10: F4 test Chrome, 41d `toUserError`, 41f `roundingDiff`, `PinGate` pe ecrane, 36g goluri (instantaneu/pairing, `access.locked` live), 36c ton pe profil, 37 (426 + instalare automată), Toast story, COMPONENTE nepotriviri, Luna/grupă (Audit B #4). Operațional (tu): repo `startica-releases`, redesfășurare `sync-server`, rularea migrărilor §8/§9 pe date reale.
 
 Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de testat manual (VERIFICARE-DUPA-PROMPT-8.md) · ⏸ pauză
 | # | Design | Cod |
@@ -25,10 +27,10 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
 | Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ✅ 40a/40c (`217250b`,`01f6881`); 40b complet — UndoToast cheltuială + arhivare 1 copil (`74f9317`+`fcbbc39`), apoi achitare/copil nou/mutare în grupă/avans + Grup frați 44b (`5112298`, PROMPT-9 §5; avans folosește `/api/personal/advances` remove, nu `/api/undo` generic — vezi INTREBARI.md) |
 | Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
-| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting, pasă separată |
+| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ PROMPT-10 §3 |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` |
 | Pontaj „Toți prezenți” (41b) | ✅ 41b | ✅ cod nou „P” (`ed33495`); distinct în grilă/legendă/tipar (PROMPT-9 §1.2) |
-| Rotunjire la achitare | ✅ 41f | ⏳ §9.1 — rândul de pe bon (42c) e gata (`5017824`), nimic nu scrie încă `roundingDiff` |
+| Rotunjire la achitare | ✅ 41f | ⏳ PROMPT-10 §2 — rândul de pe bon (42c) e gata (`5017824`), nimic nu scrie încă `roundingDiff` |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
 | Sincronizare pe ecrane, bon, restaurare | ✅ 42a–42d, 46a–46d | ✅ 42a/42b/42c (`86c744d`,`5017824`); 42d server (`7610e5f`…`4635ecc`); 46a–46d UI prima pornire + reîncărcare (`fc42764`) |
 | Actualizări (§5.2) | ✅ 37a–37d | 🔁 verificare versiune + `release.mjs` gata ✅ (`b0e5b8c`); repo = `adry999/startica-releases` ✅ cod (PROMPT-9 §1.1) — repo-ul însuși nu există încă pe GitHub, de creat manual; 426 + instalare automată rămân |
@@ -37,7 +39,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Pagina de start Bazin (43b) | ✅ 43b | ✅ `04d233e` |
 | Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | ✅ 44a–44c (`54b5ee3`,`0f6e0a6`,`7c9028b`); 44d ✅ PROMPT-9 §3 (`fbdcf10`) — `usePanelController` nou (focus pe primul câmp, Ctrl+Enter=submit, Esc→40c prin overlay-stack, „N erori” fix în subsol), lățimi ca tokeni (`--drawer-form`/`--drawer-detail`/`--dialog`), R13 (fără drawer în drawer), trecere prin formularele existente; anularea grupului de frați → §5 |
 | Liste: cele mai noi primele; filtre păstrate | — | ✅ `ba8a80d`+`1e09940` (sortare) · `b1dfb88`+`fba3164` (filtre URL) |
-| Storybook: 3 componente fără poveste + regulă R12 | — | ⏳ §6c |
+| Storybook | — | ✅ audit 02.10: lipsește doar `Toast` story → PROMPT-10 §6 (R12 e acum ModuleGuard) |
 | Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | 🔁 ✅ cu devieri (`1629df0`,`6f0e8ad`,`be02f74`,`8281546`, INTREBARI §14); filtre modul/calculator/perioadă ✅ PROMPT-9 §6 (`db8a53e`) — calculator interim, doar local, până la `device_id`/`device_name` din §7 |
 | Personal complet (salarii, avansuri, stat) | ⏸ de decis ce intră | — |
 

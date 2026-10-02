@@ -76,3 +76,12 @@ Instalează pe un calculator de test sau pe o copie a datelor, niciodată direct
 ## Rămase din PROMPT-8 (02.10)
 - [ ] F4: Chrome pe „Copil nou” → Nume / Telefon părinte nu oferă autocompletare. Dacă oferă, spune: trecem pe `new-password`.
 - [ ] După PROMPT-9: rulează checklist-ul din `PROMPT-CLAUDE-CODE-9.md` secțiune cu secțiune.
+
+## După PROMPT-9 (02.10)
+- [ ] Calculator gol: apare „Din backup / Alt calculator / De la zero”; din backup → tabel cu numere → reîncărcare în 5 s → toast.
+- [ ] Profil Bazin pe al doilea calculator: meniul arată doar Bazin; o adresă interzisă → „fără acces”; datele nu dispar.
+- [ ] Profil Personalizat cu PIN pe Achitări: Achitări cere PIN.
+- [ ] Istoric → fila „Acces”: apar încercările de PIN; filtrele modul / calculator / perioadă merg.
+- [ ] „Anulează” după: achitare, frați (anulează ambele), avans, copil nou, mutare în grupă.
+- [ ] Pontaj: „P” vizibil în grilă, legendă și tipar.
+- [ ] Curs și planuri arată la fel pe ambele filiale (baza comună).
