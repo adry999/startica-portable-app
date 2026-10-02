@@ -15,6 +15,10 @@ export interface DialogProps {
   onClose: () => void;
   /** Întors true blochează închiderea (ex. modificări nesalvate) — Dialog nu decide cum se confirmă, doar cere voie. */
   shouldBlockClose?: () => boolean;
+  /** Ascunde butonul × din antet (46d: dialogul de reîncărcare după restaurare nu are nicio
+   * ieșire în afară de butonul din footer — combină de obicei cu `shouldBlockClose={() => true}`,
+   * ca nici Esc, nici clicul pe voal să nu-l închidă). Implicit `false`. */
+  hideClose?: boolean;
   footer?: ReactNode;
   children: ReactNode;
 }
@@ -27,6 +31,7 @@ export function Dialog({
   width = 480,
   onClose,
   shouldBlockClose,
+  hideClose = false,
   footer,
   children,
 }: DialogProps) {
@@ -63,7 +68,7 @@ export function Dialog({
       >
         <header className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
-          <IconButton icon="close" ariaLabel="Închide" size="lg" onClick={requestClose} />
+          {!hideClose && <IconButton icon="close" ariaLabel="Închide" size="lg" onClick={requestClose} />}
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
         {footer && <footer className={styles.footer}>{footer}</footer>}

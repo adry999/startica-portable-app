@@ -1,11 +1,14 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSession } from '@shared/api/session';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
-import { AppBanner, TopbarActionsProvider } from '@shared/ui';
+import { AppBanner, TopbarActionsProvider, useToast } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { readRestoreDoneNote } from '@features/backup';
+import { formatDateTime } from '#shared/format/date-format.mjs';
 import { Sidebar } from './Sidebar';
 import { StartupScreen } from './StartupScreen';
+import { StartSourceFlow } from './StartSourceFlow';
 import { Topbar } from './Topbar';
 import { BranchSwitchOverlay } from './BranchSwitchOverlay';
 import { BranchSwitchDialog } from './BranchSwitchDialog';
@@ -22,6 +25,28 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+// 46a: cheia de persistență a alegerii de pe StartSourceFlow — setată o dată, niciodată ștearsă
+// automat (un calculator rămâne „pornit” chiar dacă filiala activă nu capătă date imediat).
+// usePersistedState e doar pentru valori string; aici valoarea e un bool, deci citire/scriere
+// directă, la fel ca readLastView/writeLastView din App.tsx.
+const FIRST_RUN_DISMISSED_KEY = 'firstRun.dismissed';
+
+function readFirstRunDismissed(): boolean {
+  try {
+    return localStorage.getItem(FIRST_RUN_DISMISSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeFirstRunDismissed() {
+  try {
+    localStorage.setItem(FIRST_RUN_DISMISSED_KEY, '1');
+  } catch {
+    // Ecranul ar putea reapărea la următoarea pornire — nu blochează alegerea curentă.
+  }
+}
+
 export interface AppShellProps {
   view: ViewKey;
   onNavigate: (view: ViewKey) => void;
@@ -36,17 +61,42 @@ export interface AppShellProps {
 export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, children }: AppShellProps) {
   const session = useAppSession();
   const navigate = useNavigate();
+  const toast = useToast();
   // Hook-urile rulează necondiționat, înainte de întoarcerea din ecranul de pornire de mai jos.
   const branchSwitch = useBranchSwitch();
   const syncStatusData = useSyncStatus();
   // §11, 42b: „revine a doua zi” — valoarea persistă cât bara mint a fost închisă ultima dată
   // (dată + versiune respinsă), citită înainte de orice return condiționat (regula hook-urilor).
   const [updateDismissedUntil, setUpdateDismissedUntil] = usePersistedState<string>(UPDATE_DISMISS_KEY, '');
+  // 46a: odată aleasă „De la zero” sau „Am Startica pe alt calculator”, ecranul nu mai revine
+  // pe acest calculator, chiar dacă filiala activă rămâne fără nicio evidență reală încă
+  // (nu s-a importat nimic, sau sincronizarea n-a adus încă prima bază).
+  const [firstRunDismissed, setFirstRunDismissedState] = useState(readFirstRunDismissed);
+  function setFirstRunDismissed(value: boolean) {
+    setFirstRunDismissedState(value);
+    if (value) writeFirstRunDismissed();
+  }
+  useEffect(() => {
+    // 46d: biletul e lăsat chiar înainte de reîncărcarea completă de după o restaurare —
+    // citit o singură dată, aici, ca toast-ul de confirmare să apară după ce ecranul s-a redeschis.
+    const note = readRestoreDoneNote();
+    if (!note) return;
+    toast.show({
+      message: note.createdAt
+        ? `Date restaurate din arhiva din ${formatDateTime(note.createdAt)}.`
+        : 'Date restaurate.',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Cât timp sesiunea nu are încă snapshot-ul (ready), nu are rost meniul sau antetul —
   // ecranul de pornire (21a) ia locul întregului shell, nu doar al conținutului.
   // `forceReady` (21c, „Lucrez fără legătură”) lasă utilizatorul să treacă mai departe cât
   // timp load() continuă în fundal — ecranele își au deja propriul gol pentru „fără date încă”.
   if (!session.state.ready && !session.state.forceReady) return <StartupScreen />;
+  // 46a: un calculator genuin gol (nicio evidență reală pe filiala activă) vede alegerea
+  // Backup/Sincronizare/De la zero în loc de restul aplicației, până una dintre cele trei e aleasă.
+  if (!session.state.hasAnyData && !firstRunDismissed)
+    return <StartSourceFlow onDismiss={() => setFirstRunDismissed(true)} onConnectElsewhere={goToSyncTabFirstRun} />;
   const saveStatus = deriveSaveStatus(session.state);
   // Cardul de sincronizare (14a) înlocuiește „Salvat · ora” doar când e configurat și
   // fără eroare locală (deriveSyncStatus întoarce null în acel caz — Sidebar arată saveStatus).
@@ -102,6 +152,13 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
       // Fila implicită se deschide oricum din Backup și setări.
     }
     navigate(VIEW_PATHS.settings);
+  }
+
+  // 46a: „Am Startica pe alt calculator” de pe StartSourceFlow — dismisul e obligatoriu
+  // (altfel ecranul de prima pornire ar acoperi fila Sincronizare la care tocmai a navigat).
+  function goToSyncTabFirstRun() {
+    setFirstRunDismissed(true);
+    goToSyncTab();
   }
 
   return (

@@ -99,11 +99,32 @@ export function createBackupRoutes({
         // 42d, decizia 9 din plan: încearcă arhiva completă întâi — un `.startica-backup`
         // e un ZIP valid, un `.db` legacy nu e niciodată, deci proba nu are ambiguitate.
         if (fullBackupService?.isArchive(file)) {
-          const { summary: archiveSummary } = fullBackupService.previewArchive(file);
-          return { ...archiveSummary, errors: [], notes: [] };
+          const { summary: archiveSummary, manifest } = fullBackupService.previewArchive(file);
+          // 46b: BackupPreviewTable arată un rând per bază (nu doar totalul agregat de mai
+          // sus, păstrat neschimbat pentru ecranul de restaurare existent) — manifestul are
+          // deja numărătoarea per bază, calculată o singură dată la `backup()`.
+          return {
+            ...archiveSummary,
+            errors: [],
+            notes: [],
+            archive: true,
+            appVersion: manifest.appVersion,
+            createdAt: manifest.createdAt,
+            databases: manifest.databases.map(entry => ({
+              id: entry.id,
+              name: entry.name,
+              kind: entry.kind,
+              counts: entry.counts,
+            })),
+          };
         }
         const { snapshot, notes } = readRestoreSnapshot(file, !!dir);
-        return { ...summary(snapshot), errors: previewErrors(snapshot), notes: [...notes, LEGACY_SINGLE_BRANCH_NOTE] };
+        return {
+          ...summary(snapshot),
+          errors: previewErrors(snapshot),
+          notes: [...notes, LEGACY_SINGLE_BRANCH_NOTE],
+          archive: false,
+        };
       },
     },
     {

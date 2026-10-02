@@ -304,3 +304,22 @@ test('/api/session: sync.json cu profil persistat îl expune ca atare', async t 
   assert.equal(session.profile.modules.attendance, 2);
   assert.equal(session.profile.modules.payments, 0);
 });
+
+// 46a (PROMPT-9 §4): StartSourceScreen se bazează pe acest semnal ca să știe dacă
+// filiala activă e genuin goală (nicio evidență reală încă), nu doar „fără backup extern”.
+test('/api/session: hasAnyData e fals pe un calculator nou, adevărat după primul copil', async t => {
+  const app = await startTestApplication(t, { prefix: 'startica-session-hasanydata-' });
+
+  assert.equal((await app.get('/api/session')).hasAnyData, false);
+
+  const created = await app.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: { id: 'C1', name: 'Copil test', dueDay: 10, status: 'Activ' },
+    revision: 0,
+    requestId: 'hasanydata-01',
+  });
+  assert.equal(created.status, 200, created.body.error);
+
+  assert.equal((await app.get('/api/session')).hasAnyData, true);
+});
