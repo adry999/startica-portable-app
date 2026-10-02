@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Button, ChipSelect, ChoiceCards, DateInput, Drawer, Field, SearchSelect, Select, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
@@ -74,24 +74,29 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
     }
   }
 
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    void submit();
+  }
+
   return (
     <Drawer
       open={open}
       title="Programare la bazin"
-      width={480}
+      size="detail"
       onClose={onClose}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
             Renunță
           </Button>
-          <Button disabled={saving} onClick={() => void submit()}>
+          <Button type="submit" form="booking-form" loading={saving}>
             Programează
           </Button>
         </>
       }
     >
-      <div className={styles.form}>
+      <form id="booking-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
         <div className={styles.field}>
           Copil
           <SearchSelect
@@ -153,7 +158,7 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
           pentru acest copil în fișa lui.
         </p>
         {error && <p className={styles.error}>{error}</p>}
-      </div>
+      </form>
     </Drawer>
   );
 }

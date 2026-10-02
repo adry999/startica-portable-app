@@ -19,4 +19,30 @@ export default meta;
 
 type Story = StoryObj<typeof Drawer>;
 
+/** `size="form"` (implicit) — 620px, token `--drawer-form` (44d). */
 export const Default: Story = {};
+
+/** `size="detail"` — 480px, token `--drawer-detail` (44d), pentru panouri mai simple. */
+export const Detail: Story = {
+  args: { size: 'detail', title: 'Istoric salariu (exemplu)' },
+};
+
+/** Butonul principal cu `loading` (44d) — dezactivat, cu spinner, cât salvarea e în curs. */
+export const Loading: Story = {
+  args: {
+    footer: (
+      <Button loading onClick={fn()}>
+        Salvez…
+      </Button>
+    ),
+  },
+};
+
+/** „N erori” fix în subsol (44d) — focus pe primul câmp cu eroare, numărate din validarea nativă
+ * a `<form>`-ului din panou dacă apelantul nu dă `errorCount` explicit. */
+export const WithErrors: Story = {
+  args: {
+    errorCount: 2,
+    children: <p>Conținutul formularului — „N erori” arată aici doar demonstrativ, prin `errorCount`.</p>,
+  },
+};

@@ -116,7 +116,7 @@ export function ReportExportDrawer({ open, onClose, anchorMonth, data, onOpenAss
       <Drawer
         open={open}
         title="Exportă pentru contabil"
-        width={520}
+        size="detail"
         onClose={onClose}
         footer={
           <div className={styles.footer}>

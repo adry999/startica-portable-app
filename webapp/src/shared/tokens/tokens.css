@@ -216,6 +216,14 @@
   --z-popover: 200;
   --z-toast: 300;
   --z-dialog: 400;
+
+  /* Lățimi Drawer/Dialog (44d, COMPONENTE.md §0b) — trei dimensiuni canonice, nu valori
+     ad-hoc pe fiecare formular: `form` pentru formulare complete (Copil, Vizită…), `detail`
+     pentru panouri mai simple, `dialog` pentru orice `Dialog` de bază (confirmări, formulare
+     scurte) — `RestoreDoneDialog` (46d, 560px) rămâne excepția documentată. */
+  --drawer-form: 620px;
+  --drawer-detail: 480px;
+  --dialog: 440px;
 }
 
 /* Reset minim, oglinda web/styles/base.css: aceleași fonturi aplicate global, nu doar disponibile ca variabile. */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Drawer, Icon, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { ageInYears } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
 import type { GroupTeamMember } from '@contracts/record-types.mjs';
@@ -79,7 +79,14 @@ export function GroupFormDrawer({
       ageMinRaw !== '' ||
       ageMaxRaw !== '' ||
       team.length > 0);
-  useDirtyForm(dirty ? { label: 'o grupă', save: handleSubmit } : null);
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose`.
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'o grupă',
+    formName: 'grupa nouă',
+    save: handleSubmit,
+    onClose,
+  });
 
   const capacity = Number(capacityRaw) || DEFAULT_CAPACITY;
   const ageMin = ageMinRaw.trim() ? Number(ageMinRaw) : null;
@@ -126,119 +133,122 @@ export function GroupFormDrawer({
       : `${unassignedChildren.length} ${unassignedChildren.length === 1 ? 'copil fără grupă' : 'copii fără grupă'} · îi poți adăuga după salvare.`;
 
   return (
-    <Drawer
-      open={open}
-      title="Grupă nouă"
-      width={520}
-      onClose={onClose}
-      footer={
-        <div className={styles.footer}>
-          <p className={styles.footerNote}>{footerNote}</p>
-          <div className={styles.footerActions}>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Anulează
-            </Button>
-            <Button type="submit" form="group-form-drawer" disabled={submitting || !name.trim()}>
-              Creează grupa
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <form
-        id="group-form-drawer"
-        className={styles.form}
-        autoComplete="off"
-        onSubmit={event => {
-          event.preventDefault();
-          void handleSubmit();
-        }}
-      >
-        <GroupTile
-          group={previewGroup}
-          busy
-          dragOver={false}
-          onDragOverTile={() => {}}
-          onDragLeaveTile={() => {}}
-          onDropChild={() => {}}
-          onDropGroup={() => {}}
-          onMove={() => {}}
-        />
-
-        <label className={styles.field}>
-          Nume grupă
-          <TextInput value={name} onChange={setName} autoFocus placeholder="ex. Ursuleți" />
-        </label>
-
-        <div className={styles.field}>
-          Culoare
-          <TonePicker
-            ariaLabel="Culoare"
-            tones={BOARD_TONE_PALETTE}
-            value={tone}
-            onChange={value => setTone(value as BoardTone)}
-            titleFor={option => {
-              const usedBy = usedByTone.get(option as BoardTone);
-              return usedBy ? `folosită de ${usedBy}` : 'liberă';
-            }}
-          />
-        </div>
-
-        <div className={styles.row}>
-          <div className={styles.field}>
-            {/* Label separat de control, nu unul care-l înfășoară: un <label> care conține și
-                cele două butoane +/- (labelabile ca orice control) ar face `getByLabelText`/lectorul
-                de ecran să lege eticheta de primul buton, nu de input. */}
-            <label htmlFor="new-group-capacity">Capacitate</label>
-            <div className={styles.stepper}>
-              <IconButton
-                icon="minus"
-                ariaLabel="Scade capacitatea"
-                onClick={() => setCapacityRaw(String(Math.max(1, Number(capacityRaw || DEFAULT_CAPACITY) - 1)))}
-              />
-              <NumberInput
-                id="new-group-capacity"
-                className={styles.capacityInput}
-                value={capacityRaw}
-                onChange={setCapacityRaw}
-                min={1}
-                max={1000}
-                step={1}
-              />
-              <IconButton
-                icon="plus"
-                ariaLabel="Crește capacitatea"
-                onClick={() => setCapacityRaw(String(Math.min(1000, Number(capacityRaw || DEFAULT_CAPACITY) + 1)))}
-              />
+    <>
+      <Drawer
+        open={open}
+        title="Grupă nouă"
+        size="detail"
+        onClose={unsavedGuard.requestClose}
+        footer={
+          <div className={styles.footer}>
+            <p className={styles.footerNote}>{footerNote}</p>
+            <div className={styles.footerActions}>
+              <Button type="button" variant="outline" onClick={unsavedGuard.requestClose}>
+                Anulează
+              </Button>
+              <Button type="submit" form="group-form-drawer" loading={submitting} disabled={!name.trim()}>
+                Creează grupa
+              </Button>
             </div>
           </div>
+        }
+      >
+        <form
+          id="group-form-drawer"
+          className={styles.form}
+          autoComplete="off"
+          onSubmit={event => {
+            event.preventDefault();
+            void handleSubmit();
+          }}
+        >
+          <GroupTile
+            group={previewGroup}
+            busy
+            dragOver={false}
+            onDragOverTile={() => {}}
+            onDragLeaveTile={() => {}}
+            onDropChild={() => {}}
+            onDropGroup={() => {}}
+            onMove={() => {}}
+          />
 
           <label className={styles.field}>
-            Vârstă minimă (ani)
-            <NumberInput value={ageMinRaw} onChange={setAgeMinRaw} min={0} max={18} step={1} />
+            Nume grupă
+            <TextInput value={name} onChange={setName} placeholder="ex. Ursuleți" />
           </label>
-          <label className={styles.field}>
-            Vârstă maximă (ani)
-            <NumberInput value={ageMaxRaw} onChange={setAgeMaxRaw} min={0} max={18} step={1} />
-          </label>
-        </div>
 
-        <GroupTeamPicker
-          currentGroupId={null}
-          team={team}
-          onChange={setTeam}
-          staff={staff}
-          roleName={roleName}
-          allGroups={groups.map(group => ({ id: group.id, name: group.name, team: group.team }))}
-          leaves={leaves}
-          showDays={false}
-        />
+          <div className={styles.field}>
+            Culoare
+            <TonePicker
+              ariaLabel="Culoare"
+              tones={BOARD_TONE_PALETTE}
+              value={tone}
+              onChange={value => setTone(value as BoardTone)}
+              titleFor={option => {
+                const usedBy = usedByTone.get(option as BoardTone);
+                return usedBy ? `folosită de ${usedBy}` : 'liberă';
+              }}
+            />
+          </div>
 
-        <p className={styles.orderNote}>
-          Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu mânerul{' '}
-          <Icon name="grip-vertical" size={14} style={{ verticalAlign: 'text-bottom' }} />.
-        </p>
-      </form>
-    </Drawer>
+          <div className={styles.row}>
+            <div className={styles.field}>
+              {/* Label separat de control, nu unul care-l înfășoară: un <label> care conține și
+                cele două butoane +/- (labelabile ca orice control) ar face `getByLabelText`/lectorul
+                de ecran să lege eticheta de primul buton, nu de input. */}
+              <label htmlFor="new-group-capacity">Capacitate</label>
+              <div className={styles.stepper}>
+                <IconButton
+                  icon="minus"
+                  ariaLabel="Scade capacitatea"
+                  onClick={() => setCapacityRaw(String(Math.max(1, Number(capacityRaw || DEFAULT_CAPACITY) - 1)))}
+                />
+                <NumberInput
+                  id="new-group-capacity"
+                  className={styles.capacityInput}
+                  value={capacityRaw}
+                  onChange={setCapacityRaw}
+                  min={1}
+                  max={1000}
+                  step={1}
+                />
+                <IconButton
+                  icon="plus"
+                  ariaLabel="Crește capacitatea"
+                  onClick={() => setCapacityRaw(String(Math.min(1000, Number(capacityRaw || DEFAULT_CAPACITY) + 1)))}
+                />
+              </div>
+            </div>
+
+            <label className={styles.field}>
+              Vârstă minimă (ani)
+              <NumberInput value={ageMinRaw} onChange={setAgeMinRaw} min={0} max={18} step={1} />
+            </label>
+            <label className={styles.field}>
+              Vârstă maximă (ani)
+              <NumberInput value={ageMaxRaw} onChange={setAgeMaxRaw} min={0} max={18} step={1} />
+            </label>
+          </div>
+
+          <GroupTeamPicker
+            currentGroupId={null}
+            team={team}
+            onChange={setTeam}
+            staff={staff}
+            roleName={roleName}
+            allGroups={groups.map(group => ({ id: group.id, name: group.name, team: group.team }))}
+            leaves={leaves}
+            showDays={false}
+          />
+
+          <p className={styles.orderNote}>
+            Grupa nouă apare prima, lângă „Fără grupă”, ca să tragi copiii direct în ea. Apoi o muți unde vrei cu
+            mânerul <Icon name="grip-vertical" size={14} style={{ verticalAlign: 'text-bottom' }} />.
+          </p>
+        </form>
+      </Drawer>
+      {unsavedGuard.confirmDialog}
+    </>
   );
 }

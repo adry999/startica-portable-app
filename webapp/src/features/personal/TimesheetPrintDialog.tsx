@@ -41,7 +41,6 @@ export function TimesheetPrintDialog({ open, departments, staff, onCancel, onCon
     <Dialog
       open={open}
       title="Tipărește pontajul"
-      width={380}
       onClose={onCancel}
       footer={
         <>

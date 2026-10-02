@@ -459,7 +459,65 @@ Am făcut partea care ține strict de bon (42c), fără să ating §9.1 (calculu
 
 **De decis / următorul pas:** cine construiește coada de prim-pornire (ecran nou + detectarea „fără date”) și actualizarea `BackupPage.tsx` pentru reload — următorul punct din plan, nu inclus aici ca să nu se suprapună cu alt agent care ar putea lucra pe `BackupPage.tsx`.
 
-## ⏳ 44d — regulile de Drawer/Dialog rămân amânate într-o trecere separată (ca 41d)
+## ✅ 44d — regulile de Drawer/Dialog, aplicate în componentele de bază (PROMPT-9 §3, `fbdcf10`)
+
+Reluat ca pas separat, exact cum cerea nota de mai jos (păstrată pentru istoric). Totul a intrat
+într-un hook nou, `usePanelController` (`webapp/src/shared/ui/usePanelController.ts`), folosit de
+`Drawer` și `Dialog` deopotrivă — un singur loc, nu pe fiecare formular:
+
+- **Focus pe primul câmp** la deschidere — caută primul `input`/`select`/`textarea` din panou (nu
+  din antet, ca butonul × să nu fure focusul), cu o excepție documentată: `input[type="number"]`
+  e exclus. Motiv găsit prin testul `PaymentFormDrawer` (F11, defaultChildId): un câmp numeric deja
+  focusat, când primește ulterior o valoare scrisă programatic (ex. suma precompletată dintr-un
+  copil preselectat), își pierde zecimalele în jsdom („1500.00” → „1500”) — verificat că nu e un
+  flake, ci o interacțiune reală sanitizare-nativă-a-input-ului-de-tip-number + focus. Câmpurile
+  de sumă/preț sunt oricum candidați slabi pentru focus automat, fiind tocmai genul recalculat
+  async la scurt timp după montare.
+- **Ctrl+Enter = submit** — caută `<form>` în panou și cheamă `form.requestSubmit()`; funcționează
+  fără nicio schimbare pe formularele care foloseau deja convenția `<form id="…">` + buton
+  `type="submit" form="…"` (majoritatea). Am adăugat `<form>` acolo unde lipsea și avea sens
+  (`EnrollDrawer`, `BookingDrawer`); restul (dialoguri de confirmare/tipărire fără `<form>`, ex.
+  `WeeklySheetDialog`, `ReportExportDrawer`, `SmsNewMessageDialog`, `ExcelImportDialog`,
+  dialogul de încheiere din `MonthView`) rămân neschimbate — Ctrl+Enter e inert acolo, nu o
+  regresie, doar o îmbunătățire nefăcută încă.
+- **Esc → 40c** — mecanismul (`shouldBlockClose`/`onClose`) exista deja prin
+  `useUnsavedChangesGuard`; nou e `overlay-stack` (`webapp/src/shared/ui/overlay-stack.ts`), ca
+  Esc/Ctrl+Enter să ajungă doar la panoul de SUS cât timp `UnsavedChangesDialog` stă peste un
+  `Drawer` rămas montat dedesubt (altfel ambele ar reacționa la aceeași tastă).
+- **„N erori” fix în subsol** — `errorBanner`, deasupra butoanelor, în afara `ScrollArea`-ului
+  care scrolează. Fără validare proprie scrisă pe fiecare formular: dacă apelantul nu dă
+  `errorCount` explicit, panoul își numără singur evenimentele native `invalid` (fiecare
+  `required`/`min`/`max` existent pe câmpuri contribuie automat, fără cod nou pe formular) — focus
+  pe primul câmp invalid vine gratis din validarea nativă a `<form>`-ului (`reportValidity`).
+- **`loading` pe principal** — deja exista ca prop pe `Button`; am înlocuit `disabled={submitting}`
+  redundant cu `loading={submitting}` pe butoanele de submit care nu-l foloseau încă
+  (`ExpenseFormDrawer`, `PaymentFormDrawer`, `AdvanceFormDrawer`, `LeaveFormDrawer`,
+  `SalaryFormDrawer`, `StaffFormDrawer`, `ServicesSettings`, `SalariesView`, `BookingDrawer`).
+- **Lățimi ca tokeni** — `--drawer-form` (620px) / `--drawer-detail` (480px) / `--dialog` (440px)
+  în `tokens.css`; `Drawer` capătă `size="form"|"detail"`, `Dialog` trece pe 440px implicit.
+  Convergență pe toate cele ~25 de formulare: lățimile ad-hoc (380/420/440/520/560) s-au rotunjit
+  la `form`/`detail` după complexitatea conținutului (ex. `PaymentFormDrawer`/`StaffFormDrawer`
+  560→`form`; `ExpenseFormDrawer`/`GroupFormDrawer`/`AdvanceFormDrawer` etc. →`detail`).
+  `ConfirmDialog`/`UnsavedChangesDialog` converg de la 420px la 440px implicit. Excepții păstrate
+  explicit, cu comentariu: `RestoreDoneDialog` (560px, deja documentat la 46d) și matricea de
+  profil din `DevicesList`/`SyncSettings` (620px — un `Dialog` cu conținut lat ca un `Drawer`).
+- **R13** (`architecture.test.ts`) — scanare pe text, ca R1-R12: nicio deschidere nouă de
+  `<Drawer`/`<Dialog` nu apare cât timp stiva de token-uri `<Drawer`/`<Dialog`/`</Drawer>`/
+  `</Dialog>` a fișierului nu e goală. Trece azi fără nicio excepție (convenția „confirmare
+  imbricată, nu panou imbricat” — `useUnsavedChangesGuard` randează `confirmDialog` ca soră în
+  fragment, nu ca descendent — era deja respectată peste tot).
+
+**Trecere prin formularele existente:** `ChildFormDrawer`/`GroupFormDrawer`/`CandidateFormDrawer`/
+`RolesDrawer`/`EnrollDrawer`/`VisitFormDrawer` foloseau `useDirtyForm` direct — Esc/× închideau
+tăcut, fără 40c. Migrate pe `useUnsavedChangesGuard`, la fel ca `ExpenseFormDrawer`/
+`PaymentFormDrawer` (singurele care-l foloseau deja). Restul formularelor (fără stare „nesalvat”
+urmărită, ex. dialoguri de confirmare/tipărire/filtrare) nu au fost atinse — nu e o gaură nouă,
+comportamentul lor de astăzi (închidere directă) rămâne neschimbat.
+
+**Nimic de decis din partea ta** — consemnat ca să nu pară scăpat din vedere, la fel ca notele de
+mai sus. Nota veche rămasă mai jos, pentru istoric (de ce pasul fusese amânat separat de 44a-44c).
+
+### (istoric) — regulile de Drawer/Dialog rămân amânate într-o trecere separată (ca 41d)
 
 `PROMPT-CLAUDE-CODE-8.md` §13/44d cere, „aplicate o dată în componentele de bază, nu pe fiecare formular”: focus inițial, Ctrl+Enter = submit, Esc → 40c (deja există, vezi `UnsavedChangesDialog`), subsol fix, focus pe primul câmp cu eroare + număr de erori în subsol, `loading` pe butonul principal, fără drawer în drawer (test de arhitectură), lățimi 620/480/440 ca tokeni.
 

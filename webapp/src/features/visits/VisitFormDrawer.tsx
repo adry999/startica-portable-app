@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput, TimeInput } from '@shared/ui';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { defaultVisitFormValues, STATUS_LABEL, type VisitFormValues } from './visit-form';
@@ -63,138 +63,171 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
   }
 
   const dirty = target !== null && JSON.stringify(values) !== JSON.stringify(initialValuesRef.current);
-  useDirtyForm(dirty ? { label: 'o vizită', save: submitForm } : null);
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose`.
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'o vizită',
+    formName: editing ? 'vizita' : 'vizita nouă',
+    save: submitForm,
+    onClose,
+  });
 
   return (
-    <Drawer
-      open={target !== null}
-      title={editing ? 'Editează: vizită' : 'Adaugă: vizită'}
-      width={620}
-      onClose={onClose}
-      footer={
-        <Button type="submit" form="visit-form">
-          Salvează
-        </Button>
-      }
-    >
-      <form id="visit-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
-        <fieldset className={styles.section}>
-          <legend>Vizita</legend>
-          <Field label="Data vizitei" htmlFor="visit-date">
-            <DateInput id="visit-date" required value={values.date} onChange={value => setDateOrTime('date', value)} />
-          </Field>
-          <Field label="Ora vizitei" htmlFor="visit-time">
-            <TimeInput id="visit-time" required value={values.time} onChange={value => setDateOrTime('time', value)} />
-          </Field>
-          {editing && (
-            <Field label="Statut" htmlFor="visit-status">
-              <Select
-                id="visit-status"
-                value={values.status}
-                onChange={value => setField('status', value)}
-                options={statusChoices.map(status => ({ value: status, label: STATUS_LABEL[status] }))}
+    <>
+      <Drawer
+        open={target !== null}
+        title={editing ? 'Editează: vizită' : 'Adaugă: vizită'}
+        size="form"
+        onClose={unsavedGuard.requestClose}
+        footer={
+          <Button type="submit" form="visit-form">
+            Salvează
+          </Button>
+        }
+      >
+        <form id="visit-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
+          <fieldset className={styles.section}>
+            <legend>Vizita</legend>
+            <Field label="Data vizitei" htmlFor="visit-date">
+              <DateInput
+                id="visit-date"
+                required
+                value={values.date}
+                onChange={value => setDateOrTime('date', value)}
               />
             </Field>
-          )}
-          {editing && <p className={styles.notice}>Schimbarea datei sau orei reprogramează vizita.</p>}
-        </fieldset>
+            <Field label="Ora vizitei" htmlFor="visit-time">
+              <TimeInput
+                id="visit-time"
+                required
+                value={values.time}
+                onChange={value => setDateOrTime('time', value)}
+              />
+            </Field>
+            {editing && (
+              <Field label="Statut" htmlFor="visit-status">
+                <Select
+                  id="visit-status"
+                  value={values.status}
+                  onChange={value => setField('status', value)}
+                  options={statusChoices.map(status => ({ value: status, label: STATUS_LABEL[status] }))}
+                />
+              </Field>
+            )}
+            {editing && <p className={styles.notice}>Schimbarea datei sau orei reprogramează vizita.</p>}
+          </fieldset>
 
-        <fieldset className={styles.section}>
-          <legend>Copil</legend>
-          <Field label="Nume copil" htmlFor="visit-child-name">
-            <TextInput id="visit-child-name" required value={values.name} onChange={value => setField('name', value)} />
-          </Field>
-          <Field
-            label="Data nașterii"
-            htmlFor="visit-child-birth-date"
-            hint={values.birthDate ? `Vârstă: ${formatAge(values.birthDate)}` : undefined}
-          >
-            <DateInput
-              id="visit-child-birth-date"
-              value={values.birthDate}
-              onChange={value => setField('birthDate', value)}
-            />
-          </Field>
-        </fieldset>
+          <fieldset className={styles.section}>
+            <legend>Copil</legend>
+            <Field label="Nume copil" htmlFor="visit-child-name">
+              <TextInput
+                id="visit-child-name"
+                required
+                value={values.name}
+                onChange={value => setField('name', value)}
+              />
+            </Field>
+            <Field
+              label="Data nașterii"
+              htmlFor="visit-child-birth-date"
+              hint={values.birthDate ? `Vârstă: ${formatAge(values.birthDate)}` : undefined}
+            >
+              <DateInput
+                id="visit-child-birth-date"
+                value={values.birthDate}
+                onChange={value => setField('birthDate', value)}
+              />
+            </Field>
+          </fieldset>
 
-        <fieldset className={styles.section}>
-          <legend>Părinți</legend>
-          <Field label="Părinte 1" htmlFor="visit-parent1-name">
-            <TextInput
-              id="visit-parent1-name"
-              required
-              value={values.parent}
-              onChange={value => setField('parent', value)}
-            />
-          </Field>
-          <Field label="Telefon părinte 1" htmlFor="visit-parent1-phone">
-            <PhoneInput id="visit-parent1-phone" value={values.phone} onChange={value => setField('phone', value)} />
-          </Field>
-          <Field label="Părinte 2 (opțional)" htmlFor="visit-parent2-name">
-            <TextInput id="visit-parent2-name" value={values.parent2} onChange={value => setField('parent2', value)} />
-          </Field>
-          <Field label="Telefon părinte 2 (opțional)" htmlFor="visit-parent2-phone">
-            <PhoneInput id="visit-parent2-phone" value={values.phone2} onChange={value => setField('phone2', value)} />
-          </Field>
-        </fieldset>
+          <fieldset className={styles.section}>
+            <legend>Părinți</legend>
+            <Field label="Părinte 1" htmlFor="visit-parent1-name">
+              <TextInput
+                id="visit-parent1-name"
+                required
+                value={values.parent}
+                onChange={value => setField('parent', value)}
+              />
+            </Field>
+            <Field label="Telefon părinte 1" htmlFor="visit-parent1-phone">
+              <PhoneInput id="visit-parent1-phone" value={values.phone} onChange={value => setField('phone', value)} />
+            </Field>
+            <Field label="Părinte 2 (opțional)" htmlFor="visit-parent2-name">
+              <TextInput
+                id="visit-parent2-name"
+                value={values.parent2}
+                onChange={value => setField('parent2', value)}
+              />
+            </Field>
+            <Field label="Telefon părinte 2 (opțional)" htmlFor="visit-parent2-phone">
+              <PhoneInput
+                id="visit-parent2-phone"
+                value={values.phone2}
+                onChange={value => setField('phone2', value)}
+              />
+            </Field>
+          </fieldset>
 
-        <fieldset className={styles.section}>
-          <legend>Dorințe</legend>
-          <Field label="Data dorită de start" htmlFor="visit-desired-start-date">
-            <DateInput
-              id="visit-desired-start-date"
-              value={values.desiredStartDate}
-              onChange={value => setField('desiredStartDate', value)}
-            />
-          </Field>
-          <Field label="Grupa dorită" htmlFor="visit-desired-group">
-            <Select
-              id="visit-desired-group"
-              value={values.desiredGroupId}
-              onChange={value => setField('desiredGroupId', value)}
-              placeholder="Fără preferință"
-              options={[...groups]
-                .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
-                .map(group => ({ value: group.id, label: group.name }))}
-            />
-          </Field>
-          <Field label="Cum a aflat de grădiniță" htmlFor="visit-source">
-            <TextInput id="visit-source" value={values.source} onChange={value => setField('source', value)} />
-          </Field>
-        </fieldset>
+          <fieldset className={styles.section}>
+            <legend>Dorințe</legend>
+            <Field label="Data dorită de start" htmlFor="visit-desired-start-date">
+              <DateInput
+                id="visit-desired-start-date"
+                value={values.desiredStartDate}
+                onChange={value => setField('desiredStartDate', value)}
+              />
+            </Field>
+            <Field label="Grupa dorită" htmlFor="visit-desired-group">
+              <Select
+                id="visit-desired-group"
+                value={values.desiredGroupId}
+                onChange={value => setField('desiredGroupId', value)}
+                placeholder="Fără preferință"
+                options={[...groups]
+                  .sort((a, b) => a.name.localeCompare(b.name, 'ro'))
+                  .map(group => ({ value: group.id, label: group.name }))}
+              />
+            </Field>
+            <Field label="Cum a aflat de grădiniță" htmlFor="visit-source">
+              <TextInput id="visit-source" value={values.source} onChange={value => setField('source', value)} />
+            </Field>
+          </fieldset>
 
-        <fieldset className={styles.section}>
-          <legend>Date medicale</legend>
-          <Field label="Date medicale" htmlFor="visit-health-notes">
-            <TextArea
-              id="visit-health-notes"
-              rows={3}
-              value={values.healthNotes}
-              onChange={value => setField('healthNotes', value)}
-            />
-          </Field>
-          <p className={styles.notice}>
-            Date sensibile: nu apar în export și în istoric; se șterg automat la 12 luni de la ultima schimbare de
-            statut.
-          </p>
-        </fieldset>
+          <fieldset className={styles.section}>
+            <legend>Date medicale</legend>
+            <Field label="Date medicale" htmlFor="visit-health-notes">
+              <TextArea
+                id="visit-health-notes"
+                rows={3}
+                value={values.healthNotes}
+                onChange={value => setField('healthNotes', value)}
+              />
+            </Field>
+            <p className={styles.notice}>
+              Date sensibile: nu apar în export și în istoric; se șterg automat la 12 luni de la ultima schimbare de
+              statut.
+            </p>
+          </fieldset>
 
-        <fieldset className={styles.section}>
-          <legend>După vizită</legend>
-          <Field label="Observații după vizită" htmlFor="visit-post-visit-notes">
-            <TextArea
-              id="visit-post-visit-notes"
-              rows={3}
-              value={values.postVisitNotes}
-              onChange={value => setField('postVisitNotes', value)}
-            />
-          </Field>
-        </fieldset>
+          <fieldset className={styles.section}>
+            <legend>După vizită</legend>
+            <Field label="Observații după vizită" htmlFor="visit-post-visit-notes">
+              <TextArea
+                id="visit-post-visit-notes"
+                rows={3}
+                value={values.postVisitNotes}
+                onChange={value => setField('postVisitNotes', value)}
+              />
+            </Field>
+          </fieldset>
 
-        <Field label="Observații" htmlFor="visit-notes">
-          <TextArea id="visit-notes" rows={3} value={values.notes} onChange={value => setField('notes', value)} />
-        </Field>
-      </form>
-    </Drawer>
+          <Field label="Observații" htmlFor="visit-notes">
+            <TextArea id="visit-notes" rows={3} value={values.notes} onChange={value => setField('notes', value)} />
+          </Field>
+        </form>
+      </Drawer>
+      {unsavedGuard.confirmDialog}
+    </>
   );
 }

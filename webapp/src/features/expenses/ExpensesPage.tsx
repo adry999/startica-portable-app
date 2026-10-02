@@ -389,7 +389,7 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <Drawer
         open={categoryDrawerOpen}
         title="Categorii de cheltuieli"
-        width={480}
+        size="detail"
         onClose={() => setCategoryDrawerOpen(false)}
       >
         <ExpensesCategoryManager

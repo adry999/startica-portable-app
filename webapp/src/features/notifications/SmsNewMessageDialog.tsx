@@ -195,7 +195,7 @@ export function SmsNewMessageDialog({ open, unitCostLei, onClose, onSent }: SmsN
     <Drawer
       open={open}
       title="SMS nou"
-      width={480}
+      size="detail"
       onClose={close}
       footer={
         !result ? (

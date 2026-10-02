@@ -39,7 +39,6 @@ export function UnsavedChangesDialog({
     <Dialog
       open={open}
       title={`Renunți la modificările din ${formName}?`}
-      width={420}
       onClose={onStay}
       shouldBlockClose={() => saving}
       footer={

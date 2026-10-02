@@ -276,7 +276,7 @@ export function SmsMessagesPanel() {
       <Drawer
         open={monthsOpen}
         title="SMS pe luni"
-        width={480}
+        size="detail"
         onClose={() => setMonthsOpen(false)}
         footer={
           <Button variant="ghost" onClick={exportMonthlyCsv}>

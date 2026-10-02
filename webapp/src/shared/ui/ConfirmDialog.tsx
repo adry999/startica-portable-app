@@ -35,7 +35,6 @@ export function ConfirmDialog({
     <Dialog
       open={open}
       title={title}
-      width={420}
       onClose={onCancel}
       shouldBlockClose={() => confirming}
       footer={

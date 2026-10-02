@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Button, ConfirmDeleteDialog, Drawer, Field, NumberInput, PhoneInput, TextArea, TextInput } from '@shared/ui';
-import { useDirtyForm } from '@shared/state/dirty-forms';
+import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import type { CandidateFormInput } from './useCandidates';
 import type { Candidate } from '@shared/personal/personal.types';
 import styles from './CandidateFormDrawer.module.css';
@@ -53,15 +53,22 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
 
   const currentValues = { name, position, age, experience, city, phone, notes };
   const dirty = target !== null && JSON.stringify(currentValues) !== JSON.stringify(initialValuesRef.current);
-  useDirtyForm(dirty ? { label: 'un candidat', save: submitForm } : null);
+  // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose`.
+  const unsavedGuard = useUnsavedChangesGuard({
+    dirty,
+    label: 'un candidat',
+    formName: editing ? 'candidatul' : 'candidatul nou',
+    save: submitForm,
+    onClose,
+  });
 
   return (
     <>
       <Drawer
         open={target !== null}
         title={editing ? 'Editează: candidat' : 'Adaugă: candidat'}
-        width={480}
-        onClose={onClose}
+        size="detail"
+        onClose={unsavedGuard.requestClose}
         footer={
           <div className={styles.footer}>
             <div>
@@ -72,10 +79,10 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
               )}
             </div>
             <div className={styles.footerRight}>
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={unsavedGuard.requestClose}>
                 Anulează
               </Button>
-              <Button type="submit" form="candidate-form-drawer" disabled={submitting || !name.trim()}>
+              <Button type="submit" form="candidate-form-drawer" loading={submitting} disabled={!name.trim()}>
                 Salvează
               </Button>
             </div>
@@ -84,7 +91,7 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
       >
         <form id="candidate-form-drawer" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
           <Field label="Nume, prenume" htmlFor="candidate-name">
-            <TextInput id="candidate-name" autoFocus required value={name} onChange={setName} />
+            <TextInput id="candidate-name" required value={name} onChange={setName} />
           </Field>
           <div className={`${styles.row} ${styles.rowNarrow}`}>
             <Field label="Poziție" htmlFor="candidate-position">
@@ -110,6 +117,7 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
           </Field>
         </form>
       </Drawer>
+      {unsavedGuard.confirmDialog}
 
       <ConfirmDeleteDialog
         open={confirmDeleteOpen}

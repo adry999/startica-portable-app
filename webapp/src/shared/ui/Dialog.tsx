@@ -1,6 +1,7 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { IconButton } from './IconButton';
 import { ScrollArea } from './ScrollArea';
+import { errorCountLabel, usePanelController } from './usePanelController';
 import styles from './Dialog.module.css';
 
 export interface DialogProps {
@@ -10,7 +11,9 @@ export interface DialogProps {
    * (ex. „Plătește 3 salarii”), dar numele accesibil trebuie să rămână stabil (ex. „Confirmă plata”,
    * verificat în teste cu `getByRole('dialog', { name: ... })`). Implicit `title`. */
   ariaLabel?: string;
-  /** 480 implicit — confirmări/dialoguri scurte; ecranele cu formular mai mare folosesc `Drawer`, nu `Dialog`. */
+  /** 440 implicit (`--dialog`, 44d) — confirmări/dialoguri scurte; ecranele cu formular mai mare
+   * folosesc `Drawer`, nu `Dialog`. Un `width` numeric explicit rămâne o portiță de ieșire pentru
+   * un caz documentat separat (ex. `RestoreDoneDialog`, 46d, 560px). */
   width?: number;
   onClose: () => void;
   /** Întors true blochează închiderea (ex. modificări nesalvate) — Dialog nu decide cum se confirmă, doar cere voie. */
@@ -19,48 +22,44 @@ export interface DialogProps {
    * ieșire în afară de butonul din footer — combină de obicei cu `shouldBlockClose={() => true}`,
    * ca nici Esc, nici clicul pe voal să nu-l închidă). Implicit `false`. */
   hideClose?: boolean;
+  /** „N erori” în subsol (44d) — dacă lipsește, Dialog își numără singur câmpurile native nevalide. */
+  errorCount?: number;
   footer?: ReactNode;
   children: ReactNode;
 }
 
-/** Panou modal centrat — `ConfirmDialog` (mai jos) și dialogurile de conținut scurt (28g, 29e). */
+/**
+ * Panou modal centrat — `ConfirmDialog` (mai jos) și dialogurile de conținut scurt (28g, 29e).
+ * Comportamentul comun (focus inițial, Esc → `onClose`, Ctrl+Enter = submit, „N erori”) vine din
+ * `usePanelController` (44d) — un singur loc, nu pe fiecare formular.
+ */
 export function Dialog({
   open,
   title,
   ariaLabel,
-  width = 480,
+  width,
   onClose,
   shouldBlockClose,
   hideClose = false,
+  errorCount,
   footer,
   children,
 }: DialogProps) {
-  function requestClose() {
-    if (shouldBlockClose?.()) return;
-    onClose();
-  }
-
-  // Ref, nu closure direct în effect: Esc trebuie să vadă mereu shouldBlockClose/onClose
-  // curente, nu pe cele din randarea în care s-a deschis dialogul (la fel ca în Drawer).
-  const requestCloseRef = useRef(requestClose);
-  requestCloseRef.current = requestClose;
-
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') requestCloseRef.current();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+  const { panelRef, requestClose, effectiveErrorCount } = usePanelController({
+    open,
+    onClose,
+    shouldBlockClose,
+    errorCount,
+  });
 
   if (!open) return null;
 
   return (
     <div className={styles.overlay} onClick={requestClose}>
       <div
+        ref={panelRef}
         className={styles.panel}
-        style={{ width }}
+        style={{ width: width !== undefined ? `${width}px` : 'var(--dialog)' }}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel ?? title}
@@ -71,6 +70,11 @@ export function Dialog({
           {!hideClose && <IconButton icon="close" ariaLabel="Închide" size="lg" onClick={requestClose} />}
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
+        {effectiveErrorCount > 0 && (
+          <p className={styles.errorBanner} role="status">
+            {errorCountLabel(effectiveErrorCount)}
+          </p>
+        )}
         {footer && <footer className={styles.footer}>{footer}</footer>}
       </div>
     </div>
