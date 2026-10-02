@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { normalizeProfile } from '#shared/domain/computer-profile.mjs';
 import { deriveSyncStatus } from './sync-status';
 import type { SyncStatus } from '@shared/api/useSyncStatus';
 import type { SessionStateForSaveStatus } from './save-status';
@@ -58,5 +59,39 @@ describe('deriveSyncStatus', () => {
     expect(deriveSyncStatus(BASE_SYNC, { ...BASE_LOCAL, saveError: 'Eroare' })).toBeNull();
     expect(deriveSyncStatus(BASE_SYNC, { ...BASE_LOCAL, connectionError: 'Eroare' })).toBeNull();
     expect(deriveSyncStatus(BASE_SYNC, { ...BASE_LOCAL, health: { localError: 'Eroare' } })).toBeNull();
+  });
+
+  describe('§5.3 (36d) — „Profil X · acces limitat”', () => {
+    it('profilul Complet nu arată nicio notă de profil', () => {
+      const result = deriveSyncStatus(BASE_SYNC, BASE_LOCAL, normalizeProfile({ preset: 'complet' }));
+      expect(result?.detail).toBe('Toate calculatoarele au aceleași date');
+    });
+
+    it('un profil restrâns înlocuiește detaliul cu „Profil X · acces limitat” pe starea sincronizat', () => {
+      const result = deriveSyncStatus(BASE_SYNC, BASE_LOCAL, normalizeProfile({ preset: 'educator' }));
+      expect(result?.mode).toBe('synced');
+      expect(result?.detail).toBe('Profil Educator · acces limitat');
+    });
+
+    it('pe o altă stare (ex. fără internet), nota de profil se adaugă la detaliul tehnic', () => {
+      const result = deriveSyncStatus(
+        { ...BASE_SYNC, connection: 'offline', pending: 3 },
+        BASE_LOCAL,
+        normalizeProfile({ preset: 'bazin' }),
+      );
+      expect(result?.detail).toBe(
+        '3 modificări salvate local. Se trimit automat când revine conexiunea. · Profil Bazin · acces limitat',
+      );
+    });
+
+    it('un profil blocat arată „Acces blocat”, nu doar „acces limitat”', () => {
+      const result = deriveSyncStatus(BASE_SYNC, BASE_LOCAL, normalizeProfile({ preset: 'educator', blocked: true }));
+      expect(result?.detail).toBe('Acces blocat');
+    });
+
+    it('fără profil (apelant care nu-l trimite), comportamentul rămâne cel de astăzi', () => {
+      const result = deriveSyncStatus(BASE_SYNC, BASE_LOCAL);
+      expect(result?.detail).toBe('Toate calculatoarele au aceleași date');
+    });
   });
 });

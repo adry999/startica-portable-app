@@ -62,6 +62,43 @@ const PRESET_MODULES = {
 /** Module cu PIN implicit la Personalizat nou (36b) — mereu disponibile de modificat ulterior. */
 export const DEFAULT_PIN_MODULES = ['payments', 'expenses', 'report', 'resolve'];
 
+/** Etichete românești pentru module (36b/36c/36d) — un singur loc, folosit de client
+ * (ProfileEditor, DevicesList, ModuleGuard) ca modulele să nu-și repete numele pe fiecare ecran. */
+export const MODULE_LABELS = {
+  dashboard: 'Dashboard',
+  children: 'Copii',
+  groups: 'Grupe',
+  attendance: 'Prezența',
+  visits: 'Vizite',
+  personal: 'Personal',
+  pool: 'Bazin',
+  payments: 'Achitări',
+  expenses: 'Cheltuieli',
+  status: 'Situația plăților',
+  notify: 'De notificat',
+  report: 'Raport contabil',
+  resolve: 'Taxe, De verificat, Asociere',
+  admin: 'Administrare, Salarii, Sincronizare',
+};
+
+/** Etichete pentru preset-urile din 36a. */
+export const PRESET_LABELS = {
+  complet: 'Complet',
+  educator: 'Educator',
+  receptie: 'Recepție',
+  bazin: 'Bazin',
+  personalizat: 'Personalizat',
+};
+
+/** Descrierile scurte din cardurile de alegere a profilului (36a, artboard `Profiluri calculator.dc.html`). */
+export const PRESET_DESCRIPTIONS = {
+  complet: 'Toate modulele, inclusiv Achitări, Salarii și Administrare. Pentru director și contabil.',
+  educator: 'Marchează prezența la toate grupele. Vede fișele copiilor fără plăți.',
+  receptie: 'Programează vizite și marchează prezența la intrare.',
+  bazin: 'Programările și prezența la bazin. Vede fișele copiilor fără plăți.',
+  personalizat: 'Alegi tu accesul pe fiecare modul.',
+};
+
 /** @typedef {{ preset: string, modules: Record<string, number>, pinModules: string[], blocked: boolean }} ComputerProfile */
 
 /** Profilul implicit pentru un calculator fără profil asignat (compatibilitate — vezi INTREBARI.md).

@@ -1,4 +1,5 @@
 import type { SyncStatus } from '@shared/api/useSyncStatus';
+import { PRESET_LABELS } from '#shared/domain/computer-profile.mjs';
 import type { SessionStateForSaveStatus } from './save-status';
 
 export type SyncCardMode = 'synced' | 'syncing' | 'offline' | 'conflict' | 'revoked';
@@ -19,6 +20,16 @@ function pendingLabel(count: number): string {
   return `${count} ${count === 1 ? 'modificare salvată' : 'modificări salvate'}`;
 }
 
+/** §5.3 (36d): „Profil X · acces limitat” — doar pentru un profil restrâns, nu pentru Complet.
+ * Un profil blocat arată „Acces blocat”, mai grav decât o simplă restrângere. */
+function profileNote(profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null): string | null {
+  if (!profile) return null;
+  if (profile.blocked) return 'Acces blocat';
+  if (profile.preset === 'complet') return null;
+  const presetLabels: Record<string, string> = PRESET_LABELS;
+  return `Profil ${presetLabels[profile.preset] ?? profile.preset} · acces limitat`;
+}
+
 /**
  * Cele 4 stări din spec (`18-sincronizare.md` §14a) plus „revoked" (a 5-a, deviație
  * notată în commit — același stil galben ca „Fără internet”, alt text). Ordinea de
@@ -28,7 +39,11 @@ function pendingLabel(count: number): string {
  * `null` = erorile locale (salvare, conexiune, backup) au întâietate — apelantul
  * (Sidebar) arată SaveStatusCard ca astăzi, nu acest card.
  */
-export function deriveSyncStatus(sync: SyncStatus, local: SessionStateForSaveStatus): SyncCardResult | null {
+export function deriveSyncStatus(
+  sync: SyncStatus,
+  local: SessionStateForSaveStatus,
+  profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null,
+): SyncCardResult | null {
   const hasLocalError = !!(
     local.saveError ||
     local.connectionError ||
@@ -37,11 +52,21 @@ export function deriveSyncStatus(sync: SyncStatus, local: SessionStateForSaveSta
   );
   if (hasLocalError) return null;
 
+  const note = profileNote(profile);
+  // §5.3 (36d): pe „sincronizat”, nota de profil înlocuiește detaliul generic („Toate
+  // calculatoarele au aceleași date” ar fi chiar greșit pe un profil restrâns — acest
+  // calculator NU are toate datele). Pe celelalte stări, detaliul tehnic rămâne cel mai util
+  // (offline/conflict/revoked), nota de profil se adaugă la coadă, nu îl înlocuiește.
+  function withNote(mode: SyncCardResult['mode'], detail: string): string {
+    if (!note) return detail;
+    return mode === 'synced' ? note : `${detail} · ${note}`;
+  }
+
   if (sync.conflicts > 0)
     return {
       mode: 'conflict',
       label: `${sync.conflicts} ${sync.conflicts === 1 ? 'conflict' : 'conflicte'}`,
-      detail: 'Aceleași date modificate pe alt calculator.',
+      detail: withNote('conflict', 'Aceleași date modificate pe alt calculator.'),
       actionLabel: 'Rezolvă',
     };
 
@@ -49,7 +74,7 @@ export function deriveSyncStatus(sync: SyncStatus, local: SessionStateForSaveSta
     return {
       mode: 'revoked',
       label: 'Deconectat de pe server',
-      detail: 'Acest calculator nu mai trimite sau primește date.',
+      detail: withNote('revoked', 'Acest calculator nu mai trimite sau primește date.'),
       actionLabel: 'Reconectează din Backup și setări',
     };
 
@@ -57,19 +82,19 @@ export function deriveSyncStatus(sync: SyncStatus, local: SessionStateForSaveSta
     return {
       mode: 'offline',
       label: 'Fără internet',
-      detail: `${pendingLabel(sync.pending)} local. Se trimit automat când revine conexiunea.`,
+      detail: withNote('offline', `${pendingLabel(sync.pending)} local. Se trimit automat când revine conexiunea.`),
     };
 
   if (sync.pushing || sync.pending > 0)
     return {
       mode: 'syncing',
       label: `Se trimit ${sync.pending} modificări…`,
-      detail: 'Poți lucra în continuare',
+      detail: withNote('syncing', 'Poți lucra în continuare'),
     };
 
   return {
     mode: 'synced',
     label: formatSyncedAt(sync.lastSyncedAt),
-    detail: 'Toate calculatoarele au aceleași date',
+    detail: withNote('synced', 'Toate calculatoarele au aceleași date'),
   };
 }

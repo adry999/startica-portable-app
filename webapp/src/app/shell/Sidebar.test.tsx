@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { normalizeProfile } from '#shared/domain/computer-profile.mjs';
 import { Sidebar } from './Sidebar';
 
 const saveStatus = { status: 'saved' as const, label: 'Salvat · 12:06', detail: '', onRetry: () => {} };
@@ -143,5 +144,39 @@ describe('Sidebar', () => {
     );
     expect(screen.getByText('Conflicte')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  describe('§5.3 (36d) — meniul filtrat pe profil', () => {
+    it('profilul Educator arată doar Prezența, Copii și Grupe din primul grup, și ascunde Contabilitate/De rezolvat/Administrare', () => {
+      const profile = normalizeProfile({ preset: 'educator' });
+      render(
+        <Sidebar
+          activeView="attendance"
+          onNavigate={() => {}}
+          counts={{}}
+          version="v1.6.3"
+          saveStatus={saveStatus}
+          profile={profile}
+        />,
+      );
+      expect(screen.getByRole('button', { name: 'Prezența' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Copii' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Grupe' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Dashboard' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Vizite' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Achitări/ })).not.toBeInTheDocument();
+      // Grupele fără niciun rând vizibil dispar cu tot cu titlu.
+      expect(screen.queryByText('Contabilitate')).not.toBeInTheDocument();
+      expect(screen.queryByText('De rezolvat')).not.toBeInTheDocument();
+      expect(screen.queryByText('Administrare')).not.toBeInTheDocument();
+    });
+
+    it('fără profil (implicit Complet) arată tot meniul, ca astăzi', () => {
+      render(
+        <Sidebar activeView="dashboard" onNavigate={() => {}} counts={{}} version="v1.6.3" saveStatus={saveStatus} />,
+      );
+      expect(screen.getByText('Contabilitate')).toBeInTheDocument();
+      expect(screen.getByText('Administrare')).toBeInTheDocument();
+    });
   });
 });

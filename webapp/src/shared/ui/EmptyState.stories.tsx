@@ -19,6 +19,8 @@ const EXAMPLE_PARAMS: Record<string, string> = {
   filiala: 'Centru',
   nefise: '3',
   zi: 'Sâmbătă',
+  modul: 'Achitările',
+  profil: 'Educator',
 };
 
 function fromCatalog(key: EmptyStateKey): Story {
@@ -96,3 +98,6 @@ export const BazinCoach: Story = fromCatalog('bazin.coach');
 export const RaportIncome: Story = fromCatalog('raport.income');
 export const RaportExpenses: Story = fromCatalog('raport.expenses');
 export const AsociereSuggestions: Story = fromCatalog('asociere.suggestions');
+
+// ── 36f — modul neinclus în profilul calculatorului ─────────────────────────
+export const ProfilBlocked: Story = fromCatalog('profil.blocked');

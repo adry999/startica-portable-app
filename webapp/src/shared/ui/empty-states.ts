@@ -59,7 +59,9 @@ export type EmptyStateKey =
   | 'bazin.coach'
   | 'raport.income'
   | 'raport.expenses'
-  | 'asociere.suggestions';
+  | 'asociere.suggestions'
+  // 36f — modul neinclus în profilul calculatorului (31-profiluri-calculator.md, §5.3)
+  | 'profil.blocked';
 
 type CatalogText = string | ((params: Record<string, string>) => string);
 
@@ -347,6 +349,18 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
     variant: 'first',
     size: 'compact',
     title: 'Nicio sugestie. Caută copilul mai jos.',
+  },
+
+  // ── 36f — modul neinclus în profilul calculatorului ─────────────────────
+  // `modul`/`profil` vin din ModuleGuard (eticheta modulului cerut, numele profilului curent);
+  // `actionLabel` e doar documentație aici — eticheta reală a butonului „Mergi la …” depinde de
+  // primul modul permis, construită de ModuleGuard, nu de catalog.
+  'profil.blocked': {
+    variant: 'period',
+    title: params => `Acest calculator nu are acces la ${params.modul ?? 'acest modul'}`,
+    text: params =>
+      `Calculatorul are profilul ${params.profil ?? 'restrâns'}. Accesul se schimbă din Sincronizare, de pe un calculator cu profil Complet.`,
+    actionLabel: 'Mergi la alt modul',
   },
 };
 

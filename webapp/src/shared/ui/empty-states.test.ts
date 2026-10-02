@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 
-const SAMPLE_PARAMS = { luna: 'septembrie', zi: 'Sâmbătă', data: '12.09.2026', an: '2026/2027', filiala: 'Filiala 1' };
+const SAMPLE_PARAMS = {
+  luna: 'septembrie',
+  zi: 'Sâmbătă',
+  data: '12.09.2026',
+  an: '2026/2027',
+  filiala: 'Filiala 1',
+  modul: 'Achitările',
+  profil: 'Educator',
+};
 
 // docs/design/screens/30-stari-goale.md §35b–§35d — fiecare cheie trebuie să existe în catalog.
 const KEYS_35B: EmptyStateKey[] = [
@@ -60,6 +68,9 @@ const KEYS_35D: EmptyStateKey[] = [
   'asociere.suggestions',
 ];
 
+// 36f — modul neinclus în profilul calculatorului (31-profiluri-calculator.md).
+const KEYS_36: EmptyStateKey[] = ['profil.blocked'];
+
 describe('empty-states', () => {
   it('fiecare cheie din 35b are un titlu nevid și o variantă validă', () => {
     for (const key of KEYS_35B) {
@@ -89,9 +100,28 @@ describe('empty-states', () => {
     }
   });
 
-  it('catalogul nu are alte chei în afara celor din 35b+35c+35d', () => {
-    const expected = new Set([...KEYS_35B, ...KEYS_35C, ...KEYS_35D]);
+  it('fiecare cheie din 36f există, cu titlu și text nevide, fără size="compact"', () => {
+    for (const key of KEYS_36) {
+      const entry = EMPTY_STATES[key];
+      expect(entry, `cheia ${key}`).toBeDefined();
+      expect(resolveEmptyStateTitle(entry, SAMPLE_PARAMS), `cheia ${key}`).not.toHaveLength(0);
+      expect(resolveEmptyStateText(entry, SAMPLE_PARAMS), `cheia ${key}`).not.toHaveLength(0);
+      expect(entry.size, `cheia ${key} nu e compact`).toBeUndefined();
+    }
+  });
+
+  it('catalogul nu are alte chei în afara celor din 35b+35c+35d+36f', () => {
+    const expected = new Set([...KEYS_35B, ...KEYS_35C, ...KEYS_35D, ...KEYS_36]);
     expect(Object.keys(EMPTY_STATES).sort()).toEqual([...expected].sort());
+  });
+
+  it('profil.blocked interpolează modulul și profilul curent', () => {
+    expect(resolveEmptyStateTitle(EMPTY_STATES['profil.blocked'], { modul: 'Achitările' })).toBe(
+      'Acest calculator nu are acces la Achitările',
+    );
+    expect(resolveEmptyStateText(EMPTY_STATES['profil.blocked'], { profil: 'Educator' })).toBe(
+      'Calculatorul are profilul Educator. Accesul se schimbă din Sincronizare, de pe un calculator cu profil Complet.',
+    );
   });
 
   it('interpolează parametrii în titlurile care depind de ei', () => {

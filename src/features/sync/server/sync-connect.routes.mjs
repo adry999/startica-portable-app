@@ -53,9 +53,15 @@ export function createSyncConnectRoutes({ syncDevice, createHttpClient, connectS
     {
       method: 'POST',
       path: '/api/sync/pairing-codes',
-      handle: () => {
+      // §5.3 (36a): admin-ul alege profilul (preset sau matrice Personalizat) înainte să genereze
+      // codul — `profile` lipsă păstrează comportamentul dinaintea profilurilor (Complet, vezi
+      // sync-server/devices.routes.mjs `pair()`). Serverul de sincronizare e cel care verifică,
+      // oricum, că apelantul e el însuși Complet (`assertCallerIsComplet`) — nicio gardă în plus
+      // aici, doar transportul câmpului.
+      /** @param {{ body?: { profile?: unknown } }} request */
+      handle: ({ body }) => {
         const { client } = connectedClient();
-        return translatingNetworkErrors(() => client.createPairingCode());
+        return translatingNetworkErrors(() => client.createPairingCode(body?.profile));
       },
     },
     {
@@ -74,6 +80,22 @@ export function createSyncConnectRoutes({ syncDevice, createHttpClient, connectS
         if (!body?.deviceId) fail('Trebuie specificat deviceId.', 400);
         const { client } = connectedClient();
         return translatingNetworkErrors(() => client.revokeDevice(/** @type {string} */ (body.deviceId)));
+      },
+    },
+    {
+      method: 'POST',
+      path: '/api/sync/devices/profile',
+      // §5.3 (36c): „Schimbă” din lista de calculatoare — proxy către
+      // POST /v1/devices/:id/profile, deja construit pe sync-server/ (doar un dispozitiv Complet
+      // poate apela cu succes, `assertCallerIsComplet`).
+      /** @param {{ body: { deviceId?: string, profile?: unknown } }} request */
+      handle: ({ body }) => {
+        if (!body?.deviceId) fail('Trebuie specificat deviceId.', 400);
+        if (!body?.profile) fail('Profilul lipsește din cerere.', 400);
+        const { client } = connectedClient();
+        return translatingNetworkErrors(() =>
+          client.setDeviceProfile(/** @type {string} */ (body.deviceId), body.profile),
+        );
       },
     },
     {

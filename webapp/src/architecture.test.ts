@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
+import { MODULE_IDS } from '#shared/domain/computer-profile.mjs';
 
 const SRC_ROOT: string = import.meta.dirname;
 const FEATURES_ROOT = join(SRC_ROOT, 'features');
@@ -325,6 +326,42 @@ describe('R11 — <form> brut în features/** are autoComplete="off"', () => {
     const files = collectFeatureFilesByName(/\.tsx$/).filter(f => !/\.test\.tsx$/.test(f));
     const actual = featureFilesMatching(files, hasFormWithoutAutoComplete);
     expect(actual).toEqual([]);
+  });
+});
+
+/**
+ * R12 (§5.3, 31-profiluri-calculator.md) — oglinda client a testului de arhitectură de pe server
+ * (`tests/architecture/route-modules-coverage.test.mjs`): scanează sursa `App.tsx` după fiecare
+ * `<Route path="…">` declarat literal și cere ca blocul lui să conțină imediat
+ * `<ModuleGuard moduleId="…">`, cu un `moduleId` valid (`MODULE_IDS`) — altfel o rută nouă ar
+ * rămâne, din greșeală, fără nicio gardă vizibilă (serverul tot ar respinge-o cu 403, dar
+ * interfața ar lăsa utilizatorul să încerce întâi). `*` (catch-all, `<Navigate to="/" />`) nu
+ * randează conținut propriu — exemptat explicit, nu „uitat”.
+ */
+describe('R12 — fiecare rută din App.tsx are moduleId și trece prin ModuleGuard', () => {
+  const APP_TSX = join(SRC_ROOT, 'app', 'App.tsx');
+  const ROUTE_BLOCK_PATTERN = /<Route\b[\s\S]*?\/>/g;
+  const PATH_PATTERN = /\bpath="([^"]+)"/;
+  const MODULE_GUARD_PATTERN = /element=\{\s*<ModuleGuard\s+moduleId="([^"]+)">/;
+
+  function collectRouteBlocks(): string[] {
+    return readFileSync(APP_TSX, 'utf8').match(ROUTE_BLOCK_PATTERN) ?? [];
+  }
+
+  it('App.tsx declară măcar rutele cunoscute (sanitate scanare)', () => {
+    expect(collectRouteBlocks().length).toBeGreaterThan(15);
+  });
+
+  it('fiecare <Route> (în afara catch-all-ului `*`) e înfășurat în <ModuleGuard moduleId="…">, cu un modul valid', () => {
+    const missing: string[] = [];
+    for (const block of collectRouteBlocks()) {
+      const pathMatch = block.match(PATH_PATTERN);
+      const path = pathMatch?.[1] ?? '(fără path)';
+      if (path === '*') continue; // catch-all — doar <Navigate>, fără conținut de gardat.
+      const guardMatch = block.match(MODULE_GUARD_PATTERN);
+      if (!guardMatch || !MODULE_IDS.includes(guardMatch[1])) missing.push(path);
+    }
+    expect(missing).toEqual([]);
   });
 });
 

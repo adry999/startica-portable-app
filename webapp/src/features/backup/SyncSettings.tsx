@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { Button, Card, EmptyState, LoadingState, useToast } from '@shared/ui';
+import { Button, Card, Dialog, EmptyState, LoadingState, useToast } from '@shared/ui';
 import { formatDateTime } from '#shared/format/date-format.mjs';
+import { completProfile } from '#shared/domain/computer-profile.mjs';
 import { ConnectServerForm } from './ConnectServerForm';
 import { PairingCodeCard } from './PairingCodeCard';
 import { DevicesList } from './DevicesList';
+import { ProfileEditor } from './ProfileEditor';
 import { useSyncSettings, type PairingCode } from './useSyncSettings';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
 import backupStyles from './BackupPage.module.css';
 import styles from './SyncSettings.module.css';
+
+type Profile = import('#shared/domain/computer-profile.mjs').ComputerProfile;
 
 /** Fila „Sincronizare” (14b) din Backup și setări — vezi 18-sincronizare.md, Sincronizare.dc.html#14b. */
 export function SyncSettings() {
@@ -15,7 +19,13 @@ export function SyncSettings() {
   const status = useSyncStatus();
   const toast = useToast();
   const [pairing, setPairing] = useState<PairingCode | null>(null);
+  // Profilul deja folosit la generarea codului curent — pentru linia „Profil: …” de pe
+  // PairingCodeCard, separat de `pairingProfile` (dialogul, închis după generare).
+  const [pairingCodeProfile, setPairingCodeProfile] = useState<Profile | null>(null);
   const [creatingPairing, setCreatingPairing] = useState(false);
+  // §5.3 (36a): pasul de alegere a profilului, înainte de generarea codului — non-null = dialog
+  // deschis, cu profilul în curs de editare (implicit Complet, ca orice calculator fără restricții).
+  const [pairingProfile, setPairingProfile] = useState<Profile | null>(null);
 
   async function handleConnected(result: { uploaded: string[]; downloaded: string[] }) {
     toast.show({
@@ -41,10 +51,12 @@ export function SyncSettings() {
     }
   }
 
-  async function handleCreatePairing() {
+  async function handleCreatePairing(profile: Profile) {
     setCreatingPairing(true);
     try {
-      setPairing(await sync.createPairingCode());
+      setPairing(await sync.createPairingCode(profile));
+      setPairingCodeProfile(profile);
+      setPairingProfile(null);
     } catch (error) {
       toast.show({ message: (error as Error).message });
     } finally {
@@ -104,7 +116,7 @@ export function SyncSettings() {
         <Card className={backupStyles.panel}>
           <div className={styles.header}>
             <h3 className={backupStyles.panelTitle}>Calculatoare conectate</h3>
-            <Button variant="outline" disabled={creatingPairing} onClick={() => void handleCreatePairing()}>
+            <Button variant="outline" disabled={creatingPairing} onClick={() => setPairingProfile(completProfile())}>
               + Conectează un calculator
             </Button>
           </div>
@@ -116,7 +128,11 @@ export function SyncSettings() {
             // lista lipsește, în loc de un spinner la nesfârșit sau o listă goală înșelătoare.
             <EmptyState variant="no-results" title="Lista nu e disponibilă offline" description={sync.devicesError} />
           ) : (
-            <DevicesList devices={sync.devices} onRevoke={sync.revokeDevice} />
+            <DevicesList
+              devices={sync.devices}
+              onRevoke={sync.revokeDevice}
+              onChangeProfile={sync.changeDeviceProfile}
+            />
           )}
         </Card>
 
@@ -137,7 +153,37 @@ export function SyncSettings() {
         </Card>
       </div>
 
-      {pairing && <PairingCodeCard pairing={pairing} onClose={() => setPairing(null)} />}
+      {pairing && (
+        <PairingCodeCard
+          pairing={pairing}
+          profile={pairingCodeProfile}
+          onClose={() => {
+            setPairing(null);
+            setPairingCodeProfile(null);
+          }}
+        />
+      )}
+
+      {pairingProfile && (
+        <Dialog
+          open
+          title="Ce poate face calculatorul nou?"
+          width={620}
+          onClose={() => setPairingProfile(null)}
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setPairingProfile(null)}>
+                Renunță
+              </Button>
+              <Button disabled={creatingPairing} onClick={() => void handleCreatePairing(pairingProfile)}>
+                Generează codul
+              </Button>
+            </>
+          }
+        >
+          <ProfileEditor value={pairingProfile} onChange={setPairingProfile} />
+        </Dialog>
+      )}
     </div>
   );
 }

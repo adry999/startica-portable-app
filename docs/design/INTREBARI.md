@@ -529,45 +529,35 @@ trei reguli de securitate; câteva puncte nu erau literale în cod și au cerut 
 
 **Nimic de decis din partea ta** — consemnat ca interpretările să fie vizibile, nu doar deductibile din cod.
 
-## ⏳ §5.3 — stratul client (`webapp/`) pentru profiluri rămâne neconstruit (36a-36f, 36g UI, 36h UI)
+## ✅ §5.3 — stratul client (`webapp/`) pentru profiluri construit (36a-36f) — PROMPT-9 §2
 
-Tot ce ține de server și de protocolul de sincronizare pentru §5.3 e gata, testat (1442 teste, `npm run
-check` verde) și comis pe `master-v2`: modelul pur al profilului (`computer-profile.mjs`), CRUD +
-pairing cu profil pe `sync-server/` (36a/36c server), filtrarea pull/snapshot și respingerea push după
-profil (inclusiv `children` redactat și `audit_log` append-only), clientul care învață și păstrează
-profilul în `sync.json`, și garda pe fiecare cerere `/api` locală (`route-modules.mjs` +
-`route-dispatcher.mjs`, cu test de arhitectură care scanează toate `*.routes.mjs` — a prins deja 4 căi
-neacoperite și un bug real, POST `/api/branches` fără nicio gardă).
+Reluat exact lista recomandată mai sus, în ordinea din `31-profiluri-calculator.md`, pe commiturile
+`cc27549`…`1eda866` (de la `master-v2` 1ed6037): profilul expus în `app-session-store.mjs`, `ModuleGuard`
++ `profil.blocked` (36f) înfășurând fiecare `<Route>` din `App.tsx`, meniul filtrat + grupele goale
+ascunse (36d), cardul de sincronizare cu „Profil X · acces limitat” (36d), fișa copilului doar-citire
+(36e), `ProfileEditor` (preset-uri + matrice Personalizat) folosit atât la pairing (36a/36b) cât și la
+„Schimbă” din lista de calculatoare (36c), plus rutele locale proxy către `sync-server` care lipseau
+(`/api/sync/pairing-codes` nu trimitea profilul mai departe, `/api/sync/devices/profile` nu exista deloc).
+Test de arhitectură client nou (R12, `webapp/src/architecture.test.ts`), oglinda celui de pe server.
+`npm run check` + `webapp` typecheck/vitest verzi (2346 teste webapp, 1450 server).
 
-Asta e, cu bună știință, granița de securitate reală: un calculator restrâns sau blocat nu poate citi
-sau scrie dincolo de profilul lui, nici direct pe `sync-server`, nici pe serverul local, indiferent de
-ce arată interfața. Ce rămâne — tot stratul `webapp/` din spec — e vizibilitate/UX peste acea graniță
-deja impusă, nu o gaură de securitate dacă nu se face acum:
+**Simplificări V1 asumate, nu lăsate tacit în cod:**
+- **36a/36b un singur dialog**, nu un ecran separat pentru matrice: `ProfileEditor` arată rezumatul
+  preset-urilor fixe sau matricea Personalizat, în același card — pasul 2 din artboard (ecran dedicat
+  matricei, cu „← Înapoi la profiluri”) nu există ca navigare separată.
+- **Matricea Personalizat fără grupele de titlu** din artboard (Evidență/Contabilitate/De rezolvat) —
+  listă plată, în ordinea canonică `MODULE_IDS`; rândul Administrare e informativ („Nu vede” fix), nu
+  interactiv — `SegmentedControl` n-are stare dezactivată, iar un control care arată „Modifică”
+  selectabil dar reclampat la 0 de server (`clampModules`) ar fi confuz, nu doar inutil.
+- **Culoarea pastilei de profil din lista de calculatoare** (`DevicesList`) e un singur ton (`yellow`),
+  nu paleta pe preset din artboard (portocaliu/mint/galben/albastru per profil) — informația (numele
+  profilului) e aceeași, doar decorul e redus.
 
-- **36a/36b** — pasul de alegere a profilului la conectarea unui calculator nou + matricea Personalizat
-  (ecran nou în fluxul de pairing existent din Backup și setări → Sincronizare).
-- **36c** — lista de calculatoare cu coloana Profil + panou lateral „Schimbă” (consumă
-  `GET/POST /v1/devices*` deja gata pe server).
-- **36d** — meniul filtrat după profil (grupele goale dispar), cardul de sincronizare cu „Profil X ·
-  acces limitat”.
-- **36e** — fișa copilului doar-citire pe profiluri restrânse (fără plăți/plan/note medicale, fără
-  butoane de editare) — serverul deja redactează `healthNotes`/`feeHistory` când `payments=0`; clientul
-  trebuie doar să nu încerce să le arate/editeze.
-- **36f** — starea goală `profil.blocked` pentru o rută din afara profilului (componentă nouă, cu
-  test + axe + stories per `COMPONENTE.md` §3b).
-- **`ModuleGuard`** — un singur punct în router (`App.tsx`) care citește profilul din `/api/session` și
-  redirecționează/arată 36f; fără el, azi, o interfață neatinsă ar lăsa utilizatorul să vadă/încerce
-  acțiuni pe care serverul le respinge oricum cu 403 — corect ca securitate, confuz ca experiență.
-- **Test de arhitectură client**: fiecare rută din `routes.ts`/`nav-items.ts` are un `moduleId` și trece
-  prin `ModuleGuard` (echivalentul client al testului de acoperire scris deja pe server).
-
-**De ce am oprit aici, nu „pe jumătate”:** fiecare componentă nouă din `webapp/` cere test + axe +
-`*.stories.tsx` cu toate stările (`COMPONENTE.md` §0-§0i) — un `ModuleGuard` construit fără meniul
-filtrat în aceeași trecere ar lăsa o interfață care arată module pe care ModuleGuard tocmai le-ar bloca
-la click, o experiență mai proastă decât starea actuală (fără gardă vizibilă, dar cu serverul deja
-sigur). Prefer o singură trecere coerentă pe tot stratul client, într-un punct dedicat, decât piese
-izolate. Recomand ca următorul pas să reia exact lista de mai sus, în ordinea din
-`docs/design/screens/31-profiluri-calculator.md`.
+**Rămâne neatins, cu bună știință** (confirmat la cod, nu doar la intenție): nicio linie nouă nu șterge
+date locale la restrângerea profilului — `ModuleGuard` doar ascunde randarea, iar schimbarea profilului
+unui alt calculator (`changeDeviceProfile`) nu atinge nimic local pe acest calculator. 36g (istoric pe
+calculatoare) și 36h (PIN per modul) rămân neconstruite — în afara intervalului acestui prompt (`§2`
+acoperă explicit doar 36a–36f), urmează la §7.
 
 ## ⏳ §5.3 36g — istoricul pe calculatoare (`audit_log` sincronizat) are doar fundația din protocol, nu pipeline-ul complet
 
