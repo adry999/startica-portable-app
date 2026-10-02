@@ -67,6 +67,25 @@ test('Validare monetară, dată, identificatori și referințe', () => {
   assert.equal(normalizeRecord('children', { ...child(), status: 'Retras' }).status, 'Retras');
 });
 
+test('AUDIT-COD-02-10-B.md #2: garda de repartizare compară cu amountEur pentru un copil EUR, nu cu amount (lei)', () => {
+  // amount (lei) rămâne mare — fără fix, allocated (în €) ar trece mereu comparat cu cents(amount).
+  const eurPayment = () =>
+    normalizeRecord('payments', {
+      id: 'PAY-eur',
+      childId: 'ID-test',
+      date: '2026-09-08',
+      amount: 500,
+      amountEur: 25,
+      method: 'Cash',
+      allocations: [{ month: '2026-09', amount: 25 }],
+    });
+  assert.doesNotThrow(() => eurPayment());
+  assert.throws(
+    () => normalizeRecord('payments', { ...eurPayment(), allocations: [{ month: '2026-09', amount: 45 }] }),
+    /Repartizările depășesc suma plății/,
+  );
+});
+
 test('Doi părinți opționali și achitare mixtă se normalizează', () => {
   const childRecord = normalizeRecord('children', {
     id: 'C1',

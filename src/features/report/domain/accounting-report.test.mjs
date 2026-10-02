@@ -5,13 +5,17 @@ import { reportPeriodBounds, buildAccountingReport } from './accounting-report.m
 
 const payment = overrides => {
   const amount = overrides?.amount ?? 1000;
+  // AUDIT-COD-02-10-B.md #2: alocările unui copil EUR sunt în euro — dacă overrides pune
+  // amountEur fără să rescrie și allocations, repartizarea implicită trebuie să urmeze amountEur,
+  // nu lei (altfel garda din record-schema.mjs respinge fixture-ul ca „depășește suma plății").
+  const allocationAmount = overrides?.amountEur ?? amount;
   return normalizeRecord('payments', {
     id: `PAY-${Math.random().toString(36).slice(2)}`,
     childId: 'C-1',
     date: '2026-08-05',
     amount,
     method: 'Cash',
-    allocations: [{ month: '2026-08', amount }],
+    allocations: [{ month: '2026-08', amount: allocationAmount }],
     ...overrides,
   });
 };

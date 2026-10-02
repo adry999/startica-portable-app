@@ -606,7 +606,11 @@ export function normalizeRecord(type, input) {
       record.method ||= 'Cash';
       record.service ||= DEFAULT_SERVICE_ID;
       text(record.service, 'Serviciu', true);
-      record.allocations ??= record.month ? [{ month: record.month, amount: record.amount }] : [];
+      // AUDIT-COD-02-10-B.md #2: dacă un viitor apelant pune `amountEur` + `month` fără
+      // `allocations` explicit, repartizarea implicită trebuie să fie tot în euro — altfel ar
+      // scrie suma în lei ca repartizare „în euro" (allocationCurrency() citește moneda după
+      // `amountEur`), aceeași clasă de corupere ca la #1 (fxrate-backfill).
+      record.allocations ??= record.month ? [{ month: record.month, amount: record.amountEur ?? record.amount }] : [];
       requireThat(Array.isArray(record.allocations) && record.allocations.length <= 120, 'Repartizare invalidă.');
       const seen = new Set();
       let allocated = 0;
@@ -619,7 +623,11 @@ export function normalizeRecord(type, input) {
         requireAmount(allocation.amount, 'Suma repartizată');
         allocated += cents(allocation.amount);
       }
-      requireThat(allocated <= cents(record.amount), 'Repartizările depășesc suma plății.');
+      // AUDIT-COD-02-10-B.md #2: pentru un copil cu tarif EUR, allocations[] e în EURO
+      // (allocationCurrency() din payment-allocations.mjs decide asta după `amountEur`), dar
+      // `record.amount` rămâne mereu în LEI (suma tenders-urilor) — comparate direct, garda nu mai
+      // prinde nimic (~20x diferență de scară). `amountEur` e sursa corectă când există.
+      requireThat(allocated <= cents(record.amountEur ?? record.amount), 'Repartizările depășesc suma plății.');
       record.month = record.allocations.length === 1 ? record.allocations[0].month : '';
     } else {
       // General e categoria de rezervă (nu Altele, deletabilă ca oricare alta) — vezi
