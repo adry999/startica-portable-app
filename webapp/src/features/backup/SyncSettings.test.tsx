@@ -234,9 +234,54 @@ describe('SyncSettings', () => {
     await renderPage();
     await waitFor(() => expect(screen.getByRole('button', { name: '+ Conectează un calculator' })).toBeInTheDocument());
 
+    // §5.3 (36a): butonul deschide întâi alegerea profilului, nu codul direct.
     await userEvent.click(screen.getByRole('button', { name: '+ Conectează un calculator' }));
+    expect(screen.getByRole('dialog', { name: 'Ce poate face calculatorul nou?' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Generează codul' }));
 
     await waitFor(() => expect(screen.getByText('482913')).toBeInTheDocument());
     expect(screen.getByText('https://sync.exemplu.md')).toBeInTheDocument();
+    expect(requestJsonMock).toHaveBeenCalledWith(
+      '/api/sync/pairing-codes',
+      expect.objectContaining({ profile: expect.objectContaining({ preset: 'complet' }) }),
+    );
+  });
+
+  it('§5.3 (36a): „Renunță” închide dialogul fără să genereze cod', async () => {
+    sessionState = {
+      branches: [],
+      sync: {
+        configured: true,
+        deviceName: 'Calculator A',
+        serverUrl: 'https://sync.exemplu.md',
+        connection: 'online',
+      },
+    };
+    requestJsonMock.mockImplementation((path: string) => {
+      if (path === '/api/sync/status')
+        return Promise.resolve({
+          configured: true,
+          serverUrl: '',
+          deviceName: '',
+          connection: 'online',
+          pending: 0,
+          pushing: false,
+          lastSyncedAt: '',
+          conflicts: 0,
+          lastError: '',
+        });
+      if (path === '/api/sync/server') return Promise.resolve({ branches: 1, devices: 1, lastBackupAt: '' });
+      if (path === '/api/sync/devices') return Promise.resolve({ devices: [] });
+      return Promise.reject(new Error(`neașteptat: ${path}`));
+    });
+
+    await renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: '+ Conectează un calculator' })).toBeInTheDocument());
+
+    await userEvent.click(screen.getByRole('button', { name: '+ Conectează un calculator' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Renunță' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(requestJsonMock).not.toHaveBeenCalledWith('/api/sync/pairing-codes', expect.anything());
   });
 });
