@@ -93,6 +93,8 @@ const EXCHANGE_RATE_BACKFILL_DAYS = 30;
  *   branchRoutes: import('#core/server/http/route-dispatcher.mjs').RouteDefinition[],
  *   syncDevice?: import('#features/sync/index.server.mjs').SyncDeviceRepository,
  *   common?: import('./create-common-context.mjs').CommonContext,
+ *   fullBackupService?: ReturnType<typeof import('#features/backup/index.server.mjs').createFullBackupService>,
+ *   restoreFullBackup?: (file: string) => void,
  * }} options
  */
 export function createBranchContext({
@@ -117,6 +119,11 @@ export function createBranchContext({
   // Baza comună (Personal 24): opțional aici — rutele care o folosesc (Task 3) o
   // cer explicit; un context construit fără el (teste izolate de filială) nu o vede deloc.
   common,
+  // 42d: ambele opționale aici — un context de test izolat de filială (fără create-application.mjs
+  // în jur) nu are de unde să le primească; createBackupRoutes tratează lipsa lor ca „restaurare
+  // de arhivă completă indisponibilă” și păstrează doar fluxul legacy pe un singur `.db`.
+  fullBackupService,
+  restoreFullBackup,
 }) {
   // Per context de filială (deschidere sau schimbare), nu per proces (A-1 din audit): un
   // token unic la nivel de proces era valid pe orice filială, deci o filă rămasă deschisă
@@ -364,6 +371,10 @@ export function createBranchContext({
       replaceAllRecords,
       backupDirectory: backupDir,
       forbiddenFolders,
+      // 42d: arhiva completă (toate bazele) — construită o singură dată în create-application.mjs,
+      // pasată gata construită, la fel ca `common` mai sus (decizia din plan, pasul 6).
+      fullBackupService,
+      restoreFullBackup,
     }),
     ...createTelegramRoutes({
       dataDirectory: dataDir,
@@ -543,6 +554,10 @@ export function createBranchContext({
     recordRepository,
     auditLogRepository,
     readSetting,
+    // 42d: fullBackupService (create-application.mjs) citește/scrie lastLocal/externalDir
+    // ale arhivei complete pe setările FILIALEI ACTIVE, la fel ca backups de mai sus —
+    // singurul consumator e create-application.mjs, nicio rută de-aici nu-l expune direct.
+    writeSetting: settings.setSetting,
     // Motorul de sincronizare (Faza 3, nu construită aici) se leagă de exact aceste
     // depozite; rawRecordRepository e drumul prin care aplică modificările primite
     // de pe server, ca ele să nu se întoarcă în propriul outbox (decizia 4 din plan).

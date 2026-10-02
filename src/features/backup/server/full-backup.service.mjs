@@ -21,8 +21,10 @@ import { removeFileIfPresent } from '#core/server/files/remove-file-if-present.m
 import { createZipArchive, readZipArchive } from '#core/server/files/zip-archive.mjs';
 import { openDatabaseReadOnly } from '#core/server/database/sqlite-connection.mjs';
 import { branchDirectories } from '#core/server/branches/branch-layout.mjs';
+import { summary } from '#shared/domain/records-report.mjs';
 import { selectBackupsToKeep } from '../domain/backup-retention.mjs';
 import { summarizeDatabaseContents } from './database-contents.mjs';
+import { readBackupSnapshotDetails } from './backup-snapshot.mjs';
 
 /** @typedef {import('#core/server/branches/branch-registry.mjs').BranchEntry} BranchEntry */
 /** @typedef {{ id: string, name: string, kind: 'branch' | 'common', file: string, sha256: string, counts: Record<string, number> }} ManifestDatabaseEntry */
@@ -401,6 +403,42 @@ export function createFullBackupService({
     return { manifest, databaseFiles };
   }
 
+  // RecordsSnapshot gol, pentru merge-ul de mai jos — restul câmpurilor cerute de summary()
+  // (charges, payerAliases, services) nu intră în totaluri, dar upgradeSnapshot() le poate
+  // întoarce goale, deci nu lipsesc niciodată din obiectul citit per filială.
+  /** @returns {import('#shared/contracts/record-types.mjs').RecordsSnapshot} */
+  function emptyMergedSnapshot() {
+    return { children: [], payments: [], expenses: [], groups: [], categories: [], visits: [] };
+  }
+
+  /**
+   * Previzualizarea unei restaurări (42d): aceeași validare completă ca `restore()`, plus
+   * un rezumat agregat (copii/achitări/cheltuieli… peste TOATE filialele din arhivă, Comun
+   * exclus — are alte tipuri, fără sens în `summary()`) — exact formatul deja afișat de
+   * `BackupPage.tsx`/`useRestore.ts` pentru un backup pe o singură bază, ca UI-ul existent
+   * să nu aibă nevoie de nicio schimbare pentru o arhivă completă.
+   * @param {string} file
+   * @returns {{ summary: ReturnType<typeof summary>, manifest: BackupManifest, notes: string[] }}
+   */
+  function previewArchive(file) {
+    const { manifest, databaseFiles } = validateArchive(file);
+    const stagingDir = mkdtempSync(join(backupDirectory(), '.previzualizare-'));
+    try {
+      const merged = emptyMergedSnapshot();
+      for (const entry of manifest.databases) {
+        if (entry.kind !== 'branch') continue;
+        const staged = join(stagingDir, entry.file);
+        writeFileSync(staged, /** @type {Buffer} */ (databaseFiles.get(entry.id)));
+        const { snapshot } = readBackupSnapshotDetails(staged);
+        for (const key of /** @type {const} */ (['children', 'payments', 'expenses', 'groups', 'categories', 'visits']))
+          merged[key].push(...(snapshot[key] || []));
+      }
+      return { summary: summary(merged), manifest, notes: [] };
+    } finally {
+      rmSync(stagingDir, { recursive: true, force: true });
+    }
+  }
+
   /**
    * Restaurare dintr-o arhivă validă: `apply` primește manifestul + conținutul fiecărei
    * baze (indexat după id-ul din manifest) și face singur înlocuirea de fișiere și
@@ -423,6 +461,7 @@ export function createFullBackupService({
     resolveArchiveFile,
     readArchiveManifest,
     validateArchive,
+    previewArchive,
     restore,
     isArchive: file => {
       try {

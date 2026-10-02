@@ -250,6 +250,28 @@ test('restore() respinge o arhivă a cărei numărătoare nu corespunde manifest
   assert.throws(() => service.restore(altered, { apply: () => {} }), /numărătoarea bazei.*nu corespunde/i);
 });
 
+test('previewArchive() agregă copiii peste toate filialele, excluzând Comun', t => {
+  const { service } = createHarness(t);
+  const { file } = service.backup('manual');
+
+  const { summary, manifest } = service.previewArchive(file);
+
+  // br-active are 1 copil (c1), br-other are 1 copil (c2) — Comun nu are kind „children”.
+  assert.equal(summary.children, 2);
+  assert.equal(manifest.databases.length, 3);
+});
+
+test('previewArchive() nu lasă niciun folder de lucru în urmă', t => {
+  const { service, backupDirectory } = createHarness(t);
+  const { file } = service.backup('manual');
+
+  service.previewArchive(file);
+  assert.deepEqual(
+    readdirSync(backupDirectory).filter(name => name.startsWith('.previzualizare-') || name.startsWith('.restaurare-')),
+    [],
+  );
+});
+
 test('restore() cheamă apply() cu manifestul și conținutul fiecărei baze, după validare completă', t => {
   const { service } = createHarness(t);
   const { file, manifest } = service.backup('manual');
