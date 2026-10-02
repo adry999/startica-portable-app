@@ -1,4 +1,5 @@
 import { TYPES, normalizeRecord } from '#shared/domain/record-schema.mjs';
+import { AUDIT_LOG_KIND } from '#shared/domain/computer-profile.mjs';
 
 /**
  * O modificare primită de pe server (push „superseded”/„applied la reluare” sau pull) nu
@@ -291,6 +292,36 @@ export function createChangeApplier({
    *   Faza 6 — nu scriu nimic, deci nu au ce audit sau sync_state să lase în urmă)
    */
   function apply({ kind, recordId, payload, revision, changedAt, device }) {
+    // §7 (36g): o intrare de istoric venită de pe alt calculator — scrisă direct în
+    // `audit_changes` prin `mergeSyncedEntry` (nu `recordChange`, care ar retrimite-o la
+    // nesfârșit în propria coadă), ca ecranul Istoric să arate ce s-a întâmplat acolo. Identitatea
+    // calculatorului vine din `device` (verificată de server la autentificare), nu din
+    // `payload.deviceId`/`deviceName` (auto-raportate de calculatorul care a trimis intrarea) —
+    // un calculator compromis nu poate pretinde identitatea altuia în istoricul local. `payload`
+    // poate lipsi `mergeSyncedEntry` pe dublele de test simple (recording-audit-trail.mjs) —
+    // apelul rămâne opțional, un `audit_log` fără el e doar ignorat local (nimic de arătat).
+    if (kind === AUDIT_LOG_KIND) {
+      const entry =
+        /** @type {{ action: string, recordType: string | null, recordId: string | null, before: unknown, after: unknown, occurredAt: string } | null} */ (
+          payload
+        );
+      if (entry) {
+        auditTrail.mergeSyncedEntry?.({
+          entryUid: recordId,
+          deviceId: device.id,
+          deviceName: device.name,
+          action: entry.action,
+          recordType: /** @type {import('#shared/contracts/record-types.mjs').RecordType | null} */ (
+            entry.recordType ?? null
+          ),
+          recordId: entry.recordId ?? null,
+          before: entry.before,
+          after: entry.after,
+          occurredAt: entry.occurredAt ?? changedAt,
+        });
+      }
+      return false;
+    }
     const isRecordKind = TYPES.includes(kind);
     const isCommonKind = COMMON_KINDS.includes(/** @type {any} */ (kind));
     const isAttendance = kind === 'attendance';

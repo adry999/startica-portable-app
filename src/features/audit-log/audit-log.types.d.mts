@@ -10,6 +10,10 @@ export interface AuditEntry {
   recordId: string | null;
   before: Record<string, unknown> | null;
   after: Record<string, unknown> | null;
+  /** §7 (36g): calculatorul care a scris intrarea — `null` pentru intrările vechi (dinainte de
+   * migrare) sau scrise pe un calculator fără sincronizare configurată. */
+  deviceId: string | null;
+  deviceName: string | null;
 }
 
 export interface AuditPage {

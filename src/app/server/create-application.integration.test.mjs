@@ -300,7 +300,13 @@ test('importul unui instantaneu identic (calculator sincronizat) nu pune nimic �
     // pași (ca după un push reușit), ca appearance rândurilor noi să fie vizibilă:
     // câte rânduri PENDING apar după fiecare import, plecând mereu de la zero.
     const markAllSent = () => app.db.exec("UPDATE sync_outbox SET status='sent' WHERE status='pending'");
-    const pendingCount = () => app.db.prepare("SELECT COUNT(*) AS n FROM sync_outbox WHERE status='pending'").get().n;
+    // §7 (36g): de la istoricul sincronizat, fiecare înregistrare chiar schimbată mai lasă
+    // ACUM și o a doua intrare în outbox — cu `kind='audit_log'`, drept consemnarea ei în
+    // istoric, pe lângă rândul cu datele propriu-zise — deci exclusă aici ca acest test să
+    // verifice în continuare exact ce verifica dinainte: igiena cozii pentru DATE, nu pentru
+    // istoric (care are propriul test dedicat, tests/audit-log-sync.integration.test.mjs).
+    const pendingCount = () =>
+      app.db.prepare("SELECT COUNT(*) AS n FROM sync_outbox WHERE status='pending' AND kind<>'audit_log'").get().n;
 
     const initial = await fetch(url + '/api/state').then(r => r.json());
     markAllSent();

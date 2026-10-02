@@ -13,6 +13,19 @@ export function createAuditLogRoutes({ auditLogRepository }) {
       },
     },
     {
+      // §7 (36g): fila „Acces” — evenimentele access.* (PIN, gărzi de profil), separate de
+      // restul istoricului.
+      method: 'GET',
+      path: '/api/audit/access',
+      /** @param {{ url: URL }} request */
+      handle: ({ url }) => {
+        const beforeEntryId = url.searchParams.get('beforeEntryId');
+        return auditLogRepository.readAccessEvents({
+          beforeEntryId: beforeEntryId === null ? null : Number(beforeEntryId),
+        });
+      },
+    },
+    {
       // 45a (PROMPT-8 §14): istoricul unei singure înregistrări — fișa unui copil, cu achitările
       // lui. `scope` e JSON encodat în query string: [{recordType,recordId}, ...].
       method: 'GET',

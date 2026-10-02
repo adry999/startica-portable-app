@@ -284,3 +284,127 @@ test('redactarea nu atinge alte câmpuri sau alte tipuri de înregistrare', t =>
   assert.deepEqual(entry.before, { amount: 100 });
   assert.deepEqual(entry.after, { amount: 200 });
 });
+
+test('§7 (36g): fără deviceId/deviceName la construcție, intrările au device null', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'adăugare', recordType: 'children', recordId: 'CHILD-1' });
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+  assert.equal(entry.deviceId, null);
+  assert.equal(entry.deviceName, null);
+});
+
+test('§7 (36g): cu deviceId/deviceName la construcție, fiecare intrare nouă le poartă', t => {
+  const database = new DatabaseSync(':memory:');
+  applySchema(database);
+  t.after(() => database.close());
+  const repository = createAuditLogRepository(database, { deviceId: 'DEV-A', deviceName: 'Calculator A' });
+
+  repository.recordChange({ action: 'adăugare', recordType: 'children', recordId: 'CHILD-1' });
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+
+  assert.equal(entry.deviceId, 'DEV-A');
+  assert.equal(entry.deviceName, 'Calculator A');
+});
+
+test('§7 (36g): recordChange pune o intrare în coada de sincronizare doar dacă sincronizarea e activă', t => {
+  const database = new DatabaseSync(':memory:');
+  applySchema(database);
+  t.after(() => database.close());
+  const enqueued = [];
+  let syncEnabled = false;
+  const outbox = { enqueue: change => enqueued.push(change) };
+  const repository = createAuditLogRepository(database, {
+    deviceId: 'DEV-A',
+    deviceName: 'Calculator A',
+    branchId: 'BRANCH-1',
+    outbox,
+    isSyncEnabled: () => syncEnabled,
+  });
+
+  repository.recordChange({
+    action: 'adăugare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    after: { id: 'CHILD-1' },
+  });
+  assert.equal(enqueued.length, 0, 'fără sincronizare activă, nimic nu pleacă în coadă');
+
+  syncEnabled = true;
+  repository.recordChange({
+    action: 'adăugare',
+    recordType: 'children',
+    recordId: 'CHILD-2',
+    after: { id: 'CHILD-2' },
+  });
+  assert.equal(enqueued.length, 1);
+  assert.equal(enqueued[0].kind, 'audit_log');
+  assert.equal(enqueued[0].payload.deviceId, 'DEV-A');
+  assert.equal(enqueued[0].payload.branchId, 'BRANCH-1');
+  assert.equal(enqueued[0].payload.module, 'children');
+  assert.equal(enqueued[0].payload.recordId, 'CHILD-2');
+  // recordId-ul din outbox e entry_uid (UUID global), nu id-ul local (autoincrement) — altfel
+  // două calculatoare ar genera aceeași „cheie” pentru intrări complet diferite.
+  assert.notEqual(enqueued[0].recordId, undefined);
+  assert.notEqual(String(enqueued[0].recordId), '1');
+});
+
+test('§7 (36g): mergeSyncedEntry scrie o intrare cu identitatea calculatorului de origine, redactată', t => {
+  const repository = createRepository(t);
+  repository.mergeSyncedEntry({
+    entryUid: 'UID-1',
+    deviceId: 'DEV-B',
+    deviceName: 'Calculator B',
+    action: 'modificare',
+    recordType: 'visits',
+    recordId: 'VIZ-1',
+    before: { healthNotes: 'Alergie', name: 'Ana' },
+    after: { healthNotes: '', name: 'Ana' },
+    occurredAt: '2026-10-01T10:00:00.000Z',
+  });
+
+  const [entry] = repository.readPage({ beforeEntryId: null }).entries;
+  assert.equal(entry.deviceId, 'DEV-B');
+  assert.equal(entry.deviceName, 'Calculator B');
+  assert.ok(entry.before);
+  assert.equal(entry.before.healthNotes, '[date medicale]');
+  assert.equal(entry.recordId, 'VIZ-1');
+});
+
+test('§7 (36g): mergeSyncedEntry e idempotent pe entry_uid — o reluare nu dublează rândul', t => {
+  const repository = createRepository(t);
+  /** @type {Parameters<typeof repository.mergeSyncedEntry>[0]} */
+  const entry = {
+    entryUid: 'UID-DUP',
+    deviceId: 'DEV-B',
+    deviceName: 'Calculator B',
+    action: 'adăugare',
+    recordType: 'children',
+    recordId: 'CHILD-1',
+    before: null,
+    after: null,
+    occurredAt: '2026-10-01T10:00:00.000Z',
+  };
+  repository.mergeSyncedEntry(entry);
+  repository.mergeSyncedEntry(entry);
+
+  assert.equal(repository.readPage({ beforeEntryId: null }).entries.length, 1);
+});
+
+test('§7 (36g): fila „Acces” — readAccessEvents vede doar acțiunile access.*, readPage le exclude', t => {
+  const repository = createRepository(t);
+  repository.recordChange({ action: 'access.pin_ok', recordType: null, recordId: 'payments' });
+  repository.recordChange({ action: 'modificare', recordType: 'children', recordId: 'CHILD-1' });
+  repository.recordChange({ action: 'access.blocked', recordType: null, recordId: 'personal' });
+
+  const access = repository.readAccessEvents({ beforeEntryId: null }).entries;
+  assert.deepEqual(
+    access.map(entry => entry.action),
+    ['access.blocked', 'access.pin_ok'],
+  );
+
+  const page = repository.readPage({ beforeEntryId: null }).entries;
+  assert.deepEqual(
+    page.map(entry => entry.action),
+    ['modificare'],
+  );
+});
