@@ -39,6 +39,7 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
   );
   const childResults = results.filter(r => r.type === 'children');
   const paymentResults = results.filter(r => r.type === 'payments');
+  const expenseResults = results.filter(r => r.type === 'expenses');
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -110,6 +111,22 @@ export function Topbar({ view, month, onMonthChange }: TopbarProps) {
                       <div className={styles.searchGroup}>
                         <p className={styles.searchGroupTitle}>Achitări</p>
                         {paymentResults.map(result => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            className={styles.searchResult}
+                            onMouseDown={() => select(result)}
+                          >
+                            <strong>{result.label}</strong>
+                            <small>{result.detail}</small>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {expenseResults.length > 0 && (
+                      <div className={styles.searchGroup}>
+                        <p className={styles.searchGroupTitle}>Cheltuieli</p>
+                        {expenseResults.map(result => (
                           <button
                             key={result.id}
                             type="button"

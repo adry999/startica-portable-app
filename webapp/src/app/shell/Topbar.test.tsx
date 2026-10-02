@@ -131,5 +131,38 @@ describe('Topbar', () => {
 
       expect(await screen.findByTestId('location')).toHaveTextContent('/copii/c1');
     });
+
+    it('41c: o sumă găsește o cheltuială, grupată separat, iar click navighează la listă', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (path: string) => {
+          if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+          if (path === '/api/state')
+            return jsonResponse({
+              state: {
+                ...fixtureState,
+                expenses: [{ id: 'e1', category: 'Utilități', description: 'Curent', date: '2026-09-10', amount: 777 }],
+              },
+              revision: 1,
+              updatedAt: '2026-09-23T10:00:00Z',
+            });
+          if (path === '/api/health') return jsonResponse({});
+          if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+          throw new Error(`neașteptat: ${path}`);
+        }),
+      );
+      const session = renderHook(() => useAppSession());
+      await act(() => session.result.current.load());
+
+      const user = userEvent.setup();
+      renderTopbar({ view: 'dashboard', month: '2026-09', onMonthChange: () => {} });
+
+      await user.type(screen.getByPlaceholderText('Caută copil, părinte, achitare…'), '777');
+      expect(await screen.findByText('Cheltuieli')).toBeInTheDocument();
+      const result = screen.getByText('Curent');
+      await user.click(result);
+
+      expect(await screen.findByTestId('location')).toHaveTextContent('/cheltuieli');
+    });
   });
 });

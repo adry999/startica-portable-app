@@ -34,7 +34,10 @@ export function viewForPathname(pathname: string): ViewKey {
   return SEGMENT_TO_VIEW[segment] ?? 'dashboard';
 }
 
-/** Ținta de navigare pentru un rezultat din căutarea globală — deschide direct fișa/formularul. */
+/** Ținta de navigare pentru un rezultat din căutarea globală — deschide direct fișa/formularul.
+ * Cheltuielile (41c) nu au încă o rută proprie pe id — rezultatul duce la listă, nu la un
+ * `/cheltuieli/:id` inexistent. */
 export function pathForSearchResult(result: SearchResult): string {
+  if (result.type === 'expenses') return VIEW_PATHS.expenses;
   return `${VIEW_PATHS[result.type]}/${result.id}`;
 }
