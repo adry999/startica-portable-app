@@ -1,5 +1,9 @@
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
+// docs/design/screens/32-actualizari.md („Compatibilitate”): „Fiecare cerere /v1/* trimite
+// X-Startica-Version” — același nume pe server (sync-server/src/version-gate.mjs).
+const CLIENT_VERSION_HEADER = 'X-Startica-Version';
+
 export class SyncNetworkError extends Error {}
 export class SyncRevokedError extends Error {}
 export class SyncHttpError extends Error {
@@ -7,6 +11,16 @@ export class SyncHttpError extends Error {
   constructor(status, message) {
     super(message);
     this.status = status;
+  }
+}
+/** 426 Upgrade Required (SYNC_MIN_CLIENT_VERSION) — mirorul lui SyncHttpError, cu ținta
+ * exactă de versiune (`minVersion`) în loc de un cod HTTP, ca sync-engine.service.mjs să
+ * n-o scoată dintr-un mesaj text. */
+export class SyncIncompatibleError extends Error {
+  /** @param {string} minVersion @param {string} [message] */
+  constructor(minVersion, message = 'Această versiune este prea veche.') {
+    super(message);
+    this.minVersion = minVersion;
   }
 }
 
@@ -42,6 +56,7 @@ const EVENTS_MAX_RECONNECT_MS = 30000;
  * @param {{
  *   serverUrl: string, token?: string, fetch?: typeof fetch, timeoutMs?: number,
  *   setTimeoutFn?: typeof setTimeout, clearTimeoutFn?: typeof clearTimeout,
+ *   clientVersion?: string,
  * }} dependencies
  */
 export function createSyncHttpClient({
@@ -51,9 +66,15 @@ export function createSyncHttpClient({
   timeoutMs = 10000,
   setTimeoutFn = setTimeout,
   clearTimeoutFn = clearTimeout,
+  // §5.2 (37d): versiunea aplicației (package.json#version) — lipsă doar într-un apelant
+  // care nu o dă (teste izolate); serverul tratează absența antetului ca „client dinainte
+  // de el”, nu ca eroare (version-gate.mjs).
+  clientVersion,
 }) {
   assertServerUrl(serverUrl);
   const base = serverUrl.replace(/\/+$/, '');
+  /** @type {Record<string, string>} */
+  const versionHeader = clientVersion ? { [CLIENT_VERSION_HEADER]: clientVersion } : {};
 
   /**
    * @param {string} path
@@ -69,6 +90,7 @@ export function createSyncHttpClient({
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...versionHeader,
         },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
@@ -85,6 +107,8 @@ export function createSyncHttpClient({
     } catch {
       payload = null;
     }
+    if (response.status === 426)
+      throw new SyncIncompatibleError(payload?.minVersion || '', payload?.error || undefined);
     if (!response.ok)
       throw new SyncHttpError(
         response.status,
@@ -150,7 +174,7 @@ export function createSyncHttpClient({
       function connect() {
         controller = new AbortController();
         fetchImpl(base + `/v1/branches/${branchId}/events`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...versionHeader },
           signal: controller.signal,
         })
           .then(async response => {

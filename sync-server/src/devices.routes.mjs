@@ -94,6 +94,9 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
       lastBranchId: record.lastBranchId,
       revokedAt: record.revokedAt,
       profile: record.profile,
+      // §5.2 (37d): ultima versiune raportată (X-Startica-Version) — null dacă dispozitivul
+      // n-a mai trimis încă nicio cerere autentificată cu acest antet.
+      version: record.version,
       me: record.id === meId,
     };
   }

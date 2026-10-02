@@ -94,6 +94,8 @@ export function createAppSessionStore({
      *   notes: string | null,
      *   checkedAt: string | null,
      *   error: string | null,
+     *   installReady: boolean,
+     *   pendingVersion: string | null,
      * }} */
     update: {
       updateAvailable: false,
@@ -105,6 +107,11 @@ export function createAppSessionStore({
       notes: null,
       checkedAt: null,
       error: null,
+      // §5.2 Partea 2 (PROMPT-10 §8): un instaler deja descărcat și verificat (SHA-256) —
+      // mai tare decât „updateAvailable” (doar anunțat) — AppShell arată banda verde
+      // „Se instalează când închizi aplicația” în loc de link-ul spre pagina de release.
+      installReady: false,
+      pendingVersion: null,
     },
     // 21c (DECIZII.md punctul 55) — „Lucrez fără legătură”: ieșire optimistă din ecranul de
     // pornire când încărcarea durează mult; AppShell arată interfața reală cât timp load()

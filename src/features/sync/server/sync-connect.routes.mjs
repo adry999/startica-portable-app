@@ -1,5 +1,5 @@
 import { fail } from '#core/server/errors/domain-error.mjs';
-import { SyncNetworkError, SyncRevokedError } from './sync-http-client.mjs';
+import { SyncNetworkError, SyncRevokedError, SyncIncompatibleError } from './sync-http-client.mjs';
 
 /**
  * Rutele de conectare (14b, Task 11-12): conectare/deconectare, cod de pairing, lista
@@ -113,6 +113,11 @@ export function createSyncConnectRoutes({ syncDevice, createHttpClient, connectS
         } catch (error) {
           if (error instanceof SyncNetworkError) return { connection: 'offline', devices: [], branches: [] };
           if (error instanceof SyncRevokedError) fail('Acest calculator a fost deconectat de pe server.', 401);
+          // §5.2 (426): cardul „Sincronizare” din filă nu are propriul status „incompatible” —
+          // sursa de adevăr pentru acea bandă rămâne motorul (/api/sync/status, useSyncStatus).
+          // Aici e suficient să nu arunce un 500 — „offline” lasă cardul fără date, consistent
+          // cu orice altă rețea căzută, în loc de o eroare necontrolată.
+          if (error instanceof SyncIncompatibleError) return { connection: 'offline', devices: [], branches: [] };
           throw error;
         }
       },

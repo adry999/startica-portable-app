@@ -83,6 +83,9 @@ export const STATIC_PATH_MODULE = {
   '/api/sync/conflicts': 'admin',
   '/api/sync/conflicts/resolve': 'admin',
 
+  '/api/update/download': 'admin',
+  '/api/update/pending': 'admin',
+
   '/api/health': 'admin',
   '/api/backups': 'admin',
   '/api/external-backups': 'admin',

@@ -12,10 +12,13 @@ const EMPTY_ENGINE_STATUS = {
   lastSyncedAt: '',
   conflicts: 0,
   lastError: '',
+  minVersion: '',
   profile: null,
 };
 
-const CONNECTION_RANK = { revoked: 2, offline: 1, online: 0 };
+// §5.2 (426): „incompatible” e mai gravă decât „revoked” — o reconectare simplă (revoked)
+// rezolvă singură la reîncercare, o versiune prea veche nu, până la o actualizare.
+const CONNECTION_RANK = { incompatible: 3, revoked: 2, offline: 1, online: 0 };
 
 /**
  * Setul comun (Personal 24, decizia 9) are propriul motor, pornit alături de acest context
@@ -41,6 +44,7 @@ function mergeEngineStatus(branchStatus, commonStatus) {
         : branchStatus.lastSyncedAt || commonStatus.lastSyncedAt,
     conflicts: branchStatus.conflicts + commonStatus.conflicts,
     lastError: branchStatus.lastError || commonStatus.lastError,
+    minVersion: branchStatus.minVersion || commonStatus.minVersion,
     // §5.3: amândouă motoarele reîmprospătează același profil (un singur calculator) — oricare
     // valoare cunoscută e bună; branșa activă e sursa preferată (se sincronizează mai des).
     profile: branchStatus.profile ?? commonStatus.profile,

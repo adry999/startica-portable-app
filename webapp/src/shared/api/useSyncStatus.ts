@@ -5,12 +5,14 @@ export interface SyncStatus {
   configured: boolean;
   serverUrl: string;
   deviceName: string;
-  connection: 'online' | 'offline' | 'revoked';
+  connection: 'online' | 'offline' | 'revoked' | 'incompatible';
   pending: number;
   pushing: boolean;
   lastSyncedAt: string;
   conflicts: number;
   lastError: string;
+  /** §5.2 (426, 37a/37c): versiunea minimă cerută de server — „” cât timp connection nu e „incompatible”. */
+  minVersion: string;
 }
 
 const EMPTY_STATUS: SyncStatus = {
@@ -23,6 +25,7 @@ const EMPTY_STATUS: SyncStatus = {
   lastSyncedAt: '',
   conflicts: 0,
   lastError: '',
+  minVersion: '',
 };
 
 const RELOAD_DEBOUNCE_MS = 1000;

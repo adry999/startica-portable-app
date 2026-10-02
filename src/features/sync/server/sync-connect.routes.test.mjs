@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSyncConnectRoutes } from './sync-connect.routes.mjs';
+import { SyncIncompatibleError } from './sync-http-client.mjs';
 
 const DEVICE = { serverUrl: 'https://sync.exemplu.md', token: 'tok-1' };
 
@@ -84,4 +85,22 @@ test('POST /api/sync/devices/profile fără deviceId sau fără profile respinge
 
   await assert.rejects(async () => route.handle({ body: { profile: { preset: 'bazin' } } }), /deviceId/);
   await assert.rejects(async () => route.handle({ body: { deviceId: 'dev-9' } }), /Profilul lipsește/);
+});
+
+test('GET /api/sync/server: un server 426 (SyncIncompatibleError) nu aruncă un 500 — rămâne „offline”', async () => {
+  const { client } = fakeClient({
+    status: () => Promise.reject(new SyncIncompatibleError('2.2.0', 'Versiunea 2.1.0 este prea veche.')),
+    listDevices: () => Promise.resolve({ devices: [] }),
+    listBranches: () => Promise.resolve({ branches: [] }),
+  });
+  const routes = createSyncConnectRoutes({
+    syncDevice: { read: () => /** @type {any} */ (DEVICE) },
+    createHttpClient: () => /** @type {any} */ (client),
+    connectService: /** @type {any} */ ({}),
+  });
+  const route = findRoute(routes, 'GET', '/api/sync/server');
+
+  const result = await route.handle({});
+
+  assert.deepEqual(result, { connection: 'offline', devices: [], branches: [] });
 });

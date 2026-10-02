@@ -33,6 +33,9 @@ export function openSyncDatabase(dataDir) {
   // `CREATE TABLE IF NOT EXISTS` nu adaugă coloane noi pe o bază existentă.
   ensureColumn(database, 'devices', 'profile_json', 'TEXT');
   ensureColumn(database, 'pairing_codes', 'profile_json', 'TEXT');
+  // §5.2 (32-actualizari.md, 37d): „GET /v1/devices întoarce și version (ultima văzută)” —
+  // scrisă din X-Startica-Version la fiecare cerere autentificată (vezi create-sync-server.mjs).
+  ensureColumn(database, 'devices', 'last_version', 'TEXT');
   return database;
 }
 

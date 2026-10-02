@@ -31,6 +31,7 @@ import {
  * @param {{
  *   home: string,
  *   autoBackupIntervalMs: number,
+ *   version?: string,
  *   syncDevice?: import('#features/sync/index.server.mjs').SyncDeviceRepository,
  *   fetch?: typeof fetch,
  *   onChange?: (change: { kind: string, id: string, payload: unknown | null }) => void,
@@ -41,6 +42,10 @@ import {
 export function createCommonContext({
   home,
   autoBackupIntervalMs,
+  // §5.2 (37d, X-Startica-Version): lipsă implicit — un context construit fără ea (teste
+  // izolate ale setului comun) nu are un sync.json oricum, deci clientVersion nu s-ar
+  // trimite niciodată.
+  version,
   syncDevice = { read: () => null, write: () => {}, clear: () => {} },
   fetch: fetchImpl = globalThis.fetch,
   onChange,
@@ -133,7 +138,12 @@ export function createCommonContext({
       writeSetting: settings.setSetting,
       attendanceRepository: syncAttendanceWriter,
       poolRepository: syncPoolWriter,
-      client: createSyncHttpClient({ serverUrl: deviceFile.serverUrl, token: deviceFile.token, fetch: fetchImpl }),
+      client: createSyncHttpClient({
+        serverUrl: deviceFile.serverUrl,
+        token: deviceFile.token,
+        fetch: fetchImpl,
+        clientVersion: version,
+      }),
       deviceId: deviceFile.deviceId,
       deviceName: deviceFile.deviceName,
       onStatus: status => {

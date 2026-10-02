@@ -86,6 +86,7 @@ export function DevicesList({ devices, onRevoke, onChangeProfile }: DevicesListP
               <span className={styles.name}>{device.name}</span>
               <span className={styles.meta}>
                 {device.os}
+                {device.version ? ` · v${device.version}` : ''}
                 {branch ? ` · deschide de obicei Filiala ${branch}` : ''}
               </span>
               <span className={styles.status}>

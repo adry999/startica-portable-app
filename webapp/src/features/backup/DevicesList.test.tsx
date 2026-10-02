@@ -17,6 +17,7 @@ const DEVICE_COMPLET: SyncDevice = {
   lastBranchId: null,
   revokedAt: null,
   me: true,
+  version: '1.6.3',
 };
 
 const DEVICE_EDUCATOR: SyncDevice = {
@@ -28,6 +29,7 @@ const DEVICE_EDUCATOR: SyncDevice = {
   revokedAt: null,
   me: false,
   profile: normalizeProfile({ preset: 'educator' }),
+  version: null,
 };
 
 describe('DevicesList (§5.3, 36c)', () => {
@@ -37,6 +39,14 @@ describe('DevicesList (§5.3, 36c)', () => {
     const row2 = screen.getByText('Calculator grupa Mars').closest('div')?.parentElement as HTMLElement;
     expect(within(row1).getByText('Complet')).toBeInTheDocument();
     expect(within(row2).getByText('Educator')).toBeInTheDocument();
+  });
+
+  it('§5.2 (37d): arată versiunea raportată, sau nimic dacă nu s-a conectat încă sub ea', () => {
+    render(<DevicesList devices={[DEVICE_COMPLET, DEVICE_EDUCATOR]} onRevoke={vi.fn()} />);
+    const row1 = screen.getByText('Laptop contabil').closest('div')?.parentElement as HTMLElement;
+    const row2 = screen.getByText('Calculator grupa Mars').closest('div')?.parentElement as HTMLElement;
+    expect(within(row1).getByText(/v1\.6\.3/)).toBeInTheDocument();
+    expect(within(row2).queryByText(/^v\d/)).not.toBeInTheDocument();
   });
 
   it('fără onChangeProfile nu arată „Schimbă” (apelant care nu-l expune)', () => {

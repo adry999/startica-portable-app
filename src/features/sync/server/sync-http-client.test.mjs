@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSyncHttpClient, SyncNetworkError, SyncRevokedError, SyncHttpError } from './sync-http-client.mjs';
+import {
+  createSyncHttpClient,
+  SyncNetworkError,
+  SyncRevokedError,
+  SyncHttpError,
+  SyncIncompatibleError,
+} from './sync-http-client.mjs';
 
 /** @param {{ status?: number, body?: unknown }} response */
 function jsonResponse({ status = 200, body = {} } = {}) {
@@ -252,6 +258,77 @@ test('openEvents nu se mai reconectează după close()', async () => {
   await new Promise(resolve => setTimeout(resolve, 20));
 
   assert.equal(connectCount, countAtClose, 'nicio reconectare nouă după close()');
+});
+
+test('un răspuns 426 devine SyncIncompatibleError cu minVersion din corp', async () => {
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async () =>
+      jsonResponse({ status: 426, body: { error: 'Versiunea 2.1.0 este prea veche.', minVersion: '2.2.0' } }),
+    ),
+  });
+
+  await assert.rejects(
+    () => client.status(),
+    error =>
+      error instanceof SyncIncompatibleError &&
+      error.minVersion === '2.2.0' &&
+      error.message === 'Versiunea 2.1.0 este prea veche.',
+  );
+});
+
+test('clientVersion (dat) pleacă pe X-Startica-Version la fiecare cerere, inclusiv pair()', async () => {
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    clientVersion: '2.2.0',
+    fetch: fakeFetch(async (url, options) => {
+      calls.push(options);
+      return jsonResponse({ body: { deviceId: 'dev-1', token: 'tok', branches: [] } });
+    }),
+  });
+
+  await client.pair({ setupKey: 'cheie', name: 'A', os: 'Windows 11' });
+
+  assert.equal(calls[0].headers['X-Startica-Version'], '2.2.0');
+});
+
+test('fără clientVersion, antetul X-Startica-Version lipsește (comportamentul de azi)', async () => {
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async (url, options) => {
+      calls.push(options);
+      return jsonResponse({ body: { devices: [] } });
+    }),
+  });
+
+  await client.listDevices();
+
+  assert.equal(calls[0].headers['X-Startica-Version'], undefined);
+});
+
+test('openEvents trimite și el X-Startica-Version, când dat', async () => {
+  const stream = new ReadableStream({ start: controller => controller.close() });
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    clientVersion: '2.2.0',
+    fetch: fakeFetch(async (url, options) => {
+      calls.push(options);
+      return { body: stream };
+    }),
+    ...fakeTimers({ setTimeout: 0 }),
+  });
+
+  const events = client.openEvents('branch-1', () => {});
+  await new Promise(resolve => setTimeout(resolve, 10));
+  events.close();
+
+  assert.equal(calls[0].headers['X-Startica-Version'], '2.2.0');
 });
 
 test('openEvents parsează un flux SSE și cheamă onSeq pentru fiecare eveniment cu seq', async () => {

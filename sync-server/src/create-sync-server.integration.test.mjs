@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createSyncServer } from './create-sync-server.mjs';
 
-/** @param {import('node:test').TestContext} t */
-function startServer(t) {
+/** @param {import('node:test').TestContext} t @param {Partial<import('./config.mjs').SyncServerConfig>} [configOverrides] */
+function startServer(t, configOverrides = {}) {
   const dataDir = mkdtempSync(join(tmpdir(), 'sync-server-integration-'));
   const config = {
     port: 0,
@@ -18,6 +18,7 @@ function startServer(t) {
     backupKeep: 14,
     historyDays: 365,
     trustProxy: false,
+    ...configOverrides,
   };
   const app = createSyncServer({ config, log: () => {}, accessLog: () => {} });
   return new Promise(resolve => {
@@ -162,4 +163,48 @@ test('SSE trimite un eveniment după un push', async t => {
   ]);
   assert.ok(text.includes('event: change'));
   await reader.cancel();
+});
+
+test('SYNC_MIN_CLIENT_VERSION: un client mai vechi primește 426 cu minVersion, chiar la pair()', async t => {
+  const { origin } = await startServer(t, { minClientVersion: '2.2.0' });
+
+  const vechi = await fetch(origin + '/v1/devices/pair', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Version': '2.1.0' },
+    body: JSON.stringify({ setupKey: 'cheie-dev', name: 'Calculator vechi', os: 'Windows 11' }),
+  });
+  assert.equal(vechi.status, 426);
+  const body = await vechi.json();
+  assert.equal(body.minVersion, '2.2.0');
+  assert.match(body.error, /2\.1\.0/);
+});
+
+test('SYNC_MIN_CLIENT_VERSION: un client la zi trece, și versiunea lui apare în GET /v1/devices', async t => {
+  const { origin } = await startServer(t, { minClientVersion: '2.2.0' });
+
+  const pair = await fetch(origin + '/v1/devices/pair', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Startica-Version': '2.2.0' },
+    body: JSON.stringify({ setupKey: 'cheie-dev', name: 'Calculator nou', os: 'Windows 11' }),
+  });
+  assert.equal(pair.status, 200);
+  const { token } = await pair.json();
+
+  const list = await fetch(origin + '/v1/devices', {
+    headers: { authorization: `Bearer ${token}`, 'X-Startica-Version': '2.2.0' },
+  });
+  assert.equal(list.status, 200);
+  const { devices } = await list.json();
+  assert.equal(devices[0].version, '2.2.0');
+});
+
+test('SYNC_MIN_CLIENT_VERSION: fără antetul X-Startica-Version, cererea trece (client dinainte de el)', async t => {
+  const { origin } = await startServer(t, { minClientVersion: '2.2.0' });
+
+  const pair = await fetch(origin + '/v1/devices/pair', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ setupKey: 'cheie-dev', name: 'Calculator fără antet', os: 'Windows 11' }),
+  });
+  assert.equal(pair.status, 200);
 });

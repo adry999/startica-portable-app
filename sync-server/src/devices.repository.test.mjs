@@ -43,6 +43,19 @@ test('touchLastSeen actualizează ora și, opțional, filiala deschisă ultima d
   assert.equal(device.lastBranchId, 'branch-1');
 });
 
+test('un dispozitiv fără nicio cerere cu X-Startica-Version are version null; touchLastSeen îl poate scrie', t => {
+  const devices = withRepository(t);
+  devices.insert({ id: 'dev-1', name: 'A', os: 'Windows 11', tokenHash: 'hash-1', now: '2026-09-27T08:00:00.000Z' });
+  assert.equal(devices.findById('dev-1')?.version, null);
+  devices.touchLastSeen('dev-1', { version: '2.2.0', now: '2026-09-27T09:00:00.000Z' });
+  assert.equal(devices.findById('dev-1')?.version, '2.2.0');
+  // Un apel ulterior fără „version” (ex. push-ul din changes.routes.mjs) nu-l șterge.
+  devices.touchLastSeen('dev-1', { branchId: 'branch-1', now: '2026-09-27T10:00:00.000Z' });
+  const device = devices.findById('dev-1');
+  assert.equal(device?.version, '2.2.0');
+  assert.equal(device?.lastBranchId, 'branch-1');
+});
+
 test('revoke marchează dispozitivul revocat; countActive nu îl mai numără', t => {
   const devices = withRepository(t);
   devices.insert({ id: 'dev-1', name: 'A', os: 'Windows 11', tokenHash: 'hash-1', now: '2026-09-27T08:00:00.000Z' });

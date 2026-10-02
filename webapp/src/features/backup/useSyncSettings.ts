@@ -13,6 +13,9 @@ export interface SyncDevice {
   /** §5.3 (36c) — lipsă pe un calculator conectat înainte de profiluri (tratat ca Complet,
    * vezi `completProfile()` server-side). */
   profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null;
+  /** §5.2 (37d) — ultima versiune a aplicației raportată de acest calculator (antetul
+   * X-Startica-Version); `null` dacă nu a trimis încă nicio cerere autentificată cu el. */
+  version: string | null;
 }
 
 export interface SyncServerInfo {

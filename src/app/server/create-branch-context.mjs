@@ -267,6 +267,7 @@ export function createBranchContext({
         serverUrl: syncDeviceFile.serverUrl,
         token: syncDeviceFile.token,
         fetch: fetchImpl ?? globalThis.fetch,
+        clientVersion: version,
       }),
       deviceId: syncDeviceFile.deviceId,
       deviceName: syncDeviceFile.deviceName,

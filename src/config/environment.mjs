@@ -31,6 +31,10 @@ export const SYNC_DEVICE_FILE_NAME = 'sync.json';
 // (`startica-portable-app`) rămâne privat. Un singur loc de schimbat dacă răspunsul se mai schimbă.
 export const DEFAULT_RELEASE_REPO = 'adry999/startica-releases';
 
+// §5.2 (32-actualizari.md): „Descărcare în fundal în <home>\Actualizari, verificare SHA-256” —
+// la fel ca BRANCHES_DIR_NAME/COMMON_DIR_NAME, relativ la STARTICA_HOME (update-download.service.mjs).
+export const UPDATE_DIR_NAME = 'Actualizari';
+
 /** @typedef {'development' | 'test' | 'production'} EnvironmentProfile */
 
 /**

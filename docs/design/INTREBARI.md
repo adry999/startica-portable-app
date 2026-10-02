@@ -1005,3 +1005,41 @@ niciun loc de configurare per filială (nici în `ServicesSettings`, nici în vr
 setări); `PAYMENT_ROUNDING_TOLERANCE` e o constantă fixă, la fel pentru toate filialele. Dacă
 produsul chiar vrea tolerație/pas configurabile per filială, e un punct nou de lucru (schemă de
 setări + UI), nu un fix în `payment-form.ts`.
+## ⏳ §8 PROMPT-10 Partea 2 — descărcarea instalerului e manuală (POST /api/update/download), nu automată „în fundal”
+
+`docs/design/screens/32-actualizari.md` (linia 15): „Descărcare în fundal în `<home>\Actualizari`,
+verificare SHA-256, instalare silențioasă la închidere” — sugerează o descărcare pornită singură
+de server, de îndată ce `checkForUpdate()` anunță o versiune nouă (la pornire sau o dată la 6 ore,
+`main.mjs`). Am construit în schimb doar o rută manuală (`POST /api/update/download`, declanșată
+de client) + `GET /api/update/pending` (interogare) — motivul: `app.checkForUpdate()` rulează deja
+necondiționat la pornire și la 6 ore (inclusiv în `test:e2e`, cu `fetch` real spre GitHub, dacă
+rulează cu rețea) — a lega automat o descărcare reală de acel ciclu ar fi riscat o descărcare reală
+de pe GitHub în orice rulare care ajunge pe acel cod, inclusiv `npm run test:e2e`, ceva ce regula
+de siguranță din `CLAUDE.md` („fully mockable/injectable... tests never actually execute a binary”)
+cere evitat explicit. Serviciul (`update-download.service.mjs`) și rutele sunt complet construite
+și testate (fetch injectat, niciun test atinge rețeaua reală) — rămâne de decis dacă `main.mjs`
+trebuie să cheme el însuși `POST /api/update/download` după un `checkForUpdate()` reușit (și, dacă
+da, cum se evită redescărcarea la fiecare 6 ore odată ce versiunea e deja `pendingUpdate()`).
+
+Corpul 426 e totodată mai sărac decât ar sugera același document — vezi intrarea de mai jos.
+
+## ⏳ §8 PROMPT-10 — corpul 426 e mai sărac decât `32-actualizari.md`; „oprite primele” (37d) neconstruit
+
+`docs/design/screens/32-actualizari.md` („Compatibilitate”) cere corpul 426 cu
+`{ minVersion, latestVersion, downloadUrl }` — construit acum doar cu `minVersion`
+(`sync-server/src/version-gate.mjs`). `sync-server/` nu cunoaște `latestVersion`/`downloadUrl`
+(acelea vin din GitHub Releases, citite doar de `update-check.service.mjs` în aplicație, nu în
+`sync-server/`, care rămâne fără nicio dependență externă) — a le adăuga ar cere fie noi
+variabile de mediu (`SYNC_LATEST_VERSION`/`SYNC_LATEST_DOWNLOAD_URL`, setate manual la fiecare
+deploy, dublând ce `scripts/release.mjs` scrie deja în `latest.json`), fie ca sync-server să
+cheme el însuși GitHub — ambele în afara celor 7 pași din PROMPT-10 §8 Partea 1. Las doar
+`minVersion`, suficient pentru banda „Sincronizare oprită” (37a/37c/42a) — clientul oricum
+citește `latestVersion`/`downloadUrl` din `update-check.service.mjs`, nu din 426.
+
+Neconstruit din 37d: „oprite primele, banner cu numărul lor” — adică la o ridicare de
+`SYNC_MIN_CLIENT_VERSION`, calculatoarele cu versiune veche ar trebui deconectate/oprite
+înaintea celor la zi, cu un banner care arată câte sunt. PROMPT-10 §8 Partea 3 cere explicit
+doar coloana „Versiune” din `DevicesList.tsx` (construită) — „oprite primele” + banner e o
+funcționalitate separată, nemenționată în pașii concreți ai Părții 1/3, care ar cere o decizie
+de produs (cine le oprește — admin manual din listă, sau automat la pornirea serverului cu
+noul `SYNC_MIN_CLIENT_VERSION`?) înainte de implementare.

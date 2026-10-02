@@ -30,6 +30,8 @@ const NO_UPDATE = {
   notes: null,
   checkedAt: null,
   error: null,
+  installReady: false,
+  pendingVersion: null,
 };
 
 class FakeEventSource {
@@ -134,6 +136,51 @@ describe('AppShell — benzile §11 (42a/42b)', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Închide' }));
     expect(screen.queryByText('Startica 2.2.0 e gata de descărcat.')).not.toBeInTheDocument();
+  });
+
+  it('§5.2 Partea 2: „Descarcă” pe banda mint pornește POST /api/update/download, apoi banda devine verde', async () => {
+    let sessionCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') {
+          sessionCalls += 1;
+          const ready = sessionCalls > 1;
+          return jsonResponse({
+            token: 'tok',
+            version: '2.1.0',
+            update: {
+              ...NO_UPDATE,
+              updateAvailable: true,
+              currentVersion: '2.1.0',
+              latestVersion: '2.2.0',
+              checkedAt: '2026-10-02T08:00:00Z',
+              installReady: ready,
+              pendingVersion: ready ? '2.2.0' : null,
+            },
+          });
+        }
+        if (path === '/api/update/download') return jsonResponse({ ok: true, file: 'x', version: '2.2.0' });
+        if (path === '/api/state')
+          return jsonResponse({ state: fixtureState, revision: 1, updatedAt: '2026-10-02T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: {}, sources: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderShell();
+
+    expect(await screen.findByText('Startica 2.2.0 e gata de descărcat.')).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Descarcă' }));
+
+    expect(await screen.findByText('Startica 2.2.0 se instalează când închizi aplicația.')).toBeInTheDocument();
+    expect(screen.queryByText('Startica 2.2.0 e gata de descărcat.')).not.toBeInTheDocument();
+    // Banda verde nu se poate închide — se instalează oricum la următoarea închidere.
+    expect(screen.queryByRole('button', { name: 'Închide' })).not.toBeInTheDocument();
   });
 
   it('niciun banner când sincronizarea e online și nicio actualizare nu e disponibilă', async () => {

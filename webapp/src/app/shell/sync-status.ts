@@ -2,7 +2,7 @@ import type { SyncStatus } from '@shared/api/useSyncStatus';
 import { PRESET_LABELS } from '#shared/domain/computer-profile.mjs';
 import type { SessionStateForSaveStatus } from './save-status';
 
-export type SyncCardMode = 'synced' | 'syncing' | 'offline' | 'conflict' | 'revoked';
+export type SyncCardMode = 'synced' | 'syncing' | 'offline' | 'conflict' | 'revoked' | 'incompatible';
 
 export interface SyncCardResult {
   mode: SyncCardMode;
@@ -43,6 +43,8 @@ export function deriveSyncStatus(
   sync: SyncStatus,
   local: SessionStateForSaveStatus,
   profile?: import('#shared/domain/computer-profile.mjs').ComputerProfile | null,
+  /** §5.2 (426, 37a/37c): versiunea aplicației curente — doar pentru textul „incompatible”. */
+  currentVersion?: string,
 ): SyncCardResult | null {
   const hasLocalError = !!(
     local.saveError ||
@@ -76,6 +78,16 @@ export function deriveSyncStatus(
       label: 'Deconectat de pe server',
       detail: withNote('revoked', 'Acest calculator nu mai trimite sau primește date.'),
       actionLabel: 'Reconectează din Backup și setări',
+    };
+
+  if (sync.connection === 'incompatible')
+    return {
+      mode: 'incompatible',
+      label: 'Versiune prea veche',
+      detail: withNote(
+        'incompatible',
+        `Versiunea ${currentVersion ?? ''} e prea veche, actualizează la ${sync.minVersion}.`,
+      ),
     };
 
   if (sync.connection === 'offline')
