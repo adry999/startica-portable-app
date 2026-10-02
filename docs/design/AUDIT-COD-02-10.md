@@ -38,9 +38,6 @@ Spre deosebire de migrarea §8 (`exchange-rates-plan-presets-to-common.mjs`, car
 ### 8. ✅ Rezolvat (`b59a8ef`) — Ștergere în lot de copii arhivați — scanare dublă a tabelului per id
 `record-editing.routes.mjs:102-108` — `readSnapshot()` chemat de 2 ori per id, în interiorul buclei `for (const id of ids)` (verificare vizite + verificare taxe). **Rezolvat**: ambele citiri scoase în afara buclei, un singur scan pentru tot lotul.
 
-### 9. Testul `axe` (accesibilitate) nu e impus arhitectural — 49/118 componente din `shared/ui` nu-l au deloc
-Inclusiv primitive de bază: `TextInput`, `Select`, `Checkbox`, `NumberInput`, `DateInput`, `Field`, `Button`, `DataTable`, `Drawer`, `Popover`, `Badge`. Nimic din `architecture.test.ts` (R1-R13) nu verifică asta — e doar o convenție per-fișier, nerespectată sistematic. **Fix:** regulă nouă de arhitectură care scanează `shared/ui/*.test.tsx` după `axe(`/`toHaveNoViolations`.
-
 ### 10. Componente mult folosite, fără niciun test unitar
 `RowMenu` (13 fișiere), `FilterPills` (12), `ConfirmDeleteDialog` (11), `SelectionBar` (5), `MonthStepper` (6), `ServiceBadge` (3), `ScrollArea` (3) — au Storybook, dar nicio verificare automată la o regresie.
 
@@ -71,6 +68,7 @@ Inclusiv primitive de bază: `TextInput`, `Select`, `Checkbox`, `NumberInput`, `
 - „Duplicate React key" din testele instabile sub sarcină — id-uri reale, unice; nu indică un bug de producție.
 - Cele 5 formulare amânate la sweep-ul §3 (`WeeklySheetDialog`, `ReportExportDrawer`, `SmsNewMessageDialog`, `ExcelImportDialog`, confirmarea din `MonthView`) — toate au deja gardă proprie contra dublei trimiteri; golul e doar cosmetic/consistență, nu funcțional.
 - Vechea amintire despre „capcanele de 1000 de rânduri"/PostgREST nu se aplică acestei aplicații (Node/SQLite, strat de date complet diferit de aplicația Nuxt/Supabase abandonată) — de corectat în memoria persistentă.
+- **Fostul punct 9 („axe nu e impus arhitectural, 49/118 componente fără el") era o alarmă falsă** — verificat la cod curent: `design-system.coverage.test.tsx` (`webapp/src/`) rulează deja `jest-axe` pe FIECARE poveste din `shared/ui/**/*.stories.tsx`, pentru fiecare componentă exportată din `@shared/ui/index.ts` — asta acoperă toate cele 49 „suspectate" (confirmat direct: `TextInput`, `Select`, `Checkbox`, `Button`, `DataTable`, `Drawer`, `Popover`, `Badge` etc. au toate `.stories.tsx` și trec prin axe acolo, doar nu au `axe(`/`toHaveNoViolations` *și* în propriul `.test.tsx` — de-acolo grep-ul inițial, care verifica doar `.test.tsx`-urile, a ratat mecanismul real). Singurele 2 fișiere `shared/ui/*.tsx` fără `.stories.tsx` propriu sunt `Toast.tsx`/`TopbarActions.tsx` — provideri de context + hooks (randează doar `children`/`null`), nimic vizual de testat cu axe. Nicio acțiune necesară.
 
 ## Recomandare de prioritate
 
