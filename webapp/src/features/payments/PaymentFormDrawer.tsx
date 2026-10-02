@@ -28,7 +28,7 @@ import { firstUnpaidMonth, feeEntryFor, arrears } from '@domain/tuition-obligati
 import { autoAllocatePayment } from '@domain/payment-auto-allocation.mjs';
 import { eurToMdlRate, convertAmount } from '@domain/exchange-rates.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
-import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID } from '@domain/record-schema.mjs';
+import { DEFAULT_SERVICE_ID, POOL_SERVICE_ID, PAYMENT_ROUNDING_TOLERANCE } from '@domain/record-schema.mjs';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { useExchangeRates } from '@shared/api/useExchangeRates';
 import {
@@ -41,6 +41,7 @@ import { chooseSmsRecipient } from '#features/sms-notify/index.web.mjs';
 import {
   defaultPaymentFormValues,
   defaultSendSmsConfirmation,
+  paymentRoundingDiff,
   tenderMethodsFor,
   totalOfTenders,
   type PaymentFormValues,
@@ -206,8 +207,11 @@ export function PaymentFormDrawer({
   useEffect(() => {
     if (editing || prefilledAmountRef.current || !defaultChildId || !selectedChild || !feeEntry) return;
     if (isEurChild && !effectiveRate) return;
-    const amount = isEurChild ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : feeEntry.amount;
-    if (!amount) return;
+    const converted = isEurChild ? convertAmount(feeEntry.amount, 'EUR', 'MDL', effectiveRate) : feeEntry.amount;
+    if (!converted) return;
+    // §2 (VERIFICARE §4): conversia EUR→lei lasă bani (ex. 4.921,83) — câmpul propune rotunjit la
+    // leu (4.922), nu suma exactă; diferența se scrie ca roundingDiff la salvare, dacă rămâne așa.
+    const amount = isEurChild ? Math.round(converted) : converted;
     prefilledAmountRef.current = true;
     setTender(activeMethod, formatMoneyInput(amount));
   }, [editing, defaultChildId, selectedChild, feeEntry, isEurChild, effectiveRate, activeMethod]);
@@ -454,14 +458,25 @@ export function PaymentFormDrawer({
     if (isEurChild && !effectiveRate) return false;
     setSubmitting(true);
     try {
+      // §2 (PROMPT-10, DECIZII 02.10): rotunjirea se recalculează doar la o plată NOUĂ, cu un
+      // singur rând de alocare în modul automat — la editare, restanțe bifate sau avans pe mai
+      // multe luni, `values.roundingDiff` rămâne cel deja seedat (vezi `defaultPaymentFormValues`).
+      const singleRow = allocationMode === 'auto' && values.allocations.length === 1 ? values.allocations[0] : null;
+      const singleRowFee =
+        !editing && singleRow && selectedChild ? feeEntryFor(selectedChild, singleRow.month)?.amount : null;
+      const owedLei =
+        singleRowFee == null ? null : isEurChild ? convertAmount(singleRowFee, 'EUR', 'MDL', effectiveRate!) : singleRowFee;
+      const roundingDiff = owedLei == null ? values.roundingDiff : paymentRoundingDiff(totalAmount, owedLei);
+
       const eurValues = isEurChild
         ? {
             ...values,
             fxRate: effectiveRate,
             fxRateSource: (manualRate ? 'manual' : 'bnm') as 'bnm' | 'manual',
             amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
+            roundingDiff,
           }
-        : values;
+        : { ...values, roundingDiff };
       // 44b: id-ul grupului se generează o singură dată, la trimitere — doar când există cel
       // puțin un frate bifat cu sumă validă (altfel plata rămâne una obișnuită, fără receiptGroupId).
       const finalValues =
@@ -517,6 +532,11 @@ export function PaymentFormDrawer({
     ...childOptions.map(child => ({ value: child.id, label: `${child.name}${child.archived ? ' (arhivat)' : ''}` })),
   ];
 
+  // §2 (PROMPT-10): aceeași formatare semnată ca pe bonul termic (PaymentReceiptThermal) — „+0,17”/„−1,83”.
+  function formatRoundingDiff(diff: number): string {
+    return `${diff > 0 ? '+' : '−'}${formatMoney(Math.abs(diff))}`;
+  }
+
   // Etichetă informativă pentru modul automat — nu recalculează obligația (asta rămâne în
   // #shared/domain/tuition-obligation.mjs), doar compară suma rândului cu taxa lunii lui.
   function allocationStatus(row: { month: string; amount: string }): string | null {
@@ -525,6 +545,10 @@ export function PaymentFormDrawer({
     if (fee == null) return null;
     const amount = Number(row.amount) || 0;
     if (amount <= 0) return 'neachitat';
+    // DECIZII.md (02.10): o diferență mică (≤ PAYMENT_ROUNDING_TOLERANCE) e rotunjire, nu
+    // plată parțială/avans — vezi `paymentRoundingDiff` (payment-form.ts) pentru ce se salvează.
+    const diff = Math.round((amount - fee) * 100) / 100;
+    if (diff !== 0 && Math.abs(diff) <= PAYMENT_ROUNDING_TOLERANCE) return `achitat · rotunjire ${formatRoundingDiff(diff)}`;
     if (amount < fee) return 'plată parțială';
     if (amount > fee) return 'avans';
     return 'achitat complet';
@@ -766,6 +790,7 @@ export function PaymentFormDrawer({
                             step="0.01"
                             value={row.amount}
                             onChange={value => setAllocationField(index, 'amount', value)}
+                            suffix={isEurChild ? '€' : 'lei'}
                           />
                         </Field>
                       </div>

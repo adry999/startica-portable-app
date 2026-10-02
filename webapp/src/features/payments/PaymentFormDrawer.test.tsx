@@ -54,6 +54,22 @@ const records = {
       feeHistory: [{ from: '2026-01', amount: 1200 }],
       phone: '069123456',
     },
+    // §2 (VERIFICARE §4): taxă EUR a cărei conversie la cursul cunoscut lasă bani (100,03 × 19,5 =
+    // 1.950,585 → 1.950,59), pentru testul de precompletare rotunjită la leu.
+    {
+      id: 'c5',
+      name: 'Dan Cojocaru',
+      archived: false,
+      feeHistory: [{ from: '2026-01', amount: 100.03, currency: 'EUR' }],
+    },
+    // VERIFICARE-DUPA-PROMPT-8.md §4: taxa exactă din verificare (4.921,83 lei), pentru cele 4
+    // cazuri de rotunjire/parțial/avans la salvare.
+    {
+      id: 'c6',
+      name: 'Ioana Barbu',
+      archived: false,
+      feeHistory: [{ from: '2026-01', amount: 4921.83 }],
+    },
   ],
   payments: [],
   expenses: [],
@@ -288,6 +304,18 @@ describe('PaymentFormDrawer', () => {
     expect(await screen.findByDisplayValue('1950.00')).toBeInTheDocument();
   });
 
+  it('F11 + §2 (VERIFICARE §4): conversia EUR cu bani se precompletează rotunjită la leu', async () => {
+    renderDrawerWithProps({
+      target: 'new',
+      records,
+      defaultChildId: 'c5',
+      onSubmit: vi.fn().mockResolvedValue(true),
+      onClose: vi.fn(),
+    });
+    // 100,03 € × 19,5 = 1.950,585 lei → exact 1.950,59; precompletat rotunjit la 1.951.
+    expect(await screen.findByDisplayValue('1951.00')).toBeInTheDocument();
+  });
+
   it('F11: suma precompletată rămâne editabilă', async () => {
     renderDrawerWithProps({
       target: 'new',
@@ -369,6 +397,57 @@ describe('PaymentFormDrawer', () => {
     expect(submitted.fxRate).toBe(20);
     expect(submitted.fxRateSource).toBe('manual');
     expect(submitted.amountEur).toBeCloseTo(50, 2);
+  });
+
+  // VERIFICARE-DUPA-PROMPT-8.md §4, cele 4 cazuri exacte (taxă 4.921,83 lei, copilul c6).
+  describe('§2 (PROMPT-10, DECIZII 02.10): roundingDiff la o plată cu bănuți', () => {
+    it('încasat 4.920 (sub 4.921,83) — achitat cu rotunjire −1,83', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Ioana Barbu');
+      await user.type(sumInput(), '4920');
+      await user.click(saveButton());
+
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeCloseTo(-1.83);
+      expect(submitted.allocations).toHaveLength(1);
+    });
+
+    it('încasat 4.922 (rotunjitul precompletat) — achitat cu rotunjire +0,17', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Ioana Barbu');
+      await user.type(sumInput(), '4922');
+      await user.click(saveButton());
+
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeCloseTo(0.17);
+      expect(submitted.allocations).toHaveLength(1);
+    });
+
+    it('încasat 4.900 (diferență 21,83, peste toleranță) — fără roundingDiff, rămâne restanță', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Ioana Barbu');
+      await user.type(sumInput(), '4900');
+      await user.click(saveButton());
+
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeUndefined();
+      expect(submitted.allocations).toMatchObject([{ amount: '4900.00' }]);
+    });
+
+    it('încasat 5.000 (peste toleranță) — fără roundingDiff, avans pe luna următoare', async () => {
+      const { onSubmit } = renderDrawer();
+      const user = userEvent.setup();
+      await pickChild(user, 'Ioana Barbu');
+      await user.type(sumInput(), '5000');
+      await user.click(saveButton());
+
+      const submitted = onSubmit.mock.calls[0][0];
+      expect(submitted.roundingDiff).toBeUndefined();
+      expect(submitted.allocations).toHaveLength(2);
+    });
   });
 
   it('fără curs cunoscut și fără curs manual, trimiterea unei plăți pe copil cu taxă EUR este blocată', async () => {
