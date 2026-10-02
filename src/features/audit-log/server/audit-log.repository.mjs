@@ -89,7 +89,39 @@ export function createAuditLogRepository(database, { sessionToken = null } = {})
     return { entries, nextBeforeEntryId: hasMore ? entries[entries.length - 1].id : null };
   }
 
-  return { recordChange, readPage, findById };
+  /**
+   * Istoricul unei singure înregistrări (45a, PROMPT-8 §14) — fișa unui copil arată și mutările
+   * ei de grupă (tot pe `kind:'children', recordId:childId`) cât și achitările lui, de-aceea
+   * `scope` acceptă mai multe perechi (tip, id), nu doar una singură. Același cursor pe `id`
+   * ca `readPage`, ca o modificare nouă să nu dubleze rânduri deja afișate.
+   * @param {{ scope: { recordType: string, recordId: string }[], beforeEntryId: number | null }} params
+   * @returns {AuditPage}
+   */
+  function readForScope({ scope, beforeEntryId }) {
+    if (!Array.isArray(scope) || scope.length === 0) fail('Scope-ul istoricului lipsește.');
+    for (const entry of scope)
+      if (!entry || typeof entry.recordType !== 'string' || typeof entry.recordId !== 'string' || !entry.recordId)
+        fail('Scope-ul istoricului este invalid.');
+    if (beforeEntryId !== null && !(Number.isSafeInteger(beforeEntryId) && beforeEntryId > 0))
+      fail('Poziția din istoric este invalidă.');
+
+    const scopeClause = scope.map(() => '(kind = ? AND record_id = ?)').join(' OR ');
+    const scopeParams = scope.flatMap(({ recordType, recordId }) => [recordType, recordId]);
+    const cursorClause = beforeEntryId === null ? '' : ' AND id < ?';
+    const statement = database.prepare(
+      `SELECT ${ENTRY_COLUMNS} FROM audit_changes WHERE (${scopeClause})${cursorClause} ORDER BY id DESC LIMIT ?`,
+    );
+    const params =
+      beforeEntryId === null
+        ? [...scopeParams, AUDIT_PAGE_SIZE + 1]
+        : [...scopeParams, beforeEntryId, AUDIT_PAGE_SIZE + 1];
+    const rows = statement.all(...params);
+    const hasMore = rows.length > AUDIT_PAGE_SIZE;
+    const entries = rows.slice(0, AUDIT_PAGE_SIZE).map(toAuditEntry);
+    return { entries, nextBeforeEntryId: hasMore ? entries[entries.length - 1].id : null };
+  }
+
+  return { recordChange, readPage, readForScope, findById };
 }
 
 /** @returns {AuditEntry} */
