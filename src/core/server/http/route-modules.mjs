@@ -94,6 +94,8 @@ export const STATIC_PATH_MODULE = {
   '/api/plan-presets': 'admin',
   '/api/exchange-rates/refresh': 'admin',
   '/api/exchange-rates/backfill': 'admin',
+  // Folosit doar de scripts/migrate/ (PROMPT-9 §8) — mutarea cursului în baza comună.
+  '/api/exchange-rates/import': 'admin',
   '/api/diagnostic': 'admin',
   // Cursul BNM e citit și folosit de orice ecran care precompletează o plată — gardat generic,
   // nu doar pe Administrare.

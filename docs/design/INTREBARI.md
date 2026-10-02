@@ -653,3 +653,19 @@ rulează în continuare versiunea veche, fără niciuna din aceste reguli, pân�
 Migrarea coloanei (`ensureColumn`) e scrisă să fie sigură pe o bază deja existentă (ALTER idempotent),
 dar nu se aplică singură. Pas operațional, în afara acestei sesiuni — semnalat aici ca să nu fie uitat
 înainte de a considera §5.3 „live”.
+
+## ⏳ PROMPT-9 §8 — regula de departajare pentru „sursa de adevăr” a cursului BNM, când mai multe filiale au același număr de zile
+
+`RASPUNSURI-02-10.md` #3 spune doar „sursa de adevăr = filiala cu cele mai multe zile de curs” — nu
+spune ce se întâmplă la egalitate (posibil, de exemplu, pe o instalare nouă unde nicio filială n-a
+folosit încă des cursul, sau unde două filiale au fost alimentate manual cu același număr de zile).
+Am ales, în `scripts/migrate/exchange-rates-plan-presets-to-common.mjs` (`chooseSourceBranch`), regula
+de departajare, în ordine:
+1. filiala „veche” (`folder: null` — exista dinainte de funcția Filiale, deci e cel mai probabil
+   installul original) câștigă;
+2. altfel, filiala creată mai devreme (`createdAt` mai mic) câștigă;
+3. altfel (egalitate completă, teoretic imposibilă cu `createdAt` real), id-ul mai mic alfabetic —
+   doar ca să fie determinist, nu ca să aibă vreun sens de business.
+
+**Nimic de decis din partea ta** — regulă rezonabilă aleasă ca să nu blochez migrarea; scriptul rămâne
+dry-run implicit, deci orice alegere greșită a sursei se vede în raport înainte de orice scriere.

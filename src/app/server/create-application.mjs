@@ -463,6 +463,12 @@ export function createApplication(options = {}) {
     get database() {
       return active.dbFile;
     },
+    // PROMPT-9 §8: testele cursului BNM/planurilor (acum în baza comună) trebuie să poată
+    // pregăti/verifica direct `settings`, la fel cum `db` de mai sus o face pentru filiala
+    // activă — altfel n-ar avea cum să ajungă la fișierul Comun\Startica_Date\startica.db.
+    get commonDb() {
+      return common.db;
+    },
     // common.safeBackup rulează întâi și nu aruncă niciodată: o filială care nu se
     // poate copia (disc plin, blocaj) nu are voie să lase Comun\ fără propria copie.
     /** @param {string} [reason] */
