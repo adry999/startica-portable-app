@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join, sep } from 'node:path';
-import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 import { applySchema } from '#core/server/database/schema.mjs';
@@ -198,6 +198,114 @@ test('proba „calculator nou”: B restaurează din folderul extern al lui A ș
     externalAfter.backups.some(entry2 => entry2.name.includes('_configurare_') && entry2.name !== name),
     'lipsește copia de configurare proaspătă din folderul extern',
   );
+});
+
+// 42d, §11/PROMPT-CLAUDE-CODE-8.md: proba „calculator gol” pentru arhiva completă
+// (toate bazele, nu doar filiala activă) — spre deosebire de testul de mai sus (backup
+// vechi, o singură bază), POST /api/backup produce acum întotdeauna un `.startica-backup`.
+test('proba „calculator nou” cu arhivă completă (.startica-backup): B primește datele filialei active + Comun', async t => {
+  const sourceChild = { id: 'ID-arhiva-1', name: 'Copil arhivă', dueDay: 10, status: 'Activ' };
+  const a = await startTestApplication(t, { prefix: 'startica-restore-archive-source-', autoBackupIntervalMs: 0 });
+  const created = await a.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: sourceChild,
+    revision: 0,
+    requestId: 'restore-archive-01',
+  });
+  assert.equal(created.status, 200, created.body.error);
+
+  const backup = await a.post('/api/backup', {});
+  assert.equal(backup.status, 200, backup.body.error);
+  assert.ok(backup.body.name.endsWith('.startica-backup'));
+  const sourceState = (await a.get('/api/state')).state;
+
+  const b = await startTestApplication(t, { prefix: 'startica-restore-archive-target-', autoBackupIntervalMs: 0 });
+  copyFileSync(join(a.dir, 'backups', backup.body.name), join(b.dir, 'backups', backup.body.name));
+
+  const preview = await b.get('/api/backup-preview?name=' + encodeURIComponent(backup.body.name));
+  assert.deepEqual(preview.errors, []);
+  assert.equal(preview.children, 1);
+
+  const restored = await b.post('/api/restore', {
+    name: backup.body.name,
+    dir: '',
+    confirm: 'RESTAUREAZA',
+    revision: 0,
+    requestId: 'restore-archive-02',
+  });
+  assert.equal(restored.status, 200, restored.body.error);
+  assert.equal(restored.body.ok, true);
+
+  assert.deepEqual((await b.get('/api/state')).state, sourceState);
+});
+
+// Acoperă explicit ramura „filială necunoscută local” din restoreFullBackup() (create-application.mjs):
+// id-ul din arhivă e adoptat exact (nu regenerat), pe un folder nou alocat local.
+test('restaurarea unei arhive cu o filială suplimentară o adoptă pe calculatorul nou, cu exact id-ul din arhivă', async t => {
+  const a = await startTestApplication(t, { prefix: 'startica-restore-multi-source-', autoBackupIntervalMs: 0 });
+  const mainBranchId = (await a.get('/api/branches')).activeBranchId;
+
+  const addedBranch = await a.post('/api/branches', { name: 'Botanica', color: 'mint', address: '' });
+  assert.equal(addedBranch.status, 200, addedBranch.body.error);
+  const otherBranchId = addedBranch.body.branch.id;
+
+  await a.post('/api/branches/select', { id: otherBranchId });
+  const otherChild = { id: 'ID-botanica-1', name: 'Copil Botanica', dueDay: 10, status: 'Activ' };
+  const createdOther = await a.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: otherChild,
+    revision: 0,
+    requestId: 'restore-multi-01',
+  });
+  assert.equal(createdOther.status, 200, createdOther.body.error);
+  const otherState = (await a.get('/api/state')).state;
+
+  // Revine pe filiala principală ÎNAINTE de backup — manifest.activeBranchId trebuie
+  // să fie al ei, nu al Botanicăi, pentru acest test.
+  await a.post('/api/branches/select', { id: mainBranchId });
+  const mainChild = { id: 'ID-main-1', name: 'Copil principal', dueDay: 10, status: 'Activ' };
+  const createdMain = await a.post('/api/record', {
+    type: 'children',
+    mode: 'create',
+    record: mainChild,
+    revision: 0,
+    requestId: 'restore-multi-02',
+  });
+  assert.equal(createdMain.status, 200, createdMain.body.error);
+  const mainState = (await a.get('/api/state')).state;
+
+  const backup = await a.post('/api/backup', {});
+  assert.equal(backup.status, 200, backup.body.error);
+
+  const b = await startTestApplication(t, { prefix: 'startica-restore-multi-target-', autoBackupIntervalMs: 0 });
+  const bOriginalBranchId = (await b.get('/api/branches')).activeBranchId;
+  copyFileSync(join(a.dir, 'backups', backup.body.name), join(b.dir, 'backups', backup.body.name));
+
+  const restored = await b.post('/api/restore', {
+    name: backup.body.name,
+    dir: '',
+    confirm: 'RESTAUREAZA',
+    revision: 0,
+    requestId: 'restore-multi-03',
+  });
+  assert.equal(restored.status, 200, restored.body.error);
+
+  // Filiala activă a lui B rămâne pe propriul ei id/folder, dar cu datele filialei
+  // active din arhivă (nu ale Botanicăi).
+  assert.deepEqual((await b.get('/api/state')).state, mainState);
+
+  const branchesOnB = await b.get('/api/branches');
+  assert.equal(branchesOnB.activeBranchId, bOriginalBranchId);
+  assert.equal(branchesOnB.branches.length, 2);
+  const adopted = branchesOnB.branches.find(branch => branch.id === otherBranchId);
+  assert.ok(adopted, 'filiala Botanica nu a fost adoptată cu id-ul din arhivă');
+  assert.equal(adopted.name, 'Botanica');
+  assert.notEqual(adopted.folder, null, 'filiala adoptată nu are voie să primească folderul legacy (deja ocupat)');
+
+  const adoptedRecords = await b.get('/api/branches/records?id=' + encodeURIComponent(otherBranchId));
+  assert.deepEqual(adoptedRecords.state, otherState);
 });
 
 test('restaurarea externă păstrează alt folder deja configurat, cu avertisment', async t => {
