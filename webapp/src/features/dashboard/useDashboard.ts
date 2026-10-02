@@ -72,6 +72,9 @@ export interface DashboardData {
   hasAnyRecords: boolean;
   upcomingBirthdays: ReturnType<typeof listUpcomingBirthdays>;
   birthdayWeeks: ReturnType<typeof buildBirthdayCalendar>;
+  /** Cel mai apropiat copil cu zi de naștere, oricât de departe — doar când `upcomingBirthdays`
+   * e gol (F25, PROMPT-11 §13: „fără nimeni în 5 zile" arată totuși „Următoarea"). */
+  nextBirthday: ReturnType<typeof listUpcomingBirthdays>[number] | undefined;
 }
 
 /** Forma minimă citită din `session.state.health` (BackupHealthView, @features/backup/useBackup) —
@@ -121,6 +124,7 @@ export function useDashboard(month: string): DashboardData {
       hasAnyRecords: false,
       upcomingBirthdays: [],
       birthdayWeeks: [],
+      nextBirthday: undefined,
     };
   }
 
@@ -282,6 +286,8 @@ export function useDashboard(month: string): DashboardData {
     .filter((item): item is AttentionItem => item !== null)
     .slice(0, 5);
 
+  const upcomingBirthdays = listUpcomingBirthdays(records.children, 5, todayStr);
+
   return {
     status: 'ready',
     failureMessage: '',
@@ -295,7 +301,9 @@ export function useDashboard(month: string): DashboardData {
     attentionItems,
     allClear: attentionItems.length === 0,
     hasAnyRecords: records.children.length > 0 || records.payments.length > 0,
-    upcomingBirthdays: listUpcomingBirthdays(records.children, 5, todayStr),
+    upcomingBirthdays,
     birthdayWeeks: buildBirthdayCalendar(records.children, todayStr),
+    nextBirthday:
+      upcomingBirthdays.length === 0 ? listUpcomingBirthdays(records.children, 366, todayStr)[0] : undefined,
   };
 }

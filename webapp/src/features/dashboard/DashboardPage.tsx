@@ -13,7 +13,7 @@ import {
   type ProgressBarTone,
 } from '@shared/ui';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { capitalize, formatMonthAbbrev } from '#shared/format/date-format.mjs';
+import { capitalize, formatMonthAbbrev, formatShortDayMonth } from '#shared/format/date-format.mjs';
 import { initials } from '@shared/format/initials';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { useDashboard, type AttentionItem, type AttentionTone } from './useDashboard';
@@ -79,6 +79,9 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
     expense: dashboardData.expenseHistory[index]?.value ?? 0,
   }));
   const hasRevenueData = chartMonths.some(bar => bar.income > 0 || bar.expense > 0);
+  const monthBirthdayCells = dashboardData.birthdayWeeks
+    .flat()
+    .filter((cell: { inMonth: boolean; names: unknown[] }) => cell.inMonth && cell.names.length > 0);
 
   return (
     <>
@@ -224,13 +227,33 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               <p className={styles.panelEyebrowMint}>Zile de naștere</p>
               <p className={styles.panelTitle}>În următoarele 5 zile</p>
             </div>
-            {dashboardData.upcomingBirthdays.length === 0 && (
-              <EmptyState
-                variant={EMPTY_STATES['dashboard.birthdays'].variant}
-                size="compact"
-                title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.birthdays'])}
-              />
-            )}
+            {dashboardData.upcomingBirthdays.length === 0 &&
+              (dashboardData.nextBirthday ? (
+                <div className={styles.birthdaysEmptyCard}>
+                  <p className={styles.birthdaysEmptyText}>Nimeni în următoarele 5 zile.</p>
+                  <div className={styles.birthdayNextRow}>
+                    <span className={`${styles.avatar} ${AVATAR_TONE_CLASS[0]}`}>
+                      {initials(dashboardData.nextBirthday.child.name)}
+                    </span>
+                    <div>
+                      <span className={styles.birthdayNextLabel}>URMĂTOAREA</span>
+                      <strong>{dashboardData.nextBirthday.child.name}</strong>
+                      <small>
+                        {formatShortDayMonth(dashboardData.nextBirthday.child.birthDate)} · împlinește{' '}
+                        {dashboardData.nextBirthday.turningAge}{' '}
+                        {dashboardData.nextBirthday.turningAge === 1 ? 'an' : 'ani'}
+                      </small>
+                    </div>
+                    <span className={styles.birthdayPillGray}>în {dashboardData.nextBirthday.daysUntil} zile</span>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  variant={EMPTY_STATES['dashboard.birthdays'].variant}
+                  size="compact"
+                  title={resolveEmptyStateTitle(EMPTY_STATES['dashboard.birthdays'])}
+                />
+              ))}
             {dashboardData.upcomingBirthdays.map(
               (row: { child: { id: string; name: string }; daysUntil: number; turningAge: number }, index: number) => (
                 <div key={row.child.id} className={styles.birthdayRow}>
@@ -262,10 +285,12 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
               </Button>
             </div>
             <div className={styles.birthdaysCalendar}>
-              {dashboardData.birthdayWeeks
-                .flat()
-                .filter((cell: { inMonth: boolean; names: unknown[] }) => cell.inMonth && cell.names.length > 0)
-                .flatMap(cell => {
+              {monthBirthdayCells.length === 0 ? (
+                <p className={styles.birthdaysMonthEmpty}>
+                  Fără zile de naștere în {MONTH_NAMES[Number(month.slice(5, 7)) - 1]}
+                </p>
+              ) : (
+                monthBirthdayCells.flatMap(cell => {
                   const upcoming = cell.date >= todayFn();
                   return cell.names.map((child: { name: string }, index: number) => (
                     <div
@@ -276,7 +301,8 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
                       <span>{child.name}</span>
                     </div>
                   ));
-                })}
+                })
+              )}
             </div>
           </div>
         </div>

@@ -305,6 +305,55 @@
   white-space: nowrap;
 }
 
+/* F25 (PROMPT-11 §13): „fără nimeni în 5 zile” — card punctat cu cel mai apropiat copil. */
+.birthdaysEmptyCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md-lg);
+  padding: 14px 16px;
+}
+
+.birthdaysEmptyText {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.birthdayNextRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+}
+
+.birthdayNextRow > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.birthdayNextRow small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.birthdayNextLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--subtle);
+}
+
+.birthdayPillGray {
+  background: var(--neutral-soft);
+  color: var(--subtle);
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
 .birthdaysMonth {
   display: flex;
   flex-direction: column;
@@ -375,4 +424,10 @@
 
 .calendarCellPast strong {
   color: var(--subtle);
+}
+
+.birthdaysMonthEmpty {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--muted);
 }

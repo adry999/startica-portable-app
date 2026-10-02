@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
+import { today as todayFn, shiftDays } from '@domain/calendar-month.mjs';
 import { DashboardPage } from './DashboardPage';
 
 function renderDashboard(props: Parameters<typeof DashboardPage>[0]) {
@@ -149,6 +150,40 @@ describe('DashboardPage', () => {
     expect(screen.getByText('în curs')).toBeInTheDocument();
     // max = 10000 + 4*5000 = 30000 -> rotunjit în sus la pasul de 10k = 30000 (scara + bara curentă).
     expect(screen.getAllByText('30k').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('F25 (PROMPT-11 §13): fără nimeni în 5 zile arată „Următoarea” cu cel mai apropiat copil', async () => {
+    const todayStr = todayFn();
+    const futureStr = shiftDays(todayStr, 10);
+    const [, futureMonth, futureDay] = futureStr.split('-');
+    stubFetch({
+      ...fixtureState,
+      children: [
+        { ...fixtureState.children[0], birthDate: '' },
+        {
+          id: 'c2',
+          name: 'Maria Ionescu',
+          status: 'Activ',
+          groupId: null,
+          parent: '',
+          phone: '',
+          fee: 1500,
+          feeHistory: [],
+          dueDay: 10,
+          birthDate: `2020-${futureMonth}-${futureDay}`,
+          archived: false,
+        },
+      ],
+    });
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    const { container } = renderDashboard({ month: todayStr.slice(0, 7), onNavigate: () => {} });
+    const nextCard = container.querySelector('[class*="birthdaysEmptyCard"]') as HTMLElement;
+    expect(within(nextCard).getByText('Nimeni în următoarele 5 zile.')).toBeInTheDocument();
+    expect(within(nextCard).getByText('URMĂTOAREA')).toBeInTheDocument();
+    expect(within(nextCard).getByText('Maria Ionescu')).toBeInTheDocument();
+    expect(within(nextCard).getByText('în 10 zile')).toBeInTheDocument();
   });
 
   it('A8: graficul Evoluția încasărilor arată legenda cu pătrate, nu comutatorul Încasări/Cheltuieli', async () => {
@@ -324,10 +359,13 @@ describe('DashboardPage', () => {
       const session = renderHook(() => useAppSession());
       await act(() => session.result.current.load());
 
-      renderDashboard({ month: '2026-09', onNavigate: () => {} });
+      const { container } = renderDashboard({ month: '2026-09', onNavigate: () => {} });
 
-      expect(screen.getByText('Andrei Popescu')).toBeInTheDocument();
-      expect(screen.getByText('Maria Ionescu')).toBeInTheDocument();
+      // F25 (PROMPT-11 §13): cu nimeni în 5 zile, „Andrei Popescu” (cel mai apropiat) apare și în
+      // cardul „Următoarea” — verificarea chip-urilor separate se limitează la calendarul lunii.
+      const calendar = container.querySelector('[class*="birthdaysCalendar_"]') as HTMLElement;
+      expect(within(calendar).getByText('Andrei Popescu')).toBeInTheDocument();
+      expect(within(calendar).getByText('Maria Ionescu')).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

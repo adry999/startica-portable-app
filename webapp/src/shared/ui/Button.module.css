@@ -83,7 +83,7 @@
 }
 
 .link:hover:not(:disabled) {
-  color: var(--orange);
+  color: var(--orange-strong-pressed);
   text-decoration: underline;
 }
 

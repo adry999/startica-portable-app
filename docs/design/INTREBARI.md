@@ -1330,3 +1330,31 @@ Y lei · diferență Z lei”.
 **Neatins din scop:**
 - Fără captură lângă 1a (ca la toate punctele anterioare din acest lanț) — exact pentru cazul de
   mai sus (culoarea cheltuielilor curente), o captură ar lămuri imediat dacă e corect.
+
+## §13 (F25, PROMPT-11)
+
+`useDashboard.ts`: câmp nou `nextBirthday` în `DashboardData` — cel mai apropiat copil cu zi de
+naștere, calculat doar când `upcomingBirthdays` (lista de 5 zile) e goală, prin
+`listUpcomingBirthdays(records.children, 366, todayStr)[0]` (aceeași funcție din domeniu, apelată
+cu o fereastră de un an întreg, ca să găsească „următoarea oricând" — `undefined` doar dacă niciun
+copil nu are deloc dată de naștere completată).
+
+`DashboardPage.tsx`: când lista de 5 zile e goală, cardul „Zile de naștere" arată acum un card cu
+bordură punctată (`birthdaysEmptyCard`) cu textul „Nimeni în următoarele 5 zile." și, dacă există
+`nextBirthday`, un rând „URMĂTOAREA" cu avatarul copilului, numele, data scurtă (`formatShortDayMonth`,
+ignoră anul din `birthDate`), vârsta pe care o împlinește și o pastilă gri „în N zile" (distinctă de
+pastila colorată de la rândurile din lista de 5 zile). Dacă nu există niciun copil cu dată de naștere
+completată, rămâne `EmptyState` existent (`dashboard.birthdays`), neschimbat. Calendarul lunii (coloana
+dreaptă) primește un text de rezervă „Fără zile de naștere în {lună}" (R9: fără „Niciun/Nicio" literal
+în afara catalogului) când grila filtrată n-are nicio celulă cu nume — înainte rămânea complet gol
+fără explicație.
+
+Teste noi: `DashboardPage.test.tsx` — „fără nimeni în 5 zile arată „Următoarea" cu cel mai apropiat
+copil" (verifică textul, eticheta, numele și pastila „în N zile", scopate la cardul nou ca să nu se
+suprapună cu eventuala apariție a aceluiași copil în calendarul lunii). Testul existent „chip separat
+pentru fiecare copil cu ziua de naștere în aceeași zi" a fost scopat explicit la grila calendarului
+(`within(calendar)`), pentru că cel mai apropiat dintre cei doi copii din fixtură apare acum și în
+cardul „Următoarea" — comportament nou, intenționat, nu o regresie a testului vechi.
+
+**Neatins din scop:**
+- Fără captură lângă 1b (ca la toate punctele anterioare din acest lanț).
