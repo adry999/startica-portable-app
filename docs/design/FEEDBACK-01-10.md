@@ -38,7 +38,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | Achitări rapide, frați, casa de azi, reguli formulare | ✅ 44a–44d | 🔁 44a–44c ✅ (`54b5ee3`,`0f6e0a6`,`7c9028b`); 44d → PROMPT-9 §3; anularea grupului de frați → §5 |
 | Liste: cele mai noi primele; filtre păstrate | — | ✅ `ba8a80d`+`1e09940` (sortare) · `b1dfb88`+`fba3164` (filtre URL) |
 | Storybook: 3 componente fără poveste + regulă R12 | — | ⏳ §6c |
-| Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | 🔁 ✅ cu devieri (`1629df0`,`6f0e8ad`,`be02f74`,`8281546`, INTREBARI §14); filtre modul/calculator/perioadă → PROMPT-9 §6 |
+| Istoric după copil, fișă → modificări, Necesită atenție | ✅ 45a–45c | 🔁 ✅ cu devieri (`1629df0`,`6f0e8ad`,`be02f74`,`8281546`, INTREBARI §14); filtre modul/calculator/perioadă ✅ PROMPT-9 §6 (`db8a53e`) — calculator interim, doar local, până la `device_id`/`device_name` din §7 |
 | Personal complet (salarii, avansuri, stat) | ⏸ de decis ce intră | — |
 
 ## F1. Paginare în toate tabelele
