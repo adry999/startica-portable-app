@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSession } from '@shared/api/session';
+import { requestJson, useAppSession } from '@shared/api/session';
 import { useSyncStatus } from '@shared/api/useSyncStatus';
 import { AppBanner, TopbarActionsProvider, useToast } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -68,6 +68,9 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // §11, 42b: „revine a doua zi” — valoarea persistă cât bara mint a fost închisă ultima dată
   // (dată + versiune respinsă), citită înainte de orice return condiționat (regula hook-urilor).
   const [updateDismissedUntil, setUpdateDismissedUntil] = usePersistedState<string>(UPDATE_DISMISS_KEY, '');
+  // §5.2 Partea 2 (PROMPT-10 §8): „Descarcă” de pe banda mint declanșează POST
+  // /api/update/download — descărcarea e manuală, nu pornește singură (vezi INTREBARI.md).
+  const [downloadingUpdate, setDownloadingUpdate] = useState(false);
   // 46a: odată aleasă „De la zero” sau „Am Startica pe alt calculator”, ecranul nu mai revine
   // pe acest calculator, chiar dacă filiala activă rămâne fără nicio evidență reală încă
   // (nu s-a importat nimic, sau sincronizarea n-a adus încă prima bază).
@@ -130,9 +133,28 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
   // versiune și mai nouă — vezi `shouldShowUpdateBanner`). Nu se arată deodată cu banda roz.
   const update = session.state.update;
   const today = todayIso();
+  // §5.2 Partea 2: „installReady” (instaler deja descărcat și verificat SHA-256) e mai tare
+  // decât „updateAvailable” (doar anunțat) — banda verde o înlocuiește pe cea mint, fără ×
+  // (se instalează oricum la următoarea închidere, nu are rost să fie ascunsă).
+  const installReadyBanner = !syncBanner && update.installReady;
   const showUpdateBanner =
-    !syncBanner && update.updateAvailable && shouldShowUpdateBanner(updateDismissedUntil, update.latestVersion, today);
-  const updateLink = update.releaseUrl ?? update.downloadUrl;
+    !syncBanner &&
+    !installReadyBanner &&
+    update.updateAvailable &&
+    shouldShowUpdateBanner(updateDismissedUntil, update.latestVersion, today);
+
+  async function downloadUpdate() {
+    setDownloadingUpdate(true);
+    try {
+      const result = (await requestJson('/api/update/download', {})) as { ok: boolean; error?: string };
+      if (result.ok) await session.load();
+      else toast.show({ message: result.error || 'Descărcarea actualizării a eșuat.' });
+    } catch (error) {
+      toast.show({ message: (error as Error)?.message || 'Descărcarea actualizării a eșuat.' });
+    } finally {
+      setDownloadingUpdate(false);
+    }
+  }
 
   // Fila implicită se alege din localStorage, citită de BackupPage la montare
   // (usePersistedState('view.backup', …)).
@@ -175,16 +197,21 @@ export function AppShell({ view, onNavigate, month, onMonthChange, counts = {}, 
             />
           </div>
         )}
+        {installReadyBanner && (
+          <div className={styles.banners}>
+            <AppBanner
+              tone="update"
+              message={`Startica ${update.pendingVersion} se instalează când închizi aplicația.`}
+            />
+          </div>
+        )}
         {showUpdateBanner && (
           <div className={styles.banners}>
             <AppBanner
               tone="update"
               message={`Startica ${update.latestVersion} e gata de descărcat.`}
-              action={
-                updateLink
-                  ? { label: 'Ce e nou', onClick: () => window.open(updateLink, '_blank', 'noopener') }
-                  : undefined
-              }
+              action={{ label: 'Descarcă', onClick: () => void downloadUpdate() }}
+              actionLoading={downloadingUpdate}
               onDismiss={() => setUpdateDismissedUntil(dismissUpdateValue(update.latestVersion, today))}
             />
           </div>

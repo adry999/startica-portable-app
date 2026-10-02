@@ -959,6 +959,24 @@ Două opțiuni, ambele cu cost real:
 Nu am ales niciuna dintre cele două — #2 e o schimbare de schemă, nu un fix de o linie, iar #1
 nu rezolvă confuzia, doar o etichetează. Rămâne pentru următoarea discuție de prioritizare.
 
+## ⏳ §8 PROMPT-10 Partea 2 — descărcarea instalerului e manuală (POST /api/update/download), nu automată „în fundal”
+
+`docs/design/screens/32-actualizari.md` (linia 15): „Descărcare în fundal în `<home>\Actualizari`,
+verificare SHA-256, instalare silențioasă la închidere” — sugerează o descărcare pornită singură
+de server, de îndată ce `checkForUpdate()` anunță o versiune nouă (la pornire sau o dată la 6 ore,
+`main.mjs`). Am construit în schimb doar o rută manuală (`POST /api/update/download`, declanșată
+de client) + `GET /api/update/pending` (interogare) — motivul: `app.checkForUpdate()` rulează deja
+necondiționat la pornire și la 6 ore (inclusiv în `test:e2e`, cu `fetch` real spre GitHub, dacă
+rulează cu rețea) — a lega automat o descărcare reală de acel ciclu ar fi riscat o descărcare reală
+de pe GitHub în orice rulare care ajunge pe acel cod, inclusiv `npm run test:e2e`, ceva ce regula
+de siguranță din `CLAUDE.md` („fully mockable/injectable... tests never actually execute a binary”)
+cere evitat explicit. Serviciul (`update-download.service.mjs`) și rutele sunt complet construite
+și testate (fetch injectat, niciun test atinge rețeaua reală) — rămâne de decis dacă `main.mjs`
+trebuie să cheme el însuși `POST /api/update/download` după un `checkForUpdate()` reușit (și, dacă
+da, cum se evită redescărcarea la fiecare 6 ore odată ce versiunea e deja `pendingUpdate()`).
+
+Corpul 426 e totodată mai sărac decât ar sugera același document — vezi intrarea de mai jos.
+
 ## ⏳ §8 PROMPT-10 — corpul 426 e mai sărac decât `32-actualizari.md`; „oprite primele” (37d) neconstruit
 
 `docs/design/screens/32-actualizari.md` („Compatibilitate”) cere corpul 426 cu
