@@ -56,6 +56,53 @@ describe('DataTable', () => {
     expect(screen.queryByRole('button', { name: /^$/ })).not.toBeInTheDocument();
   });
 
+  it('folosește defaultSort la montare (13.1 — liste cu dată, cele mai noi primele)', () => {
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} defaultSort={{ key: 'fee', direction: 'desc' }} />);
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Maria')).toBeInTheDocument(); // 2000
+    expect(within(rows[2]).getByText('Ioana')).toBeInTheDocument(); // 1000
+  });
+
+  it('sortarea controlată (sort/onSortChange) nu ține stare proprie — apelantul decide', async () => {
+    const onSortChange = vi.fn();
+    const { rerender } = render(
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        sort={{ key: 'fee', direction: 'asc' }}
+        onSortChange={onSortChange}
+      />,
+    );
+    let rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Ioana')).toBeInTheDocument(); // 1000, cea mai mică
+
+    await userEvent.click(screen.getByRole('button', { name: /Taxă/ }));
+    expect(onSortChange).toHaveBeenCalledWith({ key: 'fee', direction: 'desc' });
+
+    // Fără apelantul să re-dea sort-ul schimbat, tabelul rămâne pe valoarea controlată primită.
+    rerender(
+      <DataTable
+        columns={columns}
+        rows={children}
+        rowKey={c => c.id}
+        sort={{ key: 'fee', direction: 'desc' }}
+        onSortChange={onSortChange}
+      />,
+    );
+    rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[0]).getByText('Maria')).toBeInTheDocument(); // 2000, cea mai mare
+  });
+
+  it('pagina controlată (page/onPageChange) — apelantul ține numărul paginii', async () => {
+    const onPageChange = vi.fn();
+    render(
+      <DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} page={1} onPageChange={onPageChange} />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
   it('paginează când sunt mai multe rânduri decât pageSize', async () => {
     render(<DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} />);
     expect(screen.getByText('1–2 din 3')).toBeInTheDocument();

@@ -38,7 +38,13 @@ export { Drawer, type DrawerProps } from './Drawer';
 export { Dialog, type DialogProps } from './Dialog';
 export { ToastProvider, useToast } from './Toast';
 export { UndoToastProvider, useUndoToast, type UndoToastRequest } from './UndoToast';
-export { DataTable, type DataTableColumn, type DataTableProps } from './DataTable';
+export {
+  DataTable,
+  type DataTableColumn,
+  type DataTableProps,
+  type DataTableSort,
+  type SortDirection,
+} from './DataTable';
 export { EmptyState, type EmptyStateAction, type EmptyStateProps, type EmptyStateVariant } from './EmptyState';
 export {
   EMPTY_STATES,
