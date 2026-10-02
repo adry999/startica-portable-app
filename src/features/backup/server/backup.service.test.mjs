@@ -12,6 +12,7 @@ import {
   closeSync,
   rmSync,
 } from 'node:fs';
+import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -137,6 +138,58 @@ function writeFakeBackup(dir, mtimeMs, index, content = 'continut fictiv') {
   return { file, name };
 }
 
+/**
+ * Blochează EFECTIV un fișier împotriva ștergerii, ca un antivirus/Google Drive care-l ține
+ * deschis — `fs.openSync` (orice mod) NU face asta pe Windows: libuv deschide mereu cu
+ * `FILE_SHARE_DELETE`, deci `unlinkSync` reușește oricum (verificat empiric în această sesiune,
+ * motivul pentru care testul vechi se auto-sărea tăcut chiar pe Windows — AUDIT-COD-02-10.md #11).
+ * Un proces PowerShell separat, cu `FileShare.None` (.NET), ține un lacăt real la nivel de SO;
+ * se încheie cu `cleanup()`, care omoară procesul și așteaptă ca fișierul să devină redeschidere-abil.
+ * @param {string} filePath
+ * @returns {Promise<() => Promise<void>>}
+ */
+async function lockFileExclusively(filePath) {
+  const markerPath = `${filePath}.locked-marker`;
+  try {
+    rmSync(markerPath, { force: true });
+  } catch {
+    // ignorat
+  }
+  const script = `
+    $h = [System.IO.File]::Open('${filePath}', 'Open', 'Read', 'None')
+    New-Item -Path '${markerPath}' -ItemType File -Force | Out-Null
+    Start-Sleep -Seconds 60
+  `;
+  const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { stdio: 'ignore' });
+
+  const deadline = Date.now() + 5000;
+  while (!existsSync(markerPath)) {
+    if (Date.now() > deadline) throw new Error('PowerShell nu a confirmat lacătul la timp.');
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+
+  return async function cleanup() {
+    child.kill();
+    try {
+      rmSync(markerPath, { force: true });
+    } catch {
+      // ignorat
+    }
+    // Lacătul SO se eliberează asincron, odată cu încheierea procesului — reîncearcă scurt
+    // o deschidere Node (care ar eșua cât timp lacătul PowerShell e încă activ).
+    const unlockDeadline = Date.now() + 5000;
+    for (;;) {
+      try {
+        closeSync(openSync(filePath, 'r'));
+        return;
+      } catch {
+        if (Date.now() > unlockDeadline) return;
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+  };
+}
+
 test('listExternalBackups ignoră fișierele .tmp și cele străine, întoarce cele mai noi primele cu bytes', t => {
   const { service, dir } = createHarness(t);
   const external = join(dir, 'extern');
@@ -180,7 +233,11 @@ test('copia externă urmează aceeași retenție ca cea locală', t => {
   assert.ok(remaining.includes(oldNames[24]), 'Cea mai recentă dintre cele vechi a fost păstrată.');
 });
 
-test('o curățare externă eșuată nu anulează copia reușită', t => {
+test('o curățare externă eșuată nu anulează copia reușită', async t => {
+  if (process.platform !== 'win32') {
+    t.skip('Lacătul real (FileShare.None via PowerShell) e specific Windows — vezi AUDIT-COD-02-10.md #11.');
+    return;
+  }
   const { service, dir, writeSetting } = createHarness(t);
   const external = join(dir, 'extern');
   mkdirSync(external);
@@ -192,25 +249,22 @@ test('o curățare externă eșuată nu anulează copia reușită', t => {
   const { file: locked } = writeFakeBackup(external, now - 21000, 0);
   for (let i = 1; i <= 20; i++) writeFakeBackup(external, now - (21 - i) * 1000, i);
 
-  // Un handle deschis blochează unlinkSync pe Windows, deci fișierul cel mai
-  // vechi (candidat sigur la ștergere) nu poate fi eliminat de pruneExternal.
-  const handle = openSync(locked, 'r');
-  t.after(() => {
-    try {
-      closeSync(handle);
-    } catch {
-      // deja închis
-    }
-  });
+  // Lacăt real la nivel de SO (antivirus/Google Drive) — `openSync` simplu NU ajunge, vezi
+  // comentariul din `lockFileExclusively` (AUDIT-COD-02-10.md #11, fix verificat empiric în sesiune).
+  // Eliberat explicit ÎNAINTE de a ieși din test (nu doar prin `t.after`): `createHarness` își
+  // înregistrează propriul `t.after` (ștergerea recursivă a folderului temporar) mai devreme, iar
+  // hook-urile `after` ale node:test rulează în ordinea înregistrării — un `t.after(unlock)` de-aici
+  // ar rula DUPĂ acela și ar lăsa ștergerea să dea peste fișierul încă blocat.
+  const unlock = await lockFileExclusively(locked);
+  try {
+    const result = service.backup('manual');
 
-  const result = service.backup('manual');
-
-  if (!existsSync(locked)) {
-    t.skip('Pe acest sistem de fișiere, ștergerea unui fișier deschis a reușit.');
-    return;
+    assert.ok(existsSync(locked), 'fișierul blocat trebuia să rămână, dovadă că lacătul a fost real.');
+    assert.match(result.warning, /Curățarea copiilor externe/);
+    assert.ok(existsSync(join(external, result.name)), 'Copia nouă există, deși retenția externă a eșuat parțial.');
+  } finally {
+    await unlock();
   }
-  assert.match(result.warning, /Curățarea copiilor externe/);
-  assert.ok(existsSync(join(external, result.name)), 'Copia nouă există, deși retenția externă a eșuat parțial.');
 });
 
 test('health().externalBackups numără copiile din folderul extern configurat', t => {
