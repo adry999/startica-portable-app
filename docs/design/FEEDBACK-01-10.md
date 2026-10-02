@@ -22,7 +22,8 @@ Sursă: testarea utilizatorului pe 2.1.0. Design: `Feedback 01-10.dc.html#38a…
 | C6–C13 (teme, conturi, prezență pe telefon, SMS automat, contracte, ajutor, burse, verificare backup) | ⏸ toate în pauză (02.10) | — nu intră în ciclul ăsta |
 | Povești pentru bug-uri | — | ⏳ PROMPT-8 §6b |
 | Îmbunătățiri zilnice (plată din Situație, Anulează, nesalvate) | ✅ 40a–40c | ⏳ PROMPT-8 §8 |
-| Fișă incompletă, pontaj săptămână, căutare, erori | ✅ 41a–41d | ⏳ §9 |
+| Fișă incompletă, pontaj săptămână, căutare (41a–41c) | ✅ 41a–41c | ✅ `4979a1d` (41a) · `ed33495` (41b) · `1e6eb75` (41c) |
+| Mesaje de eroare (41d, `toUserError`) | ✅ 41d | ⏳ amânat deliberat — cross-cutting peste aproape toate feature-urile, pasă separată ulterioară |
 | PeriodFilter cu presetări | ✅ 41e | ✅ `581535e` (§5.1/§9.2) |
 | Rotunjire la achitare | ✅ 41f | ⏳ §9.1 |
 | Telefon +373 / 069 | ✅ 25b | ✅ `18074a4` |
