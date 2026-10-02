@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppSession } from '@shared/api/session';
 import { usePayments } from './usePayments';
@@ -6,6 +7,11 @@ import type { Payment } from '@contracts/record-types.mjs';
 
 function jsonResponse(body: unknown) {
   return { ok: true, status: 200, json: async () => body };
+}
+
+// §13.2: usePayments ține căutarea/pastilele în URL (useUrlParams), deci are nevoie de un Router.
+function withRouter({ children }: { children: React.ReactNode }) {
+  return <MemoryRouter>{children}</MemoryRouter>;
 }
 
 // Fixtură: achitări Cash/Card/Transfer, una neasociată (childId gol), una
@@ -103,13 +109,13 @@ describe('usePayments', () => {
   });
 
   it('e loading înainte ca sesiunea să fie gata', () => {
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
     expect(result.current.status).toBe('loading');
   });
 
   it('exclude achitările arhivate din filtrul implicit și calculează sumarul pe metodă', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     expect(result.current.status).toBe('ready');
     expect(result.current.rows.map(row => row.id).sort()).toEqual(['p1', 'p2', 'p3', 'p4']);
@@ -122,7 +128,7 @@ describe('usePayments', () => {
 
   it('marchează achitarea fără childId ca neasociată, cu eticheta din sourceName', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     const unassigned = result.current.rows.find(row => row.id === 'p4');
     expect(unassigned?.unassigned).toBe(true);
@@ -131,7 +137,7 @@ describe('usePayments', () => {
 
   it('randează alocarea pe 2 luni pentru achitarea de transfer', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     const transfer = result.current.rows.find(row => row.id === 'p3');
     expect(transfer?.allocations).toHaveLength(2);
@@ -140,7 +146,7 @@ describe('usePayments', () => {
 
   it('archiveFilter "archived" arată doar achitarea arhivată', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setArchiveFilter('archived'));
     expect(result.current.rows.map(row => row.id)).toEqual(['p5']);
@@ -148,7 +154,7 @@ describe('usePayments', () => {
 
   it('filtrul de copil păstrează doar achitările copilului ales', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setChildId('c2'));
     expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
@@ -156,7 +162,7 @@ describe('usePayments', () => {
 
   it('filtrul de metodă păstrează doar achitările cu acea metodă', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setMethod('Transfer'));
     expect(result.current.rows.map(row => row.id)).toEqual(['p3']);
@@ -201,7 +207,7 @@ describe('usePayments', () => {
 
     it('implicit (Toate) achitările fără `service` numesc Grădiniță, iar lista Serviciu vine din records.services', async () => {
       await loadedSessionWithServices();
-      const { result } = renderHook(() => usePayments());
+      const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
       expect(result.current.services.map(service => service.id)).toEqual(['gradinita', 'bazin']);
       const p1Row = result.current.rows.find(row => row.id === 'p1');
@@ -213,7 +219,7 @@ describe('usePayments', () => {
 
     it('păstrează doar achitările serviciului ales', async () => {
       await loadedSessionWithServices();
-      const { result } = renderHook(() => usePayments());
+      const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
       act(() => result.current.setService('bazin'));
       expect(result.current.rows.map(row => row.id)).toEqual(['p6']);
@@ -221,19 +227,20 @@ describe('usePayments', () => {
 
     it('se combină cu filtrul de metodă (ambele active îngustează suplimentar)', async () => {
       await loadedSessionWithServices();
-      const { result } = renderHook(() => usePayments());
+      const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
-      act(() => {
-        result.current.setService('bazin');
-        result.current.setMethod('Transfer');
-      });
+      // Două clicuri separate (ca în UI — fiecare pastilă e o interacțiune proprie), nu un singur
+      // `act()`: setService + setMethod ating amândouă URL-ul (§13.2 useUrlParams) și s-ar
+      // suprascrie reciproc dacă ar porni din același tur de evenimente.
+      act(() => result.current.setService('bazin'));
+      act(() => result.current.setMethod('Transfer'));
       // p6 e Cash, nu Transfer — niciun rezultat cu ambele filtre active.
       expect(result.current.rows).toEqual([]);
     });
 
     it('spre deosebire de filtrul de metodă, filtrul de serviciu îngustează și cardurile de sumar', async () => {
       await loadedSessionWithServices();
-      const { result } = renderHook(() => usePayments());
+      const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
       const cashFaraFiltru = result.current.summary.cash;
       act(() => result.current.setService('bazin'));
@@ -244,7 +251,7 @@ describe('usePayments', () => {
 
   it('periodFrom păstrează doar achitările active din ziua respectivă sau mai târziu', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setPeriodFrom('2026-08-01'));
     expect(result.current.rows.map(row => row.id).sort()).toEqual(['p1', 'p2', 'p4']);
@@ -252,7 +259,7 @@ describe('usePayments', () => {
 
   it('periodTo păstrează doar achitările active din ziua respectivă sau mai devreme', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setPeriodTo('2026-08-31'));
     expect(result.current.rows.map(row => row.id).sort()).toEqual(['p2', 'p3']);
@@ -260,7 +267,7 @@ describe('usePayments', () => {
 
   it('periodFrom și periodTo combinate îngustează la un singur interval', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => {
       result.current.setPeriodFrom('2026-08-01');
@@ -271,7 +278,7 @@ describe('usePayments', () => {
 
   it('periodPreset implicit e "tot" (fără limite), ca azi', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     expect(result.current.periodPreset).toBe('tot');
     expect(result.current.periodFrom).toBe('');
@@ -280,7 +287,7 @@ describe('usePayments', () => {
 
   it('search găsește achitarea neasociată după sourceName', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setSearch('Import CSV'));
     expect(result.current.rows.map(row => row.id)).toEqual(['p4']);
@@ -288,7 +295,7 @@ describe('usePayments', () => {
 
   it('search fără potrivire golește lista de rânduri', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     act(() => result.current.setSearch('inexistent-xyz'));
     expect(result.current.rows).toEqual([]);
@@ -296,7 +303,7 @@ describe('usePayments', () => {
 
   it('initialChildId precompletează filtrul de copil de la montare', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments('c2'));
+    const { result } = renderHook(() => usePayments('c2'), { wrapper: withRouter });
 
     expect(result.current.childId).toBe('c2');
     expect(result.current.rows.map(row => row.id)).toEqual(['p2']);
@@ -324,7 +331,7 @@ describe('usePayments', () => {
     });
 
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     expect(result.current.summary).not.toHaveProperty('other');
     expect(result.current.summary.cash).toBe(1800);
@@ -334,7 +341,7 @@ describe('usePayments', () => {
 
   it('archivePayment trimite mutația de arhivare cu archivedAt setat', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
       const body = JSON.parse(options.body as string);
@@ -351,7 +358,7 @@ describe('usePayments', () => {
 
   it('unarchivePayment trimite mutația de dezarhivare', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (_path: string, options: RequestInit) => {
       const body = JSON.parse(options.body as string);
@@ -366,21 +373,21 @@ describe('usePayments', () => {
 
   it('archivePayment pe un id inexistent aruncă eroare în loc să trimită o mutație invalidă', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     await expect(result.current.archivePayment('nope')).rejects.toThrow('Achitarea nu mai există.');
   });
 
   it('unarchivePayment pe un id inexistent aruncă eroare în loc să trimită o mutație invalidă', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     await expect(result.current.unarchivePayment('nope')).rejects.toThrow('Achitarea nu mai există.');
   });
 
   it('archiveMany trimite câte o mutație pentru fiecare id, secvențial', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     const archivedIds: string[] = [];
     (fetch as ReturnType<typeof vi.fn>).mockImplementation(async (path: string, options?: RequestInit) => {
@@ -410,11 +417,12 @@ describe('usePayments', () => {
     allocations: [{ month: '2026-09', amount: '600' }],
     notes: '',
     sendSmsConfirmation: false,
+    siblings: [],
   };
 
   it('createPayment trimite mutația de creare cu id PAY- generat', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
       expect(path).toBe('/api/record');
@@ -434,7 +442,7 @@ describe('usePayments', () => {
 
   it('createPayment cu un duplicat cere confirmare și renunță dacă e refuzată', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     const duplicateValues = {
       childId: 'c1',
@@ -446,6 +454,7 @@ describe('usePayments', () => {
       allocations: [{ month: '2026-09', amount: '1500' }],
       notes: '',
       sendSmsConfirmation: false,
+      siblings: [],
     };
 
     const confirmDuplicate = vi.fn(() => false);
@@ -456,7 +465,7 @@ describe('usePayments', () => {
 
   it('updatePayment păstrează id-ul plății existente', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
     const payment = result.current.rows.find(row => row.id === 'p1')!;
     const previous = fixtureState.payments.find(p => p.id === 'p1') as unknown as Payment;
 
@@ -479,6 +488,7 @@ describe('usePayments', () => {
         allocations: [{ month: '2026-09', amount: '1500' }],
         notes: '',
         sendSmsConfirmation: false,
+        siblings: [],
       }),
     );
   });
@@ -488,7 +498,7 @@ describe('usePayments', () => {
   // atribuit), funcția trebuie să citească snapshot-ul curent al sesiunii, nu closure-ul vechi.
   it('archivePayment citește starea curentă la momentul apelului, nu closure-ul randării în care a fost capturată referința', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
     const staleArchivePayment = result.current.archivePayment; // ca referința ținută de un toast „Anulează”
 
     // Alt calculator/altă acțiune atribuie un receiptNumber lui p1 între timp.
@@ -515,7 +525,7 @@ describe('usePayments', () => {
 
   it('deletePayment cheamă /api/record-delete cu tipul și id-ul', async () => {
     await loadedSession();
-    const { result } = renderHook(() => usePayments());
+    const { result } = renderHook(() => usePayments(), { wrapper: withRouter });
 
     (fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async (path: string, options: RequestInit) => {
       expect(path).toBe('/api/record-delete');

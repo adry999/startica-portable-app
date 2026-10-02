@@ -44,9 +44,21 @@ import {
   tenderMethodsFor,
   totalOfTenders,
   type PaymentFormValues,
+  type SiblingPaymentRowValues,
 } from './payment-form';
+import { siblingsOf } from './quick-pay-search';
 import type { Child, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 import styles from './PaymentFormDrawer.module.css';
+
+/** 44b: starea UI a unui rând de frate — distinctă de `SiblingPaymentRowValues` (ce se trimite la
+ * salvare), ca să poată ține un rând bifat momentan fără sumă validă fără să-l trimită încă. */
+interface SiblingRowState {
+  childId: string;
+  name: string;
+  month: string;
+  amount: string;
+  checked: boolean;
+}
 
 export interface PaymentFormDrawerProps {
   target: Payment | 'new' | null;
@@ -94,6 +106,13 @@ export function PaymentFormDrawer({
   // F7 (FEEDBACK-01-10.md): restanțele bifate explicit de utilizator pentru plata asta — nicio
   // restanță nu e bifată automat; se resetează la schimbarea copilului.
   const [checkedArrears, setCheckedArrears] = useState<Set<string>>(new Set());
+  // 44b: frații adăugați cu „+ Adaugă fratele” — doar la o plată nouă; se resetează la schimbarea
+  // copilului principal (altă familie, altă listă de frați).
+  const [siblingRows, setSiblingRows] = useState<SiblingRowState[]>([]);
+  // 44b: „Total grup” e derivat (principal + frați bifați) — cât timp se editează, afișăm ce a
+  // tastat utilizatorul (nu valoarea recalculată, care ar „sări” peste litera abia scrisă);
+  // revine la null (= derivat) la ieșirea din câmp.
+  const [groupTotalDraft, setGroupTotalDraft] = useState<string | null>(null);
 
   // Luna/suma repartizării rămân legate de dată/tenders doar cât timp rândul
   // unic de alocare nu a fost încă atins manual.
@@ -291,6 +310,9 @@ export function PaymentFormDrawer({
   function setChildId(childId: string) {
     // F7: nicio restanță a copilului nou ales nu rămâne bifată de la copilul anterior.
     setCheckedArrears(new Set());
+    // 44b: frații țin de familia copilului anterior — schimbarea copilului golește lista.
+    setSiblingRows([]);
+    setGroupTotalDraft(null);
     setValues(previous => {
       const child = records.children.find((c: Child) => c.id === childId);
       return { ...previous, childId, sendSmsConfirmation: defaultSendSmsConfirmation(child) };
@@ -313,6 +335,77 @@ export function PaymentFormDrawer({
 
   function removeAllocationRow(index: number) {
     setValues(previous => ({ ...previous, allocations: previous.allocations.filter((_, i) => i !== index) }));
+  }
+
+  // 44b: frații disponibili (același telefon de părinte, vezi quick-pay-search.ts) ale celor
+  // care nu au fost încă adăugați ca rând.
+  const availableSiblings = selectedChild
+    ? siblingsOf(selectedChild, records.children).filter(
+        sibling => !siblingRows.some(row => row.childId === sibling.id),
+      )
+    : [];
+
+  // Implicit: cea mai veche restanță a fratelui (ca la 40a), altfel taxa lunii plății.
+  function defaultSiblingRow(sibling: Child): SiblingRowState {
+    const siblingArrears = arrears(sibling, records.payments, records.charges, paymentMonth, values.date);
+    const oldest = siblingArrears[0];
+    const fee = feeEntryFor(sibling, oldest?.month ?? paymentMonth)?.amount;
+    const amount = oldest ? oldest.rest : fee;
+    return {
+      childId: sibling.id,
+      name: sibling.name,
+      month: oldest?.month ?? paymentMonth,
+      amount: amount ? formatMoneyInput(amount) : '',
+      checked: true,
+    };
+  }
+
+  function addSibling(sibling: Child) {
+    setGroupTotalDraft(null);
+    setSiblingRows(previous => [...previous, defaultSiblingRow(sibling)]);
+  }
+
+  function toggleSibling(childId: string, checked: boolean) {
+    setGroupTotalDraft(null);
+    setSiblingRows(previous => previous.map(row => (row.childId === childId ? { ...row, checked } : row)));
+  }
+
+  function setSiblingAmount(childId: string, amount: string) {
+    setGroupTotalDraft(null);
+    setSiblingRows(previous => previous.map(row => (row.childId === childId ? { ...row, amount } : row)));
+  }
+
+  function removeSibling(childId: string) {
+    setGroupTotalDraft(null);
+    setSiblingRows(previous => previous.filter(row => row.childId !== childId));
+  }
+
+  // 44b: valorile trimise la salvare urmăresc rândurile bifate — golirea bifei nu șterge rândul
+  // din UI (utilizatorul poate răzgândi fără să reintroducă suma), doar îl scoate din grup.
+  useEffect(() => {
+    setValues(previous => {
+      const siblings: SiblingPaymentRowValues[] = siblingRows
+        .filter(row => row.checked && Number(row.amount) > 0)
+        .map(row => ({ childId: row.childId, month: row.month, amount: row.amount }));
+      const unchanged =
+        siblings.length === previous.siblings.length &&
+        siblings.every((s, i) => JSON.stringify(s) === JSON.stringify(previous.siblings[i]));
+      return unchanged ? previous : { ...previous, siblings };
+    });
+  }, [siblingRows]);
+
+  // 44b: „Total” al grupului (principal + frați bifați) — editarea lui ajustează suma principală,
+  // ca diferența să intre prin repartizarea automată existentă (restanța cea mai veche bifată
+  // întâi, apoi luna plății, apoi avans) în loc de o a doua logică de alocare, separată.
+  const checkedSiblingsTotal = siblingRows
+    .filter(row => row.checked)
+    .reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const groupTotal = totalAmount + checkedSiblingsTotal;
+
+  function setGroupTotal(nextTotal: string) {
+    setGroupTotalDraft(nextTotal);
+    const next = Number(nextTotal) || 0;
+    setTender(activeMethod, formatMoneyInput(Math.max(0, next - checkedSiblingsTotal)));
   }
 
   // 15b: trimiterea confirmării nu blochează/întârzie succesul salvării — pornește și își
@@ -361,7 +454,7 @@ export function PaymentFormDrawer({
     if (isEurChild && !effectiveRate) return false;
     setSubmitting(true);
     try {
-      const finalValues = isEurChild
+      const eurValues = isEurChild
         ? {
             ...values,
             fxRate: effectiveRate,
@@ -369,6 +462,12 @@ export function PaymentFormDrawer({
             amountEur: convertAmount(totalAmount, 'MDL', 'EUR', effectiveRate!) ?? undefined,
           }
         : values;
+      // 44b: id-ul grupului se generează o singură dată, la trimitere — doar când există cel
+      // puțin un frate bifat cu sumă validă (altfel plata rămâne una obișnuită, fără receiptGroupId).
+      const finalValues =
+        eurValues.siblings.length > 0
+          ? { ...eurValues, receiptGroupId: eurValues.receiptGroupId ?? `GRP-${crypto.randomUUID()}` }
+          : eurValues;
       const saved = await onSubmit(finalValues);
       if (saved && finalValues.sendSmsConfirmation) sendPaymentConfirmation(finalValues);
       return saved;
@@ -395,6 +494,7 @@ export function PaymentFormDrawer({
         allocations: 'repartizarea',
         notes: 'observațiile',
         sendSmsConfirmation: 'confirmarea SMS',
+        siblings: 'frații',
       })
     : undefined;
   // 40c: × / Esc / fundalul Drawer-ului trec prin `requestClose`, nu direct prin `onClose` —
@@ -691,6 +791,66 @@ export function PaymentFormDrawer({
               </>
             )}
           </div>
+
+          {/* 44b: „+ Adaugă fratele” — doar la o plată nouă, cu copil ales care are frați
+              (același telefon de părinte, quick-pay-search.ts). */}
+          {!editing && selectedChild && (siblingRows.length > 0 || availableSiblings.length > 0) && (
+            <fieldset className={styles.section}>
+              <legend>Frați</legend>
+              {siblingRows.length > 0 && (
+                <div className={styles.allocationRows}>
+                  {siblingRows.map(row => (
+                    <div key={row.childId} className={styles.siblingRow}>
+                      <Checkbox
+                        checked={row.checked}
+                        onChange={checked => toggleSibling(row.childId, checked)}
+                        ariaLabel={`Include pe ${row.name} în plată`}
+                      />
+                      <span className={styles.siblingName}>{row.name}</span>
+                      <span className={styles.notice}>{formatMonthLabel(row.month)}</span>
+                      <NumberInput
+                        ariaLabel={`Suma pentru ${row.name}`}
+                        min={0}
+                        step="0.01"
+                        value={row.amount}
+                        onChange={value => setSiblingAmount(row.childId, value)}
+                      />
+                      <IconButton
+                        icon="close"
+                        className={styles.removeRow}
+                        ariaLabel={`Elimină ${row.name} din plată`}
+                        onClick={() => removeSibling(row.childId)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {availableSiblings.map(sibling => (
+                <Button
+                  key={sibling.id}
+                  variant="link"
+                  className={styles.linkButton}
+                  onClick={() => addSibling(sibling)}
+                >
+                  + Adaugă fratele ({sibling.name})
+                </Button>
+              ))}
+              {checkedSiblingsTotal > 0 && (
+                <div className={styles.groupTotalRow}>
+                  <span>Total grup</span>
+                  <AmountInput
+                    ariaLabel="Total grup"
+                    min={0}
+                    step="0.01"
+                    value={groupTotalDraft ?? String(groupTotal)}
+                    onChange={setGroupTotal}
+                    onBlur={() => setGroupTotalDraft(null)}
+                    currency="lei"
+                  />
+                </div>
+              )}
+            </fieldset>
+          )}
 
           <Field label="Plătitor" htmlFor="payment-source-name">
             <TextInput

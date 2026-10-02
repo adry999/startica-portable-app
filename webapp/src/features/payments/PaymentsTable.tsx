@@ -173,14 +173,12 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
   }
 
   function resetFilters() {
-    data.setMethod('');
-    data.setService('');
-    data.setGroupFilter('all');
-    data.setArchiveFilter('active');
+    // Căutarea + pastilele trec printr-un singur apel (vezi resetUrlFilters) — toate ating URL-ul
+    // și s-ar suprascrie reciproc dacă ar fi cinci apeluri separate în același tur de evenimente.
+    data.resetUrlFilters();
     data.setPeriodPreset('tot');
     data.setPeriodFrom('');
     data.setPeriodTo('');
-    data.setSearch('');
   }
 
   const activeFilterLabels = activeFilterChips.map(chip => chip.label);
@@ -289,6 +287,8 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
           selectable
           selectedRowKeys={selectedRowKeys}
           onSelectedRowKeysChange={setSelectedRowKeys}
+          sort={data.sort}
+          onSortChange={data.setSort}
           onRowClick={row => !row.unassigned && onOpenChild(row.childId)}
           emptyState={
             <EmptyState

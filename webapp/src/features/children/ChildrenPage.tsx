@@ -14,6 +14,7 @@ import { useAppSession } from '@shared/api/session';
 import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
 import { missingChildFields } from '#shared/domain/missing-child-fields.mjs';
+import { urlParamNumber, useUrlParams } from '@shared/state/useUrlParams';
 import { useChildren, type ChildRow } from './useChildren';
 import { ChildFormDrawer } from './ChildFormDrawer';
 import { buildChildRecord, type ChildFormValues } from './child-form';
@@ -59,9 +60,24 @@ function ChildrenListView({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [query, setQuery] = useState('');
+  // §13.2 PROMPT-8: căutarea, grupa și pagina rămân la întoarcerea din fișă — stare în URL, nu
+  // useState (altfel se pierd la remontarea ChildrenListView, cât timp fișa e deschisă). Un singur
+  // `setSearchParams` per interacție (vezi useUrlParams) — altfel „schimbă grupa ȘI resetează
+  // pagina” ar fi două navigări separate care se suprascriu reciproc.
+  const [urlFilters, setUrlFilters] = useUrlParams({ q: '', grupa: 'all', pagina: '1' });
+  const query = urlFilters.q;
+  const groupFilter = urlFilters.grupa;
+  const page = urlParamNumber(urlFilters.pagina, 1);
+  function setQuery(value: string) {
+    setUrlFilters({ q: value, pagina: '1' });
+  }
+  function setGroupFilter(value: string) {
+    setUrlFilters({ grupa: value, pagina: '1' });
+  }
+  function setPage(value: number) {
+    setUrlFilters({ pagina: String(value) });
+  }
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
-  const [groupFilter, setGroupFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [completenessFilter, setCompletenessFilter] = useState('all');
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
@@ -321,9 +337,10 @@ function ChildrenListView({
   const allSelectedArchived = selectedRows.length > 0 && selectedRows.every(row => row.archived);
 
   function clearFilters() {
-    setQuery('');
+    // Un singur apel pentru q/grupa/pagina (vezi useUrlParams) — setQuery + setGroupFilter separate
+    // s-ar suprascrie reciproc, fiindcă ambele ating URL-ul în același tur de evenimente.
+    setUrlFilters({ q: '', grupa: 'all', pagina: '1' });
     setArchiveFilter('active');
-    setGroupFilter('all');
     setPaymentFilter('all');
     setCompletenessFilter('all');
   }
@@ -346,6 +363,7 @@ function ChildrenListView({
           onArchiveFilterChange={value => {
             setArchiveFilter(value);
             setSelectedRowKeys(new Set());
+            setPage(1);
           }}
           activeTotal={childrenData.activeTotal}
           archivedTotal={childrenData.archivedTotal}
@@ -353,9 +371,15 @@ function ChildrenListView({
           onGroupFilterChange={setGroupFilter}
           groups={childrenData.groups}
           paymentFilter={paymentFilter}
-          onPaymentFilterChange={setPaymentFilter}
+          onPaymentFilterChange={value => {
+            setPaymentFilter(value);
+            setPage(1);
+          }}
           completenessFilter={completenessFilter}
-          onCompletenessFilterChange={setCompletenessFilter}
+          onCompletenessFilterChange={value => {
+            setCompletenessFilter(value);
+            setPage(1);
+          }}
         />
 
         {selectedRowKeys.size > 0 && (
@@ -383,6 +407,8 @@ function ChildrenListView({
           selectedRowKeys={selectedRowKeys}
           onSelectedRowKeysChange={setSelectedRowKeys}
           onRowClick={row => onOpenChild(row.id)}
+          page={page}
+          onPageChange={setPage}
           emptyState={
             <EmptyState
               title="Niciun copil nu corespunde filtrelor curente"

@@ -36,6 +36,19 @@ describe('AmountInput', () => {
     expect(screen.getByLabelText('Sumă')).toBeDisabled();
   });
 
+  // 44b: un câmp derivat („Total grup”) poate ține o valoare brută cât timp se editează — onBlur
+  // semnalează părintelui că poate reveni la valoarea recalculată.
+  it('apelează onBlur la ieșirea din câmp', async () => {
+    const onBlur = vi.fn();
+    render(<AmountInput value="" onChange={() => {}} onBlur={onBlur} ariaLabel="Sumă" />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByLabelText('Sumă'));
+    await user.tab();
+
+    expect(onBlur).toHaveBeenCalledOnce();
+  });
+
   // F4 (FEEDBACK-01-10.md): fără autocompletare de browser.
   it('are autoComplete="off"', () => {
     render(<AmountInput value="" onChange={() => {}} ariaLabel="Sumă" />);

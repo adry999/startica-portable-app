@@ -95,6 +95,9 @@ export interface Payment {
   sourceName?: string;
   sourceChildId?: string;
   group?: string;
+  /** 44b: comun tuturor achitărilor dintr-o singură plată „+ Adaugă fratele" — un rând per copil,
+   * un singur bon (§11.2, COMPONENTE.md). Absent pentru o achitare obișnuită, fără frați. */
+  receiptGroupId?: string;
   month: MonthKey | '';
   method: string;
   /** Id dintr-un `Service` (B3, ALINIERE-DESIGN.md) — implicit 'gradinita', vezi normalizeRecord(). */

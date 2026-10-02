@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { EmptyState } from './EmptyState';
 import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 import { Pagination } from './Pagination';
@@ -51,9 +51,25 @@ export interface DataTableProps<Row> {
   bare?: boolean;
   /** Rânduri-titlu între grupuri (ex. departamentele din 23a). Dezactivează paginarea. */
   groupBy?: DataTableGroupBy<Row>;
+  /** Sortarea implicită la montare (13.1 PROMPT-8 §13) — doar cât timp `sort` nu e controlat extern.
+   * Fără efect dacă `sort`/`onSortChange` sunt date (sortarea controlată vine deja cu valoarea ei). */
+  defaultSort?: DataTableSort;
+  /** Sortare controlată (ex. `usePersistedState`, ca alegerea utilizatorului să supraviețuiască
+   * schimbării de pagină/remontării) — fără ea, DataTable își ține singur starea (necontrolat),
+   * ca până acum. `sort`/`onSortChange` vin mereu împreună. */
+  sort?: DataTableSort | null;
+  onSortChange?: (sort: DataTableSort | null) => void;
+  /** Pagina curentă controlată (13.2 PROMPT-8 §13 — „pagina” păstrată în URL). Fără ea, DataTable
+   * își ține singur pagina (necontrolat), ca până acum. */
+  page?: number;
+  onPageChange?: (page: number) => void;
 }
 
-type SortDirection = 'asc' | 'desc';
+export type SortDirection = 'asc' | 'desc';
+export interface DataTableSort {
+  key: string;
+  direction: SortDirection;
+}
 
 /**
  * Tabel generic: sortare pe coloană + paginare + selecție, scrise o singură dată.
@@ -80,15 +96,33 @@ export function DataTable<Row>({
   onSelectedRowKeysChange,
   bare = false,
   groupBy,
+  defaultSort,
+  sort: controlledSort,
+  onSortChange,
+  page: controlledPage,
+  onPageChange,
 }: DataTableProps<Row>) {
-  const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
-  const [page, setPage] = useState(1);
+  const [internalSort, setInternalSort] = useState<DataTableSort | null>(() => defaultSort ?? null);
+  const [internalPage, setInternalPage] = useState(1);
+  // Controlat doar dacă apelantul dă `sort`/`page` — altfel starea rămâne internă, exact ca până acum.
+  const sort = controlledSort !== undefined ? controlledSort : internalSort;
+  const page = controlledPage !== undefined ? controlledPage : internalPage;
+  const setSort = onSortChange ?? setInternalSort;
+  const setPage = onPageChange ?? setInternalPage;
 
   // F1 (FEEDBACK-01-10.md): schimbarea setului de rânduri (filtru/căutare) duce mereu înapoi la pagina 1.
   // Semnătura (nu `rows` direct) ca să nu sară la pagina 1 doar pentru că apelantul
   // recalculează un array nou cu aceleași rânduri la fiecare randare.
   const rowsSignature = useMemo(() => rows.map(rowKey).join('\u0000'), [rows, rowKey]);
+  // Prima rulare (montarea) nu trebuie să forțeze pagina 1 — altfel o pagină controlată, restaurată
+  // din URL (§13.2 PROMPT-8, „pagina" păstrată la întoarcerea din fișă), ar fi suprascrisă imediat.
+  const isFirstRowsSignature = useRef(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- doar schimbarea semnăturii trebuie să resteze pagina.
   useEffect(() => {
+    if (isFirstRowsSignature.current) {
+      isFirstRowsSignature.current = false;
+      return;
+    }
     setPage(1);
   }, [rowsSignature]);
 
@@ -134,10 +168,11 @@ export function DataTable<Row>({
   function toggleSort(column: DataTableColumn<Row>) {
     if (!column.sortValue) return;
     setPage(1);
-    setSort(current => {
-      if (current?.key !== column.key) return { key: column.key, direction: 'asc' };
-      return { key: column.key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
-    });
+    const next: DataTableSort =
+      sort?.key !== column.key
+        ? { key: column.key, direction: 'asc' }
+        : { key: column.key, direction: sort.direction === 'asc' ? 'desc' : 'asc' };
+    setSort(next);
   }
 
   function toggleRow(key: string) {

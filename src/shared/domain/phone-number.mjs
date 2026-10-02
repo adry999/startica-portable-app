@@ -36,3 +36,56 @@ export function resolveStoredPhone(raw) {
   if (trimmed.startsWith('+')) return { value: trimmed, invalid: false };
   return { value: trimmed, invalid: true };
 }
+
+// Sub acest prag, orice șir numeric ar deveni „fragment de telefon" — prea zgomotos pentru o căutare.
+const MIN_PHONE_FRAGMENT_DIGITS = 3;
+
+// Cifrele unui telefon, fără +/spații/liniuțe/paranteze/punct — „00" inițial tratat ca „+", ca
+// potrivirea pe sufix să funcționeze indiferent de cum a fost scris prefixul de țară.
+/**
+ * @param {unknown} raw
+ * @returns {string}
+ */
+export function phoneDigitsOf(raw) {
+  if (!raw) return '';
+  let digits = String(raw).replace(/[\s.\-()]/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('+')) digits = digits.slice(1);
+  return digits;
+}
+
+/**
+ * Un query „de telefon" e fie un mobil moldovenesc complet (orice formă de scriere —
+ * `normalizeMoldovanPhone` îl aduce la E.164), fie un fragment numeric de minim
+ * {@link MIN_PHONE_FRAGMENT_DIGITS} cifre — ex. „1234" găsește un telefon terminat în …1234,
+ * indiferent de prefixul de țară. Altfel, `null` (nu e o căutare de telefon).
+ * @param {string} query
+ * @returns {string | null}
+ */
+export function phoneQueryDigits(query) {
+  const normalized = normalizeMoldovanPhone(query);
+  if (normalized) return normalized.slice(1); // fără „+"
+  const digits = phoneDigitsOf(query);
+  return digits.length >= MIN_PHONE_FRAGMENT_DIGITS && /^\d+$/.test(digits) ? digits : null;
+}
+
+/**
+ * @param {unknown} phone
+ * @param {string} queryDigits
+ * @returns {boolean}
+ */
+export function matchesPhoneSuffix(phone, queryDigits) {
+  const digits = phoneDigitsOf(phone);
+  return digits.length > 0 && digits.endsWith(queryDigits);
+}
+
+/** Telefonul 1/2 al unei fișe (copil sau angajat) plus persoanele autorizate, dacă există.
+ * @param {{ phone?: unknown, phone2?: unknown, pickupPersons?: { phone?: unknown }[] }} record
+ * @param {string} queryDigits
+ * @returns {boolean}
+ */
+export function matchesPhoneSuffixAny(record, queryDigits) {
+  if (matchesPhoneSuffix(record.phone, queryDigits)) return true;
+  if (matchesPhoneSuffix(record.phone2, queryDigits)) return true;
+  return (record.pickupPersons ?? []).some(person => matchesPhoneSuffix(person.phone, queryDigits));
+}

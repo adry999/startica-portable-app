@@ -2,14 +2,12 @@ import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { contractNumberOf } from '#shared/domain/record-labels.mjs';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
-import { normalizeMoldovanPhone } from '#shared/domain/phone-number.mjs';
+import { matchesPhoneSuffixAny, phoneQueryDigits } from '#shared/domain/phone-number.mjs';
 import type { Child, Expense, Payment, RecordsSnapshot } from '@contracts/record-types.mjs';
 
 const MAX_RESULTS_PER_GROUP = 5;
 /** 41c: „500” sau „500.00” — fără virgulă, ca în `AmountInput` (number nativ, mereu punct). */
 const AMOUNT_QUERY_RE = /^\d+(\.\d{1,2})?$/;
-/** Sub acest prag, orice șir numeric ar deveni „fragment de telefon” — prea zgomotos. */
-const MIN_PHONE_FRAGMENT_DIGITS = 3;
 
 export interface ChildSearchResult {
   type: 'children';
@@ -53,38 +51,8 @@ function expenseLabel(expense: Expense): { label: string; detail: string } {
   };
 }
 
-// 41c: cifrele unui telefon, fără +/spații/liniuțe/paranteze/punct — „00” inițial tratat ca „+”,
-// ca potrivirea pe sufix să funcționeze indiferent de cum a fost scris prefixul de țară.
-function phoneDigitsOf(raw: string | null | undefined): string {
-  if (!raw) return '';
-  let digits = raw.replace(/[\s.\-()]/g, '');
-  if (digits.startsWith('00')) digits = digits.slice(2);
-  if (digits.startsWith('+')) digits = digits.slice(1);
-  return digits;
-}
-
-/**
- * Un query „de telefon” e fie un mobil moldovenesc complet (orice formă de scriere —
- * `normalizeMoldovanPhone` îl aduce la E.164), fie un fragment numeric de minim
- * {@link MIN_PHONE_FRAGMENT_DIGITS} cifre — ex. „1234” găsește un telefon terminat în …1234,
- * indiferent de prefixul de țară. Altfel, `null` (nu e o căutare de telefon).
- */
-function phoneQueryDigits(query: string): string | null {
-  const normalized = normalizeMoldovanPhone(query);
-  if (normalized) return normalized.slice(1); // fără „+”
-  const digits = phoneDigitsOf(query);
-  return digits.length >= MIN_PHONE_FRAGMENT_DIGITS && /^\d+$/.test(digits) ? digits : null;
-}
-
-function matchesPhoneSuffix(phone: string | null | undefined, queryDigits: string): boolean {
-  const digits = phoneDigitsOf(phone);
-  return digits.length > 0 && digits.endsWith(queryDigits);
-}
-
 function childMatchesPhone(child: Child, queryDigits: string): boolean {
-  if (matchesPhoneSuffix(child.phone, queryDigits)) return true;
-  if (matchesPhoneSuffix(child.phone2, queryDigits)) return true;
-  return (child.pickupPersons ?? []).some(person => matchesPhoneSuffix(person.phone, queryDigits));
+  return matchesPhoneSuffixAny(child, queryDigits);
 }
 
 const byDateDesc = (a: { date: string }, b: { date: string }) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);

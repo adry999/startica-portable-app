@@ -7,3 +7,17 @@
   align-items: center;
   gap: var(--space-10);
 }
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+/* 44c: „Tipărește raportul zilei” — ascunde ecranul (căutare + card + listă), lasă vizibil doar
+   raportul A4 ascuns al `CashSummaryCard` (ca `features/report/ReportPage.module.css`). */
+@media print {
+  .screen {
+    display: none;
+  }
+}

@@ -1,0 +1,101 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.day {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--subtle);
+}
+
+.methods {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-12);
+}
+
+.dayKpi {
+  width: 100%;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--border);
+}
+
+.totalLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--subtle);
+}
+
+.totalValue {
+  font-family: var(--font-heading);
+  font-size: 20px;
+}
+
+.printLink {
+  margin-left: auto;
+}
+
+/* Pagina A4 tipărită — ascunsă pe ecran, vizibilă doar la `window.print()` (ca
+   `features/report/ReportPrintSummary.module.css`). */
+.printPage {
+  display: none;
+}
+
+@media print {
+  .printPage {
+    display: block;
+    width: 100%;
+    padding: 24px;
+    font-family: var(--font-body);
+    color: var(--slate);
+  }
+}
+
+.printTitle {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  margin: 0;
+}
+
+.printPeriod {
+  margin: 4px 0 20px;
+  color: var(--muted);
+}
+
+.printTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.printTable td {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.printTotalCell {
+  text-align: right;
+  font-weight: 800;
+}

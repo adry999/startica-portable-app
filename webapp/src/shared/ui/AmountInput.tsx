@@ -5,6 +5,10 @@ export interface AmountInputProps {
   id?: string;
   value: string;
   onChange: (value: string) => void;
+  /** 44b: un câmp derivat (ex. „Total grup”) poate ține o valoare brută în timpul editării și
+   * o resetează la ieșirea din câmp — fără asta, o valoare recalculată la fiecare literă ar
+   * „sări” peste ce tocmai a tastat utilizatorul. */
+  onBlur?: () => void;
   /** Moneda afișată după sumă, ex. „lei”. */
   currency?: ReactNode;
   min?: number;
@@ -29,6 +33,7 @@ export function AmountInput({
   id,
   value,
   onChange,
+  onBlur,
   currency,
   min,
   step = '0.01',
@@ -57,6 +62,7 @@ export function AmountInput({
           inputMode="numeric"
           value={value}
           onChange={event => onChange(event.target.value)}
+          onBlur={onBlur}
           min={min}
           step={step}
           required={required}

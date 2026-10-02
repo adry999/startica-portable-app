@@ -585,4 +585,16 @@ describe('ExpensesPage', () => {
     expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
     expect(screen.getByText('Curent')).toBeInTheDocument();
   });
+
+  it('§13.2: căutarea rămâne la întoarcerea din fișă — stare în URL (?q=)', async () => {
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    // Simulează URL-ul la întoarcerea dintr-o fișă: căutarea a fost setată înainte de a naviga.
+    renderPage('/cheltuieli?q=curent');
+
+    expect(screen.getByLabelText('Caută cheltuială')).toHaveValue('curent');
+    expect(screen.getByText('Curent')).toBeInTheDocument();
+    expect(screen.queryByText('Salariu septembrie')).not.toBeInTheDocument();
+  });
 });

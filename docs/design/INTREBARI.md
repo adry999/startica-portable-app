@@ -390,3 +390,21 @@ Am făcut partea care ține strict de bon (42c), fără să ating §9.1 (calculu
 2. **`BackupPage.tsx`/`useRestore.ts`** nu știu încă să anunțe utilizatorul că, pentru o arhivă completă, restaurarea cere reîncărcarea completă a paginii (nu doar un refetch) — răspunsul `/api/restore` pentru o arhivă e `{ok:true}`, fără `state` inline (motivul: pot apărea/dispărea filiale întregi, nu doar rânduri). Până la actualizarea UI, un restore de arhivă din ecranul deja existent lasă clientul cu starea veche în memorie, până la un refresh manual (F5).
 
 **De decis / următorul pas:** cine construiește coada de prim-pornire (ecran nou + detectarea „fără date”) și actualizarea `BackupPage.tsx` pentru reload — următorul punct din plan, nu inclus aici ca să nu se suprapună cu alt agent care ar putea lucra pe `BackupPage.tsx`.
+
+## ⏳ 44d — regulile de Drawer/Dialog rămân amânate într-o trecere separată (ca 41d)
+
+`PROMPT-CLAUDE-CODE-8.md` §13/44d cere, „aplicate o dată în componentele de bază, nu pe fiecare formular”: focus inițial, Ctrl+Enter = submit, Esc → 40c (deja există, vezi `UnsavedChangesDialog`), subsol fix, focus pe primul câmp cu eroare + număr de erori în subsol, `loading` pe butonul principal, fără drawer în drawer (test de arhitectură), lățimi 620/480/440 ca tokeni.
+
+E cross-cutting peste `Drawer`/`Dialog` din `@shared/ui` și, prin ele, peste aproape toate formularele aplicației (Achitări, Cheltuieli, Copii, Personal, Grupe, Vizite, Avansuri, Setări…) — exact tiparul de la 41d (`toUserError`, amânat deliberat, „pasă separată ulterioară”, `FEEDBACK-01-10.md` rândul „Mesaje de eroare”). N-am atins `Drawer`/`Dialog` de bază și n-am aplicat regulile pe formulare existente în §13 — risc prea mare de regresie într-o singură trecere făcută în grabă, pe lângă 44a–44c.
+
+**Ce am făcut în loc:** `PaymentFormDrawer` (singurul formular pe care l-am extins substanțial în §13, cu frații din 44b) n-a devenit un drawer nou — e cel existent, extins — deci nu intră nici la „componentă nouă care trebuie să respecte regulile de la început”.
+
+**De decis:** cine preia 44d ca pas separat (lățimi ca tokeni, apoi regulile de focus/Ctrl+Enter/eroare pe `Drawer`/`Dialog`, apoi o trecere prin formularele existente) — probabil după ce toate ecranele din coada ALINIERE-DESIGN.md sunt gata, ca să nu se reatingă fiecare formular de două ori.
+
+## ⏳ 44b — anularea unui grup de frați, odată ce Achitări capătă `UndoToast`
+
+Nota „✅ Anulează după salvare (40b)” de mai sus spune explicit că achitările n-au încă `UndoToast` legat client-side (server gata, buton nelegat — „din lipsă de timp”, nu blocaj tehnic). §13/44b cere: „Anularea (40b) anulează tot grupul” pentru o plată cu frați (`receiptGroupId`, vezi commitul 44b) — azi nu există nimic de „anulat” pe calea asta (nici pentru o achitare simplă, nici pentru un grup), deci cerința e imposibil de implementat înaintea notei de mai sus.
+
+**Ce rămâne de făcut, când se leagă `UndoToast` pentru Achitări:** `createPayment` din `usePayments.ts` apelează `session.mutate('/api/record', …)` o dată pentru plata principală și o dată per frate bifat (`buildSiblingPaymentRecords`) — fiecare apel întoarce propriul `auditId` (la fel ca la cheltuială/arhivare). Legarea pentru un grup de frați trebuie să rețină **toate** `auditId`-urile create (nu doar al plății principale) și, la „Anulează”, să cheme `POST /api/undo` o dată per `auditId` din grup — `/api/undo` ia un singur `auditId`, nu există azi o cale de anulare în lot pe server. Dacă fereastra de 15s expiră diferit pentru rânduri create la milisecunde distanță una de alta, primul `/api/undo` eșuat (timeout) nu trebuie să blocheze anularea celorlalte — tratează fiecare apel independent, raportează ce n-a mers.
+
+**Nimic de decis din partea ta** — doar consemnat ca să nu pară o gaură, la fel ca nota de mai sus.

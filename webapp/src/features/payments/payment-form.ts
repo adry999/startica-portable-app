@@ -13,6 +13,14 @@ export interface AllocationRowValues {
   amount: string;
 }
 
+/** 44b: un frate inclus în plată — o achitare separată, cu propriul `childId`/`month`/`amount`,
+ * legată de restul grupului prin `receiptGroupId` (vezi `buildSiblingPaymentRecords`). */
+export interface SiblingPaymentRowValues {
+  childId: string;
+  month: string;
+  amount: string;
+}
+
 export interface PaymentFormValues {
   childId: string;
   date: string;
@@ -31,6 +39,10 @@ export interface PaymentFormValues {
   amountEur?: number;
   /** 15b: bifă „Trimite confirmare prin SMS” — semnal de trimitere după salvare, nu se stochează pe Payment. */
   sendSmsConfirmation: boolean;
+  /** 44b: frații bifați pentru plata asta — gol dacă nu există/nu s-a ales niciunul. */
+  siblings: SiblingPaymentRowValues[];
+  /** 44b: generat o singură dată, la trimitere, doar când `siblings` nu e gol — vezi `PaymentFormDrawer.handleSubmit`. */
+  receiptGroupId?: string;
 }
 
 /** 15b: implicit bifată doar dacă părintele copilului are un telefon valid (sms.md). */
@@ -83,6 +95,8 @@ export function defaultPaymentFormValues(
     allocations,
     notes: payment?.notes || '',
     sendSmsConfirmation: defaultSendSmsConfirmation(smsChild),
+    // 44b: frații nu se reconstruiesc la editare — „+ Adaugă fratele” există doar la o plată nouă.
+    siblings: [],
   };
 }
 
@@ -114,7 +128,39 @@ export function buildPaymentRecord(previous: Payment | null, id: string, values:
     fxRate: values.fxRate,
     fxRateSource: values.fxRateSource,
     amountEur: values.amountEur,
+    receiptGroupId: values.receiptGroupId,
   }) as Payment;
+}
+
+/** Metoda folosită pentru rândurile fraților (44b) — prima cu sumă &gt; 0, ca plata principală;
+ * „Cash” dacă niciuna (nu ar trebui să se întâmple, suma principală fiind deja validată). */
+function primaryTenderMethod(tenders: Record<string, string>): string {
+  return Object.entries(tenders).find(([, amount]) => Number(amount) > 0)?.[0] ?? 'Cash';
+}
+
+/**
+ * 44b: un `Payment` separat per frate bifat, cu `receiptGroupId` comun — un singur bon pentru tot
+ * grupul (§11.2), dar câte o înregistrare pe copil, ca restul aplicației (restanțe, istoric) să
+ * rămână corecte per copil. Gol dacă nu există frați bifați sau `receiptGroupId` n-a fost încă generat.
+ */
+export function buildSiblingPaymentRecords(values: PaymentFormValues): Payment[] {
+  if (!values.siblings.length || !values.receiptGroupId) return [];
+  const method = primaryTenderMethod(values.tenders);
+  return values.siblings
+    .filter(sibling => Number(sibling.amount) > 0)
+    .map(
+      sibling =>
+        normalizeRecord('payments', {
+          id: `PAY-${crypto.randomUUID()}`,
+          childId: sibling.childId,
+          date: values.date,
+          service: values.service,
+          tenders: [{ method, amount: Number(sibling.amount) }],
+          allocations: [{ month: sibling.month, amount: Number(sibling.amount) }],
+          receiptGroupId: values.receiptGroupId,
+          reviewed: false,
+        }) as Payment,
+    );
 }
 
 /** Semnătura tenders-urilor unei plăți, normalizată și fără ordine — independentă de cum a fost

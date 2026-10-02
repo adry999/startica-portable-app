@@ -19,6 +19,8 @@ import {
 } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
+import { usePersistedSort } from '@shared/state/usePersistedSort';
+import { useUrlParams } from '@shared/state/useUrlParams';
 import { downloadCsv } from '@shared/csv-export';
 import { shiftMonth } from '@shared/format/month-shift';
 import { formatNameList } from '@shared/format/name-list';
@@ -54,10 +56,18 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.expenses', 'table');
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [method, setMethod] = useState('');
-  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
+  // §13.2 PROMPT-8 („același lucru în Cheltuieli"): căutarea și pastilele rămân la întoarcerea din
+  // fișă — stare în URL (useUrlParams), nu useState. Perioada rămâne useState (nu e listată
+  // explicit în §13.2, iar cele 3 câmpuri legate ar complica inutil URL-ul).
+  const [urlFilters, setUrlFilters] = useUrlParams({ q: '', categorie: '', metoda: '', arhivare: 'active' });
+  const search = urlFilters.q;
+  const category = urlFilters.categorie;
+  const method = urlFilters.metoda;
+  const archiveFilter = urlFilters.arhivare as ArchiveFilter;
+  const setSearch = (value: string) => setUrlFilters({ q: value });
+  const setCategory = (value: string) => setUrlFilters({ categorie: value });
+  const setMethod = (value: string) => setUrlFilters({ metoda: value });
+  const setArchiveFilter = (value: ArchiveFilter) => setUrlFilters({ arhivare: value });
   // §5.1: perioadă independentă de MonthStepper-ul din antet (E-1 — acela controlează doar
   // cardurile KPI); implicit 'luna', cu limitele lunii din MonthStepper la montare (nu ale lunii
   // calendaristice reale — altfel tabelul ar porni gol dacă `month` diferă de „azi”), ca tabelul
@@ -68,6 +78,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [formTarget, setFormTarget] = useState<Expense | 'new' | null>(null);
   const [categoryDrawerOpen, setCategoryDrawerOpen] = useState(false);
+  // §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină.
+  const [sort, setSort] = usePersistedSort('sort.expenses', { key: 'date', direction: 'desc' });
 
   // „+ Adaugă cheltuială" de pe Dashboard trece direct la formular (08-dashboard.md #3), fără
   // să rămână în URL — altfel s-ar redeschide la orice re-render sau navigare înapoi.
@@ -344,6 +356,8 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
               selectable
               selectedRowKeys={selectedRowKeys}
               onSelectedRowKeysChange={setSelectedRowKeys}
+              sort={sort}
+              onSortChange={setSort}
               emptyState={<p>Nu există înregistrări pentru filtrele alese.</p>}
             />
             <p className={styles.summaryText}>

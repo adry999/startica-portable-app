@@ -29,6 +29,7 @@ import { capitalize, formatAge, formatDate, formatDayLabel, formatMonthName } fr
 import { groupNameOf } from '#shared/domain/record-labels.mjs';
 import { downloadCsv } from '@shared/csv-export';
 import { formatNameList } from '@shared/format/name-list';
+import { usePersistedSort } from '@shared/state/usePersistedSort';
 import { useVisits } from './useVisits';
 import { VisitFormDrawer } from './VisitFormDrawer';
 import { EnrollDrawer } from './EnrollDrawer';
@@ -81,6 +82,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   const [deleteTarget, setDeleteTarget] = useState<Visit | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReadonlySet<string>>(new Set<string>());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  // §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină.
+  const [sort, setSort] = usePersistedSort('sort.visits', { key: 'date', direction: 'desc' });
 
   useTopbarActions(<Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>);
 
@@ -625,6 +628,8 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
           onSelectedRowKeysChange={setSelectedRowKeys}
           onRowClick={row => visitsData.setSelectedDate(row.date)}
           rowClassName={row => (row.date === visitsData.selectedDate ? styles.selectedDayRow : undefined)}
+          sort={sort}
+          onSortChange={setSort}
           empty="vizite.first"
           hasActiveFilters={activeFilterChips.length > 0}
           activeFilterLabels={activeFilterChips.map(chip => chip.label)}

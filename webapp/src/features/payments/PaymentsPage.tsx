@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, LoadingState, SegmentedControl, useToast, useTopbarActions } from '@shared/ui';
 import { usePersistedState } from '@shared/state/usePersistedState';
@@ -6,6 +7,9 @@ import { exportPaymentsCsv } from './payments-export';
 import { PaymentsTable } from './PaymentsTable';
 import { PaymentsByMonth } from './PaymentsByMonth';
 import { PaymentFormDrawer } from './PaymentFormDrawer';
+import { QuickPaySearch } from './QuickPaySearch';
+import { CashSummaryCard } from './CashSummaryCard';
+import type { DayMethodTotals } from './useDayClosingReceipt';
 import type { PaymentFormValues } from './payment-form';
 import type { Payment } from '@contracts/record-types.mjs';
 import { today } from '@domain/calendar-month.mjs';
@@ -43,6 +47,9 @@ export function PaymentsPage({
   const toast = useToast();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = usePersistedState<ViewMode>('view.payments', 'table');
+  // 44a: copilul ales din QuickPaySearch — propriul PaymentFormDrawer, independent de cel legat
+  // de rută (/achitari/nou), ca în StatusRoute (App.tsx) pentru „Plată +” din Situația plăților.
+  const [quickPayChildId, setQuickPayChildId] = useState<string | null>(null);
 
   function exportFiltered() {
     exportPaymentsCsv(`achitari-${today()}.csv`, paymentsData.status === 'ready' ? paymentsData.rows : []);
@@ -108,13 +115,48 @@ export function PaymentsPage({
     }
   }
 
+  // 44a: Enter pe un rezultat deschide plata precompletată, cu restanța deja bifată (ca „Plată +”
+  // din Situația plăților, 40a) — utilizatorul a căutat tocmai pentru că știe că e de încasat.
+  async function submitQuickPayment(values: PaymentFormValues): Promise<boolean> {
+    try {
+      const saved = await paymentsData.createPayment(values, () =>
+        window.confirm(
+          'Există o plată cu același copil, aceeași dată, sumă și metodă. Confirmi că este o plată distinctă?',
+        ),
+      );
+      if (saved) {
+        setQuickPayChildId(null);
+        toast.show({ message: 'Achitare adăugată.' });
+      }
+      return saved;
+    } catch (error) {
+      toast.show({ message: (error as Error).message });
+      return false;
+    }
+  }
+
+  // 44c: clic pe un mini-card de metodă din „Casa de azi” filtrează lista de dedesubt — metoda +
+  // ziua de azi (interval cu from = to = azi, singura cale să restrângem la o singură zi).
+  function filterByMethodToday(method: keyof DayMethodTotals) {
+    paymentsData.setMethod(method);
+    paymentsData.setPeriodPreset('interval');
+    paymentsData.setPeriodFrom(today());
+    paymentsData.setPeriodTo(today());
+  }
+
   return (
     <>
-      {viewMode === 'table' ? (
-        <PaymentsTable data={paymentsData} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
-      ) : (
-        <PaymentsByMonth data={paymentsData} onEdit={onOpenEdit} />
-      )}
+      <div className={styles.screen}>
+        <QuickPaySearch records={paymentsData.records} onSelect={setQuickPayChildId} />
+
+        <CashSummaryCard date={today()} onFilterMethod={filterByMethodToday} />
+
+        {viewMode === 'table' ? (
+          <PaymentsTable data={paymentsData} onEdit={onOpenEdit} onOpenChild={onOpenChild} />
+        ) : (
+          <PaymentsByMonth data={paymentsData} onEdit={onOpenEdit} />
+        )}
+      </div>
 
       {/* C2: 'closed' e distinct de 'new' — la fiecare redeschidere „+ Achitare nouă” trece
           prin 'closed' (target null), deci instanța se remontează și useState pleacă de la
@@ -126,6 +168,16 @@ export function PaymentsPage({
         defaultChildId={initialChildId}
         onSubmit={submitPaymentForm}
         onClose={onCloseForm}
+      />
+
+      <PaymentFormDrawer
+        key={quickPayChildId ? `quick-${quickPayChildId}` : 'quick-closed'}
+        target={quickPayChildId ? 'new' : null}
+        records={paymentsData.records}
+        defaultChildId={quickPayChildId ?? undefined}
+        defaultCheckArrears
+        onSubmit={submitQuickPayment}
+        onClose={() => setQuickPayChildId(null)}
       />
     </>
   );

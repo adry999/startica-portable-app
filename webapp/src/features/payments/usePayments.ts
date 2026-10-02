@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAppSession } from '@shared/api/session';
 import { useSessionStatus } from '@shared/api/useSessionStatus';
+import { usePersistedSort } from '@shared/state/usePersistedSort';
+import { useUrlParams } from '@shared/state/useUrlParams';
 import { sortByGroupOrder } from '@shared/format/group-order';
 import { total } from '#shared/domain/money.mjs';
 import { allocations, paymentTenders } from '#shared/domain/payment-allocations.mjs';
@@ -10,8 +12,13 @@ import { summarizePaymentsByMethod } from '#shared/ui/record-list-summary.mjs';
 import { normalizeSearchText } from '#shared/format/text-search.mjs';
 import { matchesRecordListSearch } from '#shared/ui/record-list-search.mjs';
 import { formatDate, formatMonthLabel } from '#shared/format/date-format.mjs';
-import type { PeriodPreset } from '@shared/ui';
-import { buildPaymentRecord, findDuplicatePayment, type PaymentFormValues } from './payment-form';
+import type { DataTableSort, PeriodPreset } from '@shared/ui';
+import {
+  buildPaymentRecord,
+  buildSiblingPaymentRecords,
+  findDuplicatePayment,
+  type PaymentFormValues,
+} from './payment-form';
 import type { Payment, PaymentAllocation, PaymentTender, RecordsSnapshot, Service } from '@contracts/record-types.mjs';
 
 export type PaymentsStatus = 'loading' | 'ready' | 'failed';
@@ -95,6 +102,13 @@ export interface PaymentsData {
   setPeriodTo: (value: string) => void;
   archiveFilter: ArchiveFilter;
   setArchiveFilter: (value: ArchiveFilter) => void;
+  /** Resetează căutarea + pastilele (metodă/serviciu/grupă/arhivare) într-un singur apel — vezi
+   * useUrlParams: resetFilters() din PaymentsTable nu poate apela cele 5 setteri individual,
+   * fiindcă toate ating URL-ul și s-ar suprascrie reciproc în același tur de evenimente. */
+  resetUrlFilters: () => void;
+  /** §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină. */
+  sort: DataTableSort;
+  setSort: (sort: DataTableSort | null) => void;
   archivePayment: (id: string) => Promise<void>;
   unarchivePayment: (id: string) => Promise<void>;
   archiveMany: (ids: string[]) => Promise<void>;
@@ -163,17 +177,35 @@ export function usePayments(initialChildId = ''): PaymentsData {
   const { status, failureMessage } = useSessionStatus(session.state);
   const records = state as RecordsSnapshot;
 
-  const [search, setSearch] = useState('');
+  // §13.2 PROMPT-8 („același lucru în Achitări"): căutarea și pastilele de filtru rămân la
+  // întoarcerea din fișa copilului — stare în URL (useUrlParams), nu useState. Perioada rămâne
+  // useState (nu e listată explicit în §13.2, iar cele 3 câmpuri legate ar complica inutil URL-ul).
+  const [urlFilters, setUrlFilters] = useUrlParams({
+    q: '',
+    metoda: '',
+    serviciu: '',
+    grupa: 'all',
+    arhivare: 'active',
+  });
+  const search = urlFilters.q;
+  const method = urlFilters.metoda;
+  const service = urlFilters.serviciu;
+  const groupFilter = urlFilters.grupa;
+  const archiveFilter = urlFilters.arhivare as ArchiveFilter;
+  const setSearch = (value: string) => setUrlFilters({ q: value });
+  const setMethod = (value: string) => setUrlFilters({ metoda: value });
+  const setService = (value: string) => setUrlFilters({ serviciu: value });
+  const setGroupFilter = (value: string) => setUrlFilters({ grupa: value });
+  const setArchiveFilter = (value: ArchiveFilter) => setUrlFilters({ arhivare: value });
+  const resetUrlFilters = () => setUrlFilters({ q: '', metoda: '', serviciu: '', grupa: 'all', arhivare: 'active' });
+
   const [childId, setChildId] = useState(initialChildId);
-  const [method, setMethod] = useState('');
-  const [service, setService] = useState('');
-  const [groupFilter, setGroupFilter] = useState('all');
   // Implicit 'tot' (fără limite) — comportamentul de azi, și eticheta din mockup (05-achitari.md
   // „Perioadă: oricând”).
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('tot');
   const [periodFrom, setPeriodFrom] = useState('');
   const [periodTo, setPeriodTo] = useState('');
-  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
+  const [sort, setSort] = usePersistedSort('sort.payments', { key: 'date', direction: 'desc' });
 
   // m8: citesc `session.state.state` la momentul apelului, nu `records` din closure-ul randării în
   // care a fost capturată funcția — o referință ținută de un toast „Anulează” (arhivare/dezarhivare)
@@ -216,6 +248,11 @@ export function usePayments(initialChildId = ''): PaymentsData {
     const duplicate = findDuplicatePayment(records, record);
     if (duplicate && !confirmDuplicate()) return false;
     await session.mutate('/api/record', { type: 'payments', mode: 'create', record });
+    // 44b: frați bifați în „+ Adaugă fratele” — câte o achitare pe copil, același receiptGroupId,
+    // un singur bon (§11.2). Nicio verificare de duplicat pe rândurile astea — fac parte dintr-o
+    // plată voit grupată, nu sunt o eroare de reintroducere.
+    for (const siblingRecord of buildSiblingPaymentRecords(values))
+      await session.mutate('/api/record', { type: 'payments', mode: 'create', record: siblingRecord });
     return true;
   }
 
@@ -251,6 +288,9 @@ export function usePayments(initialChildId = ''): PaymentsData {
     setPeriodTo,
     archiveFilter,
     setArchiveFilter,
+    resetUrlFilters,
+    sort,
+    setSort,
     archivePayment,
     unarchivePayment,
     archiveMany,

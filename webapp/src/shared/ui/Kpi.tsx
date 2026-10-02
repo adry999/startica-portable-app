@@ -18,6 +18,9 @@ export interface KpiProps {
   /** Contur 2px în culoarea „ink” a acestui ton — independent de `tone` (fundalul poate rămâne alb),
    * pentru un card dintr-un grup unde unul e „selectat” (ex. cardul metodei filtrate, 05-achitari.md §3). */
   activeTone?: CardTone;
+  /** 44c: card clic-abil (ex. un mini-card de metodă filtrează lista) — randat ca `<button>`
+   * prin `Card`. Fără efect cât timp `state` nu e `'ready'`. */
+  onClick?: () => void;
   className?: string;
   children?: ReactNode;
 }
@@ -31,6 +34,7 @@ export function Kpi({
   state = 'ready',
   onRetry,
   activeTone,
+  onClick,
   className,
   children,
 }: KpiProps) {
@@ -69,6 +73,7 @@ export function Kpi({
     <Card
       tone={tone}
       decorative={decorative}
+      onClick={onClick}
       className={[activeClass, className].filter(Boolean).join(' ') || undefined}
     >
       <div className={[styles.content, state === 'refreshing' ? styles.refreshing : null].filter(Boolean).join(' ')}>
