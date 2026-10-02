@@ -1,6 +1,16 @@
 import { timingSafeEqual } from 'node:crypto';
 import { fail } from './router.mjs';
 import { createToken, hashToken } from './auth.mjs';
+import { ACCESS_WRITE, completProfile, isModuleAllowed, normalizeProfile } from './profile-policy.mjs';
+
+/** Doar un calculator cu profil Complet poate invita un calculator nou sau schimba profilul
+ * altuia (36a/36c) — altfel un calculator restrâns ar putea crea un cod fără profil atașat
+ * și ar primi, implicit, un dispozitiv nou cu profil Complet (escaladare de privilegii). */
+function assertCallerIsComplet(device) {
+  const profile = /** @type {{ profile: ReturnType<typeof completProfile> }} */ (device).profile;
+  if (!isModuleAllowed(profile, 'admin', ACCESS_WRITE))
+    fail('Doar un calculator cu profil Complet poate face această operațiune.', 403);
+}
 
 const DEVICE_NAME_MAX_LENGTH = 80;
 const OS_MAX_LENGTH = 80;
@@ -42,14 +52,22 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
     if (!deviceName || !deviceOs) fail('Numele calculatorului și sistemul de operare sunt obligatorii.', 400);
 
     let createdBy = null;
+    /** @type {unknown} */
+    let profile = null;
     if (setupKey !== undefined) {
       const noDevicesYet = devices.countActive() === 0;
       if (!setupKeyMatches(setupKey) || !(noDevicesYet || config.setupKeyAlways))
         fail('Cheia de instalare nu este acceptată.', 403);
+      // Primul calculator (sau o recuperare cu SYNC_SETUP_KEY_ALWAYS) e mereu Complet —
+      // nu există încă niciun administrator care să-i aleagă profilul (36a).
+      profile = completProfile();
     } else if (code !== undefined) {
       const result = pairing.consumeCode({ code, now: now() });
       if (!result.ok) fail('Cod greșit, folosit sau expirat.', 400);
       createdBy = result.createdBy;
+      // Un cod generat înainte de §5.3 (sau fără profil ales la pasul 1) rămâne Complet —
+      // comportamentul de dinaintea profilurilor, nu o restrângere surpriză.
+      profile = result.profile ?? completProfile();
     } else {
       fail('Cererea trebuie să conțină un cod de conectare sau cheia de instalare.', 400);
     }
@@ -61,11 +79,12 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
       os: deviceOs,
       tokenHash: hashToken(token),
       now: now().toISOString(),
+      profile,
     });
-    return { deviceId: device.id, token, createdBy };
+    return { deviceId: device.id, token, createdBy, profile: device.profile };
   }
 
-  /** @param {{ id: string, name: string, os: string, lastSeenAt: string, lastBranchId: string | null, revokedAt: string | null }} record @param {string} meId */
+  /** @param {import('./devices.repository.mjs').DeviceView} record @param {string} meId */
   function toDeviceView(record, meId) {
     return {
       id: record.id,
@@ -74,6 +93,7 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
       lastSeenAt: record.lastSeenAt,
       lastBranchId: record.lastBranchId,
       revokedAt: record.revokedAt,
+      profile: record.profile,
       me: record.id === meId,
     };
   }
@@ -83,9 +103,33 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
     return { devices: devices.list().map(record => toDeviceView(record, device.id)) };
   }
 
-  /** @param {{ device: { id: string } }} context */
-  function createPairingCode({ device }) {
-    return pairing.createCode({ createdBy: device.id, now: now() });
+  /** §5.3 (36g): profilul propriu al dispozitivului autentificat, pentru clientul local care-și
+   * reîmprospătează `sync.json` la fiecare ciclu de sincronizare — nu expune lista completă de
+   * calculatoare (asta rămâne `GET /v1/devices`, rezervată unui profil Complet prin UI).
+   * @param {{ device: import('./devices.repository.mjs').DeviceView }} context */
+  function me({ device }) {
+    return { profile: device.profile };
+  }
+
+  /** @param {{ device: { id: string, profile: unknown }, profile?: unknown }} input */
+  function createPairingCode({ device, profile }) {
+    // Codul poate rămâne fără profil ales (păstrat Complet, ca azi) — dar numai un
+    // calculator Complet are voie să genereze coduri, cu sau fără profil atașat.
+    assertCallerIsComplet(device);
+    return pairing.createCode({ createdBy: /** @type {{ id: string }} */ (device).id, now: now(), profile });
+  }
+
+  /**
+   * @param {{ params: Record<string, string>, body: unknown, device: import('./devices.repository.mjs').DeviceView }} context
+   */
+  function setDeviceProfile({ params, body, device }) {
+    assertCallerIsComplet(device);
+    const target = devices.findById(params.id);
+    if (!target) fail('Calculator inexistent.', 404);
+    const payload = /** @type {{ profile?: unknown }} */ (body ?? {});
+    if (!payload.profile) fail('Profilul lipsește din cerere.', 400);
+    const updated = devices.setProfile(params.id, payload.profile);
+    return { device: toDeviceView(updated, device.id) };
   }
 
   /**
@@ -116,7 +160,29 @@ export function createDevicesRoutes({ devices, pairing, config, pairingRateLimit
       method: 'POST',
       pattern: /^\/v1\/pairing-codes$/,
       auth: true,
-      handle: ({ device }) => createPairingCode({ device: /** @type {{ id: string }} */ (device) }),
+      /** @param {{ device: unknown, body: unknown }} context */
+      handle: ({ device, body }) =>
+        createPairingCode({
+          device: /** @type {{ id: string, profile: unknown }} */ (device),
+          profile: /** @type {{ profile?: unknown } | undefined} */ (body)?.profile,
+        }),
+    },
+    {
+      method: 'GET',
+      pattern: /^\/v1\/devices\/me$/,
+      auth: true,
+      handle: ({ device }) => me({ device: /** @type {import('./devices.repository.mjs').DeviceView} */ (device) }),
+    },
+    {
+      method: 'POST',
+      pattern: /^\/v1\/devices\/(?<id>[^/]+)\/profile$/,
+      auth: true,
+      handle: ({ params, body, device }) =>
+        setDeviceProfile({
+          params,
+          body,
+          device: /** @type {import('./devices.repository.mjs').DeviceView} */ (device),
+        }),
     },
     {
       method: 'GET',

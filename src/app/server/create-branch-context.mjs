@@ -5,6 +5,9 @@ import { createRecordRepository } from '#core/server/persistence/record-reposito
 import { seedServices } from '#features/services/index.server.mjs';
 import { createRevisionTransaction } from '#core/server/persistence/revision-transaction.mjs';
 import { createRouteDispatcher } from '#core/server/http/route-dispatcher.mjs';
+import { accessLevelFor, resolveRouteModule } from '#core/server/http/route-modules.mjs';
+import { fail } from '#core/server/errors/domain-error.mjs';
+import { completProfile, isModuleAllowed, normalizeProfile } from '#shared/domain/computer-profile.mjs';
 import { createAuditLogRepository, createAuditLogRoutes, createUndoRoutes } from '#features/audit-log/index.server.mjs';
 import { createBackupService, createBackupRoutes } from '#features/backup/index.server.mjs';
 import {
@@ -228,6 +231,15 @@ export function createBranchContext({
       }),
       deviceId: syncDeviceFile.deviceId,
       deviceName: syncDeviceFile.deviceName,
+      // §5.3 (36g): profilul reîmprospătat la fiecare ciclu se persistă în sync.json, ca
+      // `/api/session` (session.routes.mjs) să-l poată citi fără o cerere de rețea proprie.
+      // Citește `syncDevice.read()` proaspăt, nu `syncDeviceFile` închis la construcție —
+      // același motiv ca în `sync-last-synced-tracker.mjs`.
+      writeProfile: profile => {
+        const current = syncDevice.read();
+        if (!current) return;
+        syncDevice.write({ ...current, profile: profile ?? undefined });
+      },
       onStatus: status => {
         lastSyncedAtTracker.handleStatus(status);
         syncRoutes.onStatus();
@@ -450,12 +462,32 @@ export function createBranchContext({
     ...branchRoutes,
   ];
 
+  // §5.3 (36h): profilul curent, citit proaspăt la fiecare cerere (nu capturat o singură dată
+  // la deschiderea filialei) — motorul de sincronizare îl poate schimba oricând în fundal
+  // (restrângere, blocare), iar o cerere în curs trebuie să vadă starea de acum, nu pe cea
+  // de la pornire.
+  function currentDeviceProfile() {
+    const stored = syncDevice.read()?.profile;
+    return stored ? normalizeProfile(stored) : completProfile();
+  }
+
+  /** @param {string | string[]} moduleId @param {{ write: boolean }} options */
+  function assertModuleAccess(moduleId, { write }) {
+    const profile = currentDeviceProfile();
+    const level = accessLevelFor(write);
+    const moduleIds = Array.isArray(moduleId) ? moduleId : [moduleId];
+    if (!moduleIds.some(id => isModuleAllowed(profile, id, level)))
+      fail('Acest calculator nu are acces la acest modul.', 403);
+  }
+
   const { dispatchRequest } = createRouteDispatcher({
     root,
     sessionToken,
     // Fiecare feature își tipează propriile rute; adunate aici, TS lărgește
     // `method` la string — cast spre forma așteptată de dispatcher.
     routes: /** @type {import('#core/server/http/route-dispatcher.mjs').RouteDefinition[]} */ (routes),
+    resolveRouteModule,
+    assertModuleAccess,
   });
 
   // Preia de la BNM orice zi lipsă din [startDate, endDate] (inclusiv) și scrie

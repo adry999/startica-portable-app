@@ -88,12 +88,13 @@ export function createChangesRoutes({ changesService, branches, devices, events,
     return result;
   }
 
-  /** @param {{ params: Record<string, string>, url: URL }} context */
-  function pull({ params, url }) {
+  /** @param {{ params: Record<string, string>, url: URL, device: unknown }} context */
+  function pull({ params, url, device }) {
     ensureBranchExists(params.id);
     const since = readSinceParam(url);
     const limit = readLimitParam(url);
-    return changesService.pull({ branchId: params.id, since, limit });
+    const deviceId = /** @type {{ id: string } | undefined} */ (device)?.id;
+    return changesService.pull({ branchId: params.id, since, limit, deviceId });
   }
 
   /** @param {{ params: Record<string, string>, body: unknown, device: unknown }} context */
@@ -109,10 +110,11 @@ export function createChangesRoutes({ changesService, branches, devices, events,
     return changesService.writeSnapshot({ branchId: params.id, deviceId, entries, now: now() });
   }
 
-  /** @param {{ params: Record<string, string> }} context */
-  function readSnapshot({ params }) {
+  /** @param {{ params: Record<string, string>, device: unknown }} context */
+  function readSnapshot({ params, device }) {
     ensureBranchExists(params.id);
-    return changesService.readSnapshot({ branchId: params.id });
+    const deviceId = /** @type {{ id: string } | undefined} */ (device)?.id;
+    return changesService.readSnapshot({ branchId: params.id, deviceId });
   }
 
   /** @param {{ params: Record<string, string>, response: import('node:http').ServerResponse, device: unknown }} context */

@@ -131,6 +131,34 @@ test('POST .../snapshot acceptă o intrare validă', () => {
   assert.deepEqual(result, { headSeq: 0 });
 });
 
+test('GET .../changes trimite deviceId lui changesService.pull (§5.3: filtrare de profil)', () => {
+  /** @type {unknown} */
+  let received;
+  const { pull } = withRoutes({
+    changesService: {
+      pull: args => ((received = args), { changes: [], nextSince: 0, headSeq: 0 }),
+    },
+  });
+  pull.handle(/** @type {any} */ ({ params: { id: 'branch-1' }, url: urlWith('http://x/'), device: { id: 'dev-a' } }));
+  assert.equal(/** @type {{ deviceId: string }} */ (received).deviceId, 'dev-a');
+});
+
+test('GET .../snapshot trimite deviceId lui changesService.readSnapshot (§5.3: filtrare de profil)', () => {
+  /** @type {unknown} */
+  let received;
+  const route = /** @type {import('./router.mjs').RouteDefinition} */ (
+    createChangesRoutes({
+      changesService: /** @type {any} */ ({ readSnapshot: args => ((received = args), { records: {}, headSeq: 0 }) }),
+      branches: /** @type {any} */ ({ findById: () => ({ id: 'branch-1' }) }),
+      devices: /** @type {any} */ ({}),
+      events: /** @type {any} */ ({}),
+      now: () => new Date(),
+    }).routes.find(entry => entry.method === 'GET' && entry.pattern.test('/v1/branches/branch-1/snapshot'))
+  );
+  route.handle(/** @type {any} */ ({ params: { id: 'branch-1' }, device: { id: 'dev-a' } }));
+  assert.equal(/** @type {{ deviceId: string }} */ (received).deviceId, 'dev-a');
+});
+
 test('GET .../changes pentru „comun” nu cere o filială înregistrată (decizia 9, personal-bazin)', () => {
   const { pullComun } = withRoutes({ branches: { findById: () => undefined } });
   const result = /** @type {{ nextSince: number }} */ (

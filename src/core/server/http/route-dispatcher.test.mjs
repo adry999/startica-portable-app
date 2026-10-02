@@ -189,3 +189,56 @@ test('un handler GET asincron este așteptat înainte de a trimite răspunsul', 
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { citit: true });
 });
+
+test('§5.3 (36h): assertModuleAccess care refuză cu fail() respinge GET-ul înainte de handler', async t => {
+  let handlerCalled = false;
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'GET', path: '/api/pool/week', handle: () => ((handlerCalled = true), { ok: true }) }],
+    {
+      resolveRouteModule: () => ({ moduleId: 'pool', write: false }),
+      assertModuleAccess: () => fail('Acest calculator nu are acces la acest modul.', 403),
+    },
+  );
+  const response = await fetch(origin + '/api/pool/week');
+  assert.equal(response.status, 403);
+  assert.deepEqual(await response.json(), { error: 'Acest calculator nu are acces la acest modul.' });
+  assert.equal(handlerCalled, false);
+});
+
+test('§5.3 (36h): assertModuleAccess care refuză respinge POST-ul după citirea corpului, înainte de handler', async t => {
+  let handlerCalled = false;
+  let receivedModuleId;
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'POST', path: '/api/pool/bookings', handle: () => ((handlerCalled = true), { ok: true }) }],
+    {
+      resolveRouteModule: ({ body }) => ({ moduleId: 'pool', write: true, body }),
+      assertModuleAccess: moduleId => {
+        receivedModuleId = moduleId;
+        fail('Acest calculator nu are acces la acest modul.', 403);
+      },
+    },
+  );
+  const response = await postJson(origin, '/api/pool/bookings');
+  assert.equal(response.status, 403);
+  assert.equal(handlerCalled, false);
+  assert.equal(receivedModuleId, 'pool');
+});
+
+test('§5.3 (36h): o cale fără gardă (resolveRouteModule întoarce null) nu cheamă assertModuleAccess', async t => {
+  let guardCalled = false;
+  const { origin } = await startDispatcherServer(
+    t,
+    [{ method: 'GET', path: '/api/session', handle: () => ({ ok: true }) }],
+    {
+      resolveRouteModule: () => null,
+      assertModuleAccess: () => {
+        guardCalled = true;
+      },
+    },
+  );
+  const response = await fetch(origin + '/api/session');
+  assert.equal(response.status, 200);
+  assert.equal(guardCalled, false);
+});

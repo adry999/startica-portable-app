@@ -104,6 +104,57 @@ test('cererile autentificate trimit Authorization: Bearer <token>', async () => 
   assert.equal(calls[0].options.headers.Authorization, 'Bearer secret-token');
 });
 
+test('createPairingCode trimite profilul ales (§5.3, 36a)', async () => {
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async (url, options) => {
+      calls.push({ url, options });
+      return jsonResponse({ body: { code: '123456', expiresAt: '2026-09-27T09:10:00.000Z' } });
+    }),
+  });
+
+  await client.createPairingCode({ preset: 'educator' });
+
+  assert.equal(calls[0].url, 'https://sync.exemplu.md/v1/pairing-codes');
+  assert.deepEqual(JSON.parse(calls[0].options.body), { profile: { preset: 'educator' } });
+});
+
+test('fetchMyProfile cere GET /v1/devices/me', async () => {
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async url => {
+      calls.push(url);
+      return jsonResponse({ body: { profile: { preset: 'complet' } } });
+    }),
+  });
+
+  const result = await client.fetchMyProfile();
+
+  assert.equal(calls[0], 'https://sync.exemplu.md/v1/devices/me');
+  assert.deepEqual(result, { profile: { preset: 'complet' } });
+});
+
+test('setDeviceProfile trimite profilul nou pe calea dispozitivului țintă', async () => {
+  const calls = [];
+  const client = createSyncHttpClient({
+    serverUrl: 'https://sync.exemplu.md',
+    token: 'tok',
+    fetch: fakeFetch(async (url, options) => {
+      calls.push({ url, options });
+      return jsonResponse({ body: { device: { id: 'dev-2' } } });
+    }),
+  });
+
+  await client.setDeviceProfile('dev-2', { preset: 'bazin' });
+
+  assert.equal(calls[0].url, 'https://sync.exemplu.md/v1/devices/dev-2/profile');
+  assert.deepEqual(JSON.parse(calls[0].options.body), { profile: { preset: 'bazin' } });
+});
+
 test('pullChanges construiește query-ul cu since și limit', async () => {
   const calls = [];
   const client = createSyncHttpClient({

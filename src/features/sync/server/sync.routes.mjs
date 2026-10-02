@@ -12,6 +12,7 @@ const EMPTY_ENGINE_STATUS = {
   lastSyncedAt: '',
   conflicts: 0,
   lastError: '',
+  profile: null,
 };
 
 const CONNECTION_RANK = { revoked: 2, offline: 1, online: 0 };
@@ -40,6 +41,9 @@ function mergeEngineStatus(branchStatus, commonStatus) {
         : branchStatus.lastSyncedAt || commonStatus.lastSyncedAt,
     conflicts: branchStatus.conflicts + commonStatus.conflicts,
     lastError: branchStatus.lastError || commonStatus.lastError,
+    // §5.3: amândouă motoarele reîmprospătează același profil (un singur calculator) — oricare
+    // valoare cunoscută e bună; branșa activă e sursa preferată (se sincronizează mai des).
+    profile: branchStatus.profile ?? commonStatus.profile,
   };
 }
 

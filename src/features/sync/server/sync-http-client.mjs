@@ -98,10 +98,18 @@ export function createSyncHttpClient({
     pair: ({ code, setupKey, name, os }) =>
       request('/v1/devices/pair', { method: 'POST', body: { code, setupKey, name, os } }),
     status: () => request('/v1/status'),
-    createPairingCode: () => request('/v1/pairing-codes', { method: 'POST', body: {} }),
+    /** §5.3 (36a): profilul ales pentru calculatorul care va folosi codul. */
+    createPairingCode: profile => request('/v1/pairing-codes', { method: 'POST', body: { profile } }),
     listDevices: () => request('/v1/devices'),
     /** @param {string} deviceId */
     revokeDevice: deviceId => request(`/v1/devices/${deviceId}/revoke`, { method: 'POST', body: {} }),
+    /** §5.3 (36g): propriul profil al dispozitivului autentificat — reîmprospătat de motorul
+     * de sincronizare la fiecare ciclu, ca restrângerile/blocarea să ajungă pe calculator
+     * fără a aștepta o repornire. */
+    fetchMyProfile: () => request('/v1/devices/me'),
+    /** §5.3 (36c): doar de pe un dispozitiv Complet. @param {string} deviceId @param {unknown} profile */
+    setDeviceProfile: (deviceId, profile) =>
+      request(`/v1/devices/${deviceId}/profile`, { method: 'POST', body: { profile } }),
     listBranches: () => request('/v1/branches'),
     /** @param {{ id: string, name: string, color: string, address: string, createdAt: string }} branch */
     registerBranch: branch => request('/v1/branches', { method: 'POST', body: branch }),
