@@ -152,14 +152,25 @@ export function createPoolRoutes({
       // de sfârșit în viitor tot are ședințe de marcat până atunci; `listBookings({ includeArchived: true })`
       // din getWeek/getMonth ține cont de asta prin filtrarea pe interval, nu prin `archivedAt`.
       const archivedAt = body.endDate && body.endDate < today() ? new Date().toISOString() : existing.archivedAt;
-      return {
-        booking: poolRepository.saveBooking({
-          ...existing,
-          endDate: body.endDate,
-          archivedAt,
-          updatedAt: new Date().toISOString(),
-        }),
-      };
+      const stopped = poolRepository.saveBooking({
+        ...existing,
+        endDate: body.endDate,
+        archivedAt,
+        updatedAt: new Date().toISOString(),
+      });
+      // AUDIT-COD-02-10-B.md #5: programarea e o acțiune structurală (ca înscrierea/mutarea în
+      // grupă), nu o editare celulă-cu-celulă — spre deosebire de postSessions (marcarea
+      // ședințelor), merită un rând în Istoric. Scris imediat după commit-ul lui saveBooking
+      // (propria tranzacție, vezi pool.repository.mjs) — nu în aceeași tranzacție, dar fără
+      // niciun `await` între ele.
+      auditTrail.recordChange({
+        action: 'bazin: oprire programare',
+        recordType: null,
+        recordId: stopped.id,
+        before: existing,
+        after: stopped,
+      });
+      return { booking: stopped };
     }
     const input = body?.booking ?? {};
     if (!recordRepository.exists('children', input.childId)) fail('Copilul nu există.', 409);
@@ -195,10 +206,19 @@ export function createPoolRoutes({
       archivedAt: null,
       updatedAt: new Date().toISOString(),
     };
-    return { booking: poolRepository.saveBooking(booking) };
+    const saved = poolRepository.saveBooking(booking);
+    // AUDIT-COD-02-10-B.md #5: vezi comentariul de la oprirea programării, mai sus.
+    auditTrail.recordChange({ action: 'bazin: creare programare', recordType: null, recordId: saved.id, after: saved });
+    return { booking: saved };
   }
 
-  /** @param {{ body: { changes?: unknown } }} request */
+  /**
+   * Marcarea ședințelor (prezent/absent/scuzat/anulat) NU scrie în Istoric — editare
+   * celulă-cu-celulă, prea frecventă ca să merite un rând de audit fiecare (același precedent
+   * ca `handlePostTimesheet` din personal.routes.mjs, spre deosebire de programarea de mai sus,
+   * care e o acțiune structurală). AUDIT-COD-02-10-B.md #5.
+   * @param {{ body: { changes?: unknown } }} request
+   */
   function postSessions({ body }) {
     const changes = /** @type {any[]} */ (body?.changes);
     if (!Array.isArray(changes) || changes.length === 0) fail('Lista de schimbări este goală.');

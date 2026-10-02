@@ -280,3 +280,35 @@ test('A-6: Luna nu listează un copil fără nicio ședință programată în lu
     ['C-1'],
   );
 });
+
+test('AUDIT-COD-02-10-B.md #5: crearea și oprirea unei programări scriu în Istoric, marcarea ședințelor nu', async t => {
+  const { get, post } = await startTestApplication(t, { prefix: 'startica-pool-audit-' });
+  await post('/api/pool/settings', SETTINGS);
+  await seedChildAndCoach({ get, post }, 'C-1');
+
+  const created = await post('/api/pool/bookings', {
+    booking: { childId: 'C-1', coachId: 'STF-1', weekday: 2, time: '09:00', startDate: '2026-09-01', endDate: null },
+  });
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  const bookingId = created.body.booking.id;
+
+  const afterCreate = await get('/api/audit');
+  const createEntry = afterCreate.entries.find(entry => entry.action === 'bazin: creare programare');
+  assert.ok(createEntry, 'crearea programării trebuia să apară în Istoric');
+  assert.equal(createEntry.recordId, bookingId);
+
+  await post('/api/pool/sessions', { changes: [{ bookingId, date: '2026-09-08', status: 'present' }] });
+  const afterSession = await get('/api/audit');
+  assert.equal(
+    afterSession.entries.length,
+    afterCreate.entries.length,
+    'marcarea unei ședințe nu trebuie să adauge o intrare în Istoric (editare prea frecventă)',
+  );
+
+  const stopped = await post('/api/pool/bookings', { id: bookingId, endDate: '2026-09-15' });
+  assert.equal(stopped.status, 200, JSON.stringify(stopped.body));
+  const afterStop = await get('/api/audit');
+  const stopEntry = afterStop.entries.find(entry => entry.action === 'bazin: oprire programare');
+  assert.ok(stopEntry, 'oprirea programării trebuia să apară în Istoric');
+  assert.equal(stopEntry.recordId, bookingId);
+});
