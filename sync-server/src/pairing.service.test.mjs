@@ -24,7 +24,7 @@ test('codul de conectare expiră după 10 minute și se folosește o singură da
 
   const dupa9Minute = new Date(createdAt.getTime() + 9 * 60 * 1000);
   const primaFolosire = pairing.consumeCode({ code, now: dupa9Minute });
-  assert.deepEqual(primaFolosire, { ok: true, createdBy: 'dev-1' });
+  assert.deepEqual(primaFolosire, { ok: true, createdBy: 'dev-1', profile: null });
 
   const aDouaFolosire = pairing.consumeCode({ code, now: dupa9Minute });
   assert.equal(aDouaFolosire.ok, false);
@@ -57,6 +57,26 @@ test('a cincea încercare greșită șterge codul', t => {
   const dupaStergere = pairing.consumeCode({ code, now: createdAt });
   assert.equal(dupaStergere.ok, false);
   assert.equal(dupaStergere.reason, 'not-found');
+});
+
+test('codul generat cu un profil îl întoarce normalizat la consumare (§5.3, 36a)', t => {
+  const pairing = withService(t);
+  const createdAt = new Date('2026-09-27T08:00:00.000Z');
+  const { code } = pairing.createCode({ createdBy: 'dev-1', now: createdAt, profile: { preset: 'educator' } });
+  const rezultat = pairing.consumeCode({ code, now: createdAt });
+  assert.equal(rezultat.ok, true);
+  assert.ok(rezultat.ok && rezultat.profile);
+  assert.equal(/** @type {{ preset: string }} */ (rezultat.profile).preset, 'educator');
+});
+
+test('un cod fără profil ales întoarce profile: null la consumare', t => {
+  const pairing = withService(t);
+  const createdAt = new Date('2026-09-27T08:00:00.000Z');
+  const { code } = pairing.createCode({ createdBy: 'dev-1', now: createdAt });
+  const rezultat = pairing.consumeCode({ code, now: createdAt });
+  assert.equal(rezultat.ok, true);
+  assert.ok(rezultat.ok);
+  assert.equal(rezultat.profile, null);
 });
 
 test('un cod inexistent nu se poate confunda cu unul valabil', t => {

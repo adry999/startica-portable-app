@@ -64,7 +64,8 @@ export const DEFAULT_PIN_MODULES = ['payments', 'expenses', 'report', 'resolve']
 
 /** @typedef {{ preset: string, modules: Record<string, number>, pinModules: string[], blocked: boolean }} ComputerProfile */
 
-/** Profilul implicit pentru un calculator fără profil asignat (compatibilitate — vezi INTREBARI.md). */
+/** Profilul implicit pentru un calculator fără profil asignat (compatibilitate — vezi INTREBARI.md).
+ * @returns {ComputerProfile} */
 export function completProfile() {
   return { preset: 'complet', modules: allModules(ACCESS_WRITE), pinModules: [], blocked: false };
 }
@@ -177,3 +178,8 @@ export const KIND_MODULE = {
  * înapoi la sincronizare (36g). Tratat separat în `changes.service.mjs`, nu prin modul.
  */
 export const AUDIT_LOG_KIND = 'audit_log';
+
+/** Câmpuri tăiate din `children` când modulul `payments` e la 0 (36e — „plățile, planul tarifar
+ * și notele medicale nu sunt pe acest calculator”). Nu există azi un câmp `allergies` separat în
+ * schema reală — doar `healthNotes` (vezi SENSITIVE_FIELDS din record-schema.mjs) — vezi INTREBARI.md. */
+export const CHILDREN_FIELDS_HIDDEN_WITHOUT_PAYMENTS = ['healthNotes', 'feeHistory'];
