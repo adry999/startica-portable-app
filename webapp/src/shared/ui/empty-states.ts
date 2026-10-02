@@ -60,6 +60,7 @@ export type EmptyStateKey =
   | 'raport.income'
   | 'raport.expenses'
   | 'asociere.suggestions'
+  | 'planuri.childForm'
   // 36f — modul neinclus în profilul calculatorului (31-profiluri-calculator.md, §5.3)
   | 'profil.blocked';
 
@@ -349,6 +350,15 @@ export const EMPTY_STATES: Record<EmptyStateKey, EmptyStateCatalogEntry> = {
     variant: 'first',
     size: 'compact',
     title: 'Nicio sugestie. Caută copilul mai jos.',
+  },
+  // PROMPT-11 §1 (F15): planul nu mai dispare fără presetări — cardul gol rămâne vizibil,
+  // cu taxa manuală tot editabilă sub el.
+  'planuri.childForm': {
+    variant: 'first',
+    size: 'compact',
+    title: params =>
+      `Nu sunt planuri setate pentru ${params.filiala ?? 'filiala deschisă'}. Adaugă planurile o dată și apoi alegi planul aici. Până atunci, scrie taxa manual.`,
+    actionLabel: 'Setează planurile',
   },
 
   // ── 36f — modul neinclus în profilul calculatorului ─────────────────────

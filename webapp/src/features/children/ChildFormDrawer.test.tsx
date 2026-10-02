@@ -58,13 +58,14 @@ describe('ChildFormDrawer', () => {
     expect(screen.getByText('6 · Istoric (avansat)')).toBeInTheDocument();
   });
 
-  it('fără niciun plan definit, arată un indiciu cu link spre Planuri și curs', async () => {
+  it('§1 (PROMPT-11): fără niciun plan definit, arată EmptyState cu buton spre Planuri și curs', async () => {
     renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
-    expect(await screen.findByText('Fără planuri definite')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'adaugă unul în Planuri și curs' })).toHaveAttribute(
-      'href',
-      '/backup-si-setari',
-    );
+    expect(
+      await screen.findByText(
+        /Nu sunt planuri setate pentru .*Adaugă planurile o dată și apoi alegi planul aici\. Până atunci, scrie taxa manual\./,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Setează planurile' })).toBeInTheDocument();
   });
 
   it('trimite valorile completate la click pe Salvează', async () => {
@@ -217,6 +218,27 @@ describe('ChildFormDrawer', () => {
     expect(chip).not.toBeDisabled();
     expect(chip).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText('Fluturași e plină (1/1). Poți salva oricum.')).toBeInTheDocument();
+  });
+
+  it('§1 (PROMPT-11): la alegerea unui preset, arată confirmarea taxei lunare', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => ({
+        ok: true,
+        json: async () =>
+          path === '/api/plan-presets' ? [{ id: 'P-1', name: 'Standard', priceEur: 150 }] : {},
+      })),
+    );
+    renderDrawer(<ChildFormDrawer target="new" groups={[]} onSubmit={vi.fn()} onClose={vi.fn()} />);
+
+    const card = await screen.findByRole('radio', { name: /Standard/ });
+    await userEvent.click(card);
+
+    expect(
+      screen.getByText((_, element) => element?.textContent === 'Taxa lunară = prețul planului: Standard · 150 €'),
+    ).toBeInTheDocument();
+
+    vi.unstubAllGlobals();
   });
 
   it('15a: arată grupele compatibile cu vârsta calculată din data nașterii', async () => {

@@ -6,6 +6,7 @@ import {
   ChoiceCards,
   DateInput,
   Drawer,
+  EmptyState,
   Field,
   IconButton,
   MonthInput,
@@ -16,11 +17,13 @@ import {
   TextInput,
   groupTone,
 } from '@shared/ui';
+import { useAppSession } from '@shared/api/session';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { formatAge, ageInYears } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
 import { usePlanPresets } from '@shared/api/usePlanPresets';
 import { sortByGroupOrder } from '@shared/format/group-order';
+import { EMPTY_STATES, resolveEmptyStateTitle } from '@shared/ui/empty-states';
 import { CHILD_STATUSES, defaultChildFormValues, type ChildFeeCurrency, type ChildFormValues } from './child-form';
 import type { ChildRow } from './useChildren';
 import type { Child, Group } from '@contracts/record-types.mjs';
@@ -52,7 +55,10 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
   // 15a: al doilea părinte pornește ascuns („+ Adaugă încă un părinte”), în afară de fișele
   // care au deja completat parent2 — altfel editarea unei fișe vechi i-ar ascunde datele.
   const [showParent2, setShowParent2] = useState(() => Boolean(editing?.parent2));
-  const { presets, ready: presetsReady } = usePlanPresets();
+  const { presets } = usePlanPresets();
+  const session = useAppSession();
+  const branchName = session.state.branch?.name ?? 'filiala deschisă';
+  const selectedPreset = presets.find(p => values.currency === 'EUR' && values.fee === String(p.priceEur));
 
   const orderedGroups = useMemo(() => sortByGroupOrder(groups), [groups]);
 
@@ -319,29 +325,45 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
               </Field>
             </div>
             {presets.length > 0 ? (
-              <ChoiceCards
-                ariaLabel="Tarif preset"
-                columns={presets.length}
-                value={presets.find(p => values.currency === 'EUR' && values.fee === String(p.priceEur))?.id ?? ''}
-                onChange={id => {
-                  const preset = presets.find(p => p.id === id);
-                  if (preset) selectPreset(preset.priceEur);
-                }}
-                options={presets.map(preset => ({
-                  value: preset.id,
-                  title: preset.name,
-                  sub: `${preset.priceEur} €`,
-                }))}
-              />
+              <>
+                <ChoiceCards
+                  ariaLabel="Tarif preset"
+                  columns={presets.length}
+                  value={selectedPreset?.id ?? ''}
+                  onChange={id => {
+                    const preset = presets.find(p => p.id === id);
+                    if (preset) selectPreset(preset.priceEur);
+                  }}
+                  options={presets.map(preset => ({
+                    value: preset.id,
+                    title: preset.name,
+                    sub: `${preset.priceEur} €`,
+                  }))}
+                />
+                {selectedPreset && (
+                  <small className={styles.hint}>
+                    Taxa lunară = prețul planului: <b>{selectedPreset.name}</b> · {selectedPreset.priceEur} €
+                  </small>
+                )}
+              </>
             ) : (
-              presetsReady && (
-                <small className={styles.hint}>
-                  <b>Fără planuri definite</b> —{' '}
-                  {/* '/backup-si-setari' e VIEW_PATHS.settings din app/shell/routes.ts — un feature
-                    nu are voie să importe din app/ (tests/architecture/import-boundaries). */}
-                  <Link to="/backup-si-setari">adaugă unul în Planuri și curs</Link>
-                </small>
-              )
+              // PROMPT-11 §1 (F15): secțiunea Plan se randează mereu, fără gardă pe `presetsReady` —
+              // cardul gol tot arată taxa manuală editabilă mai jos, fără pierdere de date.
+              <EmptyState
+                variant={EMPTY_STATES['planuri.childForm'].variant}
+                size="compact"
+                title={resolveEmptyStateTitle(EMPTY_STATES['planuri.childForm'], { filiala: branchName })}
+                action={{
+                  label: EMPTY_STATES['planuri.childForm'].actionLabel ?? '',
+                  onClick: () => {
+                    // '/backup-si-setari' e VIEW_PATHS.settings din app/shell/routes.ts — un feature
+                    // nu are voie să importe din app/ (tests/architecture/import-boundaries); Topbar.tsx
+                    // folosește același mecanism (localStorage 'view.backup') pentru sub-tab-ul 'curs'.
+                    localStorage.setItem('view.backup', 'curs');
+                    window.open('/backup-si-setari', '_blank');
+                  },
+                }}
+              />
             )}
           </fieldset>
 

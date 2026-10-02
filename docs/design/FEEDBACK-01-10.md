@@ -23,7 +23,7 @@ Legendă: ✅ închis · 🔁 parțial, restul în PROMPT-9 · 🧪 făcut, de t
 | F12 Curs BNM istoric | ✅ 38e | ✅ polling + calendar + backfill ✅ (`81f979c`); mutare în baza comună (`b0393e4`) — script de migrare scris și testat doar cu `startTestApplication` (date de test, temporare); nicio filială reală n-a fost migrată încă în această sesiune |
 | F13 Planuri view/edit | ✅ 38d | ✅ `c53533b` |
 | F14 Scroll X în 15a | — | ✅ `b93224a` |
-| F15 Plan mereu vizibil la Copil nou/Editează (gol = mesaj) | ✅ 15a, 15i | ⏳ PROMPT-11 §1 |
+| F15 Plan mereu vizibil la Copil nou/Editează (gol = mesaj) | ✅ 15a, 15i | ✅ PROMPT-11 §1 (EmptyState `planuri.childForm`, fără gardă `presetsReady`) |
 | F16 Rotunjire la alegere, precompletat exact | ✅ 15b, 41f | ✅ PROMPT-11 §2 (pastile Rotunjește: Exact/jos/sus/10 lei) |
 | F17 MonthInput propriu (repartizare manuală) | ✅ 15j | ⏳ PROMPT-11 §3 |
 | F18 Achitare nouă ≠ design | ✅ 15b (completat: curs manual, împarte pe metode, frați) | ⏳ PROMPT-11 §5 |

@@ -1047,3 +1047,25 @@ tot ce se poate plăti” în antetul coloanei de bife (`Checkbox` a primit `ind
 - Eroarea de la `/api/personal/salaries/pay` trece deja prin `toUserError` (verificat în
   `SalariesView.tsx`, `catch (error) { toast.show({ message: toUserError(error) }) }`) — nimic de
   schimbat acolo.
+
+## §1 (F15, PROMPT-11) — Planul mereu vizibil la Copil nou/Editează: ce s-a închis, ce rămâne
+
+**Închis:** `presets.length > 0 &&` scos — secțiunea Plan se randează mereu (nu mai dispare fără
+`presetsReady`, nici fără presetări). Card gol nou: cheie catalog `planuri.childForm` în
+`@shared/ui/empty-states.ts` (`EmptyState size="compact"`, `variant: 'first'`), text „Nu sunt
+planuri setate pentru {filiala}. Adaugă planurile o dată și apoi alegi planul aici. Până atunci,
+scrie taxa manual.” + buton „Setează planurile”. Câmpurile „Taxa lunară”/„Din luna” rămân vizibile
+sub card indiferent de ramură (erau deja într-un fieldset separat, nemodificat). Cu planuri alese,
+sub `ChoiceCards` apare „Taxa lunară = prețul planului: {nume} · {preț} €”.
+
+**Neatins din scop:**
+- **„{orar}” din eticheta cardului** („{nume} · {orar} · {preț} €”) — `PlanPreset` (`@shared/api/
+  usePlanPresets.ts`) nu are câmp de orar/program (`id`, `name`, `priceEur` doar); adăugarea lui ar
+  cere schimbare de contract server + migrare, nu doar UI. Eticheta rămâne „{nume} · {preț} €”.
+- **„(≈ Y lei azi)” la confirmarea taxei** — ar cere cursul BNM curent în `ChildFormDrawer`, care
+  azi nu citește cursul de schimb (doar `PaymentFormDrawer`/`useExchangeRates` o fac); confirmarea
+  arată doar suma în €, fără echivalentul în lei.
+- **Deschiderea tab-ului pe sub-tabul „Planuri și curs”** folosește mecanismul existent
+  `localStorage.setItem('view.backup', 'curs')` (deja folosit de `Topbar.tsx` pentru același scop),
+  nu un parametru de query `?tab=curs` cum sugerează litera promptului — `BackupPage.tsx` nu
+  citește deloc query string-ul azi; mecanismul ales e cel deja funcțional și testat în cod.
