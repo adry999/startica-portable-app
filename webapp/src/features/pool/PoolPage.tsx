@@ -109,7 +109,11 @@ export function PoolPage({ month }: PoolPageProps) {
               onClick={() => setWeekDate(shiftDays(weekDate, 7))}
             />
           </div>
-          {settings.settings && <Button onClick={() => setBookingOpen(true)}>+ Programare nouă</Button>}
+          {settings.settings && (
+            <Button size="header" onClick={() => setBookingOpen(true)}>
+              + Programare nouă
+            </Button>
+          )}
         </>
       )}
       {mode === 'month' && (

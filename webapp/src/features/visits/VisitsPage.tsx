@@ -86,7 +86,11 @@ export function VisitsPage({ initialDate }: VisitsPageProps = {}) {
   // §13.1: cele mai noi primele implicit, alegerea utilizatorului persistă pe pagină.
   const [sort, setSort] = usePersistedSort('sort.visits', { key: 'date', direction: 'desc' });
 
-  useTopbarActions(<Button onClick={() => setFormTarget('new')}>+ Programează vizită</Button>);
+  useTopbarActions(
+    <Button size="header" onClick={() => setFormTarget('new')}>
+      + Programează vizită
+    </Button>,
+  );
 
   if (visitsData.status === 'loading') return <LoadingState />;
   if (visitsData.status === 'failed')

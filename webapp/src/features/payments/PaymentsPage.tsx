@@ -77,7 +77,9 @@ export function PaymentsPage({
       <Button variant="ghost" onClick={exportFiltered}>
         Exportă
       </Button>
-      <Button onClick={onOpenCreate}>+ Achitare nouă</Button>
+      <Button size="header" onClick={onOpenCreate}>
+        + Achitare nouă
+      </Button>
     </div>,
   );
 

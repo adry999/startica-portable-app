@@ -67,8 +67,16 @@ export function PersonalPage({ month }: PersonalPageProps) {
   useTopbarActions(
     <div className={styles.headerActions}>
       <SegmentedControl ariaLabel="Filă Personal" value={tab} onChange={setTab} options={TAB_OPTIONS} />
-      {tab === 'echipa' && <Button onClick={() => setStaffFormTarget('new')}>+ Angajat</Button>}
-      {tab === 'candidati' && <Button onClick={() => setCandidateFormTarget('new')}>+ Candidat</Button>}
+      {tab === 'echipa' && (
+        <Button size="header" onClick={() => setStaffFormTarget('new')}>
+          + Angajat
+        </Button>
+      )}
+      {tab === 'candidati' && (
+        <Button size="header" onClick={() => setCandidateFormTarget('new')}>
+          + Candidat
+        </Button>
+      )}
       {tab === 'pontaj' && (
         <>
           <MonthStepper value={pontajMonth} onPrev={() => shiftPontajMonth(-1)} onNext={() => shiftPontajMonth(1)} />

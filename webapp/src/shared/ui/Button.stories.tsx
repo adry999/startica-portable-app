@@ -45,6 +45,10 @@ export const LinkPeCardColorat: Story = {
 };
 export const Danger: Story = { args: { variant: 'danger', children: 'Șterge 3 copii' } };
 
+// Dimensiunea CTA-ului principal din antet (00-comun A / DS Componente.dc.html#28a): Baloo 15/700,
+// padding 8px 18px, umbră mai mică pe primary.
+export const Header: Story = { args: { size: 'header', children: '+ Grupă nouă' } };
+
 export const Disabled: Story = { args: { disabled: true, children: 'Primary dezactivat' } };
 
 export const Loading: Story = { args: { loading: true, children: 'Salvez…' } };

@@ -1543,3 +1543,13 @@ axe (`status` nu e un rol permis pe `<button>`) — scos; rămâne buton simplu,
 - Fără captură vizuală — la fel ca toate punctele anterioare.
 - Nu am reverificat vizual (browser, 1440px) niciun ecran migrat față de artboard — doar structura
   subsolului (ordine, etichete, stare dezactivată/încărcare) prin teste automate.
+
+## Audit vizual 03.10 — Copii 2a, cardul „Ultimele modificări" de pe listă
+
+`Copii.dc.html#2a` are, sub tabel/paginare, un card „Ultimele modificări" (3 intrări + „Tot
+istoricul →") — pare să arate activitate recentă **pe toată lista**, nu pe un copil anume.
+`ChildrenPage.tsx` nu are așa ceva; există doar varianta de pe fișa individuală (§45b,
+`ChildProfileView.tsx`, un singur copil). Întrebare: se construiește un card nou, la nivel de
+listă (toate modificările din Copii — achitări, note, mutări de grupă, pe toți copiii), sau
+artboard-ul a copiat din greșeală secțiunea de pe fișă la mockup-ul de listă? Detalii complete:
+`docs/design/AUDIT-VIZUAL-03-10.md`, secțiunea „Copii — listă".

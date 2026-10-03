@@ -33,7 +33,9 @@ export function ReportPage({ month, onMonthChange, onOpenPayments, onOpenAssign 
     <div className={styles.headerActions}>
       <SegmentedControl<ReportMode> ariaLabel="Perioadă" value={mode} onChange={setMode} options={MODE_OPTIONS} />
       <PeriodStepper mode={mode} anchorMonth={month} period={data.period} onAnchorMonthChange={onMonthChange} />
-      <Button onClick={() => setExportOpen(true)}>Exportă pentru contabil</Button>
+      <Button size="header" onClick={() => setExportOpen(true)}>
+        Exportă pentru contabil
+      </Button>
     </div>,
   );
 

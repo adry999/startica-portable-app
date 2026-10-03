@@ -131,7 +131,9 @@ function ChildrenListView({
       <Button variant="outline" onClick={() => navigate('/copii/zile-de-nastere')}>
         Zile de naștere
       </Button>
-      <Button onClick={() => setFormTarget('new')}>+ Adaugă copil</Button>
+      <Button size="header" onClick={() => setFormTarget('new')}>
+        + Adaugă copil
+      </Button>
     </div>,
   );
 

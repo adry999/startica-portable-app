@@ -47,6 +47,11 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Salvează asocierile' }).className).toMatch(/lg/);
   });
 
+  it('aplică dimensiunea header (Baloo 15/700, 8px 18px) pentru CTA-ul principal din antet (00-comun A)', () => {
+    render(<Button size="header">+ Grupă nouă</Button>);
+    expect(screen.getByRole('button', { name: '+ Grupă nouă' }).className).toMatch(/header/);
+  });
+
   it('cât `loading` e adevărat, butonul e dezactivat, aria-busy și arată un Spinner', () => {
     const { container } = render(<Button loading>Salvez…</Button>);
     const button = container.querySelector('button')!;

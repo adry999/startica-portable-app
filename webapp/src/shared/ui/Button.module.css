@@ -118,7 +118,9 @@
 /* Butonul principal de antet (00-comun A) — padding și font propriu, umbră mai mică pe `primary`. */
 .header {
   padding: var(--space-8) var(--space-18);
+  font-family: var(--font-heading);
   font-size: 15px;
+  font-weight: 700;
 }
 
 .primary.header {

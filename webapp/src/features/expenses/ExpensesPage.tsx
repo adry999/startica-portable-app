@@ -275,7 +275,9 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       <Button variant="ghost" onClick={exportFiltered}>
         Exportă
       </Button>
-      <Button onClick={() => setFormTarget('new')}>+ Cheltuială nouă</Button>
+      <Button size="header" onClick={() => setFormTarget('new')}>
+        + Cheltuială nouă
+      </Button>
       <RowMenu
         ariaLabel="Mai multe opțiuni"
         items={[{ label: 'Administrează categorii', onClick: () => setCategoryDrawerOpen(true) }]}

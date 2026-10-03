@@ -103,7 +103,9 @@ export function GroupsPage({ onOpenGroupStickers }: GroupsPageProps = {}) {
         <b className={styles.headerStatStrong}>{unassignedCount} fără grupă</b>
       </span>
       <SegmentedControl ariaLabel="Vizualizare Grupe" options={VIEW_OPTIONS} value={viewMode} onChange={setViewMode} />
-      <Button onClick={() => setFormOpen(true)}>+ Grupă nouă</Button>
+      <Button size="header" onClick={() => setFormOpen(true)}>
+        + Grupă nouă
+      </Button>
     </div>,
   );
 
