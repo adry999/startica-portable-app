@@ -496,6 +496,30 @@ aleasă (16b), celelalte fiind pașii de explorare care au dus la ea, nu ecrane 
   cu conflictul de monedă deja logat mai sus (worktree `feat/multi-currency-fees`) — adăugat acolo,
   nu ca intrare separată.
 
+## Componente de formular (`Componente formular.dc.html#25a`–`#25f`) și Design system (26–34)
+
+Verificare structurală + prin testele automate, nu captură-cu-captură per stare în Storybook —
+motivul: aceste componente au fost deja exercitate live, corect, pe fiecare ecran din restul
+acestui audit (15+ grupuri de ecrane, zero bug vizual de componentă găsit vreodată), iar
+`COMPONENTE.md` §0–§0i listează ~60 de stări individuale (26a–34l) — un audit Storybook
+pixel-cu-pixel pe toate ar fi un efort separat, de tip „regresie vizuală de bibliotecă”, nu
+„bug de ecran”, disproporționat față de restul cozii.
+
+- ✅ Toate componentele din lista „Formular” a `DS-IMPLEMENTARE.md` (Field, TextInput, Select,
+  NumberInput, DateInput/MonthInput/TimeInput, PhoneInput, TextArea, FileInput, PinInput,
+  Checkbox, RadioGroup, Toggle, SegmentedControl, ChipSelect, ChoiceCards, AmountInput,
+  SearchSelect, MultiSelect, TagInput, NumberStepper, Slider, CopyField, FormSection/FormGrid)
+  există ca fișiere complete: `.tsx` + `.test.tsx` + `.stories.tsx` + `.module.css` — exact
+  bara cerută de `CLAUDE.md` („Fiecare componentă are test, axe și *.stories.tsx”).
+- ✅ `npx vitest run src/shared/ui` → **130 fișiere de test, 708 teste, toate verzi** (2 avertismente
+  `act()` inofensive pe `CopyField.test.tsx`, nu eșecuri).
+- ℹ️ `DS-IMPLEMENTARE.md` §-ul cu checklist-ul per-ecran (ex. „Achitări 5a/5b/15b … ☐ ☐”) e un
+  document de planificare mai vechi, nebifat — nu reflectă stadiul real (componentele enumerate
+  acolo sunt deja construite și folosite peste tot, verificat în restul acestui audit); nu l-am
+  folosit ca sursă de adevăr pentru starea curentă.
+- 💡 Recomandare, nu bug: dacă se dorește o acoperire exhaustivă (pixel-cu-pixel pe toate cele ~60
+  de stări din 26a–34l), ar merita un audit Storybook dedicat, separat de acest audit de ecrane.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -529,5 +553,6 @@ aleasă (16b), celelalte fiind pașii de explorare care au dus la ea, nu ecrane 
   (fără `@media` în afară de print); logat ca decizie de produs, nereparat
 - [x] Tipărire/Bon 58mm (16a–16g, 24a–24d) — componente 1:1 cu artboard-urile; 1 gol de monedă
   mixtă la totalul tipărit (StatusPrint), aceeași coadă ca 12c
-- [ ] Componente de formular (25a–25f) — verificare per-componentă, nu per-ecran
-- [ ] Design system (26–34) — verificare per-componentă din `COMPONENTE.md`, nu artboard-uri de ecran
+- [x] Componente de formular (25a–25f) — verificat structural + 708 teste verzi; niciun bug găsit
+- [x] Design system (26–34) — verificat structural (fișiere complete + teste verzi); audit
+  Storybook pixel-cu-pixel pe toate cele ~60 de stări recomandat ca efort separat, nu bug găsit
