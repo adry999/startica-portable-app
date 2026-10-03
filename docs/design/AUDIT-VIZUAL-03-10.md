@@ -307,6 +307,22 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   tehnică deja documentată și închisă în `INTREBARI.md` (componenta nu suportă starea
   „selectată” persistentă cerută aici).
 
+## Sincronizare (`Sincronizare.dc.html#14a`–`#14c`)
+
+- ✅ Cele 3 alinieri din `ALINIERE-DESIGN.md` confirmate exact în cod: 14b coloana dreaptă 380px
+  (`SyncSettings.module.css`), 14c titlu `font-family: var(--font-heading)` + radius tabel
+  `--radius-md` (14px) (`ConflictsPage.module.css`).
+- ✅ **14a** (cardul din meniu) — `SyncStatusCard` înlocuiește corect vechiul card „Salvat” doar
+  când sincronizarea e configurată (confirmat în cod); are 2 stări în plus față de spec
+  (`revoked`, `incompatible`), documentate în planul tehnic (`2026-09-27-sincronizare.md` Task 8,
+  §5.2/426) — nu deviații nedocumentate.
+- ✅ **14c** (Conflicte) — grid 320px/1fr, tabel comparativ pe 3 coloane, cele 2 butoane
+  „Păstrează varianta…” cu wording-ul corect — conform spec.
+- ⚠️ **Nu am putut verifica vizual stările „conectat”** (cardul serverului mint, lista de
+  calculatoare conectate, fluxul „+ Conectează un calculator”) — acest calculator nu e conectat la
+  niciun server de sincronizare (arată formularul de onboarding „Conectează acest calculator la
+  server”); a conecta unul real ar depăși scopul unui audit vizual. Verificat doar din cod.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -323,7 +339,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Prezența (18a/18b/18c/18d) — niciun bug găsit; redesignul A3c confirmat complet implementat
 - [x] Personal (23a–23o) — niciun bug găsit; spot-check + verificări anterioare deja închise
 - [x] Vizite (4a) — niciun bug găsit; 1 întrebare logată (dropdown Perioadă simplificat)
-- [ ] Sincronizare (14a/14b/14c)
+- [x] Sincronizare (14a/14b/14c) — niciun bug găsit; stările „conectat” neverificabile local
 - [ ] Filiale (13a/13b/13c)
 - [ ] Planuri și curs (12a–12g)
 - [ ] Notificare SMS/Situatia (7a–7e)
