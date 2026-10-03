@@ -19,12 +19,8 @@ Legendă: 🐛 gol real (lipsește din cod, nu doar din datele de test) · ℹ�
 
 - ✅ Mărimea KPI: Încasări 36px, Cheltuieli/Diferență/Avansuri 30px — exact ca A8.
 - ✅ Pastila de curs BNM: tot blocul e `<a href="https://www.bnm.md/" target="_blank" rel="noopener noreferrer">` — exact ca A8.
-- 🐛 **Lipsește nota de sub graficul „Evoluția încasărilor"**: artboard-ul are
-  `<span style="font-size:12px;color:#9aa3a9">Începe din prima lună cu date (iunie 2026), maxim 12
-  luni. Peste bare: încasările lunii. Hover: încasări, cheltuieli, diferență.</span>` — text absent
-  complet din `DashboardPage.tsx` (grep confirmă: niciun fragment din acest text nu există în cod).
-  Fix simplu: un `<p>` sub `<BarChart>`, cu textul mai sus (sau generat din `chartMonths[0]`, ca
-  luna să nu fie hardcodată).
+- 🐛✅ **Lipsea nota de sub graficul „Evoluția încasărilor"** — reparat: `<p className={styles.chartCaption}>`
+  adăugat sub `<BarChart>`, text generat din `chartMonths[0]` (nu hardcodat). Verificat live.
 - Bara „Cheltuieli" (verde, a doua serie din grafic) — cod corect (`secondarySeries` trimis,
   culori documentate în INTREBARI.md §11), dar filiala de test (1 Buiucani) are 0 cheltuieli în
   Aug/Sep/Oct 2026 (verificat și pe pagina Cheltuieli, nu doar pe Dashboard) — nu pot confirma
@@ -54,6 +50,21 @@ Legendă: 🐛 gol real (lipsește din cod, nu doar din datele de test) · ℹ�
 - Pastilele de grupă din filtre includ grupe de test („test212”, „test”, „test22”) — poluare din
   datele de dezvoltare, nu un bug de cod.
 
+## Grupe (`Grupe.dc.html#4a` Carduri, `#4b` Tablă)
+
+- 🐛✅ **Eyebrow „Organizare" în loc de „Evidență"** — vezi secțiunea de mai jos (bug sistemic),
+  reparat în `nav-items.ts`.
+- 🐛✅ **Buton „+ Grupă nouă" fără `size="header"`** — vezi secțiunea de mai jos, reparat.
+- ℹ️ „Șterge grupa X" + „Mută întâi cei N copii" sub el (grupă cu copii) — deja documentat ca spec
+  explicit în `PROMPT-CLAUDE-CODE-11.md` §Ștergere și `INTREBARI.md` (`blockingChildCount`), nu e
+  artefact — artboard-ul (grupa Mars, fără blocare) doar nu a ilustrat cazul blocat.
+- ✅ Structura cardului de grupă (nume, contor, bară progres, educator, avataruri copii, „+N"),
+  editorul inline „Editează grupa X" (nume, capacitate, Echipa grupei cu Principal/Asistent/
+  Înlocuitor + zile, Copii în grupă) — identice cu artboard-ul, verificat captură + DOM.
+- Sidebar „Backup și setări" + versiunea lipsesc din capturile `fullPage` anterioare doar pentru că
+  ies sub fold la 1000px înălțime — confirmat prezente în DOM (`page.$$eval`), nu bug (același tipar
+  ca la Dashboard).
+
 ## Buton CTA principal din antet — bug sistemic (găsit + reparat)
 
 Verificare detaliată (poziție, mărime, font) a butonului „+ Grupă nouă" din antetul Grupe vs
@@ -76,12 +87,24 @@ Verificare detaliată (poziție, mărime, font) a butonului „+ Grupă nouă" d
   `padding: 8px 18px` — identic cu #28a.
 - tsc + 1219 teste webapp (inclusiv `design-system.coverage.test.tsx`, axe) — toate verzi.
 
+## Eyebrow antet — bug sistemic (găsit + reparat)
+
+`DECIZII.md` §1 (prioritate maximă): eyebrow = grupa din sidebar — Evidență (Copii, Grupe, Prezența,
+Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verificat `nav-items.ts`
+`VIEW_TITLES` pentru toate cele 19 ecrane:
+
+- 🐛✅ **Grupe arăta „Organizare"** în loc de „Evidență" — reparat.
+- 🐛✅ **Vizite arăta „Înscrieri"** în loc de „Evidență" — reparat.
+- ✅ Toate celelalte 17 ecrane (Copii, Prezența, Bazin, Personal, Achitări, Cheltuieli, Situația
+  plăților, De notificat, Raport contabil, Taxe și grupe, De verificat, Asociere achitări,
+  Conflicte, Istoric, Notificări, Backup și setări, Dashboard) — corecte.
+
 ## Legendă progres
 
-- [x] Dashboard (1a) — 1 gol real găsit
+- [x] Dashboard (1a) — 1 gol real găsit, reparat
 - [x] Copii — listă (2a) — 1 gol real (posibil) găsit, 1 întrebare de business
 - [ ] Copii — fișă (2b), Zile de naștere (2c)
-- [ ] Grupe (4a/4b/4c)
+- [x] Grupe (4a/4b) — eyebrow + buton CTA reparate; 4c (drawer „+ Grupă nouă") de verificat separat
 - [ ] Achitări (5a/5b)
 - [ ] Cheltuieli (6a/6b)
 - [ ] Situația (7a/7b)
