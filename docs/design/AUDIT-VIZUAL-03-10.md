@@ -114,11 +114,35 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   plăților, De notificat, Raport contabil, Taxe și grupe, De verificat, Asociere achitări,
   Conflicte, Istoric, Notificări, Backup și setări, Dashboard) — corecte.
 
+## Copii — fișă (`Copii.dc.html#2b`)
+
+- 🐛✅ **„Contract 3” în loc de „Contract #3”** (antet + card KPI) — `useChildProfile.ts` omitea
+  `#`-ul pe care `useChildren.ts` (lista) și artboard-ul îl au. Reparat.
+- ⚠️→✅ **Fals-pozitiv de infrastructură**: „Ultimele modificări” arăta „Pagina nu există.” —
+  NU e bug de cod. Serverul backend (port 8765) rula de pe 30.09, dinainte de ruta
+  `GET /api/audit/scope`, deci orice cerere la ea pica în 404 generic. Confirmat direct cu `curl`
+  (ruta merge perfect după restart). **Repornit serverul** — „Ultimele modificări” arată acum
+  istoricul real. De reținut pentru orice audit viitor: verifică vârsta procesului backend
+  (`Get-Process`) înainte de a raporta un gol de date ca bug de cod.
+- ✅ „Prezența” (linie de puncte + listă absențe motivate, nu grilă calendar) — verificat intenționat:
+  `screens/19-prezenta.md` („Secțiune nouă… luna curentă pe o linie de puncte”) e mai nou decât
+  artboard-ul 2b (care arată o grilă calendaristică veche) și are prioritate; codul implementează
+  exact spec-ul scris, nu artboard-ul vechi. Nu e bug.
+- ✅ Lipsă „Alergii, sănătate”, rolurile „Tată”/„Mamă” la părinți, „vârste X–Y” la educator, „Pot
+  ridica copilul” gol — toate implementate corect în cod (`child.healthNotes`, `parentRelation`,
+  `group.ageMinYears/ageMaxYears`), doar neconfigurate pentru acest copil de test (Alexander Cerba,
+  date reale de dezvoltare) — date, nu cod.
+- ✅ „Taxă lunară” (nu „PLAN”) — fără spec scris care să ceară „PLAN”; wording consecvent cu restul
+  aplicației (Achitări, Cheltuieli) — artboard-ul pare un draft mai vechi.
+- Secțiunea „Note” — live are compunere prin toggle „+ Notă”, artboard arată caseta deschisă
+  permanent; ambiguu dacă artboard ilustrează doar starea „deschis” — nereportat, severitate joasă.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
 - [x] Copii — listă (2a) — 1 gol real (posibil) găsit, 1 întrebare de business
-- [ ] Copii — fișă (2b), Zile de naștere (2c)
+- [x] Copii — fișă (2b) — 1 gol real reparat, 1 fals-pozitiv (server vechi), rest confirmat OK
+- [ ] Zile de naștere (2c)
 - [x] Grupe (4a/4b/4c) — eyebrow, buton CTA, nota Culoare, stepper Vârstă — toate reparate
 - [ ] Achitări (5a/5b)
 - [ ] Cheltuieli (6a/6b)
