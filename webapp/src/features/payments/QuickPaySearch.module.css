@@ -2,6 +2,20 @@
   position: relative;
 }
 
+.eyebrow {
+  margin: 0 0 var(--space-8);
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: var(--text-eyebrow-letter-spacing);
+}
+
+.hint {
+  margin: var(--space-8) 0 0;
+  font-size: 12px;
+  color: var(--subtle);
+}
+
 .menu {
   position: absolute;
   z-index: var(--z-popover);

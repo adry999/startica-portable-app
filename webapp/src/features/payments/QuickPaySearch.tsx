@@ -70,6 +70,10 @@ export function QuickPaySearch({ records, onSelect }: QuickPaySearchProps) {
 
   return (
     <div className={styles.root}>
+      {/* aria-hidden: dublează vizual label-ul pe care `TextInput` îl are deja prin `ariaLabel`. */}
+      <p className={styles.eyebrow} aria-hidden="true">
+        Încasare rapidă
+      </p>
       <TextInput
         value={query}
         onChange={setQuery}
@@ -79,6 +83,7 @@ export function QuickPaySearch({ records, onSelect }: QuickPaySearchProps) {
         suffix={<Kbd>N</Kbd>}
         inputRef={inputRef}
       />
+      <p className={styles.hint}>Enter deschide plata precompletată (44a).</p>
 
       {open && (
         <div className={styles.menu} role="listbox" aria-label="Rezultate încasare rapidă">
