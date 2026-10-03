@@ -474,6 +474,28 @@ Situația plăților), dar aplicația are peste 30 de ecrane; a improviza compor
 restul fără artboard-uri dedicate ar însemna decizii de design pe cont propriu, nu un fix punctual.
 Logat ca decizie de produs în `INTREBARI.md`.
 
+## Tipărire / Bon 58mm (`Tiparire.dc.html#16a`–`#16g`, `Bon 58mm.dc.html#24a`–`#24d`)
+
+Subsistemul de tipărire are o componentă dedicată pentru fiecare id din artboard, cu comentarii
+care citează explicit numărul (`StatusPrint.tsx` → „16c”, `DayClosingReceipt.tsx` → „24b”,
+`PoolReceiptLabel.tsx` → „24c”): `PaymentReceipt.tsx`/`PaymentReceiptThermal.tsx` (16b A5 +
+24a 58mm, ambele currency-aware — `fxRate`/`amountEur`/`FX_SOURCE_LABEL`), `StatusPrint.tsx`
+(16c, `@page { size: A4 ${orientation} }`, antet/sumar/tabel/subsol conform spec),
+`DayClosingReceipt.tsx` (24b, „Închiderea zilei”), `PoolReceiptLabel.tsx`+`PoolReceiptPage.tsx`
+(24c, biletul de bazin), `StickerLabel.tsx`+`StickerPrintPage.tsx` (24d — marcat „se poate încerca”
+în artboard, deci opțional; construit oricum). 16d–16g sunt variante de explorare a layout-ului A5
+(„Jumătate/jumătate”, „1/3+2/3” în 3 variante) — `PaymentReceipt.tsx` implementează varianta finală
+aleasă (16b), celelalte fiind pașii de explorare care au dus la ea, nu ecrane separate de construit.
+
+- ✅ Structura și componentele corespund 1:1 artboard-urilor, verificat din cod (randarea reală de
+  print nu poate fi comparată pixel-cu-pixel fără declanșarea dialogului de tipărire al sistemului).
+- 🐛 **`StatusPrint.tsx`** însumează `row.expected`/`row.paid`/`row.rest` direct (`expectedTotal +=
+  row.expected ?? 0`) fără să separe pe monedă, apoi afișează totalul cu `formatMoney(expectedTotal)`
+  (implicit lei) și subsolul spune „Sume în lei” — pentru o filială cu copii MDL **și** EUR
+  amestecați, totalul tipărit ar aduna greșit cele două monede ca și cum ar fi aceeași. Se suprapune
+  cu conflictul de monedă deja logat mai sus (worktree `feat/multi-currency-fees`) — adăugat acolo,
+  nu ca intrare separată.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -505,6 +527,7 @@ Logat ca decizie de produs în `INTREBARI.md`.
 - [x] Încărcare (21a–21c) — niciun bug găsit, verificat din cod (greu de prins live, <1s)
 - [x] Responsive (17a–17c) — 🐛 confirmat: breakpoint-urile 1024/768px nu sunt construite deloc
   (fără `@media` în afară de print); logat ca decizie de produs, nereparat
-- [ ] Tipărire/Bon 58mm (16a–16g, 24a–24d)
+- [x] Tipărire/Bon 58mm (16a–16g, 24a–24d) — componente 1:1 cu artboard-urile; 1 gol de monedă
+  mixtă la totalul tipărit (StatusPrint), aceeași coadă ca 12c
 - [ ] Componente de formular (25a–25f) — verificare per-componentă, nu per-ecran
 - [ ] Design system (26–34) — verificare per-componentă din `COMPONENTE.md`, nu artboard-uri de ecran

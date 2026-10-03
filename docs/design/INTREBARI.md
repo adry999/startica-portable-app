@@ -28,6 +28,11 @@ suprapunerea e clară: ambele ating obligații/afișare per monedă pentru copil
 **De decis:** cele două eforturi fuzionează, sau unul înlocuiește pe celălalt? Fără un răspuns,
 orice fix viitor pe `StatusPage.tsx`/obligații (vezi 12c mai jos) riscă conflict direct la merge.
 
+**Addendum (audit Tipărire 03.10):** același gol apare și la tipărire — `StatusPrint.tsx` (16c)
+însumează `expected`/`paid`/`rest` fără să separe pe monedă, deci un total tipărit cu copii MDL
+**și** EUR amestecați ar aduna greșit cele două monede ca pe aceeași unitate. Același fix, aceeași
+coadă la decizia de mai sus.
+
 ## 🐛 Audit vizual 03.10 — Situația plăților (12c), lipsește echivalentul lei la copiii cu taxă EUR
 
 Spec (`screens/16-planuri-eur.md`, model (b)): la Situația plăților, coloanele Taxă/Achitat/Rest
