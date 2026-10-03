@@ -143,6 +143,33 @@ describe('BirthdaysPage', () => {
     expect(within(sideList).getAllByText(/împlinește/)).toHaveLength(4);
   });
 
+  it('colorează și cu tonuri din a doua jumătate a paletei (teal), nu doar primele 2 din listă', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({
+            // „Curcubeu” sortează alfabetic înaintea Mars/Soare, deci împinge Soare pe indexul 2
+            // din paleta de 8 tonuri (yellow, pink, teal, …) — Soare devine „teal”, un ton pe care
+            // BirthdaysPage.module.css nu-l definea deloc înainte de reparație.
+            state: { ...fixtureState, groups: [...fixtureState.groups, { id: 'g3', name: 'Curcubeu', capacity: 10 }] },
+            revision: 1,
+            updatedAt: '2026-09-23T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    const sideList = screen.getByText('Toată luna').closest('aside') as HTMLElement;
+    const entry = within(sideList).getByText('Ionescu Maria').closest('a') as HTMLElement;
+    expect(entry.querySelector('[class*="itemDay"]')?.className).toMatch(/teal/);
+  });
+
   it('click pe un rând din listă navighează la /copii/:childId', async () => {
     const session = renderHook(() => useAppSession());
     await act(() => session.result.current.load());
