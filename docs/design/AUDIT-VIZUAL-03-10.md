@@ -438,6 +438,24 @@ SMS pentru filtrele alese”, normal).
   consecvent cu nota din cod („46a: un calculator genuin gol vede alegerea… până una dintre cele
   trei e aleasă”). Niciun bug nou găsit.
 
+## Încărcare (`Incarcare.dc.html#21a`–`#21c`)
+
+Verificat din cod (`StartupScreen.tsx`, 209 linii, cu teste dedicate `StartupScreen.test.tsx` +
+`StartupScreen.error.test.tsx`) — ecranul real durează sub o secundă pe mașina de dezvoltare, greu
+de prins live fără artificii; codul citează explicit „21a”/„ALINIERE-DESIGN.md A8” pe deciziile cheie.
+
+- ✅ **21a** — bară de progres lină (nu în trepte, `useSmoothProgress`, cap 90% în interiorul
+  pasului curent), lista de pași reali din `session.state.startupTimings` (server → bază de date →
+  sincronizare, doar dacă e configurată → Dashboard), filiala + versiunea în subsol. Nimic vizibil
+  sub 1 s (`REVEAL_DELAY_MS`), ca spec-ul să nu „sclipească” la o pornire rapidă.
+- ✅ **21c** — exact la 15 s (`TOO_SLOW_DELAY_MS`, identic cu „după 15 secunde” din titlul
+  artboard-ului): „Pornirea durează mai mult ca de obicei” + „Lucrez fără legătură” / „Încearcă din
+  nou” + ultima sincronizare, dacă există.
+- ℹ️ **21b** (Între pagini) e `LoadingState`-ul generic din `@shared/ui`, deja verificat implicit de
+  zeci de ori în acest audit (Fee setup, Bazin, Vizite etc.) — nu o pagină separată de reconstruit.
+- ℹ️ Stare în plus față de artboard: `StartupError` (baza de date nu s-a putut citi deloc) — cu
+  mesaj + cale de backup + „Încearcă din nou”; extensie rezonabilă, nu o deviație nedorită.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -466,7 +484,7 @@ SMS pentru filtrele alese”, normal).
 - [x] Raport contabil (19a/19b) — niciun bug găsit, inclusiv secțiunea EUR din export
 - [x] Prima pornire (20a–20c) — artboard original înlocuit de 46a–46d, deja construit și verificat
   anterior; niciun bug nou
-- [ ] Încărcare (21a–21c)
+- [x] Încărcare (21a–21c) — niciun bug găsit, verificat din cod (greu de prins live, <1s)
 - [ ] Responsive (17a–17c)
 - [ ] Tipărire/Bon 58mm (16a–16g, 24a–24d)
 - [ ] Componente de formular (25a–25f) — verificare per-componentă, nu per-ecran
