@@ -414,6 +414,17 @@ SMS pentru filtrele alese”, normal).
 - ℹ️ **10b (Notificări)** — deja acoperit mai sus la SMS istoric (11a/11b): fila „Canale” din
   `NotificationsPage.tsx` corespunde 10b.
 
+## Raport contabil (`Raport contabil.dc.html#19a`–`#19b`)
+
+- ✅ **19a** — KPI-uri (Încasări/Cheltuieli/Sold), „Încasări pe metode” cu bare proporționale,
+  „Cheltuieli pe categorii”, tabelul „Pe zile · doar zilele cu mișcări”, rândul „Total lună” —
+  identic cu artboard-ul (verificat pe Septembrie 2026, lună cu date reale).
+- ✅ **19b** (Exportă pentru contabil) — Perioadă (presetări + „Altă perioadă…”), Filială (curentă/
+  „Ambele, o foaie pe filială”), Format Excel/PDF cu descriere, cele 3 bife („Include numele
+  plătitorilor”, „Sumele în EUR cu cursul și echivalentul în lei” — bifată implicit, „Include
+  achitările arhivate”), avertismentul „N achitări neasociate… Asociază-le întâi →”, numele
+  fișierului — toate conform spec, inclusiv secțiunea EUR deja construită.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -439,7 +450,7 @@ SMS pentru filtrele alese”, normal).
   currency-aware deja corecte
 - [x] Administrare (10a–10d) — niciun bug găsit; Istoric paginat corect din server, Backup/Servicii
   conforme spec
-- [ ] Raport contabil (19a/19b)
+- [x] Raport contabil (19a/19b) — niciun bug găsit, inclusiv secțiunea EUR din export
 - [ ] Prima pornire (20a–20c)
 - [ ] Încărcare (21a–21c)
 - [ ] Responsive (17a–17c)
