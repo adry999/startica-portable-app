@@ -314,7 +314,7 @@ describe('ChildrenPage', () => {
   it('C-10: schimbarea unui filtru resetează paginarea la pagina 1', async () => {
     const bigFixture = {
       ...fixtureState,
-      // 30 ca să depășească pageSize implicit (25) — vezi Pagination/DataTable (F1).
+      // 30 ca să depășească pageSize implicit (10) — vezi Pagination/DataTable (F1).
       children: Array.from({ length: 30 }, (_, index) => ({
         id: `big-${index}`,
         name: `Copil ${String(index + 1).padStart(2, '0')}`,
@@ -348,14 +348,14 @@ describe('ChildrenPage', () => {
     expect(screen.getByText('Copil 01')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '2' }));
-    expect(screen.getByText('Copil 26')).toBeInTheDocument();
+    expect(screen.getByText('Copil 11')).toBeInTheDocument();
     expect(screen.queryByText('Copil 01')).not.toBeInTheDocument();
 
     // Filtrarea nu schimbă numărul de rânduri (toți 30 corespund în continuare „Copil”),
     // deci fără cheia derivată din filtre DataTable ar rămâne clamp-uit pe aceeași pagină.
     await userEvent.type(screen.getByLabelText('Caută copil'), 'Copil');
     expect(screen.getByText('Copil 01')).toBeInTheDocument();
-    expect(screen.queryByText('Copil 26')).not.toBeInTheDocument();
+    expect(screen.queryByText('Copil 11')).not.toBeInTheDocument();
   });
 
   it('§13.2: căutarea și grupa rămân la întoarcerea din fișă — stare în URL (?q=&grupa=)', async () => {

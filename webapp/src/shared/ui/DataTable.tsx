@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { readStoredPageSize, storePageSize } from '@shared/state/table-page-size';
 import { EmptyState } from './EmptyState';
 import { EMPTY_STATES, resolveEmptyStateText, resolveEmptyStateTitle, type EmptyStateKey } from './empty-states';
 import { Pagination } from './Pagination';
@@ -81,7 +82,7 @@ export function DataTable<Row>({
   columns,
   rows,
   rowKey,
-  pageSize = 25,
+  pageSize,
   emptyState,
   empty,
   emptyParams,
@@ -106,8 +107,10 @@ export function DataTable<Row>({
   const [internalSort, setInternalSort] = useState<DataTableSort | null>(() => defaultSort ?? null);
   const [internalPage, setInternalPage] = useState(1);
   // „Pe pagină N ▾” (COMPONENTE.md §Pagination) — mereu internă, niciun apelant nu are azi
-  // nevoie s-o controleze din afară, spre deosebire de `sort`/`page` (URL, 13.2).
-  const [internalPageSize, setInternalPageSize] = useState(pageSize);
+  // nevoie s-o controleze din afară, spre deosebire de `sort`/`page` (URL, 13.2). Fără un `pageSize`
+  // explicit (tabelele generice de listă), alegerea e o preferință per calculator, comună tuturor
+  // tabelelor — altfel utilizatorul ar trebui să-și reselecteze „50” de fiecare dată.
+  const [internalPageSize, setInternalPageSize] = useState(() => pageSize ?? readStoredPageSize());
   // Controlat doar dacă apelantul dă `sort`/`page` — altfel starea rămâne internă, exact ca până acum.
   const sort = controlledSort !== undefined ? controlledSort : internalSort;
   const page = controlledPage !== undefined ? controlledPage : internalPage;
@@ -116,6 +119,7 @@ export function DataTable<Row>({
 
   function changePageSize(nextPageSize: number) {
     setInternalPageSize(nextPageSize);
+    storePageSize(nextPageSize);
     setPage(1);
   }
 

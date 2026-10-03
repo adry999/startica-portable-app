@@ -1,7 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DataTable, type DataTableColumn } from './DataTable';
+
+// „Pe pagină” e o preferință globală (localStorage) — fără curățare, o alegere dintr-un test
+// ar supraviețui în următoarele, din același fișier (vezi table-page-size.ts).
+afterEach(() => localStorage.removeItem('table.pageSize'));
 
 interface Child {
   id: string;
@@ -192,6 +196,28 @@ describe('DataTable', () => {
     expect(screen.getByText('Andrei')).toBeInTheDocument();
     expect(screen.getByText('Ioana')).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Rânduri pe pagină' })).not.toBeInTheDocument();
+  });
+
+  it('fără pageSize explicit, implicitul e 10 (nu 25) — cerut de utilizator', () => {
+    // 11 rânduri: cu implicitul vechi (25) ar fi încăput pe o singură pagină, fără bară de
+    // paginare — cu noul implicit (10) trebuie să arate „1–10 din 11”.
+    const elevenRows: Child[] = Array.from({ length: 11 }, (_, i) => ({ id: `r${i}`, name: `Rândul ${i}`, fee: 0 }));
+    render(<DataTable columns={columns} rows={elevenRows} rowKey={r => r.id} />);
+    expect(screen.getByText('1–10 din 11')).toBeInTheDocument();
+  });
+
+  it('„Pe pagină” e o preferință salvată — rămâne aleasă și la un tabel nou, nu doar la cel curent', async () => {
+    localStorage.setItem('table.pageSize', '50');
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} />);
+    // Cu preferința „50” și doar 3 rânduri, totul încape pe o pagină — bara de paginare dispare.
+    expect(screen.queryByRole('combobox', { name: 'Rânduri pe pagină' })).not.toBeInTheDocument();
+    expect(screen.getByText('Andrei')).toBeInTheDocument();
+  });
+
+  it('schimbarea din dropdown se salvează pentru următorul tabel randat (localStorage)', async () => {
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} />);
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Rânduri pe pagină' }), '50');
+    expect(localStorage.getItem('table.pageSize')).toBe('50');
   });
 
   it('apelează onRowClick cu rândul corect, fără să declanșeze selecția', async () => {
