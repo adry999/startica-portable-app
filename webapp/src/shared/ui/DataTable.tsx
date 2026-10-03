@@ -105,11 +105,19 @@ export function DataTable<Row>({
 }: DataTableProps<Row>) {
   const [internalSort, setInternalSort] = useState<DataTableSort | null>(() => defaultSort ?? null);
   const [internalPage, setInternalPage] = useState(1);
+  // „Pe pagină N ▾” (COMPONENTE.md §Pagination) — mereu internă, niciun apelant nu are azi
+  // nevoie s-o controleze din afară, spre deosebire de `sort`/`page` (URL, 13.2).
+  const [internalPageSize, setInternalPageSize] = useState(pageSize);
   // Controlat doar dacă apelantul dă `sort`/`page` — altfel starea rămâne internă, exact ca până acum.
   const sort = controlledSort !== undefined ? controlledSort : internalSort;
   const page = controlledPage !== undefined ? controlledPage : internalPage;
   const setSort = onSortChange ?? setInternalSort;
   const setPage = onPageChange ?? setInternalPage;
+
+  function changePageSize(nextPageSize: number) {
+    setInternalPageSize(nextPageSize);
+    setPage(1);
+  }
 
   // F1 (FEEDBACK-01-10.md): schimbarea setului de rânduri (filtru/căutare) duce mereu înapoi la pagina 1.
   // Semnătura (nu `rows` direct) ca să nu sară la pagina 1 doar pentru că apelantul
@@ -163,11 +171,11 @@ export function DataTable<Row>({
     return orderedKeys.map(key => ({ key, rows: buckets.get(key)! }));
   }, [sortedRows, groupBy]);
 
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / internalPageSize));
   const currentPage = Math.min(page, pageCount);
   const pageRows = groupBy
     ? sortedRows
-    : sortedRows.slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize);
+    : sortedRows.slice((currentPage - 1) * internalPageSize, (currentPage - 1) * internalPageSize + internalPageSize);
 
   // F21 (PROMPT-11 §9): crescător -> descrescător -> revine la implicit (nu un toggle etern).
   function toggleSort(column: DataTableColumn<Row>) {
@@ -338,8 +346,9 @@ export function DataTable<Row>({
             page={currentPage}
             totalPages={pageCount}
             totalRows={sortedRows.length}
-            pageSize={pageSize}
+            pageSize={internalPageSize}
             onPageChange={setPage}
+            onPageSizeChange={changePageSize}
           />
         </div>
       )}

@@ -181,6 +181,19 @@ describe('DataTable', () => {
     expect(screen.queryByText('Andrei')).not.toBeInTheDocument();
   });
 
+  it('dropdown-ul „Pe pagină” schimbă numărul de rânduri și revine la pagina 1 (COMPONENTE.md §Pagination)', async () => {
+    render(<DataTable columns={columns} rows={children} rowKey={c => c.id} pageSize={2} />);
+    await userEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(screen.getByText('Ioana')).toBeInTheDocument();
+
+    // Cu 3 rânduri și pageSize 10 intră toate pe o pagină — bara de paginare (deci și dropdown-ul
+    // „Pe pagină”) dispare, per spec („Ascunsă la o singură pagină"); rândurile rămân vizibile.
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Rânduri pe pagină' }), '10');
+    expect(screen.getByText('Andrei')).toBeInTheDocument();
+    expect(screen.getByText('Ioana')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Rânduri pe pagină' })).not.toBeInTheDocument();
+  });
+
   it('apelează onRowClick cu rândul corect, fără să declanșeze selecția', async () => {
     const onRowClick = vi.fn();
     const onSelectedRowKeysChange = vi.fn();
