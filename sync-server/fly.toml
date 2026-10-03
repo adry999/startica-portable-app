@@ -1,0 +1,51 @@
+# Deploy pe Fly.io (gestionat, HTTPS automat, fără VPS/Caddy de administrat).
+# Rulează din rădăcina depozitului (contextul de build e `sync-server/Dockerfile` cu
+# `COPY sync-server/ ./sync-server/`, la fel ca docker-compose.yml):
+#
+#   flyctl launch --config sync-server/fly.toml --dockerfile sync-server/Dockerfile --no-deploy
+#   flyctl volumes create sync_data --app <numele-ales> --region fra --size 1
+#   flyctl secrets set --app <numele-ales> SYNC_SETUP_KEY=<o-cheie-lunga-generata-o-singura-data>
+#   flyctl deploy --config sync-server/fly.toml --dockerfile sync-server/Dockerfile
+#
+# Vezi sync-server/README.md, secțiunea „Găzduire: Fly.io” pentru explicația fiecărui pas.
+
+app = "startica-sync"  # schimbă cu un nume unic global — flyctl launch întreabă/sugerează unul
+primary_region = "fra"  # Frankfurt — cel mai apropiat punct Fly de Moldova/România
+
+[build]
+  dockerfile = "sync-server/Dockerfile"
+
+[env]
+  SYNC_BIND = "0.0.0.0"
+  SYNC_DATA_DIR = "/data"
+  SYNC_TRUST_PROXY = "1"
+  SYNC_BACKUP_HOUR = "3"
+  SYNC_BACKUP_KEEP = "14"
+  SYNC_HISTORY_DAYS = "365"
+  # SYNC_SETUP_KEY NU se pune aici (fișierul ăsta ajunge în git) — doar prin
+  # `flyctl secrets set`, care îl ține criptat, separat de configurare.
+
+[mounts]
+  source = "sync_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 8790
+  protocol = "tcp"
+  auto_stop_machines = false   # serverul de sync trebuie mereu pornit, nu doar la cerere
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
