@@ -109,6 +109,43 @@ describe('FeeSetupPage', () => {
     expect(screen.getByText('1 rămase')).toBeInTheDocument();
   });
 
+  it('paginează — nu arată toate rândurile deodată (audit 03.10)', async () => {
+    const manyChildren = Array.from({ length: 25 }, (_, index) => ({
+      id: `c${index}`,
+      name: `Copil ${index}`,
+      contractNumber: String(index),
+      attendanceDate: '2026-01-10',
+      birthDate: '2022-01-10',
+      dueDay: 26,
+      groupId: null,
+      status: 'Activ',
+      statusHistory: [],
+      feeHistory: [],
+      fee: null,
+      archived: false,
+    }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({
+            state: { ...fixtureState, children: manyChildren },
+            revision: 1,
+            updatedAt: '2026-09-23T10:00:00Z',
+          });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderPage();
+
+    expect(screen.getAllByText(/Copil \d+/).length).toBe(10);
+    expect(screen.getByText('1–10 din 25')).toBeInTheDocument();
+  });
+
   it('completarea taxei activează Salvează pe rând, iar salvarea o dezactivează', async () => {
     await loadedSession();
     renderPage();

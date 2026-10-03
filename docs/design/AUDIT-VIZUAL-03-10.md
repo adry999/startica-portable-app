@@ -232,6 +232,26 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - ℹ️ „Trimite toate · N” (spec/artboard) vs „Trimite tuturor · N” (cod) — wording, consecvent cu
   „Notifică toți” din Situația 7a; fără decizie scrisă contrară, nereportat.
 
+## De rezolvat (`De rezolvat.dc.html#9a` Taxe și grupe, `#9b` De verificat, `#9c` Asociere achitări)
+
+- 🐛✅ **9a (Taxe și grupe) forța `pageSize={rows.length || 1}` pe `DataTable`** — a treia variantă
+  a aceluiași bug sistemic (de data asta explicit, nu lipsă de cod): toate cele 102–103 rânduri
+  randau pe o singură pagină de 7950px, indiferent de preferința globală „Pe pagină". Nicio
+  justificare în cod pentru excepție; selecția în masă (`selectedRowKeys`) e stare externă, nu
+  depinde de pagina curentă — confirmat că paginarea nu rupe fluxul „N selectați → Aplică la N".
+  Reparat: scoasă suprascrierea, tabelul folosește acum `table.pageSize` global ca restul aplicației.
+- ✅ **9b (De verificat)** — coada din stânga (426 intrări) e deja într-un `ScrollArea` cu înălțime
+  fixă (360px, ca în spec), nu randează toate intrările pe pagină — nu are nevoie de paginare,
+  tipar corect pentru o coadă secvențială de revizuit. Restul ecranului (progres, caseta
+  problemei, acțiunile, tasta S) conform spec-ului.
+- ✅ **9c (Asociere achitări)** — structură identică cu artboard-ul (listă + detaliu + sugestii
+  Potrivire mare/Posibil/Slab + „Alt copil…” + „Ține minte plătitorul”); lista din stânga (207
+  intrări) e la fel într-un container cu scroll propriu, nu pe toată pagina.
+- ℹ️ 9c are 3 butoane în plus față de spec (`Completează cu prima sugestie`, `Golește selecțiile`,
+  `Salvează asocierile (N)`) — bulk-acțiuni rezonabile pentru un backlog mare (207 azi vs. 64 în
+  exemplul din artboard), fără comentariu explicit în cod dar fără conflict cu `DECIZII.md`;
+  nereportat ca bug.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -243,7 +263,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Cheltuieli (6a/6b) — 1 bug sistemic reparat (paginare „Pe zile”), rest conform spec
 - [x] Situația (7a/7b) — niciun bug găsit; alinierile mici erau deja corecte în cod
 - [x] De notificat (8a) — niciun bug găsit; deviațiile (SMS, Copiază, editare în dialog) deliberate
-- [ ] De rezolvat (9a/9b/9c)
+- [x] De rezolvat (9a/9b/9c) — 1 bug sistemic reparat (paginare forțată „all” la 9a)
 - [ ] Bazin (22a/22b/22c/22d)
 - [ ] Prezența (18a/18b/18c/18d)
 - [ ] Personal (23a–23l)

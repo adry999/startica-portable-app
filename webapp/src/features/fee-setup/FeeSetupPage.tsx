@@ -287,7 +287,6 @@ export function FeeSetupPage() {
           columns={columns}
           rows={feeSetupData.rows}
           rowKey={row => row.id}
-          pageSize={feeSetupData.rows.length || 1}
           emptyState={
             feeSetupData.filter === 'missing' ? (
               <EmptyState
