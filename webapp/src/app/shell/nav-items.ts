@@ -72,10 +72,10 @@ export const VIEW_LABELS: Record<ViewKey, string> = Object.fromEntries(
 export const VIEW_TITLES: Record<ViewKey, { eyebrow: string; title: string }> = {
   dashboard: { eyebrow: 'Privire de ansamblu', title: 'Rezumatul lunii' },
   children: { eyebrow: 'Evidență', title: 'Copii' },
-  groups: { eyebrow: 'Organizare', title: 'Grupe' },
+  groups: { eyebrow: 'Evidență', title: 'Grupe' },
   attendance: { eyebrow: 'Evidență', title: 'Prezența' },
   pool: { eyebrow: 'Evidență', title: 'Bazin' },
-  visits: { eyebrow: 'Înscrieri', title: 'Vizite' },
+  visits: { eyebrow: 'Evidență', title: 'Vizite' },
   personal: { eyebrow: 'Evidență', title: 'Personal' },
   payments: { eyebrow: 'Contabilitate', title: 'Achitări' },
   expenses: { eyebrow: 'Contabilitate', title: 'Cheltuieli' },
