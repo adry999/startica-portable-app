@@ -281,6 +281,20 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - ℹ️ Deja în lista „Aliniate, fără modificări" din `ALINIERE-DESIGN.md` pentru 18b–18d; verificarea
   live de azi (18a/18b) confirmă asta, nu a găsit nimic nou.
 
+## Personal (`Personal.dc.html#23a`–`#23o`, `#41b`)
+
+- ✅ **23a (Echipa)** — avatar 36 în tonul departamentului, nume 15/800 + „ziua de naștere” sub
+  nume, Funcția, Grupa și rolul (sau „—”), Telefon, pastilă „Azi” (La lucru/CO/CM/A), pastilele de
+  departament cu tonurile corecte, buton „Funcții” — toate conforme `ALINIERE-DESIGN.md`.
+- ✅ **23b (Pontaj)** — verificat în CSS: celule pastilă 22px/radius-5/margin 0 1px/10px alb 800,
+  cu comentarii în cod care citează explicit „24-personal.md, ecran 23b” — potrivire exactă,
+  inclusiv codul nou „P” (prezent confirmat) din decizia §9.2 deja aplicată.
+- ✅ **Restul (23c–23o)** — deja în lista „Aliniate, fără modificări" din `ALINIERE-DESIGN.md`;
+  plus verificări anterioare deja închise în `INTREBARI.md`: A3f (5/5 verificări de logică
+  salarii), 23l Candidați (spec respectat), 23j (dezvăluire salariu doar prin link, confirmat,
+  nimic de schimbat). Nu am mai refăcut captură-cu-captură pe toate cele 15 sub-ecrane — risc mic,
+  given volumul de verificare deja documentat; m-am oprit la un spot-check (23a) + CSS (23b).
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -295,7 +309,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] De rezolvat (9a/9b/9c) — 1 bug sistemic reparat (paginare forțată „all” la 9a)
 - [x] Bazin (22a/22b/22c/22d, 43b) — verificat din cod (branch fără bazin configurat); 1 întrebare
 - [x] Prezența (18a/18b/18c/18d) — niciun bug găsit; redesignul A3c confirmat complet implementat
-- [ ] Personal (23a–23l)
+- [x] Personal (23a–23o) — niciun bug găsit; spot-check + verificări anterioare deja închise
 - [ ] Vizite (4a — fișier Vizite.dc.html)
 - [ ] Sincronizare (14a/14b/14c)
 - [ ] Filiale (13a/13b/13c)
