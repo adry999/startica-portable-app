@@ -425,6 +425,19 @@ SMS pentru filtrele alese”, normal).
   achitările arhivate”), avertismentul „N achitări neasociate… Asociază-le întâi →”, numele
   fișierului — toate conform spec, inclusiv secțiunea EUR deja construită.
 
+## Prima pornire (`Prima pornire.dc.html#20a`–`#20c`)
+
+- ℹ️ **Artboard-ul original (20a–20c: „Pasul 1 · Grădinița” / „Pasul 4 · Importul din Excel” /
+  „Gata”, un wizard pe pași) a fost înlocuit** de un flux mai simplu, documentat în același fișier
+  sub alte id-uri: `46a`–`46d` („alegerea Backup / Alt calculator / De la zero”, `DECIZII.md` linia
+  81, `COMPONENTE.md` §3c). Fluxul `46a`–`46d` e deja construit (`StartSourceScreen.tsx`,
+  `StartSourceFlow.tsx`) și deja verificat/închis într-o sesiune anterioară (`INTREBARI.md`,
+  „✅ 42d UI — coada de prim-pornire (46a–46d) e gata”). Nu am refăcut verificarea pixel-cu-pixel
+  aici — ar fi dublat un audit deja închis — am confirmat doar din cod că `AppShell.tsx` randează
+  `StartSourceScreen` exact la condiția descrisă (`!session.state.hasAnyData && !firstRunDismissed`),
+  consecvent cu nota din cod („46a: un calculator genuin gol vede alegerea… până una dintre cele
+  trei e aleasă”). Niciun bug nou găsit.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -451,7 +464,8 @@ SMS pentru filtrele alese”, normal).
 - [x] Administrare (10a–10d) — niciun bug găsit; Istoric paginat corect din server, Backup/Servicii
   conforme spec
 - [x] Raport contabil (19a/19b) — niciun bug găsit, inclusiv secțiunea EUR din export
-- [ ] Prima pornire (20a–20c)
+- [x] Prima pornire (20a–20c) — artboard original înlocuit de 46a–46d, deja construit și verificat
+  anterior; niciun bug nou
 - [ ] Încărcare (21a–21c)
 - [ ] Responsive (17a–17c)
 - [ ] Tipărire/Bon 58mm (16a–16g, 24a–24d)
