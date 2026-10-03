@@ -295,6 +295,18 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   nimic de schimbat). Nu am mai refăcut captură-cu-captură pe toate cele 15 sub-ecrane — risc mic,
   given volumul de verificare deja documentat; m-am oprit la un spot-check (23a) + CSS (23b).
 
+## Vizite (`Vizite.dc.html#4a`)
+
+- ✅ Structura (4 pastile statistici, calendar lunar + panou de detaliu, „Cum a decurs vizita?”
+  cu cele 4 tonuri, tabelul „Toate vizitele” cu FilterPills Statut, coloane, paginare din
+  `DataTable` fără suprascriere de `pageSize`) — conformă spec-ului.
+- ❓ Dropdown-ul „Perioadă” e un `SearchSelect` binar („Luna curentă”/„Toate lunile”), nu un
+  `PeriodFilter` cu presetări ca în Achitări/Cheltuieli (spec cere „12 luni ▾”) — logat ca
+  întrebare de business în `INTREBARI.md`, funcțional corect dar mai puțin flexibil.
+- ℹ️ Celula calendarului e `<button>` propriu, nu `MonthCalendar` din `@shared/ui` — decizie
+  tehnică deja documentată și închisă în `INTREBARI.md` (componenta nu suportă starea
+  „selectată” persistentă cerută aici).
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -310,7 +322,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Bazin (22a/22b/22c/22d, 43b) — verificat din cod (branch fără bazin configurat); 1 întrebare
 - [x] Prezența (18a/18b/18c/18d) — niciun bug găsit; redesignul A3c confirmat complet implementat
 - [x] Personal (23a–23o) — niciun bug găsit; spot-check + verificări anterioare deja închise
-- [ ] Vizite (4a — fișier Vizite.dc.html)
+- [x] Vizite (4a) — niciun bug găsit; 1 întrebare logată (dropdown Perioadă simplificat)
 - [ ] Sincronizare (14a/14b/14c)
 - [ ] Filiale (13a/13b/13c)
 - [ ] Planuri și curs (12a–12g)

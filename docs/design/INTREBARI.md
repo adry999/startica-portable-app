@@ -1562,6 +1562,15 @@ listă (toate modificările din Copii — achitări, note, mutări de grupă, pe
 artboard-ul a copiat din greșeală secțiunea de pe fișă la mockup-ul de listă? Detalii complete:
 `docs/design/AUDIT-VIZUAL-03-10.md`, secțiunea „Copii — listă".
 
+## Audit vizual 03.10 — Vizite, dropdown-ul „Perioadă” e doar Luna curentă / Toate lunile
+
+`04-vizite.md` §3 cere `<Dropdown>Perioadă: 12 luni ▾</Dropdown>` — un selector cu presetări (ca
+`PeriodFilter` din Achitări/Cheltuieli: lună, 30 zile, an școlar, tot etc.). Codul
+(`VisitsPage.tsx`) are doar un `SearchSelect` binar: „Luna curentă” / „Toate lunile”, fără treapta
+intermediară „12 luni” sau altele. Funcțional corect (ambele opțiuni există, filtrarea merge), dar
+mai puțin flexibil decât spec-ul. Întrebare: rămâne binar (simplu, suficient pentru volumul mic de
+vizite), sau se extinde la `PeriodFilter` complet, ca restul ecranelor cu filtrare pe perioadă?
+
 ## Audit vizual 03.10 — Bazin 22a, cardul „Locuri libere" lipsește complet (date, nu doar UI)
 
 `23-bazin.md` §22a cere 4 carduri: „ședințe, prezenți, locuri libere, lipsă”. Codul
