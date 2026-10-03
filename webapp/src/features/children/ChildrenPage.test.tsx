@@ -537,7 +537,7 @@ describe('ChildrenPage', () => {
 
     const heading = screen.getByRole('heading', { name: 'Andrei Popescu' });
     expect(heading).toBeInTheDocument();
-    expect(screen.getByText(/Contract 7/)).toBeInTheDocument();
+    expect(screen.getByText(/Contract #7/)).toBeInTheDocument();
     // CF-10: rândul de sub nume începe cu „Născut”.
     const meta = heading.nextElementSibling;
     expect(meta?.textContent).toMatch(/^Născut 24\.09\.2020/);

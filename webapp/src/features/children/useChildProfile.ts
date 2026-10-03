@@ -80,7 +80,7 @@ export function useChildProfile(childId: string, month: string): ChildProfileDat
     groupName: groupNameOf(child.groupId, records.groups) || 'nealocată',
     group,
     groupMemberCount,
-    contractLabel: contractNumberOf(child),
+    contractLabel: `#${contractNumberOf(child)}`,
     age: formatAge(child.birthDate),
     obligation: obligation(child, month, records.payments, records.charges, undefined, null, rates),
     feeEntry: feeEntryFor(child, month),

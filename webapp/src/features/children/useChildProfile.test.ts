@@ -131,7 +131,7 @@ describe('useChildProfile', () => {
     expect(result.current.status).toBe('ready');
     expect(result.current.child?.name).toBe('Andrei Popescu');
     expect(result.current.groupName).toBe('Fluturași');
-    expect(result.current.contractLabel).toBe('7');
+    expect(result.current.contractLabel).toBe('#7');
     expect(result.current.obligation?.label).toBe('Plătit');
     expect(result.current.payments).toHaveLength(2);
     expect(result.current.payments.map(p => p.id)).toEqual(['p1', 'p2']);
