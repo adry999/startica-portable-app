@@ -137,12 +137,20 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - Secțiunea „Note” — live are compunere prin toggle „+ Notă”, artboard arată caseta deschisă
   permanent; ambiguu dacă artboard ilustrează doar starea „deschis” — nereportat, severitate joasă.
 
+## Zile de naștere (`Copii.dc.html#2c`)
+
+- 🐛✅ **4 tonuri de grupă lipseau din CSS** (teal/blue/purple/coral) — vezi secțiunea de mai jos,
+  reparat. Grupele cu aceste tonuri (ex. „Mars”) apăreau fără nicio culoare, atât în grila de
+  calendar cât și în lista „Toată luna”.
+- ✅ Restul ecranului (antet, filtre de grupă, „N zile de naștere”, grila, lista laterală) —
+  identic structural cu artboard-ul, diferențele de date (nume, grupe) sunt din setul de dezvoltare.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
 - [x] Copii — listă (2a) — 1 gol real (posibil) găsit, 1 întrebare de business
 - [x] Copii — fișă (2b) — 1 gol real reparat, 1 fals-pozitiv (server vechi), rest confirmat OK
-- [ ] Zile de naștere (2c)
+- [x] Zile de naștere (2c) — 1 gol real (4 tonuri lipsă din CSS) reparat
 - [x] Grupe (4a/4b/4c) — eyebrow, buton CTA, nota Culoare, stepper Vârstă — toate reparate
 - [ ] Achitări (5a/5b)
 - [ ] Cheltuieli (6a/6b)
