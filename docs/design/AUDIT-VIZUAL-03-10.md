@@ -376,6 +376,24 @@ setat unul temporar (Avram Maria, 150 €) doar pe copie, înregistrat o plată 
 - ✅ **12g** (Taxe și grupe) — coloana „Monedă ▾” (MDL/EUR) + „≈ lei azi” sub taxă când e EUR,
   deja confirmat anterior în cod (`FeeSetupPage.tsx`) și reconfirmat prin salvarea reală pe copie.
 
+## SMS istoric (`Sms.dc.html#11a`–`#11b`)
+
+Ambele artboard-uri sunt deservite de o singură pagină în cod, `NotificationsPage.tsx` (rută
+`/notificari`), cu 3 file: **Canale** (Telegram, înlocuiește notificările automate — pivot deja
+documentat în `DECIZII.md`), **Mesaje SMS** (= 11a: stat-carduri Trimise/Eșuate/Consumate, filtre
+Toate/Livrate/În curs/Eșuate, căutare destinatar, „Toate șabloanele”/„Ultimele 30 de zile”, link
+„SMS pe luni”), **Șabloane** (= 11b: listă șabloane cu „Implicit”, editor cu chips de variabile,
+previzualizare live cu numărul de caractere/segmente/cost, cardul „Furnizor SMS” pentru `sms.md`).
+Verificat live la 1440px pe serverul de dezvoltare (fără date reale de SMS — tabelul arată „Niciun
+SMS pentru filtrele alese”, normal).
+
+- ✅ Structura și wording-ul corespund spec-ului, cu pivotul SMS→Telegram deja aplicat consecvent.
+- ✅ Variabila `rest` din șabloane e deja currency-aware (`formatMoney(obligation.rest,
+  obligation.currency)`, `src/shared/domain/sms-template.mjs`) — un copil cu taxă EUR primește
+  suma corectă în €, cu comentariu explicit în cod („queue 8”) despre acest fix. Spec-ul vechi cerea
+  o variabilă separată `rest_eur`; soluția din cod (o singură variabilă, currency-aware) e mai
+  simplă și deja acoperă cazul — nereportat ca gol.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -397,7 +415,8 @@ setat unul temporar (Avram Maria, 150 €) doar pe copie, înregistrat o plată 
 - [x] Planuri și curs (12a–12g) — 1 gol real găsit (12c, lipsă echivalent lei), nereparat din cauza
   conflictului cu worktree-ul concurent `feat/multi-currency-fees`; 1 întrebare logată
 - [ ] Notificare SMS/Situatia (7a–7e)
-- [ ] SMS istoric (11a/11b)
+- [x] SMS istoric (11a/11b) — niciun bug găsit; pivotul SMS→Telegram și variabila `rest`
+  currency-aware deja corecte
 - [ ] Administrare (10a–10d)
 - [ ] Raport contabil (19a/19b)
 - [ ] Prima pornire (20a–20c)
