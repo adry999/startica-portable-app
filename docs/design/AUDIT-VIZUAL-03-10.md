@@ -214,6 +214,24 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   proprii și un amendament de design deja referit în cod (`docs/design/FEEDBACK.md`, Task 17);
   nu l-am comparat pixel-cu-pixel cu 7c/7d/7e (artboard-uri probabil mai vechi decât amendamentul).
 
+## De notificat (`De notificat.dc.html#8a`)
+
+- ✅ Structura (listă De trimis/Trimise/Eșuate, bara activă orange 4px, panoul de mesaj cu
+  șablon/bulă/footer) — conformă `10-de-notificat.md` și artboard.
+- ℹ️ Artboard-ul arată deja „SMS conectat” (nu „Telegram conectat”, cum zice textul vechi din
+  `ALINIERE-DESIGN.md` A5) — artboard-ul a fost actualizat între timp; codul (`sms.md
+  neconectat`/`SMS conectat`) e corect, aliniat cu artboard-ul curent. Decizia A5 e deja aplicată;
+  doar textul din `ALINIERE-DESIGN.md` a rămas în urmă (documentație, nu cod).
+- ℹ️ Butoanele „Copiază toate mesajele” (antet) și „Copiază” (panou) nu apar în mockup — comentariu
+  explicit în cod (`NotifyPage.tsx`) le justifică drept fallback când sms.md nu e conectat; nu au
+  alt loc în layout-ul nou pe 2 coloane. Nereportat ca bug.
+- ℹ️ „Editează textul” din spec (footer-ul arborelui, §3) nu există ca buton separat — editarea
+  șablonului/textului s-a mutat în dialogul de trimitere (`SmsConfirmDialog`, care are deja
+  selector de șablon + textarea), panoul doar arată o previzualizare + „Șablonul și textul se pot
+  alege la trimitere.” Consolidare rezonabilă, nu lipsă de funcție.
+- ℹ️ „Trimite toate · N” (spec/artboard) vs „Trimite tuturor · N” (cod) — wording, consecvent cu
+  „Notifică toți” din Situația 7a; fără decizie scrisă contrară, nereportat.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -224,7 +242,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Achitări (5a/5b) — 2 bug-uri reparate (Copil bold, paginare „Pe luni")
 - [x] Cheltuieli (6a/6b) — 1 bug sistemic reparat (paginare „Pe zile”), rest conform spec
 - [x] Situația (7a/7b) — niciun bug găsit; alinierile mici erau deja corecte în cod
-- [ ] De notificat (8a)
+- [x] De notificat (8a) — niciun bug găsit; deviațiile (SMS, Copiază, editare în dialog) deliberate
 - [ ] De rezolvat (9a/9b/9c)
 - [ ] Bazin (22a/22b/22c/22d)
 - [ ] Prezența (18a/18b/18c/18d)
