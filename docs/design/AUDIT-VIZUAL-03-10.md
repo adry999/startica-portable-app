@@ -394,6 +394,26 @@ SMS pentru filtrele alese”, normal).
   o variabilă separată `rest_eur`; soluția din cod (o singură variabilă, currency-aware) e mai
   simplă și deja acoperă cazul — nereportat ca gol.
 
+## Administrare (`Administrare.dc.html#10a`–`#10d`)
+
+- ✅ **10a (Istoric)** — `AuditLogPage.tsx`, feed cronologic grupat pe zi, paginat corect din
+  server (`AUDIT_PAGE_SIZE = 100`, cursor `beforeEntryId`, buton „Mai multe”) — pagina e înaltă
+  (~19000px) pentru că are într-adevăr sute de intrări reale în baza de dezvoltare, nu pentru că
+  ar lipsi limita; **nu e aceeași clasă de bug ca Achitări/Cheltuieli/Taxe și grupe** (acolo lipsea
+  orice limită server-side). Filtrele Modul/Calculator/Perioadă + căutarea „record anume” (45a)
+  funcționează ca în spec; fila „Acces” separată corect (PIN, doar profil Complet).
+- ✅ **10c (Backup și setări → Backup)** — cardurile „Date salvate/Backup local/Copie externă”,
+  lista „Copii de siguranță”, „Import și export”, folderul extern — conform spec. Lista de copii nu
+  are pagination UI, dar e mărginită de politica de păstrare explicită (afișată în pagină: 20 recente
+  + 12 lunare + copiile dinaintea import/restaurare/migrare, care nu expiră) — nu crește nemărginit
+  ca în bug-urile de tabel găsite mai sus, deci nereportat.
+- ✅ **10d (Servicii)** — lista de servicii (Grădiniță/Bazin/Excursie, achitări, Activ/Ascuns,
+  drag handle, Editează) + panoul „Serviciu nou” (Nume, Culoare, Suma la achitare Liberă/Preț fix,
+  Previzualizare) — identic cu artboard-ul, inclusiv nota „un serviciu cu achitări nu se șterge,
+  doar se ascunde”.
+- ℹ️ **10b (Notificări)** — deja acoperit mai sus la SMS istoric (11a/11b): fila „Canale” din
+  `NotificationsPage.tsx` corespunde 10b.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -417,7 +437,8 @@ SMS pentru filtrele alese”, normal).
 - [ ] Notificare SMS/Situatia (7a–7e)
 - [x] SMS istoric (11a/11b) — niciun bug găsit; pivotul SMS→Telegram și variabila `rest`
   currency-aware deja corecte
-- [ ] Administrare (10a–10d)
+- [x] Administrare (10a–10d) — niciun bug găsit; Istoric paginat corect din server, Backup/Servicii
+  conforme spec
 - [ ] Raport contabil (19a/19b)
 - [ ] Prima pornire (20a–20c)
 - [ ] Încărcare (21a–21c)
