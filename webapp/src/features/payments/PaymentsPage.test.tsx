@@ -208,6 +208,8 @@ describe('PaymentsPage', () => {
     expect(screen.getAllByText('Andrei Popescu').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Import CSV').length).toBeGreaterThan(0);
     expect(screen.getByText('Neasociată →')).toBeInTheDocument();
+    // Achitari.dc.html#5a: numele copilului e bold în coloana „Copil” (800 vs. 400 restul tabelului).
+    expect(screen.getByRole('table').querySelector('strong')?.textContent).toBe('Andrei Popescu');
   });
 
   it('click pe un rând cu copil asociat deschide fișa copilului', async () => {

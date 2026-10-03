@@ -324,7 +324,7 @@ export function PaymentsTable({ data, onEdit, onOpenChild }: PaymentsTableProps)
                     </Button>
                   </span>
                 ) : (
-                  row.childLabel
+                  <strong>{row.childLabel}</strong>
                 ),
             },
             {
