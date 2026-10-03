@@ -190,10 +190,11 @@ export function GroupFormDrawer({
                 return usedBy ? `folosită de ${usedBy}` : 'liberă';
               }}
             />
+            <p className={styles.footerNote}>Implicit e prima culoare liberă. Poți alege și una folosită deja.</p>
           </div>
 
           <div className={styles.row}>
-            <div className={styles.field}>
+            <div className={`${styles.field} ${styles.fieldAuto}`}>
               {/* Label separat de control, nu unul care-l înfășoară: un <label> care conține și
                 cele două butoane +/- (labelabile ca orice control) ar face `getByLabelText`/lectorul
                 de ecran să lege eticheta de primul buton, nu de input. */}
@@ -221,14 +222,52 @@ export function GroupFormDrawer({
               </div>
             </div>
 
-            <label className={styles.field}>
-              Vârstă minimă (ani)
-              <NumberInput value={ageMinRaw} onChange={setAgeMinRaw} min={0} max={18} step={1} />
-            </label>
-            <label className={styles.field}>
-              Vârstă maximă (ani)
-              <NumberInput value={ageMaxRaw} onChange={setAgeMaxRaw} min={0} max={18} step={1} />
-            </label>
+            <div className={styles.field}>
+              {/* Grup vizual, nu `<label>` — două NumberInput sub același text ar face
+                `getByLabelText` ambiguu; fiecare input își are propriul `ariaLabel`. */}
+              <span aria-hidden="true">Vârstă (pentru sugestii)</span>
+              <div className={`${styles.stepper} ${styles.ageStepper}`}>
+                <IconButton
+                  icon="minus"
+                  ariaLabel="Scade vârsta minimă"
+                  onClick={() => setAgeMinRaw(String(Math.max(0, Number(ageMinRaw || 0) - 1)))}
+                />
+                <NumberInput
+                  className={styles.ageInput}
+                  ariaLabel="Vârstă minimă (ani)"
+                  value={ageMinRaw}
+                  onChange={setAgeMinRaw}
+                  min={0}
+                  max={18}
+                  step={1}
+                />
+                <IconButton
+                  icon="plus"
+                  ariaLabel="Crește vârsta minimă"
+                  onClick={() => setAgeMinRaw(String(Math.min(18, Number(ageMinRaw || 0) + 1)))}
+                />
+                <IconButton
+                  icon="minus"
+                  ariaLabel="Scade vârsta maximă"
+                  onClick={() => setAgeMaxRaw(String(Math.max(0, Number(ageMaxRaw || 0) - 1)))}
+                />
+                <NumberInput
+                  className={styles.ageInput}
+                  ariaLabel="Vârstă maximă (ani)"
+                  value={ageMaxRaw}
+                  onChange={setAgeMaxRaw}
+                  min={0}
+                  max={18}
+                  step={1}
+                />
+                <IconButton
+                  icon="plus"
+                  ariaLabel="Crește vârsta maximă"
+                  onClick={() => setAgeMaxRaw(String(Math.min(18, Number(ageMaxRaw || 0) + 1)))}
+                />
+                <span>ani</span>
+              </div>
+            </div>
           </div>
 
           <GroupTeamPicker

@@ -46,6 +46,24 @@ describe('GroupFormDrawer', () => {
     expect(screen.getByRole('button', { name: 'Creează grupa' })).toBeEnabled();
   });
 
+  it('arată nota de sub Culoare (Grupe.dc.html#4c)', () => {
+    renderDrawer();
+    expect(screen.getByText('Implicit e prima culoare liberă. Poți alege și una folosită deja.')).toBeInTheDocument();
+  });
+
+  it('steperele +/- ale vârstei (min/max) modifică valoarea, la fel ca la Capacitate (#4c)', async () => {
+    renderDrawer();
+    await userEvent.click(screen.getByRole('button', { name: 'Crește vârsta minimă' }));
+    expect(screen.getByLabelText('Vârstă minimă (ani)')).toHaveValue(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Scade vârsta minimă' }));
+    expect(screen.getByLabelText('Vârstă minimă (ani)')).toHaveValue(0);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Crește vârsta maximă' }));
+    expect(screen.getByLabelText('Vârstă maximă (ani)')).toHaveValue(1);
+    await userEvent.click(screen.getByRole('button', { name: 'Scade vârsta maximă' }));
+    expect(screen.getByLabelText('Vârstă maximă (ani)')).toHaveValue(0);
+  });
+
   it('trimite numele, capacitatea și tonul implicit la click pe Creează grupa', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderDrawer({ onSubmit });

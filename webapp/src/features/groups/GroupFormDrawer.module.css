@@ -24,6 +24,13 @@
   min-width: 120px;
 }
 
+/* Capacitate are un singur stepper (lățime fixă) — restul rândului revine câmpului Vârstă,
+   care are două steppere + „ani” și are nevoie de mai mult spațiu. */
+.row .fieldAuto {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
 .stepper {
   display: flex;
   align-items: center;
@@ -32,6 +39,15 @@
 
 .capacityInput {
   width: 72px;
+}
+
+.ageInput {
+  width: 36px;
+}
+
+.ageStepper {
+  gap: var(--space-4);
+  flex-wrap: nowrap;
 }
 
 .orderNote {
