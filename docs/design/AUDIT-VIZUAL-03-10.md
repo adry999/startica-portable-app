@@ -336,6 +336,46 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   „Filiala Buiucani” ca în artboard) e convenția deja stabilită, consecventă peste tot în
   aplicație (sidebar, header filială) — nereportat.
 
+## Planuri și curs (`Planuri si curs.dc.html#12a`–`#12g`)
+
+Testat pe o copie izolată a bazei (`scripts/dev-data-copy.mjs`, server separat pe port liber,
+niciodată pe `Startica_Date/` reală) — niciun copil din datele reale nu avea taxă EUR, deci am
+setat unul temporar (Avram Maria, 150 €) doar pe copie, înregistrat o plată și verificat live la
+1440px.
+
+- ✅ **12a** — fila „Planuri și curs” (`ExchangeRateSettings.tsx`) are exact ce cere artboard-ul:
+  lista de presetări de plan (`EditableList`, „+ Adaugă plan”/„Editează planuri”, preț € + „≈ lei
+  azi”), cardul cursului BNM cu corectare manuală, calendarul cursului cu backfill. Numele filei e
+  „Planuri și curs” (nu „Curs valutar” cum zicea varianta veche a `16-planuri-eur.md` înainte de
+  restaurarea de mai sus) — corectat în doc odată cu restaurarea modelului.
+  ℹ️ Badge-ul artboard-ului „doar pentru Filiala Buiucani” lângă titlul „Planuri” nu apare în cod,
+  dar nici la Bazin (22d, tot setare per-filială) — pare simplificare consecventă pe toată
+  aplicația (filiala = instalare locală separată, nu switch multi-tenant), nereportat ca bug;
+  logat ca întrebare mai jos.
+- ✅ **12b** (`PaymentFormDrawer`) — pentru copil cu taxă EUR: card „TAXĂ 150,00 € / pe lună”,
+  „CURS BNM · dată / 1 € = X lei” cu „Curs manual”, „Suma” = `preț € × curs = lei` editabil,
+  „Rotunjește” (exact/în jos/în sus/la 10 lei), repartizare lunară în €, câmp „Curs EUR” editabil
+  cu link BNM — identic cu artboard-ul și cu A3b din `ALINIERE-DESIGN.md`.
+- 🐛 **12c** (Situația plăților, `StatusPage.tsx`) — coloanele Taxă/Achitat/Rest pentru un copil cu
+  taxă EUR arată **doar** suma în €, fără „echivalentul lei dedesubt” cerut explicit de spec
+  (regula 12c: „Achitat = `amount` lei primit, Rest = ≈ lei azi”). Verificat live: rândul lui Avram
+  Maria arată „150,00 €” / „150,00 €” / „0,00 €” fără nicio linie în lei. **Nu am reparat acum** —
+  worktree-ul `.worktrees/feat-multi-currency-fees` (branch `feat/multi-currency-fees`, altă
+  sesiune, deja cu 5 commit-uri: „obligation în propria monedă”, „selector monedă la plată”)
+  atinge exact această zonă (`StatusPage`/obligații per copil) și ar intra în conflict direct cu
+  orice fix aici — logat ca întrebare mai jos, nu ca bug de reparat imediat.
+- ✅ **12d** (fișa copilului) — mini-card „Sold 0,00 € · La zi”, „Taxă lunară 150,00 €”, Istoric
+  plăți cu exact coloanele cerute: LUNĂ/DATĂ/METODĂ/**Plătit lei**/**Curs** (link BNM)/**Echivalent
+  €** — conform spec, fără nimic de reparat.
+- ✅ **12e** (confirmarea de plată) — nu există ca pas separat; informația cerută (sumă, curs,
+  echivalent, repartizare, rest) e deja integrată direct în panoul 12b în timp ce se completează
+  formularul, nu într-un bloc de confirmare după salvare — aceeași concluzie ca A3b din
+  `ALINIERE-DESIGN.md`, care nu semnalează 12e ca gol separat.
+- ✅ **12f** (Dashboard) — pastilă „€ 20,1068 lei / Curs BNM · dată” lângă selectorul de lună;
+  „Încasări” rămâne strict în lei (3.016 lei pentru plata EUR convertită) — conform regulii 10.
+- ✅ **12g** (Taxe și grupe) — coloana „Monedă ▾” (MDL/EUR) + „≈ lei azi” sub taxă când e EUR,
+  deja confirmat anterior în cod (`FeeSetupPage.tsx`) și reconfirmat prin salvarea reală pe copie.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -354,7 +394,8 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Vizite (4a) — niciun bug găsit; 1 întrebare logată (dropdown Perioadă simplificat)
 - [x] Sincronizare (14a/14b/14c) — niciun bug găsit; stările „conectat” neverificabile local
 - [x] Filiale (13a/13b/13c) — niciun bug găsit
-- [ ] Planuri și curs (12a–12g)
+- [x] Planuri și curs (12a–12g) — 1 gol real găsit (12c, lipsă echivalent lei), nereparat din cauza
+  conflictului cu worktree-ul concurent `feat/multi-currency-fees`; 1 întrebare logată
 - [ ] Notificare SMS/Situatia (7a–7e)
 - [ ] SMS istoric (11a/11b)
 - [ ] Administrare (10a–10d)

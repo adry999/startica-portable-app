@@ -1,5 +1,28 @@
 # Întrebări / decizii blocate
 
+## ⚠️ Audit vizual 03.10 — doi efortur paralele pe moneda EUR (`master-v2` vs. worktree `feat/multi-currency-fees`)
+
+În timpul auditului „Planuri și curs” am găsit `.worktrees/feat-multi-currency-fees/` (branch
+`feat/multi-currency-fees`, altă sesiune, 5 commit-uri: „obligation în propria monedă”, „selector
+monedă la plată”, „preserve feeHistory currency on resave”). Acesta pare să construiască un model
+de monedă diferit/suplimentar față de modelul (b) deja implementat și activ pe `master-v2`
+(`feeHistory.currency` + `Payment.fxRate`/`fxRateSource`/`amountEur`, documentat în
+`screens/16-planuri-eur.md`). Nu am investigat branch-ul ăla (nu-i al meu să-l ating), dar
+suprapunerea e clară: ambele ating obligații/afișare per monedă pentru copil.
+
+**De decis:** cele două eforturi fuzionează, sau unul înlocuiește pe celălalt? Fără un răspuns,
+orice fix viitor pe `StatusPage.tsx`/obligații (vezi 12c mai jos) riscă conflict direct la merge.
+
+## 🐛 Audit vizual 03.10 — Situația plăților (12c), lipsește echivalentul lei la copiii cu taxă EUR
+
+Spec (`screens/16-planuri-eur.md`, model (b)): la Situația plăților, coloanele Taxă/Achitat/Rest
+pentru un copil cu taxă EUR trebuie să arate suma în € **cu echivalentul lei dedesubt** (Achitat =
+`amount` lei primit, Rest = ≈ lei la cursul de azi). Verificat live pe o copie izolată a bazei
+(niciun copil din datele reale nu are taxă EUR): `StatusPage.tsx` arată doar suma în €, fără nicio
+linie în lei. Real, reprodus, dar **nereparat acum** — se suprapune direct cu worktree-ul
+`feat/multi-currency-fees` de mai sus; a repara aici fără coordonare ar produce muncă aruncată sau
+conflict la merge.
+
 ## 💡 Idee (03.10, de discutat în design, neconstruit) — tab „Prognoză” la Achitări
 
 Utilizatorul a propus un tab nou la Achitări: venitul „sigur” al lunii curente (copii activi ×
