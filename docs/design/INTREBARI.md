@@ -1,5 +1,13 @@
 # Întrebări / decizii blocate
 
+## 💡 Idee (03.10, de discutat în design, neconstruit) — tab „Prognoză” la Achitări
+
+Utilizatorul a propus un tab nou la Achitări: venitul „sigur” al lunii curente (copii activi ×
+taxa lor din plan) vs. cheltuielile obligatorii cunoscute (salariile Personalului) — o prognoză
+lunară, nu doar încasări/cheltuieli deja înregistrate. Idee doar notată, nu intră în auditul
+vizual curent (`AUDIT-VIZUAL-03-10.md`) și nu se construiește fără un ecran/artboard propriu în
+`docs/design/` (ca orice funcție nouă — plan tehnic separat, la fel ca EUR/BNM sau filiale).
+
 ## ✅ §5.2 — ce repo găzduiește latest.json / release-urile — rezolvat 02.10 (PROMPT-9 §1.1)
 
 **Răspuns** (`RASPUNSURI-02-10.md` #1): repo public separat `adry999/startica-releases`;
