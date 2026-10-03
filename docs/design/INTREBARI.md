@@ -1,5 +1,20 @@
 # Întrebări / decizii blocate
 
+## 🐛 Audit vizual 03.10 — Responsive (17a-17c): breakpoint-urile 1024/768px nu sunt construite
+
+Aplicația rulează în browser-ul implicit al sistemului (nu într-o fereastră nativă cu lățime
+minimă), deci utilizatorul poate ajunge real la 1024px/768px. Verificat live: la ambele lățimi,
+bara laterală rămâne fixă (248px) în loc să devină meniu „☰” retractabil ca în artboard-urile 17a
+(Dashboard, 1024px)/17b (meniul deschis ca overlay)/17c (Situația plăților, 768px) — antetul se
+suprapune, cardurile KPI și coloanele de tabel se taie. Confirmat din cod: niciun `@media` în afară
+de `@media print` în `webapp/src/app/shell/*.module.css`.
+
+**De decis:** construim comportamentul responsive doar pentru cele 3 ecrane din spec, îl extindem
+la toate ecranele (efort mare, fără artboard-uri pentru restul), sau rămâne un produs doar-desktop
+cu o lățime minimă impusă (mai simplu: un mesaj „Mărește fereastra” sub un prag, fără meniu
+retractabil)? Până la un răspuns, nu am construit nimic — ar fi însemnat decizii de design pe cont
+propriu pe un efort mare.
+
 ## ⚠️ Audit vizual 03.10 — doi efortur paralele pe moneda EUR (`master-v2` vs. worktree `feat/multi-currency-fees`)
 
 În timpul auditului „Planuri și curs” am găsit `.worktrees/feat-multi-currency-fees/` (branch

@@ -456,6 +456,24 @@ de prins live fără artificii; codul citează explicit „21a”/„ALINIERE-DE
 - ℹ️ Stare în plus față de artboard: `StartupError` (baza de date nu s-a putut citi deloc) — cu
   mesaj + cale de backup + „Încearcă din nou”; extensie rezonabilă, nu o deviație nedorită.
 
+## 🐛 Responsive (`Responsive.dc.html#17a`–`#17c`) — breakpoint-urile nu sunt construite deloc
+
+Verificat live, redimensionând fereastra reală (nu un emulator de telefon): la **1024px**
+(Dashboard, 17a) și la **768px** (Situația plăților, 17c) aplicația arată identic cu 1440px — bara
+laterală rămâne fixă (248px), fără „☰"/meniu retractabil ca în 17a/17b (hamburger + sidebar ca
+overlay peste un fundal întunecat). Rezultatul: antetul se suprapune („Rezumatul lunii” peste
+„Caută copil…”, pastila de curs EUR), cardurile KPI se înghesuie și textul li se taie (`„0,00 l…"`,
+`„0 cop…"`), tabelul are coloane tăiate. `grep -rn "@media" webapp/src/app/shell/*.module.css` nu
+găsește niciun breakpoint în afară de `@media print` — confirmă din cod că nu e un artefact de
+randare, ci funcționalitate neconstruită. Aplicația rulează în browser-ul implicit al sistemului
+(nu într-o fereastră nativă cu lățime minimă fixă), deci utilizatorul chiar poate ajunge la aceste
+lățimi (fereastră îngustată, laptop mic, două ferestre alăturate).
+
+**Nu am construit acum** — spec-ul acoperă explicit doar 3 ecrane (Dashboard, meniul deschis,
+Situația plăților), dar aplicația are peste 30 de ecrane; a improviza comportamentul responsive pe
+restul fără artboard-uri dedicate ar însemna decizii de design pe cont propriu, nu un fix punctual.
+Logat ca decizie de produs în `INTREBARI.md`.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -485,7 +503,8 @@ de prins live fără artificii; codul citează explicit „21a”/„ALINIERE-DE
 - [x] Prima pornire (20a–20c) — artboard original înlocuit de 46a–46d, deja construit și verificat
   anterior; niciun bug nou
 - [x] Încărcare (21a–21c) — niciun bug găsit, verificat din cod (greu de prins live, <1s)
-- [ ] Responsive (17a–17c)
+- [x] Responsive (17a–17c) — 🐛 confirmat: breakpoint-urile 1024/768px nu sunt construite deloc
+  (fără `@media` în afară de print); logat ca decizie de produs, nereparat
 - [ ] Tipărire/Bon 58mm (16a–16g, 24a–24d)
 - [ ] Componente de formular (25a–25f) — verificare per-componentă, nu per-ecran
 - [ ] Design system (26–34) — verificare per-componentă din `COMPONENTE.md`, nu artboard-uri de ecran
