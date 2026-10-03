@@ -268,6 +268,19 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - ℹ️ Rândul „Antrenor: <nume>” + legenda (A4 din `ALINIERE-DESIGN.md`) — confirmat în cod
   (`WeekView.tsx`), formatul cu virgulă pentru mai mulți antrenori e cel deja decis.
 
+## Prezența (`Prezenta.dc.html#18a` Ziua, `#18b` Luna)
+
+- ✅ **18a** — redesignul A3c (bandă compactă cu 4 contoare + „N% prezenți azi”, grupe în chenar
+  colorat, avatar 38px, stare sub nume, fără marcare în masă, `↶ Anulează | N ▾` în antet) e
+  implementat exact ca în `ALINIERE-DESIGN.md` — confirmat din cod (comentarii citează explicit
+  „A3c”) și live. Bulk-marking (`markAllUnmarkedPresent`/`markGroupPresent`) confirmat șters din
+  cod, conform DECIZIA 14.
+- ✅ **18b** — MonthStepper, FilterPills Grupa (o singură grupă), „Foi pe săptămână”/„Tipărește
+  luna”/„Exportă”, grila zi×copil cu weekend/sărbători gri și zile viitoare goale, coloana Zile,
+  rândul „Prezenți pe zi”, `↶ Anulează` partajat cu 18a — toate conforme.
+- ℹ️ Deja în lista „Aliniate, fără modificări" din `ALINIERE-DESIGN.md` pentru 18b–18d; verificarea
+  live de azi (18a/18b) confirmă asta, nu a găsit nimic nou.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -281,7 +294,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] De notificat (8a) — niciun bug găsit; deviațiile (SMS, Copiază, editare în dialog) deliberate
 - [x] De rezolvat (9a/9b/9c) — 1 bug sistemic reparat (paginare forțată „all” la 9a)
 - [x] Bazin (22a/22b/22c/22d, 43b) — verificat din cod (branch fără bazin configurat); 1 întrebare
-- [ ] Prezența (18a/18b/18c/18d)
+- [x] Prezența (18a/18b/18c/18d) — niciun bug găsit; redesignul A3c confirmat complet implementat
 - [ ] Personal (23a–23l)
 - [ ] Vizite (4a — fișier Vizite.dc.html)
 - [ ] Sincronizare (14a/14b/14c)
