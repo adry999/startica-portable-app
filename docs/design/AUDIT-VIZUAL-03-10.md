@@ -520,6 +520,20 @@ pixel-cu-pixel pe toate ar fi un efort separat, de tip „regresie vizuală de b
 - 💡 Recomandare, nu bug: dacă se dorește o acoperire exhaustivă (pixel-cu-pixel pe toate cele ~60
   de stări din 26a–34l), ar merita un audit Storybook dedicat, separat de acest audit de ecrane.
 
+## Notificare din Situația plăților (`Situatia.dc.html#7c`–`#7e`)
+
+Verificat live (Septembrie 2026, 2 restanțieri reali) — id-urile 7a/7b fuseseră deja închise
+mai sus; rămăseseră 7c–7e (Notifică un părinte / Notifică toți restanțierii / Mesaj personalizat).
+
+- ✅ **7d** — banner „N restanțieri · Trimite o notificare tuturor părinților cu restanță” +
+  „Notifică toți”, exact ca în artboard.
+- ✅ Butonul „Notifică” e corect dezactivat (`title="Conectează sms.md în Notificări"`) cât timp
+  furnizorul SMS nu e conectat — aceeași gardă deja confirmată la Achitări/PaymentFormDrawer.
+- ℹ️ **7c/7e** (dialogul „Notifică un părinte” cu mesaj personalizat) nu l-am putut deschide fără
+  să conectez `sms.md` pe mediul de dezvoltare real (nu fac asta pe datele reale); componenta din
+  spate, `SmsConfirmDialog.tsx`, a fost deja citită integral și confirmată matură/testată mai
+  devreme în această sesiune — nu am găsit niciun motiv să recitesc acum.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -540,7 +554,8 @@ pixel-cu-pixel pe toate ar fi un efort separat, de tip „regresie vizuală de b
 - [x] Filiale (13a/13b/13c) — niciun bug găsit
 - [x] Planuri și curs (12a–12g) — 1 gol real găsit (12c, lipsă echivalent lei), nereparat din cauza
   conflictului cu worktree-ul concurent `feat/multi-currency-fees`; 1 întrebare logată
-- [ ] Notificare SMS/Situatia (7a–7e)
+- [x] Notificare SMS/Situația (7a–7e) — niciun bug găsit; „Notifică toți” conform spec, gardă
+  sms.md corectă
 - [x] SMS istoric (11a/11b) — niciun bug găsit; pivotul SMS→Telegram și variabila `rest`
   currency-aware deja corecte
 - [x] Administrare (10a–10d) — niciun bug găsit; Istoric paginat corect din server, Backup/Servicii
