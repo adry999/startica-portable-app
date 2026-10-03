@@ -195,6 +195,25 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   categorie), lista grupată pe zile, fără coloana de buget — conform spec-ului, deja în lista
   „Aliniate, fără modificări" din `ALINIERE-DESIGN.md`.
 
+## Situația plăților (`Situatia.dc.html#7a` Lună, `#7b` An școlar, SMS `#7c/#7d/#7e`)
+
+- ✅ **7a (Lună)** — 4 carduri, toolbar (segmented Toți/Restanțieri/Parțial/Achitat/Urmează +
+  căutare), `FilterPills` Grupa, coloane/grid, banner „N restanțieri — Notifică toți" (ascuns
+  corect când 0 restanțieri) — toate conforme. CTA pe rând (SMS+Plată+ vs Vezi fișa) verificat în
+  cod (`NOTIFIABLE_LABELS`), corect, dar nu l-am putut vedea live cu CTA-ul de restanță — luna
+  curentă din baza de dezvoltare are 0 restanțieri/parțiale (majoritatea celor 105 copii sunt „De
+  verificat", fără taxă setată — date, nu bug).
+- ✅ **7b (An școlar)** — cele 3 alinieri mici din `ALINIERE-DESIGN.md` (avatar 30px lângă nume,
+  cifrele cardurilor 44px, antetul hărții 11px) erau deja corecte în cod, confirmat și vizual.
+  Harta, legenda, outline-ul lunii curente — conforme.
+- ℹ️ „Tipărește” e dezactivat în modul An școlar (`disabled={mode !== 'month'}`) — tipărirea nu
+  acoperă harta anuală. Nu contrazice explicit `07-situatia.md` (antetul „identic” se referă la
+  elementele prezente, nu neapărat la starea fiecăruia), dar nu e nici confirmat ca decizie scrisă
+  — severitate joasă, nereportat ca bug.
+- ✅ Dialogul SMS (`shared/ui/sms/SmsConfirmDialog.tsx`) — componentă matură, cu teste + Storybook
+  proprii și un amendament de design deja referit în cod (`docs/design/FEEDBACK.md`, Task 17);
+  nu l-am comparat pixel-cu-pixel cu 7c/7d/7e (artboard-uri probabil mai vechi decât amendamentul).
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -204,7 +223,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Grupe (4a/4b/4c) — eyebrow, buton CTA, nota Culoare, stepper Vârstă — toate reparate
 - [x] Achitări (5a/5b) — 2 bug-uri reparate (Copil bold, paginare „Pe luni")
 - [x] Cheltuieli (6a/6b) — 1 bug sistemic reparat (paginare „Pe zile”), rest conform spec
-- [ ] Situația (7a/7b)
+- [x] Situația (7a/7b) — niciun bug găsit; alinierile mici erau deja corecte în cod
 - [ ] De notificat (8a)
 - [ ] De rezolvat (9a/9b/9c)
 - [ ] Bazin (22a/22b/22c/22d)
