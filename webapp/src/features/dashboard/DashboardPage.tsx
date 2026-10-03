@@ -176,7 +176,14 @@ export function DashboardPage({ month, onNavigate }: DashboardPageProps) {
                 return `${capitalize(fullMonthLabel(bar.month))} · încasări ${formatCompactMoney(bar.income)} lei · cheltuieli ${formatCompactMoney(bar.expense)} lei · diferență ${formatCompactMoney(diff)} lei`;
               }}
             />
-          ) : (
+          ) : null}
+          {hasRevenueData && (
+            <p className={styles.chartCaption}>
+              Începe din prima lună cu date ({fullMonthLabel(chartMonths[0]?.month ?? month)}), maxim 12 luni. Peste
+              bare: încasările lunii. Hover: încasări, cheltuieli, diferență.
+            </p>
+          )}
+          {!hasRevenueData && (
             <EmptyState
               variant={EMPTY_STATES['dashboard.revenue.first'].variant}
               size="compact"
