@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { IconButton } from './IconButton';
+import { type PanelFooterPrimary, PanelFooter } from './PanelFooter';
 import { ScrollArea } from './ScrollArea';
-import { errorCountLabel, usePanelController } from './usePanelController';
+import { usePanelController } from './usePanelController';
 import styles from './Dialog.module.css';
 
 export interface DialogProps {
@@ -24,7 +25,13 @@ export interface DialogProps {
   hideClose?: boolean;
   /** „N erori” în subsol (44d) — dacă lipsește, Dialog își numără singur câmpurile native nevalide. */
   errorCount?: number;
-  footer?: ReactNode;
+  /** Subsolul unificat (F19/§6, `PanelFooter`) — fără `primary`/`footerStart`, panoul nu are subsol. */
+  primary?: PanelFooterPrimary;
+  footerStart?: ReactNode;
+  /** Implicit `requestClose` — eticheta „Anulează”. */
+  onCancel?: () => void;
+  cancelLabel?: string;
+  hideCancel?: boolean;
   children: ReactNode;
 }
 
@@ -42,10 +49,14 @@ export function Dialog({
   shouldBlockClose,
   hideClose = false,
   errorCount,
-  footer,
+  primary,
+  footerStart,
+  onCancel,
+  cancelLabel,
+  hideCancel,
   children,
 }: DialogProps) {
-  const { panelRef, requestClose, effectiveErrorCount } = usePanelController({
+  const { panelRef, requestClose, effectiveErrorCount, focusFirstInvalid } = usePanelController({
     open,
     onClose,
     shouldBlockClose,
@@ -70,12 +81,16 @@ export function Dialog({
           {!hideClose && <IconButton icon="close" ariaLabel="Închide" size="lg" onClick={requestClose} />}
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
-        {effectiveErrorCount > 0 && (
-          <p className={styles.errorBanner} role="status">
-            {errorCountLabel(effectiveErrorCount)}
-          </p>
-        )}
-        {footer && <footer className={styles.footer}>{footer}</footer>}
+        <PanelFooter
+          primary={primary}
+          footerStart={footerStart}
+          onCancel={onCancel ?? requestClose}
+          cancelLabel={cancelLabel}
+          hideCancel={hideCancel}
+          errorCount={effectiveErrorCount}
+          onFocusFirstInvalid={focusFirstInvalid}
+          className={styles.footer}
+        />
       </div>
     </div>
   );

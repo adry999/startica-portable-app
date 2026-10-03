@@ -149,15 +149,19 @@ export function ServicesSettings() {
         title={drawerTarget === 'new' ? 'Serviciu nou' : `Editează ${drawerTarget?.name ?? ''}`}
         size="detail"
         onClose={closeDrawer}
-        footer={
-          <Button
-            type="submit"
-            form="service-form-drawer"
-            loading={submitting}
-            disabled={!form.name.trim() || priceInvalid}
-          >
-            {drawerTarget === 'new' ? 'Creează serviciul' : 'Salvează'}
-          </Button>
+        primary={
+          !form.name.trim() || priceInvalid
+            ? {
+                label: drawerTarget === 'new' ? 'Creează serviciul' : 'Salvează',
+                form: 'service-form-drawer',
+                disabled: true,
+                disabledReason: !form.name.trim() ? 'Scrie un nume pentru serviciu' : 'Setează un preț mai mare ca 0',
+              }
+            : {
+                label: drawerTarget === 'new' ? 'Creează serviciul' : 'Salvează',
+                form: 'service-form-drawer',
+                loading: submitting,
+              }
         }
       >
         <form

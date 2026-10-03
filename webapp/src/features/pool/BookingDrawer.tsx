@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { Button, ChipSelect, ChoiceCards, DateInput, Drawer, Field, SearchSelect, Select, useToast } from '@shared/ui';
+import { ChipSelect, ChoiceCards, DateInput, Drawer, Field, SearchSelect, Select, useToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import type { Child, RecordsSnapshot } from '@contracts/record-types.mjs';
 import { slotTimes } from '#features/pool/index.web.mjs';
@@ -89,16 +89,8 @@ export function BookingDrawer({ open, onClose, onSaved, settings, coaches, today
       title="Programare la bazin"
       size="detail"
       onClose={onClose}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>
-            Renunță
-          </Button>
-          <Button type="submit" form="booking-form" loading={saving}>
-            Programează
-          </Button>
-        </>
-      }
+      cancelLabel="Renunță"
+      primary={{ label: 'Programează', form: 'booking-form', loading: saving }}
     >
       <form id="booking-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
         <div className={styles.field}>

@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { Button } from './Button';
 import { Drawer } from './Drawer';
 
 const meta: Meta<typeof Drawer> = {
@@ -11,7 +10,7 @@ const meta: Meta<typeof Drawer> = {
     open: true,
     title: 'Achitare nouă (exemplu)',
     onClose: fn(),
-    footer: <Button onClick={fn()}>Salvează</Button>,
+    primary: { label: 'Salvează', onClick: fn(), type: 'button' },
     children: <p>Conținutul formularului — doar demonstrativ, fără date reale.</p>,
   },
 };
@@ -27,14 +26,10 @@ export const Detail: Story = {
   args: { size: 'detail', title: 'Istoric salariu (exemplu)' },
 };
 
-/** Butonul principal cu `loading` (44d) — dezactivat, cu spinner, cât salvarea e în curs. */
+/** Butonul principal cu `loading` (44d) — ambele butoane inactive, textul devine „Salvez…” (F19/§6). */
 export const Loading: Story = {
   args: {
-    footer: (
-      <Button loading onClick={fn()}>
-        Salvez…
-      </Button>
-    ),
+    primary: { label: 'Salvează', onClick: fn(), type: 'button', loading: true },
   },
 };
 

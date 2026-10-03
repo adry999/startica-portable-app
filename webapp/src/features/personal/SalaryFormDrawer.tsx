@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, Field, MonthInput, NumberInput, Select, useToast } from '@shared/ui';
+import { Drawer, Field, MonthInput, NumberInput, Select, useToast } from '@shared/ui';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatMonthLabel } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -62,11 +62,7 @@ export function SalaryFormDrawer({ staff, currentSalary, onClose, onSubmit }: Sa
       title={staff ? `Salariul: ${staff.name}` : 'Salariul'}
       size="detail"
       onClose={onClose}
-      footer={
-        <Button type="submit" form="salary-form-drawer" loading={submitting}>
-          Salvează salariul
-        </Button>
-      }
+      primary={{ label: 'Salvează salariul', form: 'salary-form-drawer', loading: submitting }}
     >
       <form
         id="salary-form-drawer"

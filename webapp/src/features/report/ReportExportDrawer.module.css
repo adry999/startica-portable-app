@@ -55,13 +55,6 @@
   line-height: 1.45;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  width: 100%;
-}
-
 .filename {
   font-size: 13px;
   color: var(--muted);

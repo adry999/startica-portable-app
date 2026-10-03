@@ -79,13 +79,14 @@ describe('Dialog', () => {
     expect(screen.queryByRole('button', { name: 'Închide' })).not.toBeInTheDocument();
   });
 
-  it('randează footer-ul când e dat', () => {
+  it('randează subsolul unificat când e dat `primary` (F19/§6)', () => {
     render(
-      <Dialog open title="Confirmă" onClose={() => {}} footer={<button type="button">Salvează</button>}>
+      <Dialog open title="Confirmă" onClose={() => {}} primary={{ label: 'Salvează', type: 'button' }}>
         Conținut
       </Dialog>,
     );
     expect(screen.getByRole('button', { name: 'Salvează' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anulează' })).toBeInTheDocument();
   });
 
   it('fără încălcări axe (R6)', async () => {
@@ -142,7 +143,7 @@ describe('Dialog', () => {
         Conținut
       </Dialog>,
     );
-    expect(screen.getByRole('status')).toHaveTextContent('1 eroare');
+    expect(screen.getByRole('button', { name: '1 eroare' })).toBeInTheDocument();
   });
 
   it('Esc închide doar panoul de sus (40c peste un Drawer/Dialog rămas deschis dedesubt)', async () => {

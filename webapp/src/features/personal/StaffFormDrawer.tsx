@@ -152,16 +152,22 @@ export function StaffFormDrawer({ target, onClose }: StaffFormDrawerProps) {
       title={editing ? 'Editează angajatul' : 'Angajat nou'}
       size="form"
       onClose={onClose}
-      footer={
-        showExistingPicker ? (
-          <Button onClick={() => void handleAddExisting()} loading={submitting} disabled={!existingStaffId}>
-            Adaugă la {openBranchName}
-          </Button>
-        ) : (
-          <Button type="submit" form="staff-form-drawer" loading={submitting}>
-            Salvează angajatul
-          </Button>
-        )
+      primary={
+        showExistingPicker
+          ? !existingStaffId
+            ? {
+                label: `Adaugă la ${openBranchName}`,
+                type: 'button',
+                disabled: true,
+                disabledReason: 'Alege un angajat din listă',
+              }
+            : {
+                label: `Adaugă la ${openBranchName}`,
+                type: 'button',
+                loading: submitting,
+                onClick: () => void handleAddExisting(),
+              }
+          : { label: 'Salvează angajatul', form: 'staff-form-drawer', loading: submitting }
       }
     >
       {!editing && (

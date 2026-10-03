@@ -257,11 +257,7 @@ export function MonthView({
         title={`Oprește programarea — ${endingRow?.child?.name ?? endingRow?.childId ?? ''}`}
         size="detail"
         onClose={() => setEndingRow(null)}
-        footer={
-          <Button disabled={endBusy} onClick={() => void confirmEndBooking()}>
-            Salvează
-          </Button>
-        }
+        primary={{ label: 'Salvează', type: 'button', loading: endBusy, onClick: () => void confirmEndBooking() }}
       >
         <div className={styles.endForm}>
           <Field label="Ultima zi" htmlFor="end-booking-date">

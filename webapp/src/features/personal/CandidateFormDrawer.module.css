@@ -13,15 +13,3 @@
 .rowNarrow {
   grid-template-columns: 1fr 110px;
 }
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.footerRight {
-  display: flex;
-  gap: var(--space-8);
-}

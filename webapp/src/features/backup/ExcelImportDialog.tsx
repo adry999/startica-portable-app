@@ -37,10 +37,21 @@ export function ExcelImportDialog({ data, onClose }: ExcelImportDialogProps) {
         data.closeDialog();
         onClose();
       }}
-      footer={
-        <Button disabled={!data.canCommit || data.committing} onClick={() => void commit()}>
-          Confirmă importul
-        </Button>
+      primary={
+        data.canCommit
+          ? {
+              label: 'Confirmă importul',
+              type: 'button',
+              loading: data.committing,
+              loadingLabel: 'Import…',
+              onClick: () => void commit(),
+            }
+          : {
+              label: 'Confirmă importul',
+              type: 'button',
+              disabled: true,
+              disabledReason: 'Previzualizează fișierul mai întâi',
+            }
       }
     >
       <p className={styles.notice}>

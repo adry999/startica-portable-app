@@ -23,18 +23,6 @@
   gap: var(--space-12);
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.footerRight {
-  display: flex;
-  gap: var(--space-8);
-}
-
 /* Anulează bordura/padding-ul barei `FilterPills` — pastilele stau direct sub eticheta „Categorie”
  * a câmpului, ca pastilele inline din Personal 23a (`TeamView.module.css`, `.inlinePills`). */
 .categoryChips {

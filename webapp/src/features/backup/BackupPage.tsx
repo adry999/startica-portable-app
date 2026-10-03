@@ -457,10 +457,21 @@ export function BackupPage() {
         title="Restaurare"
         size="detail"
         onClose={restore.closeDialog}
-        footer={
-          <Button disabled={!restore.canCommit || restore.committing} onClick={() => void commitRestore()}>
-            Restaurează
-          </Button>
+        primary={
+          restore.canCommit
+            ? {
+                label: 'Restaurează',
+                type: 'button',
+                loading: restore.committing,
+                loadingLabel: 'Restaurez…',
+                onClick: () => void commitRestore(),
+              }
+            : {
+                label: 'Restaurează',
+                type: 'button',
+                disabled: true,
+                disabledReason: 'Alege sursa și fișierul de restaurat',
+              }
         }
       >
         <div className={styles.field}>

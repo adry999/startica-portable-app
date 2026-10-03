@@ -312,16 +312,13 @@ function SalariesContent({ month, onLocked }: { month: string; onLocked: () => v
         ariaLabel="Confirmă plata"
         onClose={() => setPayDialogOpen(false)}
         shouldBlockClose={() => paying}
-        footer={
-          <>
-            <Button variant="outline" disabled={paying} onClick={() => setPayDialogOpen(false)}>
-              Anulează
-            </Button>
-            <Button loading={paying} onClick={() => void payment()}>
-              Plătește · {formatMoney(selectedTotal)}
-            </Button>
-          </>
-        }
+        primary={{
+          label: `Plătește · ${formatMoney(selectedTotal)}`,
+          type: 'button',
+          loading: paying,
+          loadingLabel: 'Plătesc…',
+          onClick: () => void payment(),
+        }}
       >
         <p className={styles.payDialogTotal}>
           Total: <strong>{formatMoney(selectedTotal)}</strong>

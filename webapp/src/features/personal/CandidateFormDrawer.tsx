@@ -69,24 +69,23 @@ export function CandidateFormDrawer({ target, onSubmit, onDelete, onClose }: Can
         title={editing ? 'Editează: candidat' : 'Adaugă: candidat'}
         size="detail"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <div className={styles.footer}>
-            <div>
-              {editing && (
-                <Button variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
-                  Șterge
-                </Button>
-              )}
-            </div>
-            <div className={styles.footerRight}>
-              <Button variant="outline" onClick={unsavedGuard.requestClose}>
-                Anulează
-              </Button>
-              <Button type="submit" form="candidate-form-drawer" loading={submitting} disabled={!name.trim()}>
-                Salvează
-              </Button>
-            </div>
-          </div>
+        onCancel={unsavedGuard.requestClose}
+        footerStart={
+          editing && (
+            <Button variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
+              Șterge
+            </Button>
+          )
+        }
+        primary={
+          !name.trim()
+            ? {
+                label: 'Salvează',
+                form: 'candidate-form-drawer',
+                disabled: true,
+                disabledReason: 'Scrie numele candidatului',
+              }
+            : { label: 'Salvează', form: 'candidate-form-drawer', loading: submitting }
         }
       >
         <form id="candidate-form-drawer" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>

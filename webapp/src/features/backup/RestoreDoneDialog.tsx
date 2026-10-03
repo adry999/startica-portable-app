@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Dialog } from '@shared/ui';
+import { Dialog } from '@shared/ui';
 import styles from './RestoreDoneDialog.module.css';
 
 const COUNTDOWN_SECONDS = 5;
@@ -43,7 +43,8 @@ export function RestoreDoneDialog({ open, branchCount, onReload }: RestoreDoneDi
       hideClose
       shouldBlockClose={() => true}
       onClose={() => {}}
-      footer={<Button onClick={onReload}>Reîncarcă acum</Button>}
+      hideCancel
+      primary={{ label: 'Reîncarcă acum', type: 'button', onClick: onReload }}
     >
       <div className={styles.body}>
         <p className={styles.text}>

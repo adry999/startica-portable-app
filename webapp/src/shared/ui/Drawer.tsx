@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Icon } from './Icon';
+import { type PanelFooterPrimary, PanelFooter } from './PanelFooter';
 import { ScrollArea } from './ScrollArea';
-import { errorCountLabel, usePanelController } from './usePanelController';
+import { usePanelController } from './usePanelController';
 import styles from './Drawer.module.css';
 
 export type DrawerSize = 'form' | 'detail';
@@ -19,7 +20,13 @@ export interface DrawerProps {
   shouldBlockClose?: () => boolean;
   /** „N erori” în subsol (44d) — dacă lipsește, Drawer își numără singur câmpurile native nevalide. */
   errorCount?: number;
-  footer?: ReactNode;
+  /** Subsolul unificat (F19/§6, `PanelFooter`) — fără `primary`/`footerStart`, panoul nu are subsol. */
+  primary?: PanelFooterPrimary;
+  footerStart?: ReactNode;
+  /** Implicit `requestClose` — eticheta „Anulează”. */
+  onCancel?: () => void;
+  cancelLabel?: string;
+  hideCancel?: boolean;
   children: ReactNode;
 }
 
@@ -41,10 +48,14 @@ export function Drawer({
   onClose,
   shouldBlockClose,
   errorCount,
-  footer,
+  primary,
+  footerStart,
+  onCancel,
+  cancelLabel,
+  hideCancel,
   children,
 }: DrawerProps) {
-  const { panelRef, requestClose, effectiveErrorCount } = usePanelController({
+  const { panelRef, requestClose, effectiveErrorCount, focusFirstInvalid } = usePanelController({
     open,
     onClose,
     shouldBlockClose,
@@ -71,12 +82,16 @@ export function Drawer({
           </button>
         </header>
         <ScrollArea className={styles.body}>{children}</ScrollArea>
-        {effectiveErrorCount > 0 && (
-          <p className={styles.errorBanner} role="status">
-            {errorCountLabel(effectiveErrorCount)}
-          </p>
-        )}
-        {footer && <footer className={styles.footer}>{footer}</footer>}
+        <PanelFooter
+          primary={primary}
+          footerStart={footerStart}
+          onCancel={onCancel ?? requestClose}
+          cancelLabel={cancelLabel}
+          hideCancel={hideCancel}
+          errorCount={effectiveErrorCount}
+          onFocusFirstInvalid={focusFirstInvalid}
+          className={styles.footer}
+        />
       </div>
     </div>
   );

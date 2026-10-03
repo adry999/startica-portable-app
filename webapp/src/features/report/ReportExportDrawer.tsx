@@ -118,23 +118,23 @@ export function ReportExportDrawer({ open, onClose, anchorMonth, data, onOpenAss
         title="Exportă pentru contabil"
         size="detail"
         onClose={onClose}
-        footer={
-          <div className={styles.footer}>
-            <span className={styles.filename}>
-              {format === 'excel'
-                ? exportingBoth
-                  ? reportExportFilenameAmbele(period)
-                  : reportExportFilename(period)
-                : `Rezumatul lunii — se tipărește ca PDF`}
-            </span>
-            <Button variant="outline" onClick={onClose}>
-              Renunță
-            </Button>
-            <Button disabled={exporting} onClick={() => void handleExport()}>
-              {format === 'excel' ? 'Descarcă' : 'Tipărește'}
-            </Button>
-          </div>
+        cancelLabel="Renunță"
+        footerStart={
+          <span className={styles.filename}>
+            {format === 'excel'
+              ? exportingBoth
+                ? reportExportFilenameAmbele(period)
+                : reportExportFilename(period)
+              : `Rezumatul lunii — se tipărește ca PDF`}
+          </span>
         }
+        primary={{
+          label: format === 'excel' ? 'Descarcă' : 'Tipărește',
+          type: 'button',
+          loading: exporting,
+          loadingLabel: format === 'excel' ? 'Descarc…' : 'Tipăresc…',
+          onClick: () => void handleExport(),
+        }}
       >
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Perioada</span>

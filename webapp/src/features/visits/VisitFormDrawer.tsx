@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Button, DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput, TimeInput } from '@shared/ui';
+import { DateInput, Drawer, Field, PhoneInput, Select, TextArea, TextInput, TimeInput } from '@shared/ui';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { formatAge } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -79,11 +79,8 @@ export function VisitFormDrawer({ target, groups, defaultDate, onSubmit, onClose
         title={editing ? 'Editează: vizită' : 'Adaugă: vizită'}
         size="form"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <Button type="submit" form="visit-form">
-            Salvează
-          </Button>
-        }
+        onCancel={unsavedGuard.requestClose}
+        primary={{ label: 'Salvează', form: 'visit-form' }}
       >
         <form id="visit-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
           <fieldset className={styles.section}>

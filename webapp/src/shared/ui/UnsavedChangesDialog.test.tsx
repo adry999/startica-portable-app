@@ -96,7 +96,7 @@ describe('UnsavedChangesDialog', () => {
     );
     expect(screen.getByRole('button', { name: 'Renunță' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Rămân' })).toBeDisabled();
-    expect(screen.getByText('Salvez și continui').closest('button')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByText('Salvez…').closest('button')).toHaveAttribute('aria-busy', 'true');
   });
 
   it('fără încălcări axe (R6)', async () => {

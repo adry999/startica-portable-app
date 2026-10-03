@@ -34,7 +34,7 @@ describe('ConfirmDialog', () => {
 
   it('cât `confirming` e adevărat, butoanele sunt dezactivate și textul arată starea', () => {
     render(<ConfirmDialog open title="Ștergi grupa?" confirming onConfirm={() => {}} onCancel={() => {}} />);
-    expect(screen.getByRole('button', { name: 'Se procesează…' })).toBeDisabled();
+    expect(screen.getByText('Se procesează…').closest('button')).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Anulează' })).toBeDisabled();
   });
 

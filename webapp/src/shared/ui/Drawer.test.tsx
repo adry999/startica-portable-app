@@ -123,25 +123,16 @@ describe('Drawer', () => {
 
   it('„N erori” în subsol prin errorCount explicit (44d)', () => {
     render(
-      <Drawer open title="Copil nou" onClose={() => {}} errorCount={2} footer={<button type="button">Salvează</button>}>
+      <Drawer open title="Copil nou" onClose={() => {}} errorCount={2} primary={{ label: 'Salvează' }}>
         Conținut
       </Drawer>,
     );
-    expect(screen.getByRole('status')).toHaveTextContent('2 erori');
+    expect(screen.getByRole('button', { name: '2 erori' })).toBeInTheDocument();
   });
 
   it('fără errorCount explicit, numără singur câmpurile native nevalide la o încercare de submit', async () => {
     render(
-      <Drawer
-        open
-        title="Copil nou"
-        onClose={() => {}}
-        footer={
-          <button type="submit" form="f">
-            Salvează
-          </button>
-        }
-      >
+      <Drawer open title="Copil nou" onClose={() => {}} primary={{ label: 'Salvează', form: 'f' }}>
         <form id="f">
           <input aria-label="Prenume" required />
           <input aria-label="Nume" required />
@@ -149,6 +140,70 @@ describe('Drawer', () => {
       </Drawer>,
     );
     await userEvent.click(screen.getByRole('button', { name: 'Salvează' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('2 erori');
+    expect(await screen.findByRole('button', { name: '2 erori' })).toBeInTheDocument();
+  });
+
+  it('subsolul unificat (F19/§6): Anulează implicit + principal, ordinea fixă', () => {
+    render(
+      <Drawer open title="Copil nou" onClose={() => {}} primary={{ label: 'Salvează copilul', form: 'f' }}>
+        Conținut
+      </Drawer>,
+    );
+    const buttons = screen.getAllByRole('button').map(button => button.textContent);
+    expect(buttons.indexOf('Anulează')).toBeLessThan(buttons.indexOf('Salvează copilul'));
+  });
+
+  it('Anulează implicit cheamă requestClose (shouldBlockClose se aplică)', async () => {
+    const onClose = vi.fn();
+    render(
+      <Drawer open title="Copil nou" onClose={onClose} shouldBlockClose={() => true} primary={{ label: 'Salvează' }}>
+        Conținut
+      </Drawer>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Anulează' }));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('hideCancel ascunde Anulează', () => {
+    render(
+      <Drawer open title="Restaurare gata" onClose={() => {}} hideCancel primary={{ label: 'Reîncarcă acum' }}>
+        Conținut
+      </Drawer>,
+    );
+    expect(screen.queryByRole('button', { name: 'Anulează' })).not.toBeInTheDocument();
+  });
+
+  it('primary.disabled cere disabledReason, afișat în stânga subsolului', () => {
+    render(
+      <Drawer
+        open
+        title="Grupe"
+        onClose={() => {}}
+        primary={{ label: 'Salvează', disabled: true, disabledReason: 'Fără modificări' }}
+      >
+        Conținut
+      </Drawer>,
+    );
+    expect(screen.getByText('Fără modificări')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Salvează' })).toBeDisabled();
+  });
+
+  it('primary.loading arată „Salvez…” și dezactivează Anulează', () => {
+    render(
+      <Drawer open title="Copil nou" onClose={() => {}} primary={{ label: 'Salvează copilul', loading: true }}>
+        Conținut
+      </Drawer>,
+    );
+    expect(screen.getByRole('button', { name: /Salvez…/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anulează' })).toBeDisabled();
+  });
+
+  it('fără primary/footerStart, nu randează niciun subsol', () => {
+    render(
+      <Drawer open title="Istoric" onClose={() => {}}>
+        Conținut
+      </Drawer>,
+    );
+    expect(screen.queryByRole('button', { name: 'Anulează' })).not.toBeInTheDocument();
   });
 });

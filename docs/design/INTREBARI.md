@@ -1485,3 +1485,61 @@ Teste noi: `PinGate.test.tsx` (900s după 5 greșeli), `environment.test.mjs`
 
 **Neatins din scop:**
 - Fără captură — ca la toate punctele anterioare din acest lanț.
+
+## §6 (PROMPT-11), F19 — subsolul formularelor, unificat (15k)
+
+**Raportat greșit ca închis** în raportul de final al cozii PROMPT-11 — grep-ul de verificare a
+prins un commit `§6` de pe `PROMPT-10`/`AUDIT-COD-02-10-B` (gardă `if (submitting) return` în
+`ServicesSettings`), nu pe acesta. Prins abia la primul audit cerut după coadă; închis acum.
+
+**`Drawer`/`Dialog`:** `footer?: ReactNode` liber înlocuit cu `primary` (`label`, `loading?`,
+`loadingLabel?` implicit „Salvez…”, `type?`, `form?`, `onClick?`, `variant?`, și `disabled`/
+`disabledReason` cuplate — `disabled` fără `disabledReason` e eroare de tip), `footerStart?`
+(bifă/notă/buton secundar), `onCancel?`/`cancelLabel?`/`hideCancel?`. Randat de o componentă nouă,
+`shared/ui/PanelFooter.tsx` — un singur loc pentru ordinea fixă `[footerStart] … Anulează ·
+Principal`, „N erori” mutat în stânga (text roz, clic = focus pe primul câmp invalid, din
+`usePanelController`'s `focusFirstInvalid`, nouă), și `loading` → ambele butoane inactive + textul
+principal devine `loadingLabel`.
+
+Migrate toate cele 27 de `footer={` reale din `features/**` (plus `ConfirmDialog`,
+`UnsavedChangesDialog`, `PrintOptionsDialog` din `shared/ui`, care foloseau același `footer` liber
+pe `Dialog`) — 2 potriviri `footer={` erau alt prop (`PrintTable` din `CashSummaryCardView`/
+`StatusPrint`, `SearchSelect` din `StaffFormDrawer`), lăsate neatinse. `Drawer`/`Dialog` fără
+`primary`/`footerStart` rămân fără subsol (2 panouri doar-vizualizare: `ExpensesPage` categorii,
+`SalaryHistoryDrawer`).
+
+**Decizii nedocumentate explicit în §6, luate acum:**
+- Multe formulare nu aveau deloc buton „Anulează” vizibil (`PaymentFormDrawer`, `AdvanceFormDrawer`,
+  `RolesDrawer`, `SalaryFormDrawer`, `ServicesSettings`, `ExcelImportDialog`, restaurarea din
+  `BackupPage`, `EnrollDrawer`, `VisitFormDrawer`, `MonthView` bazin) — acum îl au, implicit (cerut
+  de „onCancel implicit = requestClose, eticheta Anulează”); confirmă F18/alte puncte care arătau
+  deja Anulează ca fiind corecte, nu o excepție.
+- `disabled` fără motiv text (`!name.trim()`, `priceInvalid`, `settingsInvalid`, etc.) a primit un
+  mesaj scurt în română (ex. „Scrie un nume pentru grupă”, „Setează un preț mai mare ca 0”) — text
+  nou, nespecificat în PROMPT-11, ales după convenția deja existentă în GroupsPage („Fără
+  modificări”).
+- Cancel-ul se dezactivează automat cât timp `primary.loading` e adevărat (nu mai trebuie dat
+  `disabled={saving}` pe butonul de Anulează separat — vechiul tipar din `ConfirmDialog`/
+  `UnsavedChangesDialog`/`SalariesView`).
+- `SmsMessagesPanel` (listă SMS pe luni, doar vizualizare) și `StaffFormDrawer` (modul „adaugă
+  existent”) nu au Anulează (`hideCancel`) — nu exista înainte, nimic de pierdut la renunțare.
+- `ConfirmDialog` acum trece `loading` (nu doar `disabled`) pe butonul de confirmare — arată
+  spinner-ul în plus față de text, ca restul aplicației; înainte doar dezactiva fără spinner.
+
+**R15 nou în `architecture.test.ts`:** păzește doar contractul de tip (fără `footer?: ReactNode` pe
+`DrawerProps`/`DialogProps`, ambele randează prin `PanelFooter`) — TypeScript deja refuză orice
+`footer={` rămas pe un apelant real, un grep JSX pe nume de componentă ar fi fragil (confuzie cu
+`PrintTable`/`SearchSelect`).
+
+Teste noi/actualizate: `Drawer.test.tsx`/`Dialog.test.tsx` (ordinea Anulează/Principal, `hideCancel`,
+`disabledReason` afișat, `loading` → „Salvez…” + Anulează inactiv), `ConfirmDialog.test.tsx`/
+`UnsavedChangesDialog.test.tsx` (textul în timpul `loading` se caută prin `getByText`, nu
+`getByRole(name:)`, din cauza spinner-ului care intră în numele accesibil).
+
+**Bug prins în timpul migrării:** `role="status"` pe butonul „N erori” pică `aria-allowed-role` în
+axe (`status` nu e un rol permis pe `<button>`) — scos; rămâne buton simplu, fără rol suplimentar.
+
+**Neatins din scop:**
+- Fără captură vizuală — la fel ca toate punctele anterioare.
+- Nu am reverificat vizual (browser, 1440px) niciun ecran migrat față de artboard — doar structura
+  subsolului (ordine, etichete, stare dezactivată/încărcare) prin teste automate.

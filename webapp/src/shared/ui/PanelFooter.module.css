@@ -1,0 +1,33 @@
+.start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  flex: 1;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-10);
+  margin-left: auto;
+}
+
+.reason {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* „N erori” (F19/§6) — text roz în stânga subsolului, nu bandă separată; clic focalizează primul câmp invalid. */
+.errorCount {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--pink-ink);
+  cursor: pointer;
+}

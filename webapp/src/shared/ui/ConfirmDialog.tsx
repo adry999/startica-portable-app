@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Button } from './Button';
 import { Dialog } from './Dialog';
 
 export interface ConfirmDialogProps {
@@ -37,16 +36,16 @@ export function ConfirmDialog({
       title={title}
       onClose={onCancel}
       shouldBlockClose={() => confirming}
-      footer={
-        <>
-          <Button variant="outline" disabled={confirming} onClick={onCancel}>
-            {cancelLabel}
-          </Button>
-          <Button variant={tone === 'danger' ? 'danger-solid' : 'primary'} disabled={confirming} onClick={onConfirm}>
-            {confirming ? 'Se procesează…' : confirmLabel}
-          </Button>
-        </>
-      }
+      onCancel={onCancel}
+      cancelLabel={cancelLabel}
+      primary={{
+        label: confirmLabel,
+        type: 'button',
+        loading: confirming,
+        loadingLabel: 'Se procesează…',
+        variant: tone === 'danger' ? 'danger-solid' : 'primary',
+        onClick: onConfirm,
+      }}
     >
       {description}
     </Dialog>

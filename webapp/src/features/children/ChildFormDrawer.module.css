@@ -151,22 +151,8 @@
   font-weight: 400;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  width: 100%;
-}
-
 .footerNote {
   margin: 0;
   font-size: 13px;
   color: var(--muted);
-}
-
-.footerActions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-10);
-  margin-left: auto;
 }

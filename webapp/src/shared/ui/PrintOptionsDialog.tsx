@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Button } from './Button';
 import { Dialog } from './Dialog';
 
 export interface PrintOptionsDialogProps {
@@ -30,16 +29,13 @@ export function PrintOptionsDialog({
       title={title}
       onClose={onClose}
       shouldBlockClose={() => printing}
-      footer={
-        <>
-          <Button variant="outline" disabled={printing} onClick={onClose}>
-            Anulează
-          </Button>
-          <Button variant="primary" loading={printing} onClick={onPrint}>
-            {printing ? 'Se printează…' : 'Printează'}
-          </Button>
-        </>
-      }
+      primary={{
+        label: 'Printează',
+        type: 'button',
+        loading: printing,
+        loadingLabel: 'Se printează…',
+        onClick: onPrint,
+      }}
     >
       {children}
     </Dialog>

@@ -136,22 +136,8 @@ export function DevicesList({ devices, onRevoke, onChangeProfile, minVersion }: 
             setEditingDevice(null);
             setDraftProfile(null);
           }}
-          footer={
-            <>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditingDevice(null);
-                  setDraftProfile(null);
-                }}
-              >
-                Renunță
-              </Button>
-              <Button disabled={savingProfile} onClick={() => void saveProfile()}>
-                Salvează
-              </Button>
-            </>
-          }
+          cancelLabel="Renunță"
+          primary={{ label: 'Salvează', type: 'button', loading: savingProfile, onClick: () => void saveProfile() }}
         >
           <ProfileEditor value={draftProfile} onChange={setDraftProfile} />
         </Dialog>

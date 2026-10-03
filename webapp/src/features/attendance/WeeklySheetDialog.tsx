@@ -95,15 +95,10 @@ export function WeeklySheetDialog({ onClose }: WeeklySheetDialogProps) {
       open
       title="Foi de prezență pe săptămână"
       onClose={onClose}
-      footer={
-        <>
-          <Button variant="white" onClick={onClose}>
-            Anulează
-          </Button>
-          <Button disabled={selectedGroupIds.length === 0} onClick={handleConfirm}>
-            {selectedGroupIds.length === 0 ? 'Alege o grupă' : `Tipărește ${totalSheets} foi`}
-          </Button>
-        </>
+      primary={
+        selectedGroupIds.length === 0
+          ? { label: 'Tipărește foile', type: 'button', disabled: true, disabledReason: 'Alege cel puțin o grupă' }
+          : { label: `Tipărește ${totalSheets} foi`, type: 'button', onClick: handleConfirm }
       }
     >
       <div className={styles.content}>

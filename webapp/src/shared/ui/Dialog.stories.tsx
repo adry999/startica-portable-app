@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { Button } from './Button';
 import { Dialog } from './Dialog';
 
 const meta: Meta<typeof Dialog> = {
@@ -11,7 +10,7 @@ const meta: Meta<typeof Dialog> = {
     open: true,
     title: 'Trimite rezumatul acum?',
     onClose: fn(),
-    footer: <Button onClick={fn()}>Trimite</Button>,
+    primary: { label: 'Trimite', onClick: fn(), type: 'button' },
     children: <p>Conținut scurt — doar demonstrativ, fără date reale.</p>,
   },
 };
@@ -22,14 +21,10 @@ type Story = StoryObj<typeof Dialog>;
 /** Lățime implicită — 440px, token `--dialog` (44d). */
 export const Default: Story = {};
 
-/** Butonul principal cu `loading` (44d) — dezactivat, cu spinner, cât acțiunea e în curs. */
+/** Butonul principal cu `loading` (44d) — ambele butoane inactive, textul devine „Salvez…” (F19/§6). */
 export const Loading: Story = {
   args: {
-    footer: (
-      <Button loading onClick={fn()}>
-        Se trimite…
-      </Button>
-    ),
+    primary: { label: 'Trimite', onClick: fn(), type: 'button', loading: true, loadingLabel: 'Se trimite…' },
   },
 };
 

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Button, DateInput, Drawer, Field, NumberInput, Select } from '@shared/ui';
+import { DateInput, Drawer, Field, NumberInput, Select } from '@shared/ui';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { today as todayFn } from '@domain/calendar-month.mjs';
@@ -57,11 +57,8 @@ export function EnrollDrawer({ visit, groups, onSubmit, onClose }: EnrollDrawerP
         title={visit ? `Înscrie copilul: ${visit.name}` : 'Înscrie copilul'}
         size="detail"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <Button type="submit" form="enroll-form">
-            Înscrie
-          </Button>
-        }
+        onCancel={unsavedGuard.requestClose}
+        primary={{ label: 'Înscrie', form: 'enroll-form' }}
       >
         <form id="enroll-form" className={styles.form} autoComplete="off" onSubmit={handleSubmit}>
           <fieldset className={styles.section}>

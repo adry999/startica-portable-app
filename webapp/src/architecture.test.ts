@@ -427,6 +427,33 @@ describe('R14 — fără error.message/err.message brut în features/** — doar
   });
 });
 
+/**
+ * R15 (F19/§6, 15k) — `Drawer`/`Dialog` nu mai acceptă un `footer` liber (JSX arbitrar); subsolul
+ * e structurat prin `primary`/`footerStart`/`onCancel` și randat de `PanelFooter`, ca ordinea
+ * [footerStart] … Anulează · Principal și „Salvez…”/dezactivarea să fie unificate într-un singur
+ * loc. TypeScript deja refuză orice `footer={` rămas pe un apelant (proprietatea nu mai există în
+ * tip) — testul de aici păzește doar contractul însuși, ca un viitor `footer?: ReactNode` readăugat
+ * din greșeală să pice imediat, nu doar la următoarea folosire greșită.
+ */
+describe('R15 — Drawer/Dialog nu mai au prop `footer` liber, subsolul vine din PanelFooter', () => {
+  const DRAWER_SOURCE = readFileSync(join(SRC_ROOT, 'shared', 'ui', 'Drawer.tsx'), 'utf8');
+  const DIALOG_SOURCE = readFileSync(join(SRC_ROOT, 'shared', 'ui', 'Dialog.tsx'), 'utf8');
+  const FREE_FOOTER_PROP_PATTERN = /\bfooter\s*\?\s*:\s*ReactNode/;
+
+  it('DrawerProps nu declară footer?: ReactNode', () => {
+    expect(FREE_FOOTER_PROP_PATTERN.test(DRAWER_SOURCE)).toBe(false);
+  });
+
+  it('DialogProps nu declară footer?: ReactNode', () => {
+    expect(FREE_FOOTER_PROP_PATTERN.test(DIALOG_SOURCE)).toBe(false);
+  });
+
+  it('ambele randează subsolul prin PanelFooter', () => {
+    expect(DRAWER_SOURCE).toContain('PanelFooter');
+    expect(DIALOG_SOURCE).toContain('PanelFooter');
+  });
+});
+
 describe('granițele dintre module (webapp/src/features)', () => {
   it('niciun fișier dintr-un feature nu importă direct dintr-un alt feature', () => {
     const violations = findViolations().filter(v => v.rule === 'feature-imports-feature');

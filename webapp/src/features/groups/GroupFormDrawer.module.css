@@ -40,20 +40,8 @@
   color: var(--muted);
 }
 
-.footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
-}
-
 .footerNote {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
-}
-
-.footerActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-10);
 }

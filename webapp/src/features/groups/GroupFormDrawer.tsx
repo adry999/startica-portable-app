@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, Icon, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
+import { Drawer, Icon, IconButton, NumberInput, TextInput, TonePicker } from '@shared/ui';
 import { useUnsavedChangesGuard } from '@shared/state/useUnsavedChangesGuard';
 import { ageInYears } from '#shared/format/date-format.mjs';
 import type { Staff, Leave } from '@shared/personal/personal.types';
@@ -140,18 +140,17 @@ export function GroupFormDrawer({
         title="Grupă nouă"
         size="detail"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <div className={styles.footer}>
-            <p className={styles.footerNote}>{footerNote}</p>
-            <div className={styles.footerActions}>
-              <Button type="button" variant="outline" onClick={unsavedGuard.requestClose}>
-                Anulează
-              </Button>
-              <Button type="submit" form="group-form-drawer" loading={submitting} disabled={!name.trim()}>
-                Creează grupa
-              </Button>
-            </div>
-          </div>
+        onCancel={unsavedGuard.requestClose}
+        footerStart={<p className={styles.footerNote}>{footerNote}</p>}
+        primary={
+          !name.trim()
+            ? {
+                label: 'Creează grupa',
+                form: 'group-form-drawer',
+                disabled: true,
+                disabledReason: 'Scrie un nume pentru grupă',
+              }
+            : { label: 'Creează grupa', form: 'group-form-drawer', loading: submitting }
         }
       >
         <form

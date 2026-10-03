@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Button,
   Checkbox,
   Drawer,
   SearchSelect,
@@ -147,12 +146,15 @@ export function SmsNewMessageDialog({ open, unitCostLei, onClose, onSent }: SmsN
         ? renderSmsTemplate(selectedTemplate.body, templateVariablesFor(recipientName, childName))
         : '';
 
-  const sendDisabled =
-    sending ||
-    !recipientName.trim() ||
-    !normalizedPhone ||
-    !finalText.trim() ||
-    (bodyMode === 'template' && !selectedTemplate);
+  const sendDisabledReason = !recipientName.trim()
+    ? 'Scrie numele destinatarului'
+    : !normalizedPhone
+      ? 'Numărul de telefon nu e valid'
+      : bodyMode === 'template' && !selectedTemplate
+        ? 'Alege un șablon'
+        : !finalText.trim()
+          ? 'Scrie un mesaj'
+          : null;
 
   async function send() {
     if (!normalizedPhone) return;
@@ -198,21 +200,19 @@ export function SmsNewMessageDialog({ open, unitCostLei, onClose, onSent }: SmsN
       title="SMS nou"
       size="detail"
       onClose={close}
-      footer={
-        !result ? (
-          <>
-            <Button variant="ghost" onClick={close}>
-              Anulează
-            </Button>
-            <Button variant="primary" disabled={sendDisabled} onClick={() => void send()}>
-              Trimite SMS
-            </Button>
-          </>
-        ) : (
-          <Button variant="primary" onClick={close}>
-            Închide
-          </Button>
-        )
+      hideCancel={!!result}
+      primary={
+        result
+          ? { label: 'Închide', type: 'button', onClick: close }
+          : sendDisabledReason
+            ? { label: 'Trimite SMS', type: 'button', disabled: true, disabledReason: sendDisabledReason }
+            : {
+                label: 'Trimite SMS',
+                type: 'button',
+                loading: sending,
+                loadingLabel: 'Trimit…',
+                onClick: () => void send(),
+              }
       }
     >
       <div className={styles.field}>

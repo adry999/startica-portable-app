@@ -174,16 +174,14 @@ export function SyncSettings() {
           // unui Drawer „form”, nu de lățimea standard `--dialog` (440px).
           width={620}
           onClose={() => setPairingProfile(null)}
-          footer={
-            <>
-              <Button variant="outline" onClick={() => setPairingProfile(null)}>
-                Renunță
-              </Button>
-              <Button disabled={creatingPairing} onClick={() => void handleCreatePairing(pairingProfile)}>
-                Generează codul
-              </Button>
-            </>
-          }
+          cancelLabel="Renunță"
+          primary={{
+            label: 'Generează codul',
+            type: 'button',
+            loading: creatingPairing,
+            loadingLabel: 'Generez…',
+            onClick: () => void handleCreatePairing(pairingProfile),
+          }}
         >
           <ProfileEditor value={pairingProfile} onChange={setPairingProfile} />
         </Dialog>

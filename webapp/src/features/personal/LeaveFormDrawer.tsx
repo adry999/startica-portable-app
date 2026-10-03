@@ -84,25 +84,14 @@ export function LeaveFormDrawer({ target, staff, onClose, onSubmit, onDelete }: 
         title={editing ? 'Editează: concediu' : 'Adaugă: concediu'}
         size="detail"
         onClose={onClose}
-        footer={
-          <div className={styles.footer}>
-            <div>
-              {editing && (
-                <Button variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
-                  Șterge
-                </Button>
-              )}
-            </div>
-            <div className={styles.footerRight}>
-              <Button variant="outline" onClick={onClose}>
-                Anulează
-              </Button>
-              <Button type="submit" form="leave-form-drawer" loading={submitting}>
-                Salvează
-              </Button>
-            </div>
-          </div>
+        footerStart={
+          editing && (
+            <Button variant="ghost" onClick={() => setConfirmDeleteOpen(true)}>
+              Șterge
+            </Button>
+          )
         }
+        primary={{ label: 'Salvează', form: 'leave-form-drawer', loading: submitting }}
       >
         <form
           id="leave-form-drawer"

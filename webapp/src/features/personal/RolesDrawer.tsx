@@ -182,10 +182,16 @@ export function RolesDrawer({ open, onClose }: RolesDrawerProps) {
         title="Departamente și funcții"
         size="detail"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <Button loading={saving} onClick={() => void save()} disabled={settingsInvalid}>
-            Salvează
-          </Button>
+        onCancel={unsavedGuard.requestClose}
+        primary={
+          settingsInvalid
+            ? {
+                label: 'Salvează',
+                type: 'button',
+                disabled: true,
+                disabledReason: 'Zilele de concediu anual trebuie să fie un număr întreg între 0 și 365',
+              }
+            : { label: 'Salvează', type: 'button', loading: saving, onClick: () => void save() }
         }
       >
         <div className={styles.root}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AmountInput, Button, DateInput, Drawer, Field, Select, useToast, useUndoToast } from '@shared/ui';
+import { AmountInput, DateInput, Drawer, Field, Select, useToast, useUndoToast } from '@shared/ui';
 import { useAppSession } from '@shared/api/session';
 import { today } from '#shared/domain/calendar-month.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
@@ -70,11 +70,7 @@ export function AdvanceFormDrawer({ staff, month, onClose, onSaved }: AdvanceFor
       title={staff ? `Avans: ${staff.name}` : 'Avans'}
       size="detail"
       onClose={onClose}
-      footer={
-        <Button type="submit" form="advance-form-drawer" loading={submitting}>
-          Salvează
-        </Button>
-      }
+      primary={{ label: 'Salvează', form: 'advance-form-drawer', loading: submitting }}
     >
       <form
         id="advance-form-drawer"

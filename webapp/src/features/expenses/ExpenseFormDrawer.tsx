@@ -108,21 +108,15 @@ export function ExpenseFormDrawer({
         title={editing ? 'Editează: cheltuială' : 'Adaugă: cheltuială'}
         size="detail"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <div className={styles.footer}>
-            <div />
-            <div className={styles.footerRight}>
-              {!editing && (
-                <Button variant="outline" onClick={() => void handleSaveAndAddAnother()} disabled={submitting}>
-                  Salvează și adaugă alta
-                </Button>
-              )}
-              <Button type="submit" form="expense-form-drawer" loading={submitting}>
-                Salvează
-              </Button>
-            </div>
-          </div>
+        onCancel={unsavedGuard.requestClose}
+        footerStart={
+          !editing && (
+            <Button variant="outline" onClick={() => void handleSaveAndAddAnother()} disabled={submitting}>
+              Salvează și adaugă alta
+            </Button>
+          )
         }
+        primary={{ label: 'Salvează', form: 'expense-form-drawer', loading: submitting }}
       >
         <form id="expense-form-drawer" className={styles.editorForm} autoComplete="off" onSubmit={handleSubmit}>
           <Field label="Data cheltuielii" htmlFor="expense-date">

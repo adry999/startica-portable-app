@@ -64,16 +64,5 @@
   border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-10);
-}
-
-/* „N erori” (44d) — fix, deasupra butoanelor, parte din subsolul care nu scrolează cu conținutul. */
-.errorBanner {
-  margin: 0;
-  padding: var(--space-10) var(--space-24);
-  background: var(--pink-soft);
-  color: var(--pink-ink);
-  font-weight: 700;
-  font-size: 13px;
 }

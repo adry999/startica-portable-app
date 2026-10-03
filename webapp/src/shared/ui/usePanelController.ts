@@ -16,6 +16,8 @@ export interface PanelController {
   requestClose: () => void;
   /** „N erori” (44d) — explicit prin `errorCount`, altfel numărat din evenimentele `invalid`. */
   effectiveErrorCount: number;
+  /** Clic pe „N erori” (F19/§6, `PanelFooter`) — focus pe primul câmp nativ invalid din panou. */
+  focusFirstInvalid: () => void;
 }
 
 // `type="number"` exclus intenționat: are un algoritm de sanitizare HTML care, pe un câmp deja
@@ -137,7 +139,13 @@ export function usePanelController({
     };
   }, [open]);
 
-  return { panelRef, requestClose, effectiveErrorCount: errorCount ?? nativeErrorCount };
+  const focusFirstInvalid = useCallback(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    panel.querySelector<HTMLElement>(`${FIELD_SELECTOR}:invalid`)?.focus();
+  }, []);
+
+  return { panelRef, requestClose, effectiveErrorCount: errorCount ?? nativeErrorCount, focusFirstInvalid };
 }
 
 /** Text „N erori”/„1 eroare” (44d) — plural românesc simplu, pentru subsolul fix. */

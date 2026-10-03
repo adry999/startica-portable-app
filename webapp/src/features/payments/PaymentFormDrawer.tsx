@@ -633,10 +633,20 @@ export function PaymentFormDrawer({
         title={editing ? 'Editează achitarea' : 'Achitare nouă'}
         size="form"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <Button type="submit" form="payment-form-drawer" loading={submitting} disabled={isEurChild && !effectiveRate}>
-            Salvează · {formatMoney(totalAmount, 'MDL')}
-          </Button>
+        onCancel={unsavedGuard.requestClose}
+        primary={
+          isEurChild && !effectiveRate
+            ? {
+                label: `Salvează · ${formatMoney(totalAmount, 'MDL')}`,
+                form: 'payment-form-drawer',
+                disabled: true,
+                disabledReason: 'Lipsește cursul zilei — completează cursul manual mai jos',
+              }
+            : {
+                label: `Salvează · ${formatMoney(totalAmount, 'MDL')}`,
+                form: 'payment-form-drawer',
+                loading: submitting,
+              }
         }
       >
         <form
@@ -773,7 +783,8 @@ export function PaymentFormDrawer({
               <>
                 {isEurChild && exactFeeLei !== null && feeEntry && effectiveRate && (
                   <p className={styles.notice}>
-                    {formatMoney(feeEntry.amount, 'EUR')} × {formatRate(effectiveRate)} = {formatMoney(exactFeeLei, 'MDL')}
+                    {formatMoney(feeEntry.amount, 'EUR')} × {formatRate(effectiveRate)} ={' '}
+                    {formatMoney(exactFeeLei, 'MDL')}
                   </p>
                 )}
                 <AmountInput
@@ -943,7 +954,9 @@ export function PaymentFormDrawer({
                             // §3 (PROMPT-11 F17): o lună deja aleasă pe alt rând nu se poate alege
                             // a doua oară — rândul ei propriu rămâne mereu selectabil.
                             isDisabled={month =>
-                              values.allocations.some((other, otherIndex) => otherIndex !== index && other.month === month)
+                              values.allocations.some(
+                                (other, otherIndex) => otherIndex !== index && other.month === month,
+                              )
                             }
                           />
                         </Field>

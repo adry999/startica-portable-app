@@ -41,19 +41,14 @@ export function UnsavedChangesDialog({
       title={`Renunți la modificările din ${formName}?`}
       onClose={onStay}
       shouldBlockClose={() => saving}
-      footer={
-        <>
-          <Button variant="danger-solid" disabled={saving} onClick={onDiscard}>
-            Renunță
-          </Button>
-          <Button variant="outline" disabled={saving} onClick={onStay}>
-            Rămân
-          </Button>
-          <Button variant="primary" loading={saving} onClick={onSaveAndContinue}>
-            Salvez și continui
-          </Button>
-        </>
+      onCancel={onStay}
+      cancelLabel="Rămân"
+      footerStart={
+        <Button variant="danger-solid" disabled={saving} onClick={onDiscard}>
+          Renunță
+        </Button>
       }
+      primary={{ label: 'Salvez și continui', type: 'button', loading: saving, onClick: onSaveAndContinue }}
     >
       {changedFields && changedFields.length > 0 && (
         <p className={styles.fields}>Câmpuri modificate: {formatChangedFields(changedFields)}.</p>

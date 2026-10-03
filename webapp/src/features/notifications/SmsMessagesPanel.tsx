@@ -278,11 +278,8 @@ export function SmsMessagesPanel() {
         title="SMS pe luni"
         size="detail"
         onClose={() => setMonthsOpen(false)}
-        footer={
-          <Button variant="ghost" onClick={exportMonthlyCsv}>
-            Exportă CSV
-          </Button>
-        }
+        hideCancel
+        primary={{ label: 'Exportă CSV', type: 'button', variant: 'ghost', onClick: exportMonthlyCsv }}
       >
         <DataTable
           bare

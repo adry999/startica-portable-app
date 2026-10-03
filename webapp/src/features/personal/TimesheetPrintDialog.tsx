@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, Field, SegmentedControl, Select } from '@shared/ui';
+import { Dialog, Field, SegmentedControl, Select } from '@shared/ui';
 import type { Department, Staff } from '@shared/personal/personal.types';
 import styles from './TimesheetPrintDialog.module.css';
 
@@ -42,14 +42,11 @@ export function TimesheetPrintDialog({ open, departments, staff, onCancel, onCon
       open={open}
       title="Tipărește pontajul"
       onClose={onCancel}
-      footer={
-        <>
-          <Button variant="white" onClick={onCancel}>
-            Anulează
-          </Button>
-          <Button onClick={() => onConfirm({ scope, targetId: targetId || undefined, display })}>Tipărește</Button>
-        </>
-      }
+      primary={{
+        label: 'Tipărește',
+        type: 'button',
+        onClick: () => onConfirm({ scope, targetId: targetId || undefined, display }),
+      }}
     >
       <div className={styles.form}>
         <div className={styles.field}>

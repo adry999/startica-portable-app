@@ -184,19 +184,9 @@ export function ChildFormDrawer({ target, groups, allChildren = [], onSubmit, on
         title={editing ? 'Editează copilul' : 'Copil nou'}
         size="form"
         onClose={unsavedGuard.requestClose}
-        footer={
-          <div className={styles.footer}>
-            <p className={styles.footerNote}>Poți completa restul mai târziu din fișă.</p>
-            <div className={styles.footerActions}>
-              <Button type="button" variant="outline" onClick={unsavedGuard.requestClose}>
-                Anulează
-              </Button>
-              <Button type="submit" form="child-form-drawer" loading={submitting}>
-                Salvează copilul
-              </Button>
-            </div>
-          </div>
-        }
+        onCancel={unsavedGuard.requestClose}
+        footerStart={<p className={styles.footerNote}>Poți completa restul mai târziu din fișă.</p>}
+        primary={{ label: 'Salvează copilul', form: 'child-form-drawer', loading: submitting }}
       >
         <form
           id="child-form-drawer"
