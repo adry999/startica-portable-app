@@ -1553,3 +1553,11 @@ istoricul →") — pare să arate activitate recentă **pe toată lista**, nu p
 listă (toate modificările din Copii — achitări, note, mutări de grupă, pe toți copiii), sau
 artboard-ul a copiat din greșeală secțiunea de pe fișă la mockup-ul de listă? Detalii complete:
 `docs/design/AUDIT-VIZUAL-03-10.md`, secțiunea „Copii — listă".
+
+## Audit vizual 03.10 — Achitări 5b, „+ Împarte pe mai multe luni" lipsă din panoul de detaliu
+
+`Achitari.dc.html#5b` arată, sub „Luni acoperite", un link „+ Împarte pe mai multe luni" — absent
+din `PaymentDetailPanel.tsx`, care doar afișează alocările existente (comentariul din cod spune
+explicit „doar afișează”, fără editare). Întrebare: scop redus deliberat (editarea alocărilor se
+face oricum din `PaymentFormDrawer`), sau funcție încă neconstruită care ar trebui adăugată direct
+în panoul de detaliu? Detalii: `docs/design/AUDIT-VIZUAL-03-10.md`, secțiunea „Achitări".

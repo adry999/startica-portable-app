@@ -1,5 +1,15 @@
-import { useState } from 'react';
-import { Button, FilterPills, MasterDetail, SearchInput, groupTone, useToast, type PillTone } from '@shared/ui';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Button,
+  FilterPills,
+  MasterDetail,
+  Pagination,
+  SearchInput,
+  groupTone,
+  useToast,
+  type PillTone,
+} from '@shared/ui';
+import { readStoredPageSize, storePageSize } from '@shared/state/table-page-size';
 import { formatMoney } from '#shared/format/money-format.mjs';
 import { formatMonthAbbrev, formatMonthName } from '#shared/format/date-format.mjs';
 import { PaymentDetailPanel } from './PaymentDetailPanel';
@@ -24,6 +34,9 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
   const [monthFilter, setMonthFilter] = useState<MonthFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => readStoredPageSize());
+  const firstFilterRender = useRef(true);
 
   // Toate/Neasociate operează pe achitările active; Arhivate comută filtrul de arhivare
   // partajat cu Modul Tabel (aceeași stare din usePayments).
@@ -43,6 +56,33 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
     else groups.set(monthKey, [row]);
   }
   const monthKeys = [...groups.keys()].sort((a, b) => b.localeCompare(a));
+
+  const totalPages = Math.max(1, Math.ceil(baseRows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleIds = new Set<string>();
+  let rowIndex = 0;
+  for (const monthKey of monthKeys) {
+    for (const row of groups.get(monthKey) as PaymentRowView[]) {
+      if (rowIndex >= pageStart && rowIndex < pageStart + pageSize) visibleIds.add(row.id);
+      rowIndex += 1;
+    }
+  }
+
+  // Reset la pagina 1 când filtrele/căutarea schimbă setul de rânduri, nu la fiecare randare.
+  useEffect(() => {
+    if (firstFilterRender.current) {
+      firstFilterRender.current = false;
+      return;
+    }
+    setPage(1);
+  }, [monthFilter, data.search, data.method, data.groupFilter]);
+
+  function changePageSize(nextSize: number) {
+    setPageSize(nextSize);
+    storePageSize(nextSize);
+    setPage(1);
+  }
 
   const activeId = selectedId && baseRows.some(row => row.id === selectedId) ? selectedId : (baseRows[0]?.id ?? null);
   const activePayment = baseRows.find(row => row.id === activeId) ?? null;
@@ -128,10 +168,12 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
             />
           )}
 
-          <div className={styles.groups}>
+          <div className={styles.groups} data-testid="payments-by-month-list">
             {monthKeys.length === 0 && <p className={styles.notice}>Nu există achitări pentru filtrele alese.</p>}
             {monthKeys.map(monthKey => {
               const rows = groups.get(monthKey) as PaymentRowView[];
+              const visibleRows = rows.filter(row => visibleIds.has(row.id));
+              if (visibleRows.length === 0) return null;
               const subtotal = rows.reduce((sum, row) => sum + row.total, 0);
               return (
                 <div key={monthKey} className={styles.group}>
@@ -143,7 +185,7 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
                     <strong className={styles.groupTotal}>{formatMoney(subtotal)}</strong>
                   </div>
                   <div className={styles.card}>
-                    {rows.map(row => (
+                    {visibleRows.map(row => (
                       <div
                         key={row.id}
                         role="button"
@@ -177,6 +219,16 @@ export function PaymentsByMonth({ data, onEdit }: PaymentsByMonthProps) {
               );
             })}
           </div>
+
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            totalRows={baseRows.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={changePageSize}
+            ariaLabel="Pagini achitări"
+          />
         </div>
       }
       detail={

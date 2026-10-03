@@ -102,6 +102,32 @@ Verificare detaliată (poziție, mărime, font) a butonului „+ Grupă nouă" d
   `padding: 8px 18px` — identic cu #28a.
 - tsc + 1219 teste webapp (inclusiv `design-system.coverage.test.tsx`, axe) — toate verzi.
 
+## Achitări (`Achitari.dc.html#5a` Tabel, `#5b` Pe luni)
+
+- 🐛✅ **Lipsea eyebrow-ul „ÎNCASARE RAPIDĂ" + nota „Enter deschide plata precompletată (44a)."**
+  de la căutarea rapidă din antet — reparat (`QuickPaySearch.tsx`).
+- 🐛✅ **Numele copilului în coloana „Copil" nu era bold** (artboard: 800, cod: 400) — reparat cu
+  `<strong>`, același tipar ca `PersonCell` (Copii, Personal).
+- 🐛✅ **Dropdown „Pe pagină" lipsea din toate tabelele** — semnalat direct de utilizator, vezi
+  secțiunea dedicată mai jos (bug sistemic, `DataTable`/`Pagination`).
+- 🐛✅ **„Pe luni" (5b) nu avea paginare deloc** — semnalat direct de utilizator; afișa toate cele
+  332 de achitări simultan, pe toate lunile (pagină de 18532px). Reparat: `PaymentsByMonth.tsx`
+  paginează lista plată (ordinea lunilor, descrescător) cu același `Pagination`/`table.pageSize`
+  global ca modul Tabel; antetul fiecărei luni rămâne cu numărul/subtotalul real al lunii, chiar
+  dacă pagina curentă arată doar o parte din rândurile ei.
+- ⚠️ **„Tipărește raportul zilei"** lipsește din panoul „Casa de azi" — fals-pozitiv: linkul e
+  condiționat de `paymentCount > 0` (`CashSummaryCardView.tsx`), iar azi (03.10.2026) nu are nicio
+  achitare în datele de dezvoltare. Cod corect, nu bug.
+- ❓ **„+ Împarte pe mai multe luni"** (5b, panoul de detaliu) — apare în artboard sub „Luni
+  acoperite", absent din `PaymentDetailPanel.tsx`. Comentariul din cod spune explicit „doar
+  afișează” alocările, fără editare — posibil scop redus deliberat (editarea completă se face din
+  `PaymentFormDrawer`), posibil funcție neconstruită încă. Notat în `INTREBARI.md`.
+- ℹ️ Filtrul de arhivare: artboard are un dropdown „Nearhivate ▾”, codul are `SegmentedControl`
+  (Active/Arhivate/Toate) — funcțional echivalent, fără spec scrisă care să interzică această
+  variantă; nereportat ca bug.
+- ℹ️ „Pe luna încasării” (cod) vs „Pe luni” (artboard) — wording, fără decizie scrisă contrară;
+  nereportat.
+
 ## Eyebrow antet — bug sistemic (găsit + reparat)
 
 `DECIZII.md` §1 (prioritate maximă): eyebrow = grupa din sidebar — Evidență (Copii, Grupe, Prezența,
