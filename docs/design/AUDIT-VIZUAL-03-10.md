@@ -171,6 +171,30 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - ✅ Restul ecranului (antet, filtre de grupă, „N zile de naștere”, grila, lista laterală) —
   identic structural cu artboard-ul, diferențele de date (nume, grupe) sunt din setul de dezvoltare.
 
+## Cheltuieli (`Cheltuieli.dc.html#6a` Tabel, `#6b` Pe zile)
+
+- 🐛✅ **„Pe zile" (6b) nu avea paginare deloc** — exact același bug ca Achitări „Pe luni",
+  găsit prin aceeași verificare (nu doar semnalat de utilizator de data asta, ci căutat explicit
+  după precedent). Toate cele 1201 cheltuieli din bază randau deodată, pe toate datele (pagină de
+  96208px). Reparat: `ExpensesPage.tsx` paginează lista plată (ordinea zilelor, descrescător) cu
+  același `Pagination`/`table.pageSize` global ca Tabel/Achitări; antetul fiecărei zile păstrează
+  totalul real al zilei, chiar dacă pagina curentă arată doar o parte din înregistrările ei.
+- ✅ **Mod Tabel (6a)** — coloane, grilă, toolbar (căutare + `PeriodFilter` + „Nearhivate ▾” +
+  `FilterPills` Categorie/Metodă), cardul KPI (`1fr 2.2fr`, confirmat deja corect în cod) — toate
+  conforme cu spec-ul (`06-cheltuieli.md`) și `ALINIERE-DESIGN.md`. Categoriile din pastile diferă
+  de exemplul din artboard (Salarii/Alimentație/Utilități/Materiale/Întreținere) — intenționat,
+  categoriile sunt configurabile din „Administrează categorii" (meniul ⋯), artboard-ul arată doar
+  date exemplu.
+- ℹ️ Cardul „Pe categorii, luna curentă” are un eyebrow explicit, absent din descrierea textuală a
+  spec-ului (dar nu contrazice nimic din `DECIZII.md`/`ALINIERE-DESIGN.md`) — etichetă de claritate,
+  nereportat ca bug.
+- ℹ️ Toate cele 1201 cheltuieli din baza de dezvoltare sunt arhivate (migrarea B3, categoria
+  „Bazin” mutată la achitări) — „Nearhivate” arată 0 înregistrări în orice lună; verificat cu
+  filtrul „Toate” + perioada „Tot” pentru comparația vizuală. Date, nu bug.
+- ✅ Mod Pe zile (6b): blocul „Adaugă rapid” (mint, sumă/descriere/dată/metodă + chip-uri
+  categorie), lista grupată pe zile, fără coloana de buget — conform spec-ului, deja în lista
+  „Aliniate, fără modificări" din `ALINIERE-DESIGN.md`.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -178,8 +202,8 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Copii — fișă (2b) — 1 gol real reparat, 1 fals-pozitiv (server vechi), rest confirmat OK
 - [x] Zile de naștere (2c) — 1 gol real (4 tonuri lipsă din CSS) reparat
 - [x] Grupe (4a/4b/4c) — eyebrow, buton CTA, nota Culoare, stepper Vârstă — toate reparate
-- [ ] Achitări (5a/5b)
-- [ ] Cheltuieli (6a/6b)
+- [x] Achitări (5a/5b) — 2 bug-uri reparate (Copil bold, paginare „Pe luni")
+- [x] Cheltuieli (6a/6b) — 1 bug sistemic reparat (paginare „Pe zile”), rest conform spec
 - [ ] Situația (7a/7b)
 - [ ] De notificat (8a)
 - [ ] De rezolvat (9a/9b/9c)

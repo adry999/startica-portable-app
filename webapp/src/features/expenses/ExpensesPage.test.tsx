@@ -152,6 +152,7 @@ describe('ExpensesPage', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.removeItem('table.pageSize');
   });
 
   it('arată scheletul de încărcare după 300 ms, înainte ca sesiunea să fie gata', () => {
@@ -587,6 +588,40 @@ describe('ExpensesPage', () => {
 
     expect(screen.getByText('Salariu septembrie')).toBeInTheDocument();
     expect(screen.getByText('Curent')).toBeInTheDocument();
+  });
+
+  it('„Pe zile" paginează — nu arată toate înregistrările deodată (audit 03.10)', async () => {
+    const manyExpenses = Array.from({ length: 25 }, (_, index) => ({
+      id: `big-${index}`,
+      date: `2026-09-${String(index + 1).padStart(2, '0')}`,
+      category: 'Salarii',
+      description: `Cheltuială ${index}`,
+      amount: 100,
+      archived: false,
+    }));
+    const bigState = { ...fixtureState, expenses: manyExpenses };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: bigState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    const session = renderHook(() => useAppSession());
+    await act(() => session.result.current.load());
+
+    renderPage();
+    await userEvent.click(screen.getByRole('radio', { name: 'Pe zile' }));
+
+    expect(screen.getAllByText(/Cheltuială \d+/).length).toBe(10);
+    expect(screen.getByText('1–10 din 25')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Pagina următoare' }));
+    expect(screen.getByText('11–20 din 25')).toBeInTheDocument();
   });
 
   it('§13.2: căutarea rămâne la întoarcerea din fișă — stare în URL (?q=)', async () => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Button,
@@ -9,6 +9,7 @@ import {
   LoadingState,
   monthDayBounds,
   MonthStepper,
+  Pagination,
   RowMenu,
   SegmentedControl,
   SelectionBar,
@@ -21,6 +22,7 @@ import { useAppSession } from '@shared/api/session';
 import { usePersistedState } from '@shared/state/usePersistedState';
 import { usePersistedSort } from '@shared/state/usePersistedSort';
 import { useUrlParams } from '@shared/state/useUrlParams';
+import { readStoredPageSize, storePageSize } from '@shared/state/table-page-size';
 import { downloadCsv } from '@shared/csv-export';
 import { shiftMonth } from '@shared/format/month-shift';
 import { formatNameList } from '@shared/format/name-list';
@@ -137,6 +139,50 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([date, items]) => ({ date, items, dayTotal: total(items) }));
   }, [filteredExpenses]);
+
+  // „Pe zile" nu avea nicio paginare — randa toate cheltuielile filtrate deodată (audit 03.10,
+  // același bug ca Achitări „Pe luni"). Antetul fiecărei zile păstrează totalul real al zilei,
+  // chiar dacă pagina curentă arată doar o parte din înregistrările ei.
+  const [dailyPage, setDailyPage] = useState(1);
+  const [dailyPageSize, setDailyPageSize] = useState(() => readStoredPageSize());
+  const firstDailyFilterRender = useRef(true);
+
+  const dailyTotalPages = Math.max(1, Math.ceil(filteredExpenses.length / dailyPageSize));
+  const dailyCurrentPage = Math.min(dailyPage, dailyTotalPages);
+  const dailyPageStart = (dailyCurrentPage - 1) * dailyPageSize;
+  const dailyVisibleIds = useMemo(() => {
+    const ids = new Set<string>();
+    let index = 0;
+    for (const group of dailyGroups) {
+      for (const expense of group.items) {
+        if (index >= dailyPageStart && index < dailyPageStart + dailyPageSize) ids.add(expense.id);
+        index += 1;
+      }
+    }
+    return ids;
+  }, [dailyGroups, dailyPageStart, dailyPageSize]);
+
+  const pagedDailyGroups: DailyGroup[] = useMemo(
+    () =>
+      dailyGroups
+        .map(group => ({ ...group, items: group.items.filter(item => dailyVisibleIds.has(item.id)) }))
+        .filter(group => group.items.length > 0),
+    [dailyGroups, dailyVisibleIds],
+  );
+
+  useEffect(() => {
+    if (firstDailyFilterRender.current) {
+      firstDailyFilterRender.current = false;
+      return;
+    }
+    setDailyPage(1);
+  }, [search, category, method, archiveFilter, periodPreset, periodFrom, periodTo]);
+
+  function changeDailyPageSize(nextSize: number) {
+    setDailyPageSize(nextSize);
+    storePageSize(nextSize);
+    setDailyPage(1);
+  }
 
   async function deleteCategoryConfirmed(id: string) {
     try {
@@ -369,11 +415,22 @@ export function ExpensesPage({ month }: ExpensesPageProps) {
             </p>
           </>
         ) : (
-          <DailyExpensesView
-            groups={dailyGroups}
-            categoryNames={expensesData.categoryNames}
-            onQuickAdd={quickAddExpense}
-          />
+          <>
+            <DailyExpensesView
+              groups={pagedDailyGroups}
+              categoryNames={expensesData.categoryNames}
+              onQuickAdd={quickAddExpense}
+            />
+            <Pagination
+              page={dailyCurrentPage}
+              totalPages={dailyTotalPages}
+              totalRows={filteredExpenses.length}
+              pageSize={dailyPageSize}
+              onPageChange={setDailyPage}
+              onPageSizeChange={changeDailyPageSize}
+              ariaLabel="Pagini cheltuieli"
+            />
+          </>
         )}
       </Card>
 
