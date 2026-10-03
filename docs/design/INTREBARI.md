@@ -1562,6 +1562,20 @@ listă (toate modificările din Copii — achitări, note, mutări de grupă, pe
 artboard-ul a copiat din greșeală secțiunea de pe fișă la mockup-ul de listă? Detalii complete:
 `docs/design/AUDIT-VIZUAL-03-10.md`, secțiunea „Copii — listă".
 
+## Audit vizual 03.10 — Bazin 22a, cardul „Locuri libere" lipsește complet (date, nu doar UI)
+
+`23-bazin.md` §22a cere 4 carduri: „ședințe, prezenți, locuri libere, lipsă”. Codul
+(`WeekView.tsx`/`usePool.ts`, `WeekStats`) are 4 carduri, dar: Programate/Prezenți/Lipsă/**Motivat**
+— „Locuri libere” (capacitate rămasă pe săptămână, din `seatsPerSlot`) nu există nicăieri, nici
+în tipul `WeekStats`, nici calculat altundeva pe ecran. „Motivat” se potrivește cu cele 3 stări pe
+care le ciclează clicul pe placă (Prezent → Lipsă → Motivat), spre deosebire de „locuri libere”
+(o metrică de capacitate, nu de prezență) — posibil o alegere deliberată mai utilă, dar nescrisă
+nicăieri ca decizie. Întrebare: rămâne „Motivat” (cum e acum), sau se adaugă „Locuri libere” ca al
+5-lea card ori se înlocuiește unul din cele 4? Nu am putut verifica vizual restul Bazinului (22b/c/d)
+live — filiala activă („1 Buiucani”) nu are bazinul configurat (`Bazinul nu este configurat pentru
+această filială`), iar configurarea lui ar scrie date reale în baza de dezvoltare, în afara
+scopului unui audit doar de citire.
+
 ## Audit vizual 03.10 — Achitări 5b, „+ Împarte pe mai multe luni" lipsă din panoul de detaliu
 
 `Achitari.dc.html#5b` arată, sub „Luni acoperite", un link „+ Împarte pe mai multe luni" — absent

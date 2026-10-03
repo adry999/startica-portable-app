@@ -252,6 +252,22 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   exemplul din artboard), fără comentariu explicit în cod dar fără conflict cu `DECIZII.md`;
   nereportat ca bug.
 
+## Bazin (`Bazin.dc.html#22a`–`#22d`, `#43b` Azi)
+
+- ⚠️ **Nu am putut verifica vizual live** — filiala activă („1 Buiucani”) nu are bazinul
+  configurat (`pool_settings` lipsă → „Bazinul nu este configurat pentru această filială”,
+  comportament corect per planul tehnic, §10). Configurarea ar scrie date reale în baza de
+  dezvoltare partajată — în afara scopului unui audit doar de citire. Verificat doar din cod.
+- ❓ **22a — cardul „Locuri libere” lipsește, înlocuit cu „Motivat”** — logat în `INTREBARI.md`
+  (întrebare de business, nu bug silențios reparat).
+- ✅ **43b (Azi)** — artboard real, construit intenționat (commit `04d233e`, §12); starea goală
+  („Bazinul nu este configurat…”) confirmată corectă pentru o filială fără `pool_settings`.
+- ✅ **22c (Luna)** — tabelul pe copii (`MonthView.tsx`) nu folosește `DataTable`/paginare, dar
+  setul e natural mărginit (copiii înscriși la bazin într-o lună, nu tot efectivul filialei) —
+  nu intră în clasa de bug găsită la Achitări/Cheltuieli/Taxe și grupe.
+- ℹ️ Rândul „Antrenor: <nume>” + legenda (A4 din `ALINIERE-DESIGN.md`) — confirmat în cod
+  (`WeekView.tsx`), formatul cu virgulă pentru mai mulți antrenori e cel deja decis.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -264,7 +280,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Situația (7a/7b) — niciun bug găsit; alinierile mici erau deja corecte în cod
 - [x] De notificat (8a) — niciun bug găsit; deviațiile (SMS, Copiază, editare în dialog) deliberate
 - [x] De rezolvat (9a/9b/9c) — 1 bug sistemic reparat (paginare forțată „all” la 9a)
-- [ ] Bazin (22a/22b/22c/22d)
+- [x] Bazin (22a/22b/22c/22d, 43b) — verificat din cod (branch fără bazin configurat); 1 întrebare
 - [ ] Prezența (18a/18b/18c/18d)
 - [ ] Personal (23a–23l)
 - [ ] Vizite (4a — fișier Vizite.dc.html)
