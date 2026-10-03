@@ -65,6 +65,21 @@ Legendă: 🐛 gol real (lipsește din cod, nu doar din datele de test) · ℹ�
   ies sub fold la 1000px înălțime — confirmat prezente în DOM (`page.$$eval`), nu bug (același tipar
   ca la Dashboard).
 
+### 4c — panoul „+ Grupă nouă"
+
+- 🐛✅ **Lipsea nota de sub Culoare** („Implicit e prima culoare liberă. Poți alege și una folosită
+  deja.") — reparat (`GroupFormDrawer.tsx`).
+- 🐛✅ **Vârstă minimă/maximă foloseau `NumberInput` simplu**, fără steperul +/- pe care artboard-ul
+  îl arată identic pentru Capacitate ȘI Vârstă (grup unic „Vârstă (pentru sugestii)”, două steppere,
+  sufix „ani”) — reparat; fiecare input are acum `ariaLabel` propriu (vechiul `<label>` unic nu mai
+  e valabil cu două controale). Layout ajustat (`.fieldAuto`/`.ageInput`/`.ageStepper`) ca rândul să
+  încapă în lățimea fixă a drawer-ului (480px) fără overflow — verificat, 0px tăiat.
+- ✅ Cele 8 culori (`BOARD_TONE_PALETTE`) — toate prezente în DOM, implicit prima liberă
+  (`firstUnusedTone`) — ce părea „doar 7 vizibile" într-o captură mică a fost eroare de citire a
+  imaginii, nu bug (confirmat `page.evaluate` pe toate butoanele).
+- ✅ Textul „Grupa nouă apare prima, lângă «Fără grupă»…" — deja implementat (`GroupFormDrawer.tsx`
+  linia 246), doar ieșea sub fold în captura de 900px înălțime — nu bug.
+
 ## Buton CTA principal din antet — bug sistemic (găsit + reparat)
 
 Verificare detaliată (poziție, mărime, font) a butonului „+ Grupă nouă" din antetul Grupe vs
@@ -104,7 +119,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
 - [x] Copii — listă (2a) — 1 gol real (posibil) găsit, 1 întrebare de business
 - [ ] Copii — fișă (2b), Zile de naștere (2c)
-- [x] Grupe (4a/4b) — eyebrow + buton CTA reparate; 4c (drawer „+ Grupă nouă") de verificat separat
+- [x] Grupe (4a/4b/4c) — eyebrow, buton CTA, nota Culoare, stepper Vârstă — toate reparate
 - [ ] Achitări (5a/5b)
 - [ ] Cheltuieli (6a/6b)
 - [ ] Situația (7a/7b)
