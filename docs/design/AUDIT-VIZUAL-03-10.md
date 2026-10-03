@@ -323,6 +323,19 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
   niciun server de sincronizare (arată formularul de onboarding „Conectează acest calculator la
   server”); a conecta unul real ar depăși scopul unui audit vizual. Verificat doar din cod.
 
+## Filiale (`Filiale.dc.html#13a`–`#13c`)
+
+- ✅ **13a (Selectorul)** — toate valorile pixel verificate în cod și confirmate: padding
+  `8px 12px 8px 8px`, radius 14 (`--radius-md`), border 1.5px, pătrat 30px, „FILIALA” 10px/800,
+  numele 14/800, dropdown radius 18 — exact ca în spec. Prezent pe toate ecranele (verificat
+  indirect: apare identic în fiecare captură din acest audit).
+- ✅ **13b** — `BranchSwitchDialog` are exact cele 3 butoane cu wording-ul din spec (Rămân aici /
+  Renunț și schimb / Salvează și schimbă).
+- ✅ **13c** — lista de filiale, badge „Deschisă acum”, adresă, „N copii · N grupe · salvat…”,
+  Redenumește/Culoare, „+ Adaugă filială”, nota de subsol — conforme. Wording „1 Buiucani” (nu
+  „Filiala Buiucani” ca în artboard) e convenția deja stabilită, consecventă peste tot în
+  aplicație (sidebar, header filială) — nereportat.
+
 ## Legendă progres
 
 - [x] Dashboard (1a) — 1 gol real găsit, reparat
@@ -340,7 +353,7 @@ Bazin, Vizite, Personal) · Contabilitate · De rezolvat · Administrare. Verifi
 - [x] Personal (23a–23o) — niciun bug găsit; spot-check + verificări anterioare deja închise
 - [x] Vizite (4a) — niciun bug găsit; 1 întrebare logată (dropdown Perioadă simplificat)
 - [x] Sincronizare (14a/14b/14c) — niciun bug găsit; stările „conectat” neverificabile local
-- [ ] Filiale (13a/13b/13c)
+- [x] Filiale (13a/13b/13c) — niciun bug găsit
 - [ ] Planuri și curs (12a–12g)
 - [ ] Notificare SMS/Situatia (7a–7e)
 - [ ] SMS istoric (11a/11b)
