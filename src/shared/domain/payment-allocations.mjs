@@ -49,7 +49,13 @@ export function paymentIndex(payments, asOf) {
     if (!months) index.set(p.childId, (months = new Map()));
     for (const a of allocations(p)) {
       const list = months.get(a.month) ?? [];
-      list.push({ amount: a.amount, currency: allocationCurrency(p), date: p.date, service: p.service });
+      list.push({
+        amount: a.amount,
+        currency: allocationCurrency(p),
+        date: p.date,
+        service: p.service,
+        fxRate: p.fxRate,
+      });
       months.set(a.month, list);
     }
   }

@@ -30,17 +30,33 @@ export function StatusPrint({
   orientation,
   kindergarten,
 }: StatusPrintProps) {
-  let expectedTotal = 0;
-  let paidTotal = 0;
-  let restTotal = 0;
+  // Totalurile se țin separat pe monedă — a le aduna direct ar amesteca MDL și EUR ca și cum
+  // ar fi aceeași unitate (12c/StatusPrint, aceeași regulă ca în Situația plăților pe ecran).
+  let expectedTotalMdl = 0;
+  let paidTotalMdl = 0;
+  let restTotalMdl = 0;
+  let expectedTotalEur = 0;
+  let paidTotalEur = 0;
+  let restTotalEur = 0;
+  let hasEur = false;
   let overdueCount = 0;
   let partialCount = 0;
   for (const row of rows) {
-    expectedTotal += row.expected ?? 0;
-    paidTotal += row.paid ?? 0;
-    restTotal += row.rest ?? 0;
+    if (row.currency === 'EUR') {
+      hasEur = true;
+      expectedTotalEur += row.expected ?? 0;
+      paidTotalEur += row.paid ?? 0;
+      restTotalEur += row.rest ?? 0;
+    } else {
+      expectedTotalMdl += row.expected ?? 0;
+      paidTotalMdl += row.paid ?? 0;
+      restTotalMdl += row.rest ?? 0;
+    }
     if (row.label === 'Restanță') overdueCount += 1;
     if (row.label === 'Plată parțială') partialCount += 1;
+  }
+  function totalLabel(mdl: number, eur: number): string {
+    return hasEur ? `${formatMoney(mdl)} + ${formatMoney(eur, 'EUR')}` : formatMoney(mdl);
   }
 
   const columns: PrintTableColumn<StatusRowView>[] = [
@@ -77,15 +93,15 @@ export function StatusPrint({
       <div className={styles.printSummary}>
         <div className={styles.printSummaryCell}>
           <span>De încasat</span>
-          <strong>{formatMoney(expectedTotal)}</strong>
+          <strong>{totalLabel(expectedTotalMdl, expectedTotalEur)}</strong>
         </div>
         <div className={styles.printSummaryCell}>
           <span>Încasat</span>
-          <strong>{formatMoney(paidTotal)}</strong>
+          <strong>{totalLabel(paidTotalMdl, paidTotalEur)}</strong>
         </div>
         <div className={styles.printSummaryCell}>
           <span>Rest</span>
-          <strong>{formatMoney(restTotal)}</strong>
+          <strong>{totalLabel(restTotalMdl, restTotalEur)}</strong>
         </div>
         <div className={styles.printSummaryCell}>
           <span>Copii în listă</span>
@@ -105,16 +121,19 @@ export function StatusPrint({
             <td colSpan={showPhone ? 2 : 1}></td>
             <td colSpan={showPhone ? 2 : 1}>Total · {rows.length} copii</td>
             <td></td>
-            <td style={AMOUNT_CELL_STYLE}>{formatMoney(expectedTotal)}</td>
-            <td style={AMOUNT_CELL_STYLE}>{formatMoney(paidTotal)}</td>
-            <td style={AMOUNT_CELL_STYLE}>{formatMoney(restTotal)}</td>
+            <td style={AMOUNT_CELL_STYLE}>{totalLabel(expectedTotalMdl, expectedTotalEur)}</td>
+            <td style={AMOUNT_CELL_STYLE}>{totalLabel(paidTotalMdl, paidTotalEur)}</td>
+            <td style={AMOUNT_CELL_STYLE}>{totalLabel(restTotalMdl, restTotalEur)}</td>
             <td></td>
           </tr>
         }
       />
 
       <PrintFooter>
-        Sume în lei. Taxă integrală pentru luna începută; plățile cu dată viitoare nu intră în soldul de azi.
+        {hasEur
+          ? 'Sume în moneda fiecărui copil (lei sau €); totalurile de mai sus sunt separate pe monedă, nu adunate. '
+          : 'Sume în lei. '}
+        Taxă integrală pentru luna începută; plățile cu dată viitoare nu intră în soldul de azi.
       </PrintFooter>
     </div>
   );

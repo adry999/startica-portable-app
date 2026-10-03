@@ -185,6 +185,66 @@ describe('StatusPage', () => {
     expect(screen.getByText('Restanță')).toBeInTheDocument();
   });
 
+  it('12c: un copil cu taxă EUR arată echivalentul lei sub Taxă/Achitat/Rest', async () => {
+    const eurState = {
+      ...fixtureState,
+      children: [
+        {
+          id: 'c5',
+          name: 'Ion Vlad',
+          contractDate: '2026-01-10',
+          attendanceDate: '2026-01-10',
+          withdrawalDate: null,
+          status: 'Activ',
+          statusHistory: [],
+          feeHistory: [{ from: '2026-01', amount: 150, currency: 'EUR' }],
+          archived: false,
+        },
+      ],
+      payments: [
+        {
+          id: 'p5',
+          date: '2026-09-10',
+          childId: 'c5',
+          amount: 2000,
+          method: 'Cash',
+          fxRate: 20,
+          fxRateSource: 'bnm',
+          amountEur: 100,
+          allocations: [{ month: '2026-09', amount: 100 }],
+          archived: false,
+        },
+      ],
+    };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (path: string) => {
+        if (path === '/api/session') return jsonResponse({ token: 'tok', version: '1.6.3' });
+        if (path === '/api/state')
+          return jsonResponse({ state: eurState, revision: 1, updatedAt: '2026-09-23T10:00:00Z' });
+        if (path === '/api/health') return jsonResponse({});
+        // Curs „de azi" diferit de fxRate-ul îngheţat al plății (20) — testează că Achitat
+        // folosește lei-ul chiar încasat (paidLei), nu o reconversie la cursul curent.
+        if (path === '/api/exchange-rates') return jsonResponse({ rates: { '2026-09-30': 22 }, sources: {} });
+        if (path === '/api/kindergarten') return jsonResponse({ name: 'Startica', idno: '' });
+        if (path === '/api/sms-status') return jsonResponse(smsUnconfigured);
+        if (path === '/api/sms-last-notified') return jsonResponse({});
+        if (path === '/api/sms-templates') return jsonResponse({ templates: [], usageCountById: {} });
+        throw new Error(`neașteptat: ${path}`);
+      }),
+    );
+
+    await loadedSession();
+    renderPage();
+
+    expect(await screen.findByText('150,00 €')).toBeInTheDocument(); // Taxă
+    expect(await screen.findByText('≈ 3.300,00 lei azi')).toBeInTheDocument(); // Taxă, la cursul de azi (22)
+    expect(screen.getByText('100,00 €')).toBeInTheDocument(); // Achitat
+    expect(screen.getByText('2.000,00 lei')).toBeInTheDocument(); // Achitat, lei chiar încasat (fxRate îngheţat 20)
+    expect(screen.getByText('50,00 €')).toBeInTheDocument(); // Rest
+    expect(await screen.findByText('≈ 1.100,00 lei azi')).toBeInTheDocument(); // Rest, la cursul de azi (22)
+  });
+
   it('butonul de tipărire deschide dialogul, apoi declanșează window.print', async () => {
     await loadedSession();
     renderPage();

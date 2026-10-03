@@ -369,6 +369,93 @@ test('obligation: plată cu curs manual pe achitare — paid este suma îngheţa
 
   assert.equal(result.paid, 150);
   assert.equal(result.rest, 350);
+  assert.equal(result.paidLei, 3000);
+});
+
+test('obligation: paidLei (12c, Situația plăților) e suma lei chiar încasată, cu fxRate-ul îngheţat al fiecărei plăți, nu cursul de azi', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const firstPayment = normalizeRecord('payments', {
+    id: 'P-1',
+    childId: 'C-EUR',
+    date: '2026-09-05',
+    amount: 2000,
+    method: 'Cash',
+    fxRate: 20,
+    fxRateSource: 'bnm',
+    amountEur: 100,
+    allocations: [{ month: '2026-09', amount: 100 }],
+  });
+  const secondPayment = normalizeRecord('payments', {
+    id: 'P-2',
+    childId: 'C-EUR',
+    date: '2026-09-20',
+    amount: 1030,
+    method: 'Card',
+    fxRate: 20.6,
+    fxRateSource: 'bnm',
+    amountEur: 50,
+    allocations: [{ month: '2026-09', amount: 50 }],
+  });
+  // Cursul de azi, diferit de ambele fxRate-uri îngheţate — nu trebuie folosit.
+  const rates = { '2026-09-05': 20, '2026-09-20': 20.6, '2026-09-30': 25 };
+
+  const result = obligation(eurChild, '2026-09', [firstPayment, secondPayment], [], '2026-09-30', null, rates);
+
+  assert.equal(result.paid, 150);
+  assert.equal(result.paidLei, 3030);
+});
+
+test('obligation: paidLei e null când o plată EUR n-are fxRate îngheţat (nu poate fi reconstituit lei-ul primit)', () => {
+  const eurChild = normalizeRecord('children', {
+    id: 'C-EUR',
+    name: 'Ion',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 500, currency: 'EUR' }],
+  });
+  const eurPayment = normalizeRecord('payments', {
+    id: 'P-EUR',
+    childId: 'C-EUR',
+    date: '2026-09-10',
+    amount: 300,
+    currency: 'EUR',
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 300 }],
+  });
+
+  const result = obligation(eurChild, '2026-09', [eurPayment], [], '2026-09-30');
+
+  assert.equal(result.paid, 300);
+  assert.equal(result.paidLei, null);
+});
+
+test('obligation: paidLei pentru un copil cu taxă MDL e identic cu paid (deja lei)', () => {
+  const mdlChild = normalizeRecord('children', {
+    id: 'C-MDL',
+    name: 'Maria',
+    status: 'Activ',
+    attendanceDate: '2026-09-01',
+    feeHistory: [{ from: '2026-09', amount: 2000 }],
+  });
+  const payment = normalizeRecord('payments', {
+    id: 'P-MDL',
+    childId: 'C-MDL',
+    date: '2026-09-10',
+    amount: 1500,
+    method: 'Cash',
+    allocations: [{ month: '2026-09', amount: 1500 }],
+  });
+
+  const result = obligation(mdlChild, '2026-09', [payment], [], '2026-09-30');
+
+  assert.equal(result.paid, 1500);
+  assert.equal(result.paidLei, 1500);
 });
 
 test('obligation: cursul corectat ulterior în tabel nu modifică retroactiv o plată deja îngheţată', () => {

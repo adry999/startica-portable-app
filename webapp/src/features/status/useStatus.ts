@@ -25,6 +25,9 @@ export interface StatusRowView {
   currency: Currency;
   expected: number | null;
   paid: number | null;
+  /** Lei chiar încasați (nu echivalentul de azi) — pentru taxă EUR, diferit de `paid` (în €);
+   * `null` când nu poate fi reconstituit (o plată EUR fără fxRate îngheţat). Vezi 12c. */
+  paidLei: number | null;
   rest: number | null;
   due: string;
   label: string;
@@ -156,6 +159,7 @@ export function useStatus(month: string): StatusData {
     currency: obligation.currency as Currency,
     expected: obligation.expected,
     paid: obligation.paid,
+    paidLei: obligation.paidLei,
     rest: obligation.rest,
     due: obligation.due,
     label: obligation.label,

@@ -32,8 +32,10 @@ import { usePersistedState } from '@shared/state/usePersistedState';
 import { useKindergarten } from '@shared/api/useKindergarten';
 import type { ViewKey } from '@shared/view-key';
 import type { ToneableGroup } from '@shared/ui/group-tone';
+import { useExchangeRates } from '@shared/api/useExchangeRates';
 import { formatDate } from '#shared/format/date-format.mjs';
 import { formatMoney } from '#shared/format/money-format.mjs';
+import { convertAmount, latestKnownRate } from '#shared/domain/exchange-rates.mjs';
 import { schoolYearLabel, schoolYearStartOf } from '#features/billing/index.web.mjs';
 import { planSmsBatch } from '#features/sms-notify/index.web.mjs';
 import { DEFAULT_SMS_TEMPLATE_BODY, renderSmsTemplate, smsVariablesFor } from '@domain/sms-template.mjs';
@@ -455,6 +457,14 @@ function MonthView({
 }) {
   const { summary } = data;
   const pct = Math.round(summary.paidShare * 100);
+  const { rates } = useExchangeRates();
+  const todaysRate = latestKnownRate(rates);
+  // 12c: echivalentul lei dedesubt, doar pentru copiii cu taxă EUR — Taxă/Rest sunt estimări „≈
+  // azi” (16-planuri-eur.md regula 9), Achitat e lei chiar încasat (`paidLei`, îngheţat pe plată).
+  function leiEquivalent(amountEur: number | null): string | null {
+    if (amountEur === null || todaysRate === undefined) return null;
+    return `≈ ${formatMoney(convertAmount(amountEur, 'EUR', 'MDL', todaysRate))} azi`;
+  }
 
   const columns: DataTableColumn<StatusRowView>[] = [
     {
@@ -472,6 +482,9 @@ function MonthView({
       render: row => (
         <>
           {formatMoney(row.expected, row.currency)}
+          {row.currency === 'EUR' && leiEquivalent(row.expected) && (
+            <span className={styles.extraCharge}>{leiEquivalent(row.expected)}</span>
+          )}
           {row.extraCharges.map(charge => (
             <span key={charge.label} className={styles.extraCharge}>
               incl. {charge.label}
@@ -485,7 +498,14 @@ function MonthView({
       header: 'Achitat',
       align: 'end',
       sortValue: row => row.paid ?? -1,
-      render: row => formatMoney(row.paid, row.currency),
+      render: row => (
+        <>
+          {formatMoney(row.paid, row.currency)}
+          {row.currency === 'EUR' && (
+            <span className={styles.extraCharge}>{row.paidLei === null ? '—' : formatMoney(row.paidLei, 'MDL')}</span>
+          )}
+        </>
+      ),
     },
     {
       key: 'rest',
@@ -493,9 +513,14 @@ function MonthView({
       align: 'end',
       sortValue: row => row.rest ?? -1,
       render: row => (
-        <span className={row.rest && row.rest > 0 ? styles.restDue : undefined}>
-          {formatMoney(row.rest, row.currency)}
-        </span>
+        <>
+          <span className={row.rest && row.rest > 0 ? styles.restDue : undefined}>
+            {formatMoney(row.rest, row.currency)}
+          </span>
+          {row.currency === 'EUR' && leiEquivalent(row.rest) && (
+            <span className={styles.extraCharge}>{leiEquivalent(row.rest)}</span>
+          )}
+        </>
       ),
     },
     {

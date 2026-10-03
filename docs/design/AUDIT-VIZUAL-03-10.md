@@ -356,14 +356,12 @@ setat unul temporar (Avram Maria, 150 €) doar pe copie, înregistrat o plată 
   „CURS BNM · dată / 1 € = X lei” cu „Curs manual”, „Suma” = `preț € × curs = lei` editabil,
   „Rotunjește” (exact/în jos/în sus/la 10 lei), repartizare lunară în €, câmp „Curs EUR” editabil
   cu link BNM — identic cu artboard-ul și cu A3b din `ALINIERE-DESIGN.md`.
-- 🐛 **12c** (Situația plăților, `StatusPage.tsx`) — coloanele Taxă/Achitat/Rest pentru un copil cu
-  taxă EUR arată **doar** suma în €, fără „echivalentul lei dedesubt” cerut explicit de spec
-  (regula 12c: „Achitat = `amount` lei primit, Rest = ≈ lei azi”). Verificat live: rândul lui Avram
-  Maria arată „150,00 €” / „150,00 €” / „0,00 €” fără nicio linie în lei. **Nu am reparat acum** —
-  worktree-ul `.worktrees/feat-multi-currency-fees` (branch `feat/multi-currency-fees`, altă
-  sesiune, deja cu 5 commit-uri: „obligation în propria monedă”, „selector monedă la plată”)
-  atinge exact această zonă (`StatusPage`/obligații per copil) și ar intra în conflict direct cu
-  orice fix aici — logat ca întrebare mai jos, nu ca bug de reparat imediat.
+- ✅ **12c** (Situația plăților, `StatusPage.tsx`) — coloanele Taxă/Achitat/Rest pentru un copil cu
+  taxă EUR arătau **doar** suma în €, fără „echivalentul lei dedesubt” cerut de spec (regula 12c:
+  „Achitat = `amount` lei primit, Rest = ≈ lei azi”). **Reparat**: `tuition-obligation.mjs` expune
+  `paidLei` (lei chiar încasați, la cursul îngheţat al fiecărei plăți), `StatusPage.tsx` arată
+  echivalentul lei sub Taxă/Rest (cursul de azi) și sub Achitat (`paidLei`). Test nou (12c) în
+  `StatusPage.test.tsx`.
 - ✅ **12d** (fișa copilului) — mini-card „Sold 0,00 € · La zi”, „Taxă lunară 150,00 €”, Istoric
   plăți cu exact coloanele cerute: LUNĂ/DATĂ/METODĂ/**Plătit lei**/**Curs** (link BNM)/**Echivalent
   €** — conform spec, fără nimic de reparat.
@@ -489,12 +487,11 @@ aleasă (16b), celelalte fiind pașii de explorare care au dus la ea, nu ecrane 
 
 - ✅ Structura și componentele corespund 1:1 artboard-urilor, verificat din cod (randarea reală de
   print nu poate fi comparată pixel-cu-pixel fără declanșarea dialogului de tipărire al sistemului).
-- 🐛 **`StatusPrint.tsx`** însumează `row.expected`/`row.paid`/`row.rest` direct (`expectedTotal +=
-  row.expected ?? 0`) fără să separe pe monedă, apoi afișează totalul cu `formatMoney(expectedTotal)`
-  (implicit lei) și subsolul spune „Sume în lei” — pentru o filială cu copii MDL **și** EUR
-  amestecați, totalul tipărit ar aduna greșit cele două monede ca și cum ar fi aceeași. Se suprapune
-  cu conflictul de monedă deja logat mai sus (worktree `feat/multi-currency-fees`) — adăugat acolo,
-  nu ca intrare separată.
+- ✅ **`StatusPrint.tsx`** însuma `row.expected`/`row.paid`/`row.rest` direct fără să separe pe
+  monedă, apoi afișa totalul cu `formatMoney(...)` (implicit lei) — pentru o filială cu copii MDL
+  **și** EUR amestecați, totalul tipărit ar fi adunat greșit cele două monede ca și cum ar fi
+  aceeași. **Reparat**: totaluri separate pe monedă (`...TotalMdl`/`...TotalEur`), afișate ca
+  `"<mdl> + <eur> €"` când `hasEur`, subsolul menționează explicit monedele mixte în acest caz.
 
 ## Componente de formular (`Componente formular.dc.html#25a`–`#25f`) și Design system (26–34)
 
@@ -552,8 +549,7 @@ mai sus; rămăseseră 7c–7e (Notifică un părinte / Notifică toți restanț
 - [x] Vizite (4a) — niciun bug găsit; 1 întrebare logată (dropdown Perioadă simplificat)
 - [x] Sincronizare (14a/14b/14c) — niciun bug găsit; stările „conectat” neverificabile local
 - [x] Filiale (13a/13b/13c) — niciun bug găsit
-- [x] Planuri și curs (12a–12g) — 1 gol real găsit (12c, lipsă echivalent lei), nereparat din cauza
-  conflictului cu worktree-ul concurent `feat/multi-currency-fees`; 1 întrebare logată
+- [x] Planuri și curs (12a–12g) — 1 gol real găsit (12c, lipsă echivalent lei) — reparat
 - [x] Notificare SMS/Situația (7a–7e) — niciun bug găsit; „Notifică toți” conform spec, gardă
   sms.md corectă
 - [x] SMS istoric (11a/11b) — niciun bug găsit; pivotul SMS→Telegram și variabila `rest`
@@ -567,7 +563,7 @@ mai sus; rămăseseră 7c–7e (Notifică un părinte / Notifică toți restanț
 - [x] Responsive (17a–17c) — 🐛 confirmat: breakpoint-urile 1024/768px nu sunt construite deloc
   (fără `@media` în afară de print); logat ca decizie de produs, nereparat
 - [x] Tipărire/Bon 58mm (16a–16g, 24a–24d) — componente 1:1 cu artboard-urile; 1 gol de monedă
-  mixtă la totalul tipărit (StatusPrint), aceeași coadă ca 12c
+  mixtă la totalul tipărit (StatusPrint) — reparat
 - [x] Componente de formular (25a–25f) — verificat structural + 708 teste verzi; niciun bug găsit
 - [x] Design system (26–34) — verificat structural (fișiere complete + teste verzi); audit
   Storybook pixel-cu-pixel pe toate cele ~60 de stări recomandat ca efort separat, nu bug găsit

@@ -34,6 +34,18 @@ function sumEntriesInCurrency(entries, targetCurrency, rates) {
   }
   return sumCents / 100;
 }
+// Lei chiar încasați (nu echivalentul de azi) pentru niște intrări de plată — o intrare EUR
+// folosește `fxRate`-ul îngheţat al plății ei (16-planuri-eur.md regula 5), nu cursul curent;
+// o intrare MDL e deja lei. Spec 12c: „Achitat = amount lei primit”, diferit de `paid` (în €).
+function sumEntriesInLei(entries) {
+  let sumCents = 0;
+  for (const entry of entries) {
+    if (entry.currency !== 'MDL' && typeof entry.fxRate !== 'number') return null;
+    const lei = entry.currency === 'MDL' ? entry.amount : entry.amount * entry.fxRate;
+    sumCents += cents(lei);
+  }
+  return sumCents / 100;
+}
 // Intrarea de taxă aplicabilă la o lună dată — ultima cu from <= month, sau
 // null dacă nu există niciuna. Exportată separat de obligation() pentru că
 // webapp are nevoie doar de monedă/sumă (fără calcul de obligație) când
@@ -48,7 +60,7 @@ export function feeEntryFor(child, month) {
 // `charges` (decizia 4, 2026-09-27-personal-bazin.md) e lista completă a taxelor suplimentare
 // (ex. Bazin) — parametru obligatoriu, înaintea lui asOf, ca niciun apelant să nu-l uite în
 // tăcere (o valoare lipsă ar arăta sume greșite fără nicio eroare).
-/** @param {Map<string, Map<string, {amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string}[]>> | null} [index] */
+/** @param {Map<string, Map<string, {amount: number, currency: import('#shared/contracts/record-types.mjs').Currency, date: string, fxRate?: number}[]>> | null} [index] */
 export function obligation(child, month, payments, charges, asOf = today(), index = null, rates = {}) {
   const start = child.attendanceDate?.slice(0, 7),
     end = child.withdrawalDate?.slice(0, 7);
@@ -67,7 +79,13 @@ export function obligation(child, month, payments, charges, asOf = today(), inde
         .flatMap(p =>
           allocations(p)
             .filter(a => a.month === month)
-            .map(a => ({ amount: a.amount, currency: allocationCurrency(p), date: p.date, service: p.service })),
+            .map(a => ({
+              amount: a.amount,
+              currency: allocationCurrency(p),
+              date: p.date,
+              service: p.service,
+              fxRate: p.fxRate,
+            })),
         );
   // Serviciile (B3): o plată de Bazin nu scade taxa Grădiniței și invers — fiecare linie
   // (taxa lunii / taxele suplimentare) e acoperită doar de plățile serviciului ei. O plată
@@ -78,6 +96,12 @@ export function obligation(child, month, payments, charges, asOf = today(), inde
   const feePaid = sumEntriesInCurrency(feePaidEntries, feeCurrency, rates);
   const chargesPaid = chargesPaidEntries.length ? sumEntriesInCurrency(chargesPaidEntries, feeCurrency, rates) : 0;
   const paid = feePaid === null || chargesPaid === null ? null : Math.round((feePaid + chargesPaid) * 100) / 100;
+  // Lei chiar încasați (12c, StatusPage „Achitat”) — doar pentru taxa EUR; pentru MDL e identic
+  // cu `paid`, deci nefolosit separat în UI (se arată doar când currency === 'EUR').
+  const feePaidLei = sumEntriesInLei(feePaidEntries);
+  const chargesPaidLei = chargesPaidEntries.length ? sumEntriesInLei(chargesPaidEntries) : 0;
+  const paidLei =
+    feePaidLei === null || chargesPaidLei === null ? null : Math.round((feePaidLei + chargesPaidLei) * 100) / 100;
   const childCharges = (charges || []).filter(c => c.childId === child.id && c.month === month);
   const chargesTotal = childCharges.length ? sumEntriesInCurrency(childCharges, feeCurrency, rates) : 0;
   const unknown = (!inactive && (!start || !status || fee === null)) || paid === null || chargesTotal === null;
@@ -113,7 +137,20 @@ export function obligation(child, month, payments, charges, asOf = today(), inde
     unknown || inactive
       ? []
       : [{ kind: /** @type {'fee'} */ ('fee'), amount: fee, currency: feeCurrency }, ...childCharges];
-  return { expected, paid, rest, credit, due, label, notify, daysToDue, currency: feeCurrency, feeAmount: fee, lines };
+  return {
+    expected,
+    paid,
+    paidLei,
+    rest,
+    credit,
+    due,
+    label,
+    notify,
+    daysToDue,
+    currency: feeCurrency,
+    feeAmount: fee,
+    lines,
+  };
 }
 /** Luna calendaristică următoare lui `month` ("AAAA-LL"). */
 export function nextMonth(month) {

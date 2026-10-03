@@ -65,8 +65,8 @@ test('paymentIndex grupează intrările pe copil și lună fără să le adune, 
   const index = paymentIndex(payments, '2026-09-30');
 
   assert.deepEqual(index.get('C-1').get('2026-09'), [
-    { amount: 500, currency: 'EUR', date: '2026-09-05', service: 'gradinita' },
-    { amount: 200, currency: 'MDL', date: '2026-09-20', service: 'gradinita' },
+    { amount: 500, currency: 'EUR', date: '2026-09-05', service: 'gradinita', fxRate: undefined },
+    { amount: 200, currency: 'MDL', date: '2026-09-20', service: 'gradinita', fxRate: undefined },
   ]);
 });
 
@@ -87,6 +87,6 @@ test('paymentIndex marchează intrarea cu moneda EUR când plata are amountEur �
   const index = paymentIndex([frozenPayment], '2026-09-30');
 
   assert.deepEqual(index.get('C-2').get('2026-09'), [
-    { amount: 150, currency: 'EUR', date: '2026-09-10', service: 'gradinita' },
+    { amount: 150, currency: 'EUR', date: '2026-09-10', service: 'gradinita', fxRate: 20 },
   ]);
 });
