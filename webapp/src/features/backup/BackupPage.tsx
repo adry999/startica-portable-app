@@ -32,12 +32,13 @@ import { BranchesSettings } from './BranchesSettings';
 import { SyncSettings } from './SyncSettings';
 import { PoolSettings } from './PoolSettings';
 import { ServicesSettings } from './ServicesSettings';
+import { AboutSettings } from './AboutSettings';
 import styles from './BackupPage.module.css';
 import { toUserError } from '@shared/api/to-user-error';
 
 const STATUS_TONE: Record<HealthTone, BadgeTone> = { ok: 'mint', warning: 'yellow', error: 'pink' };
 
-type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync' | 'pool' | 'services';
+type ViewMode = 'backup' | 'curs' | 'kindergarten' | 'branches' | 'sync' | 'pool' | 'services' | 'about';
 
 // O zi în ms — același prag ca useBackup/useRestore pentru „vechi”.
 const STALE_AFTER_MS = 86400000;
@@ -304,6 +305,7 @@ export function BackupPage() {
             { value: 'sync', label: 'Sincronizare' },
             { value: 'pool', label: 'Bazin' },
             { value: 'services', label: 'Servicii' },
+            { value: 'about', label: 'Despre' },
           ]}
         />
         {/* Versiunea nu mai stă lângă logo (17-filiale.md 13a) — apare aici, în antetul filei. */}
@@ -322,6 +324,8 @@ export function BackupPage() {
         <PoolSettings />
       ) : viewMode === 'services' ? (
         <ServicesSettings />
+      ) : viewMode === 'about' ? (
+        <AboutSettings />
       ) : (
         <>
           {backupData.health && (
